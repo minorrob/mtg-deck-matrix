@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Living Death",
+    "oracleId": "9e6a3df4-67a3-452e-a6ef-f04dbadb21ef",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each player exiles all creature cards from their graveyard, then sacrifices all creatures they control, then puts all cards they exiled this way onto the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each player exiles all creature cards from their graveyard, then sacrifices all creatures they control, then puts all cards they exiled this way onto the battlefield.",
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "card",
+            "zone": "graveyard",
+            "types": [
+              "Creature"
+            ]
+          },
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "sacrificeAll",
+          "who": "each",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        },
+        {
+          "effect": "moveZone",
+          "targets": "remembered",
+          "to": "battlefield"
+        }
+      ]
+    }
+  ]
+}

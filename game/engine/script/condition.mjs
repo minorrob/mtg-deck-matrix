@@ -44,6 +44,10 @@ function namedObject(about, {remembered, targets, about: subject}) {
   return null;
 }
 function namedIs(state, id, selector, context, was = null) {
+  /* "If that creature is a Bird, Frog, Otter, or Rat" (Splash Portal, batch 79): a choice of what it may be (`anyOf`), each
+     with what they share -- one of them is enough, where `subtypes` alone would ask for all four. */
+  const {anyOf, ...shared} = selector ?? {};
+  if (Array.isArray(anyOf)) return anyOf.some((one) => namedIs(state, id, {...shared, ...one}, context, was));
   const object = id === null || id === undefined ? null : state.objects[id];
   /* Gone: as it last was, for what a last-known snapshot can answer (its types, subtypes, controller); anything else it
      cannot say, and the condition does not hold. */
@@ -123,7 +127,12 @@ export function conditionProblems(condition) {
     problems.push("selfCounters names a counter and how many, at least 1");
   if (("about" in condition) !== ("is" in condition)) problems.push("about names an object and is says what it must be: both, or neither");
   if ("about" in condition && !NAMED.includes(condition.about)) problems.push(`about is ${NAMED.join(", ")}`);
-  if ("is" in condition) { try { compileSelector({...condition.is, what: "card"}); } catch (error) { problems.push(`What a named object must be: ${error.message}`); } }
+  if ("is" in condition) {
+    const {anyOf, ...shared} = condition.is ?? {};
+    if (anyOf !== undefined && !(Array.isArray(anyOf) && anyOf.length)) problems.push("What a named object may be is a list: {anyOf: [selector, ...]}");
+    try { for (const one of Array.isArray(anyOf) ? anyOf.map((a) => ({...shared, ...a})) : [condition.is]) compileSelector({...one, what: "card"}); }
+    catch (error) { problems.push(`What a named object must be: ${error.message}`); }
+  }
   if ("cast" in condition) {
     const rule = condition.cast;
     if (!rule || typeof rule !== "object" || Array.isArray(rule) || !Object.keys(rule).length || !Object.keys(rule).every((k) => CAST_KEYS.includes(k)))

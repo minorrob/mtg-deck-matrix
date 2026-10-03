@@ -590,10 +590,12 @@ export function legalActions(state, player) {
 
   /* CR 702.29a and its kin: an ability a card has in its owner's hand -- cycling, "{2}, discard this card: draw a card"
      -- whenever that player has priority, unless it says sorcery speed. */
-  for (const id of cardsIn(state, "hand", player)) {
+  /* Commander ninjutsu (CR 702.49d) works from the command zone as well: the hand's abilities that say so (`alsoCommand`). */
+  for (const id of [...cardsIn(state, "hand", player), ...cardsIn(state, "command", player)]) {
     const object = state.objects[id];
     for (const ability of object.abilities ?? []) {
       if (ability.kind !== "activated" || ability.zone !== "hand") continue;
+      if (object.zone === "command" && ability.alsoCommand !== true) continue;
       if (ability.timing === "sorcery" && !sorceryTime) continue;
       if (!conditionHolds(state, ability.condition, {controller: player, source: id})) continue;
       const payment = costPayment(state, player, id, ability.cost, 0, abilityLess(state, player, id, ability));

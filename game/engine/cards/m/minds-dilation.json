@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mind's Dilation",
+    "oracleId": "d4b5e09b-9ca2-4b51-a4f8-080741810df8",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever an opponent casts their first spell each turn, that player exiles the top card of their library. If it's a nonland card, you may cast it without paying its mana cost.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent casts their first spell each turn, that player exiles the top card of their library. If it's a nonland card, you may cast it without paying its mana cost.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "opponent",
+        "firstThisTurn": true
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "fromTop": 1,
+          "who": "that player",
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "play",
+          "from": "targets",
+          "targets": "remembered",
+          "free": true,
+          "condition": {
+            "about": "remembered",
+            "is": {
+              "nonTypes": [
+                "Land"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

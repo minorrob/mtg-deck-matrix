@@ -349,10 +349,12 @@ export function compileScript(script) {
     /* NINJUTSU (CR 702.49a): "{cost}, Return an unblocked attacking creature you control to its owner's hand: Put this card
        onto the battlefield from your hand tapped and attacking" -- an ability of the card in its owner's hand, attacking
        whom the returned creature attacked (rules/actions.mjs remembers it as the ability goes on the stack). */
-    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "ninjutsu") {
+    /* COMMANDER NINJUTSU (CR 702.49d; Yuriko, batch 79): the same ability, which also works while the card is in the
+       command zone (`alsoCommand`, rules/actions.mjs). */
+    if (ability.kind === "keyword" && ["ninjutsu", "commander ninjutsu"].includes(String(ability.keyword).toLowerCase())) {
       const cost = Array.isArray(ability.cost) ? ability.cost : [];
       if (!cost.length || !cost.every((atom) => atom?.atom === "mana")) problems.push(`${ability.text}: a ninjutsu cost of mana`);
-      abilities.push({id, kind: "activated", zone: "hand", text: ability.text,
+      abilities.push({id, kind: "activated", zone: "hand", text: ability.text, ...(String(ability.keyword).toLowerCase() === "commander ninjutsu" ? {alsoCommand: true} : {}),
         cost: [...structuredClone(cost), {atom: "returnToHand", selector: {what: "permanent", types: ["Creature"], controller: "you", attacking: true, unblocked: true}}],
         effects: [{effect: "moveZone", targets: "self", to: "battlefield", tapped: true, attacking: "that player"}]});
       keywords.push("Ninjutsu");

@@ -318,6 +318,18 @@ export function costIncrease(state, player, cardId) {
       total += amountOf(state, ability.amount ?? 1, {controller: holder.controller, source: holderId});
     }
   }
+  /* And for a while (effects/permanents.mjs, effectUntil): "noncreature spells your opponents cast cost {2} more to cast
+     until your next turn" (Elspeth Conquers Death, batch 79) -- the caster and the amount in what it applies, whose
+     "you" is the effect's controller. It changes a rule, not a characteristic, so a spell cast after it resolved is
+     under it too (CR 611.2c): its spell selector is read at each cast, never fixed. */
+  for (const effect of state.effects ?? []) {
+    if (effect.rule !== "spells-cost-more") continue;
+    const caster = effect.apply?.caster ?? "any";
+    if (caster === "you" && player !== effect.sourceController) continue;
+    if (caster === "opponent" && player === effect.sourceController) continue;
+    if (!matchesSelector({...(effect.affects ?? {}), what: "card", zone: object.zone}, state, cardId, {controller: effect.sourceController, source: null})) continue;
+    total += effect.apply?.amount ?? 1;
+  }
   return total;
 }
 

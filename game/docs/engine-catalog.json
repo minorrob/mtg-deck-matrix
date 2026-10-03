@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 980,
-  "everyRule": 2255
+  "defined": 992,
+  "everyRule": 2267
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -2353,9 +2353,9 @@
   },
   "Keyword actions (CR 701)": {
    "tally": {
-    "built": 16,
+    "built": 17,
     "partial": 3,
-    "named": 7,
+    "named": 6,
     "missing": 44
    },
    "entries": [
@@ -2617,12 +2617,12 @@
      "rule": "701.24",
      "name": "Shuffle",
      "engine": "shuffle",
-     "status": "named",
+     "status": "built",
      "forge": "Shuffle",
      "top": 6,
      "all": 66,
-     "blocks": 6,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword action",
@@ -3205,9 +3205,9 @@
   },
   "Effects": {
    "tally": {
-    "built": 56,
+    "built": 57,
     "partial": 1,
-    "named": 15,
+    "named": 14,
     "missing": 120
    },
    "entries": [
@@ -4080,12 +4080,12 @@
      "rule": null,
      "name": "Shuffle",
      "engine": "shuffle",
-     "status": "named",
+     "status": "built",
      "forge": "Shuffle",
      "top": 6,
      "all": 66,
-     "blocks": 6,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -8922,8 +8922,8 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 113,
-     "alone": 21
+     "blocks": 102,
+     "alone": 12
     },
     {
      "kind": "option",
@@ -11797,7 +11797,7 @@
      "top": 35,
      "all": 475,
      "blocks": 25,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "keyword construct",

@@ -189,59 +189,99 @@ export const surveil = {
   },
 };
 
-/* ---- dig ---- */
+/* ---- dig ----
 
+   "Look at the top N cards of your library, put one into your hand and the rest on the bottom": the top `count` cards
+   of the controller's library, `take` of them chosen to go `to` a zone. Batch 80, for "look at that many cards from the
+   top of your library. You may exile a nonland card from among them. Put the rest on the bottom of your library in a
+   random order. You may cast the exiled card" (The Key to the Vault): `selector`, what may be taken (the others are
+   shown, not offered); `upTo`, "you may" -- none is a choice; `remember`, what was taken, for the effects after it;
+   `random`, the rest in a random order from the game's stream. The cards are looked at, by their controller only. */
+/* What dig does with the cards not taken: "the bottom" is a library move -- in a random order when the card says so, else
+   in the order they were looked at; anywhere else is an ordinary zone change. */
+function digRest(state, player, cards, {rest, random}, rng, events) {
+  const left = cards.filter((id) => state.objects[id]);
+  if (random && !rng) throw new Error("A random order needs the game's random stream");
+  const order = random ? rng.shuffle(left) : left;
+  if (rest !== "bottom") { for (const id of order) moveOne(state, id, rest, events, {owner: player}); return; }
+  const library = state.zones.library[player];
+  for (const id of order) {
+    const at = library.indexOf(id);
+    if (at >= 0) library.splice(at, 1);
+    library.push(id);
+  }
+}
 export const dig = {
-  open(state, params, context) {
+  open(state, params, context, rng = null) {
     const looked = cardsIn(state, "library", context.controller).slice(0, params.count ?? 1);
+    if (params.remember) context.remembered = [];
     if (looked.length === 0) return false;
+    const fits = params.selector ? compileSelector({...params.selector, what: "card", zone: "library"}) : null;
+    const offered = fits ? looked.filter((id) => fits(state, id, {controller: context.controller, source: context.source ?? null})) : looked;
+    /* Nothing among them that may be taken: nobody is asked, and the rest go where they go. */
+    if (offered.length === 0) {
+      const events = [];
+      digRest(state, context.controller, looked, {rest: params.rest ?? "bottom", random: params.random === true}, rng, events);
+      return {events};
+    }
+    const take = Math.min(params.take ?? 1, offered.length);
     state.awaiting = {
-      kind: "effect-choice", effect: "dig", player: context.controller, cards: looked,
-      take: Math.min(params.take ?? 1, looked.length),
+      kind: "effect-choice", effect: "dig", player: context.controller, cards: looked, offered,
+      take, min: params.upTo === true ? 0 : take,
       to: params.to ?? "hand", rest: params.rest ?? "bottom",
+      ...(params.random === true ? {random: true} : {}), ...(params.remember ? {remember: true} : {}),
     };
     return true;
   },
 
   choice(state, awaiting) {
+    const offered = awaiting.offered ?? awaiting.cards;
     return {
       id: `dig:${awaiting.cards.join(",")}`,
-      title: `Choose ${awaiting.take} to put into your ${awaiting.to}`,
-      mode: awaiting.take === 1 ? "one" : "many",
-      min: awaiting.take,
+      title: `Choose ${awaiting.min === 0 ? "up to " : ""}${awaiting.take} to put into your ${awaiting.to}`,
+      mode: awaiting.take === 1 && awaiting.min === 1 ? "one" : "many",
+      min: awaiting.min ?? awaiting.take,
       max: awaiting.take,
-      options: cardOptions(state, awaiting.cards),
+      options: cardOptions(state, offered),
     };
   },
 
-  apply(state, awaiting, indices) {
+  apply(state, awaiting, indices, extra = {}, rng = null) {
     const events = [];
-    const taken = new Set((indices ?? []).map((index) => awaiting.cards[index]));
+    const offered = awaiting.offered ?? awaiting.cards;
+    const chosen = (indices ?? []).map((index) => offered[index]);
+    if (chosen.some((id) => id === undefined) || new Set(chosen).size !== chosen.length || chosen.length < (awaiting.min ?? awaiting.take) || chosen.length > awaiting.take)
+      throw new Error("Invalid selection");
+    const taken = new Set(chosen), found = [];
     for (const id of awaiting.cards) {
       if (!taken.has(id)) continue;
-      moveOne(state, id, awaiting.to, events, {owner: awaiting.player});
+      const moved = moveOne(state, id, awaiting.to, events, {owner: awaiting.player});
+      if (moved !== null && state.objects[moved]) found.push(moved);
     }
-    /* The rest, in the order they were looked at. "The bottom" is a library move that keeps their
-       order; anywhere else is an ordinary zone change. */
-    const rest = awaiting.cards.filter((id) => !taken.has(id) && state.objects[id]);
-    if (awaiting.rest === "bottom") {
-      const library = state.zones.library[awaiting.player];
-      for (const id of rest) {
-        const at = library.indexOf(id);
-        if (at >= 0) library.splice(at, 1);
-        library.push(id);
-      }
-    } else {
-      for (const id of rest) moveOne(state, id, awaiting.rest, events, {owner: awaiting.player});
-    }
-    return events;
+    digRest(state, awaiting.player, awaiting.cards.filter((id) => !taken.has(id)), awaiting, rng, events);
+    return awaiting.remember ? {events, remembered: found} : events;
   },
 };
 
 /* ---- discard ---- */
 
+/* One card from a hand to its owner's graveyard, said as a discard (CR 701.9a) -- what "whenever you discard" reads. */
+function discardOne(state, id, player, events) {
+  const card = cardRef(state, id);
+  const owner = state.objects[id].owner;
+  const discarded = moveObject(state, id, "graveyard", owner);
+  events.push(event("GameEventCardChangeZone", state, {
+    card,
+    becomes: discarded,
+    from: {zoneType: "Hand", player: {playerId: player}},
+    to: {zoneType: "Graveyard", player: {playerId: owner}},
+    discarded: true,
+  }));
+  return discarded;
+}
+
 export const discard = {
-  open(state, params, context) {
+  open(state, params, context, rng = null) {
     /* Each player who has to discard is asked separately, in turn order, about their own hand. */
     const queue = playersFor(state, params.who, context.controller)
       .filter((player) => cardsIn(state, "hand", player).length > 0);
@@ -249,6 +289,16 @@ export const discard = {
        effects after it -- nothing, until they do. */
     if (params.remember) context.remembered = [];
     if (queue.length === 0) return false;
+    /* "Discard a card at random" (Gamble, batch 80; CR 701.9b): nobody chooses -- each card is picked from the hand by the
+       game's random stream, and nobody is asked. */
+    if (params.random === true) {
+      if (!rng) throw new Error("A discard at random needs the game's random stream");
+      const events = [];
+      for (const player of queue)
+        for (let n = 0; n < (params.count ?? 1) && cardsIn(state, "hand", player).length > 0; n += 1)
+          discardOne(state, rng.pick(cardsIn(state, "hand", player)), player, events);
+      return {events};
+    }
     state.awaiting = {
       kind: "effect-choice", effect: "discard", player: queue[0], remaining: queue.slice(1),
       count: params.count ?? 1, who: params.who, controller: context.controller,
@@ -277,19 +327,7 @@ export const discard = {
        hand underneath the positions the player answered with. */
     const chosen = (indices ?? []).map((index) => hand[index]).filter((id) => id !== undefined);
     const gone = [];
-    for (const id of chosen) {
-      const card = cardRef(state, id);
-      const owner = state.objects[id].owner;
-      const discarded = moveObject(state, id, "graveyard", owner);
-      gone.push(discarded);
-      events.push(event("GameEventCardChangeZone", state, {
-        card,
-        becomes: discarded,
-        from: {zoneType: "Hand", player: {playerId: awaiting.player}},
-        to: {zoneType: "Graveyard", player: {playerId: owner}},
-        discarded: true,
-      }));
-    }
+    for (const id of chosen) gone.push(discardOne(state, id, awaiting.player, events));
     /* What the effect's controller discarded, as the cards it became. */
     const remembering = awaiting.remembering && awaiting.player === awaiting.controller ? [...awaiting.remembering, ...gone] : awaiting.remembering;
 
@@ -751,6 +789,10 @@ export const chooseCard = {
     if (player === undefined) return false;
     /* A description, or a choice of them (`anyOf`): "a Plains, Island, Swamp, or Mountain card". */
     const alternatives = Array.isArray(params.selector?.anyOf) ? params.selector.anyOf : [params.selector ?? {}];
+    /* "You may return another creature you control to its owner's hand" (Temur Sabertooth, batch 79): a permanent chosen
+       as the effect resolves, untargeted -- no search (CR 701.23 is of a zone's cards), so one that fits must be chosen
+       unless the card says "may" (`upTo`), and none, and nobody is asked. */
+    const onField = zone === "battlefield";
     const matchers = alternatives.map((one) => compileSelector({...one, what: "card", zone}));
     /* "A creature card from among them" (Lord of the Void): from what an earlier effect of this resolution moved there,
        face up -- so a card that fits must be chosen; only a search of a hidden zone may fail to find (CR 701.23b). */
@@ -758,13 +800,14 @@ export const chooseCard = {
     /* "Return ANOTHER permanent card" (Rise of the Witch-king, batch 70): not the one an earlier effect of this resolution
        remembered -- the creature sacrificed this way. */
     const except = params.except === "remembered" ? new Set(context.remembered ?? []) : null;
-    const pool = (among ? (context.remembered ?? []).filter((id) => state.objects[id]?.zone === zone) : cardsIn(state, zone, player)).filter((id) => !except?.has(id));
+    const pool = (among ? (context.remembered ?? []).filter((id) => state.objects[id]?.zone === zone) : onField ? [...state.zones.battlefield] : cardsIn(state, zone, player))
+      .filter((id) => !except?.has(id));
     const cards = pool.filter((id) => matchers.some((m) => m(state, id, {controller: player, source: context.source})));
     /* From among what was looked at or moved (Risen Reef's "if it's a land card"), with nothing that fits: nothing to choose,
        and nobody is asked -- the cards are face up to the chooser, so there is no failing to find (CR 701.23b is a search's). */
-    if (among && cards.length === 0) return false;
+    if ((among || onField) && cards.length === 0) return false;
     const count = params.count ?? 1;
-    const min = params.upTo || (!among && hasQuality(params.selector)) ? 0 : Math.min(count, cards.length);
+    const min = params.upTo || (!among && !onField && hasQuality(params.selector)) ? 0 : Math.min(count, cards.length);
     state.awaiting = {
       kind: "effect-choice", effect: "chooseCard", player, zone, cards, min, max: Math.min(count, cards.length),
       destinations: params.destinations ?? [{to: params.to ?? "hand", ...(params.tapped ? {tapped: true} : {})}],
@@ -781,7 +824,9 @@ export const chooseCard = {
   choice(state, awaiting) {
     return {
       id: `chooseCard:${awaiting.player}:${state.turn}:${awaiting.cards.length}`,
-      title: awaiting.max === 0 ? `Search your ${ZONE_WORD[awaiting.zone]}: nothing to find` : `Search your ${ZONE_WORD[awaiting.zone]}`,
+      /* A permanent is chosen, not searched for. */
+      title: awaiting.zone === "battlefield" ? (awaiting.max > 1 ? "Choose permanents" : "Choose a permanent")
+        : awaiting.max === 0 ? `Search your ${ZONE_WORD[awaiting.zone]}: nothing to find` : `Search your ${ZONE_WORD[awaiting.zone]}`,
       mode: awaiting.max <= 1 ? (awaiting.min === 0 ? "many" : "one") : "many",
       min: awaiting.min,
       max: awaiting.max,
@@ -834,29 +879,39 @@ export const chooseCard = {
    so as much generic mana as its mana value. What is owed is paid as an "unless" cost is, from the pool and the player's
    plain mana sources (rules/mana.mjs, payGeneric); a card they could not pay for is not offered. Nothing to cast, and
    nobody is asked. The spell is cast (rules/actions.mjs, castNow) -- what watches casts sees it -- and goes on the stack
-   above the resolving object. */
+   above the resolving object.
+   "You may cast ANY NUMBER of spells from among those cards" (Etali, Villainous Wealth; batch 79, `anyNumber`): asked
+   again after each one, of what is left that can still be cast, until the player says "Don't cast" or nothing is left --
+   each a choice of theirs, in the order they choose (CR 608.2g). Cast this way, each goes on the stack above the last. */
+const playable = (state, player, pool, {most, free, anyMana}) => {
+  const valueOf = (id) => (state.objects[id].manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0);
+  const owed = (id) => (free ? (state.objects[id].zone === "command" ? commanderTax(state, player, id) : 0) : anyMana ? valueOf(id) : null);
+  /* A card cast a moment ago is on the stack as a new object (CR 400.7): its id here no longer names anything. */
+  return pool.filter((id) => state.objects[id] && valueOf(id) <= most)
+    .flatMap((id) => {
+      const pay = owed(id);
+      return pay === null || !canPayGeneric(state, player, pay) ? [] : castChoicesNow(state, player, id).map((action) => ({...action, owed: pay}));
+    });
+};
 export const play = {
   open(state, params, context) {
     const player = context.controller;
     if (!state.players[player]) return false;
-    const valueOf = (id) => (state.objects[id].manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0);
-    const owed = (id) => (params.free ? (state.objects[id].zone === "command" ? commanderTax(state, player, id) : 0) : params.anyMana ? valueOf(id) : null);
     const most = params.manaValueAtMost === undefined ? Infinity : amountOf(state, params.manaValueAtMost, context);
     const from = params.from ?? "hand";
     const pool = from === "hand" ? cardsIn(state, "hand", player)
       : from === "command" ? cardsIn(state, "command", player).filter((id) => state.objects[id].commander === true)
       : (params.targets ?? []).filter((id) => state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone));
-    const choices = pool.filter((id) => valueOf(id) <= most)
-      .flatMap((id) => {
-        const pay = owed(id);
-        return pay === null || !canPayGeneric(state, player, pay) ? [] : castChoicesNow(state, player, id).map((action) => ({...action, owed: pay}));
-      });
+    const terms = {most, free: params.free === true, anyMana: params.anyMana === true};
+    const choices = playable(state, player, pool, terms);
     if (!choices.length) return false;
-    state.awaiting = {kind: "effect-choice", effect: "play", player, choices};
+    /* For `anyNumber`, what may still be cast and on what terms, to ask again (a number, not Infinity: state is JSON). */
+    state.awaiting = {kind: "effect-choice", effect: "play", player, choices,
+      ...(params.anyNumber === true ? {again: {pool, ...terms, most: Number.isFinite(most) ? most : null}, cast: 0} : {})};
     return true;
   },
   choice(state, awaiting) {
-    return {id: `play:${awaiting.player}:${state.turn}`, title: "Cast a spell?", mode: "one", min: 1, max: 1,
+    return {id: `play:${awaiting.player}:${state.turn}${awaiting.again ? `:${awaiting.cast}` : ""}`, title: awaiting.cast ? "Cast another spell?" : "Cast a spell?", mode: "one", min: 1, max: 1,
       options: [...awaiting.choices.map((c, index) => ({index, label: c.targetNames?.length ? `${c.label} → ${c.targetNames.join(", ")}` : c.label, cardId: c.objectId})),
         {index: awaiting.choices.length, label: "Don't cast"}]};
   },
@@ -868,6 +923,15 @@ export const play = {
     const {owed, ...action} = chosen;
     const events = owed ? payGeneric(state, awaiting.player, owed) : [];
     events.push(...castNow(state, awaiting.player, action));
+    /* Any number: asked again, of what is still there to cast. */
+    if (awaiting.again) {
+      const {pool, most, free, anyMana} = awaiting.again;
+      const choices = playable(state, awaiting.player, pool, {most: most ?? Infinity, free, anyMana});
+      if (choices.length) {
+        state.awaiting = {...awaiting, choices, cast: awaiting.cast + 1};
+        return {events, again: true};
+      }
+    }
     return {events};
   },
 };

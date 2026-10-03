@@ -20,6 +20,8 @@
  *                                        control -- a hybrid symbol of two of them once, a Phyrexian one of its color
  *   {lifeLostThisWay: true}              the life the effects before it in this resolution took ("You gain life equal to
  *                                        the life lost this way")
+ *   {rememberedCount: true}              how many things the effect before it remembered -- "each player shuffles the cards
+ *                                        from their hand into their library, then draws that many cards" (batch 80)
  *
  * and any of them may say `atMost` ("{1} less IF you control a creature with flying": the count, at most 1), `times` and
  * `plus`: "twice X", "1 plus the number of ...", and `times: -1` for "-X/-X" and
@@ -41,7 +43,7 @@ import {powerOf, characteristicsOf, controllerOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
-export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost"]);
+export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -143,6 +145,8 @@ export function amountOf(state, value, context = {}) {
     n = "greatestPower" in value ? Math.max(0, ...powers) : powers.reduce((a, b) => a + b, 0);
   } else if ("devotion" in value) n = devotion(state, context.controller, value.devotion);
   else if ("lifeLostThisWay" in value) n = context.lifeLost ?? 0;
+  /* "Then draws that many cards" (Winds of Change): what the effect before it moved, and remembered, counted. */
+  else if ("rememberedCount" in value) n = (context.remembered ?? []).length;
   /* "Draw that many cards", "search for up to that many": how many a "one or more" trigger is about (rules/trigger.mjs). */
   else if ("thoseCards" in value) n = (context.about?.cards ?? []).length;
   /* "That many", after damage: how much the trigger's damage was (rules/trigger.mjs). */
@@ -187,8 +191,9 @@ export function amountOf(state, value, context = {}) {
   return (value.times ?? 1) < 0 ? total : Math.max(0, total);
 }
 
-/** The parameters of an effect that take a number, and so may take a count. */
-export const AMOUNT_PARAMS = Object.freeze(["amount", "count", "power", "toughness"]);
+/** The parameters of an effect that take a number, and so may take a count -- "the top X cards" (`fromTop`, Villainous
+ *  Wealth, batch 79) among them. */
+export const AMOUNT_PARAMS = Object.freeze(["amount", "count", "power", "toughness", "fromTop"]);
 
 /** An effect with its counted amounts read now (bind.mjs calls this as the effect reaches the head of the queue). */
 export function countEffect(state, effect, context) {

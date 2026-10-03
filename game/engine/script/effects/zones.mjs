@@ -127,6 +127,31 @@ export const playersFor = (state, who, controller) => {
 };
 
 /**
+ * TO SHUFFLE A LIBRARY (CR 701.24; batch 80): a fair random order from the game's stream (rng.mjs), handed in -- never
+ * made up here. Whatever a player knew of that library's top cards from looking ends with it (CR 701.20d; projection.mjs,
+ * `looks`). Every shuffle an effect makes goes through here.
+ */
+export function shuffleLibrary(state, player, rng, events) {
+  if (!rng) throw new Error("A shuffle needs the game's random stream");
+  state.zones.library[player] = rng.shuffle(state.zones.library[player]);
+  if (state.looks) state.looks = state.looks.filter((look) => look.owner !== player);
+  events.push(event("GameEventShuffle", state, {player: {playerId: player, name: state.players[player].name}}));
+}
+
+/** `shuffle` -- Forge's Shuffle: "shuffle your library", "target player shuffles their library": each library `who` names. */
+export function shuffle(state, params, context, rng) {
+  const events = [];
+  for (const player of playersFor(state, params.who, context.controller)) shuffleLibrary(state, player, rng, events);
+  return events;
+}
+
+/* "In a random order" (CR 701.24 is a library's; this is the same fair order for a few cards): the order they go in. */
+const inRandomOrder = (list, rng) => {
+  if (!rng) throw new Error("A random order needs the game's random stream");
+  return rng.shuffle(list);
+};
+
+/**
  * TO SACRIFICE (CR 701.21a): to move a permanent its controller controls to its owner's graveyard -- and to say so. The
  * move is marked `sacrificed`, with who sacrificed it (its controller as it went), for "whenever you sacrifice a
  * permanent" (rules/trigger.mjs). Every sacrifice goes through here: costs, the sacrifice effect, a ward paid this way.
@@ -180,18 +205,23 @@ export function peekAndReveal(state, params, context) {
 }
 
 /** `moveZone` — put the named objects somewhere. */
-export function moveZone(state, params, context) {
+export function moveZone(state, params, context, rng = null) {
   const events = [];
   const arrived = [], became = [];
   /* "The top card of your library", "the top seven cards of that player's library" (`fromTop`, `who`), revealed first if
-     it says so (Dark Confidant) -- or simply moved, face up, to exile (Lord of the Void). */
-  const [whose] = params.fromTop !== undefined ? playersFor(state, params.who, context.controller) : [];
-  const moving = params.fromTop !== undefined ? (whose === undefined ? [] : cardsIn(state, "library", whose).slice(0, params.fromTop)) : params.targets ?? [];
+     it says so (Dark Confidant) -- or simply moved, face up, to exile (Lord of the Void). "The top card of each player's
+     library" (Etali, batch 79): of every library `who` names; "the top X cards" (Villainous Wealth): an amount. */
+  const moving = params.fromTop !== undefined
+    ? playersFor(state, params.who, context.controller).flatMap((whose) => cardsIn(state, "library", whose).slice(0, params.fromTop))
+    : params.targets ?? [];
   if (params.reveal) for (const id of moving) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: state.objects[id].owner}}));
-  for (const id of moving) {
+  /* "Put the rest on the bottom of your library in a random order" (Sunbird's Invocation; batch 80, `random`). */
+  for (const id of params.random === true ? inRandomOrder(moving, rng) : moving) {
     /* "Sacrifice it" (`sacrifice: true`): to its owner's graveyard, as a sacrifice. */
     const moved = params.sacrifice === true ? sacrificeOne(state, id, events) : moveOne(state, id, params.to ?? "graveyard", events, {tapped: params.tapped === true});
-    if (moved !== null) became.push(moved);
+    /* What it is now, for `remember`: what it became -- or, exiled and returned at once, the permanent that came back
+       ("if that creature is a Bird", Splash Portal, batch 79), set below. */
+    let landed = moved;
     /* "On top of your library" (Mystic Sanctuary): a card put into a library goes to the bottom unless it says the top. */
     if (moved !== null && params.to === "library" && params.top === true && state.objects[moved]) {
       const library = state.zones.library[state.objects[moved].owner];
@@ -209,9 +239,17 @@ export function moveZone(state, params, context) {
       const back = {effect: "moveZone", targets: [moved], to: "battlefield", ...(params.under === "you" ? {controller: context.controller} : {}),
         ...(params.returnWithCounter ? {withCounter: params.returnWithCounter} : {})};
       if (params.andReturn === "end step") delayedTrigger(state, {at: "end step", text: "Return that card to the battlefield at the beginning of the next end step.", effects: [back]}, context);
-      else events.push(...moveZone(state, back, context));
+      else {
+        /* The return remembers what came back in a context of its own, so this effect's `remember` is not overwritten. */
+        const returning = {...context};
+        events.push(...moveZone(state, {...back, remember: true}, returning));
+        landed = returning.remembered?.[0] ?? null;
+      }
     }
+    if (landed !== null) became.push(landed);
   }
+  /* "Shuffle it into its owner's library" (`shuffle`, batch 80): each library a card was put into, shuffled after. */
+  if (params.shuffle === true) for (const owner of new Set(became.filter((id) => state.objects[id]?.zone === "library").map((id) => state.objects[id].owner))) shuffleLibrary(state, owner, rng, events);
   /* "Exile target creature card from a graveyard. Create a token that's a copy of it": what this moved, as the new
      objects it became (CR 400.7), for the effects after it to name as "remembered" (script/bind.mjs). */
   if (params.remember) context.remembered = became.filter((id) => state.objects[id]);
@@ -222,7 +260,7 @@ export function moveZone(state, params, context) {
 }
 
 /** `moveZoneAll` — every object a selector matches (a board wipe, a mass bounce). */
-export function moveZoneAll(state, params, context) {
+export function moveZoneAll(state, params, context, rng = null) {
   const events = [];
   const arrivedAll = [];
   const matched = selectMatching(state, params.selector ?? {what: "permanent"}, context);
@@ -231,6 +269,12 @@ export function moveZoneAll(state, params, context) {
     const moved = moveOne(state, id, params.to ?? "graveyard", events, {tapped: params.tapped === true});
     if (moved !== null) arrivedAll.push(moved);
   }
+  /* "Each player shuffles the cards from their hand into their library" (Winds of Change, batch 80, `shuffle`): each library
+     a card was put into, shuffled after. */
+  if (params.shuffle === true) for (const owner of new Set(arrivedAll.filter((id) => state.objects[id]?.zone === "library").map((id) => state.objects[id].owner))) shuffleLibrary(state, owner, rng, events);
+  /* "Then puts all cards they exiled this way onto the battlefield" (Living Death, batch 79): what this moved, as the new
+     objects it became (CR 400.7), for the effects after it to name as "remembered" -- every player's at once. */
+  if (params.remember) context.remembered = arrivedAll.filter((id) => state.objects[id]);
   /* "They gain haste until end of turn" (Wake the Past). */
   afterwards(state, arrivedAll, params, context);
   return events;
@@ -297,10 +341,10 @@ export function destroyAll(state, params, context) {
  * the one that fits goes (`to`, `tapped`; no `to` and it stays where it is), `remember`ed for the effects after it ("you
  * may cast that card"). `rest`: "graveyard", "bottom" or "exile". A library that runs out stops it, nothing found.
  *
- * "The rest on the bottom of your library in a random order": in the order they were taken -- no random stream reaches a
- * plain effect yet.
+ * "The rest on the bottom of your library in a random order" (`rest: "bottom"`, every card that says it): in a random
+ * order from the game's stream (batch 80; before it, in the order they were taken, which was not random).
  */
-export function digUntil(state, params, context) {
+export function digUntil(state, params, context, rng = null) {
   const events = [];
   const found = [];
   const below = params.manaValueBelow !== undefined ? amountOf(state, params.manaValueBelow, context) : null;
@@ -324,7 +368,7 @@ export function digUntil(state, params, context) {
       if (landed !== null) found.push(landed);
     }
     if (params.rest === "graveyard" || (params.rest === "exile" && !params.exile)) for (const id of taken) moveOne(state, id, params.rest, events, {owner: player});
-    if (params.rest === "bottom") for (const id of taken) {
+    if (params.rest === "bottom") for (const id of inRandomOrder(taken, rng)) {
       if (params.exile) { moveOne(state, id, "library", events, {owner: player}); continue; }
       const library = state.zones.library[player];
       library.splice(library.indexOf(id), 1);

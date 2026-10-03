@@ -26,6 +26,7 @@ import {beginGame} from "../game/engine/rules/turn.mjs";
 import {powerOf, toughnessOf, typesOf, keywordsOf} from "../game/engine/rules/layers.mjs";
 import {runEffect, EFFECTS, TOP_25} from "../game/engine/script/effects/index.mjs";
 import {isPrimitive} from "../game/engine/vocabulary.mjs";
+import {createRng} from "../game/engine/rng.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -44,7 +45,8 @@ function board() {
   const theirs = addObject(s, creature({card: "Theirs", owner: 1, controller: 1}), "battlefield");
   return {s, bear, theirs, ctx: {controller: 0, source: bear}};
 }
-const run = (s, effect, ctx) => runEffect(s, effect, ctx);
+/* With the game's random stream, as a resolution hands it in (batch 80): a shuffle draws from it. */
+const run = (s, effect, ctx) => runEffect(s, effect, ctx, createRng("engine-effects"));
 
 /* ---- the catalog and the registry agree ---- */
 {

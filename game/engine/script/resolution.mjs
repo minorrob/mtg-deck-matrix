@@ -29,11 +29,12 @@ import {conditionHolds} from "./condition.mjs";
 export const resolutionPending = (state) => Boolean(state.resolving);
 
 /**
- * Start resolving a list of effects.
+ * Start resolving a list of effects. `rng`, the game's random stream, reaches every effect of it (batch 80): it is handed
+ * in at each step rather than kept, since a generator is not state and the resolution must stay plain data.
  *
  * @returns {{status: "done"|"waiting", events: Array}}
  */
-export function beginResolution(state, effects, context = {}) {
+export function beginResolution(state, effects, context = {}, rng = null) {
   if (state.resolving) throw new Error("A resolution is already under way; finish it before starting another");
   state.resolving = {
     queue: structuredClone(effects ?? []),
@@ -46,7 +47,7 @@ export function beginResolution(state, effects, context = {}) {
       ...(context.cast ? {cast: context.cast} : {})},
     events: [],
   };
-  return runResolution(state);
+  return runResolution(state, rng);
 }
 
 /**
@@ -54,7 +55,7 @@ export function beginResolution(state, effects, context = {}) {
  *
  * @returns {{status: "done"|"waiting", events: Array}}
  */
-export function runResolution(state) {
+export function runResolution(state, rng = null) {
   const resolving = state.resolving;
   if (!resolving) return {status: "done", events: []};
 
@@ -86,17 +87,20 @@ export function runResolution(state) {
     if (asking) {
       /* `open` returns false when there is nothing to ask about — an empty library to scry, a hand
          with nothing in it to discard. The effect is then simply done, rather than the game
-         stopping on a question with no answers. */
-      if (asking.open(state, effect, resolving.context)) {
+         stopping on a question with no answers. It returns {events} when it was done without asking
+         anybody (batch 80): a discard at random, nothing among the cards a dig may take. */
+      const opened = asking.open(state, effect, resolving.context, rng);
+      if (opened === true) {
         state.awaiting.resolution = true;
         return {status: "waiting", events: resolving.events};
       }
+      if (opened && Array.isArray(opened.events)) resolving.events.push(...opened.events);
       resolving.queue.shift();
       continue;
     }
 
     resolving.queue.shift();
-    resolving.events.push(...runEffect(state, effect, resolving.context));
+    resolving.events.push(...runEffect(state, effect, resolving.context, rng));
   }
 
   const events = resolving.events;
@@ -144,7 +148,8 @@ export function answerResolution(state, indices, extra = {}, rng = null) {
   if (!Array.isArray(outcome) && Array.isArray(outcome.splice) && outcome.splice.length > 0) {
     state.resolving.queue.unshift(...outcome.splice);
   }
-  return runResolution(state);
+  /* What follows the answer has the same random stream the answer had. */
+  return runResolution(state, rng);
 }
 
 /** The choice record for whatever the resolution is asking (§12.1). */
