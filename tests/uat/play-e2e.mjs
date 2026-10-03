@@ -128,8 +128,13 @@ try {
   const made = await api("POST", "/api/tables", {hostName: "Rob", seats: [{kind: "ai", name: "Bot"}]});
   eq([made.status, made.json.table.playtest, made.json.table.youAreHost], [201, true, true], "Rob makes a table with an AI seat, and on staging it is a playtest table");
   const id = made.json.table.tableId, url = `/api/tables/${id}`;
-  const refused = await api("POST", `${url}/deck`, {seatId: 0, deck: {name: "Quintorius", commander: ["Quintorius, Loremaster"], cards: ["Sol Ring", "Forest"]}});
-  eq([refused.status, refused.json.unsupported], [422, ["Quintorius, Loremaster", "Sol Ring"]], "a real deck's cards are refused by name: the engine cannot play them until M4 defines them");
+  const refused = await api("POST", `${url}/deck`, {seatId: 0, deck: {name: "Quintorius", commander: ["Quintorius, Loremaster"], cards: ["Cyclonic Rift", "Forest"]}});
+  eq([refused.status, refused.json.unsupported], [422, ["Cyclonic Rift", "Quintorius, Loremaster"]], "a deck's cards the engine has no definition of yet are refused by name");
+  /* M5 (the plan review's C4): the table plays the engine's own definitions -- a deck wholly of them takes a seat, and
+     the table says which names it does not know. */
+  eq((await api("POST", `${url}/known`, {names: ["Krenko, Mob Boss", "Lightning Bolt", "Cyclonic Rift"]})).json.unknown, ["Cyclonic Rift"], "asked which names it cannot play, the table names only the undefined one");
+  const whole = await api("POST", `${url}/deck`, {seatId: 0, deck: {name: "Goblins", commander: ["Krenko, Mob Boss"], cards: [...Array(40).fill("Mountain"), "Lightning Bolt", "Blasphemous Act", "Sol Ring"]}});
+  eq(whole.status, 200, "a deck wholly of the engine's own definitions takes a seat at the playtest table");
   /* The lobby, drawn from the release's own modules (Rob, 2026-09-29: it opened on "reading 'statusPill'"). */
   await page.goto(`${BASE}/index.html#table?id=${id}`);
   await page.locator(".cm-cloud-table .cm-lobby-seat").nth(1).waitFor({timeout: 30000});

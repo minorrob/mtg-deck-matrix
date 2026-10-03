@@ -209,8 +209,11 @@ try {
   const started = await post(object, "/start", {matchId: "do-1", seed: "seed-5", pod: POD});
   eq([started.status, (await started.json()).seats.length], [201, 4], "POST /start sets the table");
   eq((await post(object, "/start", {matchId: "do-1", seed: "seed-5", pod: POD})).status, 409, "and a second start is refused");
-  const bad = await post(new GameRoom({...ctx, storage: {get: async () => undefined, put: async () => {}, delete: async () => false, list: async () => new Map()}}, {}), "/start", {matchId: "do-2", seed: "s", pod: pod4});
-  eq([bad.status, (await bad.json()).unsupported.length], [422, 3], "over the object, an unplayable pod is refused by name too");
+  /* The object's own card source is the table's, every definition in the directory (cloud/game-room.mjs, tableCards):
+     Krenko, Sol Ring and Counterspell are among them, so the pod it refuses is one of cards with no definition yet. */
+  const pod5 = {seats: [{seatId: "a", commander: ["Quintorius, Loremaster"], cards: ["Mountain", "Cyclonic Rift", "Mountain"]}, {seatId: "b", commander: [], cards: ["Island", "Mana Drain"]}]};
+  const bad = await post(new GameRoom({...ctx, storage: {get: async () => undefined, put: async () => {}, delete: async () => false, list: async () => new Map()}}, {}), "/start", {matchId: "do-2", seed: "s", pod: pod5});
+  eq([bad.status, (await bad.json()).unsupported], [422, ["Cyclonic Rift", "Mana Drain", "Quintorius, Loremaster"]], "over the object, a pod of cards the table has no definition of is refused by name too");
   eq((await post(object, "/view", null, "stranger")).status, 403, "a seat that is not at the table gets no view");
   const byRoom = {rob: socket(), maya: socket(), "ai-1": socket()};
   for (const [seat, s] of Object.entries(byRoom)) object.accept(s, seat);
