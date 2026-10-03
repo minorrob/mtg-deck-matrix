@@ -35,6 +35,9 @@ import {typesOf, characteristicsOf} from "../../rules/layers.mjs";
 import {pushCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
 import {loseLife} from "./resources.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
+import {commanderTax} from "../../rules/commander.mjs";
+import {amountOf} from "../amount.mjs";
+import {castNow, castChoicesNow} from "../../rules/actions.mjs";
 
 const cardOptions = (state, ids) => ids.map((id, index) => ({index, label: state.objects[id].card, cardId: id}));
 
@@ -677,4 +680,52 @@ export const chooseCard = {
   },
 };
 
-export const ASKING = Object.freeze({scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, unlessPays, copySpell, chooseType});
+/* ---- play: "you may cast a spell with mana value 5 or less from your hand without paying its mana cost" (Forge's Play) ----
+
+   As the effect resolves, its controller may cast one card (CR 608.2g): from their hand (`manaValueAtMost`, an amount --
+   "X or less", "less than or equal to that damage"), their commander from the command zone (`from: "command"`),
+   or the cards it names (`from: "targets"`): a card it targets in a graveyard, or what an earlier effect of this resolution
+   moved (`targets: "remembered"` -- "exile the top card of your library; you may cast it without paying its mana cost"). `free`: without paying its mana cost -- a commander's tax still
+   paid ("you still pay any additional costs", CR 903.8); `anyMana`: its mana cost, "and mana of any type can be spent" --
+   so as much generic mana as its mana value. What is owed is paid as an "unless" cost is, from the pool and the player's
+   plain mana sources (rules/mana.mjs, payGeneric); a card they could not pay for is not offered. Nothing to cast, and
+   nobody is asked. The spell is cast (rules/actions.mjs, castNow) -- what watches casts sees it -- and goes on the stack
+   above the resolving object. */
+export const play = {
+  open(state, params, context) {
+    const player = context.controller;
+    if (!state.players[player]) return false;
+    const valueOf = (id) => (state.objects[id].manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0);
+    const owed = (id) => (params.free ? (state.objects[id].zone === "command" ? commanderTax(state, player, id) : 0) : params.anyMana ? valueOf(id) : null);
+    const most = params.manaValueAtMost === undefined ? Infinity : amountOf(state, params.manaValueAtMost, context);
+    const from = params.from ?? "hand";
+    const pool = from === "hand" ? cardsIn(state, "hand", player)
+      : from === "command" ? cardsIn(state, "command", player).filter((id) => state.objects[id].commander === true)
+      : (params.targets ?? []).filter((id) => state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone));
+    const choices = pool.filter((id) => valueOf(id) <= most)
+      .flatMap((id) => {
+        const pay = owed(id);
+        return pay === null || !canPayGeneric(state, player, pay) ? [] : castChoicesNow(state, player, id).map((action) => ({...action, owed: pay}));
+      });
+    if (!choices.length) return false;
+    state.awaiting = {kind: "effect-choice", effect: "play", player, choices};
+    return true;
+  },
+  choice(state, awaiting) {
+    return {id: `play:${awaiting.player}:${state.turn}`, title: "Cast a spell?", mode: "one", min: 1, max: 1,
+      options: [...awaiting.choices.map((c, index) => ({index, label: c.targetNames?.length ? `${c.label} → ${c.targetNames.join(", ")}` : c.label, cardId: c.objectId})),
+        {index: awaiting.choices.length, label: "Don't cast"}]};
+  },
+  apply(state, awaiting, indices) {
+    const index = (indices ?? [])[0];
+    if (index === awaiting.choices.length) return {events: []};
+    const chosen = awaiting.choices[index];
+    if (!chosen) throw new Error("Invalid selection");
+    const {owed, ...action} = chosen;
+    const events = owed ? payGeneric(state, awaiting.player, owed) : [];
+    events.push(...castNow(state, awaiting.player, action));
+    return {events};
+  },
+};
+
+export const ASKING = Object.freeze({scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, unlessPays, copySpell, chooseType, play});

@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 841,
-  "everyRule": 2082
+  "defined": 846,
+  "everyRule": 2089
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -607,7 +607,7 @@
      "top": 4,
      "all": 15,
      "blocks": 4,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -2353,9 +2353,9 @@
   },
   "Keyword actions (CR 701)": {
    "tally": {
-    "built": 15,
+    "built": 16,
     "partial": 3,
-    "named": 8,
+    "named": 7,
     "missing": 44
    },
    "entries": [
@@ -2485,12 +2485,12 @@
      "rule": "701.18",
      "name": "Play",
      "engine": "play",
-     "status": "named",
+     "status": "built",
      "forge": "Play",
      "top": 35,
      "all": 315,
-     "blocks": 35,
-     "alone": 7
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword action",
@@ -3205,9 +3205,9 @@
   },
   "Effects": {
    "tally": {
-    "built": 47,
+    "built": 48,
     "partial": 1,
-    "named": 19,
+    "named": 18,
     "missing": 125
    },
    "entries": [
@@ -3576,12 +3576,12 @@
      "rule": null,
      "name": "Play",
      "engine": "play",
-     "status": "named",
+     "status": "built",
      "forge": "Play",
      "top": 35,
      "all": 315,
-     "blocks": 35,
-     "alone": 7
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -3773,7 +3773,7 @@
      "top": 18,
      "all": 167,
      "blocks": 18,
-     "alone": 7
+     "alone": 8
     },
     {
      "kind": "effect",
@@ -3905,7 +3905,7 @@
      "top": 11,
      "all": 158,
      "blocks": 11,
-     "alone": 3
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -4289,7 +4289,7 @@
      "top": 2,
      "all": 80,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -6075,7 +6075,7 @@
      "top": 1,
      "all": 2,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "trigger",
@@ -8923,7 +8923,7 @@
      "top": 124,
      "all": 1168,
      "blocks": 113,
-     "alone": 11
+     "alone": 15
     },
     {
      "kind": "option",
@@ -9199,7 +9199,7 @@
      "top": 10,
      "all": 97,
      "blocks": 10,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "option",
