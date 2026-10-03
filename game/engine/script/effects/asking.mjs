@@ -34,7 +34,8 @@ import {makeCopies, afterwards, joinAttack, defendingPlayers, attachTo} from "./
 import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits} from "../../rules/mana.mjs";
 import {typesOf, characteristicsOf} from "../../rules/layers.mjs";
 import {pushCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
-import {loseLife} from "./resources.mjs";
+import {loseLife, DAMAGING, damageQuestion} from "./resources.mjs";
+import {damageOrderChoice} from "../../rules/replacement.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
 import {commanderTax} from "../../rules/commander.mjs";
 import {amountOf} from "../amount.mjs";
@@ -1018,4 +1019,33 @@ export const commanderHome = {
   },
 };
 
-export const ASKING = Object.freeze({scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome});
+/* ---- the order of the effects that change damage (CR 616.1) ----
+
+   Two or more replacement effects would change one damage event, and the order changes how it ends: Torbran's "plus 2"
+   and Fiery Emancipation's tripling, 3 to Maya -- 15 or 11. The player dealt it, or the controller of the permanent dealt
+   it, chooses which applies first; asked BEFORE any of the effect's damage is dealt, a hit at a time, and then the effect
+   is done with every answer (`damageOrders`, by hit), its hits dealt at once as before. The resolution puts this question
+   in front of a damage effect that has one (script/resolution.mjs), and again with each answer given while another hit
+   is still to be ordered; an order that ends the same either way is never asked (rules/replacement.mjs). */
+export const orderDamage = {
+  open(state, params, context, rng) {
+    const question = damageQuestion(state, params.damage, context, params.answers);
+    if (!question) return {events: DAMAGING[params.damage.effect](state, {...params.damage, damageOrders: params.answers}, context, rng)};
+    state.awaiting = {kind: "effect-choice", effect: "orderDamage", player: question.player, key: question.key, proposal: question.proposal,
+      options: question.options, answers: params.answers, damage: params.damage};
+    return true;
+  },
+  choice(state, awaiting) {
+    return damageOrderChoice(state, awaiting);
+  },
+  /* The effect itself again, with this answer added, where it stood in the resolution: asked once more while another of
+     its hits is still to be ordered, and dealt once none is. */
+  apply(state, awaiting, indices) {
+    const chosen = Array.isArray(indices) && indices.length === 1 ? awaiting.options[indices[0]] : undefined;
+    if (chosen === undefined) throw new Error("Invalid selection");
+    const answers = {...awaiting.answers, [awaiting.key]: [...(awaiting.answers[awaiting.key] ?? []), chosen]};
+    return {events: [], splice: [{...awaiting.damage, damageOrders: answers}]};
+  },
+};
+
+export const ASKING = Object.freeze({scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage});

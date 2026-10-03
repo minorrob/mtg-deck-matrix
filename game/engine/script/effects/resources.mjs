@@ -16,7 +16,7 @@
  */
 
 import {addMana as addToPool} from "../../rules/mana.mjs";
-import {applyReplacements} from "../../rules/replacement.mjs";
+import {applyReplacements, hitKey, damageChoicesPossible} from "../../rules/replacement.mjs";
 import {runFollowUps} from "./index.mjs";
 import {selectMatching} from "../filter.mjs";
 import {event, cardRef, playersFor} from "./zones.mjs";
@@ -116,20 +116,14 @@ export function loseLife(state, params, context) {
  * A hit prevented in full does not happen at all (CR 615.4), so it is skipped rather than reported
  * as zero damage — the board should not announce something that did not occur.
  */
-export function dealDamage(state, params, context) {
-  const events = [];
+/* What a damage effect deals, and to whom: the source, the amount, and each hit. */
+function damageHits(state, params, context) {
   const amount = params.amount ?? 0;
-  /* "If a Dinosaur is dealt damage this way" (Marauding Raptor, batch 70): the permanents it was dealt to, after prevention,
-     remembered for the effects after it -- none, when there was no damage to deal. */
-  const dealt = [];
-  if (params.remember) context.remembered = dealt;
-  if (amount <= 0) return events;
   /* The spell or ability, or a creature the trigger is about: "it deals that much damage to each other opponent". One that
      has left the battlefield since (a Dragon dealt lethal damage) still deals it, as a departed ability source does
      (rules/stack.mjs): with no object left to read for lifelink or deathtouch. */
   const named = Array.isArray(params.from) ? params.from[0] ?? null : context.source ?? null;
   const source = named !== null && state.objects[named] ? named : null;
-
   const hits = [
     ...(params.targets ?? []).map((id) => ({toCard: id})),
     ...(params.toPlayer === undefined ? [] : [{toPlayer: params.toPlayer}]),
@@ -139,11 +133,24 @@ export function dealDamage(state, params, context) {
       .filter((player) => !(params.exceptThatPlayer === true && player === context.about?.player))
       .map((player) => ({toPlayer: player})),
   ];
+  return {source, amount, hits};
+}
+
+export function dealDamage(state, params, context) {
+  const events = [];
+  /* "If a Dinosaur is dealt damage this way" (Marauding Raptor, batch 70): the permanents it was dealt to, after prevention,
+     remembered for the effects after it -- none, when there was no damage to deal. */
+  const dealt = [];
+  if (params.remember) context.remembered = dealt;
+  const {source, amount, hits} = damageHits(state, params, context);
+  if (amount <= 0) return events;
 
   for (const hit of hits) {
+    /* CR 616.1: the order of the effects that change it, as the player dealt it chose (effects/asking.mjs, orderDamage);
+       the order that leaves the least where nobody was asked (rules/replacement.mjs). */
     const {proposal} = applyReplacements(state, {
       event: "damage", toPlayer: hit.toPlayer, toCard: hit.toCard, amount, sourceId: source, combat: false,
-    });
+    }, {orders: params.damageOrders?.[hitKey(source, hit.toPlayer, hit.toCard)] ?? []});
     /* What follows a prevention -- "each opponent mills that many cards" -- immediately afterward (CR 615.5). */
     if (proposal.prevented === true || proposal.amount <= 0) { events.push(...runFollowUps(state, proposal)); continue; }
     /* Dealt where the replacements left it: a redirection (CR 614.9) moves it from a player to a permanent. */
@@ -186,13 +193,17 @@ export function dealDamage(state, params, context) {
  * power to each other creature" (Chandra's Ignition), which `exceptSource` leaves out of "each other creature". One
  * damage event for all of it; the dying is state-based, afterwards (CR 704.5g).
  */
-export function damageAll(state, params, context) {
+function damageAllCall(state, params, context) {
   const from = Array.isArray(params.from) ? params.from[0] ?? null : context.source ?? null;
   /* "Each creature and planeswalker they control": a choice of descriptions (`anyOf`), each one counted once. */
   const {anyOf, ...shared} = params.selector ?? {what: "permanent", types: ["Creature"]};
   const matched = Array.isArray(anyOf) ? [...new Set(anyOf.flatMap((one) => selectMatching(state, {...shared, ...one}, context)))] : selectMatching(state, shared, context);
   const ids = matched.filter((id) => !(params.exceptSource === true && id === from));
-  return dealDamage(state, {amount: params.amount, targets: ids, ...(params.who !== undefined ? {who: params.who} : {})}, {...context, source: from});
+  return [{amount: params.amount, targets: ids, ...(params.who !== undefined ? {who: params.who} : {}), ...(params.damageOrders ? {damageOrders: params.damageOrders} : {})}, {...context, source: from}];
+}
+export function damageAll(state, params, context) {
+  const [deal, from] = damageAllCall(state, params, context);
+  return dealDamage(state, deal, from);
 }
 
 export function addCounters(state, id, kind, count, events) {
@@ -211,12 +222,48 @@ export function addCounters(state, id, kind, count, events) {
  * ("this creature", "target creature you control"), `targets` the other. Both powers are read before either deals any.
  * If either is no longer a creature on the battlefield, neither deals damage (701.14b).
  */
-export function fight(state, params, context) {
+function fightCalls(state, params, context) {
   const [a] = params.from ?? [], [b] = params.targets ?? [];
   const fighting = (id) => id !== undefined && state.objects[id]?.zone === "battlefield" && typesOf(state, id).includes("Creature");
   if (!fighting(a) || !fighting(b)) return [];
   const powerA = Math.max(0, powerOf(state, a)), powerB = Math.max(0, powerOf(state, b));
-  return [...dealDamage(state, {amount: powerA, targets: [b], from: [a]}, context), ...dealDamage(state, {amount: powerB, targets: [a], from: [b]}, context)];
+  const orders = params.damageOrders ? {damageOrders: params.damageOrders} : {};
+  return [[{amount: powerA, targets: [b], from: [a], ...orders}, context], [{amount: powerB, targets: [a], from: [b], ...orders}, context]];
+}
+export function fight(state, params, context) {
+  return fightCalls(state, params, context).flatMap(([deal, ctx]) => dealDamage(state, deal, ctx));
+}
+
+/* ---- CR 616.1, before damage is dealt ----
+
+   The damage effects a resolution can stop to ask about (script/resolution.mjs; effects/asking.mjs, orderDamage), each
+   as the dealDamage calls it makes -- so the question and the dealing see the same hits. */
+export const DAMAGING = Object.freeze({dealDamage, damageAll, fight});
+function damageCalls(state, effect, context) {
+  if (effect.effect === "dealDamage") return [[effect, context]];
+  if (effect.effect === "damageAll") return [damageAllCall(state, effect, context)];
+  if (effect.effect === "fight") return fightCalls(state, effect, context);
+  return [];
+}
+
+/**
+ * The first hit of this damage effect whose replacement effects' order is the affected player's to choose and not yet
+ * chosen (CR 616.1), given `answers` (by hit, `hitKey`): `{player, proposal, options, key}`, or null when there is none.
+ * Tried dry: it changes nothing.
+ */
+export function damageQuestion(state, effect, context, answers = {}) {
+  if (!DAMAGING[effect?.effect] || !damageChoicesPossible(state)) return null;
+  for (const [params, ctx] of damageCalls(state, effect, context)) {
+    const {source, amount, hits} = damageHits(state, params, ctx);
+    if (amount <= 0) continue;
+    for (const hit of hits) {
+      const key = hitKey(source, hit.toPlayer, hit.toCard);
+      const {question} = applyReplacements(state, {event: "damage", toPlayer: hit.toPlayer, toCard: hit.toCard, amount, sourceId: source, combat: false},
+        {orders: answers[key] ?? [], askable: true, dry: true});
+      if (question) return {...question, key};
+    }
+  }
+  return null;
 }
 
 /**

@@ -18,6 +18,10 @@
  *             the bottom, none included; a second press puts one back), then the order of the two kept; and the saved
  *             game has the picked card on the bottom of his library and the other two on top in his order. The board
  *             sends only the indices it collected, which is all scry now asks for (game/engine/script/effects/asking.mjs).
+ *   Damage    a third table, Rob and Maya both people: Rob's 3/3 Brute attacks and Maya blocks it with two Bears. The
+ *             board draws the division as a pop-up of amounts, each Bear with its lethal damage; Rob gives 1 to the first
+ *             and 2 to the second -- no lethal-first order (CR 510.1c) -- and the room takes it: the second Bear dies, the
+ *             first lives with 1 damage marked.
  *
  * The board half needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure.
  */
@@ -116,12 +120,12 @@ const serial = (fn) => (queue = queue.then(fn, fn));
 const callAt = (at, p, body) => serial(async () => (await at.fetch(new Request(`https://table.internal${p}`, {method: body === undefined ? "GET" : "POST", headers: {"content-type": "application/json", "x-crankmagic-email": ROB}, ...(body !== undefined ? {body: JSON.stringify(body)} : {})}))).json());
 let latest = null;
 const frames = [];
-async function socket(onFrame, at = object) {
+async function socket(onFrame, at = object, email = ROB) {
   const server = {tags: null, closed: false, send(f) {if (!this.closed) onFrame(f);}, close() {this.closed = true;}};
   await serial(async () => {
     at.socketPair = () => [{}, server];
     at.upgraded = () => ({status: 101});
-    await at.fetch(new Request("https://table.internal/connect", {headers: {upgrade: "websocket", "x-crankmagic-email": ROB}}));
+    await at.fetch(new Request("https://table.internal/connect", {headers: {upgrade: "websocket", "x-crankmagic-email": email}}));
   });
   return server;
 }
@@ -195,6 +199,61 @@ const robSeat = scryView.seat, scry = scryView.decision, libraryBefore = savedLi
 eq([scry.mode, scry.min, scry.max, scry.title], ["many", 0, 3, "Scry 3: choose any to put on the bottom"],
   "Peek Three resolves and the room asks Rob a pick-several: any of the three to the bottom, none included (CR 701.22a)");
 eq(scry.options.map((o) => o.cardId), libraryBefore.slice(0, 3), "over the top three cards of his library");
+
+/* ---- 2c. a third table, Rob and Maya both people: Rob's Brute attacks, and Maya blocks it with two Bears ---- */
+/* CR 510.1c: the attacking creature's controller divides its damage among its blockers as he chooses -- in no order, no
+   blocker owed lethal before the next. A house pilot never blocks one attacker with two, so Maya is a person here, her
+   answers sent over her own socket. */
+const DAMAGE_TABLE = "boarddamage01", MAYA = "maya@example.com";
+DEFS.set("Brute", {types: ["Creature"], power: 3, toughness: 3, manaCost: "{R}"});
+const damageAt = standUp(DAMAGE_TABLE);
+const callAs = (email, p, body) => serial(async () => (await damageAt.fetch(new Request(`https://table.internal${p}`, {method: body === undefined ? "GET" : "POST", headers: {"content-type": "application/json", "x-crankmagic-email": email}, ...(body !== undefined ? {body: JSON.stringify(body)} : {})}))).json());
+await callAs(ROB, "/table/create", {tableId: DAMAGE_TABLE, hostName: "Rob", seats: [{kind: "human", name: "Maya"}]});
+await callAs(MAYA, "/table/join", {code: (await callAs(ROB, "/table/invite", {seatId: 1})).invite.code});
+await callAs(ROB, "/table/deck", {seatId: 0, deck: deck("Rob", "Mountain", "Brute")});
+await callAs(MAYA, "/table/deck", {seatId: 1, deck: deck("Maya", "Forest", "Maya Bear")});
+await callAs(ROB, "/table/ready", {ready: true}); await callAs(MAYA, "/table/ready", {ready: true});
+await callAs(ROB, "/table/start", {});
+clock += 10000; await serial(() => damageAt.alarm());
+const seen = {[ROB]: null, [MAYA]: null}, nodes = {};
+for (const email of [ROB, MAYA]) nodes[email] = await socket((f) => {const x = JSON.parse(f); if (x.view) seen[email] = x.view;}, damageAt, email);
+const sendAs = (email, v, payload) => serial(() => damageAt.webSocketMessage(nodes[email], JSON.stringify({type: "act", actionId: crypto.randomUUID(), revision: v.revision, kind: "answer", choiceId: v.decision.id, ...payload})));
+/* Each plays a land a turn and casts its creature when it can (tapping first, then casting); Rob attacks with one Brute
+   once Maya has two untapped Bears, and she blocks it with two. */
+function policy(v) {
+  const d = v.decision, me = v.state.players[v.seat], spell = v.seat === 0 ? "Brute" : "Maya Bear";
+  if (d.kind === "priority") {
+    const cast = d.options.find((o) => o.act === "cast" && o.label === spell);
+    const land = !me.landsPlayed && d.options.find((o) => o.act === "play-land");
+    const mine = v.state.turnPlayerId === v.seat && ["MAIN1", "MAIN2"].includes(v.state.phase) && !(v.state.stack ?? []).length;
+    const tap = mine && me.zones.Hand.cards.some((c) => c.name === spell) && d.options.find((o) => o.act === "activate-mana");
+    return {indices: [(cast || land || tap || d.options.find((o) => o.act === "pass")).index]};
+  }
+  if (String(d.id).startsWith("declare-attackers:")) {
+    const bears = v.state.players[1].zones.Battlefield.cards.filter((c) => c.name === "Maya Bear" && !c.tapped).length;
+    const brute = d.options.find((o) => o.label.startsWith("Brute → "));
+    return {indices: bears >= 2 && brute ? [brute.index] : []};
+  }
+  if (String(d.id).startsWith("declare-blockers:")) return {indices: d.options.filter((o) => o.label === "Maya Bear blocks Brute").slice(0, 2).map((o) => o.index)};
+  if (d.mode === "many") return {indices: d.options.slice(0, d.min).map((o) => o.index)};
+  if (d.mode === "order") return {indices: d.options.map((o) => o.index)};
+  if (d.mode === "ack") return {indices: []};
+  return {indices: [(d.options.find((o) => /^Keep|^No\b|^Don't|^Draw/i.test(o.label)) || d.options[0]).index]};
+}
+for (let i = 0; i < 4000 && seen[ROB]?.status !== "finished" && seen[ROB]?.decision?.mode !== "damage"; i += 1) {
+  const email = seen[ROB]?.decision ? ROB : seen[MAYA]?.decision ? MAYA : null;
+  if (!email) {const before = seen[ROB]; await serial(async () => damageAt.broadcast()); if (seen[ROB] === before && !seen[MAYA]?.decision) break; continue;}
+  await sendAs(email, seen[email], policy(seen[email]));
+}
+const division = seen[ROB]?.decision;
+eq([division?.mode, division?.title, division?.divide, division?.options.map((o) => [o.label, o.lethal])], ["damage", "Assign 3 damage", true, [["Maya Bear", 2], ["Maya Bear", 2]]],
+  `the third table reaches Rob's Brute blocked by two of Maya's Bears (turn ${seen[ROB]?.state.turn}): the room asks Rob to divide its 3, each Bear with its lethal damage, in no order (CR 510.1c)`);
+/* The game as the table saved it last. */
+function savedState(tableId) {
+  const {map} = tables.get(tableId), key = [...map.keys()].find((k) => k.endsWith("/checkpoint/latest"));
+  const {sequence} = JSON.parse(map.get(key));
+  return JSON.parse(map.get(key.replace(/latest$/, String(sequence).padStart(10, "0")))).state;
+}
 
 /* ---- 3. the board: the pop-up ---- */
 const {openBrowser} = await import("./uat/browser-runner.mjs");
@@ -308,10 +367,35 @@ try {
   const libraryAfter = savedLibrary(SCRY_TABLE, robSeat), [a, b, c] = scry.options.map((o) => o.cardId);
   eq([onScry(), libraryAfter.slice(0, 2), libraryAfter.at(-1), libraryAfter.length], [false, [c, b], a, libraryBefore.length],
     `and the game did what the board said: nothing more is asked about the scry (next: ${latest?.decision?.kind ?? latest?.decision?.title}); the card picked is on the bottom of Rob's library, the two kept on top in his order, none lost`);
+
+  /* ---- 5. the board divides combat damage: amounts, in no order (CR 510.1c) ---- */
+  await page.goto("about:blank");
+  await page.goto(`${base}/index.html#table?id=${DAMAGE_TABLE}`);
+  const dbox = page.locator("#cm-board-decision");
+  await dbox.locator("h3", {hasText: "Assign 3 damage"}).waitFor({timeout: 60000});
+  const rows = dbox.locator(".cm-board-amount"), dconfirm = dbox.locator("[data-action=board-confirm]");
+  const said = async () => (await dbox.locator(".cm-board-decision-foot .cm-muted").first().innerText()).replace(/\s+/g, " ").trim();
+  const rowWords = async () => (await rows.allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
+  eq([await rows.count(), await rowWords(), await said(), await dconfirm.isEnabled()], [2, ["Maya Bear lethal 2", "Maya Bear lethal 2"], "0 of 3", false],
+    "the board draws the division as a pop-up of amounts: each Bear with its lethal damage, nothing given yet, Confirm waiting for all 3");
+  await rows.nth(0).locator("input").fill("1");
+  eq([await said(), await dconfirm.isEnabled()], ["1 of 3", false], "1 to the first Bear: 1 of 3, not yet");
+  await rows.nth(1).locator("input").fill("2");
+  eq([await said(), await dconfirm.isEnabled()], ["3 of 3", true], "and 2 to the second: 3 of 3, and Confirm is ready -- though the first Bear is short of lethal");
+  if (SHOTS) await page.screenshot({path: path.join(SHOTS, "board-damage-1400.png")});
+  const bears = division.options.map((o) => o.cardId);
+  await dconfirm.click();
+  const onDivision = () => String(latest?.decision?.id ?? "").startsWith("assign-damage");
+  for (let t = 0; t < 100 && onDivision(); t += 1) await new Promise((r) => setTimeout(r, 100));
+  const after = savedState(DAMAGE_TABLE);
+  const mayas = (zone) => Object.values(after.objects).filter((o) => o.card === "Maya Bear" && o.zone === zone && o.owner === 1);
+  eq([onDivision(), after.objects[bears[0]]?.zone, after.objects[bears[0]]?.damage, after.objects[bears[1]]?.zone === "battlefield", mayas("graveyard").length],
+    [false, "battlefield", 1, false, 1],
+    "the room takes Rob's division as he gave it (CR 510.1c, no order to follow): the first Bear lives with 1 damage marked, the second, dealt its lethal 2, is in Maya's graveyard");
   await context.close();
 } finally {
   await close();
 }
 
-console.log(`board-choices: ${checks} checks passed — a card used more than one way says each way (its target, its sacrifice, its color), and the board asks which in a pop-up rather than doing the first; a scry is a pick-several pop-up for the bottom, then the order of the rest.`);
+console.log(`board-choices: ${checks} checks passed — a card used more than one way says each way (its target, its sacrifice, its color), and the board asks which in a pop-up rather than doing the first; a scry is a pick-several pop-up for the bottom, then the order of the rest; combat damage among two blockers is divided by amounts, in no order.`);
 process.exit(0);
