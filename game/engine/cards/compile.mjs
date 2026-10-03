@@ -41,16 +41,18 @@ export const oracleHash = (card) => hashState({name: card.name, mana: card.mana 
 const num = (v) => (v !== null && v !== undefined && /^\d+$/.test(String(v)) ? Number(v) : null);
 const SUPERTYPES = ["Legendary", "Basic", "Snow", "World"];
 
-/** The printed facts, from the oracle record and never from the model. */
+/** The printed facts, from the oracle record and never from the model. A modal double-faced card's are its front face's
+    (CR 712.8a), its name the whole card's and its color identity both faces' (903.4); its back face is the script's own. */
 export function identityOf(card) {
-  const [left, right = ""] = String(card.type ?? "").split(" — ");
+  const face = card.layout === "modal_dfc" && Array.isArray(card.faces) && card.faces.length ? card.faces[0] : card;
+  const [left, right = ""] = String(face.type ?? "").split(" — ");
   const words = left.split(/\s+/).filter(Boolean);
   const supertypes = words.filter((w) => SUPERTYPES.includes(w));
   return {
     name: card.name, oracleId: card.id, ...(supertypes.length ? {supertypes} : {}),
     types: words.filter((w) => !SUPERTYPES.includes(w)), subtypes: right.split(/\s+/).filter(Boolean),
-    manaCost: card.mana ?? null, colors: [...(card.colors ?? [])], colorIdentity: [...(card.ci ?? [])],
-    power: num(card.power), toughness: num(card.toughness),
+    manaCost: face.mana ?? null, colors: [...(face.colors ?? [])], colorIdentity: [...(card.ci ?? [])],
+    power: num(face.power), toughness: num(face.toughness),
   };
 }
 
@@ -180,6 +182,8 @@ const SMOKE_FIXTURES = Object.freeze({
  */
 export function smokeScenario(script) {
   const name = script.identity.name;
+  /* A modal double-faced card is cast as its front face, by that face's name (CR 712.11b). */
+  const front = script.back !== undefined ? String(name).split(" // ")[0] : name;
   const isLand = (script.identity.types ?? []).includes("Land");
   const lands = isLand ? ["Wastes", "Wastes"] : landsFor(script.identity.manaCost);
   /* A card aimed at its controller's own spell ("copy target creature spell you control", Double Major) answers a free
@@ -205,7 +209,7 @@ export function smokeScenario(script) {
     if (instantSpeed) steps.push({cast: "Smoke Sorcery", seat: 1, targets: "any"}, {pass: 1});
     if (ownSpell) steps.push({cast: "Smoke Whelp", seat: 0});
     for (let i = 0; i < lands.length - 2; i += 1) steps.push({tap: lands[i], seat: 0, optional: true});
-    steps.push({cast: name, seat: 0, targets: "any", optional: true}, {settle: true});
+    steps.push({cast: front, seat: 0, targets: "any", optional: true}, {settle: true});
   }
   steps.push({to: {turn: 3, phase: "MAIN1", settle: true}});
   for (const ability of script.abilities ?? []) {
@@ -267,10 +271,11 @@ export function smokeTest(script, cards) {
     const bad = zoneProblems(state);
     /* Whether the card was actually played: a counterspell with nothing to counter stays in hand, which is the
        fixture's limit and not the script's fault -- so it is reported, not refused. */
-    const name = script.identity.name;
+    /* A double-faced card's events name the face that was cast or played. */
+    const names = script.back !== undefined ? String(script.identity.name).split(" // ") : [script.identity.name];
     const played = (!(script.identity.types ?? []).includes("Land") && !script.identity.manaCost)
-      || events.some((e) => (e.kind === "GameEventLandPlayed" && e.data.fields.land?.name === name)
-        || (e.kind === "GameEventSpellAbilityCast" && e.data.fields.sa?.isSpell && e.data.fields.card?.name === name));
+      || events.some((e) => (e.kind === "GameEventLandPlayed" && names.includes(e.data.fields.land?.name))
+        || (e.kind === "GameEventSpellAbilityCast" && e.data.fields.sa?.isSpell && names.includes(e.data.fields.card?.name)));
     const resolved = events.filter((e) => e.kind === "GameEventSpellResolved").length;
     return {ok: bad.length === 0, error: null, problems: bad, played, resolved};
   } catch (error) {
