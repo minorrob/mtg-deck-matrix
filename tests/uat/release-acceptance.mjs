@@ -25,13 +25,15 @@ import {mkdirSync} from "node:fs";
 import path from "node:path";
 
 const require = createRequire(import.meta.url);
-const {chromium} = require(process.env.UAT_PLAYWRIGHT || "playwright");
+const playwright = require(process.env.UAT_PLAYWRIGHT || "playwright");
+/* The browser UAT_BROWSER names (the matrix, browser-runner.mjs); Chromium by default. */
+const {launchBrowser} = await import("./browser-runner.mjs");
 const BASE = (process.env.UAT_BASE || "").replace(/\/+$/, "");
 if (!BASE) {console.error("release-acceptance: set UAT_BASE to the release's address"); process.exit(2);}
 const SHOTS = process.env.UAT_SHOTS || "";
 if (SHOTS) mkdirSync(SHOTS, {recursive: true});
 
-const browser = await chromium.launch({headless: true, ignoreDefaultArgs: ["--hide-scrollbars"], ...(process.env.UAT_CHROME ? {executablePath: process.env.UAT_CHROME} : {})});
+const browser = await launchBrowser(playwright, {ignoreDefaultArgs: ["--hide-scrollbars"]});
 const context = await browser.newContext({viewport: {width: 1440, height: 900}});
 const page = await context.newPage();
 const origin = new URL(BASE).origin;
