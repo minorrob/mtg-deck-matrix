@@ -634,9 +634,16 @@ try {
   await active.page.locator("#cm-notice").filter({hasText: /./}).first().waitFor({timeout: 10000});
   ok((await text(active.page, "#cm-notice")).length > 5, `a refused answer is said: "${(await text(active.page, "#cm-notice")).trim()}"`);
 
-  /* SKIP TO END: the active player's board passes for them from here to the turn's end, by itself. */
+  /* SKIP TO END: the active player's board passes for them from here to the turn's end, by itself. "Skipping" is on the
+     button only that long, and it is short: the board passes a moment after the click, the room runs the pass to turn 2
+     in one step, and the button puts itself away. A read slower than that saw "Skip to end" again (a busy machine,
+     2026-10-02). So the room is held while the button is read, and the label is waited for, not read once. */
+  let resume; const roomHeld = new Promise((r) => {resume = r;});
+  serial(() => roomHeld);
   await active.page.click("[data-action=board-skip]");
-  ok(/Skipping/.test(await text(active.page, "[data-action=board-skip]")), "Skip to end says it is skipping");
+  await waitText(active.page, "[data-action=board-skip]", /Skipping/, 10000);
+  ok(true, "Skip to end says it is skipping");
+  resume();
   await waitText(active.page, ".cm-board-waiting", new RegExp(`Waiting on ${active === rob ? "Maya" : "Rob"}`), 10000);
   ok(true, "and the board passed priority for them, unasked");
   /* B5, item 13: THE DRAW, ITS OWN BEAT. Turn 2 opens on the other player's draw step and one button, Draw a card; their
@@ -812,7 +819,10 @@ try {
   await waitText(firstBoard.page, ".cm-board-strip [data-action=board-pass]", new RegExp(`Resolve ${castName}`));
   const secondName = second === rob ? "Rob" : "Maya", firstName_ = second === rob ? "Maya" : "Rob";
   eq((await text(firstBoard.page, ".cm-board-waiting")).trim(), `${secondName}'s first main phase · you may respond`, `on the other board the button reads Resolve ${castName}, and the strip says whose step it is and that they may respond`);
-  ok(new RegExp(`Waiting on ${firstName_}`).test(await text(second.page, ".cm-board-waiting")), "and the caster's strip says who the table waits on");
+  /* The caster's own view comes on the caster's socket, and may come after the other board's: until it does, the strip
+     says "Sent…". So it is waited for. */
+  await waitText(second.page, ".cm-board-waiting", new RegExp(`Waiting on ${firstName_}`), 10000);
+  ok(true, "and the caster's strip says who the table waits on");
   await shot(firstBoard.page, "resolve-" + (firstBoard === rob ? "1400" : "1280"));
   await firstBoard.page.click(".cm-board-strip [data-action=board-pass]");
   await waitText(second.page, ".cm-board-mat .cm-board-field", new RegExp(castName));
