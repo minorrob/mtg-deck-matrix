@@ -341,7 +341,9 @@ export function animate(state, params, context) {
   pushEffect(state, {
     id: `animate:${context.source ?? "effect"}`,
     layer: 4, affects,
-    apply: {addTypes: params.addTypes ?? ["Creature"], ...(params.subtypes ? {addTypes: [...(params.addTypes ?? ["Creature"]), ...params.subtypes]} : {})},
+    apply: {addTypes: params.addTypes ?? ["Creature"], ...(params.subtypes ? {addTypes: [...(params.addTypes ?? ["Creature"]), ...params.subtypes]} : {}),
+      /* "And gain all creature types" (Mirror Entity, batch 74): in the same layer (rules/layers.mjs). */
+      ...(params.allCreatureTypes === true ? {allCreatureTypes: true} : {})},
     until: params.until ?? null,
     sourceController: context.controller,
   });

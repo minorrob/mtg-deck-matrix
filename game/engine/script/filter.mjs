@@ -35,6 +35,7 @@
 import {usesThisTurn} from "../state/index.mjs";
 import {typesOf, keywordsOf, controllerOf, characteristicsOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
+import {hasSubtype, isCreatureType} from "../keywords/types.mjs";
 
 /* The steps after blockers are declared, in which an attacker is blocked or unblocked (CR 509.1h). */
 const BLOCKERS_DECLARED = ["COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAGE", "COMBAT_DAMAGE", "COMBAT_END"];
@@ -57,10 +58,12 @@ export function matchesLastKnown(selector, lki, context = {}) {
   if (Array.isArray(s.anyOf)) return s.anyOf.some((one) => matchesLastKnown({...one, ...(s.controller ? {controller: s.controller} : {})}, lki, context));
   if (s.what && s.what !== "permanent" && s.what !== "card") return false;
   const types = lki.types ?? [], subtypes = [...types, ...(lki.subtypes ?? [])];
+  /* A changeling as it last was is every creature type (keywords/types.mjs). */
+  const changeling = lki.everyCreatureType === true;
   if (s.types && !s.types.every((t) => types.includes(t))) return false;
   if (s.nonTypes && s.nonTypes.some((t) => types.includes(t))) return false;
-  if (s.subtypes && !s.subtypes.every((t) => subtypes.includes(t))) return false;
-  if (s.nonSubtypes && s.nonSubtypes.some((t) => subtypes.includes(t))) return false;
+  if (s.subtypes && !s.subtypes.every((t) => subtypes.includes(t) || (changeling && isCreatureType(t)))) return false;
+  if (s.nonSubtypes && s.nonSubtypes.some((t) => subtypes.includes(t) || (changeling && isCreatureType(t)))) return false;
   if (s.supertypes && !s.supertypes.every((t) => (lki.supertypes ?? []).includes(t))) return false;
   if (s.controller === "you" && lki.controller !== context.controller) return false;
   if (s.controller === "opponent" && lki.controller === context.controller) return false;
@@ -195,9 +198,10 @@ export function compileSelector(selector) {
 
     /* Subtypes (CR 205.3): the printed ones, and any the layers added -- an animated land's "Elemental" arrives
        with its types. "A Forest" is a land with the subtype Forest, basic or not (CR 305.6). */
+    /* A changeling is every creature type (CR 702.73a; keywords/types.mjs), in every zone. */
     if (selector.subtypes) {
-      const current = [...typesOf(state, id), ...(object.subtypes ?? [])];
-      if (!selector.subtypes.every((subtype) => current.includes(subtype))) return false;
+      const current = [...typesOf(state, id), ...(object.subtypes ?? [])], every = characteristicsOf(state, id).everyCreatureType;
+      if (!selector.subtypes.every((subtype) => hasSubtype(current, every, subtype))) return false;
     }
 
     /* Supertypes (CR 205.4): "a basic land card" is a land with the supertype Basic. */
@@ -208,9 +212,10 @@ export function compileSelector(selector) {
     /* "Nonartifact creature", "non-Elf creature", "noncreature spell": none of these -- and an artifact creature is an
        artifact (CR 205.2b), so "nonartifact" excludes it. */
     if (selector.nonTypes || selector.nonSubtypes) {
-      const current = [...typesOf(state, id), ...(object.subtypes ?? [])];
+      const current = [...typesOf(state, id), ...(object.subtypes ?? [])], every = characteristicsOf(state, id).everyCreatureType;
       if ((selector.nonTypes ?? []).some((type) => current.includes(type))) return false;
-      if ((selector.nonSubtypes ?? []).some((subtype) => current.includes(subtype))) return false;
+      /* "Non-Elf": a changeling is an Elf. */
+      if ((selector.nonSubtypes ?? []).some((subtype) => hasSubtype(current, every, subtype))) return false;
     }
 
     if (selector.named !== undefined && object.card !== selector.named) return false;
@@ -256,9 +261,16 @@ export function compileSelector(selector) {
        subtypes is one of a permanent's the selector describes, itself aside -- a creature's subtypes are creature types
        (CR 205.3m), the layers' included. */
     if (selector.sharesCreatureType) {
-      const mine = new Set(object.subtypes ?? []);
+      const mine = new Set(object.subtypes ?? []), mineAll = characteristicsOf(state, id).everyCreatureType;
       const others = selectMatching(state, {what: "permanent", ...selector.sharesCreatureType}, context).filter((other) => other !== id);
-      if (!others.some((other) => [...typesOf(state, other), ...(state.objects[other].subtypes ?? [])].some((t) => mine.has(t)))) return false;
+      /* A changeling shares every creature type (CR 702.73a): with anything that has one. */
+      const shares = (other) => {
+        const theirs = [...typesOf(state, other), ...(state.objects[other].subtypes ?? [])], theirsAll = characteristicsOf(state, other).everyCreatureType;
+        if (mineAll) return theirsAll || theirs.some(isCreatureType);
+        if (theirsAll) return [...mine].some(isCreatureType);
+        return theirs.some((t) => mine.has(t));
+      };
+      if (!others.some(shares)) return false;
     }
     /* "Whenever a goaded creature attacks" (effects/permanents.mjs goad). */
     if (selector.goaded === true && !(state.effects ?? []).some((e) => e.rule === "goaded" && e.affects.ids.includes(id))) return false;

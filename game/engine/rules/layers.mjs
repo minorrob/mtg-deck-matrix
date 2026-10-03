@@ -41,6 +41,7 @@
 import {conditionHolds} from "../script/condition.mjs";
 import {isCounted, amountOf} from "../script/amount.mjs";
 import {chosenFor} from "../script/chosen.mjs";
+import {hasSubtype, everyCreatureType} from "../keywords/types.mjs";
 
 /** The seven layers of CR 613.1, in order. */
 export const LAYERS = Object.freeze([1, 2, 3, 4, 5, 6, 7]);
@@ -64,6 +65,8 @@ function printed(state, id) {
     types: [...(object.types ?? [])],
     colors: [...(object.colors ?? [])],
     keywords: [...new Set([...(object.keywords ?? []), ...counterKeywords(object.counters)])],
+    /* Changeling (CR 702.73a), every creature type; an effect may make it so in layer 4 (applyEffect). */
+    everyCreatureType: everyCreatureType(object.keywords),
     power: object.power,
     toughness: object.toughness,
     controller: object.controller,
@@ -95,7 +98,8 @@ function affects(state, effect, current, sourceController) {
   if (Number.isInteger(rule.controller) && current.controller !== rule.controller) return false;
   if (rule.token !== undefined && (state.objects[current.id]?.token ?? false) !== rule.token) return false;
   /* "Other Elf creatures you control get +1/+1": a subtype (printed, or a type the layers added), and not the source. */
-  if (rule.subtypes && !rule.subtypes.every((t) => current.types.includes(t) || (state.objects[current.id]?.subtypes ?? []).includes(t))) return false;
+  /* A changeling is every creature type (CR 702.73a): an Elf lord's "other Elves" takes it in. */
+  if (rule.subtypes && !rule.subtypes.every((t) => current.types.includes(t) || hasSubtype(state.objects[current.id]?.subtypes ?? [], current.everyCreatureType, t))) return false;
   /* "Legendary Humans you control have indestructible" (General's Enforcer): printed supertypes, which no layer changes. */
   if (rule.supertypes && !rule.supertypes.every((t) => (state.objects[current.id]?.supertypes ?? []).includes(t))) return false;
   if (rule.another === true && current.id === effect.sourceId) return false;
@@ -125,6 +129,8 @@ function applyEffect(current, effect) {
   if (change.addTypes) for (const type of change.addTypes) if (!current.types.includes(type)) current.types.push(type);
   if (change.setTypes) current.types = [...change.setTypes];
   if (change.setColors) current.colors = [...change.setColors];
+  /* "Gain all creature types" (Mirror Entity, batch 74): a type change, layer 4 (CR 613.1d). */
+  if (change.allCreatureTypes === true) current.everyCreatureType = true;
   if (change.removeAllAbilities) current.keywords = [];
   if (change.addKeywords) for (const word of change.addKeywords) if (!current.keywords.includes(word)) current.keywords.push(word);
   if (Number.isInteger(change.setPower)) current.power = change.setPower;
@@ -351,6 +357,8 @@ export function lastKnown(state, id) {
     attachments: [...(object.attachments ?? [])],
     colors: [...current.colors],
     keywords: [...current.keywords],
+    /* Every creature type, as it last was (Changeling, or an effect's). */
+    everyCreatureType: current.everyCreatureType === true,
     /* Null, not zero, for a thing that has no power — a dying Sol Ring is not a 0/0. */
     power: current.power ?? null,
     toughness: current.toughness ?? null,
