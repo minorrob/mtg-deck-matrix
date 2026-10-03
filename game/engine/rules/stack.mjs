@@ -192,7 +192,7 @@ export function specsOf(state, entry) {
  *                            stack. Phase 2 passes the compiled card script here.
  * @returns {Array} events for the caller to journal
  */
-export function resolveTop(state, effect = null) {
+export function resolveTop(state, effect = null, rng = null) {
   const entry = peekStack(state);
   if (!entry) throw new Error("There is nothing on the stack to resolve");
   if (entry.stage === "resolving") throw new Error("The top of the stack is already resolving; answer what it asked");
@@ -230,7 +230,7 @@ export function resolveTop(state, effect = null) {
      ability's own condition only -- "activate only if" was asked as it was activated (CR 602.5b) and is not again. */
   if (entry.kind === "trigger" && script.condition && !conditionHolds(state, script.condition, {controller: entry.playerId, source, about: entry.about ?? undefined})) return finishTop(state, entry, events, false);
   /* What its effects need to know about their targets, read once, now (CR 608.2h). */
-  const outcome = beginResolution(state, script.effects, {...context, targets, facts: factsOf(state, targets)});
+  const outcome = beginResolution(state, script.effects, {...context, targets, facts: factsOf(state, targets)}, rng);
   events.push(...outcome.events);
   if (outcome.status === "waiting") {
     entry.stage = "resolving";

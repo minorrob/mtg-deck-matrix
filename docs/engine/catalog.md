@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 989 defined and playable today; 2,264 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 992 defined and playable today; 2,267 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -19,8 +19,8 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 31 | 0 | 23 | 140 |
-| Keyword actions (CR 701) | 70 | 16 | 3 | 7 | 44 |
-| Effects | 192 | 56 | 1 | 15 | 120 |
+| Keyword actions (CR 701) | 70 | 17 | 3 | 6 | 44 |
+| Effects | 192 | 57 | 1 | 14 | 120 |
 | Triggers | 138 | 13 | 4 | 7 | 114 |
 | Static abilities | 77 | 8 | 2 | 0 | 67 |
 | Replacement effects | 34 | 0 | 4 | 0 | 30 |
@@ -38,12 +38,12 @@ The things that alone hold back the most of the most-played cards.
 | --- | --- | --- | --- | ---: | ---: |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 20 | 106 |
 | option | You may play or cast a card from another zone | — | missing | 14 | 79 |
-| option | Remembering what an effect moved | — | missing | 12 | 104 |
+| option | Remembering what an effect moved | — | missing | 12 | 102 |
 | keyword construct | ETBReplacement | — | missing | 10 | 33 |
 | effect | SetState | setState | named | 8 | 19 |
 | option | Imprint (a card exiled with this) | — | missing | 7 | 10 |
+| keyword construct | etbCounter | — | missing | 6 | 25 |
 | effect | RingTemptsYou | — | missing | 6 | 11 |
-| keyword construct | etbCounter | — | missing | 5 | 25 |
 | count | Cards in a library | — | missing | 5 | 13 |
 | keyword ability | Convoke | — | named | 5 | 11 |
 | trigger | CounterAddedOnce | counter added once | named | 5 | 10 |
@@ -276,7 +276,7 @@ The things that alone hold back the most of the most-played cards.
 | 701.15 | Goad | — | missing | 11 | 67 | 0 | 0 |
 | 701.66 | Earthbend | — | missing | 10 | 36 | 0 | 0 |
 | 701.47 | Amass | amass | named | 7 | 72 | 7 | 5 |
-| 701.24 | Shuffle | shuffle | named | 6 | 66 | 6 | 1 |
+| 701.24 | Shuffle | shuffle | built | 6 | 66 | 0 | 0 |
 | 701.57 | Discover | discover | named | 6 | 35 | 6 | 5 |
 | 701.65 | Airbend | — | missing | 4 | 13 | 0 | 0 |
 | 701.16 | Investigate (a Clue (CR 111.10f)) | createToken | built | 3 | 142 | 0 | 0 |
@@ -402,7 +402,7 @@ The things that alone hold back the most of the most-played cards.
 | RollDice | — | missing | 7 | 131 | 7 | 3 |
 | Amass | amass | named | 7 | 72 | 7 | 5 |
 | StoreSVar | — | missing | 6 | 68 | 6 | 2 |
-| Shuffle | shuffle | named | 6 | 66 | 6 | 1 |
+| Shuffle | shuffle | built | 6 | 66 | 0 | 0 |
 | LosesGame | — | missing | 6 | 45 | 6 | 3 |
 | Discover | discover | named | 6 | 35 | 6 | 5 |
 | AlterAttribute | alterAttribute | named | 5 | 115 | 5 | 2 |
@@ -826,7 +826,7 @@ The things that alone hold back the most of the most-played cards.
 | You may, decided by a named player | modal (Yes / No) | partial | 176 | 1499 | 0 | 0 |
 | An effect's condition: if a permanent is present | an effect's condition {present ...} | built | 142 | 1292 | 0 | 0 |
 | Fewer targets than the most ("up to", "any number of") | — | missing | 126 | 1672 | 126 | 1 |
-| Remembering what an effect moved | — | missing | 124 | 1168 | 104 | 12 |
+| Remembering what an effect moved | — | missing | 124 | 1168 | 102 | 12 |
 | More than one target of a kind ("up to N") | — | missing | 123 | 1664 | 123 | 0 |
 | Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 106 | 20 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
@@ -1078,7 +1078,7 @@ The things that alone hold back the most of the most-played cards.
 | Name | Engine | Status | Top | All | Holds back | Alone |
 | --- | --- | --- | ---: | ---: | ---: | ---: |
 | ETBReplacement | — | missing | 68 | 408 | 33 | 10 |
-| etbCounter | — | missing | 35 | 475 | 25 | 5 |
+| etbCounter | — | missing | 35 | 475 | 25 | 6 |
 | Chapter | Chapter | built | 19 | 236 | 0 | 0 |
 | Class | — | missing | 9 | 38 | 9 | 5 |
 | Choose a Background | — | missing | 5 | 32 | 5 | 3 |

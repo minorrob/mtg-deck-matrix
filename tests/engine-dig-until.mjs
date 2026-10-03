@@ -13,6 +13,7 @@ import {runEffects} from "../game/engine/script/effects/index.mjs";
 import {runScenario} from "../game/engine/cards/scenario.mjs";
 import {missingFor} from "../game/tools/engine-constructs.mjs";
 import {loadCardIndex} from "../game/tools/engine-cards.mjs";
+import {createRng} from "../game/engine/rng.mjs";
 
 let checks = 0;
 const eq = (a, b, m) => { assert.deepEqual(a, b, m); checks += 1; };
@@ -31,7 +32,8 @@ function table(seats = 2, top = []) {
 const names = (s, zone, seat) => cardsIn(s, zone, seat).map((id) => s.objects[id].card);
 /* Exile is one zone: a player's cards in it, by owner. */
 const exiled = (s, seat) => s.zones.exile.filter((id) => s.objects[id].owner === seat).map((id) => s.objects[id].card);
-const dig = (s, params, controller = 0) => { const context = {controller, source: null}; const events = runEffects(s, [{effect: "digUntil", ...params}], context); return {events, context}; };
+/* The game's random stream, as the room hands it in (batch 80): "the rest on the bottom in a random order". */
+const dig = (s, params, controller = 0, seed = "dig-until") => { const context = {controller, source: null}; const events = runEffects(s, [{effect: "digUntil", ...params}], context, createRng(seed)); return {events, context}; };
 
 {
   /* Until a basic land: the Forest to his hand, the two before it to his graveyard, each revealed. */
@@ -41,11 +43,21 @@ const dig = (s, params, controller = 0) => { const context = {controller, source
     "the Forest to his hand; the Bear and the nonbasic Grove to his graveyard; three revealed");
 }
 {
-  /* Until a land: onto the battlefield tapped, the rest to the bottom in the order taken. */
+  /* Until a land: onto the battlefield tapped, the rest to the bottom in a random order (batch 80; it was the order they
+     were taken, which is not what the cards say). */
   const s = table(2, [card("Bear"), card("Ogre"), LAND("Forest")]);
   dig(s, {selector: {types: ["Land"]}, found: {to: "battlefield", tapped: true}, rest: "bottom"});
   const forest = s.zones.battlefield.find((id) => s.objects[id].card === "Forest");
-  eq([s.objects[forest]?.tapped, names(s, "library", 0)], [true, ["Wastes", "Wastes", "Wastes", "Bear", "Ogre"]], "the Forest tapped; the Bear and the Ogre at the bottom, in that order");
+  const library = names(s, "library", 0);
+  eq([s.objects[forest]?.tapped, library.slice(0, 3), [...library.slice(3)].sort()], [true, ["Wastes", "Wastes", "Wastes"], ["Bear", "Ogre"]], "the Forest tapped; the Bear and the Ogre at the bottom");
+  /* The order is the stream's: the same seed, the same order; across seeds, both orders turn up. */
+  const order = (seed) => { const t = table(2, [card("Bear"), card("Ogre"), LAND("Forest")]); dig(t, {selector: {types: ["Land"]}, found: {to: "battlefield"}, rest: "bottom"}, 0, seed); return names(t, "library", 0).slice(3).join(" "); };
+  const seen = new Set(Array.from({length: 24}, (_, i) => order(`seed ${i}`)));
+  eq([order("seed 3") === order("seed 3"), [...seen].sort()], [true, ["Bear Ogre", "Ogre Bear"]], "in a random order from the game's stream: replayable by seed, and either order");
+  /* No stream, no order made up: it refuses. */
+  const u = table(2, [card("Bear"), LAND("Forest")]);
+  eq((() => { try { runEffects(u, [{effect: "digUntil", selector: {types: ["Land"]}, found: {to: "hand"}, rest: "bottom"}], {controller: 0, source: null}); return "ran"; } catch (e) { return e.message; } })(),
+    "A random order needs the game's random stream", "without the game's random stream, a random order is refused rather than made up");
 }
 {
   /* Exiled until they total 20 or more, each opponent's -- in a three-player game, not his own. */
