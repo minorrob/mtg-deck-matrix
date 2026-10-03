@@ -104,6 +104,8 @@ function subjects(state, event, condition, sourceId, controller) {
     const attacker = fields.player?.playerId, attacks = fields.attackers ?? [];
     if (!attacks.length || !whoseIs(condition.attacker ?? "you", attacker, controller)) return [];
     if (condition.atLeast && attacks.length < condition.atLeast) return [];
+    /* "Whenever you attack with one or more non-Gnome creatures" (Anim Pakal): an attacker the filter fits. */
+    if (condition.filter && !attacks.some((a) => fits(state, a.card?.cardId, {filter: condition.filter}, sourceId, controller))) return [];
     if (condition.notAttacking === "you" && attacks.some((a) => a.defender?.playerId === controller)) return [];
     if (condition.eachDefender) return [...new Set(attacks.map((a) => a.defender?.playerId))].map((player) => ({player}));
     return [{player: attacker}];
