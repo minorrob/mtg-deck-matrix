@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 846,
-  "everyRule": 2089
+  "defined": 851,
+  "everyRule": 2097
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -1399,7 +1399,7 @@
      "top": 1,
      "all": 5,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -3205,10 +3205,10 @@
   },
   "Effects": {
    "tally": {
-    "built": 48,
+    "built": 49,
     "partial": 1,
     "named": 18,
-    "missing": 125
+    "missing": 124
    },
    "entries": [
     {
@@ -3767,13 +3767,13 @@
      "kind": "effect",
      "rule": null,
      "name": "DigUntil",
-     "engine": null,
-     "status": "missing",
+     "engine": "digUntil",
+     "status": "built",
      "forge": "DigUntil",
      "top": 18,
      "all": 167,
-     "blocks": 18,
-     "alone": 8
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4025,7 +4025,7 @@
      "top": 8,
      "all": 120,
      "blocks": 8,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -4373,7 +4373,7 @@
      "top": 1,
      "all": 87,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -7225,7 +7225,7 @@
      "top": 26,
      "all": 353,
      "blocks": 13,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "static",
@@ -8195,7 +8195,7 @@
      "top": 7,
      "all": 37,
      "blocks": 7,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "replacement",

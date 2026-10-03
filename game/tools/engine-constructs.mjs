@@ -24,6 +24,8 @@ export const FORGE_API = {
   PeekAndReveal: "peekAndReveal", Sacrifice: "sacrifice", SacrificeAll: "sacrificeAll",
   Destroy: "destroy", DestroyAll: "destroyAll", Regenerate: "regenerate", ExileUntil: "exileUntil", ReturnToHand: "returnToHand",
   Play: "play", Discover: "discover",
+  /* DigUntil ("reveal cards until you reveal a land card", batch 62). */
+  DigUntil: "digUntil",
   /* ManaReflected ("any color that a land an opponent controls could produce", batch 50): addMana's reflect and among. */
   Mana: "addMana", ManaReflected: "addMana", Tap: "tap", Untap: "untap", UntapAll: "untapAll",
   ReduceCost: "costReduction", AlternativeCost: "alternativeCost",

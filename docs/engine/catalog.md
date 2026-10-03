@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 846 defined and playable today; 2,089 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 851 defined and playable today; 2,097 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -20,7 +20,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 25 | 0 | 25 | 144 |
 | Keyword actions (CR 701) | 70 | 16 | 3 | 7 | 44 |
-| Effects | 192 | 48 | 1 | 18 | 125 |
+| Effects | 192 | 49 | 1 | 18 | 124 |
 | Triggers | 138 | 9 | 4 | 10 | 115 |
 | Static abilities | 77 | 5 | 2 | 0 | 70 |
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
@@ -39,7 +39,6 @@ The things that alone hold back the most of the most-played cards.
 | option | Remembering what an effect moved | — | missing | 15 | 113 |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 13 | 106 |
 | option | You may play or cast a card from another zone | — | missing | 12 | 79 |
-| effect | DigUntil | — | missing | 8 | 18 |
 | option | An effect's condition: about a named object | — | missing | 6 | 53 |
 | trigger | AttackersDeclared | attackers declared | named | 6 | 26 |
 | option | Only once (or N times) each turn | — | missing | 6 | 18 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | effect | ChangeTargets | — | missing | 6 | 10 |
 | static | CantAttackUnless | — | missing | 6 | 7 |
 | effect | SetState | setState | named | 5 | 19 |
+| option | A token that enters tapped and attacking | — | missing | 5 | 16 |
 
 ## Keyword abilities (CR 702)
 
@@ -170,7 +170,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.150 | Compleated | — | missing | 1 | 7 | 1 | 0 |
 | 702.183 | Tiered | — | missing | 1 | 7 | 1 | 1 |
 | 702.176 | Impending | — | missing | 1 | 6 | 1 | 1 |
-| 702.192 | Paradigm | — | missing | 1 | 5 | 1 | 0 |
+| 702.192 | Paradigm | — | missing | 1 | 5 | 1 | 1 |
 | 702.168 | Disguise | — | missing | 0 | 47 | 0 | 0 |
 | 702.45 | Bushido | — | missing | 0 | 37 | 0 | 0 |
 | 702.18 | Shroud | Shroud | built | 0 | 37 | 0 | 0 |
@@ -376,7 +376,7 @@ The things that alone hold back the most of the most-played cards.
 | SetState | setState | named | 19 | 280 | 19 | 5 |
 | SacrificeAll | sacrificeAll | built | 19 | 130 | 0 | 0 |
 | ImmediateTrigger | immediateTrigger | named | 18 | 313 | 18 | 1 |
-| DigUntil | — | missing | 18 | 167 | 18 | 8 |
+| DigUntil | digUntil | built | 18 | 167 | 0 | 0 |
 | ReplaceToken | — | missing | 17 | 35 | 17 | 0 |
 | ReplaceCounter | replaceCounters | named | 16 | 33 | 16 | 0 |
 | Fight | fight | built | 15 | 148 | 0 | 0 |
@@ -397,7 +397,7 @@ The things that alone hold back the most of the most-played cards.
 | Earthbend | — | missing | 10 | 36 | 10 | 6 |
 | Phases | phaseOut | named | 9 | 56 | 9 | 3 |
 | RemoveCounter | removeCounter | built | 8 | 198 | 0 | 0 |
-| ChoosePlayer | — | missing | 8 | 120 | 8 | 0 |
+| ChoosePlayer | — | missing | 8 | 120 | 8 | 1 |
 | Repeat | — | missing | 8 | 58 | 8 | 0 |
 | RollDice | — | missing | 7 | 131 | 7 | 3 |
 | Amass | amass | named | 7 | 72 | 7 | 5 |
@@ -426,7 +426,7 @@ The things that alone hold back the most of the most-played cards.
 | TwoPiles | twoPiles | named | 2 | 32 | 2 | 1 |
 | DigMultiple | — | missing | 2 | 12 | 2 | 1 |
 | ExchangeLifeVariant | exchangeLife | named | 2 | 3 | 2 | 2 |
-| NameCard | — | missing | 1 | 87 | 1 | 0 |
+| NameCard | — | missing | 1 | 87 | 1 | 1 |
 | ChooseSource | — | missing | 1 | 67 | 1 | 0 |
 | DamageResolve | — | missing | 1 | 64 | 1 | 0 |
 | Explore | — | missing | 1 | 42 | 1 | 0 |
@@ -672,7 +672,7 @@ The things that alone hold back the most of the most-played cards.
 | --- | --- | --- | ---: | ---: | ---: | ---: |
 | Continuous | layers | partial | 521 | 4418 | 0 | 0 |
 | ReduceCost | rules/statics | partial | 100 | 516 | 0 | 0 |
-| CantBlockBy | — | missing | 26 | 353 | 13 | 4 |
+| CantBlockBy | — | missing | 26 | 353 | 13 | 5 |
 | AlternativeCost | rules/actions | built | 24 | 148 | 0 | 0 |
 | Panharmonicon | rules/trigger | built | 19 | 37 | 0 | 0 |
 | CantBeCast | — | missing | 14 | 97 | 14 | 6 |
@@ -757,7 +757,7 @@ The things that alone hold back the most of the most-played cards.
 | Counter | — | missing | 21 | 110 | 12 | 6 |
 | CreateToken | — | missing | 17 | 32 | 17 | 0 |
 | AddCounter | — | missing | 15 | 30 | 15 | 0 |
-| Draw | — | missing | 7 | 37 | 7 | 3 |
+| Draw | — | missing | 7 | 37 | 7 | 4 |
 | GainLife | — | missing | 6 | 21 | 6 | 1 |
 | Untap | — | missing | 5 | 157 | 5 | 5 |
 | ProduceMana | — | missing | 2 | 11 | 2 | 0 |

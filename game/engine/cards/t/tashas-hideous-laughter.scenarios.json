@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Tasha's Hideous Laughter",
+  "fixtures": {
+    "Titan": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{5}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 6,
+      "toughness": 6
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya exiles four 6-mana Titans: 24, past 20",
+      "library": [
+        "Titan",
+        "Titan",
+        "Titan",
+        "Titan",
+        "Titan"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tasha's Hideous Laughter"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Tasha's Hideous Laughter"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Titan",
+            "Titan",
+            "Titan",
+            "Titan"
+          ]
+        }
+      ]
+    }
+  ]
+}

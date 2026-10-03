@@ -635,7 +635,8 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
 
 - Zones: `moveZone` (ChangeZone), `moveZoneAll` (ChangeZoneAll), `draw`, `discard`, `mill`, `shuffle`, `dig` (look at
   top N, choose, rest to bottom or graveyard), `surveil`, `scry`, `peekAndReveal`, `sacrifice`, `sacrificeAll`,
-  `destroy`, `destroyAll`, `exileUntil`, `returnToHand`, `play` (cast or play without paying), `discover`.
+  `destroy`, `destroyAll`, `exileUntil`, `returnToHand`, `play` (cast or play without paying), `discover`, `digUntil`
+  (from the top until a card fits; added in M4 phase 3, batch 62).
 - Mana and cost: `addMana`, `addManaReflected`, `tap`, `untap`, `untapAll`, `costReduction`, `alternativeCost`.
 - Life and damage: `gainLife`, `loseLife`, `dealDamage`, `damageEach`, `damageAll`, `exchangeLife`, `fight`.
 - Counters: `putCounter`, `putCounterAll`, `removeCounter`, `proliferate`, `multiplyCounters`, `moveCounters`,

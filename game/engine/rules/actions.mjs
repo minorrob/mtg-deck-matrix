@@ -759,6 +759,8 @@ function perform(state, player, action, during = null) {
        and the pool may have moved since it was offered. The offered check above proves the action
        is still on the list, and this proves the payment still balances. */
     const fromCommand = object.zone === "command";
+    /* "Whenever you cast a legendary spell from your hand" (Jodah): where it was cast from, for what watches. */
+    const castFrom = object.zone;
     const tax = fromCommand ? commanderTax(state, player, action.objectId) : 0;
     const free = action.free ? freeCast(state, player, action.objectId) : null;
     if (action.free && !free) throw new Error(`${object.card} cannot be cast without paying its mana cost now`);
@@ -829,7 +831,7 @@ function perform(state, player, action, during = null) {
       card,
       sa: {isSpell: true, abilityId: entry.abilityId, stackId: entry.stackId},
       si: {isTrigger: false, actor: {playerId: player, name: state.players[player].name}},
-      targetDescription,
+      targetDescription, castFrom,
     }));
     events.push(event("GameEventCardChangeZone", state, {
       card,

@@ -27,7 +27,7 @@ import {isPrimitive} from "../../vocabulary.mjs";
 import {bindEffect} from "../bind.mjs";
 import {countEffect} from "../amount.mjs";
 import {controllerOf, typesOf} from "../../rules/layers.mjs";
-import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sacrificeAll} from "./zones.mjs";
+import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sacrificeAll, digUntil} from "./zones.mjs";
 import {
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
   putCounter, putCounterAll, removeCounter, proliferate, damageAll, fight,
@@ -126,6 +126,8 @@ export const EFFECTS = Object.freeze({
   gainControl, sacrificeAll,
   /* Batch 58: a permanent becomes a copy (CR 707.2, layer 1). */
   becomeCopy,
+  /* Batch 62: cards from the top of a library until one fits. */
+  digUntil,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */
