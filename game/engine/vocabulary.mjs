@@ -154,7 +154,9 @@ const BEYOND_TIER0 = ["shroud", "ward",
   /* Batch 77: toxic (CR 702.164), prowess (CR 702.108), devoid (CR 702.114). */
   "toxic", "prowess", "devoid",
   /* Batch 78: annihilator (CR 702.86). */
-  "annihilator"];
+  "annihilator",
+  /* Batch 79: commander ninjutsu (CR 702.49d), ninjutsu that also works from the command zone. */
+  "commander ninjutsu"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

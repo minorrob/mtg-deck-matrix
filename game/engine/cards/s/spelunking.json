@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Spelunking",
+    "oracleId": "2962fe4c-bf48-454b-8a6b-0f8253352ae8",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When this enchantment enters, draw a card, then you may put a land card from your hand onto the battlefield. If you put a Cave onto the battlefield this way, you gain 4 life.\nLands you control enter untapped.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this enchantment enters, draw a card, then you may put a land card from your hand onto the battlefield. If you put a Cave onto the battlefield this way, you gain 4 life.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "hand",
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          },
+          "upTo": true,
+          "to": "battlefield",
+          "remember": true
+        },
+        {
+          "effect": "gainLife",
+          "amount": 4,
+          "condition": {
+            "about": "remembered",
+            "is": {
+              "subtypes": [
+                "Cave"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Lands you control enter untapped.",
+      "rule": "lands-enter-untapped",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      }
+    }
+  ]
+}

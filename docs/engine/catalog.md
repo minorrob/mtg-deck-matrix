@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 980 defined and playable today; 2,255 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 989 defined and playable today; 2,264 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -36,9 +36,9 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | Remembering what an effect moved | — | missing | 21 | 113 |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 20 | 106 |
 | option | You may play or cast a card from another zone | — | missing | 14 | 79 |
+| option | Remembering what an effect moved | — | missing | 12 | 104 |
 | keyword construct | ETBReplacement | — | missing | 10 | 33 |
 | effect | SetState | setState | named | 8 | 19 |
 | option | Imprint (a card exiled with this) | — | missing | 7 | 10 |
@@ -826,7 +826,7 @@ The things that alone hold back the most of the most-played cards.
 | You may, decided by a named player | modal (Yes / No) | partial | 176 | 1499 | 0 | 0 |
 | An effect's condition: if a permanent is present | an effect's condition {present ...} | built | 142 | 1292 | 0 | 0 |
 | Fewer targets than the most ("up to", "any number of") | — | missing | 126 | 1672 | 126 | 1 |
-| Remembering what an effect moved | — | missing | 124 | 1168 | 113 | 21 |
+| Remembering what an effect moved | — | missing | 124 | 1168 | 104 | 12 |
 | More than one target of a kind ("up to N") | — | missing | 123 | 1664 | 123 | 0 |
 | Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 106 | 20 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |

@@ -187,8 +187,9 @@ export function amountOf(state, value, context = {}) {
   return (value.times ?? 1) < 0 ? total : Math.max(0, total);
 }
 
-/** The parameters of an effect that take a number, and so may take a count. */
-export const AMOUNT_PARAMS = Object.freeze(["amount", "count", "power", "toughness"]);
+/** The parameters of an effect that take a number, and so may take a count -- "the top X cards" (`fromTop`, Villainous
+ *  Wealth, batch 79) among them. */
+export const AMOUNT_PARAMS = Object.freeze(["amount", "count", "power", "toughness", "fromTop"]);
 
 /** An effect with its counted amounts read now (bind.mjs calls this as the effect reaches the head of the queue). */
 export function countEffect(state, effect, context) {
