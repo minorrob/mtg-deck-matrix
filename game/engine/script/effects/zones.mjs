@@ -26,6 +26,8 @@ import {keywordsOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector} from "../filter.mjs";
 import {applyReplacements, enteringModifications, regenerated} from "../../rules/replacement.mjs";
 import {cantBeCountered} from "../../rules/statics.mjs";
+import {amountOf} from "../amount.mjs";
+import {manaValue, parseManaCost} from "../../rules/mana.mjs";
 
 const ZONE_LABEL = {
   library: "Library", hand: "Hand", battlefield: "Battlefield",
@@ -255,6 +257,52 @@ export function destroyAll(state, params, context) {
     if (params.noRegenerate !== true && regenerated(state, id, events)) continue;
     moveOne(state, id, "graveyard", events);
   }
+  return events;
+}
+
+/**
+ * `digUntil` -- "reveal cards from the top of your library until you reveal a land card. Put that card onto the battlefield
+ * tapped and the rest on the bottom of your library" (Forge's DigUntil). For each player it names (`who`), cards from the
+ * top until one fits `selector` -- of "lesser mana value" than an amount (`manaValueBelow`: Jodah) -- or until those taken
+ * total `totalManaValue` or more (Tasha's Hideous Laughter). Revealed as they are taken, or exiled (`exile`). `found`: where
+ * the one that fits goes (`to`, `tapped`; no `to` and it stays where it is), `remember`ed for the effects after it ("you
+ * may cast that card"). `rest`: "graveyard", "bottom" or "exile". A library that runs out stops it, nothing found.
+ *
+ * "The rest on the bottom of your library in a random order": in the order they were taken -- no random stream reaches a
+ * plain effect yet.
+ */
+export function digUntil(state, params, context) {
+  const events = [];
+  const found = [];
+  const below = params.manaValueBelow !== undefined ? amountOf(state, params.manaValueBelow, context) : null;
+  const fits = params.selector ? compileSelector({...params.selector, what: "card", zone: params.exile ? "exile" : "library", ...(below !== null ? {manaValue: {max: below - 1}} : {})}) : null;
+  const valueOf = (id) => (state.objects[id]?.manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0);
+  for (const player of playersFor(state, params.who, context.controller)) {
+    const taken = [];
+    let hit = null, total = 0;
+    for (const top of cardsIn(state, "library", player)) {
+      const id = params.exile ? moveOne(state, top, "exile", events, {owner: player}) : top;
+      if (id === null) break;
+      if (!params.exile) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: player}}));
+      if (fits && fits(state, id, {controller: context.controller, source: context.source})) { hit = id; break; }
+      taken.push(id);
+      total += valueOf(id);
+      if (params.totalManaValue !== undefined && total >= params.totalManaValue) break;
+    }
+    if (hit !== null) {
+      const to = params.found?.to;
+      const landed = to ? moveOne(state, hit, to, events, {owner: player, tapped: params.found?.tapped === true}) : hit;
+      if (landed !== null) found.push(landed);
+    }
+    if (params.rest === "graveyard" || (params.rest === "exile" && !params.exile)) for (const id of taken) moveOne(state, id, params.rest, events, {owner: player});
+    if (params.rest === "bottom") for (const id of taken) {
+      if (params.exile) { moveOne(state, id, "library", events, {owner: player}); continue; }
+      const library = state.zones.library[player];
+      library.splice(library.indexOf(id), 1);
+      library.push(id);
+    }
+  }
+  if (params.remember) context.remembered = found.filter((id) => state.objects[id]);
   return events;
 }
 
