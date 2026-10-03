@@ -194,7 +194,13 @@ try {
   const next = cloud.puts[2];
   ok(next.parent === forced.answer && !next.force, `the next sync saves on top of the reset (${forced.answer}), without force`);
   eq(cloud.pulls, 0, "and nothing was ever pulled back down");
-  const signedAfter = await library(p);
+  /* The page keeps the save's answer once it has read the response, a moment after the request the cloud above counts:
+     waited for, not read at once -- under load the read came first (the local gate, 2026-10-03). */
+  let signedAfter = await library(p);
+  for (const end = Date.now() + 30000; signedAfter.sync?.headId !== cloud.head.id && Date.now() < end;) {
+    await new Promise((r) => setTimeout(r, 100));
+    signedAfter = await library(p);
+  }
   eq([signedAfter.decks, signedAfter.lots], [0, 0], "the library stays empty");
   ok(signedAfter.sync && signedAfter.sync.email === "reader@example.test" && signedAfter.sync.headId === cloud.head.id, "matched to the cloud's newest version, for the same account");
   /* The landing page stands alone, with the rail hidden: its own chip opens the Menu, and names who is signed in. */
