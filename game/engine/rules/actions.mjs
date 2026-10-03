@@ -210,7 +210,9 @@ export const costAtomBuilt = (atom) => (COST_ATOMS_BUILT.includes(atom?.atom) &&
   /* "Crew 3": other untapped creatures with total power 3 or more, the player's choice (crewChoices). */
   || (atom?.atom === "crew" && Number.isInteger(atom.power) && atom.power >= 0)
   /* "Tap another untapped creature you control" (station, CR 702.184a): which one, chosen as it is activated (tapChoices). */
-  || (atom?.atom === "tapCreature" && Boolean(atom.selector) && typeof atom.selector === "object");
+  || (atom?.atom === "tapCreature" && Boolean(atom.selector) && typeof atom.selector === "object")
+  /* "Untap a tapped creature you control", "untap two" (Halo Fountain, batch 75): which, chosen as it is activated (untapChoices). */
+  || (atom?.atom === "untapCreature" && Number.isInteger(atom.count) && atom.count >= 1);
 
 /* CREW (CR 702.122a): the sets of other untapped creatures you control whose power totals at least N -- each smallest
    such set, so no offer taps a creature it does not need; ids ascending, and no more than CREW_OFFERS_MAX of them. A
@@ -232,6 +234,21 @@ function crewChoices(state, player, vehicle, power) {
   return sets.filter((set) => !sets.some((other) => other !== set && other.length < set.length && other.every((id) => set.includes(id))));
 }
 const crewAtom = (cost) => (cost ?? []).find((a) => a?.atom === "crew");
+const untapAtom = (cost) => (cost ?? []).find((a) => a?.atom === "untapCreature");
+/* "Untap a tapped creature you control", "untap fifteen tapped creatures you control": each set of that many tapped
+   creatures the player controls, ids ascending, no more than CREW_OFFERS_MAX of them (as crew); too few, and none. */
+function untapChoices(state, player, count) {
+  const tapped = state.zones.battlefield.filter((id) => state.objects[id].tapped
+    && characteristicsOf(state, id).controller === player && characteristicsOf(state, id).types.includes("Creature")).sort((a, b) => a - b);
+  const sets = [];
+  const walk = (from, chosen) => {
+    if (sets.length >= CREW_OFFERS_MAX) return;
+    if (chosen.length === count) { sets.push(chosen); return; }
+    for (let i = from; i < tapped.length; i += 1) walk(i + 1, [...chosen, tapped[i]]);
+  };
+  walk(0, []);
+  return sets;
+}
 const tapAtom = (cost) => (cost ?? []).find((a) => a?.atom === "tapCreature");
 /* "Tap another untapped creature you control": each one it may be, one offer each -- a summoning-sick one too, since it is
    not its own {T} (CR 302.6). */
@@ -550,15 +567,17 @@ export function legalActions(state, player) {
         const atom = sacrificeAtom(ability.cost), back = returnAtom(ability.cost), toss = discardAtom(ability.cost);
         /* A permanent you control to sacrifice, or to return to its owner's hand, or a card in your hand to discard: one
            offer each (CR 602.2b). No card to discard, and the ability can't be activated. */
-        const crew = crewAtom(ability.cost), tapper = tapAtom(ability.cost);
+        const crew = crewAtom(ability.cost), tapper = tapAtom(ability.cost), untapper = untapAtom(ability.cost);
         const fodder = atom ? sacrificeChoices(state, player, id, atom.selector).map((s) => ({sacrifice: s}))
           : back ? sacrificeChoices(state, player, id, back.selector).map((r) => ({returnToHand: r}))
           : toss ? discardSets(cardsIn(state, "hand", player).filter((c) => c !== id), toss.count ?? 1).map((d) => ({discard: d}))
           : crew ? crewChoices(state, player, id, crew.power).map((set) => ({crew: set}))
-          : tapper ? tapChoices(state, player, id, tapper.selector).map((t) => ({tap: t})) : [null];
+          : tapper ? tapChoices(state, player, id, tapper.selector).map((t) => ({tap: t}))
+          : untapper ? untapChoices(state, player, untapper.count).map((set) => ({untap: set})) : [null];
         for (const costChoice of fodder)
           actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment, ...(X !== null ? {x: X} : {}),
             ...(costChoice ? {costChoice, costNames: costChoice.crew ? costChoice.crew.map((c) => state.objects[c].card)
+              : costChoice.untap ? costChoice.untap.map((c) => state.objects[c].card)
               : Array.isArray(costChoice.discard) ? costChoice.discard.map((c) => state.objects[c].card)
               : [state.objects[costChoice.sacrifice ?? costChoice.returnToHand ?? costChoice.discard ?? costChoice.tap].card]} : {})}, ability,
             /* "With mana value X": the X of this offer (script/filter.mjs). */
@@ -924,6 +943,11 @@ function perform(state, player, action, during = null) {
         if (!state.objects[tapped] || state.objects[tapped].tapped) throw new Error("That creature can no longer be tapped");
         state.objects[tapped].tapped = true;
         events.push(event("GameEventCardTapped", state, {card: cardRef(state, tapped), tapped: true}));
+      }
+      /* "Untap a tapped creature you control": the ones chosen (still tapped -- the action is one legalActions offers). */
+      if (atom.atom === "untapCreature") for (const id of action.costChoice?.untap ?? []) {
+        state.objects[id].tapped = false;
+        events.push(event("GameEventCardTapped", state, {card: cardRef(state, id), tapped: false}));
       }
       if (atom.atom === "crew") for (const id of action.costChoice?.crew ?? []) {
         if (!state.objects[id] || state.objects[id].tapped) throw new Error("That creature can no longer crew");

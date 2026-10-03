@@ -142,9 +142,16 @@ function objectsOf(value, context) {
   return chosen && chosen.kind === "object" ? [chosen.id] : [];
 }
 
-function playersOf(value, context) {
+function playersOf(value, context, state = null) {
   /* "That player": the one who cast, was dealt the damage, or drew (trigger.mjs). */
   if (value === "that player") return context.about?.player !== undefined && context.about.player !== null ? [context.about.player] : [];
+  /* "It deals 1 damage to its controller" (Vengeful Ancestor, batch 75): the controller of what the trigger is about -- the
+     attacking creature -- now, while it is on the battlefield; gone, the one it last had (CR 608.2h), as it attacked. */
+  if (value === "that card's controller") {
+    const card = context.about?.card;
+    if (state && card !== undefined && card !== null && state.objects[card]?.zone === "battlefield") return [controllerOf(state, card)];
+    return context.about?.controller !== undefined && context.about.controller !== null ? [context.about.controller] : [];
+  }
   if (!isRef(value)) return value;
   const chosen = (context.targets ?? [])[value.target];
   return chosen && chosen.kind === "player" ? [chosen.id] : [];
@@ -156,7 +163,7 @@ function playersOf(value, context) {
  */
 /* "THE CHOSEN TYPE" ("$chosen", script/chosen.mjs): what a chooseType earlier in this resolution chose, or what the
    ability's permanent chose as it entered -- wherever an effect names it. */
-export function bindEffect(effect, context) {
+export function bindEffect(effect, context, state = null) {
   if (!effect || typeof effect !== "object") return effect;
   const bound = namesChosen(effect) ? withChosen(effect, context.chosen) : {...effect};
   /* Facts first: a number for an amount, a player where a player goes. */
@@ -181,7 +188,7 @@ export function bindEffect(effect, context) {
   /* What is attached, when it is not the ability's source: "you may attach it to target creature you control" (Sigarda's
      Aid, "it" the Equipment that entered). Gone, it is nothing -- never the source in its place. */
   if (typeof bound.source === "string") { const [id] = objectsOf(bound.source, context); bound.source = id ?? -1; }
-  if ("who" in bound) bound.who = playersOf(bound.who, context);
+  if ("who" in bound) bound.who = playersOf(bound.who, context, state);
   /* "Target opponent creates a 1/1 Spirit" (Forbidden Orchard): a token's controller, a target player -- or no one. */
   if (isRef(bound.controller)) { const [player] = playersOf(bound.controller, context); bound.controller = player ?? -1; }
   if (isRef(bound.toPlayer)) {
@@ -211,7 +218,7 @@ export function rememberNow(effects, context, {keepThat = false} = {}) {
     if (!effect || typeof effect !== "object") return effect;
     const kept = {};
     if (keepThat) for (const key of ["targets", "spells", "who", "toPlayer", "chooser"])
-      if (effect[key] === "that card" || effect[key] === "that player") kept[key] = effect[key];
+      if (["that card", "that player", "that card's controller"].includes(effect[key])) kept[key] = effect[key];
     const bound = {...bindEffect(effect, context), ...kept};
     for (const key of ["effects", "then", "otherwise"]) if (Array.isArray(bound[key])) bound[key] = bound[key].map(walk);
     if (Array.isArray(bound.modes)) bound.modes = bound.modes.map((mode) => ({...mode, effects: (mode.effects ?? []).map(walk)}));
