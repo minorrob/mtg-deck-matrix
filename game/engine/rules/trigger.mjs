@@ -49,6 +49,7 @@ import {pushAbility, becameTarget} from "./stack.mjs";
 import {cardsIn, usesThisTurn, recordUse} from "../state/index.mjs";
 import {playerStatics} from "./statics.mjs";
 import {matchesSelector, matchesLastKnown} from "../script/filter.mjs";
+import {abilitiesOf} from "./layers.mjs";
 import {chosenFor} from "../script/chosen.mjs";
 import {targetChoices, targetName, isHostile} from "../script/bind.mjs";
 
@@ -180,7 +181,10 @@ function subjects(state, event, condition, sourceId, controller) {
   /* Ward (CR 702.21a): this permanent became the target of a spell or ability an opponent controls -- about that player
      and the stack entry, which "counter it" counters (script/bind.mjs, `stack: "that"`). */
   if (condition.on === "GameEventBecomesTarget") {
-    if (condition.who === "self" && fields.targetId !== sourceId) return [];
+    /* "Whenever this creature becomes the target", and (batch 76) "whenever a Dragon you control becomes the target"
+       (`who` another or any, `filter` what was targeted); "of a spell" (`spell`), not an ability. */
+    if (!fits(state, fields.targetId, condition, sourceId, controller)) return [];
+    if (condition.spell && fields.kind !== "spell") return [];
     const by = fields.by?.playerId;
     if (condition.by === "opponent" && (by === undefined || by === controller)) return [];
     return [{card: fields.targetId, player: by, stackId: fields.stackId}];
@@ -376,7 +380,8 @@ export function collectTriggers(state, events) {
     for (const zone of WATCHING_ZONES) {
       for (const id of state.zones[zone]) {
         const object = state.objects[id];
-        for (const own of object.abilities ?? []) {
+        /* A permanent's abilities now, the ones given it included (layers.mjs); a card's elsewhere. */
+        for (const own of abilitiesOf(state, id)) {
           /* "Whenever you cast a creature spell of the chosen type": read with its permanent's choice. */
           const ability = chosenFor(own, object);
           /* A triggered mana ability happened with the mana ability that triggered it (manaTriggered). */

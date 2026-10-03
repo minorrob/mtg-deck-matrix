@@ -401,6 +401,9 @@ export function pump(state, params, context) {
     apply: {
       power: params.power ?? 0, toughness: params.toughness ?? 0,
       ...(params.keywords ? {addKeywords: params.keywords} : {}),
+      /* "Target creature gains 'When this creature dies, return it ...' until end of turn" (Feign Death, batch 76): the
+         abilities, compiled as the card was (cards/index.mjs). */
+      ...(params.abilities ? {addAbilities: params.abilities} : {}),
     },
     until: params.until ?? "end-of-turn",
     sourceController: context.controller,
