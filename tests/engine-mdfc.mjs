@@ -67,6 +67,10 @@ const mv = (s, id) => manaValue(parseManaCost(s.objects[id].manaCost ?? ""));
     "on the battlefield it is Fell Mire: a land, mana value 0, no color, untapped for 3 life");
   ok(legalActions(s, 0).some((a) => a.kind === "activate-mana" && a.objectId === mire), "and it taps for {B}");
   eq(projectFor(s, 1).players[0].zones.Battlefield.cards.map((x) => x.name), [BACK], "Maya sees Fell Mire");
+  /* It is played as that face, so it is announced as that face: "Rob played Fell Mire" -- the history, the telemetry's
+     land count and the audio rules read this event. */
+  const {events: announced} = runScenario({name: "announced", setup: [at(0, "hand", FELL)], steps: [{play: BACK}, {answer: [0]}]}, index.definition, {});
+  eq(announced.filter((e) => e.kind === "GameEventLandPlayed").map((e) => e.data.fields.land?.name), [BACK], "the land played is announced as Fell Mire");
 
   /* It leaves, and is its front face again (CR 712.8a): returned to Rob's hand, it may be cast or played again. */
   const events = [];
