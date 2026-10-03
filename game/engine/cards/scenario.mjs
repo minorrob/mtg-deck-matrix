@@ -49,11 +49,13 @@ const ZONES = {hand: "Hand", battlefield: "Battlefield", graveyard: "Graveyard",
 const STEP_LIMIT = 2000;
 
 /* Questions the rules ask on the way that a scenario has no view on: nobody attacks or blocks unless a step says so,
-   and a player's triggers go on in the order offered. Anything else stops the scenario, by name. */
+   a player's triggers go on in the order offered, and the legend rule keeps the first (CR 704.5j). Anything else stops
+   the scenario, by name. */
 function routine(state) {
   const kind = state.awaiting?.kind;
   if (kind === "declare-attackers" || kind === "declare-blockers") return resolveAwaiting(state, []);
   if (kind === "order-triggers") return resolveAwaiting(state, awaitingChoice(state).options.map((o) => o.index));
+  if (kind === "legend-rule") return resolveAwaiting(state, [0]);
   return null;
 }
 

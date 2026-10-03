@@ -190,9 +190,12 @@ export function housePilot({seat, cards = () => null} = {}) {
         const lethal = incoming >= self.life;
         const used = new Set(), blocked = new Set(), picks = [];
         const good = (o) => { const b = onBoard.get(o.cardId), a = onBoard.get(o.attackerId); return (b?.power ?? 0) >= (a?.toughness ?? 0) && (b?.toughness ?? 0) > (a?.power ?? 0); };
-        for (const o of options) if (good(o) && !used.has(o.cardId) && !blocked.has(o.attackerId)) { picks.push(o.index); used.add(o.cardId); blocked.add(o.attackerId); }
+        /* One blocker each, so never on a creature with menace, which only two or more may block (CR 702.111b): the
+           rules would refuse the whole declaration. Read from what it sees of the attacker. */
+        const single = options.filter((o) => !(onBoard.get(o.attackerId)?.keywords ?? []).includes("Menace"));
+        for (const o of single) if (good(o) && !used.has(o.cardId) && !blocked.has(o.attackerId)) { picks.push(o.index); used.add(o.cardId); blocked.add(o.attackerId); }
         if (lethal) {
-          const biggest = [...options].sort((x, y) => (onBoard.get(y.attackerId)?.power ?? 0) - (onBoard.get(x.attackerId)?.power ?? 0) || x.index - y.index);
+          const biggest = [...single].sort((x, y) => (onBoard.get(y.attackerId)?.power ?? 0) - (onBoard.get(x.attackerId)?.power ?? 0) || x.index - y.index);
           for (const o of biggest) if (!used.has(o.cardId) && !blocked.has(o.attackerId)) { picks.push(o.index); used.add(o.cardId); blocked.add(o.attackerId); }
         }
         return {indices: picks.slice(0, Math.max(min, Math.min(max, picks.length)))};

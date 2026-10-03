@@ -45,11 +45,11 @@ export function randomLegalPilot(rng) {
       if (choice.mode === "ack") return {indices: []};
       if (choice.mode === "text") return {cancel: true};
 
-      /* CR 510.1c: lethal to each in order before the damage moves on. Walking the list and giving
-         each what would kill it is the simplest assignment that satisfies the rule; anything left
-         over after every blocker has lethal goes on the last one, because the whole amount has to
-         be assigned somewhere. The controller validates this against the same rule, so a pilot that
-         could not produce a legal assignment would stall a game rather than play a bad one. */
+      /* CR 510.1c lets the damage be divided among the blockers any way at all; giving each in turn
+         what would kill it is a sensible division, and anything left over goes on the last option --
+         a trampler's player (CR 702.19b), which by then every blocker's lethal allows. The controller
+         validates it against the same rule, so a pilot that could not produce a legal division would
+         stall a game rather than play a bad one. */
       if (choice.mode === "damage") {
         const targets = choice.options ?? [];
         const amounts = targets.map(() => 0);

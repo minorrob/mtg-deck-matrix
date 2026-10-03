@@ -172,4 +172,35 @@ const resolve = (s) => { passPriority(s); return passPriority(s); };
   eq(empty.awaiting, null, "with no creature anywhere, nobody is asked");
 }
 
+{
+  /* And then at the same time (CR 101.4; the plan review's P8b): each player chooses in turn, and only when the last has
+     chosen does anything move -- before, the active player's creature was already in the graveyard while the next chose,
+     which changes what "whenever one or more creatures die" sees and what a lord was still pumping. */
+  const s = table();
+  const theirs = on(s, {card: "Their Bear", types: ["Creature"], power: 2, toughness: 2}, 1);
+  const mine = on(s, {card: "My Bear", types: ["Creature"], power: 2, toughness: 2}, 0);
+  main(s);
+  beginResolution(s, [{effect: "sacrifice", who: "each", count: 1, selector: {types: ["Creature"]}}], {controller: 0, source: null});
+  resolveAwaiting(s, [0]);
+  eq([s.awaiting?.player, s.objects[mine]?.zone, s.zones.graveyard[0].length], [1, "battlefield", 0],
+    "seat 0 has chosen its Bear, and the Bear is still on the battlefield while seat 1 chooses");
+  resolveAwaiting(s, [0]);
+  eq([s.objects[mine], s.objects[theirs], s.zones.graveyard[0].length, s.zones.graveyard[1].length], [undefined, undefined, 1, 1],
+    "then both are sacrificed together");
+}
+{
+  /* The same for "each player discards a card": chosen in turn order from the active player, then discarded together. */
+  const s = table();
+  const mine = on(s, {card: "My Card", types: ["Creature"], power: 1, toughness: 1}, 0, "hand");
+  on(s, {card: "Their Card", types: ["Creature"], power: 1, toughness: 1}, 1, "hand");
+  main(s);
+  s.activePlayer = 1;
+  beginResolution(s, [{effect: "discard", who: "each", count: 1}], {controller: 0, source: null});
+  eq(s.awaiting?.player, 1, "each player discards: the active player (Maya) chooses first, whoever controls the effect (CR 101.4)");
+  resolveAwaiting(s, [0]);
+  eq([s.awaiting?.player, s.zones.graveyard[1].length], [0, 0], "Maya has chosen, and her card is still in her hand while Rob chooses");
+  resolveAwaiting(s, [s.zones.hand[0].indexOf(mine)]);
+  eq([s.zones.graveyard[0].length, s.zones.graveyard[1].length, s.awaiting], [1, 1, null], "then both are discarded together");
+}
+
 console.log(`engine-costs: ${checks} checks passed — spells cost less by generic mana only, the tax included and never below nothing; cycling from the hand at instant speed; each player sacrifices their own, the active player first.`);

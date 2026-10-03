@@ -24,6 +24,7 @@ import {createRng} from "../game/engine/rng.mjs";
 import {randomLegalPilot} from "../game/engine/pilots/random-legal.mjs";
 import {hashState} from "../game/engine/journal.mjs";
 import {startRoom, openRoom, RoomError, basicCards} from "../game/room/room.mjs";
+import {loadCardIndex} from "../game/tools/engine-cards.mjs";
 import {GameRoom, objectStorage} from "../cloud/game-room.mjs";
 
 let checks = 0;
@@ -242,4 +243,23 @@ try {
 } finally {
   /* nothing to close: all in memory */
 }
+/* A PILOT'S REFUSED ANSWER IS NOT THE GAME'S END (the plan review's C2; probe R's seed 11 ended a table this way). The
+   house pilot cannot see what attacking costs (Propaganda: {2} for each creature attacking its controller), so it
+   declares an attack its controller cannot pay for; the rules refuse it before changing anything. The room says so in
+   the history and answers for it with the least legal answer -- here, no attack -- and the game goes on to its end. */
+{
+  const index = loadCardIndex();
+  const refusalCards = (name) => (name === "Propaganda" ? index.definition("Propaganda") : cards(name));
+  const zero = def("Zero Bear", {types: ["Creature"], power: 1, toughness: 1, manaCost: "{0}"});
+  const pod = {seats: [
+    {seatId: "ai-a", name: "Zero", pilot: "house", commander: [def("General z", {types: ["Creature"], supertypes: ["Legendary"], power: 3, toughness: 3, manaCost: "{9}"})], cards: Array(99).fill(zero)},
+    {seatId: "ai-b", name: "Prop", pilot: "house", commander: [def("General p", {types: ["Creature"], supertypes: ["Legendary"], power: 3, toughness: 3, manaCost: "{9}"})],
+      cards: [...Array(30).fill("Island"), ...Array(69).fill("Propaganda")]},
+  ]};
+  const room = await startRoom({storage: memoryStorage(), matchId: "refused1", cards: refusalCards, pod, seed: "refused"});
+  const said = room.history.filter((h) => /was refused/.test(h.text));
+  ok(said.length > 0 && /cost \{\d+\} to attack with/.test(said[0].text), `the refused attack is said in the history (${said[0]?.text})`);
+  ok(room.status === "finished" || room.history.length > 0, "and the game went on past it rather than stopping the table");
+}
+
 console.log(`game-room: ${checks} checks passed — one match per room, every seat shown only its own view (${leakChecks} views checked), decisions only from the seat asked, the same game after any reopening, unplayable cards refused by name.`);

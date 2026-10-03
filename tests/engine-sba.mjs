@@ -25,7 +25,9 @@
  */
 import assert from "node:assert/strict";
 import {createState, addObject, commanderKeyOf} from "../game/engine/state/index.mjs";
-import {beginGame} from "../game/engine/rules/turn.mjs";
+import {beginGame, awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
+import {runScenario} from "../game/engine/cards/scenario.mjs";
+import {loadCardIndex} from "../game/tools/engine-cards.mjs";
 import {checkStateBasedActions, dealCommanderDamage, gameOver} from "../game/engine/rules/sba.mjs";
 
 let checks = 0;
@@ -226,6 +228,80 @@ const creature = (over) => ({types: ["Creature"], power: 2, toughness: 2, ...ove
   checkStateBasedActions(s);
   eq([Boolean(s.objects[dented]), s.objects[dented]?.damage, Boolean(s.objects[touched]), Boolean(s.objects[shrunk]), Boolean(s.objects[plain])], [true, 5, true, false, false],
     "an indestructible 2/2 with 5 damage stays, damage and all; so does one dealt deathtouch damage; an indestructible 2/0 is put into the graveyard (704.5f is not destruction); a plain 2/2 with 2 damage dies");
+}
+
+/* ---- the legend rule (CR 704.5j; the plan review's C2, 2026-10-03) ----
+   Two or more legendary permanents with the same name controlled by one player: that player chooses one, and the rest are
+   PUT INTO their owners' graveyards -- not destroyed, so indestructible does not save them, and not sacrificed -- which is
+   a death, so "dies" sees it. The same name under two players is two legends. */
+{
+  const s = fresh();
+  const legend = (over) => creature({card: "Krenko, Mob Boss", supertypes: ["Legendary"], owner: 0, controller: 0, ...over});
+  const first = addObject(s, legend({}), "battlefield");
+  const second = addObject(s, legend({keywords: ["Indestructible"]}), "battlefield");
+  checkStateBasedActions(s);
+  eq([s.awaiting?.kind, s.awaiting?.player], ["legend-rule", 0], "two Krenkos under one player: that player is asked which to keep (CR 704.5j)");
+  const choice = awaitingChoice(s);
+  eq([choice.mode, choice.min, choice.max, choice.options.map((o) => o.cardId)], ["one", 1, 1, [first, second]], "one of the two, each offered as itself");
+  ok(new Set(choice.options.map((o) => o.label)).size === 2, `and told apart in words (${choice.options.map((o) => o.label).join(" | ")})`);
+  resolveAwaiting(s, [0]);
+  eq([Boolean(s.objects[first]), Boolean(s.objects[second]), s.zones.graveyard[0].length, s.awaiting], [true, false, 1, null],
+    "the one kept stays; the other is put into its owner's graveyard -- indestructible does not save it, because nothing destroyed it");
+}
+{
+  const s = fresh();
+  addObject(s, creature({card: "Krenko, Mob Boss", supertypes: ["Legendary"], owner: 0, controller: 0}), "battlefield");
+  addObject(s, creature({card: "Krenko, Mob Boss", supertypes: ["Legendary"], owner: 1, controller: 1}), "battlefield");
+  addObject(s, creature({card: "Bear", owner: 0, controller: 0}), "battlefield");
+  addObject(s, creature({card: "Bear", owner: 0, controller: 0}), "battlefield");
+  checkStateBasedActions(s);
+  eq([s.awaiting, s.zones.battlefield.length], [null, 4], "the same legend under two players is two legends (one each), and two Bears are just two Bears");
+}
+{
+  const s = fresh();
+  const mine = addObject(s, creature({card: "Krenko, Mob Boss", supertypes: ["Legendary"], owner: 0, controller: 0}), "battlefield");
+  const borrowed = addObject(s, creature({card: "Krenko, Mob Boss", supertypes: ["Legendary"], owner: 2, controller: 0}), "battlefield");
+  checkStateBasedActions(s);
+  eq(s.awaiting?.player, 0, "a legend borrowed from another player counts under its controller");
+  resolveAwaiting(s, [0]);
+  eq([Boolean(s.objects[mine]), s.objects[borrowed], s.zones.graveyard[2].length], [true, undefined, 1], "and the one not kept goes to its OWNER's graveyard");
+}
+/* A legend put into a graveyard by the rule died: Blood Artist sees it, through the rules with real cards. */
+{
+  const index = loadCardIndex();
+  const LEGEND = {types: ["Creature"], subtypes: ["Goblin"], supertypes: ["Legendary"], manaCost: "{R}", colors: ["R"], power: 2, toughness: 2};
+  const {state} = runScenario({name: "the legend rule is a death", setup: [
+    {seat: 0, zone: "battlefield", cards: ["Mountain", "Blood Artist", "Legend"]}, {seat: 0, zone: "hand", cards: ["Legend"]},
+  ], steps: [{tap: "Mountain"}, {cast: "Legend"}, {resolve: true},
+    {expect: [{asks: {seat: 0}}]}, {answer: [0]},
+    {expect: [{seat: 0, zone: "graveyard", cards: ["Legend"]}, {stack: 1}]}]}, index.definition, {Legend: LEGEND});
+  eq([state.zones.battlefield.filter((id) => state.objects[id].card === "Legend").length], [1], "one Legend stays, the other died, and Blood Artist's trigger is on the stack for it");
+  /* And a scenario that never answers it: the runner keeps the first, as the house pilot does. */
+  const kept = runScenario({name: "the runner keeps the first legend", setup: [{seat: 0, zone: "battlefield", cards: ["Legend", "Legend"]}],
+    steps: [{expect: [{seat: 0, zone: "graveyard", cards: ["Legend"]}]}]}, index.definition, {Legend: LEGEND}).state;
+  eq(kept.zones.battlefield.filter((id) => kept.objects[id].card === "Legend").length, 1, "a scenario that does not answer the legend rule keeps the first");
+}
+{
+  const s = fresh();
+  for (let i = 0; i < 2; i += 1) {
+    const id = addObject(s, creature({card: "Krenko, Mob Boss", supertypes: ["Legendary"], owner: 0, controller: 0}), "battlefield");
+    s.objects[id].faceDown = true;
+  }
+  checkStateBasedActions(s);
+  eq([s.awaiting, s.zones.battlefield.length], [null, 2], "two face-down permanents have no name (CR 708.2): the legend rule has nothing to compare");
+}
+
+/* ---- +1/+1 and -1/-1 counters annihilate (CR 704.5q) ---- */
+{
+  const s = fresh();
+  const bear = addObject(s, creature({card: "Bear", owner: 0, controller: 0}), "battlefield");
+  const other = addObject(s, creature({card: "Elk", owner: 0, controller: 0}), "battlefield");
+  s.objects[bear].counters = {"+1/+1": 2, "-1/-1": 3};
+  s.objects[other].counters = {"+1/+1": 2};
+  checkStateBasedActions(s);
+  eq([s.objects[bear].counters["+1/+1"] ?? 0, s.objects[bear].counters["-1/-1"] ?? 0, s.objects[other].counters["+1/+1"]], [0, 1, 2],
+    "two +1/+1 and three -1/-1: two of each are removed, one -1/-1 is left (CR 704.5q); a creature with only +1/+1 counters keeps them");
+  ok(Boolean(s.objects[bear]), "and the 2/2 with one -1/-1 counter lives, as a 1/1");
 }
 
 console.log(`engine-sba: ${checks} checks passed — two commanders' damage is not pooled, life gain does not erase it, an empty library is not a loss until you draw, and a dead player's board leaves with them.`);

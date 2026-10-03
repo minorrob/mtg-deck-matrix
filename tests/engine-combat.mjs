@@ -17,9 +17,10 @@
  * happens as the step begins, before anyone can respond — which is why an instant cast in the
  * declare attackers step is cast at creatures that are already attacking and already tapped.
  *
- * LETHAL DAMAGE COMES BEFORE DAMAGE MOVES ON (CR 510.1c). An attacker facing two blockers may not
- * assign its damage past the first until the first has been assigned lethal. The board already
- * enforces this in `damage` mode, and the engine offers the same record.
+ * DAMAGE AMONG BLOCKERS IS DIVIDED AS ITS CONTROLLER CHOOSES (CR 510.1c). Since the 2024 rules
+ * there is no damage assignment order; lethal matters only for trample, which reaches the player
+ * once every blocker has lethal (CR 702.19b). The board's validator and the engine hold the same
+ * rule (controller.mjs, damageAssignmentProblem).
  */
 import assert from "node:assert/strict";
 import {createState, addObject, cardsIn, zoneOf} from "../game/engine/state/index.mjs";
@@ -30,6 +31,8 @@ import {attackers, blockers, combatDamage} from "../game/engine/rules/combat.mjs
 import {createRng} from "../game/engine/rng.mjs";
 import {randomLegalPilot} from "../game/engine/pilots/random-legal.mjs";
 import {hashState} from "../game/engine/journal.mjs";
+import {createController} from "../game/engine/controller.mjs";
+import {randomUUID} from "node:crypto";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -244,7 +247,7 @@ function withAttack(setup = () => {}) {
     "and dealt its own two back before dying — damage is simultaneous (CR 510.2), so the 3/3 carries it and lives");
 }
 
-/* ---- two blockers: lethal before the damage moves on (CR 510.1c) ---- */
+/* ---- two blockers: the attacking player divides the damage (CR 510.1c) ---- */
 {
   const s = withAttack((state) => {
     addObject(state, creature({card: "Small", owner: 1, controller: 1, power: 1, toughness: 1}), "battlefield");
@@ -253,7 +256,7 @@ function withAttack(setup = () => {}) {
   resolveAwaiting(s, [0, 1]);
   eq(s.combat.attacks[0].blockers.length, 2, "two creatures block one attacker");
 
-  /* The attacking player orders them and then divides three damage. */
+  /* The attacking player divides three damage between them. */
   let guard = 0, offered = null;
   while (guard < 30) {
     if (s.awaiting?.kind === "assign-combat-damage") { offered = awaitingChoice(s); break; }
@@ -265,7 +268,111 @@ function withAttack(setup = () => {}) {
   eq(offered.mode, "damage", "in the mode the board already draws");
   eq(offered.total, 3, "for the attacker's three power");
   ok(offered.options.every((o) => Number.isInteger(o.lethal)),
-    "each blocker saying how much is lethal to it, which is what the assignment-order rule needs");
+    "each blocker saying how much is lethal to it, which trample's rule needs (CR 702.19b)");
+}
+
+/* ---- dividing damage among blockers (CR 510.1c), trample past them (CR 702.19b), deathtouch's lethal (CR 702.2c) ----
+   The plan review's C2 (decision D9): the rule today has no damage assignment order. The attacking creature's
+   controller divides its damage among its blockers as they choose; lethal matters only for trample, whose damage reaches
+   the player once every blocker has been assigned lethal. Each combat damage step asks for its own division (CR 510.4). */
+function blockedBy(attacker, blockerSpecs) {
+  const s = atCombat((state) => {
+    addObject(state, creature({card: "Attacker", owner: 0, controller: 0, ...attacker}), "battlefield");
+    for (const b of blockerSpecs) addObject(state, creature({owner: 1, controller: 1, ...b}), "battlefield");
+  });
+  const declare = awaitingChoice(s);
+  resolveAwaiting(s, [declare.options.findIndex((o) => o.label.startsWith("Attacker") && o.defenderId === 1)]);
+  let guard = 0;
+  while (s.awaiting?.kind !== "declare-blockers" && guard < 40) {
+    if (s.priorityPlayer !== null) { if (passPriority(s).outcome === "step-ends") advance(s); } else advance(s);
+    guard += 1;
+  }
+  resolveAwaiting(s, awaitingChoice(s).options.map((o) => o.index));
+  return onTo(s, (st) => st.awaiting?.kind === "assign-combat-damage");
+}
+function onTo(s, done) {
+  let guard = 0;
+  while (!done(s) && guard < 60) {
+    if (s.awaiting) { resolveAwaiting(s, []); continue; }
+    if (s.priorityPlayer !== null) { if (passPriority(s).outcome === "step-ends") advance(s); } else advance(s);
+    guard += 1;
+  }
+  return s;
+}
+const combatOver = (s) => onTo(s, (st) => ["COMBAT_END", "MAIN2"].includes(currentPhase(st)));
+const answerAs = (choice, amounts) => {
+  const c = createController();
+  c.offer(choice);
+  return c.answer({actionId: randomUUID(), revision: c.revision, kind: "answer", choiceId: choice.id, amounts});
+};
+{
+  const s = blockedBy({power: 3, toughness: 3}, [{card: "Small", power: 1, toughness: 1}, {card: "Big", power: 1, toughness: 4}]);
+  const choice = awaitingChoice(s);
+  eq([choice.divide, choice.options.map((o) => [o.label, o.lethal, o.defender])], [true, [["Small", 1, false], ["Big", 4, false]]],
+    "two blockers: the attacker's controller divides three damage between them, each saying what is lethal to it");
+  ok(answerAs(choice, [0, 3]).accepted, "the board's answer of all three to the 1/4 and none to the 1/1 is accepted -- there is no order to follow (CR 510.1c)");
+  resolveAwaiting(s, [], [0, 3]);
+  eq([named(s, "Small").length, s.objects[named(s, "Big")[0]]?.damage], [1, 3], "and dealt: the 1/1 untouched, the 1/4 with three");
+}
+{
+  const s = blockedBy({power: 5, toughness: 5, keywords: ["Trample"]}, [{card: "Wall A", power: 0, toughness: 2}, {card: "Wall B", power: 0, toughness: 2}]);
+  const choice = awaitingChoice(s);
+  eq(choice.options.map((o) => [o.defender, o.lethal]), [[false, 2], [false, 2], [true, 0]], "a trampler's division has the player in it, after its blockers (CR 702.19b)");
+  assert.throws(() => answerAs(choice, [2, 1, 2]), /lethal/, "two to the player while one wall has less than lethal is refused by the board's validator"); checks += 1;
+  assert.throws(() => resolveAwaiting(s, [], [2, 1, 2]), /lethal/, "and by the engine"); checks += 1;
+  resolveAwaiting(s, [], [2, 2, 1]);
+  eq([s.players[1].life, named(s, "Wall A").length + named(s, "Wall B").length], [39, 0], "lethal to each wall, then one to the player: both walls die and the player takes one");
+}
+{
+  const s = blockedBy({power: 3, toughness: 3, keywords: ["Trample", "Deathtouch"]}, [{card: "Ox A", power: 0, toughness: 4}, {card: "Ox B", power: 0, toughness: 4}]);
+  eq(awaitingChoice(s).options.map((o) => o.lethal), [1, 1, 0], "from a source with deathtouch one damage is lethal (CR 702.2c)");
+  resolveAwaiting(s, [], [1, 1, 1]);
+  eq([s.players[1].life, named(s, "Ox A").length + named(s, "Ox B").length], [39, 0], "one to each 0/4, both destroyed (CR 702.2b), and one tramples over");
+}
+{
+  const s = blockedBy({power: 4, toughness: 4, keywords: ["Double Strike"]}, [{card: "Pike A", power: 2, toughness: 2}, {card: "Pike B", power: 2, toughness: 2}]);
+  eq(currentPhase(s), "COMBAT_FIRST_STRIKE_DAMAGE", "a double striker facing two blockers divides its damage in the first-strike step");
+  resolveAwaiting(s, [], [2, 2]);
+  eq([named(s, "Pike A").length + named(s, "Pike B").length, s.objects[named(s, "Attacker")[0]].damage], [0, 0],
+    "both blockers die in that step without dealing theirs: the answer is dealt as first-strike damage, not regular");
+  combatOver(s);
+  eq(s.players[1].life, 40, "and in the regular step, blocked by nothing and without trample, it deals no damage (CR 510.1c)");
+}
+{
+  const s = blockedBy({power: 4, toughness: 4, keywords: ["Double Strike", "Trample"]}, [{card: "Pike A", power: 2, toughness: 2}, {card: "Pike B", power: 2, toughness: 2}]);
+  resolveAwaiting(s, [], [2, 2, 0]);
+  combatOver(s);
+  eq(s.players[1].life, 36, "with trample, blocked by nothing left, all four go to the player in the regular step (CR 702.19d)");
+}
+
+{
+  const s = blockedBy({power: 2, toughness: 9, keywords: ["Double Strike"]}, [{card: "Ogre A", power: 0, toughness: 3}, {card: "Ogre B", power: 0, toughness: 3}]);
+  resolveAwaiting(s, [], [2, 0]);
+  onTo(s, (st) => st.awaiting?.kind === "assign-combat-damage" || ["COMBAT_END", "MAIN2"].includes(currentPhase(st)));
+  eq([currentPhase(s), s.awaiting?.kind], ["COMBAT_DAMAGE", "assign-combat-damage"], "both blockers lived through the first-strike step, so the double striker divides again in the regular one (CR 510.4)");
+  resolveAwaiting(s, [], [0, 2]);
+  eq(["Ogre A", "Ogre B"].map((n) => s.objects[named(s, n)[0]].damage), [2, 2], "two to each blocker, one division in each step");
+}
+
+/* ---- an attacker that has left the battlefield is out of combat (CR 506.4) ----
+   Probe R's seed 10: an attacker sacrificed after attackers were declared, and the blockers' question was built for it
+   anyway, and threw. It is offered no blocker, and the one still attacking is. */
+{
+  const s = atCombat((state) => {
+    addObject(state, creature({card: "Bear", owner: 0, controller: 0}), "battlefield");
+    addObject(state, creature({card: "Doomed", owner: 0, controller: 0}), "battlefield");
+    addObject(state, {card: "Altar", types: ["Artifact"], owner: 0, controller: 0, abilities: [{id: "a1", kind: "activated", text: "Sacrifice a creature: You gain 1 life.",
+      cost: [{atom: "sacrifice", selector: {types: ["Creature"]}}], effects: [{effect: "gainLife", amount: 1}]}]}, "battlefield");
+    addObject(state, creature({card: "Guard", owner: 1, controller: 1}), "battlefield");
+  });
+  const declare = awaitingChoice(s);
+  resolveAwaiting(s, ["Bear", "Doomed"].map((n) => declare.options.findIndex((o) => o.label.startsWith(n) && o.defenderId === 1)));
+  const sac = legalActions(s, 0).find((a) => a.kind === "activate" && a.costChoice?.sacrifice === named(s, "Doomed")[0]);
+  ok(sac, "seat 0 may sacrifice its own attacker in the declare attackers step");
+  applyAction(s, 0, sac);
+  onTo(s, (st) => st.awaiting?.kind === "declare-blockers");
+  const blocks = awaitingChoice(s);
+  eq(blocks.options.map((o) => o.label), ["Guard blocks Bear"], "the defender is offered blocks on the attacker still there, and none on the one that left (CR 506.4)");
 }
 
 /* ---- a game with combat in it terminates, and replays ---- */
@@ -312,4 +419,4 @@ function playOut(seed, turnLimit = 20) {
   eq(a.attacks, b.attacks, "declaring the same attacks");
 }
 
-console.log(`engine-combat: ${checks} checks passed — every attacker chooses its own defender, summoning sickness is about control, and lethal damage comes before the damage moves on.`);
+console.log(`engine-combat: ${checks} checks passed — every attacker chooses its own defender, summoning sickness is about control, damage among blockers is divided as its controller chooses, and trample waits for lethal to every blocker.`);

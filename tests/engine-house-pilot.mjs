@@ -171,4 +171,36 @@ function playGame(seed, kinds, {onDecision} = {}) {
   ok(standing.random <= seats.random * 0.25, `random-legal pilots do not: ${standing.random} of ${seats.random}`);
 }
 
+/* 6. It never blocks a menace creature with one (CR 702.111b; the plan review's C2). Probe R's seed 11: offered each
+   blocker on its own, the pilot declared a single good block on a creature with menace, the rules refused the
+   declaration, and the room could not get past the refusal. It reads the attacker's keywords from its own view. */
+{
+  const s = createState({matchId: "m", seed: "menace", players: [{name: "Rob"}, {name: "Maya"}]});
+  for (let seat = 0; seat < 2; seat += 1) for (let i = 0; i < 20; i += 1) addObject(s, {...FOREST, owner: seat, controller: seat}, "library", seat);
+  addObject(s, {card: card("Sneak", {manaValue: 2, types: ["Creature"], power: 2, toughness: 2}), types: ["Creature"], power: 2, toughness: 2, keywords: ["Menace"], owner: 0, controller: 0}, "battlefield");
+  addObject(s, {card: card("Plain Bear", {manaValue: 2, types: ["Creature"], power: 2, toughness: 2}), types: ["Creature"], power: 2, toughness: 2, owner: 0, controller: 0}, "battlefield");
+  addObject(s, {card: card("Wall", {manaValue: 3, types: ["Creature"], power: 3, toughness: 3}), types: ["Creature"], power: 3, toughness: 3, owner: 1, controller: 1}, "battlefield");
+  beginGame(s);
+  let guard = 0;
+  while (!(s.turn === 3 && s.awaiting?.kind === "declare-attackers") && guard < 400) {
+    guard += 1;
+    if (s.awaiting) { resolveAwaiting(s, []); continue; }
+    if (s.priorityPlayer === null) { advance(s); continue; }
+    if (passPriority(s).outcome === "step-ends") advance(s);
+  }
+  const attack = awaitingChoice(s);
+  resolveAwaiting(s, attack.options.filter((o) => o.defenderId === 1).map((o) => o.index));
+  while (s.awaiting?.kind !== "declare-blockers" && guard < 500) {
+    guard += 1;
+    if (s.priorityPlayer === null) { advance(s); continue; }
+    if (passPriority(s).outcome === "step-ends") advance(s);
+  }
+  const choice = awaitingChoice(s);
+  const answer = housePilot({seat: 1, cards}).answer(projectFor(s, 1), choice);
+  eq(answer.indices.map((i) => choice.options[i].label), ["Wall blocks Plain Bear"],
+    "the Wall would block either attacker well, and blocks the one without menace -- never one blocker on a menace creature");
+  resolveAwaiting(s, answer.indices);
+  ok(true, "and the rules accept the declaration");
+}
+
 console.log(`engine-house-pilot: ${checks} checks passed — the house pilot sees only its seat, draws nothing it cannot see, replays exactly, finishes 100 games, and beats random play (${measured.join("; ")}).`);

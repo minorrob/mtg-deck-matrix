@@ -83,29 +83,38 @@ function validateGenericAmount(choice, request) {
 /* CR 510.1c. Damage may not be assigned past a blocker that has not been assigned lethal damage,
    unless the attacker divides damage as it chooses or the assignment order is being overridden —
    and even then, not past a blocker to the defending player. */
+/**
+ * What is wrong with a division of combat damage, or null -- the one statement of the rule, which the engine's combat
+ * (rules/combat.mjs) holds its own answers to as well. Whole amounts, none more than the total, adding up to it. Among
+ * the blockers as the attacking creature's controller chooses (CR 510.1c: there is no damage assignment order). To the
+ * player -- a trampler's `defender` option -- only once every blocker has at least its lethal (CR 702.19b). A choice that
+ * does not say `divide` is held to the old order, lethal to each before the damage moves on, as it always was.
+ */
+export function damageAssignmentProblem(choice, amounts) {
+  const targets = choice.options ?? [];
+  if (!Array.isArray(amounts) || amounts.length !== targets.length) return "Assign damage to each listed recipient";
+  if (amounts.some((n) => !Number.isFinite(n) || !Number.isInteger(n) || n < 0 || n > choice.total)) return "Use whole, nonnegative damage amounts";
+  const short = targets.some((t, i) => t.defender !== true && amounts[i] < (t.lethal ?? 0));
+  if (short && targets.some((t, i) => t.defender === true && amounts[i] > 0)) return "Assign lethal damage to every blocker before assigning any to the player";
+  if (choice.divide !== true) {
+    let priorNeedsLethal = false;
+    for (let i = 0; i < targets.length; i += 1) {
+      if (amounts[i] > 0 && priorNeedsLethal && (choice.overrideOrder !== true || targets[i].defender === true))
+        return "Assign lethal damage to the required blockers before assigning damage onward";
+      priorNeedsLethal = priorNeedsLethal || amounts[i] < targets[i].lethal;
+    }
+  }
+  if (amounts.reduce((a, b) => a + b, 0) !== choice.total) return `Assign exactly ${choice.total} damage before confirming`;
+  return null;
+}
+
 function validateCombatDamage(choice, request) {
   if (request.skip === true) {
     if (choice.maySkip !== true) throw new Error("This damage assignment cannot be skipped");
     return;
   }
-  const targets = choice.options ?? [];
-  const amounts = request.amounts;
-  if (!Array.isArray(amounts) || amounts.length !== targets.length)
-    throw new Error("Assign damage to each listed recipient");
-  let sum = 0;
-  let priorNeedsLethal = false;
-  for (let i = 0; i < targets.length; i += 1) {
-    const amount = amounts[i];
-    if (!Number.isFinite(amount) || !Number.isInteger(amount) || amount < 0 || amount > choice.total)
-      throw new Error("Use whole, nonnegative damage amounts");
-    const target = targets[i];
-    if (amount > 0 && priorNeedsLethal && choice.divide !== true
-        && (choice.overrideOrder !== true || target.defender === true))
-      throw new Error("Assign lethal damage to the required blockers before assigning damage onward");
-    priorNeedsLethal = priorNeedsLethal || amount < target.lethal;
-    sum += amount;
-  }
-  if (sum !== choice.total) throw new Error(`Assign exactly ${choice.total} damage before confirming`);
+  const problem = damageAssignmentProblem(choice, request.amounts);
+  if (problem) throw new Error(problem);
 }
 
 /* Reordering the top of a library, where some cards may not be moved (a revealed card that must
