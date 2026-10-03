@@ -25,6 +25,7 @@ import {validateScript} from "../game/engine/script/schema.mjs";
 import {housePilot} from "../game/engine/pilots/house-pilot.mjs";
 import {missingFor} from "../game/tools/engine-constructs.mjs";
 import {loadCardIndex} from "../game/tools/engine-cards.mjs";
+import {offerDetails} from "../game/room/room.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -58,6 +59,7 @@ const ON_BOARD = [at(0, "battlefield", "Mountain", "Elf"), at(1, "battlefield", 
   const offers = legalActions(s, 0).filter((a) => a.kind === "cast");
   eq([offers.length, offers[0].targets, offers[0].targetNames], [1, [{kind: "choose", min: 0, max: 2}], ["up to two targets"]],
     "Split Shot is offered once, its counted target a placeholder -- not once per way to choose up to two of four creatures");
+  eq(offerDetails(s, 0, offers), ["→ up to two targets"], "the room words the offer for the board by what is still to be picked, not a blank");
   applyAction(s, 0, offers[0]);
   const choice = awaitingChoice(s);
   eq([s.awaiting.kind, choice.mode, choice.min, choice.max, choice.title, choice.options.map((o) => o.label)],

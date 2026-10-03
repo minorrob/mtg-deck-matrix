@@ -40,6 +40,7 @@ import {gameOver, concede} from "../engine/rules/sba.mjs";
 import {beginMulligans} from "../engine/rules/mulligan.mjs";
 import {projectFor} from "../engine/projection.mjs";
 import {controllerOf, characteristicsOf} from "../engine/rules/layers.mjs";
+import {countWords} from "../engine/script/bind.mjs";
 import {createRng} from "../engine/rng.mjs";
 import {createJournal, hashState} from "../engine/journal.mjs";
 import {createController} from "../engine/controller.mjs";
@@ -152,7 +153,10 @@ export function offerDetails(state, seat, actions) {
     /* The modes chosen as it is cast (CR 700.2), in the card's words. */
     if (Array.isArray(a.modes)) parts.push(a.modes.map((i) => state.objects[a.objectId]?.spell?.modal?.modes?.[i]?.text ?? `mode ${i + 1}`).join(" + "));
     if (a.x !== undefined) parts.push(`X = ${a.x}`);
-    if ((a.targets ?? []).length) parts.push(`→ ${a.targets.map((t) => (!t ? "" : t.kind === "player" ? player(t.id) : object(t.id, plain))).join(", ")}`);
+    /* A counted target (script/bind.mjs): what is still to be picked ("up to two targets"), or the ones picked. */
+    const aimed = (t) => (!t ? "" : Array.isArray(t) ? (t.length ? t.map(aimed).join(" and ") : "no target") : t.kind === "choose" ? countWords(t)
+      : t.kind === "player" ? player(t.id) : object(t.id, plain));
+    if ((a.targets ?? []).length) parts.push(`→ ${a.targets.map(aimed).join(", ")}`);
     for (const [kind, id] of Object.entries(a.costChoice ?? {})) parts.push(`${kind === "discard" ? "discarding" : kind === "returnToHand" ? "returning" : kind === "exile" ? "exiling" : "sacrificing"} ${object(id, plain)}`);
     /* An alternative cost (CR 118.9): what is paid instead of the mana cost. */
     if (a.alternative !== undefined) {
