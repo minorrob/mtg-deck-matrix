@@ -14,7 +14,8 @@
  * `effects/asking.mjs`, driven by `resolution.mjs`, which is what lets an effect stop half way
  * through and carry on. `runEffect` refuses to call one directly rather than running half of it.
  *
- * EVERY PRIMITIVE HAS THE SAME SHAPE: `(state, params, context) => events`. It mutates the state
+ * EVERY PRIMITIVE HAS THE SAME SHAPE: `(state, params, context, rng) => events` -- `rng` the game's random stream, for
+ * "then shuffle" and "in a random order" (batch 80), handed in rather than kept. It mutates the state
  * and hands back what happened; nothing here holds a journal, for the same reason no rules module
  * does — a rollback discards the events with the state rather than leaving a record of something
  * that did not happen.
@@ -28,7 +29,7 @@ import {bindEffect} from "../bind.mjs";
 import {countEffect} from "../amount.mjs";
 import {conditionHolds} from "../condition.mjs";
 import {controllerOf, typesOf} from "../../rules/layers.mjs";
-import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sacrificeAll, digUntil, peekAndReveal} from "./zones.mjs";
+import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sacrificeAll, digUntil, peekAndReveal, shuffle} from "./zones.mjs";
 import {
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
   putCounter, putCounterAll, removeCounter, proliferate, damageAll, fight, poison, winGame,
@@ -99,11 +100,11 @@ export const REPEAT_EACH = Object.freeze(["player", "opponent", "creature"]);
  * "that card" bound to it and every amount counted for it (CR 608.2h, each as it is done). What it repeats does not
  * stop to ask (cards/index.mjs refuses one that would).
  */
-function repeatFor(state, params, context) {
+function repeatFor(state, params, context, rng = null) {
   const events = [];
   for (const about of eachOf(state, params.each, context)) {
     const each = {...context, about: {...(context.about ?? {}), ...about}};
-    for (const effect of params.effects ?? []) events.push(...runEffect(state, countEffect(state, bindEffect(effect, each), each), each));
+    for (const effect of params.effects ?? []) events.push(...runEffect(state, countEffect(state, bindEffect(effect, each), each), each, rng));
   }
   return events;
 }
@@ -113,10 +114,10 @@ function repeatFor(state, params, context) {
  * Otherwise, put two +1/+1 counters on it"). In a resolution it is spliced into the queue (script/resolution.mjs), so a
  * question inside it can be asked; called directly (what repeats for each), what it does must not ask.
  */
-function branch(state, params, context) {
+function branch(state, params, context, rng = null) {
   const holds = conditionHolds(state, params.if, {controller: context.controller, source: context.source ?? null, about: context.about, remembered: context.remembered, targets: context.targets, cast: context.cast});
   const events = [];
-  for (const effect of (holds ? params.then : params.otherwise) ?? []) events.push(...runEffect(state, countEffect(state, bindEffect(effect, context), context), context));
+  for (const effect of (holds ? params.then : params.otherwise) ?? []) events.push(...runEffect(state, countEffect(state, bindEffect(effect, context), context), context, rng));
   return events;
 }
 
@@ -153,6 +154,8 @@ export const EFFECTS = Object.freeze({
   branch, immediateTrigger,
   /* Batch 73: the top of a library looked at, or revealed. */
   peekAndReveal,
+  /* Batch 80: a library shuffled (CR 701.24), from the game's random stream. */
+  shuffle,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */
@@ -166,7 +169,7 @@ export const isBuilt = (name) => Boolean(EFFECTS[name]) || NEEDS_A_DECISION.incl
  * declares and this does not implement is a gap in the engine, and saying which it is turns "why
  * did nothing happen" into a one-line answer.
  */
-export function runEffect(state, effect, context = {}) {
+export function runEffect(state, effect, context = {}, rng = null) {
   const name = effect?.effect;
   if (!isPrimitive(name))
     throw new Error(`${JSON.stringify(name)} is not a primitive in the catalog (§12.2)`);
@@ -177,7 +180,7 @@ export function runEffect(state, effect, context = {}) {
       : "it is declared in the catalog and not implemented yet";
     throw new Error(`The primitive ${name} cannot be run directly: ${why}`);
   }
-  return run(state, effect, context) ?? [];
+  return run(state, effect, context, rng) ?? [];
 }
 
 /**
@@ -193,8 +196,8 @@ export function runFollowUps(state, proposal) {
 }
 
 /** Run a list of effects in order, collecting what happened. */
-export function runEffects(state, effects, context = {}) {
+export function runEffects(state, effects, context = {}, rng = null) {
   const events = [];
-  for (const effect of effects ?? []) events.push(...runEffect(state, effect, context));
+  for (const effect of effects ?? []) events.push(...runEffect(state, effect, context, rng));
   return events;
 }

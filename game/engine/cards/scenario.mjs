@@ -97,7 +97,7 @@ export function runScenario(scenario, cards, fixtures = {}) {
   const stepOnce = () => {
     if (state.awaiting) { if (!routine(state)) fail(`the game asks ${state.awaiting.kind}, which the scenario did not answer`); return; }
     if (state.priorityPlayer === null) { record(advance(state)); return; }
-    const outcome = passPriority(state);
+    const outcome = passPriority(state, null, rng);
     record(outcome.events);
     if (outcome.outcome === "step-ends") record(advance(state));
   };
@@ -277,7 +277,7 @@ export function runScenario(scenario, cards, fixtures = {}) {
         } else stepOnce();
       }
     } else if (step.pass) {
-      for (let n = 0; n < step.pass; n += 1) record(passPriority(state).events);
+      for (let n = 0; n < step.pass; n += 1) record(passPriority(state, null, rng).events);
     } else if (step.to) goTo(step.to);
     else if (step.attack) {
       /* On to the declare-attackers step of this turn, the named creatures attacking (each its first defender). */

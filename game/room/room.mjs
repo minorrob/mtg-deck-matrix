@@ -279,7 +279,9 @@ function roomOn(storage, matchId, cards) {
   function apply(seat, action, by = "person") {
     if (action.kind === "pass") {
       if (by === "room") step.quiet = true; else if (by === "person") step.acted = true;
-      const result = passPriority(state);
+      /* The game's random stream, for what resolves ("then shuffle", "in a random order"): the room's own, so a replay
+         of the tape draws the same (game/room/replay.mjs). */
+      const result = passPriority(state, null, rng);
       write(result.events);
       if (result.outcome === "step-ends") {
         if (step.quiet && !step.acted) quietly(state.phase);

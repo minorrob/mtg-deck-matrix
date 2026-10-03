@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gamble",
+    "oracleId": "a54f0869-94c8-42af-9080-166efb9486a4",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Search your library for a card, put that card into your hand, discard a card at random, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Search your library for a card, put that card into your hand, discard a card at random, then shuffle.",
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {},
+          "to": "hand"
+        },
+        {
+          "effect": "discard",
+          "count": 1,
+          "random": true
+        },
+        {
+          "effect": "shuffle"
+        }
+      ]
+    }
+  ]
+}

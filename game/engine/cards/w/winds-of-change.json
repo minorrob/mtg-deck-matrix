@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Winds of Change",
+    "oracleId": "f525cf10-e24c-4c46-9a13-6f8579d09d50",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each player shuffles the cards from their hand into their library, then draws that many cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each player shuffles the cards from their hand into their library, then draws that many cards.",
+      "effects": [
+        {
+          "effect": "repeatFor",
+          "each": "player",
+          "effects": [
+            {
+              "effect": "moveZoneAll",
+              "selector": {
+                "what": "card",
+                "zone": "hand",
+                "controller": "that player"
+              },
+              "to": "library",
+              "shuffle": true,
+              "remember": true
+            },
+            {
+              "effect": "draw",
+              "who": "that player",
+              "count": {
+                "rememberedCount": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

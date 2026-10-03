@@ -75,8 +75,11 @@ export function takeAction(state, player = state.priorityPlayer) {
  *   `resolving`  the top object began to resolve and stopped to ask somebody (`state.awaiting`); it
  *                stays on the stack and nobody holds priority until the answer finishes it.
  *   `step-ends`  everyone passed on an empty stack; the caller advances the step (CR 117.4).
+ *
+ * `rng`: the game's random stream, for what resolves -- "then shuffle", "in a random order" (batch 80). A generator is
+ * not state, so it is handed in, as a search's and the mulligan's are; without it, an effect that needs one refuses.
  */
-export function passPriority(state, effect = null) {
+export function passPriority(state, effect = null, rng = null) {
   if (state.priorityPlayer === null)
     throw new Error("Nobody holds priority in this step, so nobody can pass it");
 
@@ -101,7 +104,7 @@ export function passPriority(state, effect = null) {
     return {outcome: "step-ends", events: []};
   }
 
-  const events = resolveTop(state, effect);
+  const events = resolveTop(state, effect, rng);
   if (resolutionPending(state)) {state.priorityPlayer = null; return {outcome: "resolving", events};}
   return {outcome: "resolved", events: afterResolving(state, events)};
 }
