@@ -28,7 +28,9 @@ import {build, worktreeSource} from "../../tools/release-pages.mjs";
 import {replayTape} from "../../game/room/replay.mjs";
 
 const require = createRequire(import.meta.url);
-const {chromium} = require(process.env.UAT_PLAYWRIGHT || "playwright");
+const playwright = require(process.env.UAT_PLAYWRIGHT || "playwright");
+/* The browser UAT_BROWSER names (the matrix, browser-runner.mjs); Chromium by default. */
+const {launchBrowser} = await import("./browser-runner.mjs");
 const WRANGLER = process.env.WRANGLER;
 if (!WRANGLER) { console.error("play-e2e: set WRANGLER to an installed wrangler's bin/wrangler.js (docs/release-pages.md, Tooling on a fresh machine)"); process.exit(2); }
 const PORT = Number(process.env.E2E_PORT || 8797), WORKER_PORT = PORT + 1, BASE = `http://crankmagic.localhost:${PORT}`;
@@ -97,7 +99,7 @@ await new Promise((r) => proxy.listen(PORT, "127.0.0.1", r));
 
 const SHOTS = process.env.UAT_SHOTS || "";
 if (SHOTS) mkdirSync(SHOTS, {recursive: true});
-const browser = await chromium.launch({headless: true, ...(process.env.UAT_CHROME ? {executablePath: process.env.UAT_CHROME} : {})});
+const browser = await launchBrowser(playwright);
 const errors = [];
 const shot = async (page, name) => {if (SHOTS) await page.screenshot({path: path.join(SHOTS, `play-${name}.png`)});};
 const until = async (what, fn, timeout = 30000) => {const end = Date.now() + timeout; for (;;) {const v = await fn(); if (v) return v; if (Date.now() > end) throw Error(`timed out waiting for ${what}`); await new Promise((r) => setTimeout(r, 500));}};

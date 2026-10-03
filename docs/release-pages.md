@@ -72,6 +72,17 @@ It covers the Play tab, a playtest table with an AI seat, the alarm launching th
 stays Coming Soon, and binds no table, until Rob's go. Until M4 defines the decks' cards, the engine plays basic
 lands only: a real deck is refused by name, card by card.
 
+**The browser matrix (Part 6 of the plan: Chrome, Edge, Safari and Firefox on the desk).** Every walk above runs in
+the browser `UAT_BROWSER` names -- `chromium` (the default), `msedge`, `firefox` or `webkit`, Safari's engine --
+through `launchBrowser` in `tests/uat/browser-runner.mjs`. With the release served as in step 3,
+`tests/uat/browser-matrix.mjs --write` runs the walks in each and writes the table to `docs/uat/browser-matrix.md`;
+a browser that will not start on the machine is recorded with the reason. The phones (Safari on an iPhone, Chrome on
+an Android phone, in landscape, for Play) are a person's to run, and their rows say so.
+
+```bash
+UAT_BASE=http://crankmagic.localhost:8790 WRANGLER=<wrangler.js> node tests/uat/browser-matrix.mjs --write
+```
+
 **Once, before the first release that carries R3.10a (Rob, in the Cloudflare dashboard).** Import by link
 (`GET /api/import/archidekt`, `cloud/import.mjs`) needs no account, but Access guards all of `/api/*` with the
 Invited policy, so until Access lets that one path through, only a signed-in person can import a deck by its

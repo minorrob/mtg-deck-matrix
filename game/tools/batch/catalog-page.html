@@ -1,0 +1,261 @@
+<!-- The Engine Catalog page: game/tools/batch/build-catalog-page.py puts the catalog data and the standing line in it. -->
+<title>CrankMagic Engine Catalog</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a rules ledger -- the standing first (three figures, a bar per section), then the build order, then the whole
+   catalog as one sortable table with section tabs, a search and status chips. */
+:root {
+  --bg: #f6f7f8;
+  --panel: #ffffff;
+  --ink: #17212b;
+  --muted: #5a6672;
+  --line: #dde2e7;
+  --accent: #1d5f7c;
+  --accent-soft: #e3eff5;
+  --built: #2f7a4b;
+  --built-soft: #e2f1e7;
+  --partial: #9a6a12;
+  --partial-soft: #f7ecd6;
+  --named: #4b5fa3;
+  --named-soft: #e6e9f6;
+  --missing: #7a828b;
+  --missing-soft: #eceef1;
+  --bar: #c9d6df;
+  --display: "Spectral", Georgia, "Times New Roman", serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12171c; --panel: #1a2128; --ink: #e6ecf1; --muted: #9aa7b3; --line: #2b353f;
+    --accent: #7fc0d8; --accent-soft: #1e3240;
+    --built: #6fcf93; --built-soft: #1d3326; --partial: #e2b25a; --partial-soft: #3a2f19;
+    --named: #9fb0ee; --named-soft: #262d48; --missing: #8c96a0; --missing-soft: #262d34; --bar: #34505f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12171c; --panel: #1a2128; --ink: #e6ecf1; --muted: #9aa7b3; --line: #2b353f;
+  --accent: #7fc0d8; --accent-soft: #1e3240;
+  --built: #6fcf93; --built-soft: #1d3326; --partial: #e2b25a; --partial-soft: #3a2f19;
+  --named: #9fb0ee; --named-soft: #262d48; --missing: #8c96a0; --missing-soft: #262d34; --bar: #34505f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 56px; display: grid; gap: 28px; }
+h1, h2 { font-family: var(--display); font-weight: 600; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; letter-spacing: -0.01em; }
+h2 { font-size: 22px; line-height: 1.2; }
+p { margin: 0; max-width: 68ch; }
+.muted { color: var(--muted); }
+.mono { font-family: var(--mono); font-size: 13px; }
+.num { font-variant-numeric: tabular-nums; }
+header { display: grid; gap: 10px; }
+.eyebrow { font: 600 12px/1 var(--body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.figure { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; display: grid; gap: 4px; min-width: 0; }
+.figure b { font: 600 30px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.figure span { color: var(--muted); font-size: 13.5px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.sections { display: grid; gap: 8px; }
+.srow { display: grid; grid-template-columns: minmax(150px, 230px) minmax(0, 1fr) 64px; gap: 12px; align-items: center; }
+.srow button { all: unset; cursor: pointer; color: var(--ink); font-weight: 500; border-radius: 4px; }
+.srow button:hover { color: var(--accent); text-decoration: underline; }
+.srow button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.stack { display: flex; height: 14px; border-radius: 3px; overflow: hidden; background: var(--missing-soft); }
+.stack span { display: block; height: 100%; }
+.s-built { background: var(--built); } .s-partial { background: var(--partial); } .s-named { background: var(--named); } .s-missing { background: var(--missing-soft); }
+.srow .count { text-align: right; color: var(--muted); font-size: 13px; }
+.next { display: grid; gap: 6px; }
+.nrow { display: grid; grid-template-columns: 28px minmax(0, 1fr) minmax(90px, 220px) 92px; gap: 12px; align-items: center; padding-block: 6px; border-top: 1px solid var(--line); }
+.nrow:first-child { border-top: 0; }
+.nrow .rank { color: var(--muted); font-size: 13px; text-align: right; }
+.nrow .what { min-width: 0; display: grid; }
+.nrow .what small { color: var(--muted); font-size: 12.5px; }
+.meter { height: 8px; background: var(--missing-soft); border-radius: 4px; overflow: hidden; position: relative; }
+.meter .held { position: absolute; inset: 0 auto 0 0; background: var(--bar); }
+.meter .alone { position: absolute; inset: 0 auto 0 0; background: var(--accent); }
+.nrow .figs { text-align: right; font-size: 13px; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.tab, .chip { font: 500 13px/1 var(--body); border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 8px 11px; border-radius: 999px; cursor: pointer; }
+.tab[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--panel); }
+.tab:focus-visible, .chip:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.chip[aria-pressed="false"] { opacity: 0.45; }
+.chip i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+.search { flex: 1 1 240px; min-width: 0; display: flex; }
+.search input { width: 100%; font: 14px/1.2 var(--body); padding: 9px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+label.toggle { display: inline-flex; gap: 8px; align-items: center; font-size: 13.5px; color: var(--muted); cursor: pointer; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 760px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 600 12px/1.2 var(--body); letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); position: sticky; top: 0; background: var(--panel); white-space: nowrap; }
+th button { all: unset; cursor: pointer; }
+th button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+th[aria-sort="descending"] button::after { content: " ↓"; }
+th[aria-sort="ascending"] button::after { content: " ↑"; }
+td.r, th.r { text-align: right; }
+tr:last-child td { border-bottom: 0; }
+td .kind { color: var(--muted); font-size: 12.5px; }
+td .note { color: var(--muted); font-size: 12.5px; display: block; }
+.pill { display: inline-block; font: 600 11.5px/1 var(--body); letter-spacing: 0.03em; padding: 5px 8px; border-radius: 999px; white-space: nowrap; }
+.p-built { color: var(--built); background: var(--built-soft); }
+.p-partial { color: var(--partial); background: var(--partial-soft); }
+.p-named { color: var(--named); background: var(--named-soft); }
+.p-missing { color: var(--missing); background: var(--missing-soft); }
+.use { display: grid; grid-template-columns: 1fr 52px; gap: 8px; align-items: center; min-width: 120px; }
+.use .meter { height: 6px; }
+.empty { padding: 28px; text-align: center; color: var(--muted); }
+footer { color: var(--muted); font-size: 13px; display: grid; gap: 6px; }
+@media (max-width: 640px) {
+  .srow { grid-template-columns: minmax(0, 1fr) 54px; }
+  .srow .stack { grid-column: 1 / -1; grid-row: 2; }
+  .nrow { grid-template-columns: 24px minmax(0, 1fr) 80px; }
+  .nrow .meter { grid-column: 2 / -1; grid-row: 2; }
+}
+@media (prefers-reduced-motion: no-preference) { .tab, .chip { transition: background-color .15s, opacity .15s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">CrankMagic rules engine</div>
+    <h1>Engine catalog</h1>
+    <p class="muted">Every distinct thing a Commander card can do, and where the engine stands on each. The keyword actions and abilities are the Comprehensive Rules' own list (701, 702). The effects, triggers, static abilities, replacement effects, costs, and options and conditions are every one used by the <span id="all-cards" class="num"></span> cards Forge implements.</p>
+  </header>
+
+  <section class="figures" aria-label="The most-played cards">
+    <div class="figure"><b id="f-top" class="num"></b><span>most-played Commander cards (80% of decks)</span></div>
+    <div class="figure"><b id="f-defined" class="num"></b><span>defined and playable today</span></div>
+    <div class="figure"><b id="f-every" class="num"></b><span>with every mechanic built: only their definitions are left to write</span></div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-standing">
+    <h2 id="h-standing">Where the engine stands</h2>
+    <div class="legend">
+      <span><i class="s-built"></i>Built: the engine does it</span>
+      <span><i class="s-partial"></i>Partial: some forms</span>
+      <span><i class="s-named"></i>Named: in the engine's vocabulary, not built</span>
+      <span><i class="s-missing" style="outline:1px solid var(--line)"></i>Missing: not yet named</span>
+    </div>
+    <div class="sections" id="sections"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-next">
+    <h2 id="h-next">What to build next</h2>
+    <p class="muted">The things that hold back the most of the most-played cards on their own. The dark bar is the cards each one alone holds back; the light bar is every card that needs it.</p>
+    <div class="next" id="next"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-all">
+    <h2 id="h-all">The whole catalog</h2>
+    <div class="controls">
+      <div class="tabs" id="tabs" role="group" aria-label="Section"></div>
+    </div>
+    <div class="controls">
+      <div class="search"><input id="q" type="search" placeholder="Search by name, engine name or rule number" aria-label="Search the catalog"></div>
+      <div class="tabs" id="chips" role="group" aria-label="Status"></div>
+      <label class="toggle"><input id="used" type="checkbox"> Only what the most-played cards use</label>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr id="head"></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="muted num" id="shown"></p>
+  </section>
+
+  <footer>
+    <span id="source"></span>
+    <span>Top: how many of the most-played cards use it. All: how many of every card. Holds back: how many most-played cards need it among other missing things. Alone: how many it alone holds back.</span>
+  </footer>
+</div>
+
+<script type="application/json" id="catalog-data">__CATALOG__</script>
+<script>
+(function () {
+  const data = JSON.parse(document.getElementById("catalog-data").textContent);
+  const fmt = (n) => (typeof n === "number" ? n.toLocaleString("en-US") : "—");
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+  const STATUS = ["built", "partial", "named", "missing"];
+  const LABEL = {built: "Built", partial: "Partial", named: "Named", missing: "Missing"};
+  const titles = Object.keys(data.sections);
+  const all = titles.flatMap((t) => data.sections[t].entries.map((e) => ({...e, section: t})));
+
+  document.getElementById("all-cards").textContent = fmt(data.sources.cards.all);
+  document.getElementById("f-top").textContent = fmt(data.top.cards);
+  document.getElementById("f-defined").textContent = fmt(data.top.defined);
+  document.getElementById("f-every").textContent = fmt(data.top.everyRule);
+  document.getElementById("source").textContent = `Rules: ${data.sources.rules.replace(/\.txt$/, "")}. __SOURCE__`;
+
+  /* Where the engine stands: a bar per section. */
+  const sectionsEl = document.getElementById("sections");
+  sectionsEl.innerHTML = titles.map((t) => {
+    const s = data.sections[t], total = s.entries.length;
+    const parts = STATUS.map((k) => s.tally[k] ? `<span class="s-${k}" style="width:${(100 * s.tally[k] / total).toFixed(2)}%" title="${LABEL[k]}: ${s.tally[k]}"></span>` : "").join("");
+    const said = STATUS.map((k) => `${s.tally[k]} ${LABEL[k].toLowerCase()}`).join(", ");
+    return `<div class="srow"><button type="button" data-section="${esc(t)}">${esc(t)}</button><div class="stack" role="img" aria-label="${esc(t)}: ${said}">${parts}</div><span class="count num">${fmt(s.tally.built + s.tally.partial)} / ${fmt(total)}</span></div>`;
+  }).join("");
+  sectionsEl.addEventListener("click", (e) => { const b = e.target.closest("button[data-section]"); if (b) { state.tab = b.dataset.section; render(); document.getElementById("h-all").scrollIntoView({behavior: "smooth", block: "start"}); } });
+
+  /* What to build next: a keyword action and its effect are one thing, listed once. */
+  const seen = new Set();
+  const next = all.filter((e) => e.status !== "built" && e.alone > 0)
+    .sort((a, b) => b.alone - a.alone || b.blocks - a.blocks || (a.kind === "effect" ? -1 : 1))
+    .filter((e) => { const k = e.engine ?? `${e.kind}:${e.name}`; if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 15);
+  const maxHeld = Math.max(...next.map((e) => e.blocks), 1);
+  document.getElementById("next").innerHTML = next.map((e, i) => `<div class="nrow">
+      <span class="rank num">${i + 1}</span>
+      <span class="what"><span>${esc(e.name)} <span class="pill p-${e.status}">${LABEL[e.status]}</span></span><small>${esc(e.kind)}${e.engine ? ` · <span class="mono">${esc(e.engine)}</span>` : ""}</small></span>
+      <span class="meter" role="img" aria-label="${e.alone} alone, ${e.blocks} in all"><span class="held" style="width:${(100 * e.blocks / maxHeld).toFixed(1)}%"></span><span class="alone" style="width:${(100 * e.alone / maxHeld).toFixed(1)}%"></span></span>
+      <span class="figs num"><b>${fmt(e.alone)}</b> <span class="muted">/ ${fmt(e.blocks)}</span></span>
+    </div>`).join("");
+
+  /* The whole catalog. */
+  const state = {tab: "All", q: "", statuses: new Set(STATUS), used: false, sort: "top", dir: -1};
+  try { const saved = localStorage.getItem("engine-catalog-tab"); if (saved && (saved === "All" || titles.includes(saved))) state.tab = saved; } catch (e) {}
+  const tabsEl = document.getElementById("tabs"), chipsEl = document.getElementById("chips");
+  const COLS = [
+    {key: "rule", label: "Rule"}, {key: "name", label: "Name"}, {key: "engine", label: "Engine"}, {key: "status", label: "Status"},
+    {key: "top", label: "Top", r: true}, {key: "all", label: "All", r: true}, {key: "blocks", label: "Holds back", r: true}, {key: "alone", label: "Alone", r: true},
+  ];
+  const maxTop = Math.max(...all.map((e) => e.top), 1);
+  function render() {
+    try { localStorage.setItem("engine-catalog-tab", state.tab); } catch (e) {}
+    tabsEl.innerHTML = ["All", ...titles].map((t) => `<button type="button" class="tab" data-tab="${esc(t)}" aria-pressed="${state.tab === t}">${esc(t)} <span class="num">${fmt(t === "All" ? all.length : data.sections[t].entries.length)}</span></button>`).join("");
+    chipsEl.innerHTML = STATUS.map((k) => `<button type="button" class="chip" data-status="${k}" aria-pressed="${state.statuses.has(k)}"><i class="s-${k}"${k === "missing" ? ' style="outline:1px solid var(--muted)"' : ""}></i>${LABEL[k]}</button>`).join("");
+    document.getElementById("head").innerHTML = COLS.map((c) => `<th class="${c.r ? "r" : ""}" aria-sort="${state.sort === c.key ? (state.dir < 0 ? "descending" : "ascending") : "none"}"><button type="button" data-sort="${c.key}">${c.label}</button></th>`).join("");
+    const q = state.q.trim().toLowerCase();
+    const rows = all.filter((e) => (state.tab === "All" || e.section === state.tab) && state.statuses.has(e.status) && (!state.used || e.top > 0)
+      && (!q || [e.name, e.engine, e.rule, e.forge, e.kind].some((v) => String(v ?? "").toLowerCase().includes(q))));
+    const key = state.sort, rank = (e) => (key === "status" ? STATUS.indexOf(e.status) : e[key]);
+    rows.sort((a, b) => {
+      const x = rank(a), y = rank(b);
+      if (typeof x === "number" || typeof y === "number") return ((x ?? -1) - (y ?? -1)) * state.dir || b.top - a.top;
+      return String(x ?? "").localeCompare(String(y ?? ""), "en", {numeric: true}) * state.dir || b.top - a.top;
+    });
+    document.getElementById("rows").innerHTML = rows.length ? rows.map((e) => `<tr>
+        <td class="mono">${esc(e.rule ?? "")}</td>
+        <td>${esc(e.name)}${e.note ? `<span class="note">${esc(e.note)}</span>` : ""}${state.tab === "All" ? `<span class="note">${esc(e.kind)}</span>` : ""}</td>
+        <td class="mono">${esc(e.engine ?? "—")}</td>
+        <td><span class="pill p-${e.status}">${LABEL[e.status]}</span></td>
+        <td class="r"><span class="use"><span class="meter"><span class="alone" style="width:${(100 * e.top / maxTop).toFixed(1)}%"></span></span><span class="num">${fmt(e.top)}</span></span></td>
+        <td class="r num">${fmt(e.all)}</td>
+        <td class="r num">${e.blocks ? fmt(e.blocks) : "—"}</td>
+        <td class="r num">${e.alone ? fmt(e.alone) : "—"}</td>
+      </tr>`).join("") : `<tr><td colspan="8" class="empty">Nothing matches. Clear the search or turn a status back on.</td></tr>`;
+    document.getElementById("shown").textContent = `${fmt(rows.length)} of ${fmt(all.length)} entries shown.`;
+  }
+  tabsEl.addEventListener("click", (e) => { const b = e.target.closest("button[data-tab]"); if (b) { state.tab = b.dataset.tab; render(); } });
+  chipsEl.addEventListener("click", (e) => { const b = e.target.closest("button[data-status]"); if (!b) return; const k = b.dataset.status; if (state.statuses.has(k)) state.statuses.delete(k); else state.statuses.add(k); render(); });
+  document.getElementById("head").addEventListener("click", (e) => { const b = e.target.closest("button[data-sort]"); if (!b) return; const k = b.dataset.sort; if (state.sort === k) state.dir = -state.dir; else { state.sort = k; state.dir = ["top", "all", "blocks", "alone"].includes(k) ? -1 : 1; } render(); });
+  document.getElementById("q").addEventListener("input", (e) => { state.q = e.target.value; render(); });
+  document.getElementById("used").addEventListener("change", (e) => { state.used = e.target.checked; render(); });
+  render();
+})();
+</script>
