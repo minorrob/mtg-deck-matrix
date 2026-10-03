@@ -40,7 +40,8 @@
           "Inkling"
         ]
       },
-      "defender": "you"
+      "defender": "you",
+      "planeswalkers": true
     },
     {
       "kind": "triggered",

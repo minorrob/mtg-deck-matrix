@@ -59,8 +59,10 @@ export function housePilot({seat, cards = () => null} = {}) {
   };
   /* How many of an offer's targets are on the side its effect is meant for. */
   const aim = (view, action) => (action.targets ?? []).reduce((n, t) => {
-    /* A counted target is picked later, by `answer` below ("choose-targets"): worth taking the offer for. */
-    if (Array.isArray(t) || t?.kind === "choose") return n + 1;
+    /* A counted target is picked later, by `answer` below ("choose-targets"): worth taking the offer for -- unless there is
+       nothing to pick ("up to two target creatures you control", with none). */
+    if (Array.isArray(t)) return n + 1;
+    if (t?.kind === "choose") return n + ((t.of ?? 1) > 0 ? 1 : 0);
     const theirs = t.kind === "player" ? t.id !== seat : (controllerIn(view, t.id) ?? seat) !== seat;
     return n + (theirs === (action.hostile === true) ? 1 : 0);
   }, 0);
@@ -90,6 +92,10 @@ export function housePilot({seat, cards = () => null} = {}) {
       /* A real land before a double-faced card's land face: the spell on its front is worth keeping. */
       const land = actions.find((a) => a.kind === "play-land" && !a.face) ?? actions.find((a) => a.kind === "play-land");
       if (land) return land;
+      /* A planeswalker's loyalty ability, once a turn (CR 606.3): the one that costs the least loyalty, aimed where its
+         targets should go. */
+      const loyal = actions.filter((a) => a.kind === "activate" && a.loyalty !== undefined && (!(a.targets ?? []).length || aim(view, a) > 0));
+      if (loyal.length) return loyal.reduce((best, a) => (a.loyalty > best.loyalty ? a : best));
       /* An X spell at X = 0 does next to nothing; at its largest it does the most (CR 107.3). */
       const casts = actions.filter((a) => a.kind === "cast" && a.x !== 0 && (!(a.targets ?? []).length || aim(view, a) > 0));
       const worth = (a) => manaValue(a.label) + (a.x ?? 0);
@@ -164,7 +170,8 @@ export function housePilot({seat, cards = () => null} = {}) {
           return life < bestLife || (life === bestLife && o.defenderId < best.defenderId) ? o : best;
         });
         const byCreature = new Map();
-        for (const o of options) { if (!opponents.some((p) => p.playerId === o.defenderId)) continue; (byCreature.get(o.cardId) ?? byCreature.set(o.cardId, []).get(o.cardId)).push(o); }
+        /* Players only: the house pilot does not attack a planeswalker (an attack on one is not on its controller). */
+        for (const o of options) { if (!opponents.some((p) => p.playerId === o.defenderId) || o.planeswalkerId !== undefined) continue; (byCreature.get(o.cardId) ?? byCreature.set(o.cardId, []).get(o.cardId)).push(o); }
         /* One defender for the whole attack: the one it can hurt most, a lethal attack first, then the lowest
            life. Against a defender with fewer untapped creatures than it has attackers, everything goes in,
            because the excess gets through however they block; otherwise only the creatures no untapped blocker
@@ -189,7 +196,8 @@ export function housePilot({seat, cards = () => null} = {}) {
       if (id.startsWith("declare-blockers:")) {
         const attacks = view.combat?.attacks.filter((a) => a.defender === seat) ?? [];
         const onBoard = new Map(view.players.flatMap((p) => creaturesOf(p)).map((c) => [c.cardId, c]));
-        const incoming = attacks.reduce((n, a) => n + (onBoard.get(a.attacker)?.power ?? 0), 0);
+        /* What would come at its life: an attack on one of its planeswalkers would not. */
+        const incoming = attacks.filter((a) => a.planeswalker === undefined).reduce((n, a) => n + (onBoard.get(a.attacker)?.power ?? 0), 0);
         const lethal = incoming >= self.life;
         const used = new Set(), blocked = new Set(), picks = [];
         const good = (o) => { const b = onBoard.get(o.cardId), a = onBoard.get(o.attackerId); return (b?.power ?? 0) >= (a?.toughness ?? 0) && (b?.toughness ?? 0) > (a?.power ?? 0); };

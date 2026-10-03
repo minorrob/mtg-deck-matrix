@@ -119,10 +119,12 @@ function subjects(state, event, condition, sourceId, controller) {
     if (condition.atLeast && attacks.length < condition.atLeast) return [];
     /* "Whenever you attack with one or more non-Gnome creatures" (Anim Pakal): an attacker the filter fits. */
     if (condition.filter && !attacks.some((a) => fits(state, a.card?.cardId, {filter: condition.filter}, sourceId, controller))) return [];
-    if (condition.notAttacking === "you" && attacks.some((a) => a.defender?.playerId === controller)) return [];
+    /* Attacking a planeswalker of a player's is not attacking that player (CR 506.3): not "attacking you", and no player
+       attacked for "that player". */
+    if (condition.notAttacking === "you" && attacks.some((a) => a.defender?.playerId === controller && !a.defender.planeswalker)) return [];
     /* Each player attacked, "that player"; the attacking player is `attacker` ("that attacking player creates ..."). One of
        this ability's controller's opponents only, when it says so (CR 508.3e). */
-    if (condition.eachDefender) return [...new Set(attacks.map((a) => a.defender?.playerId))]
+    if (condition.eachDefender) return [...new Set(attacks.filter((a) => !a.defender?.planeswalker).map((a) => a.defender?.playerId))]
       .filter((player) => condition.defender !== "opponent" || player !== controller).map((player) => ({player, attacker}));
     return [{player: attacker}];
   }
@@ -130,8 +132,10 @@ function subjects(state, event, condition, sourceId, controller) {
     const matched = (fields.attackers ?? []).filter((a) => fits(state, a.card?.cardId, condition, sourceId, controller))
       /* "Attacks for the first time each turn": its first attack this turn is this one (rules/combat.mjs counts them). */
       .filter((a) => !condition.firstTime || usesThisTurn(state, a.card?.cardId, "attacked") === 1)
-      /* "Attack one of your opponents" (Frontier Warmonger): the player attacked is not this ability's controller. */
-      .filter((a) => condition.defender !== "opponent" || (a.defender?.playerId !== undefined && a.defender.playerId !== controller));
+      /* "Attack one of your opponents": the player attacked is not this ability's controller. A planeswalker of theirs only
+         when it says "or a planeswalker they control" (`planeswalkers`, Frontier Warmonger; CR 506.3). */
+      .filter((a) => condition.defender !== "opponent" || (a.defender?.playerId !== undefined && a.defender.playerId !== controller
+        && (!a.defender.planeswalker || condition.planeswalkers === true)));
     /* "Whenever a player attacks with three or more creatures" (Aurelia): the attack as a whole, counted -- one event
        declares every attacker (CR 508.1). */
     if (condition.atLeast && matched.length < condition.atLeast) return [];

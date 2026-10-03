@@ -85,8 +85,11 @@ export function runScenario(scenario, cards, fixtures = {}) {
   };
   const put = (seat, zone, name) => {
     const object = define(name);
-    return addObject(state, {...object, card: name, owner: seat, controller: seat, ...(zone === "command" ? {commander: true} : {})},
+    const id = addObject(state, {...object, card: name, owner: seat, controller: seat, ...(zone === "command" ? {commander: true} : {})},
       zone, ["battlefield", "exile"].includes(zone) ? null : seat);
+    /* A planeswalker set on the battlefield has the loyalty counters it would have entered with (CR 306.5b). */
+    if (zone === "battlefield" && (object.types ?? []).includes("Planeswalker") && Number.isInteger(object.loyalty)) state.objects[id].counters.loyalty = object.loyalty;
+    return id;
   };
 
   /* Every library starts with twenty of the same filler, so a draw is visible and never the game's end. */

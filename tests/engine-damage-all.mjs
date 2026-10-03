@@ -76,10 +76,12 @@ const run = (s, effect, source = null, targets = []) => { beginResolution(s, [ef
 {
   const s = table();
   const elf = on(s, creature("Elf", 1), 1), walker = on(s, {card: "Walker", types: ["Planeswalker"], manaCost: "{1}"}, 1), rock = on(s, {card: "Rock", types: ["Artifact"], manaCost: "{1}"}, 1);
-  main(s);
+  /* The loyalty it would have entered with (CR 306.5b): with none, it would be put into the graveyard (704.5i). */
   s.objects[walker].counters.loyalty = 3;
+  main(s);
   run(s, {effect: "damageAll", amount: 1, selector: {what: "permanent", controller: "opponent", anyOf: [{types: ["Creature"]}, {types: ["Planeswalker"]}]}});
-  eq([alive(s, [elf, rock]), s.objects[walker]?.damage ?? "gone"], [[false, true], 1], "\"each creature and planeswalker they control\": the Elf and the Walker are dealt damage, the Rock is not");
+  eq([alive(s, [elf, rock]), s.objects[walker]?.counters.loyalty ?? "gone", s.objects[walker]?.damage], [[false, true], 2, 0],
+    "\"each creature and planeswalker they control\": the Elf and the Walker are dealt damage -- the Walker's removes a loyalty counter (CR 120.3c) -- the Rock is not");
 }
 
 console.log(`engine-damage-all: ${checks} checks passed — damage to each creature and each opponent in one event, from the spell or a creature (its deathtouch and lifelink, on any damage), counted as it resolves, prevented piece by piece.`);

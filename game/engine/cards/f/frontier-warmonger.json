@@ -30,7 +30,8 @@
         "on": "attacks",
         "who": "any",
         "batch": true,
-        "defender": "opponent"
+        "defender": "opponent",
+        "planeswalkers": true
       },
       "effects": [
         {

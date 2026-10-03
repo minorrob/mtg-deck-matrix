@@ -405,7 +405,11 @@ export function enteringModifications(state, {objectId, player, types, abilities
     entering: {abilities: abilities ?? []},
     tapped: false, counters: {},
   });
-  return {tapped: proposal.tapped === true, counters: proposal.counters ?? {}, asks: proposal.asks ?? []};
+  /* A planeswalker enters with as many loyalty counters as its printed loyalty (CR 306.5b): a replacement every
+     planeswalker has. */
+  const counters = {...(proposal.counters ?? {})}, loyalty = state.objects[objectId]?.loyalty;
+  if ((types ?? []).includes("Planeswalker") && Number.isInteger(loyalty)) counters.loyalty = (counters.loyalty ?? 0) + loyalty;
+  return {tapped: proposal.tapped === true, counters, asks: proposal.asks ?? []};
 }
 
 /**

@@ -69,8 +69,9 @@ export function countOf(spec) {
   const count = spec && typeof spec === "object" ? spec.count : undefined;
   return count && typeof count === "object" ? {min: count.min ?? 0, max: count.max ?? null} : null;
 }
-/** The placeholder a counted target holds in an offer until its controller picks (rules/turn.mjs, "choose-targets"). */
-export const choosing = (spec) => ({kind: "choose", ...countOf(spec)});
+/** The placeholder a counted target holds in an offer until its controller picks (rules/turn.mjs, "choose-targets"), and
+    how many there are to pick from (`of`): "up to two" with none to pick does nothing, for a pilot weighing the offer. */
+export const choosing = (spec, of) => ({kind: "choose", ...countOf(spec), ...(of !== undefined ? {of} : {})});
 export const isChoosing = (t) => Boolean(t) && !Array.isArray(t) && t.kind === "choose";
 
 const COUNT_WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
@@ -114,7 +115,7 @@ export function targetChoices(state, specs, context) {
     const count = countOf(spec);
     if (count) {
       if (candidates.length < count.min) return [];
-      choices = choices.map((chosen) => [...chosen, choosing(spec)]);
+      choices = choices.map((chosen) => [...chosen, choosing(spec, candidates.length)]);
       continue;
     }
     const next = [];

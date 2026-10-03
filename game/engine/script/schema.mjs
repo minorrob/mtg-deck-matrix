@@ -213,6 +213,9 @@ function checkAbility(ability, path, errors) {
          `trigger.mjs` will never match it. */
       errors.push({path: `${path}.trigger.on`, message: `${JSON.stringify(on)} is not a trigger event the engine declares; the app's terms are bridged in vocabulary.mjs, not accepted here`});
     }
+    /* "Attack one of your opponents or a planeswalker they control" (CR 506.3): planeswalkers: true, beside defender: "opponent". */
+    if (ability.trigger?.planeswalkers !== undefined && (ability.trigger.planeswalkers !== true || on !== "attacks" || ability.trigger.defender !== "opponent"))
+      errors.push({path: `${path}.trigger.planeswalkers`, message: "\"Or a planeswalker they control\" is planeswalkers: true, on an attack trigger with defender: \"opponent\""});
   }
 
   if (ability.kind === "keyword") {
@@ -244,6 +247,10 @@ function checkAbility(ability, path, errors) {
         errors.push({path: `${path}.defender`, message: `Whom it can't attack is one of ${CANT_ATTACK_DEFENDERS.join(", ")}, or anyone when unsaid`});
       if (ability.unless !== undefined) for (const message of conditionProblems(ability.unless)) errors.push({path: `${path}.unless`, message});
     }
+    /* "You or planeswalkers you control" (CR 506.3): a restriction on attacking its controller, or a tax on it, that reaches
+       the planeswalkers they control too. Attacking one of those is not attacking them (rules/statics.mjs). */
+    if (ability.planeswalkers !== undefined && (ability.planeswalkers !== true || !(ability.rule === "attack-tax" || (ability.rule === "cant-attack" && ability.defender === "you"))))
+      errors.push({path: `${path}.planeswalkers`, message: "\"Or planeswalkers you control\" is planeswalkers: true, on a tax on attacking you or a restriction on attacking you"});
     if (ability.rule === "cant-be-blocked-by") {
       if (!ability.by && ability.byPowerBelowSource !== true) errors.push({path, message: "\"Can't be blocked by\" says by what: `by`, or `byPowerBelowSource`"});
       if (ability.by) checkSelector(ability.by, `${path}.by`, errors, {choice: true});
@@ -278,6 +285,9 @@ function checkIdentity(identity, errors) {
     errors.push({path: "identity.types", message: "A card has at least one type"});
   if (identity.manaCost !== undefined && identity.manaCost !== null && typeof identity.manaCost !== "string")
     errors.push({path: "identity.manaCost", message: "A mana cost is the printed text, or null for a card with none"});
+  /* A planeswalker's printed loyalty (CR 306.5a). */
+  if (identity.loyalty !== undefined && identity.loyalty !== null && !(Number.isInteger(identity.loyalty) && identity.loyalty >= 0))
+    errors.push({path: "identity.loyalty", message: "A planeswalker's loyalty is its printed number, 0 or more"});
 }
 
 /**

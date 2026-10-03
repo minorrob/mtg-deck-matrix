@@ -171,8 +171,7 @@ export function dealDamage(state, params, context) {
         amount: proposal.amount, combat: false, infect,
       }));
     } else if (state.objects[toCard]) {
-      if (infect) addCounters(state, toCard, "-1/-1", proposal.amount, events);
-      else state.objects[toCard].damage += proposal.amount;
+      damagePermanent(state, toCard, proposal.amount, events, {infect});
       events.push(event("GameEventCardDamaged", state, {
         card: cardRef(state, toCard),
         source: source === null ? null : cardRef(state, source),
@@ -206,6 +205,23 @@ function damageAllCall(state, params, context) {
 export function damageAll(state, params, context) {
   const [deal, from] = damageAllCall(state, params, context);
   return dealDamage(state, deal, from);
+}
+
+/**
+ * DAMAGE TO A PERMANENT (CR 120.3): to a planeswalker, that many loyalty counters removed (120.3c, 306.8); to a creature,
+ * marked -- or, from a source with infect, that many -1/-1 counters (120.3d); to one that is both, both (120.3).
+ */
+export function damagePermanent(state, id, amount, events, {infect = false} = {}) {
+  const types = typesOf(state, id);
+  const object = state.objects[id];
+  if (types.includes("Planeswalker")) {
+    const before = object.counters.loyalty ?? 0;
+    object.counters.loyalty = Math.max(0, before - amount);
+    events.push(event("GameEventCardCounters", state, {card: cardRef(state, id), type: "loyalty", oldValue: before, newValue: object.counters.loyalty}));
+    if (!types.includes("Creature")) return;
+  }
+  if (infect) addCounters(state, id, "-1/-1", amount, events);
+  else object.damage += amount;
 }
 
 export function addCounters(state, id, kind, count, events) {
