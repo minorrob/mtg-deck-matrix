@@ -66,6 +66,31 @@ export async function serveRepo() {
 export const WEB_HOST = "crankmagic.localhost";
 const webArgs = () => [`--host-resolver-rules=MAP ${WEB_HOST} 127.0.0.1`];
 
+/* THE BROWSER MATRIX (docs/plan-to-done-2026-09-30.md, Part 6: "Chrome, Edge, Safari and Firefox on the desk"). A
+   walk runs in the browser UAT_BROWSER names: chromium (the default, Chrome's engine), msedge (Microsoft Edge, through
+   Chromium's channel), firefox, or webkit (Safari's engine). Each is told that crankmagic.localhost is this machine --
+   Chromium by its resolver flag, Firefox by its local-domains preference; WebKit resolves *.localhost itself -- and
+   each treats it as a secure context, which restoring a backup needs. tests/uat/browser-matrix.mjs runs the walks in
+   every one and writes the table. */
+export const BROWSERS = Object.freeze(["chromium", "msedge", "firefox", "webkit"]);
+export function browserName() {
+  const name = String(process.env.UAT_BROWSER || "chromium").toLowerCase();
+  if (!BROWSERS.includes(name)) throw new Error(`UAT_BROWSER is one of ${BROWSERS.join(", ")}, not ${name}`);
+  return name;
+}
+
+/** Launch the browser UAT_BROWSER names. `chromiumArgs` and `ignoreDefaultArgs` reach only the Chromium browsers. */
+export async function launchBrowser(playwright, {chromiumArgs = [], ignoreDefaultArgs = null, headless = true} = {}) {
+  const pw = playwright.chromium ? playwright : playwright.default;
+  const name = browserName();
+  if (name === "firefox") return pw.firefox.launch({headless, firefoxUserPrefs: {"network.dns.localDomains": WEB_HOST}});
+  if (name === "webkit") return pw.webkit.launch({headless});
+  return pw.chromium.launch({
+    headless, args: [...webArgs(), ...chromiumArgs], ...(ignoreDefaultArgs ? {ignoreDefaultArgs} : {}),
+    ...(name === "msedge" ? {channel: "msedge"} : process.env.UAT_CHROME ? {executablePath: process.env.UAT_CHROME} : {}),
+  });
+}
+
 /* Everything a browser suite needs, or a skip. `name` is the suite's own name for its
    messages and `flag` the environment variable that makes a missing browser a failure. */
 export async function openBrowser({name, flag}) {
@@ -81,8 +106,8 @@ export async function openBrowser({name, flag}) {
   const entry = findPlaywright();
   if (!entry) skip("Playwright is not installed");
   const module_ = await import(path.isAbsolute(entry) ? pathToFileURL(entry).href : entry);
-  const chromium = module_.chromium || (module_.default && module_.default.chromium);
-  if (!chromium) skip("the Playwright entry point exposes no chromium");
+  const playwright = module_.chromium ? module_ : module_.default;
+  if (!playwright || !playwright.chromium) skip("the Playwright entry point exposes no browsers");
 
   const {server, port, base} = await serveRepo();
   let stub = null;
@@ -90,14 +115,10 @@ export async function openBrowser({name, flag}) {
 
   let browser = null;
   try {
-    browser = await chromium.launch({
-      headless: true,
-      args: webArgs(),
-      ...(process.env.UAT_CHROME ? {executablePath: process.env.UAT_CHROME} : {}),
-    });
+    browser = await launchBrowser(playwright);
   } catch (error) {
     server.close();
-    skip(`Chromium would not launch (${String(error.message).split("\n")[0]})`);
+    skip(`${browserName()} would not launch (${String(error.message).split("\n")[0]})`);
   }
   return {browser, base, stub, close: async () => {await browser.close(); server.close();}};
 }

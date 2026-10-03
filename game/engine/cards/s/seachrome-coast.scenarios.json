@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Seachrome Coast",
+  "scenarios": [
+    {
+      "name": "With two other lands, it enters untapped, and taps for either color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Seachrome Coast"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Seachrome Coast"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Seachrome Coast",
+              "is": false
+            }
+          ]
+        },
+        {
+          "tap": "Seachrome Coast",
+          "mana": {
+            "U": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "With three, it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Seachrome Coast"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Seachrome Coast"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Seachrome Coast"
+        }
+      ]
+    }
+  ]
+}

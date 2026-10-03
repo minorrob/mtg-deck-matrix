@@ -1,0 +1,89 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thunderhawk Gunship",
+    "oracleId": "d64a4ad2-c80e-4a7f-93f2-b702916dba07",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Vehicle"
+    ],
+    "manaCost": "{6}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Flying\nWhen this Vehicle enters, create two 2/2 white Astartes Warrior creature tokens with vigilance.\nWhenever this Vehicle attacks, attacking creatures you control gain flying until end of turn.\nCrew 2",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this Vehicle enters, create two 2/2 white Astartes Warrior creature tokens with vigilance.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 2,
+          "token": {
+            "name": "Astartes Warrior",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Astartes",
+              "Warrior"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 2,
+            "toughness": 2,
+            "keywords": [
+              "Vigilance"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this Vehicle attacks, attacking creatures you control gain flying until end of turn.",
+      "trigger": {
+        "on": "attacks"
+      },
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Flying"
+          ],
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "attacking": true
+          }
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Crew 2",
+      "keyword": "crew",
+      "amount": 2
+    }
+  ]
+}

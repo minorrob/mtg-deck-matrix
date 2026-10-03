@@ -1,0 +1,107 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Halo Fountain",
+    "oracleId": "36a9de4c-8073-475d-8679-e50844eef09e",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{W}, {T}, Untap a tapped creature you control: Create a 1/1 green and white Citizen creature token.\n{W}{W}, {T}, Untap two tapped creatures you control: Draw a card.\n{W}{W}{W}{W}{W}, {T}, Untap fifteen tapped creatures you control: You win the game.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{W}, {T}, Untap a tapped creature you control: Create a 1/1 green and white Citizen creature token.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{W}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "untapCreature",
+          "count": 1
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Citizen",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Citizen"
+            ],
+            "colors": [
+              "G",
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{W}{W}, {T}, Untap two tapped creatures you control: Draw a card.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{W}{W}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "untapCreature",
+          "count": 2
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{W}{W}{W}{W}{W}, {T}, Untap fifteen tapped creatures you control: You win the game.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{W}{W}{W}{W}{W}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "untapCreature",
+          "count": 15
+        }
+      ],
+      "effects": [
+        {
+          "effect": "winGame"
+        }
+      ]
+    }
+  ]
+}

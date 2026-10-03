@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Molten Echoes",
+    "oracleId": "26486a42-4dc6-472b-9a9b-3c3ca78cc3b5",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As this enchantment enters, choose a creature type.\nWhenever a nontoken creature you control of the chosen type enters, create a token that's a copy of that creature. That token gains haste. Exile it at the beginning of the next end step.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "As this enchantment enters, choose a creature type.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "choose": "creature type"
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a nontoken creature you control of the chosen type enters, create a token that's a copy of that creature. That token gains haste. Exile it at the beginning of the next end step.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "subtypes": [
+            "$chosen"
+          ],
+          "token": false
+        }
+      },
+      "effects": [
+        {
+          "effect": "copyPermanent",
+          "targets": "that card",
+          "gains": [
+            "Haste"
+          ],
+          "atEndStep": "exile"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ingenious Infiltrator",
+    "oracleId": "354defd2-f63f-4a48-9fd4-2526b3878a84",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vedalken",
+      "Ninja"
+    ],
+    "manaCost": "{2}{U}{B}",
+    "colors": [
+      "B",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Ninjutsu {U}{B} ({U}{B}, Return an unblocked attacker you control to hand: Put this card onto the battlefield from your hand tapped and attacking.)\nWhenever a Ninja you control deals combat damage to a player, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Ninjutsu {U}{B}",
+      "keyword": "ninjutsu",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{U}{B}"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a Ninja you control deals combat damage to a player, draw a card.",
+      "trigger": {
+        "on": "damage dealt",
+        "to": "player",
+        "combat": true,
+        "who": "any",
+        "filter": {
+          "subtypes": [
+            "Ninja"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Castle Garenbrig",
+    "oracleId": "de75e5dd-8a52-406c-b55c-96d686885500",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This land enters tapped unless you control a Forest.\n{T}: Add {G}.\n{2}{G}{G}, {T}: Add six {G}. Spend this mana only to cast creature spells or activate abilities of creatures.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This land enters tapped unless you control a Forest.",
+      "watches": {
+        "event": "enters",
+        "who": "self",
+        "unless": {
+          "controls": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ],
+            "subtypes": [
+              "Forest"
+            ]
+          }
+        }
+      },
+      "change": {
+        "entersTapped": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {G}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{2}{G}{G}, {T}: Add six {G}. Spend this mana only to cast creature spells or activate abilities of creatures.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{G}{G}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": 6
+          },
+          "spendOnly": {
+            "spell": {
+              "types": [
+                "Creature"
+              ]
+            },
+            "ability": {
+              "types": [
+                "Creature"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

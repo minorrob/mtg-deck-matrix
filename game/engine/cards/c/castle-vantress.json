@@ -1,0 +1,81 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Castle Vantress",
+    "oracleId": "cdf41cf4-4e77-453d-be5b-0abbbd358934",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This land enters tapped unless you control an Island.\n{T}: Add {U}.\n{2}{U}{U}, {T}: Scry 2.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This land enters tapped unless you control an Island.",
+      "watches": {
+        "event": "enters",
+        "who": "self",
+        "unless": {
+          "controls": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ],
+            "subtypes": [
+              "Island"
+            ]
+          }
+        }
+      },
+      "change": {
+        "entersTapped": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {U}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "U": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{2}{U}{U}, {T}: Scry 2.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{U}{U}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "scry",
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

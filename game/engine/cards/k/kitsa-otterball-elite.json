@@ -1,0 +1,110 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kitsa, Otterball Elite",
+    "oracleId": "16414460-11ce-481d-ab54-6f0e0ea7d83d",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Otter",
+      "Wizard"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Vigilance\nProwess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)\n{T}: Draw a card, then discard a card.\n{2}, {T}: Copy target instant or sorcery spell you control. You may choose new targets for the copy. Activate only if Kitsa's power is 3 or greater.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "keyword",
+      "text": "Prowess",
+      "keyword": "prowess"
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Draw a card, then discard a card.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "discard",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{2}, {T}: Copy target instant or sorcery spell you control. You may choose new targets for the copy. Activate only if Kitsa's power is 3 or greater.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "spell",
+              "types": [
+                "Instant"
+              ],
+              "controller": "you"
+            },
+            {
+              "what": "spell",
+              "types": [
+                "Sorcery"
+              ],
+              "controller": "you"
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "copySpell",
+          "spells": {
+            "target": 0
+          },
+          "newTargets": true
+        }
+      ],
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "self": true,
+          "power": {
+            "min": 3
+          }
+        }
+      }
+    }
+  ]
+}

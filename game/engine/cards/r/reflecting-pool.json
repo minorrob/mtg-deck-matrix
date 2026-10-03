@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Reflecting Pool",
+    "oracleId": "67f43ac6-2a58-4b53-b5d7-0330e2a252e2",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add one mana of any type that a land you control could produce.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add one mana of any type that a land you control could produce.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "reflect": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ],
+            "controller": "you"
+          },
+          "anyType": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ulvenwald Tracker",
+    "oracleId": "63a37c08-7e38-4fe2-9a71-cc4604c4f831",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Shaman"
+    ],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{1}{G}, {T}: Target creature you control fights another target creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{1}{G}, {T}: Target creature you control fights another target creature.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{G}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "fight",
+          "from": {
+            "target": 0
+          },
+          "targets": {
+            "target": 1
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        },
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ]
+    }
+  ]
+}

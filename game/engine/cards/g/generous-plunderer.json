@@ -1,0 +1,93 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Generous Plunderer",
+    "oracleId": "91c835d1-22ca-4c90-9ba6-c8e01bbc0347",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Rogue"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Menace\nAt the beginning of your upkeep, you may create a Treasure token. When you do, target opponent creates a tapped Treasure token.\nWhenever this creature attacks, it deals damage to defending player equal to the number of artifacts they control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Menace",
+      "keyword": "menace"
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, you may create a Treasure token. When you do, target opponent creates a tapped Treasure token.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "token": {
+            "predefined": "Treasure"
+          }
+        },
+        {
+          "effect": "immediateTrigger",
+          "text": "When you do, target opponent creates a tapped Treasure token.",
+          "targets": [
+            {
+              "what": "player",
+              "who": "opponent"
+            }
+          ],
+          "effects": [
+            {
+              "effect": "createToken",
+              "token": {
+                "predefined": "Treasure"
+              },
+              "controller": {
+                "target": 0
+              },
+              "tapped": true
+            }
+          ]
+        }
+      ],
+      "optional": true
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks, it deals damage to defending player equal to the number of artifacts they control.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "who": "that player",
+          "amount": {
+            "count": {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ],
+              "controller": "that player"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

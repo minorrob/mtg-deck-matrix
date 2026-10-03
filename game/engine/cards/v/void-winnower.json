@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Void Winnower",
+    "oracleId": "70ac902e-1eb5-4f83-a5a6-00ac89cfe50f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Eldrazi"
+    ],
+    "manaCost": "{9}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 11,
+    "toughness": 9
+  },
+  "oracleText": "Your opponents can't cast spells with even mana values. (Zero is even.)\nYour opponents can't block with creatures with even mana values.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Your opponents can't cast spells with even mana values.",
+      "rule": "cant-cast",
+      "affects": {
+        "what": "player",
+        "who": "opponent"
+      },
+      "spells": {
+        "manaValue": {
+          "even": true
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Your opponents can't block with creatures with even mana values.",
+      "rule": "cant-be-blocked-by",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "by": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "opponent",
+        "manaValue": {
+          "even": true
+        }
+      }
+    }
+  ]
+}

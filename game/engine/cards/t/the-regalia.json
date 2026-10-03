@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "The Regalia",
+    "oracleId": "27a7610e-acbe-4a2b-9f61-81b383eb20a5",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Vehicle"
+    ],
+    "manaCost": "{4}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Haste\nWhenever The Regalia attacks, reveal cards from the top of your library until you reveal a land card. Put that card onto the battlefield tapped and the rest on the bottom of your library in a random order.\nCrew 1",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Haste",
+      "keyword": "haste"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever The Regalia attacks, reveal cards from the top of your library until you reveal a land card. Put that card onto the battlefield tapped and the rest on the bottom of your library in a random order.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "digUntil",
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          },
+          "found": {
+            "to": "battlefield",
+            "tapped": true
+          },
+          "rest": "bottom"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Crew 1",
+      "keyword": "crew",
+      "amount": 1
+    }
+  ]
+}

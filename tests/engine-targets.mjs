@@ -216,8 +216,8 @@ const names = (s, zone, seat) => cardsIn(s, zone, seat).map((id) => s.objects[id
   eq([s.priorityPlayer, s.awaiting.kind, s.awaiting.player], [null, "effect-choice", 0], "nobody holds priority; its controller is asked");
   eq(names(s, "hand", 0), [], "and the draw behind the scry has not happened");
   throws(() => resolveTop(s), /already resolving/, "nothing can resolve it a second time while it waits");
-  eq(awaitingChoice(s).title, "Scry 1", "the question is the scry's");
-  const events = resolveAwaiting(s, [0], null, null, {toBottom: []});
+  eq(awaitingChoice(s).title, "Scry 1: choose any to put on the bottom", "the question is the scry's");
+  const events = resolveAwaiting(s, []);
   eq([s.stack.length, names(s, "graveyard", 0), names(s, "hand", 0)], [0, ["Peek Ahead"], [top]],
     "the answer finishes it: the draw happens, then the spell leaves the stack for the graveyard");
   ok(events.some((e) => e.kind === "GameEventSpellResolved"), "and its resolution is reported once it is over");

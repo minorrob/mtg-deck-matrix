@@ -14,6 +14,10 @@
  *   Board     "You can also ▾" lists the spell once, with how many ways; pressing it, or the card in the hand, opens a
  *             pop-up listing every way by its target; "→ Maya" casts it at Maya, and the stack says so. The card's own
  *             label names what it can do once, not once per target.
+ *   Scry      a second table, where Rob casts "Scry 3.": the board draws the question as a pick-several pop-up (any to
+ *             the bottom, none included; a second press puts one back), then the order of the two kept; and the saved
+ *             game has the picked card on the bottom of his library and the other two on top in his order. The board
+ *             sends only the indices it collected, which is all scry now asks for (game/engine/script/effects/asking.mjs).
  *
  * The board half needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure.
  */
@@ -85,60 +89,77 @@ const land = (color) => ({types: ["Land"], supertypes: ["Basic"], abilities: [{i
 console.log(`board-choices: ${checks} checks of the room's details passed; the board's next.`);
 
 /* ---- 2. a real table: Rob, with Zap in hand, against an AI seat ---- */
-const DEFS = new Map([["Zap", ZAP], ["Rob General", {types: ["Creature"], supertypes: ["Legendary"], power: 2, toughness: 2, manaCost: "{3}{R}"}],
+/* Peek Three is section 4's: a scry, which the board asks as a pick-several and then an order (asking.mjs, scry). */
+const PEEK = {types: ["Sorcery"], manaCost: "{R}", colors: ["R"], spell: {id: "s0", text: "Scry 3.", targets: [], effects: [{effect: "scry", count: 3}]}};
+const DEFS = new Map([["Zap", ZAP], ["Peek Three", PEEK], ["Rob General", {types: ["Creature"], supertypes: ["Legendary"], power: 2, toughness: 2, manaCost: "{3}{R}"}],
   ["Maya General", {types: ["Creature"], supertypes: ["Legendary"], power: 2, toughness: 2, manaCost: "{3}{G}"}],
   ["Maya Bear", {types: ["Creature"], power: 2, toughness: 2, manaCost: "{1}{G}"}]]);
 const cards = (name) => basicCards(name) ?? DEFS.get(name) ?? null;
 const ROB = "rob@example.com";
 let clock = Date.parse("2026-10-01T18:00:00Z");
-const map = new Map(), sockets = [];
-const ctx = {storage: {get: async (k) => map.get(k), put: async (k, v) => {map.set(k, v);}, delete: async (k) => map.delete(k),
-  list: async ({prefix}) => new Map([...map].filter(([k]) => k.startsWith(prefix)).sort()), setAlarm: async () => {}, deleteAlarm: async () => {}},
-acceptWebSocket: (s, tags) => {s.tags = tags; sockets.push(s);}, getWebSockets: () => sockets.filter((s) => !s.closed), getTags: (s) => s.tags};
-const object = new GameTable(ctx, {}, {cards, now: () => clock});
+/* A table is one GameTable object over storage of its own, as one Durable Object is; a page's requests and its socket are
+   carried to the table they name. */
+const tables = new Map();
+function standUp(tableId) {
+  const map = new Map(), sockets = [];
+  const ctx = {storage: {get: async (k) => map.get(k), put: async (k, v) => {map.set(k, v);}, delete: async (k) => map.delete(k),
+    list: async ({prefix}) => new Map([...map].filter(([k]) => k.startsWith(prefix)).sort()), setAlarm: async () => {}, deleteAlarm: async () => {}},
+  acceptWebSocket: (s, tags) => {s.tags = tags; sockets.push(s);}, getWebSockets: () => sockets.filter((s) => !s.closed), getTags: (s) => s.tags};
+  const at = new GameTable(ctx, {}, {cards, now: () => clock});
+  tables.set(tableId, {object: at, map});
+  return at;
+}
 const TABLE = "boardchoices01";
+const object = standUp(TABLE);
 let queue = Promise.resolve();
 const serial = (fn) => (queue = queue.then(fn, fn));
-const call = (p, body) => serial(async () => (await object.fetch(new Request(`https://table.internal${p}`, {method: body === undefined ? "GET" : "POST", headers: {"content-type": "application/json", "x-crankmagic-email": ROB}, ...(body !== undefined ? {body: JSON.stringify(body)} : {})}))).json());
+const callAt = (at, p, body) => serial(async () => (await at.fetch(new Request(`https://table.internal${p}`, {method: body === undefined ? "GET" : "POST", headers: {"content-type": "application/json", "x-crankmagic-email": ROB}, ...(body !== undefined ? {body: JSON.stringify(body)} : {})}))).json());
 let latest = null;
 const frames = [];
-async function socket(onFrame) {
+async function socket(onFrame, at = object) {
   const server = {tags: null, closed: false, send(f) {if (!this.closed) onFrame(f);}, close() {this.closed = true;}};
   await serial(async () => {
-    object.socketPair = () => [{}, server];
-    object.upgraded = () => ({status: 101});
-    await object.fetch(new Request("https://table.internal/connect", {headers: {upgrade: "websocket", "x-crankmagic-email": ROB}}));
+    at.socketPair = () => [{}, server];
+    at.upgraded = () => ({status: 101});
+    await at.fetch(new Request("https://table.internal/connect", {headers: {upgrade: "websocket", "x-crankmagic-email": ROB}}));
   });
   return server;
 }
 const deck = (who, basic, spell) => ({name: `${who}'s deck`, commander: [`${who} General`], cards: [...Array(40)].map((_, i) => (i % 2 ? basic : spell))});
-await call("/table/create", {tableId: TABLE, hostName: "Rob", seats: [{kind: "ai", name: "Maya"}]});
-await call("/table/deck", {seatId: 0, deck: deck("Rob", "Mountain", "Zap")});
-await call("/table/deck", {seatId: 1, deck: deck("Maya", "Forest", "Maya Bear")});
-await call("/table/ready", {ready: true});
-await call("/table/start", {});
-clock += 10000; await serial(() => object.alarm());
+async function startTable(at, tableId, robSpell) {
+  await callAt(at, "/table/create", {tableId, hostName: "Rob", seats: [{kind: "ai", name: "Maya"}]});
+  await callAt(at, "/table/deck", {seatId: 0, deck: deck("Rob", "Mountain", robSpell)});
+  await callAt(at, "/table/deck", {seatId: 1, deck: deck("Maya", "Forest", "Maya Bear")});
+  await callAt(at, "/table/ready", {ready: true});
+  await callAt(at, "/table/start", {});
+  clock += 10000; await serial(() => at.alarm());
+}
+await startTable(object, TABLE, "Zap");
 const node = await socket((f) => {frames.push(f); const x = JSON.parse(f); if (x.view) latest = x.view;});
 const send = (v, payload) => serial(() => object.webSocketMessage(node, JSON.stringify({type: "act", actionId: crypto.randomUUID(), revision: v.revision, kind: "answer", choiceId: v.decision.id, ...payload})));
 
-/* Rob keeps, plays a Mountain a turn and passes, until his own main phase with Zap in hand, a Mountain untapped and a
-   creature of Maya's to aim at; then he taps the Mountain, and the next question offers Zap. */
+/* Rob keeps, plays a Mountain a turn and passes -- every other question taking its first answer -- until `ready`. */
+async function playUntil(at, view, act, ready) {
+  for (let i = 0; i < 3000 && view() && view().status !== "finished" && !ready(view()); i += 1) {
+    const v = view(), d = v.decision;
+    if (!d) {await serial(async () => at.broadcast()); if (view() === v) break; continue;}
+    let indices;
+    if (d.kind === "priority") {
+      const me = v.state.players[v.seat], landOpt = !me.landsPlayed && d.options.find((o) => o.act === "play-land");
+      indices = [(landOpt || d.options.find((o) => o.act === "pass")).index];
+    } else if (d.mode === "many") indices = d.options.slice(0, d.min).map((o) => o.index);
+    else if (d.mode === "order") indices = d.options.map((o) => o.index);
+    else if (d.mode === "ack") indices = [];
+    else indices = [(d.options.find((o) => /^Keep|^No\b|^Don't|^Draw/i.test(o.label)) || d.options[0]).index];
+    await act(v, d.mode === "damage" || d.mode === "amount" ? {amounts: d.options.map((_, k) => (k === 0 ? d.total : 0))} : {indices});
+  }
+}
+/* Until his own main phase with Zap in hand, a Mountain untapped and a creature of Maya's to aim at; then he taps the
+   Mountain, and the next question offers Zap. */
 const ready = (v) => v.state.turnPlayerId === v.seat && v.state.phase === "MAIN1" && v.decision?.kind === "priority" && v.state.players[v.seat].landsPlayed
   && v.state.players[v.seat].zones.Hand.cards.some((c) => c.name === "Zap") && v.state.players[1].zones.Battlefield.cards.some((c) => c.name === "Maya Bear")
   && v.state.players[v.seat].zones.Battlefield.cards.some((c) => c.name === "Mountain" && !c.tapped);
-for (let i = 0; i < 3000 && latest && latest.status !== "finished" && !ready(latest); i += 1) {
-  const v = latest, d = v.decision;
-  if (!d) {await serial(async () => object.broadcast()); if (latest === v) break; continue;}
-  let indices;
-  if (d.kind === "priority") {
-    const me = v.state.players[v.seat], landOpt = !me.landsPlayed && d.options.find((o) => o.act === "play-land");
-    indices = [(landOpt || d.options.find((o) => o.act === "pass")).index];
-  } else if (d.mode === "many") indices = d.options.slice(0, d.min).map((o) => o.index);
-  else if (d.mode === "order") indices = d.options.map((o) => o.index);
-  else if (d.mode === "ack") indices = [];
-  else indices = [(d.options.find((o) => /^Keep|^No\b|^Don't|^Draw/i.test(o.label)) || d.options[0]).index];
-  await send(v, d.mode === "damage" || d.mode === "amount" ? {amounts: d.options.map((_, k) => (k === 0 ? d.total : 0))} : {indices});
-}
+await playUntil(object, () => latest, send, ready);
 ok(latest && ready(latest), `the table reaches Rob's main phase with Zap in hand and a Bear of Maya's on the battlefield (turn ${latest?.state.turn})`);
 await send(latest, {indices: [latest.decision.options.find((o) => o.act === "activate-mana" && o.label === "Mountain").index]});
 /* Each copy of Zap in the hand is offered once per target; one copy's offers are what its pop-up lists. */
@@ -150,6 +171,31 @@ ok(castOptions.length === targetCount && allZaps.every((o) => o.detail), `the ro
 eq(new Set(castOptions.map((o) => o.detail)).size, castOptions.length, `no two of one card's reading alike${bears > 1 ? `, though Maya's ${bears} Bears share a name` : ""}`);
 ok(castOptions.some((o) => o.detail === "→ Maya") && castOptions.some((o) => o.detail === "→ Rob (you)"), "the players among them, by name");
 
+/* ---- 2b. a second table, where Rob's spell is Peek Three ("Scry 3."), played to its question ---- */
+const SCRY_TABLE = "boardscry01";
+const scryAt = standUp(SCRY_TABLE);
+await startTable(scryAt, SCRY_TABLE, "Peek Three");
+let scryView = null;
+const scryNode = await socket((f) => {const x = JSON.parse(f); if (x.view) scryView = x.view;}, scryAt);
+const scrySend = (v, payload) => serial(() => scryAt.webSocketMessage(scryNode, JSON.stringify({type: "act", actionId: crypto.randomUUID(), revision: v.revision, kind: "answer", choiceId: v.decision.id, ...payload})));
+const canPeek = (v) => v.state.turnPlayerId === v.seat && v.state.phase === "MAIN1" && v.decision?.kind === "priority" && v.state.players[v.seat].landsPlayed
+  && v.state.players[v.seat].zones.Hand.cards.some((c) => c.name === "Peek Three") && v.state.players[v.seat].zones.Battlefield.cards.some((c) => c.name === "Mountain" && !c.tapped);
+await playUntil(scryAt, () => scryView, scrySend, canPeek);
+ok(scryView && canPeek(scryView), `the second table reaches Rob's main phase with Peek Three in hand and a Mountain untapped (turn ${scryView?.state.turn})`);
+for (const pick of [(o) => o.act === "activate-mana" && o.label === "Mountain", (o) => o.act === "cast" && o.label === "Peek Three", (o) => o.act === "pass"])
+  await scrySend(scryView, {indices: [scryView.decision.options.find(pick).index]});
+/* The game as the table saved it (the room checkpoints at every person's decision): what no seat's view shows, the order of
+   a library. */
+function savedLibrary(tableId, seat) {
+  const {map} = tables.get(tableId), key = [...map.keys()].find((k) => k.endsWith("/checkpoint/latest"));
+  const {sequence} = JSON.parse(map.get(key));
+  return JSON.parse(map.get(key.replace(/latest$/, String(sequence).padStart(10, "0")))).state.zones.library[seat];
+}
+const robSeat = scryView.seat, scry = scryView.decision, libraryBefore = savedLibrary(SCRY_TABLE, robSeat);
+eq([scry.mode, scry.min, scry.max, scry.title], ["many", 0, 3, "Scry 3: choose any to put on the bottom"],
+  "Peek Three resolves and the room asks Rob a pick-several: any of the three to the bottom, none included (CR 701.22a)");
+eq(scry.options.map((o) => o.cardId), libraryBefore.slice(0, 3), "over the top three cards of his library");
+
 /* ---- 3. the board: the pop-up ---- */
 const {openBrowser} = await import("./uat/browser-runner.mjs");
 const {browser, base, stub, close} = await openBrowser({name: "board-choices", flag: "GEOMETRY_REQUIRED"});
@@ -157,18 +203,20 @@ const html = readFileSync(path.join(ROOT, "index.html"), "utf8").replace("</head
 async function answer(route) {
   const req = route.request(), url = new URL(req.url()), method = req.method();
   const m = /^\/api\/tables\/([a-z0-9]+)(?:\/([a-z]+))?$/.exec(url.pathname);
-  if (!m) return route.fulfill({status: 404, json: {error: "No such endpoint."}});
-  const r = await serial(() => object.fetch(new Request(`https://table.internal${m[2] ? `/table/${m[2]}` : "/table"}${url.search}`, {method, headers: {"content-type": "application/json", "x-crankmagic-email": ROB}, ...(method === "GET" ? {} : {body: req.postData() || "{}"})})));
+  const at = m && tables.get(m[1])?.object;
+  if (!at) return route.fulfill({status: 404, json: {error: "No such endpoint."}});
+  const r = await serial(() => at.fetch(new Request(`https://table.internal${m[2] ? `/table/${m[2]}` : "/table"}${url.search}`, {method, headers: {"content-type": "application/json", "x-crankmagic-email": ROB}, ...(method === "GET" ? {} : {body: req.postData() || "{}"})})));
   return route.fulfill({status: r.status, contentType: "application/json", body: await r.text()});
 }
 function carry(ws) {
+  const at = tables.get(/\/api\/tables\/([a-z0-9]+)\/connect$/.exec(new URL(ws.url()).pathname)[1]).object;
   const server = {tags: null, closed: false, send(f) {if (!this.closed) {frames.push(f); const x = JSON.parse(f); if (x.view) latest = x.view; ws.send(f);}}, close() {this.closed = true;}};
   serial(async () => {
-    object.socketPair = () => [{}, server];
-    object.upgraded = () => ({status: 101});
-    await object.fetch(new Request("https://table.internal/connect", {headers: {upgrade: "websocket", "x-crankmagic-email": ROB}}));
+    at.socketPair = () => [{}, server];
+    at.upgraded = () => ({status: 101});
+    await at.fetch(new Request("https://table.internal/connect", {headers: {upgrade: "websocket", "x-crankmagic-email": ROB}}));
   });
-  ws.onMessage((message) => serial(() => object.webSocketMessage(server, message)));
+  ws.onMessage((message) => serial(() => at.webSocketMessage(server, message)));
   ws.onClose(() => {server.closed = true;});
 }
 try {
@@ -223,10 +271,47 @@ try {
   for (let t = 0; t < 100 && !(latest.state.stack ?? []).length; t += 1) await new Promise((r) => setTimeout(r, 100));
   const top = (latest.state.stack ?? []).at(-1);
   ok(top && top.name === "Zap" && top.targets?.[0]?.kind === "player" && top.targets[0].id === 1, `choosing "→ Maya" casts Zap at Maya: the stack holds ${top ? `${top.name} aimed at ${JSON.stringify(top.targets)}` : "nothing"}`);
+
+  /* ---- 4. the board answers scry: a pick-several pop-up, then the order of what stays ---- */
+  /* The board sends what it collected and nothing else ({indices}); scry was once one ordering whose answer had to carry
+     `toBottom` as well, so from here "on the bottom" could not be chosen. Now each question is one the board draws. */
+  await page.setViewportSize({width: 1400, height: 900});
+  await page.goto("about:blank");
+  await page.goto(`${base}/index.html#table?id=${SCRY_TABLE}`);
+  const box = page.locator("#cm-board-decision");
+  await box.locator("h3", {hasText: "Scry 3"}).waitFor({timeout: 60000});
+  const cardsBox = box.locator("[data-action=board-option]"), confirm = box.locator("[data-action=board-confirm]");
+  const pressed = async () => Promise.all((await cardsBox.all()).map((el) => el.getAttribute("aria-pressed")));
+  const foot = async () => (await box.locator(".cm-board-decision-foot .cm-muted").first().innerText()).replace(/\s+/g, " ").trim();
+  eq([(await box.locator("h3").textContent()).trim(), await cardsBox.count(), await pressed()], ["Scry 3: choose any to put on the bottom", 3, ["false", "false", "false"]],
+    "the board draws Rob's scry as a pick-several pop-up: the question, a button for each card looked at, none picked");
+  ok(await confirm.isEnabled() && await foot() === "0 chosen · 0 to 3", `Confirm is ready with none picked, since keeping all three is an answer ("${await foot()}")`);
+  await cardsBox.nth(2).click();
+  await cardsBox.nth(0).click();
+  eq(await pressed(), ["true", "false", "true"], "two cards pressed, each marked picked");
+  await cardsBox.nth(2).click();
+  eq([await pressed(), await foot()], [["true", "false", "false"], "1 chosen · 0 to 3"], "and a second press puts one back: a pick-several, not a pick-one");
+  if (SHOTS) await page.screenshot({path: path.join(SHOTS, "board-scry-bottom-1400.png")});
+  await confirm.click();
+  await box.locator("h3", {hasText: "Put the rest back on top"}).waitFor({timeout: 10000});
+  eq([(await box.locator("h3").textContent()).trim(), await cardsBox.count()], ["Put the rest back on top of your library, the first you choose on top", 2],
+    "one to the bottom and two kept: the board asks the order of the two, a second pop-up");
+  await cardsBox.nth(1).click();
+  await cardsBox.nth(0).click();
+  eq([await cardsBox.nth(1).getAttribute("data-order"), await cardsBox.nth(0).getAttribute("data-order")], ["1", "2"], "the second of them chosen first, to go on top");
+  if (SHOTS) await page.screenshot({path: path.join(SHOTS, "board-scry-order-1400.png")});
+  await box.locator("[data-action=board-confirm]").click();
+  /* The game moves on to whatever Rob is asked next (with nothing left to do, the room passes for him); his draw waits
+     for him, so the library is still as the scry left it. */
+  const onScry = () => !latest?.decision || String(latest.decision.id).startsWith("scry");
+  for (let t = 0; t < 100 && onScry(); t += 1) await new Promise((r) => setTimeout(r, 100));
+  const libraryAfter = savedLibrary(SCRY_TABLE, robSeat), [a, b, c] = scry.options.map((o) => o.cardId);
+  eq([onScry(), libraryAfter.slice(0, 2), libraryAfter.at(-1), libraryAfter.length], [false, [c, b], a, libraryBefore.length],
+    `and the game did what the board said: nothing more is asked about the scry (next: ${latest?.decision?.kind ?? latest?.decision?.title}); the card picked is on the bottom of Rob's library, the two kept on top in his order, none lost`);
   await context.close();
 } finally {
   await close();
 }
 
-console.log(`board-choices: ${checks} checks passed — a card used more than one way says each way (its target, its sacrifice, its color), and the board asks which in a pop-up rather than doing the first.`);
+console.log(`board-choices: ${checks} checks passed — a card used more than one way says each way (its target, its sacrifice, its color), and the board asks which in a pop-up rather than doing the first; a scry is a pick-several pop-up for the bottom, then the order of the rest.`);
 process.exit(0);

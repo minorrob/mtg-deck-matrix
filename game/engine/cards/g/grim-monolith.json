@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Grim Monolith",
+    "oracleId": "229d6627-1292-4ae1-8849-b0f956fa6540",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This artifact doesn't untap during your untap step.\n{T}: Add {C}{C}{C}.\n{4}: Untap this artifact.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This artifact doesn't untap during your untap step.",
+      "rule": "doesnt-untap",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}{C}{C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 3
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{4}: Untap this artifact.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "untap",
+          "targets": "self"
+        }
+      ]
+    }
+  ]
+}

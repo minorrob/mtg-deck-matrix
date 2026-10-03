@@ -1,0 +1,98 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Jasmine Dragon Tea Shop",
+    "oracleId": "d9a24444-289f-473f-9985-8df275257555",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {C}.\n{T}: Add one mana of any color. Spend this mana only to cast an Ally spell or activate an ability of an Ally source.\n{5}, {T}: Create a 1/1 white Ally creature token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add one mana of any color. Spend this mana only to cast an Ally spell or activate an ability of an Ally source.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true,
+          "spendOnly": {
+            "spell": {
+              "subtypes": [
+                "Ally"
+              ]
+            },
+            "ability": {
+              "subtypes": [
+                "Ally"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{5}, {T}: Create a 1/1 white Ally creature token.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{5}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "token": {
+            "name": "Ally",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Ally"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  ]
+}

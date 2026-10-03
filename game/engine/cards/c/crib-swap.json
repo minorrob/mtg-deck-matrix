@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Crib Swap",
+    "oracleId": "2987c385-011a-4032-a516-a46d1e9dc9e8",
+    "types": [
+      "Kindred",
+      "Instant"
+    ],
+    "subtypes": [
+      "Shapeshifter"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Changeling (This card is every creature type.)\nExile target creature. Its controller creates a 1/1 colorless Shapeshifter creature token with changeling.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Changeling (This card is every creature type.)",
+      "keyword": "changeling"
+    },
+    {
+      "kind": "spell",
+      "text": "Exile target creature. Its controller creates a 1/1 colorless Shapeshifter creature token with changeling.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile"
+        },
+        {
+          "effect": "createToken",
+          "controller": {
+            "controllerOf": {
+              "target": 0
+            }
+          },
+          "token": {
+            "name": "Shapeshifter",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Shapeshifter"
+            ],
+            "colors": [],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Changeling"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mirrormade",
+  "fixtures": {
+    "Trinket": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A copy of the Trinket",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Island",
+            "Island",
+            "Trinket"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mirrormade"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Mirrormade"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Trinket",
+                  "No copy"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Trinket"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Island",
+            "Island",
+            "Trinket",
+            "Trinket"
+          ]
+        }
+      ]
+    }
+  ]
+}

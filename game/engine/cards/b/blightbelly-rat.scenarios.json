@@ -1,0 +1,108 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Blightbelly Rat",
+  "fixtures": {
+    "Kill": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It hits Maya: 2 damage and a poison counter; it dies, and proliferate gives her another",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Blightbelly Rat",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Kill"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Blightbelly Rat"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 38
+            },
+            {
+              "seat": 1,
+              "poison": 1
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Kill",
+          "targets": [
+            {
+              "card": "Blightbelly Rat"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Maya (1 poison)"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "poison": 2
+        }
+      ]
+    }
+  ]
+}

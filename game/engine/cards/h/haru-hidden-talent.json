@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Haru, Hidden Talent",
+    "oracleId": "7488ce54-37c6-475c-b327-59f52f2b1424",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Peasant",
+      "Ally"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Whenever another Ally you control enters, earthbend 1. (Target land you control becomes a 0/0 creature with haste that's still a land. Put a +1/+1 counter on it. When it dies or is exiled, return it to the battlefield tapped.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever another Ally you control enters, earthbend 1.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "subtypes": [
+            "Ally"
+          ],
+          "controller": "you",
+          "another": true
+        }
+      },
+      "effects": [
+        {
+          "effect": "earthbend",
+          "targets": {
+            "target": 0
+          },
+          "count": 1
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      ]
+    }
+  ]
+}

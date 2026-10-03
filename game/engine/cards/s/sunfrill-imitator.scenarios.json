@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sunfrill Imitator",
+  "fixtures": {
+    "Raptor": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dinosaur"
+      ],
+      "manaCost": "{3}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Attacking: a copy of his Raptor, still named Sunfrill Imitator",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sunfrill Imitator",
+            "Raptor"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Sunfrill Imitator"
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Sunfrill Imitator",
+            "power": 4,
+            "toughness": 4
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -41,7 +41,7 @@ import {powerOf, characteristicsOf, controllerOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
-export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn"]);
+export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -87,6 +87,10 @@ const playerOf = (ref, context) => (ref === "that player" ? context.about?.playe
 function objectOf(ref, context) {
   if (ref === "self") return context.source ?? null;
   if (ref === "that card") return context.about?.card ?? null;
+  /* "You lose life equal to its mana value" (Dark Confidant): what an earlier effect moved. */
+  if (ref === "remembered") return context.remembered?.[0] ?? null;
+  /* "Target creature you control deals damage equal to its power" (Infectious Bite): a target, while it is one. */
+  if (ref && typeof ref === "object" && Number.isInteger(ref.target)) { const chosen = (context.targets ?? [])[ref.target]; return chosen?.kind === "object" ? chosen.id : null; }
   return null;
 }
 
@@ -128,6 +132,12 @@ export function amountOf(state, value, context = {}) {
   } else if ("powerOf" in value) {
     const id = objectOf(value.powerOf, context);
     n = id !== null && state.objects[id]?.zone === "battlefield" ? powerOf(state, id) : (context.lastKnown?.power ?? 0);
+  } else if ("countersAmong" in value) {
+    /* "The number of +1/+1 counters on lands you control" (Toph, the Blind Bandit): all of them, of the kind. */
+    n = matching(state, value.countersAmong, who).reduce((sum, id) => sum + (state.objects[id].counters?.[value.counter ?? "+1/+1"] ?? 0), 0);
+  } else if ("greatestToughness" in value) {
+    /* "Draw cards equal to the greatest toughness among creatures you control" (Last March of the Ents). */
+    n = Math.max(0, ...matching(state, value.greatestToughness, who).map((id) => characteristicsOf(state, id).toughness ?? 0));
   } else if ("greatestPower" in value || "totalPower" in value) {
     const powers = matching(state, value.greatestPower ?? value.totalPower, who).map((id) => characteristicsOf(state, id).power ?? 0);
     n = "greatestPower" in value ? Math.max(0, ...powers) : powers.reduce((a, b) => a + b, 0);
@@ -137,6 +147,13 @@ export function amountOf(state, value, context = {}) {
   else if ("thoseCards" in value) n = (context.about?.cards ?? []).length;
   /* "That many", after damage: how much the trigger's damage was (rules/trigger.mjs). */
   else if ("damageDealt" in value) n = context.about?.amount ?? 0;
+  /* "Target opponent loses that much life" (Sanguine Bond; Forge's LifeAmount): the life the trigger is about gaining. */
+  else if ("lifeGained" in value) n = context.about?.amount ?? 0;
+  /* "That player mills that many cards", "you gain that much life" (batch 78): the life lost the trigger is about. */
+  else if ("lifeLost" in value) n = context.about?.amount ?? 0;
+  /* "Each opponent mills that many cards" (The Mindskinner), "a +1/+1 counter for each 1 damage prevented this way" (Vigor):
+     the damage a prevention stopped, its follow-up about it (rules/replacement.mjs). */
+  else if ("damagePrevented" in value) n = context.about?.amount ?? 0;
   /* "If you control a creature with power 4 or greater, instead search for three" (Forge's Count$Compare): one amount
      or the other, by a condition asked now (script/condition.mjs). */
   else if ("if" in value) n = amountOf(state, conditionHolds(state, value.if, {controller: context.controller, source: context.source}) ? value.then ?? 0 : value.else ?? 0, context);
@@ -159,6 +176,8 @@ export function amountOf(state, value, context = {}) {
   /* "For each other instant and sorcery spell you've cast before it this turn": counted as the trigger triggered. */
   else if ("castBefore" in value) n = context.about?.castBefore ?? 0;
   /* "For each of that spell's colors" (Ramos, CR 105.2): how many colors it has, through the layers on the battlefield. */
+  /* "For each color among permanents you control" (Conqueror's Flail): the colors they have between them, as they are. */
+  else if ("colorsAmong" in value) n = new Set(matching(state, value.colorsAmong, who).flatMap((id) => characteristicsOf(state, id).colors ?? [])).size;
   else if ("colorsOf" in value) {
     const id = objectOf(value.colorsOf, context);
     n = id !== null && state.objects[id] ? (state.objects[id].zone === "battlefield" ? characteristicsOf(state, id).colors : state.objects[id].colors ?? []).length : 0;

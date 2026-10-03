@@ -1,0 +1,151 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Universal Automaton",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Lord": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "abilities": [
+        {
+          "id": "lord",
+          "kind": "static",
+          "layer": 7,
+          "sublayer": "c",
+          "text": "Other Elf creatures you control get +1/+1.",
+          "affects": {
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Elf"
+            ],
+            "controller": "you",
+            "another": true
+          },
+          "apply": {
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    "Spark": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "You gain 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    "Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Charm": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Beside an Elf lord: it is an Elf, a 2/2; the Bear is not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Universal Automaton",
+            "Lord",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Universal Automaton",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Universal Automaton",
+            "has": [
+              "Changeling"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

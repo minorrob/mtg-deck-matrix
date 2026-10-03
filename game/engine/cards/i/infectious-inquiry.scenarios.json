@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Infectious Inquiry",
+  "scenarios": [
+    {
+      "name": "Two cards, 2 life, and a poison counter for Maya",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Infectious Inquiry"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Infectious Inquiry"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "seat": 1,
+          "poison": 1
+        }
+      ]
+    }
+  ]
+}

@@ -40,12 +40,21 @@
 
 import {conditionHolds} from "../script/condition.mjs";
 import {isCounted, amountOf} from "../script/amount.mjs";
+import {chosenFor} from "../script/chosen.mjs";
+import {hasSubtype, everyCreatureType} from "../keywords/types.mjs";
 
 /** The seven layers of CR 613.1, in order. */
 export const LAYERS = Object.freeze([1, 2, 3, 4, 5, 6, 7]);
 
 /** The sublayers of layer 7, in the order CR 613.4 gives. */
 const SUBLAYERS = Object.freeze(["a", "b", "c", "d", "e"]);
+
+/* KEYWORD COUNTERS (CR 122.1b): a counter that is a keyword gives the object that keyword -- in layer 6 (CR 613.1f),
+   read here with its printed keywords, before any effect that removes abilities. The ones the engine plays. */
+const KEYWORD_COUNTERS = Object.freeze({"flying": "Flying", "first strike": "First Strike", "double strike": "Double Strike", "deathtouch": "Deathtouch",
+  "haste": "Haste", "hexproof": "Hexproof", "indestructible": "Indestructible", "lifelink": "Lifelink", "menace": "Menace", "reach": "Reach",
+  "trample": "Trample", "vigilance": "Vigilance"});
+const counterKeywords = (counters) => Object.entries(counters ?? {}).filter(([kind, n]) => n > 0 && KEYWORD_COUNTERS[kind]).map(([kind]) => KEYWORD_COUNTERS[kind]);
 
 /* An object's printed characteristics: where a derivation starts. */
 function printed(state, id) {
@@ -55,11 +64,15 @@ function printed(state, id) {
     card: object.card,
     types: [...(object.types ?? [])],
     colors: [...(object.colors ?? [])],
-    keywords: [...(object.keywords ?? [])],
+    keywords: [...new Set([...(object.keywords ?? []), ...counterKeywords(object.counters)])],
+    /* Changeling (CR 702.73a), every creature type; an effect may make it so in layer 4 (applyEffect). */
+    everyCreatureType: everyCreatureType(object.keywords),
     power: object.power,
     toughness: object.toughness,
     controller: object.controller,
     counters: {...object.counters},
+    /* Abilities other effects give it (batch 76), in the order they were given. */
+    granted: [],
   };
 }
 
@@ -73,6 +86,11 @@ function printed(state, id) {
  * doing, so it would recurse. Two matchers over one shape is fine; two spellings of the same idea
  * is what produced a `pumpAll` that pumped the opponent's creatures as well, silently, because
  * "you" was not a word this understood. */
+/* THE KEYS A LAYER STATIC'S `affects` MAY CARRY -- this matcher's, narrower than the selector grammar because the layers
+   cannot ask what they are still deriving. Anything else would be ignored, and a static would affect more than it says:
+   the card compiler refuses it (cards/index.mjs). */
+export const LAYER_AFFECTS_KEYS = Object.freeze(["what", "ids", "types", "subtypes", "supertypes", "controller", "token", "another", "self", "attachedBy", "colors", "colorless", "countersAtLeast", "tapped"]);
+
 function affects(state, effect, current, sourceController) {
   const rule = effect.affects ?? {};
   if (rule.ids && !rule.ids.includes(current.id)) return false;
@@ -82,7 +100,10 @@ function affects(state, effect, current, sourceController) {
   if (Number.isInteger(rule.controller) && current.controller !== rule.controller) return false;
   if (rule.token !== undefined && (state.objects[current.id]?.token ?? false) !== rule.token) return false;
   /* "Other Elf creatures you control get +1/+1": a subtype (printed, or a type the layers added), and not the source. */
-  if (rule.subtypes && !rule.subtypes.every((t) => current.types.includes(t) || (state.objects[current.id]?.subtypes ?? []).includes(t))) return false;
+  /* A changeling is every creature type (CR 702.73a): an Elf lord's "other Elves" takes it in. */
+  if (rule.subtypes && !rule.subtypes.every((t) => current.types.includes(t) || hasSubtype(state.objects[current.id]?.subtypes ?? [], current.everyCreatureType, t))) return false;
+  /* "Legendary Humans you control have indestructible" (General's Enforcer): printed supertypes, which no layer changes. */
+  if (rule.supertypes && !rule.supertypes.every((t) => (state.objects[current.id]?.supertypes ?? []).includes(t))) return false;
   if (rule.another === true && current.id === effect.sourceId) return false;
   /* "This creature's power and toughness are each equal to ...": the source itself. */
   if (rule.self === true && current.id !== effect.sourceId) return false;
@@ -91,8 +112,12 @@ function affects(state, effect, current, sourceController) {
   /* "As long as enchanted creature is white" (Steel of the Godhead): its colors as they now are -- layer 5 is done by the
      time layers 6 and 7 ask. */
   if (rule.colors && !rule.colors.every((color) => (current.colors ?? []).includes(color))) return false;
+  /* "Colorless creatures you control get +2/+2" (Forsaken Monument): no color, as layer 5 left it. */
+  if (rule.colorless === true && (current.colors ?? []).length > 0) return false;
   /* "As long as this creature has four or more +1/+1 counters on it" (Voice of the Blessed): counters as they are now. */
   if (rule.countersAtLeast && ((current.counters ?? {})[rule.countersAtLeast.counter] ?? 0) < rule.countersAtLeast.count) return false;
+  /* "Other tapped legendary creatures you control have indestructible" (The Seriema): tapped as it is, which no layer changes. */
+  if (rule.tapped !== undefined && (state.objects[current.id]?.tapped === true) !== rule.tapped) return false;
   return true;
 }
 
@@ -106,7 +131,16 @@ function applyEffect(current, effect) {
   if (change.addTypes) for (const type of change.addTypes) if (!current.types.includes(type)) current.types.push(type);
   if (change.setTypes) current.types = [...change.setTypes];
   if (change.setColors) current.colors = [...change.setColors];
-  if (change.removeAllAbilities) current.keywords = [];
+  /* "Gain all creature types" (Mirror Entity, batch 74): a type change, layer 4 (CR 613.1d). */
+  if (change.allCreatureTypes === true) current.everyCreatureType = true;
+  /* "Loses all abilities" (CR 613.1f): its own, and any given it before -- one given after, in timestamp order, it keeps. */
+  if (change.removeAllAbilities) { current.keywords = []; current.granted = []; current.lostAbilities = true; }
+  /* GRANTED ABILITIES (Forge's AddAbility, batch 76): "lands you control have '{T}: Add one mana of any color'", "equipped
+     creature has 'Whenever this creature attacks, create a Treasure token'" -- abilities compiled as a card's own are
+     (cards/index.mjs), each with an id naming the effect that gave it -- its timestamp, and which of its holder's
+     abilities it is -- so two grants of one ability are two abilities. */
+  if (change.addAbilities) for (const ability of change.addAbilities)
+    current.granted.push({...ability, id: `granted:${effect.timestamp ?? ""}:${effect.id ?? ""}:${ability.id}`});
   if (change.addKeywords) for (const word of change.addKeywords) if (!current.keywords.includes(word)) current.keywords.push(word);
   if (Number.isInteger(change.setPower)) current.power = change.setPower;
   if (Number.isInteger(change.setToughness)) current.toughness = change.setToughness;
@@ -153,7 +187,8 @@ function allEffects(state) {
       if (ability.worksFrom === "graveyard") continue;
       if (!holdsNow(state, ability.condition, {controller: holder.controller, source: id})) continue;
       found.push({
-        ...ability,
+        /* "Creatures you control of the chosen type get +1/+1", "this creature is the chosen type": its own choice. */
+        ...chosenFor(ability, holder),
         sourceId: id,
         sourceController: holder.controller,
         /* A static ability's timestamp is its permanent's (CR 613.7d). */
@@ -294,6 +329,29 @@ export const typesOf = (state, id) => characteristicsOf(state, id).types;
 /** What it currently has, after layer 6. */
 export const keywordsOf = (state, id) => characteristicsOf(state, id).keywords;
 
+/* Its own abilities unless it lost them, then the ones given it. */
+const heldAbilities = (object, current) => [...(current.lostAbilities ? [] : object.abilities ?? []), ...current.granted];
+
+/* Whether any effect in play may give or take abilities -- an effect left behind, a static on the battlefield or in a
+   graveyard (where one may work from, allEffects): when none does, a permanent's abilities are its own, and nothing need
+   be derived to read them. */
+function abilitiesChange(state) {
+  const changes = (apply) => Boolean(apply && (apply.addAbilities || apply.removeAllAbilities));
+  if ((state.effects ?? []).some((effect) => changes(effect.apply))) return true;
+  const holders = [...state.zones.battlefield, ...(state.zones.graveyard ?? []).flat()];
+  return holders.some((id) => (state.objects[id].abilities ?? []).some((ability) => ability.kind === "static" && changes(ability.apply)));
+}
+
+/**
+ * A PERMANENT'S ABILITIES NOW (CR 613.1f, batch 76): its own, less them if it lost them, and those other effects gave it
+ * -- what its activated, mana and triggered abilities are read from. Anywhere but the battlefield, the card's own.
+ */
+export function abilitiesOf(state, id) {
+  const object = state.objects[id];
+  if (object.zone !== "battlefield" || !abilitiesChange(state)) return object.abilities ?? [];
+  return heldAbilities(object, characteristicsOf(state, id));
+}
+
 /**
  * LAST KNOWN INFORMATION (CR 113.7a) — everything about an object, captured before it leaves.
  *
@@ -326,9 +384,13 @@ export function lastKnown(state, id) {
     /* What "another Vampire you control dies" and "equipped creature dies" ask of a thing that is gone. */
     subtypes: [...(object.subtypes ?? [])],
     supertypes: [...(object.supertypes ?? [])],
+    /* What it chose as it entered, for its abilities read as it last was. */
+    ...(object.chosen !== undefined ? {chosen: object.chosen} : {}),
     attachments: [...(object.attachments ?? [])],
     colors: [...current.colors],
     keywords: [...current.keywords],
+    /* Every creature type, as it last was (Changeling, or an effect's). */
+    everyCreatureType: current.everyCreatureType === true,
     /* Null, not zero, for a thing that has no power — a dying Sol Ring is not a 0/0. */
     power: current.power ?? null,
     toughness: current.toughness ?? null,
@@ -337,6 +399,7 @@ export function lastKnown(state, id) {
     tapped: object.tapped === true,
     token: object.token === true,
     commander: object.commander === true,
-    abilities: structuredClone(object.abilities ?? []),
+    /* Its abilities as it last was, the ones given it included: "when this creature dies" given by Feign Death. */
+    abilities: structuredClone(heldAbilities(object, current)),
   };
 }

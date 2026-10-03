@@ -34,6 +34,7 @@
  * whose every target is illegal does nothing and leaves the stack with `hasFizzled`.
  */
 
+import {holdArrival} from "./entering.mjs";
 import {conditionHolds} from "../script/condition.mjs";
 import {moveObject, addObject, removeObject} from "../state/index.mjs";
 import {enteringModifications} from "./replacement.mjs";
@@ -218,7 +219,11 @@ export function resolveTop(state, effect = null) {
   /* X (CR 107.3a): the spell's or ability's own; a permanent's ability uses the X paid to cast it (CR 107.3m). */
   const x = entry.x ?? (source !== null ? state.objects[source]?.xPaid : undefined) ?? 0;
   const attached = source !== null ? state.objects[source]?.attachedTo ?? null : null;
-  const context = {controller: entry.playerId, source, x, ...(entry.about ? {about: entry.about} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {}), ...(attached !== null ? {attached} : {})};
+  const context = {controller: entry.playerId, source, x, ...(entry.about ? {about: entry.about} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {}), ...(attached !== null ? {attached} : {}),
+    /* How the spell was cast, for its own conditions ("if this spell was cast from a graveyard"; rules/actions.mjs). */
+    ...(entry.cast ? {cast: entry.cast} : {}),
+    /* What its permanent chose as it entered: "draw a card for each creature of the chosen type". */
+    ...(source !== null && state.objects[source]?.chosen !== undefined ? {chosen: state.objects[source].chosen} : {})};
   const {targets, fizzles} = recheckTargets(state, script.targets, entry.targets, context);
   if (fizzles) return finishTop(state, entry, events, true);
   /* An intervening "if" asked again as it resolves (CR 603.4): false now, and the ability does nothing. A triggered
@@ -266,7 +271,7 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
        its OWNER's graveyard as the final part of its resolution — not the graveyard of whoever
        cast it, which is a different player whenever a card has been borrowed. */
     /* Cast with flashback, it is exiled instead of going anywhere else (CR 702.34a): resolved, or fizzled. */
-    const to = entry.permanent && !fizzled ? "battlefield" : entry.flashback ? "exile" : "graveyard";
+    const to = entry.permanent && !fizzled ? "battlefield" : entry.flashback || entry.graveyardToExile ? "exile" : "graveyard";
     /* CR 614.12, asked before the move: a permanent coming off the stack enters tapped or with
        counters as ONE event, and the abilities that say so are on the spell, not on anything that
        is on the battlefield yet. */
@@ -276,6 +281,9 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
         types: object.types, abilities: object.abilities, x: entry.x ?? 0})
       : null;
     const arrived = moveObject(state, entry.objectId, to, to === "graveyard" ? owner : null);
+    /* CR 608.3a: it enters under its caster's control -- not its owner's, when a card was cast by another player (Tinybones,
+       the Pickpocket casting a card from an opponent's graveyard). */
+    if (to === "battlefield") state.objects[arrived].controller = entry.playerId;
     /* An Aura enters attached to what it was cast at (CR 303.4f). */
     if (to === "battlefield" && attachTo !== null && state.objects[attachTo]) {
       state.objects[arrived].attachedTo = attachTo;
@@ -295,12 +303,14 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     }
     events.push(event("GameEventCardChangeZone", state, {
       card,
-      ...(to === "battlefield" ? {enteredAs: arrived} : {}),
+      ...(to === "battlefield" ? {enteredAs: arrived, ...(state.objects[arrived]?.tapped ? {enteredTapped: true} : {})} : {}),
       /* What it became, on the battlefield or in the graveyard -- both public (CR 400.7e). */
       becomes: arrived,
       from: {zoneType: ZONE_LABEL.stack, player: {playerId: entry.playerId}},
       to: {zoneType: ZONE_LABEL[to], player: {playerId: to === "graveyard" ? owner : entry.playerId}},
     }));
+    /* "You may have this creature enter as a copy of ...": its arrival waits for the answer (rules/entering.mjs). */
+    if (to === "battlefield") holdArrival(state, arrived, events[events.length - 1]);
   }
 
   events.push(event("GameEventSpellResolved", state, {
@@ -317,5 +327,6 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
  * into the state; everything the board draws is here.
  */
 export function stackProjection(state) {
-  return state.stack.map(({objectId, permanent, script, ...shown}) => ({...shown}));
+  /* How a spell was cast (`cast`, rules/actions.mjs) is the engine's, for its conditions: the board's contract is as it was. */
+  return state.stack.map(({objectId, permanent, script, cast, ...shown}) => ({...shown}));
 }

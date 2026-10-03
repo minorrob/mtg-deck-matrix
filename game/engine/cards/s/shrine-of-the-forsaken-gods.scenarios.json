@@ -1,0 +1,106 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Shrine of the Forsaken Gods",
+  "fixtures": {
+    "Golem": {
+      "types": [
+        "Artifact",
+        "Creature"
+      ],
+      "subtypes": [
+        "Golem"
+      ],
+      "manaCost": "{3}",
+      "colors": [],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Seven lands: {C}{C} for a colorless spell",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Shrine of the Forsaken Gods",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Golem"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Shrine of the Forsaken Gods",
+          "mana": {
+            "C": 2
+          }
+        },
+        {
+          "cast": "Golem"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Shrine of the Forsaken Gods",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Golem"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Six lands: only its {C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Shrine of the Forsaken Gods",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Shrine of the Forsaken Gods"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

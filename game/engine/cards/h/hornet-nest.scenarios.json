@@ -1,0 +1,99 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Hornet Nest",
+  "fixtures": {
+    "Zap": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Zap deals 2 damage to target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 2,
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Dealt 2 damage: it dies, and two 1/1 Insects with flying and deathtouch",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hornet Nest",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Zap"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Zap",
+          "targets": [
+            {
+              "card": "Hornet Nest",
+              "seat": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Insect",
+            "Insect"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Insect",
+            "has": [
+              "Flying",
+              "Deathtouch"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

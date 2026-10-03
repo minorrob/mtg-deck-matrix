@@ -1,0 +1,147 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Castle Garenbrig",
+  "fixtures": {
+    "Hydra": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Hydra"
+      ],
+      "manaCost": "{4}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 6,
+      "toughness": 6
+    },
+    "Charm": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "You gain 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "No Forest: it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Castle Garenbrig"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Castle Garenbrig"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Castle Garenbrig"
+        }
+      ]
+    },
+    {
+      "name": "Six {G} cast the 6/6, not the instant",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Castle Garenbrig",
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hydra",
+            "Charm"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Castle Garenbrig",
+          "mana": {
+            "G": 6
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Hydra"
+              },
+              "count": 1
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Charm"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "cast": "Hydra"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Castle Garenbrig",
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Hydra"
+          ]
+        }
+      ]
+    }
+  ]
+}

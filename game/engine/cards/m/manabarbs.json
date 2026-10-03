@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Manabarbs",
+    "oracleId": "0f1afedd-c60f-454f-b84a-c8117aec0128",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever a player taps a land for mana, this enchantment deals 1 damage to that player.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever a player taps a land for mana, this enchantment deals 1 damage to that player.",
+      "trigger": {
+        "on": "tapped for mana",
+        "tapper": "any",
+        "filter": {
+          "types": [
+            "Land"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "who": "that player"
+        }
+      ]
+    }
+  ]
+}

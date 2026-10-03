@@ -1,0 +1,234 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Goldspan Dragon",
+  "fixtures": {
+    "Growth": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [
+        "G"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Target creature gets +3/+3 until end of turn.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "pump",
+            "targets": {
+              "target": 0
+            },
+            "power": 3,
+            "toughness": 3
+          }
+        ]
+      }
+    },
+    "Pinger": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wizard"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "p",
+          "kind": "activated",
+          "text": "{T}: This deals 1 damage to target creature.",
+          "cost": [
+            {
+              "atom": "{T}"
+            }
+          ],
+          "targets": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            }
+          ],
+          "effects": [
+            {
+              "effect": "dealDamage",
+              "amount": 1,
+              "targets": {
+                "target": 0
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It attacks: a Treasure, which taps for {R}{R}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goldspan Dragon"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Goldspan Dragon"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Treasure",
+          "mana": {
+            "R": 2
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "pool": {
+                "R": 2
+              }
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "controls": [
+            "Goldspan Dragon"
+          ],
+          "seat": 0
+        }
+      ]
+    },
+    {
+      "name": "His own Growth targets it: a Treasure",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goldspan Dragon",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Growth"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Growth",
+          "targets": [
+            {
+              "card": "Goldspan Dragon"
+            }
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "controls": [
+            "Goldspan Dragon",
+            "Treasure",
+            "Wastes"
+          ],
+          "seat": 0
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Goldspan Dragon",
+            "power": 7,
+            "toughness": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "An ability targets it: no Treasure",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goldspan Dragon",
+            "Pinger"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Pinger",
+          "targets": [
+            {
+              "card": "Goldspan Dragon"
+            }
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "controls": [
+            "Goldspan Dragon",
+            "Pinger"
+          ],
+          "seat": 0
+        }
+      ]
+    }
+  ]
+}

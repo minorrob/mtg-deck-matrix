@@ -46,9 +46,12 @@
 
 import {cardsIn, recordUse} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
-import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf} from "./layers.mjs";
+import {runFollowUps} from "../script/effects/index.mjs";
+import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf} from "./layers.mjs";
+import {givePoison, changeLife, infects, addCounters} from "../script/effects/resources.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
-import {combatDamageOf, ruleChanged} from "./statics.mjs";
+import {combatDamageOf, ruleChanged, attackTax, goadersOf} from "./statics.mjs";
+import {canPayGeneric, payGeneric} from "./mana.mjs";
 import {
   canBlockAttacker, blockersAreLegal, whyBlockersAreIllegal, lethalNeededFrom,
   combatNeedsFirstStrike, dealsFirstStrike, dealsRegular, trampleOver, lifelinkFrom, markDeathtouch,
@@ -112,7 +115,12 @@ export const attackers = {
     const defenders = defendersFor(state, awaiting.player);
     for (const id of state.zones.battlefield) {
       if (!canAttack(state, id, awaiting.player)) continue;
+      /* GOADED (CR 701.15b): it attacks a player other than its goader if it can without a cost to pay (CR 508.1d) -- so
+         its goader is not offered while such a player is. */
+      const goaders = goadersOf(state, id);
+      const elsewhere = goaders.length > 0 && defenders.some((d) => !goaders.includes(d) && attackTax(state, [{defenderId: d}]) === 0);
       for (const defender of defenders) {
+        if (elsewhere && goaders.includes(defender)) continue;
         options.push({
           index: options.length,
           label: `${state.objects[id].card} → ${state.players[defender].name}`,
@@ -151,12 +159,32 @@ export const attackers = {
     if (new Set(picked.map((o) => o.cardId)).size !== picked.length)
       throw new Error("A creature can attack only once; the same creature was declared twice");
 
+    /* GOADED (CR 701.15b, 508.1d): it attacks each combat if able -- with no cost to pay for it -- so one left out attacks
+       anyway: the first player after its controller in turn order it may attack for free, not its goader if it can. */
+    const seats = state.players.length;
+    for (const id of state.zones.battlefield) {
+      const goaders = goadersOf(state, id);
+      if (!goaders.length || picked.some((o) => o.cardId === id) || !canAttack(state, id, awaiting.player)) continue;
+      const free = defendersFor(state, awaiting.player).filter((d) => attackTax(state, [{defenderId: d}]) === 0)
+        .sort((a, b) => (a - awaiting.player + seats) % seats - (b - awaiting.player + seats) % seats);
+      const defender = free.find((d) => !goaders.includes(d)) ?? free[0];
+      if (defender !== undefined) picked.push({cardId: id, defenderId: defender});
+    }
+
     const events = [];
     if (picked.length === 0) {
       /* CR 506.5: with no attackers, the declare blockers and combat damage steps do not happen.
          `combat` stays null, which is what the turn table's condition reads. */
       state.awaiting = null;
       return events;
+    }
+
+    /* CR 508.1g-h: what attacking costs (Propaganda), paid now -- from the pool and the player's plain mana sources, as an
+       "unless" cost is -- or this is not an attack that can be declared. */
+    const tax = attackTax(state, picked);
+    if (tax > 0) {
+      if (!canPayGeneric(state, awaiting.player, tax)) throw new Error(`Those attackers cost {${tax}} to attack with, more than can be paid`);
+      events.push(...payGeneric(state, awaiting.player, tax));
     }
 
     state.combat = {
@@ -421,22 +449,28 @@ export const combatDamage = {
         sourceId: raw.source,
         combat: true,
       });
-      if (hit.prevented === true || hit.amount <= 0) continue;
+      /* What follows a prevention -- "each opponent mills that many cards" -- immediately afterward (CR 615.5). */
+      if (hit.prevented === true || hit.amount <= 0) { events.push(...runFollowUps(state, hit)); continue; }
       hit.source = raw.source;
+      /* INFECT (CR 702.90b-c, batch 78): poison counters to a player, -1/-1 counters to a creature, in place of the rest. */
+      const infect = infects(state, hit.source);
       if (hit.toPlayer !== undefined && hit.toPlayer !== null) {
-        const before = state.players[hit.toPlayer].life;
-        state.players[hit.toPlayer].life -= hit.amount;
         events.push(event("GameEventPlayerDamaged", state, {
           source: cardRef(state, hit.source),
           target: {playerId: hit.toPlayer, name: state.players[hit.toPlayer].name},
-          amount: hit.amount, combat: true, infect: false,
+          amount: hit.amount, combat: true, infect,
         }));
-        events.push(event("GameEventPlayerLivesChanged", state, {
-          player: {playerId: hit.toPlayer, name: state.players[hit.toPlayer].name},
-          oldLives: before, newLives: state.players[hit.toPlayer].life,
-        }));
+        /* The damage is a loss of life (CR 120.3a), counted as one this turn (batch 78: it was not) -- or, with infect, as
+           many poison counters. */
+        if (infect) events.push(...givePoison(state, hit.toPlayer, hit.amount));
+        else changeLife(state, hit.toPlayer, -hit.amount, events);
+        /* TOXIC (CR 702.164c, batch 77): dealt combat damage by a creature with toxic, the player also gets that many
+           poison counters -- every instance it has, given ones too, added together (702.164b). */
+        const toxic = abilitiesOf(state, hit.source).filter((a) => a.kind === "static" && a.rule === "toxic").reduce((n, a) => n + (a.amount ?? 0), 0);
+        if (toxic > 0) events.push(...givePoison(state, hit.toPlayer, toxic));
       } else {
-        state.objects[hit.toCard].damage += hit.amount;
+        if (infect) addCounters(state, hit.toCard, "-1/-1", hit.amount, events);
+        else state.objects[hit.toCard].damage += hit.amount;
         /* CR 704.5h: the mark that makes state-based actions destroy it whatever its toughness. */
         markDeathtouch(state, hit.source, hit.toCard);
         events.push(event("GameEventCardDamaged", state, {

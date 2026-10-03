@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ripjaw Raptor",
+    "oracleId": "80bb9ce4-1f3c-42ca-b75f-9a6b2f42073b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dinosaur"
+    ],
+    "manaCost": "{2}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Enrage — Whenever this creature is dealt damage, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Enrage — Whenever this creature is dealt damage, draw a card.",
+      "trigger": {
+        "on": "damage dealt once",
+        "to": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

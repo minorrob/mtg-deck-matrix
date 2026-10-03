@@ -1,0 +1,224 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Enduring Vitality",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Pray": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "You gain 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    "Kill": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "His Bear taps for {W}: Pray cast with it; one that came this turn can't tap for mana",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Enduring Vitality",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Pray"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Bear"
+              },
+              "count": 5
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Enduring Vitality"
+              },
+              "count": 5
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Ogre"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Bear",
+          "mana": {
+            "W": 1
+          }
+        },
+        {
+          "cast": "Pray"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 41
+        },
+        {
+          "seat": 0,
+          "tapped": "Bear"
+        }
+      ]
+    },
+    {
+      "name": "Destroyed, it returns an enchantment: the Bear still has the ability, the Vitality no longer",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Enduring Vitality",
+            "Bear",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Kill"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Kill",
+          "targets": [
+            {
+              "card": "Enduring Vitality"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "controls": [
+            "Bear",
+            "Enduring Vitality",
+            "Wastes"
+          ],
+          "seat": 0
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Bear"
+          },
+          "count": 5
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Enduring Vitality"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

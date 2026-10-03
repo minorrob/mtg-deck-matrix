@@ -1,0 +1,93 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Shorikai, Genesis Engine",
+  "fixtures": {
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{6}",
+      "colors": [],
+      "power": 7,
+      "toughness": 7
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Draw two, discard one, and a Pilot -- whose 1 crews as 3: the Pilot and a 7/7 Giant crew 8 together",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Shorikai, Genesis Engine",
+            "Giant",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Shorikai, Genesis Engine",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "count": 1
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Pilot",
+                "power": 1,
+                "toughness": 1
+              }
+            }
+          ]
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Shorikai, Genesis Engine"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "activate": "Shorikai, Genesis Engine",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Shorikai, Genesis Engine",
+            "power": 8,
+            "toughness": 8
+          }
+        }
+      ]
+    }
+  ]
+}

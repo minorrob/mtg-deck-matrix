@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mirage Mirror",
+    "oracleId": "6a84eda1-7e72-4b5a-849f-b6e177565aeb",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{2}: This artifact becomes a copy of target artifact, creature, enchantment, or land until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{2}: This artifact becomes a copy of target artifact, creature, enchantment, or land until end of turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Enchantment"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Land"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "becomeCopy",
+          "targets": {
+            "target": 0
+          },
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

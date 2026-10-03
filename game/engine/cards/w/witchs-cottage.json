@@ -1,0 +1,94 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Witch's Cottage",
+    "oracleId": "6c8f276e-4e7b-4974-ab02-9356cc0ffb2b",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Swamp"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "({T}: Add {B}.)\nThis land enters tapped unless you control three or more other Swamps.\nWhen this land enters untapped, you may put target creature card from your graveyard on top of your library.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {B}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "B": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "replacement",
+      "text": "This land enters tapped unless you control three or more other Swamps.",
+      "watches": {
+        "event": "enters",
+        "who": "self",
+        "unless": {
+          "controls": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ],
+            "subtypes": [
+              "Swamp"
+            ]
+          },
+          "min": 3
+        }
+      },
+      "change": {
+        "entersTapped": true
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "When this land enters untapped, you may put target creature card from your graveyard on top of your library.",
+      "trigger": {
+        "on": "enters",
+        "untapped": true
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "library",
+          "top": true
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

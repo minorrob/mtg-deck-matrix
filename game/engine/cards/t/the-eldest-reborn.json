@@ -1,0 +1,112 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "The Eldest Reborn",
+    "oracleId": "44ed4c0c-a012-4895-a547-b04150553bba",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Saga"
+    ],
+    "manaCost": "{4}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)\nI — Each opponent sacrifices a creature or planeswalker of their choice.\nII — Each opponent discards a card.\nIII — Put target creature or planeswalker card from a graveyard onto the battlefield under your control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.",
+      "keyword": "saga"
+    },
+    {
+      "kind": "triggered",
+      "text": "I — Each opponent sacrifices a creature or planeswalker of their choice.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 1
+      },
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "who": "opponent",
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "types": [
+                  "Planeswalker"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "II — Each opponent discards a card.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 2
+      },
+      "effects": [
+        {
+          "effect": "discard",
+          "who": "opponent",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "III — Put target creature or planeswalker card from a graveyard onto the battlefield under your control.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 3
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "battlefield",
+          "controller": "you"
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "types": [
+                "Planeswalker"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

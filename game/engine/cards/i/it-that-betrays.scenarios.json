@@ -1,0 +1,183 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "It That Betrays",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Edict": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Target player sacrifices a permanent.",
+        "targets": [
+          {
+            "what": "player"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "sacrifice",
+            "who": {
+              "target": 0
+            },
+            "count": 1,
+            "selector": {
+              "what": "permanent"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It attacks: Maya sacrifices her Bear and Relic -- and they come to him",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "It That Betrays"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Relic",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "It That Betrays"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear",
+            "Relic"
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "controls": [
+            "Bear",
+            "It That Betrays",
+            "Relic"
+          ],
+          "seat": 0
+        },
+        {
+          "controls": [
+            "Ogre"
+          ],
+          "seat": 1
+        }
+      ]
+    },
+    {
+      "name": "His own Edict on himself: nothing comes back",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "It That Betrays",
+            "Relic",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Edict"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Edict",
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Relic"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "controls": [
+            "It That Betrays",
+            "Swamp"
+          ],
+          "seat": 0
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

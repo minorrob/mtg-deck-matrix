@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lier, Disciple of the Drowned",
+    "oracleId": "f224db3d-cdd2-43f2-b625-4b861efa6449",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{3}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Spells can't be countered.\nEach instant and sorcery card in your graveyard has flashback. The flashback cost is equal to that card's mana cost.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Spells can't be countered.",
+      "rule": "cant-be-countered",
+      "affects": {
+        "what": "spell"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Each instant and sorcery card in your graveyard has flashback. The flashback cost is equal to that card's mana cost.",
+      "rule": "flashback",
+      "affects": {
+        "what": "card",
+        "zone": "graveyard",
+        "controller": "you",
+        "anyOf": [
+          {
+            "types": [
+              "Instant"
+            ]
+          },
+          {
+            "types": [
+              "Sorcery"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Forge of Heroes",
+    "oracleId": "77807103-bcd5-479f-bedd-f5d97aa6d3d2",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {C}.\n{T}: Choose target commander that entered this turn. Put a +1/+1 counter on it if it's a creature and a loyalty counter on it if it's a planeswalker.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Choose target commander that entered this turn. Put a +1/+1 counter on it if it's a creature and a loyalty counter on it if it's a planeswalker.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "+1/+1",
+          "count": 1,
+          "condition": {
+            "about": "target",
+            "is": {
+              "types": [
+                "Creature"
+              ]
+            }
+          }
+        },
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "loyalty",
+          "count": 1,
+          "condition": {
+            "about": "target",
+            "is": {
+              "types": [
+                "Planeswalker"
+              ]
+            }
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "commander": true,
+          "enteredThisTurn": true
+        }
+      ]
+    }
+  ]
+}

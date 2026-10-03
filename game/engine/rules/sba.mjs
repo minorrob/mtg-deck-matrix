@@ -38,6 +38,8 @@ import {applyReplacements, regenerated} from "./replacement.mjs";
 import {lastKnown, toughnessOf, typesOf, keywordsOf} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {offersCommandZone, resolveCommanderChoice} from "./commander.mjs";
+import {sacrificeOne} from "../script/effects/zones.mjs";
+import {changeLife} from "../script/effects/resources.mjs";
 
 /* The capitalized zone names the projection and the telemetry use. */
 const ZONE_LABEL = {
@@ -67,16 +69,11 @@ const isCreature = (object) => (object.types ?? []).includes("Creature");
  */
 export function dealCommanderDamage(state, player, sourceId, amount, {combat = true} = {}) {
   const events = [];
-  const before = state.players[player].life;
-  state.players[player].life -= amount;
+  changeLife(state, player, -amount, events);
   if (combat && state.objects[sourceId]?.commander === true) {
     const tally = state.players[player].commanderDamage;
     tally[sourceId] = (tally[sourceId] ?? 0) + amount;
   }
-  events.push(event("GameEventPlayerLivesChanged", state, {
-    player: {playerId: player, name: state.players[player].name},
-    oldLives: before, newLives: state.players[player].life,
-  }));
   return events;
 }
 
@@ -243,6 +240,17 @@ export function checkStateBasedActions(state) {
       }
     }
 
+    /* CR 714.4: a Saga whose lore counters have reached its final chapter, and that is the source of no chapter ability
+       that has triggered and not yet left the stack, is sacrificed. */
+    for (const id of [...state.zones.battlefield]) {
+      const object = state.objects[id];
+      const chapters = (object.abilities ?? []).filter((a) => a.kind === "triggered" && Number.isInteger(a.trigger?.chapter));
+      if (!chapters.length || (object.counters?.lore ?? 0) < Math.max(...chapters.map((a) => a.trigger.chapter))) continue;
+      const ids = new Set(chapters.map((a) => a.id));
+      if (state.stack.some((e) => e.cardId === id && ids.has(e.abilityId)) || (state.pendingTriggers ?? []).some((p) => p.source?.cardId === id && ids.has(p.abilityId))) continue;
+      if (sacrificeOne(state, id, events) !== null) acted = true;
+    }
+
     for (const player of state.players) {
       const reason = lossReason(state, player);
       if (!reason) continue;
@@ -337,6 +345,10 @@ export function finishCommanderReplacement(state, awaiting, indices) {
  * crash and not an arbitrary winner.
  */
 export function gameOver(state) {
+  /* "You win the game" (CR 104.2b, effects/resources.mjs winGame): over at once, that player the winner -- before any
+     state-based action could take it from them (CR 104.1). */
+  const won = state.players.find((p) => p.won === true);
+  if (won) return {winner: won.id, reason: "won by an effect"};
   const alive = state.players.filter((p) => !p.lost);
   if (alive.length === 1) return {winner: alive[0].id, reason: "last player standing"};
   if (alive.length === 0) return {winner: null, reason: "all players lost"};

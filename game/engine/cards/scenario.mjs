@@ -22,14 +22,16 @@
  *            | {resolve: true} | {settle: true} | {pass: n} | {to: {turn, phase}} | {answer: [indices]} | {expect: [...]} ],
  *   (`targets: "any"` takes the first legal aim; `optional` skips a move the rules do not offer; `settle` answers every
  *   question with its first legal answer and resolves the stack until it is empty -- the card loader's smoke test.)
- *     expect: [ {seat, zone, cards} | {seat, zone, count} | {seat, life} | {stack} | {seat, tapped, is}
+ *     expect: [ {seat, zone, cards} | {seat, zone, count} | {seat, life} | {seat, poison} | {stack} | {seat, tapped, is}
  *             | {seat, pool} | {offers: {kind, card, seat?}, count, targets?} | {event, where} ] }]}
  */
 
+import {controllerOf} from "../rules/layers.mjs";
 import {createState, addObject} from "../state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../rules/turn.mjs";
 import {legalActions, applyAction} from "../rules/actions.mjs";
 import {passPriority} from "../rules/priority.mjs";
+import {gameOver} from "../rules/sba.mjs";
 import {projectFor} from "../projection.mjs";
 import {createRng} from "../rng.mjs";
 import {targetName} from "../script/bind.mjs";
@@ -105,10 +107,12 @@ export function runScenario(scenario, cards, fixtures = {}) {
     const choice = awaitingChoice(state);
     const amounts = choice.mode === "damage" || choice.mode === "amount" ? choice.options.map(() => 0) : null;
     if (amounts && choice.total) amounts[0] = choice.total;
-    record(resolveAwaiting(state, amounts ? [] : choice.options.slice(0, choice.min ?? 0).map((o) => o.index), amounts, rng, {toBottom: []}));
+    record(resolveAwaiting(state, amounts ? [] : choice.options.slice(0, choice.min ?? 0).map((o) => o.index), amounts, rng));
   };
   const goTo = ({turn, phase, settle = false}) => {
     for (let n = 0; n < STEP_LIMIT; n += 1) {
+      /* A smoke game the card ended (Tasha's Hideous Laughter exiling a library of Wastes): played to its end. */
+      if (scenario.stopWhenOver && gameOver(state)) return;
       if (settle && state.awaiting && !["declare-attackers", "declare-blockers", "order-triggers"].includes(state.awaiting.kind)) { settleOne(); continue; }
       /* The first moment in that step at which someone holds priority: a trigger of the step may be waiting on the
          stack, which is what a scenario about that trigger wants to see. */
@@ -152,8 +156,11 @@ export function runScenario(scenario, cards, fixtures = {}) {
     /* Which way it is paid for: an alternative cost by its ability's place (CR 118.9), or `false` for the mana cost. */
     if (step.alternative !== undefined) found = found.filter((a) => (a.alternative ?? false) === step.alternative);
     for (const key of ["exile"]) if (step[key] !== undefined) found = found.filter((a) => (a.costNames ?? []).includes(step[key]));
-    /* Which permanent a "Sacrifice a creature" cost takes, or which card a discard does: the offer that names it. */
-    for (const key of ["sacrifice", "discard"]) if (step[key] !== undefined) found = found.filter((a) => (a.costNames ?? []).includes(step[key]));
+    /* Which permanent a "Sacrifice a creature" cost takes, which card a discard does, or which creature an "untap a tapped
+       creature you control" cost untaps: the offer that names it. */
+    for (const key of ["sacrifice", "discard", "untap"]) if (step[key] !== undefined) found = found.filter((a) => (a.costNames ?? []).includes(step[key]));
+    /* Which creature a "tap another untapped creature you control" cost taps (station): the offer that names it. */
+    if (step.tapping !== undefined) found = found.filter((a) => a.costChoice?.tap !== undefined && state.objects[a.costChoice.tap]?.card === step.tapping);
     if (!found.length && step.optional) return;
     if (!found.length) fail(`${names[seat]} is not offered ${kind} ${card}${step.targets ? ` at ${JSON.stringify(step.targets)}` : ""}`);
     record(applyAction(state, seat, found[0]));
@@ -177,6 +184,17 @@ export function runScenario(scenario, cards, fixtures = {}) {
         const life = projectFor(state, e.seat).players[e.seat].life;
         if (life !== e.life) fail(`${names[e.seat]} is at ${life} life, not ${e.life}`);
         passed.push(`${names[e.seat]} at ${e.life} life`);
+      } else if (e.poison !== undefined) {
+        /* Poison counters, as the board shows them. */
+        const poison = projectFor(state, e.seat).players[e.seat].health?.poison ?? 0;
+        if (poison !== e.poison) fail(`${names[e.seat]} has ${poison} poison counters, not ${e.poison}`);
+        passed.push(`${names[e.seat]} with ${e.poison} poison`);
+      } else if (e.controls !== undefined) {
+        /* What a seat controls on the battlefield -- a stolen creature is its new controller's (the zones are by owner). */
+        const got = state.zones.battlefield.filter((id) => controllerOf(state, id) === e.seat).map((id) => state.objects[id].card).sort();
+        const want = [...e.controls].sort();
+        if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${names[e.seat]} controls ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);
+        passed.push(`${names[e.seat]} controls ${want.join(", ") || "nothing"}`);
       } else if (e.stack !== undefined) {
         const size = projectFor(state, 0).stackSize;
         if (size !== e.stack) fail(`the stack holds ${size}, not ${e.stack}`);
@@ -255,7 +273,7 @@ export function runScenario(scenario, cards, fixtures = {}) {
           const choice = awaitingChoice(state);
           const amounts = choice.mode === "damage" || choice.mode === "amount" ? choice.options.map(() => 0) : null;
           if (amounts && choice.total) amounts[0] = choice.total;
-          record(resolveAwaiting(state, amounts ? [] : choice.options.slice(0, choice.min ?? 0).map((o) => o.index), amounts, rng, {toBottom: []}));
+          record(resolveAwaiting(state, amounts ? [] : choice.options.slice(0, choice.min ?? 0).map((o) => o.index), amounts, rng));
         } else stepOnce();
       }
     } else if (step.pass) {

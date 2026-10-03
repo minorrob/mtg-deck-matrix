@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Urza's Incubator",
+    "oracleId": "b380c04b-0bce-4328-8f0a-1425e48bee72",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As this artifact enters, choose a creature type.\nCreature spells of the chosen type cost {2} less to cast.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "As this artifact enters, choose a creature type.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "choose": "creature type"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Creature spells of the chosen type cost {2} less to cast.",
+      "rule": "spells-cost-less",
+      "caster": "any",
+      "affects": {
+        "what": "spell",
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "$chosen"
+        ]
+      },
+      "amount": 2
+    }
+  ]
+}

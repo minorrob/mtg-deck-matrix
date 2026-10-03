@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Masterwork of Ingenuity",
+    "oracleId": "35d458fb-dfdb-41e4-92e3-f0fd392e1c69",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{1}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You may have this Equipment enter as a copy of any Equipment on the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "You may have this Equipment enter as a copy of any Equipment on the battlefield.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "copyOf": {
+          "subtypes": [
+            "Equipment"
+          ]
+        }
+      }
+    }
+  ]
+}

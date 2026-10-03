@@ -1,0 +1,138 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shifting Woodland",
+    "oracleId": "7c2a4fe5-43e8-4e20-bef2-0278d18afc4b",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This land enters tapped unless you control a Forest.\n{T}: Add {G}.\nDelirium — {2}{G}{G}: This land becomes a copy of target permanent card in your graveyard until end of turn. Activate only if there are four or more card types among cards in your graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This land enters tapped unless you control a Forest.",
+      "watches": {
+        "event": "enters",
+        "who": "self",
+        "unless": {
+          "controls": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ],
+            "subtypes": [
+              "Forest"
+            ]
+          }
+        }
+      },
+      "change": {
+        "entersTapped": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {G}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Delirium — {2}{G}{G}: This land becomes a copy of target permanent card in your graveyard until end of turn. Activate only if there are four or more card types among cards in your graveyard.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{G}{G}"
+        }
+      ],
+      "condition": {
+        "graveyardTypes": 4
+      },
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "types": [
+                "Enchantment"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "types": [
+                "Land"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "types": [
+                "Planeswalker"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "types": [
+                "Battle"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "becomeCopy",
+          "targets": {
+            "target": 0
+          },
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

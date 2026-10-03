@@ -1,0 +1,93 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Chronicle of Victory",
+    "oracleId": "e949b362-4988-4482-ac51-c1049af9040c",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{6}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As Chronicle of Victory enters, choose a creature type.\nCreatures you control of the chosen type get +2/+2 and have first strike and trample.\nWhenever you cast a spell of the chosen type, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "As Chronicle of Victory enters, choose a creature type.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "choose": "creature type"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Creatures you control of the chosen type get +2/+2 and have first strike and trample.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "subtypes": [
+          "$chosen"
+        ]
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 2
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Creatures you control of the chosen type get +2/+2 and have first strike and trample.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "subtypes": [
+          "$chosen"
+        ]
+      },
+      "apply": {
+        "addKeywords": [
+          "First Strike",
+          "Trample"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a spell of the chosen type, draw a card.",
+      "trigger": {
+        "on": "spell cast",
+        "filter": {
+          "subtypes": [
+            "$chosen"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Distant Melody",
+    "oracleId": "ac6c5852-71c7-4f19-8c87-ccb345052862",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose a creature type. Draw a card for each permanent you control of that type.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose a creature type. Draw a card for each permanent you control of that type.",
+      "effects": [
+        {
+          "effect": "chooseType"
+        },
+        {
+          "effect": "draw",
+          "count": {
+            "count": {
+              "what": "permanent",
+              "controller": "you",
+              "subtypes": [
+                "$chosen"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

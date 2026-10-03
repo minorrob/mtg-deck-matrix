@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hermit Druid",
+    "oracleId": "16f6438d-2a29-41cb-bf0c-4d02bd66112b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Druid"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{G}, {T}: Reveal cards from the top of your library until you reveal a basic land card. Put that card into your hand and all other cards revealed this way into your graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{G}, {T}: Reveal cards from the top of your library until you reveal a basic land card. Put that card into your hand and all other cards revealed this way into your graveyard.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{G}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "digUntil",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "found": {
+            "to": "hand"
+          },
+          "rest": "graveyard"
+        }
+      ]
+    }
+  ]
+}

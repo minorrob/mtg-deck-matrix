@@ -1,0 +1,78 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thousand-Faced Shadow",
+    "oracleId": "98636623-bbc6-4935-a2bb-2234691eb6d8",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Ninja"
+    ],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Ninjutsu {2}{U}{U} ({2}{U}{U}, Return an unblocked attacker you control to hand: Put this card onto the battlefield from your hand tapped and attacking.)\nFlying\nWhen this creature enters from your hand, if it's attacking, create a token that's a copy of another target attacking creature. The token enters tapped and attacking.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Ninjutsu {2}{U}{U}",
+      "keyword": "ninjutsu",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{U}{U}"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters from your hand, if it's attacking, create a token that's a copy of another target attacking creature. The token enters tapped and attacking.",
+      "trigger": {
+        "on": "enters",
+        "from": "hand"
+      },
+      "effects": [
+        {
+          "effect": "copyPermanent",
+          "targets": {
+            "target": 0
+          },
+          "tapped": true,
+          "attacking": true
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "attacking": true,
+          "another": true
+        }
+      ],
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "self": true,
+          "attacking": true
+        }
+      }
+    }
+  ]
+}

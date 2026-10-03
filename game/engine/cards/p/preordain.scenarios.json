@@ -32,14 +32,8 @@
         },
         {
           "answer": [
-            0,
             1
-          ],
-          "extra": {
-            "toBottom": [
-              1
-            ]
-          }
+          ]
         }
       ],
       "expect": [
@@ -47,6 +41,146 @@
           "seat": 0,
           "zone": "hand",
           "count": 1
+        }
+      ]
+    },
+    {
+      "name": "Scry 2: the top card to the bottom, and the second is the one drawn",
+      "library": [
+        "Mountain",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Preordain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Preordain"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Mountain",
+                  "Forest"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "stack": 0
+        },
+        {
+          "event": "GameEventShuffle",
+          "where": {
+            "scryedToBottom": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Scry 2: both kept, the second put on top, and drawn",
+      "library": [
+        "Mountain",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Preordain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Preordain"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Mountain",
+                  "Forest"
+                ],
+                "min": 2
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            1,
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "stack": 0
         }
       ]
     }

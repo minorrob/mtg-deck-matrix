@@ -1,0 +1,120 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Valley Floodcaller",
+    "oracleId": "4879c8f0-8832-4290-bc71-9838940f75cd",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Otter",
+      "Wizard"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flash\nYou may cast noncreature spells as though they had flash.\nWhenever you cast a noncreature spell, Birds, Frogs, Otters, and Rats you control get +1/+1 until end of turn. Untap them.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "static",
+      "text": "You may cast noncreature spells as though they had flash.",
+      "rule": "cast-as-though-flash",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "spells": {
+        "nonTypes": [
+          "Creature"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a noncreature spell, Birds, Frogs, Otters, and Rats you control get +1/+1 until end of turn. Untap them.",
+      "trigger": {
+        "on": "spell cast",
+        "filter": {
+          "nonTypes": [
+            "Creature"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "power": 1,
+          "toughness": 1,
+          "selector": {
+            "what": "permanent",
+            "controller": "you",
+            "anyOf": [
+              {
+                "subtypes": [
+                  "Bird"
+                ]
+              },
+              {
+                "subtypes": [
+                  "Frog"
+                ]
+              },
+              {
+                "subtypes": [
+                  "Otter"
+                ]
+              },
+              {
+                "subtypes": [
+                  "Rat"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "effect": "untapAll",
+          "selector": {
+            "what": "permanent",
+            "controller": "you",
+            "anyOf": [
+              {
+                "subtypes": [
+                  "Bird"
+                ]
+              },
+              {
+                "subtypes": [
+                  "Frog"
+                ]
+              },
+              {
+                "subtypes": [
+                  "Otter"
+                ]
+              },
+              {
+                "subtypes": [
+                  "Rat"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Harmonic Sliver",
+    "oracleId": "1c06c093-18ab-49e6-a82d-38e826d25016",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Sliver"
+    ],
+    "manaCost": "{1}{G}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "All Slivers have \"When this permanent enters, destroy target artifact or enchantment.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "All Slivers have \"When this permanent enters, destroy target artifact or enchantment.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "subtypes": [
+          "Sliver"
+        ]
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "triggered",
+            "text": "When this permanent enters, destroy target artifact or enchantment.",
+            "trigger": {
+              "on": "enters",
+              "who": "self"
+            },
+            "effects": [
+              {
+                "effect": "destroy",
+                "targets": {
+                  "target": 0
+                }
+              }
+            ],
+            "targets": [
+              {
+                "anyOf": [
+                  {
+                    "what": "permanent",
+                    "types": [
+                      "Artifact"
+                    ]
+                  },
+                  {
+                    "what": "permanent",
+                    "types": [
+                      "Enchantment"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

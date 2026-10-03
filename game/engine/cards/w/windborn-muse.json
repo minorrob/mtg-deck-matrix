@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Windborn Muse",
+    "oracleId": "75e09ac6-d789-4c4d-9aca-845d68f3899f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Flying\nCreatures can't attack you unless their controller pays {2} for each creature they control that's attacking you.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "static",
+      "text": "Creatures can't attack you unless their controller pays {2} for each creature they control that's attacking you.",
+      "rule": "attack-tax",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "amount": 2
+    }
+  ]
+}

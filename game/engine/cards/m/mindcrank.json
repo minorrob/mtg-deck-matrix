@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mindcrank",
+    "oracleId": "c73c1d91-0163-49c6-832a-b9327e7a2c9b",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever an opponent loses life, that player mills that many cards. (Damage causes loss of life.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent loses life, that player mills that many cards.",
+      "trigger": {
+        "on": "life lost",
+        "loser": "opponent"
+      },
+      "effects": [
+        {
+          "effect": "mill",
+          "who": "that player",
+          "count": {
+            "lifeLost": true
+          }
+        }
+      ]
+    }
+  ]
+}

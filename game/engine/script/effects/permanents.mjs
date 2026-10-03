@@ -18,9 +18,11 @@
  */
 
 import {addObject} from "../../state/index.mjs";
-import {selectMatching} from "../filter.mjs";
+import {selectMatching, compileSelector} from "../filter.mjs";
 import {bindEffect, rememberNow} from "../bind.mjs";
+import {amountOf} from "../amount.mjs";
 import {event, cardRef} from "./zones.mjs";
+import {typesOf} from "../../rules/layers.mjs";
 
 /* A continuous effect needs a timestamp to be ordered by (CR 613.7), and it has to be part of the
    state so a checkpoint carries it. The state's own counter is the right source: it is monotonic
@@ -72,16 +74,44 @@ export function attach(state, params, context) {
   return events;
 }
 
+/* AN AURA THAT ENTERS WITHOUT BEING CAST (CR 303.4f, batch 70): a token copy of an Aura (Yenna, Redtooth Regent), an Aura
+   card returned from a graveyard (Sun Titan, Sevinne's Reclamation). Its controller chooses what it will enchant as it
+   enters -- anything its Enchant could enchant, which is not targeting, so hexproof does not stop it; asked before it is
+   on the battlefield, so never itself (CR 303.4d). With nothing to enchant it does not enter: a card stays where it was,
+   and a token is not made (CR 303.4g). What it may enchant here are permanents; an Aura that enchants a player is not
+   built, and finds nothing. */
+export function enchantable(state, enchant, controller) {
+  const {anyOf, ...shared} = enchant ?? {};
+  const each = (Array.isArray(anyOf) ? anyOf.map((one) => ({...shared, ...one})) : [enchant ?? {}])
+    .filter((one) => (one.what ?? "permanent") === "permanent")
+    .map((one) => compileSelector({...one, what: "permanent"}));
+  return state.zones.battlefield.filter((id) => each.some((match) => match(state, id, {controller})));
+}
+/* It enters attached (CR 303.4f): to the one there is, at once; with a choice, its controller is asked next, before the
+   rest of what the effect does (asking.mjs, enchantWhat) -- or, with no resolution to ask in, it takes the first. */
+export function enchantOnArrival(state, auraId, hosts, controller) {
+  if (hosts.length === 1 || !state.resolving) { attachTo(state, auraId, hosts[0]); return; }
+  state.resolving.queue.unshift({effect: "enchantWhat", aura: auraId, hosts: [...hosts], player: controller});
+}
+/** Attach an Aura entering the battlefield to what it enchants (CR 303.4f): no event of its own, it enters attached. */
+export function attachTo(state, auraId, hostId) {
+  const host = state.objects[hostId];
+  state.objects[auraId].attachedTo = hostId;
+  host.attachments = [...(host.attachments ?? []), auraId];
+}
+
 /* COPIABLE VALUES (CR 707.2): what a copy of a permanent copies -- its name, mana cost, colors, types, subtypes,
    supertypes, rules text and printed power and toughness, which is what the state holds (the layers derive the rest),
    and never its counters, damage, tapped state or the effects on it. A copy of a token that is itself a copy copies the
    copy (CR 707.3). `except` is the card's "except ..." (CR 707.9): not legendary, an extra type, keywords, power and
-   toughness, colors. */
+   toughness, colors, its name ("except its name is Sarkhan, Soul Aflame"), an extra supertype ("except it's legendary"), its
+   card types set. */
 function copiable(object, except = {}) {
-  const supertypes = (object.supertypes ?? []).filter((t) => !(except.nonLegendary && t === "Legendary"));
+  const supertypes = [...new Set([...(object.supertypes ?? []).filter((t) => !(except.nonLegendary && t === "Legendary")), ...(except.addSupertypes ?? [])])];
   return {
-    card: object.card, manaCost: object.manaCost ?? null,
-    types: [...new Set([...(object.types ?? []), ...(except.addTypes ?? [])])],
+    card: except.name ?? object.card, manaCost: object.manaCost ?? null,
+    /* "It's a Vehicle artifact ... and it loses all other card types" (Imposter Mech): set, then any added. */
+    types: [...new Set([...(except.setTypes ?? object.types ?? []), ...(except.addTypes ?? [])])],
     /* "It's a 2/2 black Zombie in addition to its other colors and types" (Ratadrabik): added, not set. */
     subtypes: [...new Set([...(except.setSubtypes ?? object.subtypes ?? []), ...(except.addSubtypes ?? [])])],
     ...(supertypes.length ? {supertypes} : {}),
@@ -92,6 +122,45 @@ function copiable(object, except = {}) {
     ...(object.spell ? {spell: structuredClone(object.spell)} : {}),
     ...(object.enchant ? {enchant: structuredClone(object.enchant)} : {}),
   };
+}
+
+/* WHO A CREATURE PUT ONTO THE BATTLEFIELD ATTACKING MAY ATTACK (CR 508.4): a defending player -- and where every opponent
+   is one (Commander's attack multiple players option, CR 802.2), each opponent still in the game, in turn order. */
+export function defendingPlayers(state, controller) {
+  const seats = state.players.map((p) => p.id), from = seats.indexOf(controller);
+  return [...seats.slice(from + 1), ...seats.slice(0, from)].filter((id) => !state.players[id].lost);
+}
+
+/* It attacks that player in this combat: never declared as an attacker (CR 508.4: no "whenever ... attacks" for it), and
+   blocked or not as the combat goes. The player defends now, so they declare blockers. */
+export function joinAttack(state, id, player) {
+  state.combat.attacks.push({attacker: id, defender: player, blocked: false, blockers: []});
+  if (!state.combat.defenders.includes(player)) state.combat.defenders.push(player);
+}
+
+/**
+ * "Tapped and attacking" (CR 508.4; Forge's TokenAttacking) -- `attacking` on what makes or moves permanents: "that
+ * player", the one the ability is about (Adeline's "attacking that player", ninjutsu's returned attacker's); `true`, the
+ * defending player its controller chooses as it enters -- the only one, or asked, a creature at a time (asking.mjs,
+ * attackWhom). Only in a combat, only a creature, and only the attacking player's (CR 506.3a-b); a player no longer in
+ * the game is attacked by nothing (CR 508.4a).
+ */
+export function enterAttacking(state, ids, whom, context, controller) {
+  if (!state.combat || state.combat.attackingPlayerId !== controller) return;
+  const creatures = ids.filter((id) => state.objects[id]?.zone === "battlefield" && typesOf(state, id).includes("Creature"));
+  if (!creatures.length) return;
+  if (whom === "that player") {
+    const player = context.about?.player;
+    if (player === controller || !state.players[player] || state.players[player].lost) return;
+    for (const id of creatures) joinAttack(state, id, player);
+    return;
+  }
+  const players = defendingPlayers(state, controller);
+  if (!players.length) return;
+  /* One defending player, or an effect run outside a resolution with no one to ask: the first in turn order. */
+  if (players.length === 1 || !state.resolving) { for (const id of creatures) joinAttack(state, id, players[0]); return; }
+  /* Asked next, before the rest of what the ability does. */
+  state.resolving.queue.unshift({effect: "attackWhom", tokens: creatures, player: controller});
 }
 
 /**
@@ -107,8 +176,15 @@ export function afterwards(state, ids, params, context) {
     apply: {addKeywords: params.gainsUntilEndOfTurn}, until: "end-of-turn", sourceController: controller});
   if (params.gains) pushEffect(state, {id: `gains-always:${context.source ?? "effect"}`, layer: 6, affects: {ids: made},
     apply: {addKeywords: params.gains}, until: "leaves", sourceController: controller});
+  /* "If it would leave the battlefield, exile it instead of putting it anywhere else" (effects/zones.mjs, moveOne). */
+  if (params.exileIfLeaves) for (const id of made) state.objects[id].exileIfLeaves = true;
   if (params.atEndStep) delayedTrigger(state, {at: "end step", text: params.atEndStep === "exile" ? "Exile it at the beginning of the next end step." : "Sacrifice it at the beginning of the next end step.",
-    effects: [{effect: "moveZone", targets: made, to: params.atEndStep === "exile" ? "exile" : "graveyard"}]}, context);
+    effects: [{effect: "moveZone", targets: made, to: params.atEndStep === "exile" ? "exile" : "graveyard", ...(params.atEndStep === "exile" ? {} : {sacrifice: true})}]}, context);
+  /* "Tapped and attacking" (Leonin Warleader's Cats, a ninja put onto the battlefield). */
+  if (params.attacking) enterAttacking(state, made, params.attacking, context, controller);
+  /* "Return it to the battlefield under its owner's control. It's an enchantment. (It's not a creature.)" (the Enduring
+     cycle): its card types from now on, as long as it is this object (CR 205.1a, layer 4). */
+  if (params.setTypes) pushEffect(state, {id: `types:${context.source ?? "effect"}`, layer: 4, affects: {ids: made}, apply: {setTypes: params.setTypes}, until: null, sourceController: controller});
 }
 
 /**
@@ -124,11 +200,16 @@ export function makeCopies(state, ids, params, context, events) {
     const original = state.objects[id];
     if (!original) continue;
     for (let i = 0; i < (params.count ?? 1); i += 1) {
-      const copy = addObject(state, {...copiable(original, params.except), owner: controller, controller, token: true}, "battlefield");
+      const values = copiable(original, params.except);
+      /* A copy of an Aura enchants something as it enters, or is not made (CR 303.4f-g). */
+      const hosts = values.enchant ? enchantable(state, values.enchant, controller) : null;
+      if (hosts && !hosts.length) continue;
+      const copy = addObject(state, {...values, owner: controller, controller, token: true}, "battlefield");
+      if (hosts) enchantOnArrival(state, copy, hosts, controller);
       if (params.tapped) state.objects[copy].tapped = true;
       made.push(copy);
       events.push(event("GameEventCardChangeZone", state, {
-        card: cardRef(state, copy), enteredAs: copy, becomes: copy,
+        card: cardRef(state, copy), enteredAs: copy, becomes: copy, ...(state.objects[copy]?.tapped ? {enteredTapped: true} : {}),
         from: {zoneType: null, player: {playerId: controller}}, to: {zoneType: "Battlefield", player: {playerId: controller}}, createdAsToken: true,
       }));
     }
@@ -141,8 +222,62 @@ export function makeCopies(state, ids, params, context, events) {
 export function copyPermanent(state, params, context) {
   const events = [];
   const originals = params.selector ? selectMatching(state, params.selector, context) : (params.targets ?? []);
-  makeCopies(state, originals, params, context, events);
+  const made = makeCopies(state, originals, params, context, events);
+  /* "If the token is an Aura, untap Yenna" (batch 70): the tokens made, for the effects after it. */
+  if (params.remember) context.remembered = made;
   return events;
+}
+
+/**
+ * `becomeCopy` -- "this land becomes a copy of target land" (Thespian's Stage), "... until end of turn" (Mirage Mirror):
+ * CR 707.2, layer 1 (CR 613.1a).
+ *
+ * `targets`, the object copied, first of them: its copiable values as they are now -- its own, or what a copy effect
+ * made them (CR 707.3) -- a permanent or a card elsewhere ("target creature card in your graveyard"). The source is what
+ * becomes the copy. `until` "end-of-turn", or for good. `except` as a token copy's (copiable), and `keep`: the ids of its own abilities it keeps ("except it has
+ * this ability").
+ *
+ * THE VALUES ARE WRITTEN ONTO THE PERMANENT, ITS OWN KEPT BESIDE THEM (`uncopied`), so everything that reads a
+ * permanent's name, types, abilities and printed power and toughness -- the layers, the triggers, the offers -- reads the
+ * copy without knowing there is one. The latest copy effect is the one that shows (CR 613.7); when it ends the one before
+ * it shows again, and with none left the permanent is its own again. Leaving the battlefield ends them all: a card moves
+ * as itself (state/index.mjs, moveObject; CR 400.7).
+ */
+export const COPY_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "spell", "enchant"]);
+const ownValues = (object) => Object.fromEntries(COPY_KEYS.map((key) => [key, object[key] === undefined ? undefined : structuredClone(object[key])]));
+function showCopy(object) {
+  const latest = (object.copyEffects ?? []).at(-1);
+  const values = latest ? latest.values : object.uncopied;
+  for (const key of COPY_KEYS) {
+    if (values[key] === undefined) delete object[key];
+    else object[key] = structuredClone(values[key]);
+  }
+  if (!latest) { delete object.uncopied; delete object.copyEffects; }
+}
+/** The permanent `id` becomes a copy of `fromId` (becomeCopy; and entering as a copy, rules/entering.mjs). @returns {boolean} whether it did */
+export function copyOnto(state, id, fromId, {except = {}, keep = [], until = null} = {}) {
+  const from = state.objects[fromId], object = state.objects[id];
+  if (!from || !object || object.zone !== "battlefield") return false;
+  object.uncopied ??= ownValues(object);
+  const values = copiable(from, except);
+  /* "Except it has this ability": its own, renamed so an id the copy also has does not answer for it. */
+  for (const ability of (object.uncopied.abilities ?? []).filter((a) => keep.includes(a.id))) values.abilities.push({...structuredClone(ability), id: `kept-${ability.id}`});
+  (object.copyEffects ??= []).push({values, until});
+  showCopy(object);
+  return true;
+}
+export function becomeCopy(state, params, context) {
+  copyOnto(state, context.source, (params.targets ?? [])[0], {except: params.except ?? {}, keep: params.keep ?? [], until: params.until ?? null});
+  return [];
+}
+/** "Until end of turn": those copy effects end (rules/turn.mjs, the cleanup step). */
+export function endCopies(state) {
+  for (const id of state.zones.battlefield) {
+    const object = state.objects[id];
+    if (!(object.copyEffects ?? []).some((c) => c.until === "end-of-turn")) continue;
+    object.copyEffects = object.copyEffects.filter((c) => c.until !== "end-of-turn");
+    showCopy(object);
+  }
 }
 
 /** `createToken` — CR 111. */
@@ -152,17 +287,24 @@ export function createToken(state, params, context) {
   if (!spec) throw new Error(`No predefined token named ${params.token.predefined}`);
   const count = params.count ?? 1;
   const controller = params.controller ?? context.controller;
+  /* A target player who is no longer one creates nothing. */
+  if (!state.players[controller]) return events;
   const made = [];
+  /* "An X/X green Dinosaur Beast ... where X is the amount of damage those creatures dealt" (Quartzwood Crasher): its size
+     counted as it is made. */
+  const sized = (value) => (value !== null && typeof value === "object" ? amountOf(state, value, context) : value ?? null);
   for (let i = 0; i < count; i += 1) {
     const id = addObject(state, {
       card: spec.name ?? "Token",
       types: spec.types ?? ["Creature"],
       /* A Goblin token is a Goblin (CR 111.4): "sacrifice a Goblin" has to find it. */
       subtypes: spec.subtypes ?? [],
+      /* "Colorless snow artifact tokens named Replicated Ring" (batch 72): its supertypes (state/index.mjs keeps none empty). */
+      supertypes: spec.supertypes ?? [],
       /* "A 1/1 red Elemental" is red (CR 111.4): "white creatures you control" has to find a white token. */
       colors: spec.colors ?? [],
-      power: spec.power ?? null,
-      toughness: spec.toughness ?? null,
+      power: sized(spec.power),
+      toughness: sized(spec.toughness),
       keywords: spec.keywords ?? [],
       abilities: spec.abilities ?? [],
       owner: controller,
@@ -174,7 +316,7 @@ export function createToken(state, params, context) {
     events.push(event("GameEventCardChangeZone", state, {
       card: cardRef(state, id),
       /* The token is the object that arrived: "for each of them, create a token that's a copy of it" names it. */
-      becomes: id,
+      becomes: id, ...(state.objects[id]?.tapped ? {enteredTapped: true} : {}),
       from: {zoneType: null, player: {playerId: controller}},
       to: {zoneType: "Battlefield", player: {playerId: controller}},
       createdAsToken: true,
@@ -199,7 +341,9 @@ export function animate(state, params, context) {
   pushEffect(state, {
     id: `animate:${context.source ?? "effect"}`,
     layer: 4, affects,
-    apply: {addTypes: params.addTypes ?? ["Creature"], ...(params.subtypes ? {addTypes: [...(params.addTypes ?? ["Creature"]), ...params.subtypes]} : {})},
+    apply: {addTypes: params.addTypes ?? ["Creature"], ...(params.subtypes ? {addTypes: [...(params.addTypes ?? ["Creature"]), ...params.subtypes]} : {}),
+      /* "And gain all creature types" (Mirror Entity, batch 74): in the same layer (rules/layers.mjs). */
+      ...(params.allCreatureTypes === true ? {allCreatureTypes: true} : {})},
     until: params.until ?? null,
     sourceController: context.controller,
   });
@@ -213,6 +357,29 @@ export function animate(state, params, context) {
     });
   }
   return [];
+}
+
+/**
+ * `earthbend` -- "Earthbend N: target land you control becomes a 0/0 creature with haste that's still a land. Put N +1/+1
+ * counters on it. When it dies or is exiled, return it to the battlefield tapped" (Forge's Earthbend): for good, the
+ * land's own (`targets`), `count` the counters; the return a delayed trigger waiting on that permanent (CR 603.7).
+ */
+export function earthbend(state, params, context) {
+  const events = [];
+  for (const id of (params.targets ?? []).filter((t) => state.objects[t]?.zone === "battlefield")) {
+    animate(state, {targets: [id], addTypes: ["Creature"], power: 0, toughness: 0}, context);
+    pushEffect(state, {id: `earthbend:${id}`, layer: 6, affects: {ids: [id]}, apply: {addKeywords: ["Haste"]}, until: null, sourceController: context.controller});
+    const count = params.count ?? 1;
+    if (count > 0) {
+      const before = state.objects[id].counters["+1/+1"] ?? 0;
+      state.objects[id].counters["+1/+1"] = before + count;
+      events.push(event("GameEventCardCounters", state, {card: cardRef(state, id), type: "+1/+1", oldValue: before, newValue: before + count}));
+    }
+    const back = [{effect: "moveZone", targets: "that card", to: "battlefield", tapped: true}];
+    for (const to of ["Graveyard", "Exile"])
+      delayedTrigger(state, {on: {on: "GameEventCardChangeZone", from: "Battlefield", to, who: "any"}, watch: [id], text: "When it dies or is exiled, return it to the battlefield tapped.", effects: back}, context);
+  }
+  return events;
 }
 
 /** `animateAll` — the same over a selector. */
@@ -234,6 +401,9 @@ export function pump(state, params, context) {
     apply: {
       power: params.power ?? 0, toughness: params.toughness ?? 0,
       ...(params.keywords ? {addKeywords: params.keywords} : {}),
+      /* "Target creature gains 'When this creature dies, return it ...' until end of turn" (Feign Death, batch 76): the
+         abilities, compiled as the card was (cards/index.mjs). */
+      ...(params.abilities ? {addAbilities: params.abilities} : {}),
     },
     until: params.until ?? "end-of-turn",
     sourceController: context.controller,
@@ -292,6 +462,39 @@ export function effectUntil(state, params, context) {
 }
 
 /**
+ * `gainControl` -- CR 613.1b: "gain control of target creature until end of turn", "untap all creatures and gain control
+ * of them" (`selector`, fixed as it resolves), "target opponent gains control of this creature" (`toPlayer`). For good
+ * unless `until` says "end-of-turn". The permanent's controller itself changes -- the projection, its triggers, a choice
+ * of "a creature you control" all read it -- and for a turn a `control-returns` record gives it back as the turn ends
+ * (rules/turn.mjs). It has changed controller, so it is summoning sick for its new controller unless it has haste
+ * (CR 302.6), and again for its old one when it returns.
+ */
+export function gainControl(state, params, context) {
+  const to = Number.isInteger(params.toPlayer) ? params.toPlayer : context.controller;
+  const ids = (params.selector ? selectMatching(state, params.selector, context) : params.targets ?? []).filter((id) => state.objects[id]?.zone === "battlefield");
+  for (const id of ids) {
+    const object = state.objects[id];
+    if (params.until === "end-of-turn" && object.controller !== to)
+      (state.effects ??= []).push({id: `control-returns:${id}:${state.effects.length}`, rule: "control-returns", affects: {ids: [id]}, apply: {controller: object.controller}, until: "end-of-turn", sourceController: context.controller});
+    if (object.controller !== to) object.controlledSinceTurn = state.turn;
+    object.controller = to;
+  }
+  return [];
+}
+
+/**
+ * `goad` -- "goad target creature", "goad all creatures you don't control" (CR 701.15; Forge's Goad): until this effect's
+ * controller's next turn, each creature it names (`targets`, or every one `selector` describes, fixed as it resolves)
+ * attacks each combat if able and attacks a player other than its goader if able (rules/combat.mjs). Goaded again by the
+ * same player, nothing more (CR 701.15b); by two players, it avoids both if it can.
+ */
+export function goad(state, params, context) {
+  const ids = (params.selector ? selectMatching(state, params.selector, context) : params.targets ?? []).filter((id) => state.objects[id]?.zone === "battlefield");
+  if (ids.length) (state.effects ??= []).push({id: `goad:${context.source ?? "effect"}:${state.effects.length}`, rule: "goaded", affects: {ids}, until: "your-next-turn", sourceController: context.controller});
+  return [];
+}
+
+/**
  * `regenerate` -- CR 701.19a: a regeneration shield on each target (or each permanent `selector` describes, fixed as it
  * resolves: "regenerate each creature you control"), until end of turn. rules/replacement.mjs `regenerated` uses one up.
  */
@@ -342,6 +545,24 @@ export function addPhase(state, params, context) {
  * made (CR 603.7a): it is `fresh` until the action that made it has been read for triggers (rules/trigger.mjs).
  * WHAT: its effects, with every reference remembered now (script/bind.mjs, rememberNow; CR 603.7c).
  */
+/**
+ * `immediateTrigger` -- a reflexive triggered ability (Forge's ImmediateTrigger; CR 603.12): "Sacrifice it. When you do,
+ * search your library ..." (the New Capenna lands), "you may create a Treasure token. When you do, target opponent creates
+ * a tapped Treasure token" (Generous Plunderer). It triggers as the resolution does what it names -- an effect's own
+ * condition saying whether it did ("this way", script/condition.mjs) -- and goes on the stack the next time a player
+ * would receive priority, with the other triggers waiting then, its targets chosen as it does (CR 603.3d; none legal,
+ * and it is removed). `effects` what it does, `targets` its own; "that card" and "that player" what this resolution is
+ * about.
+ */
+export function immediateTrigger(state, params, context) {
+  const source = context.source ?? null;
+  (state.pendingTriggers ??= []).push({abilityId: "reflexive", text: params.text ?? "When you do", controller: context.controller,
+    source: {cardId: source, name: source !== null ? state.objects[source]?.card ?? null : null}, cause: null, optional: false,
+    ...(context.about ? {about: structuredClone(context.about)} : {}),
+    script: {targets: structuredClone(params.targets ?? []), effects: structuredClone(params.effects ?? [])}});
+  return [];
+}
+
 export function delayedTrigger(state, params, context) {
   if (!state.delayedTriggers) state.delayedTriggers = [];
   const waits = Boolean(params.on);

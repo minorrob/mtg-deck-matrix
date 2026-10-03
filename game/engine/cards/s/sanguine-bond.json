@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sanguine Bond",
+    "oracleId": "73089a39-a2f6-4aa2-a058-e6551475153d",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever you gain life, target opponent loses that much life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you gain life, target opponent loses that much life.",
+      "trigger": {
+        "on": "life gained"
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "amount": {
+            "lifeGained": true
+          },
+          "who": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ]
+    }
+  ]
+}

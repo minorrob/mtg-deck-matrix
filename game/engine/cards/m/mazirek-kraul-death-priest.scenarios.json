@@ -1,0 +1,85 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mazirek, Kraul Death Priest",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Altar": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}",
+      "abilities": [
+        {
+          "id": "alt",
+          "kind": "activated",
+          "text": "Sacrifice a creature: You gain 1 life.",
+          "cost": [
+            {
+              "atom": "sacrifice",
+              "selector": {
+                "types": [
+                  "Creature"
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "effect": "gainLife",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Another permanent sacrificed: a +1/+1 counter on each of his creatures",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mazirek, Kraul Death Priest",
+            "Altar",
+            "Bear",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Altar",
+          "sacrifice": "Bear"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 3,
+            "toughness": 3
+          }
+        }
+      ]
+    }
+  ]
+}

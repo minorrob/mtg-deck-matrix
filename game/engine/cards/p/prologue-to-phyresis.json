@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Prologue to Phyresis",
+    "oracleId": "3f661b58-e8ca-412c-bdac-af151162de12",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each opponent gets a poison counter.\nDraw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each opponent gets a poison counter.\nDraw a card.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "poison",
+          "who": "opponent",
+          "count": 1
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

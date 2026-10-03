@@ -1,0 +1,439 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Halo Fountain",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Leech": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Leech"
+      ],
+      "manaCost": "{1}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "keywords": [
+        "Lifelink"
+      ]
+    },
+    "Zap": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Acolyte": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Cleric"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "w",
+          "kind": "mana",
+          "tapSelf": true,
+          "produces": {
+            "W": 1
+          },
+          "text": "{T}: Add {W}."
+        }
+      ]
+    },
+    "Squire": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Cleric"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "w",
+          "kind": "mana",
+          "tapSelf": true,
+          "produces": {
+            "W": 1
+          },
+          "text": "{T}: Add {W}."
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "The Acolyte taps for {W} and the Fountain untaps it: a Citizen, the Acolyte ready again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Halo Fountain",
+            "Acolyte"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Acolyte"
+        },
+        {
+          "activate": "Halo Fountain",
+          "untap": "Acolyte"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "controls": [
+            "Acolyte",
+            "Citizen",
+            "Halo Fountain"
+          ],
+          "seat": 0
+        },
+        {
+          "seat": 0,
+          "tapped": "Acolyte",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "tapped": "Halo Fountain"
+        }
+      ]
+    },
+    {
+      "name": "No tapped creature: it can't be activated; a Plains's {W} alone is not enough",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Halo Fountain",
+            "Plains",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Halo Fountain"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Two tapped creatures: which one it untaps is his choice, one offer each",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Halo Fountain",
+            "Acolyte",
+            "Squire"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Acolyte"
+        },
+        {
+          "tap": "Squire"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Halo Fountain"
+          },
+          "count": 3,
+          "costs": [
+            [
+              "Acolyte"
+            ],
+            [
+              "Squire"
+            ],
+            [
+              "Acolyte",
+              "Squire"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Both tapped for {W}{W}; he untaps the Squire for a Citizen, and the Acolyte stays tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Halo Fountain",
+            "Acolyte",
+            "Squire"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Acolyte"
+        },
+        {
+          "tap": "Squire"
+        },
+        {
+          "activate": "Halo Fountain",
+          "ability": "a0",
+          "untap": "Squire"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Squire",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "tapped": "Acolyte"
+        },
+        {
+          "controls": [
+            "Acolyte",
+            "Citizen",
+            "Halo Fountain",
+            "Squire"
+          ],
+          "seat": 0
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Untap two: he draws a card, and both are untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Halo Fountain",
+            "Acolyte",
+            "Squire"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Acolyte"
+        },
+        {
+          "tap": "Squire"
+        },
+        {
+          "activate": "Halo Fountain",
+          "untap": "Squire",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "tapped": "Acolyte",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "tapped": "Squire",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "Fifteen tapped creatures and {W}{W}{W}{W}{W}: he wins the game",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Halo Fountain",
+            "Acolyte",
+            "Acolyte",
+            "Acolyte",
+            "Acolyte",
+            "Acolyte",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 20
+            }
+          ]
+        },
+        {
+          "tap": "Acolyte"
+        },
+        {
+          "tap": "Acolyte"
+        },
+        {
+          "tap": "Acolyte"
+        },
+        {
+          "tap": "Acolyte"
+        },
+        {
+          "tap": "Acolyte"
+        },
+        {
+          "activate": "Halo Fountain",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "event": "GameEventGameOutcome",
+          "where": {
+            "winner": 0
+          }
+        }
+      ]
+    }
+  ]
+}

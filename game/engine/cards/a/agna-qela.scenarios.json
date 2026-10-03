@@ -1,0 +1,149 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Agna Qel'a",
+  "fixtures": {
+    "Ruins": {
+      "types": [
+        "Land"
+      ]
+    },
+    "Spark": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "spell": {
+        "id": "s",
+        "text": "You gain 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "With a basic land, it enters untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Agna Qel'a"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Agna Qel'a"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Agna Qel'a",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "With only a nonbasic land, tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ruins"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Agna Qel'a"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Agna Qel'a"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Agna Qel'a"
+        }
+      ]
+    },
+    {
+      "name": "{2}{U}, {T}: draw a card, then discard one",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Agna Qel'a",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Spark"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Agna Qel'a"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Spark"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Spark"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

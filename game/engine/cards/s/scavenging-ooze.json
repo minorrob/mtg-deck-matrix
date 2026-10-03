@@ -1,0 +1,78 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Scavenging Ooze",
+    "oracleId": "1ff25f67-36a7-4cfa-a2b1-2135b5b6fb67",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Ooze"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "{G}: Exile target card from a graveyard. If it was a creature card, put a +1/+1 counter on this creature and you gain 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{G}: Exile target card from a graveyard. If it was a creature card, put a +1/+1 counter on this creature and you gain 1 life.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{G}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1,
+          "condition": {
+            "about": "remembered",
+            "is": {
+              "types": [
+                "Creature"
+              ]
+            }
+          }
+        },
+        {
+          "effect": "gainLife",
+          "amount": 1,
+          "condition": {
+            "about": "remembered",
+            "is": {
+              "types": [
+                "Creature"
+              ]
+            }
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard"
+        }
+      ]
+    }
+  ]
+}

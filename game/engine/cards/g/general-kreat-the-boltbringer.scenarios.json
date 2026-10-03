@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "General Kreat, the Boltbringer",
+  "fixtures": {
+    "Goblin Raider": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A Goblin attacks: a Goblin token attacking -- and it entering deals Maya 1; 3 to her",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "General Kreat, the Boltbringer",
+            "Goblin Raider"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Goblin Raider"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 39
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_END"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 37
+        }
+      ]
+    }
+  ]
+}

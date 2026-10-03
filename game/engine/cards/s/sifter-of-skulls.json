@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sifter of Skulls",
+    "oracleId": "688e5e19-8f28-45c4-ace4-a38144f494f1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Eldrazi"
+    ],
+    "manaCost": "{3}{B}",
+    "colors": [],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "Devoid (This card has no color.)\nWhenever another nontoken creature you control dies, create a 1/1 colorless Eldrazi Scion creature token. It has \"Sacrifice this token: Add {C}.\" ({C} represents colorless mana.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Devoid",
+      "keyword": "devoid"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another nontoken creature you control dies, create a 1/1 colorless Eldrazi Scion creature token. It has \"Sacrifice this token: Add {C}.\"",
+      "trigger": {
+        "on": "dies",
+        "who": "another",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "token": false
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Eldrazi Scion",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Eldrazi",
+              "Scion"
+            ],
+            "colors": [],
+            "power": 1,
+            "toughness": 1,
+            "abilities": [
+              {
+                "id": "scion",
+                "kind": "mana",
+                "tapSelf": false,
+                "produces": {
+                  "C": 1
+                },
+                "sacrificeSelf": true,
+                "text": "Sacrifice this token: Add {C}."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

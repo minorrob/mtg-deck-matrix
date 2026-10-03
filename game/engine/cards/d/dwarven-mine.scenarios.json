@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Dwarven Mine",
+  "scenarios": [
+    {
+      "name": "Three other Mountains: untapped, and a 1/1 Dwarf",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Dwarven Mine"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Dwarven Mine"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Dwarven Mine",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Dwarf",
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "With two other Mountains, it enters tapped: nothing triggers",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Dwarven Mine"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Dwarven Mine"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Dwarven Mine"
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

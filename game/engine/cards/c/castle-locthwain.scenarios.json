@@ -1,0 +1,118 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Castle Locthwain",
+  "scenarios": [
+    {
+      "name": "With a Swamp, it enters untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Castle Locthwain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Castle Locthwain"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Castle Locthwain",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "Without one, tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Castle Locthwain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Castle Locthwain"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Castle Locthwain"
+        }
+      ]
+    },
+    {
+      "name": "{1}{B}{B}, {T}: a card, then he loses life equal to the cards in his hand (three)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Castle Locthwain",
+            "Swamp",
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Castle Locthwain"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 3
+        },
+        {
+          "seat": 0,
+          "life": 37
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Glistener Elf",
+  "scenarios": [
+    {
+      "name": "It hits Maya: one poison counter, no life lost",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Glistener Elf"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Glistener Elf"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 1,
+          "poison": 1
+        }
+      ]
+    }
+  ]
+}

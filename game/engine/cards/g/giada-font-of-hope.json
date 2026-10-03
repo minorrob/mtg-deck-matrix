@@ -1,0 +1,91 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Giada, Font of Hope",
+    "oracleId": "48e6d3d8-2f27-4017-acdd-40bce8cdbc02",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying, vigilance\nEach other Angel you control enters with an additional +1/+1 counter on it for each Angel you already control.\n{T}: Add {W}. Spend this mana only to cast an Angel spell.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "replacement",
+      "text": "Each other Angel you control enters with an additional +1/+1 counter on it for each Angel you already control.",
+      "watches": {
+        "event": "enters",
+        "filter": {
+          "subtypes": [
+            "Angel"
+          ],
+          "controller": "you"
+        }
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "+1/+1",
+          "count": {
+            "count": {
+              "what": "permanent",
+              "subtypes": [
+                "Angel"
+              ],
+              "controller": "you"
+            }
+          }
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {W}. Spend this mana only to cast an Angel spell.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "W": 1
+          },
+          "spendOnly": {
+            "spell": {
+              "subtypes": [
+                "Angel"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

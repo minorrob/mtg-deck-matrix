@@ -533,6 +533,13 @@ moved, the workflow's toolchain checked, both of its steps run twice, and what t
 scanned for secrets and personal addresses. AGENTS.md, "Merging to `main`", says when it stands
 in for CI.
 
+While Actions can run, `tools/quick-check.sh <suite.mjs>...` is the check before a push:
+`tools/local-ci.sh HEAD 0` (the scan and the merge with `main`), then only the suites the
+change touches. `tools/release-staging.sh` builds `origin/main` for staging, walks it, and only
+then pushes `release/cloud-staging`; production is never released without Rob's go. A card
+batch for the engine (M4 phase 3) is built with the helpers in `game/tools/batch/`, whose
+README is the batch's procedure.
+
 ```sh
 bash runtests.sh -q
 node tools/check-glossary.mjs
@@ -567,7 +574,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 193 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 234 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -654,6 +661,46 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-present` — `tests/engine-present.mjs`
 - `engine-static-conditions` — `tests/engine-static-conditions.mjs`
 - `engine-alternative-cost` — `tests/engine-alternative-cost.mjs`
+- `engine-control` — `tests/engine-control.mjs`
+- `engine-effect-conditions` — `tests/engine-effect-conditions.mjs`
+- `engine-damage-once` — `tests/engine-damage-once.mjs`
+- `engine-sacrificed` — `tests/engine-sacrificed.mjs`
+- `engine-condition-compare` — `tests/engine-condition-compare.mjs`
+- `engine-play-from` — `tests/engine-play-from.mjs`
+- `engine-damage-amount` — `tests/engine-damage-amount.mjs`
+- `engine-damage-replaced` — `tests/engine-damage-replaced.mjs`
+- `engine-remembered-moved` — `tests/engine-remembered-moved.mjs`
+- `engine-flash-sacrifice` — `tests/engine-flash-sacrifice.mjs`
+- `engine-cost-more` — `tests/engine-cost-more.mjs`
+- `engine-tapped-for-mana` — `tests/engine-tapped-for-mana.mjs`
+- `engine-storm-fight` — `tests/engine-storm-fight.mjs`
+- `engine-untap-choose-type` — `tests/engine-untap-choose-type.mjs`
+- `engine-ninjutsu` — `tests/engine-ninjutsu.mjs`
+- `engine-crew` — `tests/engine-crew.mjs`
+- `engine-chosen` — `tests/engine-chosen.mjs`
+- `engine-restricted-mana` — `tests/engine-restricted-mana.mjs`
+- `engine-become-copy` — `tests/engine-become-copy.mjs`
+- `engine-station` — `tests/engine-station.mjs`
+- `engine-enter-copy` — `tests/engine-enter-copy.mjs`
+- `engine-saga` — `tests/engine-saga.mjs`
+- `engine-play` — `tests/engine-play.mjs`
+- `engine-dig-until` — `tests/engine-dig-until.mjs`
+- `engine-cant-cast` — `tests/engine-cant-cast.mjs`
+- `engine-poison` — `tests/engine-poison.mjs`
+- `engine-earthbend` — `tests/engine-earthbend.mjs`
+- `engine-attack-tax` — `tests/engine-attack-tax.mjs`
+- `engine-token-attacking` — `tests/engine-token-attacking.mjs`
+- `engine-win-game` — `tests/engine-win-game.mjs`
+- `engine-goad` — `tests/engine-goad.mjs`
+- `engine-named-object` — `tests/engine-named-object.mjs`
+- `engine-damage-redirect` — `tests/engine-damage-redirect.mjs`
+- `engine-branch-reflexive` — `tests/engine-branch-reflexive.mjs`
+- `engine-peek` — `tests/engine-peek.mjs`
+- `engine-changeling` — `tests/engine-changeling.mjs`
+- `engine-attacker-untap` — `tests/engine-attacker-untap.mjs`
+- `engine-grants` — `tests/engine-grants.mjs`
+- `engine-prowess-toxic` — `tests/engine-prowess-toxic.mjs`
+- `engine-life-lost-infect` — `tests/engine-life-lost-infect.mjs`
 - `engine-entering` — `tests/engine-entering.mjs`
 - `engine-equip` — `tests/engine-equip.mjs`
 - `engine-event-triggers` — `tests/engine-event-triggers.mjs`
@@ -691,6 +738,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `type-final` — `tests/type-final.mjs`
 - `shell-r3` — `tests/shell-r3.mjs`
 - `settings-r3` — `tests/settings-r3.mjs`
+- `reset-all` — `tests/reset-all.mjs`
 - `decks-hub` — `tests/decks-hub.mjs`
 - `deck-page-r3` — `tests/deck-page-r3.mjs`
 - `library-r3` — `tests/library-r3.mjs`

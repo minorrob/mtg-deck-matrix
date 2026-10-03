@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Nuka-Cola Vending Machine",
+  "scenarios": [
+    {
+      "name": "{1},{T}: a Food; the Food eaten: a tapped Treasure",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Nuka-Cola Vending Machine",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Nuka-Cola Vending Machine"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Food"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 43
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Nuka-Cola Vending Machine",
+            "Treasure",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Treasure",
+          "is": true
+        }
+      ]
+    }
+  ]
+}

@@ -46,12 +46,7 @@
         {
           "answer": [
             0
-          ],
-          "extra": {
-            "toBottom": [
-              0
-            ]
-          }
+          ]
         }
       ],
       "expect": [

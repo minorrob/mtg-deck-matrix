@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Repercussion",
+    "oracleId": "f6069a4f-744e-43e8-9f8b-7c13b8b0187f",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever a creature is dealt damage, this enchantment deals that much damage to that creature's controller.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature is dealt damage, this enchantment deals that much damage to that creature's controller.",
+      "trigger": {
+        "on": "damage dealt once",
+        "to": "creature"
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": {
+            "damageDealt": true
+          },
+          "who": "that player"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Exotic Orchard",
+    "oracleId": "27b047e3-0d41-45e2-98e9-9391d7923a1e",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add one mana of any color that a land an opponent controls could produce.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add one mana of any color that a land an opponent controls could produce.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "reflect": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ],
+            "controller": "opponent"
+          }
+        }
+      ]
+    }
+  ]
+}

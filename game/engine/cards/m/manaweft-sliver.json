@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Manaweft Sliver",
+    "oracleId": "bd47398d-da35-4a09-8754-771af91b14f4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Sliver"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Sliver creatures you control have \"{T}: Add one mana of any color.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Sliver creatures you control have \"{T}: Add one mana of any color.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Sliver"
+        ]
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "activated",
+            "text": "{T}: Add one mana of any color.",
+            "cost": [
+              {
+                "atom": "{T}"
+              }
+            ],
+            "effects": [
+              {
+                "effect": "addMana",
+                "anyColor": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

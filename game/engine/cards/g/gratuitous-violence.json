@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gratuitous Violence",
+    "oracleId": "7c340a39-4ee0-4ba1-bb66-6674f8020fda",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If a creature you control would deal damage to a permanent or player, it deals double that damage instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "If a creature you control would deal damage to a permanent or player, it deals double that damage instead.",
+      "watches": {
+        "event": "damage",
+        "source": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "change": {
+        "multiply": 2
+      }
+    }
+  ]
+}

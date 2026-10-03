@@ -149,9 +149,11 @@ const resolveCtx = (controller = 0, source = null) => ({controller, source});
 
 /* ---- the measurement ---- */
 {
-  eq([missingFor({apis: ["CopyPermanent"], options: ["AtEOT", "NonLegendary", "PumpKeywords"]}), missingFor({apis: ["CopyPermanent"], options: ["TokenAttacking"]}), missingFor({apis: ["Animate"], options: ["AddTriggers"]})],
-    [[], [{kind: "option", name: "TokenAttacking", why: "not built"}], [{kind: "option", name: "AddTriggers", why: "not built"}]],
-    "a copy sacrificed at end step, not legendary, hasty this turn: built; a copy entering attacking, or an ability granting a trigger: not");
+  /* (Batch 76 built granting a trigger; the example of an option still unbuilt is now remembering an object.) */
+  eq([missingFor({apis: ["CopyPermanent"], options: ["AtEOT", "NonLegendary", "PumpKeywords"]}), missingFor({apis: ["CopyPermanent"], options: ["TokenAttacking"]}), missingFor({apis: ["Animate"], options: ["AddTriggers"]}),
+    missingFor({apis: ["Animate"], options: ["RememberObjects"]})],
+    [[], [], [], [{kind: "option", name: "RememberObjects", why: "not built"}]],
+    "a copy sacrificed at end step, not legendary, hasty this turn: built; a copy entering attacking: built (batch 67); an ability granting a trigger: built (batch 76); remembering an object: not");
 }
 
 console.log(`engine-copies: ${checks} checks passed — a copy copies the copiable values and the card's exceptions, populate copies the token chosen, and "at the beginning of the next end step" fires once.`);

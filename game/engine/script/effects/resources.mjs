@@ -17,9 +17,11 @@
 
 import {addMana as addToPool} from "../../rules/mana.mjs";
 import {applyReplacements} from "../../rules/replacement.mjs";
+import {runFollowUps} from "./index.mjs";
 import {selectMatching} from "../filter.mjs";
 import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
+import {typesOf, powerOf, keywordsOf} from "../../rules/layers.mjs";
 
 /** `addMana` — into the controller's pool, which empties at the end of the step (CR 500.4). */
 export function addMana(state, params, context) {
@@ -63,7 +65,15 @@ export function untapAll(state, params, context) {
   return untap(state, {targets: selectMatching(state, params.selector ?? {what: "permanent"}, context)}, context);
 }
 
-function changeLife(state, player, delta, events) {
+/** Whether a source deals its damage with infect (CR 702.90): the keyword, as the layers have it now. */
+export const infects = (state, id) => Boolean(state.objects[id]) && keywordsOf(state, id).includes("Infect");
+
+/**
+ * A PLAYER'S LIFE CHANGED (CR 119.3), and said so: every life loss and gain goes through here -- an effect's, combat
+ * damage's, a commander's, a cost's ("pay 2 life", CR 119.4; batch 78) -- so "whenever an opponent loses life" sees
+ * each, and "the life they lost this turn" counts each.
+ */
+export function changeLife(state, player, delta, events) {
   if (delta === 0) return;
   const before = state.players[player].life;
   state.players[player].life += delta;
@@ -109,9 +119,16 @@ export function loseLife(state, params, context) {
 export function dealDamage(state, params, context) {
   const events = [];
   const amount = params.amount ?? 0;
+  /* "If a Dinosaur is dealt damage this way" (Marauding Raptor, batch 70): the permanents it was dealt to, after prevention,
+     remembered for the effects after it -- none, when there was no damage to deal. */
+  const dealt = [];
+  if (params.remember) context.remembered = dealt;
   if (amount <= 0) return events;
-  /* The spell or ability, or a creature the trigger is about: "it deals that much damage to each other opponent". */
-  const source = Array.isArray(params.from) ? params.from[0] ?? null : context.source ?? null;
+  /* The spell or ability, or a creature the trigger is about: "it deals that much damage to each other opponent". One that
+     has left the battlefield since (a Dragon dealt lethal damage) still deals it, as a departed ability source does
+     (rules/stack.mjs): with no object left to read for lifelink or deathtouch. */
+  const named = Array.isArray(params.from) ? params.from[0] ?? null : context.source ?? null;
+  const source = named !== null && state.objects[named] ? named : null;
 
   const hits = [
     ...(params.targets ?? []).map((id) => ({toCard: id})),
@@ -127,23 +144,33 @@ export function dealDamage(state, params, context) {
     const {proposal} = applyReplacements(state, {
       event: "damage", toPlayer: hit.toPlayer, toCard: hit.toCard, amount, sourceId: source, combat: false,
     });
-    if (proposal.prevented === true || proposal.amount <= 0) continue;
-    if (hit.toPlayer !== undefined) {
-      changeLife(state, hit.toPlayer, -proposal.amount, events);
+    /* What follows a prevention -- "each opponent mills that many cards" -- immediately afterward (CR 615.5). */
+    if (proposal.prevented === true || proposal.amount <= 0) { events.push(...runFollowUps(state, proposal)); continue; }
+    /* Dealt where the replacements left it: a redirection (CR 614.9) moves it from a player to a permanent. */
+    const toPlayer = proposal.toPlayer !== undefined && proposal.toPlayer !== null ? proposal.toPlayer : undefined;
+    const toCard = toPlayer === undefined ? proposal.toCard : undefined;
+    if (toCard !== undefined && state.objects[toCard]) dealt.push(toCard);
+    /* INFECT (CR 702.90b-c, batch 78): from a source with infect, damage to a player is poison counters, not life lost, and
+       damage to a creature is -1/-1 counters, not damage marked -- still damage dealt. */
+    const infect = source !== null && infects(state, source);
+    if (toPlayer !== undefined) {
+      if (infect) events.push(...givePoison(state, toPlayer, proposal.amount));
+      else changeLife(state, toPlayer, -proposal.amount, events);
       events.push(event("GameEventPlayerDamaged", state, {
         source: source === null ? null : cardRef(state, source),
-        target: {playerId: hit.toPlayer, name: state.players[hit.toPlayer].name},
-        amount: proposal.amount, combat: false, infect: false,
+        target: {playerId: toPlayer, name: state.players[toPlayer].name},
+        amount: proposal.amount, combat: false, infect,
       }));
-    } else if (state.objects[hit.toCard]) {
-      state.objects[hit.toCard].damage += proposal.amount;
+    } else if (state.objects[toCard]) {
+      if (infect) addCounters(state, toCard, "-1/-1", proposal.amount, events);
+      else state.objects[toCard].damage += proposal.amount;
       events.push(event("GameEventCardDamaged", state, {
-        card: cardRef(state, hit.toCard),
+        card: cardRef(state, toCard),
         source: source === null ? null : cardRef(state, source),
         amount: proposal.amount,
       }));
       /* CR 702.2b: deathtouch is any damage from the source, not only combat damage. */
-      markDeathtouch(state, source, hit.toCard);
+      markDeathtouch(state, source, toCard);
     }
     /* CR 702.15b: so is lifelink -- its controller gains that much life as the damage is dealt. */
     const linked = source === null ? 0 : lifelinkFrom(state, source, proposal.amount);
@@ -168,7 +195,7 @@ export function damageAll(state, params, context) {
   return dealDamage(state, {amount: params.amount, targets: ids, ...(params.who !== undefined ? {who: params.who} : {})}, {...context, source: from});
 }
 
-function addCounters(state, id, kind, count, events) {
+export function addCounters(state, id, kind, count, events) {
   if (count === 0) return;
   const object = state.objects[id];
   if (!object) return;
@@ -177,6 +204,47 @@ function addCounters(state, id, kind, count, events) {
   events.push(event("GameEventCardCounters", state, {
     card: cardRef(state, id), type: kind, oldValue: before, newValue: object.counters[kind],
   }));
+}
+
+/**
+ * `fight` -- CR 701.14a: two creatures, each dealing damage equal to its power to the other -- `from` the one named first
+ * ("this creature", "target creature you control"), `targets` the other. Both powers are read before either deals any.
+ * If either is no longer a creature on the battlefield, neither deals damage (701.14b).
+ */
+export function fight(state, params, context) {
+  const [a] = params.from ?? [], [b] = params.targets ?? [];
+  const fighting = (id) => id !== undefined && state.objects[id]?.zone === "battlefield" && typesOf(state, id).includes("Creature");
+  if (!fighting(a) || !fighting(b)) return [];
+  const powerA = Math.max(0, powerOf(state, a)), powerB = Math.max(0, powerOf(state, b));
+  return [...dealDamage(state, {amount: powerA, targets: [b], from: [a]}, context), ...dealDamage(state, {amount: powerB, targets: [a], from: [b]}, context)];
+}
+
+/**
+ * `poison` -- "each opponent gets a poison counter", "that player gets two poison counters" (CR 122.1f; Forge's Poison):
+ * on each player it names, `count` of them. Ten or more and that player loses (CR 704.5c, rules/sba.mjs).
+ */
+export function poison(state, params, context) {
+  const count = params.count ?? 1;
+  if (!(count > 0)) return [];
+  return playersFor(state, params.who, context.controller).flatMap((id) => givePoison(state, id, count));
+}
+
+/** Poison counters on a player, reported as the board knows them -- an effect's (poison), or toxic's (rules/combat.mjs). */
+export function givePoison(state, id, count) {
+  const player = state.players[id];
+  const before = player.poison ?? 0;
+  player.poison = before + count;
+  return [event("GameEventPlayerPoisoned", state, {receiver: {playerId: id, name: player.name}, oldValue: before, amount: count})];
+}
+
+/**
+ * `winGame` -- "you win the game" (CR 104.2b; Forge's WinsGame): the player it names wins, and the game is over at once
+ * (CR 104.1) -- with every opponent, a multiplayer game having no limited range of influence (CR 104.3h). The state-based
+ * actions report it (rules/sba.mjs, gameOver). A player no longer in the game wins nothing (playersFor names none).
+ */
+export function winGame(state, params, context) {
+  for (const id of playersFor(state, params.who ?? "you", context.controller)) state.players[id].won = true;
+  return [];
 }
 
 /** `putCounter` — CR 121. */
@@ -233,6 +301,8 @@ export function proliferate(state, params, context) {
       for (const [kind, amount] of Object.entries(player.counters)) {
         if (amount > 0) player.counters[kind] = amount + 1;
       }
+      /* Poison counters are counters (CR 122.1f): one more, reported as any poisoning is (batch 77). */
+      if (player.poison > 0) events.push(...givePoison(state, choice.player, 1));
       continue;
     }
     const object = state.objects[choice];

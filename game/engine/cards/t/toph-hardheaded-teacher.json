@@ -1,0 +1,124 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Toph, Hardheaded Teacher",
+    "oracleId": "8c1c0117-6fc0-43c5-a4c8-6472de6503d9",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warrior",
+      "Ally"
+    ],
+    "manaCost": "{2}{R}{G}",
+    "colors": [
+      "G",
+      "R"
+    ],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "When Toph enters, you may discard a card. If you do, return target instant or sorcery card from your graveyard to your hand.\nWhenever you cast a spell, earthbend 1. If that spell is a Lesson, put an additional +1/+1 counter on that land. (Target land you control becomes a 0/0 creature with haste that's still a land. Put a +1/+1 counter on it. When it dies or is exiled, return it to the battlefield tapped.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Toph enters, you may discard a card. If you do, return target instant or sorcery card from your graveyard to your hand.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "discard",
+          "count": 1,
+          "remember": true
+        },
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand",
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "types": [
+                "Instant"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "types": [
+                "Sorcery"
+              ]
+            }
+          ]
+        }
+      ],
+      "optional": true
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a spell, earthbend 1. If that spell is a Lesson, put an additional +1/+1 counter on that land. (Target land you control becomes a 0/0 creature with haste that's still a land. Put a +1/+1 counter on it. When it dies or is exiled, return it to the battlefield tapped.)",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you"
+      },
+      "effects": [
+        {
+          "effect": "earthbend",
+          "targets": {
+            "target": 0
+          },
+          "count": 1
+        },
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "+1/+1",
+          "count": 1,
+          "condition": {
+            "about": "that card",
+            "is": {
+              "subtypes": [
+                "Lesson"
+              ]
+            }
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      ]
+    }
+  ]
+}

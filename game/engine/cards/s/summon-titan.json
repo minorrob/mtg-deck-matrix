@@ -1,0 +1,127 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Summon: Titan",
+    "oracleId": "66ce0c60-f406-4ece-915f-675da4e8b16d",
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "Saga",
+      "Giant"
+    ],
+    "manaCost": "{3}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 7,
+    "toughness": 7
+  },
+  "oracleText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)\nI — Mill five cards.\nII — Return all land cards from your graveyard to the battlefield tapped.\nIII — Until end of turn, another target creature you control gains trample and gets +X/+X, where X is the number of lands you control.\nReach, trample",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.",
+      "keyword": "saga"
+    },
+    {
+      "kind": "triggered",
+      "text": "I — Mill five cards.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 1
+      },
+      "effects": [
+        {
+          "effect": "mill",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "II — Return all land cards from your graveyard to the battlefield tapped.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 2
+      },
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "card",
+            "zone": "graveyard",
+            "controller": "you",
+            "types": [
+              "Land"
+            ]
+          },
+          "to": "battlefield",
+          "tapped": true
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "III — Until end of turn, another target creature you control gains trample and gets +X/+X, where X is the number of lands you control.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 3
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": {
+            "count": {
+              "what": "permanent",
+              "types": [
+                "Land"
+              ],
+              "controller": "you"
+            }
+          },
+          "toughness": {
+            "count": {
+              "what": "permanent",
+              "types": [
+                "Land"
+              ],
+              "controller": "you"
+            }
+          },
+          "keywords": [
+            "Trample"
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "another": true
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Reach",
+      "keyword": "reach"
+    },
+    {
+      "kind": "keyword",
+      "text": "trample",
+      "keyword": "trample"
+    }
+  ]
+}

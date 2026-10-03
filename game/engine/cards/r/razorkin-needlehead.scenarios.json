@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Razorkin Needlehead",
+  "scenarios": [
+    {
+      "name": "First strike on his turn; Maya draws on hers: 1 damage to her, and no first strike then",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Razorkin Needlehead"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Razorkin Needlehead",
+                "has": [
+                  "First Strike"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1",
+            "settle": true
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Razorkin Needlehead",
+            "lacks": [
+              "First Strike"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

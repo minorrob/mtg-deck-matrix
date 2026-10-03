@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Imposter Mech",
+    "oracleId": "f434e266-d9d6-4058-96ff-a1bd4029d8dc",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Vehicle"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "You may have this Vehicle enter as a copy of a creature an opponent controls, except it's a Vehicle artifact with crew 3 and it loses all other card types.\nCrew 3",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "You may have this Vehicle enter as a copy of a creature an opponent controls, except it's a Vehicle artifact with crew 3 and it loses all other card types.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "copyOf": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "opponent"
+        },
+        "keep": [
+          "a1"
+        ],
+        "except": {
+          "setTypes": [
+            "Artifact"
+          ],
+          "addSubtypes": [
+            "Vehicle"
+          ]
+        }
+      }
+    },
+    {
+      "kind": "keyword",
+      "text": "Crew 3",
+      "keyword": "crew",
+      "amount": 3
+    }
+  ]
+}

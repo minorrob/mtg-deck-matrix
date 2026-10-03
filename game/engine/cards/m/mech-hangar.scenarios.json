@@ -1,0 +1,158 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mech Hangar",
+  "fixtures": {
+    "Pilot": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Pilot"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Elf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Cart": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [
+        "Vehicle"
+      ],
+      "manaCost": "{2}",
+      "colors": [],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Its green casts the Pilot, not the Elf",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mech Hangar"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Pilot",
+            "Elf"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mech Hangar",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Pilot"
+              },
+              "count": 1
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Elf"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "cast": "Pilot"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mech Hangar",
+            "Pilot"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Cart a 3/3 artifact creature until end of turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mech Hangar",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Cart"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Mech Hangar",
+          "targets": [
+            {
+              "card": "Cart"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Cart",
+            "power": 3,
+            "toughness": 3
+          }
+        }
+      ]
+    }
+  ]
+}

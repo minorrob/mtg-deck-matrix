@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mirror Entity",
+    "oracleId": "17e905ca-c0bd-473d-95a7-e180ba5fea43",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Shapeshifter"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Changeling (This card is every creature type.)\n{X}: Until end of turn, creatures you control have base power and toughness X/X and gain all creature types.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Changeling (This card is every creature type.)",
+      "keyword": "changeling"
+    },
+    {
+      "kind": "activated",
+      "text": "{X}: Until end of turn, creatures you control have base power and toughness X/X and gain all creature types.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{X}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "animateAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "addTypes": [
+            "Creature"
+          ],
+          "power": "X",
+          "toughness": "X",
+          "allCreatureTypes": true,
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Vivi Ornitier",
+  "fixtures": {
+    "Jolt": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Jolt deals 3 damage to target opponent.",
+        "targets": [
+          {
+            "what": "player",
+            "who": "opponent"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 3,
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A Jolt: a counter on Vivi and 1 to Maya; Vivi's {0} makes {R} for the next; once a turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Vivi Ornitier",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Jolt",
+            "Jolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Jolt",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Vivi Ornitier",
+                "power": 1,
+                "toughness": 4
+              }
+            },
+            {
+              "seat": 1,
+              "life": 36
+            }
+          ]
+        },
+        {
+          "tap": "Vivi Ornitier",
+          "mana": {
+            "R": 1
+          }
+        },
+        {
+          "cast": "Jolt",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 32
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Vivi Ornitier",
+            "power": 2,
+            "toughness": 5
+          }
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Vivi Ornitier"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

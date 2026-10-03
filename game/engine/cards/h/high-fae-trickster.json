@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "High Fae Trickster",
+    "oracleId": "28c1a4a0-f58c-4d07-a918-51ff8a74f050",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Faerie",
+      "Wizard"
+    ],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 4,
+    "toughness": 2
+  },
+  "oracleText": "Flash (You may cast this spell any time you could cast an instant.)\nFlying\nYou may cast spells as though they had flash.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "static",
+      "text": "You may cast spells as though they had flash.",
+      "rule": "cast-as-though-flash",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "spells": true
+    }
+  ]
+}

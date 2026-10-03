@@ -1,0 +1,92 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dwarven Mine",
+    "oracleId": "74ed0bd3-ac31-41a4-8220-d8e7c8c1c437",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Mountain"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "({T}: Add {R}.)\nThis land enters tapped unless you control three or more other Mountains.\nWhen this land enters untapped, create a 1/1 red Dwarf creature token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {R}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "R": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "replacement",
+      "text": "This land enters tapped unless you control three or more other Mountains.",
+      "watches": {
+        "event": "enters",
+        "who": "self",
+        "unless": {
+          "controls": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ],
+            "subtypes": [
+              "Mountain"
+            ]
+          },
+          "min": 3
+        }
+      },
+      "change": {
+        "entersTapped": true
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "When this land enters untapped, create a 1/1 red Dwarf creature token.",
+      "trigger": {
+        "on": "enters",
+        "untapped": true
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "token": {
+            "name": "Dwarf",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Dwarf"
+            ],
+            "colors": [
+              "R"
+            ],
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  ]
+}

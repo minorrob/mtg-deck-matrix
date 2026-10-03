@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Insurrection",
+    "oracleId": "7f7c204f-be1a-47e4-91c6-ba6f906d9012",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}{R}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Untap all creatures and gain control of them until end of turn. They gain haste until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Untap all creatures and gain control of them until end of turn. They gain haste until end of turn.",
+      "effects": [
+        {
+          "effect": "untapAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        },
+        {
+          "effect": "gainControl",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          },
+          "until": "end-of-turn"
+        },
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Haste"
+          ],
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

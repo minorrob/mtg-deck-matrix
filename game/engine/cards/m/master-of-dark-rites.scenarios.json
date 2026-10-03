@@ -1,0 +1,116 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Master of Dark Rites",
+  "fixtures": {
+    "Vampire": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Vampire"
+      ],
+      "manaCost": "{B}{B}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Zombie": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie"
+      ],
+      "manaCost": "{B}{B}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "The Bear sacrificed: {B}{B}{B} casts the Vampire, not the Zombie",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Master of Dark Rites",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vampire",
+            "Zombie"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Master of Dark Rites",
+          "sacrifice": "Bear"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Vampire"
+              },
+              "count": 1
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Zombie"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "cast": "Vampire"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Master of Dark Rites",
+            "Vampire"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Esika's Chariot",
+    "oracleId": "8e7b079d-9ede-421c-bd2b-f9a5126a8e6f",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Vehicle"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "When Esika's Chariot enters, create two 2/2 green Cat creature tokens.\nWhenever Esika's Chariot attacks, create a token that's a copy of target token you control.\nCrew 4",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Esika's Chariot enters, create two 2/2 green Cat creature tokens.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 2,
+          "token": {
+            "name": "Cat",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Cat"
+            ],
+            "colors": [
+              "G"
+            ],
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Esika's Chariot attacks, create a token that's a copy of target token you control.",
+      "trigger": {
+        "on": "attacks"
+      },
+      "effects": [
+        {
+          "effect": "copyPermanent",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "token": true,
+          "controller": "you"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Crew 4",
+      "keyword": "crew",
+      "amount": 4
+    }
+  ]
+}

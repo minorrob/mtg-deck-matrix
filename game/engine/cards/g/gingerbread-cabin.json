@@ -1,0 +1,81 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gingerbread Cabin",
+    "oracleId": "fa98c367-0312-49c6-abef-72e5ead4cc7d",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Forest"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "({T}: Add {G}.)\nThis land enters tapped unless you control three or more other Forests.\nWhen this land enters untapped, create a Food token. (It's an artifact with \"{2}, {T}, Sacrifice this token: You gain 3 life.\")",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {G}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "replacement",
+      "text": "This land enters tapped unless you control three or more other Forests.",
+      "watches": {
+        "event": "enters",
+        "who": "self",
+        "unless": {
+          "controls": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ],
+            "subtypes": [
+              "Forest"
+            ]
+          },
+          "min": 3
+        }
+      },
+      "change": {
+        "entersTapped": true
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "When this land enters untapped, create a Food token.",
+      "trigger": {
+        "on": "enters",
+        "untapped": true
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "token": {
+            "predefined": "Food"
+          }
+        }
+      ]
+    }
+  ]
+}

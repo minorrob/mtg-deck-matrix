@@ -1,0 +1,100 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Glóin, Dwarf Emissary",
+    "oracleId": "29375a7a-af4e-46aa-8d1c-e8d22d3c0ea7",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dwarf",
+      "Advisor"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Whenever you cast a historic spell, create a Treasure token. This ability triggers only once each turn. (Artifacts, legendaries, and Sagas are historic.)\n{T}, Sacrifice a Treasure: Goad target creature. (Until your next turn, that creature attacks each combat if able and attacks a player other than you if able.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a historic spell, create a Treasure token. This ability triggers only once each turn.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "anyOf": [
+            {
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "supertypes": [
+                "Legendary"
+              ]
+            },
+            {
+              "subtypes": [
+                "Saga"
+              ]
+            }
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Treasure"
+          }
+        }
+      ],
+      "limit": 1
+    },
+    {
+      "kind": "activated",
+      "text": "{T}, Sacrifice a Treasure: Goad target creature.",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "subtypes": [
+              "Treasure"
+            ]
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "goad",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

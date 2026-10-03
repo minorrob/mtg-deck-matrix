@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Bootleggers' Stash",
+  "scenarios": [
+    {
+      "name": "His Wastes makes a Treasure",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bootleggers' Stash",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Wastes"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "controls": [
+            "Bootleggers' Stash",
+            "Treasure",
+            "Wastes"
+          ],
+          "seat": 0
+        },
+        {
+          "seat": 0,
+          "tapped": "Wastes"
+        }
+      ]
+    },
+    {
+      "name": "Maya's land does not",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bootleggers' Stash"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Wastes",
+            "seat": 1
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

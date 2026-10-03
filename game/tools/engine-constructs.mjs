@@ -13,6 +13,7 @@ import {isPrimitive, isKeyword, isTriggerEvent, normalizeKeyword} from "../engin
 import {isBuilt} from "../engine/script/effects/index.mjs";
 import {KEYWORD_FAMILIES} from "../engine/keywords/combat.mjs";
 import {KEYWORD_FAMILIES as TIMING_FAMILIES} from "../engine/keywords/timing.mjs";
+import {KEYWORD_FAMILIES as TYPE_FAMILIES} from "../engine/keywords/types.mjs";
 import {TRIGGER_KINDS} from "../engine/cards/index.mjs";
 
 /* Forge's API names to the engine's primitives — §12.2's parenthesised pairs, as data. A name that
@@ -24,20 +25,35 @@ export const FORGE_API = {
   PeekAndReveal: "peekAndReveal", Sacrifice: "sacrifice", SacrificeAll: "sacrificeAll",
   Destroy: "destroy", DestroyAll: "destroyAll", Regenerate: "regenerate", ExileUntil: "exileUntil", ReturnToHand: "returnToHand",
   Play: "play", Discover: "discover",
-  Mana: "addMana", ManaReflected: "addManaReflected", Tap: "tap", Untap: "untap", UntapAll: "untapAll",
+  /* DigUntil ("reveal cards until you reveal a land card", batch 62). */
+  DigUntil: "digUntil",
+  /* ManaReflected ("any color that a land an opponent controls could produce", batch 50): addMana's reflect and among. */
+  Mana: "addMana", ManaReflected: "addMana", Tap: "tap", Untap: "untap", UntapAll: "untapAll",
   ReduceCost: "costReduction", AlternativeCost: "alternativeCost",
   GainLife: "gainLife", LoseLife: "loseLife", DealDamage: "dealDamage", EachDamage: "damageEach",
   DamageAll: "damageAll", ExchangeLifeVariant: "exchangeLife", Fight: "fight",
   PutCounter: "putCounter", PutCounterAll: "putCounterAll", RemoveCounter: "removeCounter",
   Proliferate: "proliferate", MultiplyCounter: "multiplyCounters", MoveCounter: "moveCounters",
   ReplaceCounter: "replaceCounters", Amass: "amass",
+  /* Poison ("each opponent gets a poison counter", batch 64). */
+  Poison: "poison",
+  /* "You win the game" (batch 68). */
+  WinsGame: "winGame",
+  /* Goad (batch 69): attacks each combat, not its goader if it can. */
+  Goad: "goad",
+  /* Earthbend (batch 65): the land a creature with haste, its counters, its return. */
+  Earthbend: "earthbend",
+  /* Clone ("becomes a copy of target land", batch 58): a permanent becoming a copy, for a turn or for good. */
+  Clone: "becomeCopy",
   Token: "createToken", CopyPermanent: "copyPermanent", Animate: "animate", AnimateAll: "animateAll",
   Attach: "attach", GainControl: "gainControl", SetState: "setState", Phases: "phaseOut",
   Pump: "pump", PumpAll: "pumpAll", AlterAttribute: "alterAttribute", Effect: "effectUntil",
   Charm: "modal", RepeatEach: "repeatFor", Branch: "branch", DelayedTrigger: "delayedTrigger",
   ImmediateTrigger: "immediateTrigger", Counter: "counterSpell", CopySpellAbility: "copySpell",
   AddTurn: "addTurn", AddPhase: "addPhase", ChooseCard: "chooseCard", ChooseType: "chooseType",
-  GenericChoice: "genericChoice", TwoPiles: "twoPiles", Connive: "connive",
+  /* GenericChoice ("create a Food token or a Treasure token", "target opponent may have you draw three cards"): the modal
+     question at resolution, its chooser any player (batch 52). */
+  GenericChoice: "modal", TwoPiles: "twoPiles", Connive: "connive",
   Investigate: "investigate", Cleanup: "cleanup", ReplaceEffect: "effectUntil",
 };
 
@@ -46,10 +62,10 @@ export const FORGE_TRIGGER = {
   ChangesZone: "enters", ChangesZoneAll: "enters", Exiled: "exiled", Sacrificed: "sacrificed",
   Phase: "phase", Attacks: "attacks", AttackersDeclared: "attackers declared",
   AttackersDeclaredOneTarget: "attackers declared", Blocks: "blocks",
-  SpellCast: "spell cast", DamageDone: "damage dealt", DamageDoneOnce: "damage dealt once",
+  SpellCast: "spell cast", DamageDone: "damage dealt", DamageDoneOnce: "damage dealt once", TapsForMana: "tapped for mana",
   Discarded: "discarded", DiscardedAll: "discarded", Drawn: "drawn", LandPlayed: "land played",
   BecomesTarget: "becomes target", CounterAdded: "counter added", CounterAddedOnce: "counter added once",
-  LifeGained: "life gained", TokenCreatedOnce: "token created", BecomeMonstrous: "becomes monstrous",
+  LifeGained: "life gained", LifeLost: "life lost", TokenCreatedOnce: "token created", BecomeMonstrous: "becomes monstrous",
 };
 
 /* Forge static and replacement modes the engine can execute today. `Continuous` is an anthem or a
@@ -60,21 +76,55 @@ export const FORGE_STATIC = {Continuous: "layers", CombatDamageToughness: "rules
   /* "That ability triggers an additional time" (batch 34): the static `triggers-again`, read by rules/trigger.mjs. */
   Panharmonicon: "rules/trigger",
   /* "Rather than pay this spell's mana cost" (batch 39): the card's own `alternative-cost` static, rules/actions.mjs. */
-  AlternativeCost: "rules/actions"};
-export const FORGE_REPLACEMENT = {Moved: "replacement"};
+  AlternativeCost: "rules/actions",
+  /* "You may cast spells as though they had flash" (batch 49): `cast-as-though-flash`, rules/actions.mjs. */
+  CastWithFlash: "rules/actions",
+  /* "Untap all permanents you control during each other player's untap step" (batch 53): rules/turn.mjs. */
+  UntapOtherPlayer: "rules/turn",
+  /* "Your opponents can't cast spells from anywhere other than their hands", "during your turn", "more than one spell each
+     turn" (batch 63): the static `cant-cast`, read where a cast is offered (rules/statics.mjs castForbidden). */
+  CantBeCast: "rules/actions",
+  /* "Creatures can't attack you unless their controller pays {2} for each" (batch 66): `attack-tax`, rules/combat.mjs. */
+  CantAttackUnless: "rules/combat",
+  /* "Can't be blocked by creatures with power 3 or greater", "your opponents can't block with creatures with even mana
+     values" (batch 69 credits it): the static `cant-be-blocked-by`, its attackers `affects` and its blockers `by`. */
+  CantBlockBy: "keywords/combat"};
+export const FORGE_REPLACEMENT = {Moved: "replacement",
+  /* "This artifact doesn't untap during your untap step" (batch 66): the static `doesnt-untap`, rules/turn.mjs. */
+  Untap: "rules/turn",
+  /* "This spell can't be countered", "creature spells you control can't be countered" (batch 64): the static
+     `cant-be-countered`, read where a counter would apply (rules/statics.mjs, cantBeCountered). */
+  Counter: "rules/statics",
+  /* Damage replaced (batch 71): doubled, plus N, prevented -- for a while, a shield, or with what follows "that many"
+     (CR 615.5) -- and redirected to what the holder enchants (CR 614.9); by its source, to whom, combat or not. */
+  DamageDone: "rules/replacement"};
 
 /* Keywords the engine implements BEHAVIORALLY, as opposed to merely declaring the word. Declaring
    `Flying` in the vocabulary is what lets a card script say it; `keywords/combat.mjs` is what makes
    a flier unblockable by the ground. Coverage has to mean the second — the whole reason this file
    exists is that the engine knew the word `Flying` for a week and did nothing with it. */
-export const BEHAVIORAL_KEYWORDS = new Set([...Object.values(KEYWORD_FAMILIES), ...Object.values(TIMING_FAMILIES)].flat());
+export const BEHAVIORAL_KEYWORDS = new Set([...Object.values(KEYWORD_FAMILIES), ...Object.values(TIMING_FAMILIES), ...Object.values(TYPE_FAMILIES)].flat());
 
 /* Keywords that stand for an ability rather than a behavior, built once the primitive the ability uses is. Equip is
    "[Cost]: Attach this permanent to target creature you control. Activate only as a sorcery" (CR 702.6a): an
    activated ability with the `attach` effect, and what the Equipment grants a static ability on the creature it is
    attached to (`attachedBy`). Cycling is "{cost}, discard this card: draw a card" activated from the hand (CR 702.29a),
    and typecycling the same searching for a card of the type (702.29e): built with activation from the hand (batch 9). */
-export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: "chooseCard", Enchant: "attach"};
+export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: "chooseCard", Enchant: "attach",
+  /* Ninjutsu (batch 54): an ability of the card in hand, returning an unblocked attacker, the Ninja put onto the battlefield
+     tapped and attacking (cards/index.mjs). */
+  Ninjutsu: "moveZone",
+  /* Crew (batch 55): the `crew` cost and the Vehicle animated until end of turn (cards/index.mjs). */
+  Crew: "animate",
+  /* Station (batch 58): tap another creature, charge counters equal to its power; what it has at N+ on that condition. */
+  Station: "putCounter",
+  /* Chapter (batch 60): a Saga's lore counters -- entering, after the draw step -- its chapters, and its sacrifice. */
+  Chapter: "putCounter",
+  /* Prowess (batch 77): the triggered ability, +1/+1 until end of turn on a noncreature spell cast (cards/index.mjs).
+     Toxic (batch 77): poison counters with combat damage to a player, its number (rules/combat.mjs). */
+  Prowess: "pump", Toxic: "poison",
+  /* Annihilator (batch 78): the triggered ability, the defending player sacrificing N permanents (cards/index.mjs). */
+  Annihilator: "sacrifice"};
 
 
 /* What a card needs that the engine has not got. Empty means the engine can play it. */
@@ -95,12 +145,15 @@ export const FORGE_OPTIONS = Object.freeze({
   /* Judged kind by kind (FORGE_COUNTS below), not as one: "for each creature you control" is built, "for each spell
      you've cast this turn" is not. */
   Count: {name: "An amount the game counts (X, for each, devotion, greatest power)", status: "partial", engine: "script/amount.mjs, by kind"},
-  ConditionPresent: {name: "An effect's condition: if a permanent is present", status: "missing"},
-  ConditionCompare: {name: "An effect's condition: a comparison", status: "missing"},
+  ConditionPresent: {name: "An effect's condition: if a permanent is present", status: "built", engine: "an effect's condition {present ...}"},
+  ConditionCompare: {name: "An effect's condition: a comparison", status: "built", engine: "a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost}"},
   ConditionCheckSVar: {name: "An effect's condition: a counted value", status: "missing"},
   ConditionSVarCompare: {name: "An effect's condition: a counted comparison", status: "missing"},
-  ConditionDefined: {name: "An effect's condition: about a named object", status: "missing"},
-  Condition: {name: "An effect's condition (threshold, metalcraft, kicked, ...)", status: "missing"},
+  /* Batch 70: its seven forms -- how the spell was cast (from a graveyard, Addendum's main phase), what the effect before
+     did "this way" (sacrificed, discarded, dealt damage to, made), and the spell a trigger is about, as it last was. */
+  ConditionDefined: {name: "An effect's condition: about a named object", status: "built",
+    engine: "{cast: {from | mainPhase}}; {about: \"remembered\" | \"that card\" | \"target\", is} -- `remember` on sacrifice, discard, dealDamage, copyPermanent"},
+  Condition: {name: "An effect's condition (threshold, metalcraft, kicked, ...)", status: "built", engine: "an effect's or a static's condition: present, turn, graveyard types"},
   CheckSVar: {name: "An intervening \"if\" or \"activate only if\": a counted value", status: "missing"},
   IsPresent: {name: "An intervening \"if\" or \"activate only if\": a permanent present", status: "built", engine: "condition {present: selector}"},
   IsPresentStatic: {name: "As long as a permanent is present (a static ability's condition)", status: "built", engine: "a static's condition {present, atLeast | atMost}; worksFrom: graveyard"},
@@ -109,11 +162,14 @@ export const FORGE_OPTIONS = Object.freeze({
   PumpKeywords: {name: "It gains a keyword until end of turn (a token made this way)", status: "built", engine: "gainsUntilEndOfTurn"},
   NonLegendary: {name: "Except it isn't legendary (a copy)", status: "built", engine: "except.nonLegendary"},
   Populate: {name: "Populate (copy a creature token you control)", status: "built", engine: "populate"},
-  TokenAttacking: {name: "A token that enters tapped and attacking", status: "missing"},
-  AddTriggers: {name: "Grants a triggered ability (\"has 'whenever ...'\")", status: "missing"},
+  TokenAttacking: {name: "A token that enters tapped and attacking", status: "built", engine: "`attacking` on createToken and copyPermanent: that player, or the one its controller chooses (batch 67)"},
+  /* Batch 76: granted abilities -- a layer-6 static's `addAbilities` ("equipped creature has 'whenever this creature
+     attacks ...'", "all Slivers have 'when this permanent enters ...'") and a pump's `abilities` until end of turn
+     ("target creature gains 'when this creature dies ...'"); activated, mana and keyword abilities given the same way. */
+  AddTriggers: {name: "Grants a triggered ability (\"has 'whenever ...'\")", status: "built", engine: "a static's apply.addAbilities; a pump's abilities (rules/layers.mjs, abilitiesOf)"},
   SVarCompare: {name: "A counted comparison for a condition", status: "missing"},
   PresentCompare: {name: "A comparison of permanents present for a condition", status: "built", engine: "condition {present, atLeast | atMost}"},
-  ActivationLimit: {name: "Only once (or N times) each turn", status: "missing"},
+  ActivationLimit: {name: "Only once (or N times) each turn", status: "built", engine: "an activated or triggered ability's `limit`, times each turn (rules/actions.mjs, rules/trigger.mjs)"},
   ActivationPhases: {name: "Activate only during a step or phase", status: "missing"},
   TargetMin: {name: "Fewer targets than the most (\"up to\", \"any number of\")", status: "missing"},
   TargetMax: {name: "More than one target of a kind (\"up to N\")", status: "missing"},
@@ -139,6 +195,7 @@ export const FORGE_COUNTS = Object.freeze({
   ValidGraveyard: {name: "Cards in a graveyard", status: "built", engine: "{count: {what: \"card\", zone: \"graveyard\"}}"},
   ValidLibrary: {name: "Cards in a library", status: "missing"},
   ValidExile: {name: "Cards in exile", status: "missing"},
+  LifeAmount: {name: "That much life (\"loses that much life\", the life gained)", status: "built", engine: "{lifeGained: true}: the life the trigger is about (batch 68)"},
   Devotion: {name: "Devotion to a color (CR 700.5)", status: "built", engine: "{devotion: [color]}"},
   DevotionDual: {name: "Devotion to two colors (CR 700.5)", status: "built", engine: "{devotion: [color, color]}"},
   Compare: {name: "A comparison (\"if you control ...\")", status: "built", engine: "{if: condition, then, else}; a modal's chooseMore, as it is cast"},
@@ -163,7 +220,7 @@ export const FORGE_COUNTS = Object.freeze({
   UrzaLands: {name: "The Urza lands", status: "missing"},
   Monarch: {name: "The monarch", status: "missing"},
   YourStartingLife: {name: "Your starting life total", status: "missing"},
-  DamageAmount: {name: "Damage dealt", status: "missing"},
+  DamageAmount: {name: "Damage dealt", status: "built", engine: "{damageDealt: true}: the damage a damage trigger is about, all of an action's together"},
   AttackersDeclared: {name: "Attackers declared", status: "missing"},
   TimesKicked: {name: "Times kicked", status: "missing"},
   Kicked: {name: "Whether it was kicked", status: "missing"},

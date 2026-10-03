@@ -42,7 +42,10 @@ import {commanderChoice} from "./commander.mjs";
 import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
 import {answerResolution, resolutionChoice} from "../script/resolution.mjs";
 import {finishResolving} from "./stack.mjs";
-import {playerRuleChanged} from "./statics.mjs";
+import {playerRuleChanged, untapsDuringOthers, ruleChanged} from "./statics.mjs";
+import {emptyRestricted} from "./restricted-mana.mjs";
+import {endCopies} from "../script/effects/permanents.mjs";
+import {runEffect} from "../script/effects/index.mjs";
 import {askEntering, enteringChoice, resolveEnteringChoice} from "./entering.mjs";
 import {collectTriggers, openTriggers, triggerChoice, resolveTriggerOrder, triggerTargetsChoice, resolveTriggerTargets} from "./trigger.mjs";
 
@@ -128,7 +131,10 @@ const cardRef = (state, id) => {
 function untap(state, events) {
   for (const id of state.zones.battlefield) {
     const o = state.objects[id];
-    if (o.controller !== state.activePlayer || !o.tapped) continue;
+    /* The active player's permanents (CR 502.3), and another player's that a static of theirs untaps now (Seedborn Muse). */
+    if (!o.tapped || (o.controller !== state.activePlayer && !untapsDuringOthers(state, id))) continue;
+    /* "Doesn't untap during your untap step" (Mana Vault, Meekstone). */
+    if (ruleChanged(state, "doesnt-untap", id)) continue;
     o.tapped = false;
     events.push(event("GameEventCardTapped", state, {card: cardRef(state, id), tapped: false}));
   }
@@ -164,6 +170,8 @@ const skipsFirstDraw = (state) =>
    news, and a board that announces it every step buries what matters. */
 function emptyManaPools(state, events) {
   for (const player of state.players) {
+    /* And the mana that could be spent only on some things (rules/restricted-mana.mjs). */
+    emptyRestricted(player);
     const total = Object.values(player.manaPool).reduce((a, b) => a + b, 0);
     if (total === 0) continue;
     const had = {...player.manaPool};
@@ -191,7 +199,14 @@ function cleanup(state, events) {
   for (const id of state.zones.battlefield) {
     if (state.objects[id].damage !== 0) state.objects[id].damage = 0;
   }
+  /* Control gained "until end of turn" returns now (effects/permanents.mjs gainControl), latest first, so the first
+     controller is the last one set. It changed hands this very turn, which already makes it summoning sick for its old
+     controller until their next turn begins (CR 302.6). */
+  for (const effect of (state.effects ?? []).filter((e) => e.rule === "control-returns").reverse())
+    for (const id of effect.affects?.ids ?? []) if (state.objects[id]) state.objects[id].controller = effect.apply.controller;
   if ((state.effects ?? []).some((effect) => effect.until === "end-of-turn")) state.effects = state.effects.filter((effect) => effect.until !== "end-of-turn");
+  /* "Becomes a copy of target artifact until end of turn" ends with them (effects/permanents.mjs). */
+  endCopies(state);
   /* And a delayed trigger that lasted "this turn" ("whenever a creature dies this turn", CR 603.7b) ends with them. */
   if ((state.delayedTriggers ?? []).some((d) => d.thisTurn)) state.delayedTriggers = state.delayedTriggers.filter((d) => !d.thisTurn);
   const player = state.players[state.activePlayer];
@@ -361,6 +376,10 @@ function arrive(state, events) {
     if (state.drawBeat) state.awaiting = {kind: "draw-card", player: state.activePlayer};
     else draw(state, state.activePlayer, events);
   }
+  /* CR 714.3b: as the precombat main phase begins, the active player puts a lore counter on each Saga they control -- what
+     brings its next chapter. */
+  if (state.phase === "MAIN1") for (const id of state.zones.battlefield.filter((x) => state.objects[x].controller === state.activePlayer && (state.objects[x].subtypes ?? []).includes("Saga")))
+    events.push(...runEffect(state, {effect: "putCounter", targets: [id], counter: "lore", count: 1}, {controller: state.activePlayer, source: id}));
   /* The combat steps' turn-based actions (CR 508.1, 509.1, 510.1) each stop the game and ask.
      `open` returns false when there is nothing to decide, and the step just proceeds. */
   /* "If it's the first combat phase of the turn" (Genji Glove): each combat phase counted as it begins. */
@@ -484,6 +503,8 @@ export function advance(state) {
     state.activePlayer = nextLivingPlayer(state, state.activePlayer);
     state.turn += 1;
     state.players[state.activePlayer].turnBegan = state.turn;   /* CR 302.6, keywords/timing.mjs */
+    /* "Until your next turn" (goad, CR 701.15a): over as that player's turn begins. */
+    state.effects = (state.effects ?? []).filter((e) => !(e.until === "your-next-turn" && e.sourceController === state.activePlayer));
     /* CR 305.2 says "already played a land THIS TURN", so the count is per turn and resets for
        everyone, not only for whoever is about to take it. The difference shows the moment an
        effect lets somebody play a land on another player's turn: resetting only the active

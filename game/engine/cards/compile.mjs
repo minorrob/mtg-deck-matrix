@@ -68,10 +68,13 @@ export function assembleScript(card, answer, model = null) {
 
 const normalize = (s) => String(s ?? "").replace(/[‘’]/g, "'").replace(/[“”]/g, "\"").replace(/—/g, "-")
   .toLowerCase().replace(/\s+/g, " ").replace(/\s*\.\s*$/, "").trim();
-/* A line that is all reminder text (a basic land's "({T}: Add {W}.)") is the card's ability; anywhere else, reminder
-   text in parentheses explains a keyword and claims nothing. */
+/* A line that is all reminder text (a basic land's "({T}: Add {W}.)") is the card's ability -- unless it explains a
+   Phyrexian mana symbol ("({U/P} can be paid with either {U} or 2 life.)", Phyrexian Metamorph), which is the cost's
+   reminder and claims nothing; anywhere else, reminder text in parentheses explains a keyword and claims nothing. */
+const PHYREXIAN_REMINDER = /^\(\{[WUBRGC]\/P\} can be paid with either \{[WUBRGC]\} or 2 life\.\)$/;
 const withoutReminders = (line) => {
   const t = line.trim();
+  if (PHYREXIAN_REMINDER.test(t)) return "";
   if (/^\(.*\)$/.test(t)) return t.slice(1, -1);
   return t.replace(/\s*\([^)]*\)/g, "").trim();
 };
@@ -146,6 +149,9 @@ function landsFor(cost) {
     const s = symbol.slice(1, -1);
     if (/^\d+$/.test(s)) for (let i = 0; i < Number(s); i += 1) lands.push("Wastes");
     else if (s === "X") continue;
+    /* A Phyrexian symbol ({U/P}): paid with 2 life. With its color's land beside it, mana or life would be the player's
+       to decide, and automatic payment does not guess. */
+    else if (/^[WUBRGC]\/P$/.test(s)) continue;
     else {
       const color = s.split("/").find((c) => COLOR_LAND[c]);
       lands.push(color ? COLOR_LAND[color] : "Wastes");
@@ -159,8 +165,9 @@ const SMOKE_FIXTURES = Object.freeze({
   "Smoke Relic": {types: ["Artifact"], manaCost: "{2}"},
   "Smoke Charm": {types: ["Enchantment"], manaCost: "{2}"},
   "Smoke Giant": {types: ["Creature"], manaCost: "{4}{G}", power: 5, toughness: 5},
-  /* A free sorcery the opponent casts, so a card cast at instant speed has a spell to answer. */
-  "Smoke Sorcery": {types: ["Sorcery"], manaCost: "{0}", spell: {id: "s", text: "Draw a card.", targets: [], effects: [{effect: "draw", count: 1}]}},
+  /* A free sorcery the opponent casts, so a card cast at instant speed has a spell to answer -- aimed at a player, so a card
+     that changes a spell's target has one to change. */
+  "Smoke Sorcery": {types: ["Sorcery"], manaCost: "{0}", spell: {id: "s", text: "Target player draws a card.", targets: [{what: "player"}], effects: [{effect: "draw", count: 1, who: {target: 0}}]}},
   /* A free creature the card's own player casts, so a card aimed at its controller's creature spell has one to answer. */
   "Smoke Whelp": {types: ["Creature"], manaCost: "{0}", power: 1, toughness: 1},
 });
@@ -188,11 +195,14 @@ export function smokeScenario(script) {
     /* An Aura's target is its Enchant's: "Enchant creature you control" (Super State). */
     || (a?.kind === "keyword" && String(a.keyword).toLowerCase() === "enchant" && JSON.stringify(a.target ?? {}).includes('"controller":"you"')));
   const fodderField = extra.some((a) => a?.atom === "sacrifice") || ownTargets ? ["Smoke Bear", "Smoke Relic"] : [];
+  /* A card aimed at a card in a graveyard ("return target permanent card ... from your graveyard", Sevinne's Reclamation;
+     Reanimate) gets a creature card in its player's graveyard to aim at (batch 70). */
+  const graveTargets = (script.abilities ?? []).some((a) => (a?.targets ?? []).some((t) => JSON.stringify(t).includes('"zone":"graveyard"')));
   const steps = [];
   /* A land that asks as it enters, or triggers (a scry land), is answered and resolved before the game moves on. */
   if (isLand) steps.push({play: name, seat: 0}, {settle: true});
   else if (script.identity.manaCost) {
-    if (instantSpeed) steps.push({cast: "Smoke Sorcery", seat: 1}, {pass: 1});
+    if (instantSpeed) steps.push({cast: "Smoke Sorcery", seat: 1, targets: "any"}, {pass: 1});
     if (ownSpell) steps.push({cast: "Smoke Whelp", seat: 0});
     for (let i = 0; i < lands.length - 2; i += 1) steps.push({tap: lands[i], seat: 0, optional: true});
     steps.push({cast: name, seat: 0, targets: "any", optional: true}, {settle: true});
@@ -211,6 +221,7 @@ export function smokeScenario(script) {
       setup: [
         {seat: 0, zone: "command", cards: ["Smoke Commander"]},
         {seat: 0, zone: "battlefield", cards: [...lands, ...fodderField]},
+        ...(graveTargets ? [{seat: 0, zone: "graveyard", cards: ["Smoke Bear"]}] : []),
         ...(isLand || script.identity.manaCost ? [{seat: 0, zone: "hand", cards: [name, ...fodderHand, ...(ownSpell ? ["Smoke Whelp"] : [])]}] : [{seat: 0, zone: "battlefield", cards: [name]}]),
         {seat: 1, zone: "battlefield", cards: ["Smoke Bear", "Smoke Giant", "Smoke Relic", "Smoke Charm", "Wastes"]},
         {seat: 1, zone: "hand", cards: ["Smoke Sorcery"]},
@@ -252,7 +263,7 @@ export function smokeTest(script, cards) {
   const {scenario, fixtures} = smokeScenario(script);
   const resolve = (name) => (name === script.identity.name ? structuredClone(definition) : cards(name));
   try {
-    const {state, events} = runScenario(scenario, resolve, fixtures);
+    const {state, events} = runScenario({...scenario, stopWhenOver: true}, resolve, fixtures);
     const bad = zoneProblems(state);
     /* Whether the card was actually played: a counterspell with nothing to counter stays in hand, which is the
        fixture's limit and not the script's fault -- so it is reported, not refused. */

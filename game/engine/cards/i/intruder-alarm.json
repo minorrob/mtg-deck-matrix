@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Intruder Alarm",
+    "oracleId": "1e943e04-e213-4781-b1a7-935aad8790e1",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures don't untap during their controllers' untap steps.\nWhenever a creature enters, untap all creatures.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Creatures don't untap during their controllers' untap steps.",
+      "rule": "doesnt-untap",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature enters, untap all creatures.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "untapAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tinybones, the Pickpocket",
+    "oracleId": "7bc4c7e2-6758-4a85-84e7-03ab93981106",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Skeleton",
+      "Rogue"
+    ],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Deathtouch\nWhenever Tinybones deals combat damage to a player, you may cast target nonland permanent card from that player's graveyard, and mana of any type can be spent to cast that spell.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Deathtouch",
+      "keyword": "deathtouch"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Tinybones deals combat damage to a player, you may cast target nonland permanent card from that player's graveyard, and mana of any type can be spent to cast that spell.",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "self",
+        "combat": true,
+        "to": "player"
+      },
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "that player",
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "that player",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "that player",
+              "types": [
+                "Enchantment"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "that player",
+              "types": [
+                "Planeswalker"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "that player",
+              "types": [
+                "Battle"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "play",
+          "from": "targets",
+          "targets": {
+            "target": 0
+          },
+          "anyMana": true
+        }
+      ]
+    }
+  ]
+}

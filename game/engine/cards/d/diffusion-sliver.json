@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Diffusion Sliver",
+    "oracleId": "458ca9f4-4622-48e1-9ca1-6a8117188973",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Sliver"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Whenever a Sliver creature you control becomes the target of a spell or ability an opponent controls, counter that spell or ability unless its controller pays {2}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever a Sliver creature you control becomes the target of a spell or ability an opponent controls, counter that spell or ability unless its controller pays {2}.",
+      "trigger": {
+        "on": "becomes target",
+        "who": "any",
+        "by": "opponent",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "subtypes": [
+            "Sliver"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "that player",
+          "amount": 2,
+          "effects": [
+            {
+              "effect": "counterSpell",
+              "stack": "that"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

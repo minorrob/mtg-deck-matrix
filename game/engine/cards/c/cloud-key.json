@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cloud Key",
+    "oracleId": "2a838818-d590-4374-9a63-d9e6381a0f0d",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As this artifact enters, choose artifact, creature, enchantment, instant, or sorcery.\nSpells you cast of the chosen type cost {1} less to cast.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "As this artifact enters, choose artifact, creature, enchantment, instant, or sorcery.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "choose": [
+          "Artifact",
+          "Creature",
+          "Enchantment",
+          "Instant",
+          "Sorcery"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Spells you cast of the chosen type cost {1} less to cast.",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "types": [
+          "$chosen"
+        ]
+      },
+      "amount": 1
+    }
+  ]
+}

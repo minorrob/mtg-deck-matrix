@@ -1,0 +1,107 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Goldspan Dragon",
+    "oracleId": "716b3ea2-45b7-4a8f-af72-de7f4e510eff",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon"
+    ],
+    "manaCost": "{3}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Flying, haste\nWhenever this creature attacks or becomes the target of a spell, create a Treasure token.\nTreasures you control have \"{T}, Sacrifice this artifact: Add two mana of any one color.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "haste",
+      "keyword": "haste"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks or becomes the target of a spell, create a Treasure token.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Treasure"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks or becomes the target of a spell, create a Treasure token.",
+      "trigger": {
+        "on": "becomes target",
+        "who": "self",
+        "spell": true
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Treasure"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Treasures you control have \"{T}, Sacrifice this artifact: Add two mana of any one color.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "subtypes": [
+          "Treasure"
+        ]
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "activated",
+            "text": "{T}, Sacrifice this artifact: Add two mana of any one color.",
+            "cost": [
+              {
+                "atom": "{T}"
+              },
+              {
+                "atom": "sacrifice",
+                "self": true
+              }
+            ],
+            "effects": [
+              {
+                "effect": "addMana",
+                "anyColor": true,
+                "count": 2
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

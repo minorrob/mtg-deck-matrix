@@ -1,0 +1,120 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Tinybones, the Pickpocket",
+  "fixtures": {
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{1}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Bolt": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Bolt deals 3 damage to any target.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 0
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It hits: Maya's Ogre cast from her graveyard, its {1}{R} paid with any mana",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tinybones, the Pickpocket",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre",
+            "Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Tinybones, the Pickpocket"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Ogre"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Ogre"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Ogre"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Tinybones, the Pickpocket",
+            "Wastes",
+            "Wastes",
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 39
+        }
+      ]
+    }
+  ]
+}

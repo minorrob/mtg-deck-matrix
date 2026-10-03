@@ -1,0 +1,82 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Aura of Silence",
+    "oracleId": "e7faf8eb-e829-4109-8dfe-42865a23ba86",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Artifact and enchantment spells your opponents cast cost {2} more to cast.\nSacrifice this enchantment: Destroy target artifact or enchantment.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Artifact and enchantment spells your opponents cast cost {2} more to cast.",
+      "rule": "spells-cost-more",
+      "affects": {
+        "what": "spell",
+        "anyOf": [
+          {
+            "types": [
+              "Artifact"
+            ]
+          },
+          {
+            "types": [
+              "Enchantment"
+            ]
+          }
+        ]
+      },
+      "amount": 2,
+      "caster": "opponent"
+    },
+    {
+      "kind": "activated",
+      "text": "Sacrifice this enchantment: Destroy target artifact or enchantment.",
+      "cost": [
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Enchantment"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Toph, the Blind Bandit",
+    "oracleId": "2ce20f43-9357-448f-bb40-7315feb08433",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warrior",
+      "Ally"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": 3
+  },
+  "oracleText": "When Toph enters, earthbend 2. (Target land you control becomes a 0/0 creature with haste that's still a land. Put two +1/+1 counters on it. When it dies or is exiled, return it to the battlefield tapped.)\nToph's power is equal to the number of +1/+1 counters on lands you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Toph enters, earthbend 2.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "earthbend",
+          "targets": {
+            "target": 0
+          },
+          "count": 2
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Toph's power is equal to the number of +1/+1 counters on lands you control.",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "countersAmong": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ],
+            "controller": "you"
+          },
+          "counter": "+1/+1"
+        }
+      }
+    }
+  ]
+}

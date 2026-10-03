@@ -635,21 +635,25 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
 
 - Zones: `moveZone` (ChangeZone), `moveZoneAll` (ChangeZoneAll), `draw`, `discard`, `mill`, `shuffle`, `dig` (look at
   top N, choose, rest to bottom or graveyard), `surveil`, `scry`, `peekAndReveal`, `sacrifice`, `sacrificeAll`,
-  `destroy`, `destroyAll`, `exileUntil`, `returnToHand`, `play` (cast or play without paying), `discover`.
+  `destroy`, `destroyAll`, `exileUntil`, `returnToHand`, `play` (cast or play without paying), `discover`, `digUntil`
+  (from the top until a card fits; added in M4 phase 3, batch 62).
 - Mana and cost: `addMana`, `addManaReflected`, `tap`, `untap`, `untapAll`, `costReduction`, `alternativeCost`.
 - Life and damage: `gainLife`, `loseLife`, `dealDamage`, `damageEach`, `damageAll`, `exchangeLife`, `fight`.
 - Counters: `putCounter`, `putCounterAll`, `removeCounter`, `proliferate`, `multiplyCounters`, `moveCounters`,
-  `replaceCounters`, `amass`.
-- Permanents: `createToken`, `copyPermanent`, `animate`, `animateAll`, `attach`, `gainControl`, `setState` (transform,
+  `replaceCounters`, `amass`, `poison` (a player's poison counters; added in M4 phase 3, batch 64), `winGame` ("you win
+  the game", CR 104.2b; batch 68), `goad` (CR 701.15; batch 69).
+- Permanents: `createToken`, `copyPermanent`, `becomeCopy`, `earthbend` (added in M4 phase 3, batch 65), `animate`, `animateAll`, `attach`, `gainControl`, `setState` (transform,
   flip), `phaseOut`.
 - Modifiers: `pump`, `pumpAll`, `alterAttribute`, `effectUntil` (a temporary static), `grantKeyword`, `regenerate` (a regeneration shield, CR 701.19a; added in M4 phase 3, batch 28).
 - Flow: `modal` (Charm), `sequence`, `repeatFor` (RepeatEach), `branch`, `delayedTrigger`, `immediateTrigger`,
   `counterSpell`, `copySpell`, `addTurn`, `chooseCard`, `chooseType`, `genericChoice`, `twoPiles`, `connive`,
   `investigate`, `cleanup` (end-of-effect bookkeeping, not a card-visible primitive), `addPhase` (an additional
-  combat, main or beginning phase, CR 500.8; added in M4 phase 3, batch 33).
+  combat, main or beginning phase, CR 500.8; added in M4 phase 3, batch 33), `changeTargets` (a spell's single target
+  changed, CR 115.7; batch 65).
 - Triggers: zone change (enters, dies, leaves, exiled), phase and step, attacks, attackers declared, blocks, spell
-  cast, damage dealt (and once), discarded, drawn, land played, becomes target, sacrificed, counter added (and once),
-  life gained, life lost, token created (once), becomes monstrous.
+  cast, damage dealt (and once), discarded, drawn, land played, becomes target, sacrificed, tapped for mana (added in
+  M4 phase 3, batch 51; one that adds mana is a mana ability, CR 605.1b), counter added (and once), life gained, life
+  lost, token created (once), becomes monstrous, chapter (a Saga's, CR 714.2c; added in M4 phase 3, batch 60).
 - Statics: continuous characteristic changes, combat damage by toughness, can't attack, can attack as though no
   defender, attack restriction, can't be cast, can't be blocked by, must attack, cost reduction, alternative cost,
   activate as though haste, Panharmonicon-style trigger doubling.

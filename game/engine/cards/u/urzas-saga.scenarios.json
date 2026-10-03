@@ -1,0 +1,125 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Urza's Saga",
+  "fixtures": {
+    "Trinket": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "I: it taps for {C}; II: a Construct; III: a {1} artifact from his library, then sacrificed",
+      "library": [
+        "Wastes",
+        "Wastes",
+        "Trinket"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Urza's Saga"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Urza's Saga"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Urza's Saga"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Urza's Saga"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Construct",
+                "power": 1,
+                "toughness": 1
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Trinket"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Urza's Saga"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Construct",
+            "Trinket"
+          ]
+        }
+      ]
+    }
+  ]
+}
