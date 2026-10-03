@@ -18,6 +18,8 @@ import {beginResolution} from "../game/engine/script/resolution.mjs";
 import {housePilot} from "../game/engine/pilots/house-pilot.mjs";
 import {projectFor} from "../game/engine/projection.mjs";
 import {loadCardIndex} from "../game/tools/engine-cards.mjs";
+import {runScenario} from "../game/engine/cards/scenario.mjs";
+import {offerDetails} from "../game/room/room.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -203,4 +205,33 @@ const resolve = (s) => { passPriority(s); return passPriority(s); };
   eq([s.zones.graveyard[0].length, s.zones.graveyard[1].length, s.awaiting], [1, 1, null], "then both are discarded together");
 }
 
-console.log(`engine-costs: ${checks} checks passed — spells cost less by generic mana only, the tax included and never below nothing; cycling from the hand at instant speed; each player sacrifices their own, the active player first.`);
+/* ---- "Sacrifice two other creatures" (X5b): a cost of a set, each set its own offer, the source never in it ---- */
+{
+  const FIX = {Bear: {types: ["Creature"], manaCost: "{1}{G}", colors: ["G"], power: 2, toughness: 2},
+    Wolf: {types: ["Creature"], manaCost: "{1}{G}", colors: ["G"], power: 2, toughness: 2},
+    Elf: {types: ["Creature"], manaCost: "{G}", colors: ["G"], power: 1, toughness: 1}};
+  const at = (seat, zone, ...names) => ({seat, zone, cards: names});
+  const {state: s} = runScenario({name: "Priest's sets", setup: [at(0, "battlefield", "Priest of Forgotten Gods", "Bear", "Wolf", "Elf")], steps: []}, cards.definition, FIX);
+  const offers = legalActions(s, 0).filter((a) => a.kind === "activate" && a.label === "Priest of Forgotten Gods");
+  eq(offers.map((a) => a.costNames.join(" + ")).sort(), ["Bear + Elf", "Bear + Wolf", "Wolf + Elf"],
+    "Priest of Forgotten Gods: one offer for each two of the three other creatures, the Priest itself never one of them");
+  eq(offerDetails(s, 0, offers).map((d) => d.replace(/ \d+\/\d+/g, "")).sort(), ["→ any number of targets · sacrificing Bear and Elf", "→ any number of targets · sacrificing Bear and Wolf", "→ any number of targets · sacrificing Wolf and Elf"],
+    "the room says which two each offer sacrifices, for the board's pop-up");
+  const two = offers.find((a) => a.costNames.join(" + ") === "Bear + Wolf");
+  applyAction(s, 0, two);
+  resolveAwaiting(s, [1]);
+  const graveyard = s.zones.graveyard[0].map((id) => s.objects[id].card).sort();
+  eq([graveyard, s.stack.length, s.stack[0]?.kind, (s.stack[0]?.targets ?? [])[0]?.map?.((t) => t.id)], [["Bear", "Wolf"], 1, "ability", [1]],
+    "activated at Maya: both sacrificed as the cost is paid, and -- targeting, so not a mana ability though it adds mana (CR 605.1a) -- it is on the stack");
+  for (let n = 0; n < 20 && s.stack.length; n += 1) passPriority(s);
+  eq([s.players[1].life, s.players[0].manaPool.B ?? 0], [38, 2], "it resolves: Maya loses 2, and the {B}{B} is added as it resolves");
+}
+{
+  /* The room's words for a set of discards, a blank before (game/room/room.mjs). */
+  const s = createState({matchId: "m", seed: "discards", players: [{name: "Rob"}, {name: "Maya"}]});
+  const ponder = addObject(s, {card: "Ponder", types: ["Sorcery"], owner: 0, controller: 0}, "hand", 0);
+  const opt = addObject(s, {card: "Opt", types: ["Instant"], owner: 0, controller: 0}, "hand", 0);
+  eq(offerDetails(s, 0, [{kind: "activate", objectId: ponder, label: "Test", costChoice: {discard: [ponder, opt]}}]), ["discarding Ponder and Opt"], "a cost that discards two says both");
+}
+
+console.log(`engine-costs: ${checks} checks passed — spells cost less by generic mana only, the tax included and never below nothing; cycling from the hand at instant speed; each player sacrifices their own, the active player first; a cost of two sacrifices offered once per two, the source never one of them.`);

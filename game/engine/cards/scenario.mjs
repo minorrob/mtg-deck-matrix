@@ -163,7 +163,8 @@ export function runScenario(scenario, cards, fixtures = {}) {
     for (const key of ["exile"]) if (step[key] !== undefined) found = found.filter((a) => (a.costNames ?? []).includes(step[key]));
     /* Which permanent a "Sacrifice a creature" cost takes, which card a discard does, or which creature an "untap a tapped
        creature you control" cost untaps: the offer that names it. */
-    for (const key of ["sacrifice", "discard", "untap"]) if (step[key] !== undefined) found = found.filter((a) => (a.costNames ?? []).includes(step[key]));
+    /* A set ("sacrifice two other creatures"): the offer that names every one of them. */
+    for (const key of ["sacrifice", "discard", "untap"]) if (step[key] !== undefined) found = found.filter((a) => [].concat(step[key]).every((n) => (a.costNames ?? []).includes(n)));
     /* Which creature a "tap another untapped creature you control" cost taps (station): the offer that names it. */
     if (step.tapping !== undefined) found = found.filter((a) => a.costChoice?.tap !== undefined && state.objects[a.costChoice.tap]?.card === step.tapping);
     if (!found.length && step.optional) return;

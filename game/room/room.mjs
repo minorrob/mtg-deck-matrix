@@ -157,7 +157,10 @@ export function offerDetails(state, seat, actions) {
     const aimed = (t) => (!t ? "" : Array.isArray(t) ? (t.length ? t.map(aimed).join(" and ") : "no target") : t.kind === "choose" ? countWords(t)
       : t.kind === "player" ? player(t.id) : object(t.id, plain));
     if ((a.targets ?? []).length) parts.push(`→ ${a.targets.map(aimed).join(", ")}`);
-    for (const [kind, id] of Object.entries(a.costChoice ?? {})) parts.push(`${kind === "discard" ? "discarding" : kind === "returnToHand" ? "returning" : kind === "exile" ? "exiling" : "sacrificing"} ${object(id, plain)}`);
+    /* What the cost takes: one card, or a set of them ("sacrificing Bear and Wolf", "discarding Ponder and Opt"), each
+       said with what it does to them. */
+    const DOING = {discard: "discarding", returnToHand: "returning", exile: "exiling", crew: "crewing with", tap: "tapping", untap: "untapping"};
+    for (const [kind, id] of Object.entries(a.costChoice ?? {})) parts.push(`${DOING[kind] ?? "sacrificing"} ${[].concat(id).map((x) => object(x, plain)).join(" and ")}`);
     /* An alternative cost (CR 118.9): what is paid instead of the mana cost. */
     if (a.alternative !== undefined) {
       const cost = state.objects[a.objectId]?.abilities?.[a.alternative]?.cost ?? [];

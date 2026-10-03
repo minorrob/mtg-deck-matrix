@@ -209,6 +209,10 @@ const MANA = (m) => m && typeof m === "object" && !Array.isArray(m) && Object.ke
   && Object.entries(m).every(([color, n]) => /^[WUBRGC]$/.test(color) && ((Number.isInteger(n) && n > 0) || isCounted(n)));
 function manaAbility(ability, id) {
   if (ability.kind !== "activated") return null;
+  /* CR 605.1a: an ability that targets is not a mana ability, whatever it adds -- it goes on the stack like any other, and
+     the mana is added as it resolves ("Any number of target players each lose 2 life ... You add {B}{B}", Priest of
+     Forgotten Gods). */
+  if ((ability.targets ?? []).length) return null;
   const [first, ...then] = ability.effects ?? [];
   if (first?.effect !== "addMana") return (ability.effects ?? []).some((e) => e?.effect === "addMana") ? "unbuilt" : null;
   const cost = ability.cost ?? [];

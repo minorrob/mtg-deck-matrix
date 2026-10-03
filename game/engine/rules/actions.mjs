@@ -570,7 +570,9 @@ export function legalActions(state, player) {
         /* A permanent you control to sacrifice, or to return to its owner's hand, or a card in your hand to discard: one
            offer each (CR 602.2b). No card to discard, and the ability can't be activated. */
         const crew = crewAtom(ability.cost), tapper = tapAtom(ability.cost), untapper = untapAtom(ability.cost);
-        const fodder = atom ? sacrificeChoices(state, player, id, atom.selector).map((s) => ({sacrifice: s}))
+        /* "Sacrifice two other creatures" (Priest of Forgotten Gods): each set of `count` of them, one offer each, as the
+           cards of "discard two cards" are; fewer than that there, and it can't be activated. */
+        const fodder = atom ? discardSets(sacrificeChoices(state, player, id, atom.selector), atom.count ?? 1).map((s) => ({sacrifice: s}))
           : back ? sacrificeChoices(state, player, id, back.selector).map((r) => ({returnToHand: r}))
           : toss ? discardSets(cardsIn(state, "hand", player).filter((c) => c !== id), toss.count ?? 1).map((d) => ({discard: d}))
           : crew ? crewChoices(state, player, id, crew.power).map((set) => ({crew: set}))
@@ -581,6 +583,7 @@ export function legalActions(state, player) {
             ...(costChoice ? {costChoice, costNames: costChoice.crew ? costChoice.crew.map((c) => state.objects[c].card)
               : costChoice.untap ? costChoice.untap.map((c) => state.objects[c].card)
               : Array.isArray(costChoice.discard) ? costChoice.discard.map((c) => state.objects[c].card)
+              : Array.isArray(costChoice.sacrifice) ? costChoice.sacrifice.map((c) => state.objects[c].card)
               : [state.objects[costChoice.sacrifice ?? costChoice.returnToHand ?? costChoice.discard ?? costChoice.tap].card]} : {})}, ability,
             /* "With mana value X": the X of this offer (script/filter.mjs). */
             {controller: player, source: id, ...(X !== null ? {x: X} : {})}));
@@ -1022,7 +1025,9 @@ function perform(state, player, action, during = null) {
       if (atom.atom === "sacrifice" && atom.self === true) sacrificeOne(state, action.objectId, events);
       /* Discarding it is the cost of cycling: paid after the ability is on the stack (CR 602.2b, 601.2h), a discard. */
       if (atom.atom === "discard" && atom.self === true && moveOne(state, action.objectId, "graveyard", events, {owner: object.owner}) !== null) events[events.length - 1].data.fields.discarded = true;
-      if (atom.atom === "sacrifice" && atom.selector && action.costChoice?.sacrifice !== undefined) sacrificeOne(state, action.costChoice.sacrifice, events);
+      /* Each permanent of the set chosen, sacrificed (CR 701.21a). */
+      if (atom.atom === "sacrifice" && atom.selector && action.costChoice?.sacrifice !== undefined)
+        for (const fodder of [].concat(action.costChoice.sacrifice)) sacrificeOne(state, fodder, events);
       /* Crew: the creatures chosen, tapped (CR 702.122a). */
       /* Station: the creature chosen, tapped. */
       if (atom.atom === "tapCreature") {
