@@ -56,7 +56,7 @@ import {runFollowUps} from "../script/effects/index.mjs";
 import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf} from "./layers.mjs";
 import {givePoison, changeLife, infects, addCounters} from "../script/effects/resources.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
-import {combatDamageOf, ruleChanged, attackTax, goadersOf} from "./statics.mjs";
+import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf} from "./statics.mjs";
 import {paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits} from "./mana.mjs";
 import {recordCommanderDamage} from "./commander.mjs";
 import {damageAssignmentProblem} from "../controller.mjs";
@@ -127,8 +127,12 @@ export const attackers = {
          its goader is not offered while such a player is. */
       const goaders = goadersOf(state, id);
       const elsewhere = goaders.length > 0 && defenders.some((d) => !goaders.includes(d) && attackTax(state, [{defenderId: d}]) === 0);
+      /* REQUIRED TO ATTACK A PLAYER THIS TURN (encore, CR 702.141a, 508.1d): only that player is offered while it can attack
+         them with no cost to pay; with a cost, nothing is required of it. */
+      const owed = mustAttackOf(state, id).filter((d) => defenders.includes(d) && attackTax(state, [{defenderId: d}]) === 0);
       for (const defender of defenders) {
         if (elsewhere && goaders.includes(defender)) continue;
+        if (owed.length && !owed.includes(defender)) continue;
         options.push({
           index: options.length,
           label: `${state.objects[id].card} → ${state.players[defender].name}`,
@@ -177,6 +181,14 @@ export const attackers = {
         .sort((a, b) => (a - awaiting.player + seats) % seats - (b - awaiting.player + seats) % seats);
       const defender = free.find((d) => !goaders.includes(d)) ?? free[0];
       if (defender !== undefined) picked.push({cardId: id, defenderId: defender});
+    }
+
+    /* And required to attack a player this turn (encore, CR 508.1d): one left out attacks that player anyway, if it can
+       with no cost to pay. */
+    for (const id of state.zones.battlefield) {
+      if (picked.some((o) => o.cardId === id) || !canAttack(state, id, awaiting.player)) continue;
+      const owed = mustAttackOf(state, id).filter((d) => defendersFor(state, awaiting.player).includes(d) && attackTax(state, [{defenderId: d}]) === 0);
+      if (owed.length) picked.push({cardId: id, defenderId: owed[0]});
     }
 
     const events = [];

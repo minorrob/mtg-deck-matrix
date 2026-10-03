@@ -273,7 +273,9 @@ export const costAtomBuilt = (atom) => (COST_ATOMS_BUILT.includes(atom?.atom) &&
   /* "Tap another untapped creature you control" (station, CR 702.184a): which one, chosen as it is activated (tapChoices). */
   || (atom?.atom === "tapCreature" && Boolean(atom.selector) && typeof atom.selector === "object")
   /* "Untap a tapped creature you control", "untap two" (Halo Fountain, batch 75): which, chosen as it is activated (untapChoices). */
-  || (atom?.atom === "untapCreature" && Number.isInteger(atom.count) && atom.count >= 1);
+  || (atom?.atom === "untapCreature" && Number.isInteger(atom.count) && atom.count >= 1)
+  /* "Exile this card from your graveyard" (encore, CR 702.141a): an ability of the card in its owner's graveyard. */
+  || (atom?.atom === "exileFromGraveyard" && atom.self === true);
 
 /* CREW (CR 702.122a): the sets of other untapped creatures you control whose power totals at least N -- each smallest
    such set, so no offer taps a creature it does not need; ids ascending, and no more than CREW_OFFERS_MAX of them. A
@@ -623,8 +625,9 @@ export function legalActions(state, player) {
     const object = state.objects[id];
     if (object.controller !== player) continue;
     for (const ability of abilitiesOf(state, id)) {
-      /* An ability of the card in its owner's hand (cycling, ninjutsu) is not the permanent's (CR 602.2, 702.29a). */
-      if (ability.kind !== "activated" || ability.zone === "hand") continue;
+      /* An ability of the card in its owner's hand (cycling, ninjutsu) or graveyard (encore) is not the permanent's (CR 602.2,
+         702.29a, 702.141a). */
+      if (ability.kind !== "activated" || ability.zone === "hand" || ability.zone === "graveyard") continue;
       if (ability.timing === "sorcery" && !sorceryTime) continue;
       if (!conditionHolds(state, ability.condition, {controller: player, source: id})) continue;
       if (!withinLimit(state, id, ability)) continue;
@@ -673,6 +676,20 @@ export function legalActions(state, player) {
       for (const costChoice of back ? sacrificeChoices(state, player, id, back.selector).map((r) => ({returnToHand: r})) : [null])
         actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment,
           ...(costChoice ? {costChoice, costNames: [state.objects[costChoice.returnToHand].card]} : {})}, ability, {controller: player, source: id}));
+    }
+  }
+
+  /* An ability a card has in its owner's graveyard -- encore (CR 702.141a) -- whenever that player has priority, at its own
+     timing. */
+  for (const id of cardsIn(state, "graveyard", player)) {
+    const object = state.objects[id];
+    for (const ability of object.abilities ?? []) {
+      if (ability.kind !== "activated" || ability.zone !== "graveyard") continue;
+      if (ability.timing === "sorcery" && !sorceryTime) continue;
+      if (!conditionHolds(state, ability.condition, {controller: player, source: id})) continue;
+      const payment = costPayment(state, player, id, ability.cost, 0, abilityLess(state, player, id, ability));
+      if (!payment) continue;
+      actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment}, ability, {controller: player, source: id}));
     }
   }
 
@@ -1114,6 +1131,12 @@ function perform(state, player, action, during = null) {
       /* CR 701.21a: to sacrifice is to move a permanent you control to its owner's graveyard -- through the
          replacements and with its last known information, like any death, so "when this dies" still sees it. */
       if (atom.atom === "sacrifice" && atom.self === true) sacrificeOne(state, action.objectId, events);
+      /* Exiling it from the graveyard is the cost of encore (CR 702.141a), paid after the ability is on the stack: "this card"
+         is then that card in exile (CR 400.7), what the ability is about. */
+      if (atom.atom === "exileFromGraveyard" && atom.self === true) {
+        const exiled = moveOne(state, action.objectId, "exile", events, {owner: object.owner});
+        if (exiled !== null) entry.about = {...(entry.about ?? {}), card: exiled};
+      }
       /* Discarding it is the cost of cycling: paid after the ability is on the stack (CR 602.2b, 601.2h), a discard. */
       if (atom.atom === "discard" && atom.self === true && moveOne(state, action.objectId, "graveyard", events, {owner: object.owner}) !== null) events[events.length - 1].data.fields.discarded = true;
       /* Each permanent of the set chosen, sacrificed (CR 701.21a). */

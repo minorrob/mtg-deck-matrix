@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,000 defined and playable today; 2,382 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,001 defined and playable today; 2,383 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 33 | 0 | 21 | 140 |
+| Keyword abilities (CR 702) | 194 | 34 | 0 | 20 | 140 |
 | Keyword actions (CR 701) | 70 | 17 | 3 | 6 | 44 |
 | Effects | 192 | 57 | 1 | 14 | 120 |
 | Triggers | 138 | 14 | 4 | 6 | 114 |
@@ -145,7 +145,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.47 | Splice | — | missing | 1 | 30 | 1 | 1 |
 | 702.127 | Aftermath | — | missing | 1 | 27 | 1 | 1 |
 | 702.80 | Wither | — | missing | 1 | 27 | 1 | 1 |
-| 702.141 | Encore | — | named | 1 | 26 | 1 | 1 |
+| 702.141 | Encore | Encore | built | 1 | 26 | 0 | 0 |
 | 702.110 | Exploit | — | missing | 1 | 25 | 1 | 0 |
 | 702.82 | Devour | — | missing | 1 | 24 | 1 | 1 |
 | 702.43 | Modular | — | missing | 1 | 24 | 1 | 1 |

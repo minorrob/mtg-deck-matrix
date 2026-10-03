@@ -470,6 +470,19 @@ export function compileScript(script) {
       keywords.push("Flashback");
       return;
     }
+    /* ENCORE (CR 702.141a): "[Cost], Exile this card from your graveyard: For each opponent, create a token that's a copy of
+       this card that attacks that opponent this turn if able. The tokens gain haste. Sacrifice them at the beginning of the
+       next end step. Activate only as a sorcery." -- an activated ability of the card in its owner's graveyard (rules/
+       actions.mjs offers it there), its cost the mana and the card exiled; "this card" is that card in exile (the stack
+       entry is about it), and "attacks that opponent if able" a requirement for this turn (rules/combat.mjs). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "encore") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      if (cost.length !== 1 || cost[0]?.atom !== "mana") problems.push(`${ability.text}: an encore cost is mana, once`);
+      abilities.push({id, kind: "activated", text: ability.text, zone: "graveyard", timing: "sorcery", cost: [...structuredClone(cost), {atom: "exileFromGraveyard", self: true}],
+        effects: [{effect: "repeatFor", each: "opponent", effects: [{effect: "copyPermanent", targets: "that card", gains: ["Haste"], atEndStep: "sacrifice", mustAttack: "that player"}]}]});
+      keywords.push("Encore");
+      return;
+    }
     /* ESCAPE (CR 702.138a): "Escape--{3}{B}{B}, Exile four other cards from your graveyard" -- the keyword with its cost, kept
        as a static ability the card carries into its graveyard (rules/actions.mjs offers the cast there). Never on a land,
        which is played and never cast. */

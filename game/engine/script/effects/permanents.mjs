@@ -182,6 +182,11 @@ export function afterwards(state, ids, params, context) {
     effects: [{effect: "moveZone", targets: made, to: params.atEndStep === "exile" ? "exile" : "graveyard", ...(params.atEndStep === "exile" ? {} : {sacrifice: true})}]}, context);
   /* "Tapped and attacking" (Leonin Warleader's Cats, a ninja put onto the battlefield). */
   if (params.attacking) enterAttacking(state, made, params.attacking, context, controller);
+  /* "That attacks that opponent this turn if able" (encore, CR 702.141a): a requirement on them for this turn (CR 508.1d),
+     the player the effect is about (rules/combat.mjs reads it). */
+  if (params.mustAttack === "that player" && Number.isInteger(context.about?.player))
+    pushEffect(state, {id: `must-attack:${context.source ?? "effect"}:${made.join(",")}`, rule: "must-attack", affects: {ids: made}, defender: context.about.player,
+      until: "end-of-turn", sourceController: controller});
   /* "Return it to the battlefield under its owner's control. It's an enchantment. (It's not a creature.)" (the Enduring
      cycle): its card types from now on, as long as it is this object (CR 205.1a, layer 4). */
   if (params.setTypes) pushEffect(state, {id: `types:${context.source ?? "effect"}`, layer: 4, affects: {ids: made}, apply: {setTypes: params.setTypes}, until: null, sourceController: controller});
