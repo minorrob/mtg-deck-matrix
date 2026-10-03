@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 881,
-  "everyRule": 2141
+  "defined": 894,
+  "everyRule": 2158
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -1279,7 +1279,7 @@
      "top": 1,
      "all": 13,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -3761,7 +3761,7 @@
      "top": 18,
      "all": 313,
      "blocks": 18,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -3917,7 +3917,7 @@
      "top": 11,
      "all": 67,
      "blocks": 11,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "effect",
@@ -5691,7 +5691,7 @@
      "top": 10,
      "all": 47,
      "blocks": 10,
-     "alone": 2
+     "alone": 4
     },
     {
      "kind": "trigger",
@@ -5751,7 +5751,7 @@
      "top": 5,
      "all": 42,
      "blocks": 5,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "trigger",
@@ -5787,7 +5787,7 @@
      "top": 4,
      "all": 21,
      "blocks": 4,
-     "alone": 0
+     "alone": 2
     },
     {
      "kind": "trigger",
@@ -5799,7 +5799,7 @@
      "top": 3,
      "all": 126,
      "blocks": 3,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "trigger",
@@ -8147,7 +8147,7 @@
      "top": 22,
      "all": 209,
      "blocks": 15,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "replacement",
@@ -8859,10 +8859,10 @@
   },
   "Options and conditions": {
    "tally": {
-    "built": 14,
+    "built": 16,
     "partial": 4,
     "named": 0,
-    "missing": 19
+    "missing": 17
    },
    "entries": [
     {
@@ -8947,7 +8947,7 @@
      "top": 123,
      "all": 1460,
      "blocks": 106,
-     "alone": 14
+     "alone": 15
     },
     {
      "kind": "option",
@@ -9007,7 +9007,7 @@
      "top": 99,
      "all": 625,
      "blocks": 79,
-     "alone": 12
+     "alone": 13
     },
     {
      "kind": "option",
@@ -9121,13 +9121,13 @@
      "kind": "option",
      "rule": null,
      "name": "Only once (or N times) each turn",
-     "engine": null,
-     "status": "missing",
+     "engine": "an activated or triggered ability's `limit`, times each turn (rules/actions.mjs, rules/trigger.mjs)",
+     "status": "built",
      "forge": "ActivationLimit",
      "top": 29,
      "all": 289,
-     "blocks": 18,
-     "alone": 6
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "option",
@@ -9169,13 +9169,13 @@
      "kind": "option",
      "rule": null,
      "name": "A token that enters tapped and attacking",
-     "engine": null,
-     "status": "missing",
+     "engine": "`attacking` on createToken and copyPermanent: that player, or the one its controller chooses (batch 67)",
+     "status": "built",
      "forge": "TokenAttacking",
      "top": 16,
      "all": 88,
-     "blocks": 16,
-     "alone": 11
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "option",
@@ -9689,7 +9689,7 @@
      "top": 3,
      "all": 15,
      "blocks": 3,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "count",
@@ -11785,7 +11785,7 @@
      "top": 68,
      "all": 408,
      "blocks": 33,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "keyword construct",
@@ -11821,7 +11821,7 @@
      "top": 9,
      "all": 38,
      "blocks": 9,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "keyword construct",

@@ -1,0 +1,134 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ghalta and Mavren",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "The Dinosaur: tapped, attacking, 2/2 -- the Bear's power, the greatest among the others; 16 to Maya",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ghalta and Mavren",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Ghalta and Mavren",
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Create a tapped and attacking X/X green Dinosaur creature token with trample, where X is the greatest power among other attacking creatures."
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Dinosaur",
+                "power": 2,
+                "toughness": 2
+              }
+            },
+            {
+              "seat": 0,
+              "tapped": "Dinosaur"
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_END"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 24
+        }
+      ]
+    },
+    {
+      "name": "The Vampires: one for the one other attacker, not attacking; 14 to Maya",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ghalta and Mavren",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Ghalta and Mavren",
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Create X 1/1 white Vampire creature tokens with lifelink, where X is the number of other attacking creatures."
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_END"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 26
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Ghalta and Mavren",
+            "Vampire"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Vampire",
+          "is": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Anim Pakal, Thousandth Moon",
+    "oracleId": "05551d91-50c6-46d1-86a4-cd3d177d0923",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{1}{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "Whenever you attack with one or more non-Gnome creatures, put a +1/+1 counter on Anim Pakal, then create X 1/1 colorless Gnome artifact creature tokens that are tapped and attacking, where X is the number of +1/+1 counters on Anim Pakal.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you attack with one or more non-Gnome creatures, put a +1/+1 counter on Anim Pakal, then create X 1/1 colorless Gnome artifact creature tokens that are tapped and attacking, where X is the number of +1/+1 counters on Anim Pakal.",
+      "trigger": {
+        "on": "attackers declared",
+        "filter": {
+          "nonSubtypes": [
+            "Gnome"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        },
+        {
+          "effect": "createToken",
+          "count": {
+            "countersOn": "self",
+            "counter": "+1/+1"
+          },
+          "token": {
+            "name": "Gnome",
+            "types": [
+              "Artifact",
+              "Creature"
+            ],
+            "subtypes": [
+              "Gnome"
+            ],
+            "colors": [],
+            "power": 1,
+            "toughness": 1
+          },
+          "tapped": true,
+          "attacking": true
+        }
+      ]
+    }
+  ]
+}
