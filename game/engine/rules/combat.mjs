@@ -48,7 +48,8 @@ import {cardsIn, recordUse} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
 import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf} from "./layers.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
-import {combatDamageOf, ruleChanged} from "./statics.mjs";
+import {combatDamageOf, ruleChanged, attackTax} from "./statics.mjs";
+import {canPayGeneric, payGeneric} from "./mana.mjs";
 import {
   canBlockAttacker, blockersAreLegal, whyBlockersAreIllegal, lethalNeededFrom,
   combatNeedsFirstStrike, dealsFirstStrike, dealsRegular, trampleOver, lifelinkFrom, markDeathtouch,
@@ -157,6 +158,14 @@ export const attackers = {
          `combat` stays null, which is what the turn table's condition reads. */
       state.awaiting = null;
       return events;
+    }
+
+    /* CR 508.1g-h: what attacking costs (Propaganda), paid now -- from the pool and the player's plain mana sources, as an
+       "unless" cost is -- or this is not an attack that can be declared. */
+    const tax = attackTax(state, picked);
+    if (tax > 0) {
+      if (!canPayGeneric(state, awaiting.player, tax)) throw new Error(`Those attackers cost {${tax}} to attack with, more than can be paid`);
+      events.push(...payGeneric(state, awaiting.player, tax));
     }
 
     state.combat = {
