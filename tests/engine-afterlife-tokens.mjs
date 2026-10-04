@@ -3,8 +3,8 @@
 /* AFTERLIFE, AND "WHENEVER YOU CREATE ONE OR MORE CREATURE TOKENS" (the plan's X5, D5 Shadrix Aristocrats: two of the
  * mechanics its list missed; X5c).
  *
- * Afterlife N (CR 702.135a) is a triggered ability: "When this creature dies, create N 1/1 white and black Spirit creature
- * tokens with flying" -- compiled from the keyword (cards/index.mjs), as Prowess and Annihilator are. "Whenever you create
+ * Afterlife N (CR 702.135a) is a triggered ability -- as the creature dies, N 1/1 white and black Spirit tokens with flying
+ * -- compiled from the keyword (cards/index.mjs), as Prowess and Annihilator are. "Whenever you create
  * one or more creature tokens" watches a created token's arrival under its controller's control: a token is put onto the
  * battlefield only by being created, under its creator's control unless the effect says otherwise (CR 111.1, 111.2), and
  * "one or more" is once for all made at once. The card scenarios (Ministrant of Obligation, Staff of the Storyteller) play

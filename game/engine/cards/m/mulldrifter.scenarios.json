@@ -134,7 +134,7 @@
                 "seat": 0,
                 "options": [
                   "Mulldrifter: When this creature enters, draw two cards.",
-                  "Mulldrifter: When this permanent enters, if its evoke cost was paid, its controller sacrifices it."
+                  "Mulldrifter: When this permanent enters, if it was evoked, its controller sacrifices it."
                 ]
               }
             }

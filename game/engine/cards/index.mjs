@@ -442,8 +442,8 @@ export function compileScript(script) {
       keywords.push("Toxic");
       return;
     }
-    /* AFTERLIFE N (CR 702.135a): "When this creature dies, create N 1/1 white and black Spirit creature tokens with
-       flying" -- the keyword IS that triggered ability (Ministrant of Obligation). */
+    /* AFTERLIFE N (CR 702.135a): the keyword IS a triggered ability -- as the creature dies, N 1/1 white and black Spirit
+       tokens with flying (Ministrant of Obligation). */
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "afterlife") {
       if (!(Number.isInteger(ability.amount) && ability.amount >= 1)) problems.push(`${ability.text}: afterlife needs its number, 1 or more`);
       abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.dies({who: "self"}),
@@ -498,11 +498,11 @@ export function compileScript(script) {
       keywords.push("Flashback");
       return;
     }
-    /* ENCORE (CR 702.141a): "[Cost], Exile this card from your graveyard: For each opponent, create a token that's a copy of
-       this card that attacks that opponent this turn if able. The tokens gain haste. Sacrifice them at the beginning of the
-       next end step. Activate only as a sorcery." -- an activated ability of the card in its owner's graveyard (rules/
-       actions.mjs offers it there), its cost the mana and the card exiled; "this card" is that card in exile (the stack
-       entry is about it), and "attacks that opponent if able" a requirement for this turn (rules/combat.mjs). */
+    /* ENCORE (CR 702.141a): an activated ability of the card in its owner's graveyard, at sorcery speed (rules/actions.mjs
+       offers it there), its cost the mana and the card exiled: for each opponent, a token copy of the card with haste that
+       attacks that opponent this turn if able, sacrificed at the beginning of the next end step. "This card" is that card in
+       exile (the stack entry is about it), and "attacks that opponent if able" a requirement for this turn
+       (rules/combat.mjs). */
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "encore") {
       const cost = Array.isArray(ability.cost) ? ability.cost : [];
       if (cost.length !== 1 || cost[0]?.atom !== "mana") problems.push(`${ability.text}: an encore cost is mana, once`);
@@ -521,19 +521,19 @@ export function compileScript(script) {
       keywords.push("Escape");
       return;
     }
-    /* EVOKE (CR 702.74a): two abilities. "You may cast this card by paying [cost] rather than paying its mana cost" -- an
-       alternative cost (CR 118.9), offered beside the mana cost wherever the card may be cast (rules/actions.mjs), its cost
-       mana or "exile a red card from your hand" (Fury) -- and "When this permanent enters, if its evoke cost was paid, its
-       controller sacrifices it": a cast for it marks the spell, and the permanent it becomes, evoked (rules/stack.mjs),
-       which the trigger's condition reads as it triggers and again as it resolves (CR 603.4; script/condition.mjs). A new
-       object after it moves (CR 400.7) was never evoked, so one flickered in response stays. */
+    /* EVOKE (CR 702.74a): two abilities. An alternative cost (CR 118.9) -- the card cast for its evoke cost instead of its
+       mana cost, offered beside the mana cost wherever the card may be cast (rules/actions.mjs), its cost mana or "exile a
+       red card from your hand" (Fury) -- and a trigger as the permanent enters, its controller sacrificing it if it was
+       evoked: a cast for it marks the spell, and the permanent it becomes, evoked (rules/stack.mjs), which the trigger's
+       condition reads as it triggers and again as it resolves (CR 603.4; script/condition.mjs). A new object after it
+       moves (CR 400.7) was never evoked, so one flickered in response stays. */
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "evoke") {
       const cost = Array.isArray(ability.cost) ? ability.cost : [];
       if (!cost.length || !cost.every((atom) => EVOKE_ATOMS.includes(atom?.atom) && (atom.atom !== "exileFromHand" || (atom.selector && typeof atom.selector === "object"))))
         problems.push(`${ability.text}: an evoke cost of ${EVOKE_ATOMS.join(", ")} (a card exiled from the hand by a selector), and at least one`);
       if ((identity.types ?? []).some((t) => ["Instant", "Sorcery", "Land"].includes(t))) problems.push(`${ability.text}: evoke on a card that never enters from the stack`);
       abilities.push({id, kind: "static", rule: "alternative-cost", evoke: true, text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
-      abilities.push({id: `${id}-evoked`, kind: "triggered", text: "When this permanent enters, if its evoke cost was paid, its controller sacrifices it.",
+      abilities.push({id: `${id}-evoked`, kind: "triggered", text: "When this permanent enters, if it was evoked, its controller sacrifices it.",
         trigger: TRIGGERS.enters({who: "self"}), condition: {evoked: true}, effects: [{effect: "moveZone", targets: "self", sacrifice: true}]});
       keywords.push("Evoke");
       return;

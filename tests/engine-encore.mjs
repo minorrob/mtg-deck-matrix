@@ -2,9 +2,9 @@
 
 /* ENCORE (the plan's X5, D5 Shadrix Aristocrats: Angel of Indemnity; X5f).
  *
- * "Encore [cost]" means "[Cost], Exile this card from your graveyard: For each opponent, create a token that's a copy of
- * this card that attacks that opponent this turn if able. The tokens gain haste. Sacrifice them at the beginning of the
- * next end step. Activate only as a sorcery." (CR 702.141a). Three things the engine had no word for until now:
+ * Encore (CR 702.141a) is an activated ability of a card in its owner's graveyard, at sorcery speed: pay the cost and exile
+ * the card, and for each opponent a token copy of it with haste attacks that opponent this turn if able, sacrificed at the
+ * beginning of the next end step. Three things the engine had no word for until now:
  *   - an activated ability of a card in its owner's graveyard, offered there (rules/actions.mjs), its cost exiling the card;
  *   - a token copy of that card, now in exile ("this card": the stack entry is about it);
  *   - a requirement to attack one player this turn "if able" (CR 508.1d): offered only that player while it can attack

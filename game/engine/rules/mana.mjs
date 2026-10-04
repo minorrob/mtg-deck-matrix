@@ -326,9 +326,8 @@ export function tapPlans(units, cost, limit = 2) {
 
 /* ---- convoke (CR 702.51a): creatures help cast a spell ----
  *
- * "For each colored mana in this spell's total cost, you may tap an untapped creature of that color you control rather
- * than pay that mana. For each generic mana in this spell's total cost, you may tap an untapped creature you control
- * rather than pay that mana." Not an additional or alternative cost: it pays part of the total cost, once that is known
+ * Each untapped creature its caster taps pays one mana of the spell's total cost instead: a colored one of a color the
+ * creature is, or a generic one. Not an additional or alternative cost: it pays part of the total cost, once that is known
  * (702.51b). Each creature pays one symbol: generic, or a colored or hybrid one of a color it is; a colorless creature
  * pays only generic, never {C}. The rest is paid with mana from the pool. Phyrexian, snow and {2/W} symbols are left to the
  * pool, and a cost with {X} is not convoked here (rules/actions.mjs does not offer it).

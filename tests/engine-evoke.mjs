@@ -2,10 +2,9 @@
 
 /* EVOKE (Rob's Priority Batch 10.3, its twentieth slice: Mulldrifter).
  *
- * "Evoke [cost]" is two abilities (CR 702.74a): "you may cast this card by paying [cost] rather than paying its mana cost",
- * an alternative cost (CR 118.9) offered wherever the card may be cast, and "when this permanent enters, if its evoke cost
- * was paid, its controller sacrifices it", a trigger whose "if" is checked as it triggers and again as it resolves (CR
- * 603.4). cards/index.mjs compiles both from the keyword; the cast marks the spell, and the permanent it becomes, evoked
+ * Evoke is two abilities (CR 702.74a): an alternative cost (CR 118.9) -- the card cast for its evoke cost instead of its mana
+ * cost -- offered wherever the card may be cast, and a trigger as the permanent enters that has its controller sacrifice it
+ * if it was evoked, its "if" checked as it triggers and again as it resolves (CR 603.4). cards/index.mjs compiles both from the keyword; the cast marks the spell, and the permanent it becomes, evoked
  * (rules/actions.mjs, rules/stack.mjs); the trigger's condition reads the mark (script/condition.mjs, `evoked`).
  *
  * The card scenarios play the cards (Mulldrifter, Shriekmaw, Foundation Breaker): evoked and not, the two triggers in
@@ -55,7 +54,7 @@ const evokes = (s, a) => a.alternative !== undefined && s.objects[a.objectId].ab
   const sac = mull.abilities.find((a) => a.condition?.evoked !== undefined);
   eq([alt.evoke, alt.cost, alt.affects], [true, [{atom: "mana", cost: "{2}{U}"}], {what: "card", self: true}], "Mulldrifter's evoke: an alternative cost of {2}{U}, marked an evoke cost");
   eq([sac.kind, sac.trigger.on, sac.trigger.who, sac.condition, sac.effects], ["triggered", "GameEventCardChangeZone", "self", {evoked: true}, [{effect: "moveZone", targets: "self", sacrifice: true}]],
-    "and its trigger: when it enters, if its evoke cost was paid, its controller sacrifices it");
+    "and its trigger: when it enters, if it was evoked, its controller sacrifices it");
   ok(new Set(mull.abilities.map((a) => a.id)).size === mull.abilities.length, "the two abilities from one keyword have ids of their own");
   eq([mull.keywords.includes("Evoke"), mull.keywords.includes("Flying")], [true, true], "the card has the keyword Evoke beside Flying");
   eq(cinderProblems, [], "an evoke cost that exiles a red card from the hand compiles");

@@ -1282,7 +1282,7 @@ function perform(state, player, action, during = null) {
     if (back) entry.flashback = true;
     /* Cast with escape, it escaped (CR 702.138b): the permanent it becomes is marked so (rules/stack.mjs). */
     if (fled) entry.escaped = true;
-    /* Cast for its evoke cost (CR 702.74a): the permanent it becomes is marked so, for "if its evoke cost was paid". */
+    /* Cast for its evoke cost (CR 702.74a): the permanent it becomes is marked so, for the evoke trigger's condition. */
     if (way?.evoke) entry.evoked = true;
     /* "And that spell can't be countered" (Cavern of Souls): paid with mana that said so. */
     if (paid.uncounterable) entry.uncounterable = true;

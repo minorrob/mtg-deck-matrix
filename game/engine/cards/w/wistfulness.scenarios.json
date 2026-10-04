@@ -118,7 +118,7 @@
                 "seat": 0,
                 "options": [
                   "Wistfulness: When this creature enters, if {G}{G} was spent to cast it, exile target artifact or enchantment an opponent controls.",
-                  "Wistfulness: When this permanent enters, if its evoke cost was paid, its controller sacrifices it."
+                  "Wistfulness: When this permanent enters, if it was evoked, its controller sacrifices it."
                 ]
               }
             }
