@@ -1,0 +1,105 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Woe Strider",
+    "oracleId": "3adbd963-e85d-4569-963a-4472594f06f9",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Horror"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, create a 0/1 white Goat creature token.\nSacrifice another creature: Scry 1.\nEscape—{3}{B}{B}, Exile four other cards from your graveyard. (You may cast this card from your graveyard for its escape cost.)\nThis creature escapes with two +1/+1 counters on it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, create a 0/1 white Goat creature token.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Goat",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Goat"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 0,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Sacrifice another creature: Scry 1.",
+      "cost": [
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "another": true
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "scry",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Escape—{3}{B}{B}, Exile four other cards from your graveyard.",
+      "keyword": "escape",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{B}{B}"
+        },
+        {
+          "atom": "exileFromGraveyard",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "kind": "replacement",
+      "text": "This creature escapes with two +1/+1 counters on it.",
+      "watches": {
+        "event": "enters",
+        "who": "self",
+        "escaped": true
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "+1/+1",
+          "count": 2
+        }
+      }
+    }
+  ]
+}

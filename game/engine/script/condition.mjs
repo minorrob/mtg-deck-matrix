@@ -19,6 +19,8 @@
  *   {handEmpty: true|false}            its controller's hand is empty, or is not
  *   {notTheirTurn: true}               "if it isn't that player's turn": the player the trigger is about is not the
  *                                      active player (Tataru Taru)
+ *   {escaped: true|false}              its own permanent escaped, or did not (CR 702.138b): "sacrifice it unless it
+ *                                      escaped" (Uro)
  *
  * The keys are closed, like every other grammar here: an unknown one is refused at the schema rather than read as true.
  */
@@ -27,7 +29,7 @@ import {cardsIn} from "../state/index.mjs";
 import {matchesSelector, compileSelector, matchesLastKnown} from "./filter.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
 
-const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare"];
+const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped"];
 /* A counted comparison's keys: what is counted, and against what. */
 const COMPARE_KEYS = ["count", "atLeast", "atMost", "moreThan", "fewerThan"];
 /* A NAMED OBJECT (Forge's ConditionDefined): "if it was a creature card" (Scavenging Ooze: what was exiled), "if it's
@@ -78,6 +80,8 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   if (condition.cast !== undefined && !castHolds(condition.cast, cast)) return false;
   /* "Khans -- ...": what its permanent chose as it entered (the Sieges). */
   if (condition.chosen !== undefined && (source === null || state.objects[source]?.chosen !== condition.chosen)) return false;
+  /* "Sacrifice it unless it escaped" (Uro; CR 702.138b): whether its own permanent was cast with escape (rules/stack.mjs). */
+  if (condition.escaped !== undefined && ((source !== null && state.objects[source]?.escaped === true) !== condition.escaped)) return false;
   /* "12+ | Flying" (a station symbol, CR 721.2a): as long as its own object has that many counters of the kind. */
   if (condition.selfCounters !== undefined && (source === null ? 0 : state.objects[source]?.counters?.[condition.selfCounters.counter] ?? 0) < condition.selfCounters.atLeast) return false;
   if (condition.about !== undefined && !namedIs(state, namedObject(condition.about, {remembered, targets, about}), condition.is ?? {}, {controller, source},
@@ -137,6 +141,7 @@ export function conditionProblems(condition) {
   if ("notYourTurn" in condition && condition.notYourTurn !== true) problems.push("notYourTurn is true");
   if ("graveyardTypes" in condition && !(Number.isInteger(condition.graveyardTypes) && condition.graveyardTypes >= 1)) problems.push("graveyardTypes is a whole number of card types, 1 or more");
   if ("chosen" in condition && typeof condition.chosen !== "string") problems.push("chosen names what was chosen");
+  if ("escaped" in condition && typeof condition.escaped !== "boolean") problems.push("escaped is true or false");
   if ("compare" in condition) {
     const compare = condition.compare;
     if (!compare || typeof compare !== "object" || Array.isArray(compare)) problems.push("compare is {count, atLeast | atMost | moreThan | fewerThan}");

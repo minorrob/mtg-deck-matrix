@@ -34,13 +34,13 @@
  */
 import {createState, addObject} from "../engine/state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../engine/rules/turn.mjs";
-import {legalActions, applyAction, nothingToDo} from "../engine/rules/actions.mjs";
+import {legalActions, applyAction, nothingToDo, escapeWays} from "../engine/rules/actions.mjs";
 import {passPriority} from "../engine/rules/priority.mjs";
 import {gameOver, concede} from "../engine/rules/sba.mjs";
 import {beginMulligans} from "../engine/rules/mulligan.mjs";
 import {projectFor} from "../engine/projection.mjs";
 import {controllerOf, characteristicsOf} from "../engine/rules/layers.mjs";
-import {countWords} from "../engine/script/bind.mjs";
+import {countWords, inWords} from "../engine/script/bind.mjs";
 import {createRng} from "../engine/rng.mjs";
 import {createJournal, hashState} from "../engine/journal.mjs";
 import {createController} from "../engine/controller.mjs";
@@ -171,6 +171,11 @@ export function offerDetails(state, seat, actions) {
     if (a.free) parts.push("without paying its mana cost");
     /* Flashback (CR 702.34a): from the graveyard for its flashback cost, exiled after. */
     if (a.flashback) parts.push("flashback");
+    /* Escape (CR 702.138a): from the graveyard for its escape cost -- its mana, and the other cards it will take. */
+    if (a.escape !== undefined) {
+      const way = escapeWays(state, seat, a.objectId).find((w) => w.kind === a.escape);
+      parts.push(way ? `escape for ${way.mana}, exiling ${inWords(way.exile)} other card${way.exile === 1 ? "" : "s"}` : "escape");
+    }
     if (a.kind === "activate-mana" && a.produce !== undefined) parts.push(manaText(a.mana));
     return parts.join(" · ");
   };

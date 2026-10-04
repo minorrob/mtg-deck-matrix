@@ -160,6 +160,9 @@ export function runScenario(scenario, cards, fixtures = {}) {
     if (step.modes !== undefined) found = found.filter((a) => JSON.stringify(a.modes) === JSON.stringify(step.modes));
     /* Which way it is paid for: an alternative cost by its ability's place (CR 118.9), or `false` for the mana cost. */
     if (step.alternative !== undefined) found = found.filter((a) => (a.alternative ?? false) === step.alternative);
+    /* With escape (CR 702.138a): its own ("own"), or one a permanent gives it ("given"); `false`, not with escape. Its other
+       cards are a question once it is taken, answered by the next step's `choose`. */
+    if (step.escape !== undefined) found = found.filter((a) => (a.escape ?? false) === step.escape);
     for (const key of ["exile"]) if (step[key] !== undefined) found = found.filter((a) => (a.costNames ?? []).includes(step[key]));
     /* Which permanent a "Sacrifice a creature" cost takes, which card a discard does, or which creature an "untap a tapped
        creature you control" cost untaps: the offer that names it. */

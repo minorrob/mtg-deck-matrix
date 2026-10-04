@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Underworld Breach",
+    "oracleId": "27e0948b-9916-473b-8d8c-a51bdfbc7457",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each nonland card in your graveyard has escape. The escape cost is equal to the card's mana cost plus exile three other cards from your graveyard. (You may cast cards from your graveyard for their escape cost.)\nAt the beginning of the end step, sacrifice this enchantment.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Each nonland card in your graveyard has escape. The escape cost is equal to the card's mana cost plus exile three other cards from your graveyard.",
+      "rule": "escape",
+      "affects": {
+        "what": "card",
+        "zone": "graveyard",
+        "controller": "you",
+        "nonTypes": [
+          "Land"
+        ]
+      },
+      "cost": [
+        {
+          "atom": "exileFromGraveyard",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of the end step, sacrifice this enchantment.",
+      "trigger": {
+        "on": "end step",
+        "yours": false
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "sacrifice": true
+        }
+      ]
+    }
+  ]
+}

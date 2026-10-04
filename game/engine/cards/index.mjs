@@ -61,6 +61,19 @@ const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "trig
 
 /* What a flashback cost may be made of (CR 702.34a): mana, and life ("Flashback--{1}{U}, Pay 3 life"). */
 const FLASHBACK_ATOMS = ["mana", "payLife"];
+/* What an escape cost is made of (CR 702.138a): mana, and "exile N other cards from your graveyard" (`exileFromGraveyard`,
+   its `count`) -- every escape cost printed has both. */
+export function escapeCostProblems(cost, {given = false} = {}) {
+  const atoms = Array.isArray(cost) ? cost : [];
+  const exile = atoms.filter((atom) => atom?.atom === "exileFromGraveyard");
+  const problems = [];
+  if (atoms.some((atom) => !["mana", "exileFromGraveyard"].includes(atom?.atom))) problems.push("an escape cost is mana and \"exile N other cards from your graveyard\" only");
+  /* Given ("each nonland card in your graveyard has escape"), the mana is each card's own mana cost: only the cards to exile are said. */
+  if (given ? atoms.some((atom) => atom?.atom === "mana") : atoms.filter((atom) => atom?.atom === "mana").length !== 1)
+    problems.push(given ? "an escape given costs each card's own mana cost: its cost says only the cards to exile" : "an escape cost has its mana, once");
+  if (exile.length !== 1 || !(Number.isInteger(exile[0].count) && exile[0].count >= 1)) problems.push("an escape cost exiles a number of other cards from the graveyard, 1 or more, once");
+  return problems;
+}
 
 /* THE PARTNER ABILITIES (CR 702.124a), read from the card's own words: a deck rule a table holds a deck to
    (room/table.mjs), which the game itself never reads. Reminder text first goes, and "Partner with" is read whole --
@@ -457,6 +470,16 @@ export function compileScript(script) {
       keywords.push("Flashback");
       return;
     }
+    /* ESCAPE (CR 702.138a): "Escape--{3}{B}{B}, Exile four other cards from your graveyard" -- the keyword with its cost, kept
+       as a static ability the card carries into its graveyard (rules/actions.mjs offers the cast there). Never on a land,
+       which is played and never cast. */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "escape") {
+      problems.push(...escapeCostProblems(ability.cost).map((problem) => `${ability.text}: ${problem}`));
+      if ((identity.types ?? []).includes("Land")) problems.push(`${ability.text}: escape on a land, which is never cast`);
+      abilities.push({id, kind: "static", rule: "escape", text: ability.text, cost: structuredClone(Array.isArray(ability.cost) ? ability.cost : []), affects: {what: "card", self: true}});
+      keywords.push("Escape");
+      return;
+    }
     for (const effect of effectsIn(ability.effects)) {
       if (!isBuilt(effect.effect)) problems.push(`${effect.effect}: declared, not built`);
       /* counterSpell's `targets` are stack ids, which no script can know; a script names the spell it counters by
@@ -548,6 +571,11 @@ export function compileScript(script) {
     /* A layer static's `affects` is read by the layers' own matcher: a key it does not read is refused, not ignored. */
     if (ability.kind === "static" && ability.layer !== undefined)
       for (const key of Object.keys(ability.affects ?? {})) if (!LAYER_AFFECTS_KEYS.includes(key)) problems.push(`${ability.text}: a layer static's affects has no key ${JSON.stringify(key)}`);
+    /* Escape given ("each nonland card in your graveyard has escape. The escape cost is equal to the card's mana cost plus
+       exile three other cards from your graveyard", Underworld Breach): to the cards `affects` describes (the schema asks
+       for it), its cost the cards to exile. */
+    if (ability.kind === "static" && ability.rule === "escape")
+      problems.push(...escapeCostProblems(ability.cost, {given: true}).map((problem) => `${ability.text}: ${problem}`));
     /* What follows a prevention is done at once, inside the damage event (CR 615.5): nothing in it may stop to ask. */
     if (ability.kind === "replacement") for (const effect of ability.change?.then ?? [])
       if (!EFFECTS[effect?.effect]) problems.push(`${ability.text}: ${effect?.effect} follows a prevention, and it asks a question or is not built`);

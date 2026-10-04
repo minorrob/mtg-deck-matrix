@@ -88,6 +88,11 @@ export const STATIC_RULES = Object.freeze({
       (Past in Flames: effectUntil, its cards fixed as it resolves, their mana costs the cost). rules/actions.mjs offers
       the cast from its owner's graveyard; rules/stack.mjs and effects/zones.mjs exile it as it leaves the stack. */
   "flashback": "rules/actions.mjs",
+  /** Escape (CR 702.138a): the card's own, from its keyword and cost (cards/index.mjs), or given by a permanent ("each
+      nonland card in your graveyard has escape", Underworld Breach: `affects` which cards, `cost` the cards to exile, the
+      mana each card's own mana cost). rules/actions.mjs offers the cast from its owner's graveyard and asks which cards to
+      exile; rules/stack.mjs marks what escaped (702.138b). */
+  "escape": "rules/actions.mjs",
   /** Storm (CR 702.40a): the keyword kept as this static, read as the spell is cast (cards/index.mjs; batch 77 names it
       here, where every rule a definition carries is named). */
   "storm": "rules/actions.mjs",

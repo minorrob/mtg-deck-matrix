@@ -84,7 +84,9 @@ function applies(state, ability, holder, proposal) {
   if (proposal.event === "enters") {
     /* `who: "self"` is the permanent's own arrival ability. `holder` is null for it, because at
        this moment the permanent is NOT on the battlefield to be a holder — see `applicable`. */
-    if (watches.who === "self") return holder === null && !unlessHolds(state, watches.unless, proposal.player);
+    /* "This creature escapes with two +1/+1 counters on it" (CR 702.138c): "if it escaped, it enters with them" --
+       `escaped`, only when the spell it was cast with escape (rules/stack.mjs). */
+    if (watches.who === "self") return holder === null && !unlessHolds(state, watches.unless, proposal.player) && (watches.escaped !== true || proposal.escaped === true);
     if (holder === null) return false;
     if (watches.types && !watches.types.every((type) => (proposal.types ?? []).includes(type))) return false;
     if (watches.controller === "controller" && proposal.player !== holder.controller) return false;
@@ -397,9 +399,9 @@ export function applyReplacements(state, proposal, {orders = [], askable = false
  *
  * @returns {{tapped: boolean, counters: object}}
  */
-export function enteringModifications(state, {objectId, player, types, abilities, x = 0}) {
+export function enteringModifications(state, {objectId, player, types, abilities, x = 0, escaped = false}) {
   const {proposal} = applyReplacements(state, {
-    event: "enters", objectId, player, types: types ?? [], x,
+    event: "enters", objectId, player, types: types ?? [], x, escaped,
     entering: {abilities: abilities ?? []},
     tapped: false, counters: {},
   });

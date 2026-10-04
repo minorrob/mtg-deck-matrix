@@ -1,0 +1,128 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Uro, Titan of Nature's Wrath",
+    "oracleId": "ee302659-59ed-4eef-babe-451b9ccf7f14",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elder",
+      "Giant"
+    ],
+    "manaCost": "{1}{G}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "When Uro enters, sacrifice it unless it escaped.\nWhenever Uro enters or attacks, you gain 3 life and draw a card, then you may put a land card from your hand onto the battlefield.\nEscape—{G}{G}{U}{U}, Exile five other cards from your graveyard. (You may cast this card from your graveyard for its escape cost.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Uro enters, sacrifice it unless it escaped.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "escaped": false
+          },
+          "then": [
+            {
+              "effect": "moveZone",
+              "targets": "self",
+              "sacrifice": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Uro enters or attacks, you gain 3 life and draw a card, then you may put a land card from your hand onto the battlefield.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 3
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "hand",
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          },
+          "to": "battlefield",
+          "upTo": true
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Uro enters or attacks, you gain 3 life and draw a card, then you may put a land card from your hand onto the battlefield.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 3
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "hand",
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          },
+          "to": "battlefield",
+          "upTo": true
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Escape—{G}{G}{U}{U}, Exile five other cards from your graveyard.",
+      "keyword": "escape",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{G}{G}{U}{U}"
+        },
+        {
+          "atom": "exileFromGraveyard",
+          "count": 5
+        }
+      ]
+    }
+  ]
+}

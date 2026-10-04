@@ -58,7 +58,7 @@ import {addMana, spend, parseManaCost, automaticPayment, manaValue, poolSize} fr
 import {commanderTax, recordCommanderCast, colorIdentity} from "./commander.mjs";
 import {COLORS} from "./mana.mjs";
 import {summoningSick, hasFlash} from "../keywords/timing.mjs";
-import {targetChoices, targetName, isHostile, modalScript, isChoosing, countOf, targetCandidates, countedChoice} from "../script/bind.mjs";
+import {targetChoices, targetName, isHostile, modalScript, isChoosing, countOf, targetCandidates, countedChoice, inWords} from "../script/bind.mjs";
 import {moveOne, sacrificeOne} from "../script/effects/zones.mjs";
 import {compileSelector, matchesSelector, selectMatching} from "../script/filter.mjs";
 import {runEffects} from "../script/effects/index.mjs";
@@ -123,6 +123,66 @@ export function flashbackCost(state, player, id) {
   const cost = own?.cost ?? (given ? [{atom: "mana", cost: object.manaCost ?? ""}] : null);
   if (!cost) return null;
   return {mana: cost.find((a) => a.atom === "mana")?.cost ?? "", life: cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0)};
+}
+
+/**
+ * ESCAPE (CR 702.138a): the ways this card may be cast from its owner's graveyard rather than for its mana cost, each
+ * `{kind, mana, exile}`. "own" is the card's own escape. "given" is the escape a permanent gives it ("each nonland card in
+ * your graveyard has escape", Underworld Breach): the card's mana cost and the other cards to exile. Two permanents that
+ * give it make one way, the fewer cards. A way counts only while that many other cards are in the graveyard to exile.
+ * A card without a mana cost is given none: a cost based on that mana cost cannot be paid (CR 118.6). A land card has no
+ * mana cost, and cards/index.mjs refuses a land's own escape.
+ *
+ * @returns {Array<{kind: "own"|"given", mana: string, exile: number}>}
+ */
+export function escapeWays(state, player, id) {
+  const object = state.objects[id];
+  if (!object || object.zone !== "graveyard" || object.owner !== player) return [];
+  const exileOf = (cost) => (cost ?? []).filter((a) => a.atom === "exileFromGraveyard").reduce((n, a) => n + (a.count ?? 1), 0);
+  const ways = [];
+  const own = (object.abilities ?? []).find((a) => a.kind === "static" && a.rule === "escape" && !a.affects?.zone);
+  if (own) ways.push({kind: "own", mana: (own.cost ?? []).find((a) => a.atom === "mana")?.cost ?? "", exile: exileOf(own.cost)});
+  const given = state.zones.battlefield.flatMap((h) => (state.objects[h].abilities ?? []).filter((a) => a.kind === "static" && a.rule === "escape" && a.affects?.zone === "graveyard"
+    && matchesSelector({...a.affects, what: "card", zone: "graveyard"}, state, id, {controller: state.objects[h].controller, source: h})));
+  if (given.length && object.manaCost) ways.push({kind: "given", mana: object.manaCost, exile: Math.min(...given.map((a) => exileOf(a.cost)))});
+  const others = cardsIn(state, "graveyard", player).filter((c) => c !== id).length;
+  return ways.filter((way) => way.exile <= others);
+}
+
+/** The question an escape asks once its cast is taken (CR 702.138a, 601.2h): which other cards of the graveyard to exile. */
+export function escapeCostChoice(state, awaiting) {
+  const {action, player} = awaiting;
+  const n = escapeWays(state, player, action.objectId).find((way) => way.kind === action.escape)?.exile ?? 0;
+  const options = cardsIn(state, "graveyard", player).filter((id) => id !== action.objectId).map((cardId, index) => ({index, label: state.objects[cardId].card, cardId}));
+  /* Two that read alike, numbered: "Wastes (1)", "Wastes (2)". */
+  for (const option of options) {
+    const alike = options.filter((o) => o.label === option.label);
+    if (alike.length > 1) alike.forEach((o, k) => { o.label = `${o.label} (${k + 1})`; });
+  }
+  return {id: `choose-cost:${action.objectId}`, title: `${state.objects[action.objectId]?.card ?? "That card"}'s escape: exile ${inWords(n)} other card${n === 1 ? "" : "s"} from your graveyard`,
+    mode: "many", min: n, max: n, options};
+}
+
+/** Escape's other cards picked: the cast taken with them, as it would have been had they been chosen with it (CR 601.2h). */
+export function resolveEscapeCost(state, awaiting, indices) {
+  const choice = escapeCostChoice(state, awaiting);
+  const picked = [...new Set(indices ?? [])].sort((a, b) => a - b);
+  if (picked.length !== (indices ?? []).length || picked.length !== choice.min || picked.some((i) => !choice.options[i]))
+    throw new Error("Invalid selection");
+  const action = {...structuredClone(awaiting.action), escapeExile: picked.map((i) => choice.options[i].cardId)};
+  state.awaiting = null;
+  state.priorityPlayer = awaiting.player;
+  return applyAction(state, awaiting.player, action);
+}
+
+/* The cards an escape exiles, as its caster picked them: that many, none twice, each another card in their graveyard.
+   Refused before anything moves. */
+function escapeExiled(state, player, action, way) {
+  const list = action.escapeExile;
+  const others = cardsIn(state, "graveyard", player).filter((id) => id !== action.objectId);
+  if (!Array.isArray(list) || list.length !== way.exile || new Set(list).size !== list.length || !list.every((id) => others.includes(id)))
+    throw new Error(`Those are not ${inWords(way.exile)} other cards in that graveyard for its escape`);
+  return [...list];
 }
 
 /**
@@ -511,8 +571,11 @@ export function legalActions(state, player) {
       .map((id) => ({id, from: "command"})),
     /* Flashback (CR 702.34a): from the graveyard, for the flashback cost. */
     ...cardsIn(state, "graveyard", player).filter((id) => flashbackCost(state, player, id)).map((id) => ({id, from: "graveyard", flashback: true})),
+    /* Escape (CR 702.138a): from the graveyard, for an escape cost -- each way one offer, its other cards picked once it is
+       taken (`escapeCostChoice`), never one offer per set of them. */
+    ...cardsIn(state, "graveyard", player).flatMap((id) => escapeWays(state, player, id).map((way) => ({id, from: "graveyard", escape: way.kind}))),
   ];
-  for (const {id, from, flashback} of castable) {
+  for (const {id, from, flashback, escape} of castable) {
     const object = state.objects[id];
     if (!object.manaCost) continue;
     /* "Can't cast" (castForbidden): from a graveyard, during its controller's turn, more than one each turn. */
@@ -522,17 +585,19 @@ export function legalActions(state, player) {
     const tax = from === "command" ? commanderTax(state, player, id) : 0;
     /* "Without paying its mana cost": offered alone when it may be used every time; beside the paid cast when it is "once
        each turn", so the player decides which spell spends it. */
-    const free = flashback ? null : freeCast(state, player, id);
-    /* Its own alternative costs (CR 118.9), each an offer of its own -- never with flashback or a free cast (118.9a). */
-    const alternatives = flashback ? [] : alternativeCosts(state, player, id);
+    const free = flashback || escape ? null : freeCast(state, player, id);
+    /* Its own alternative costs (CR 118.9), each an offer of its own -- never with flashback, escape or a free cast (118.9a). */
+    const alternatives = flashback || escape ? [] : alternativeCosts(state, player, id);
     /* The flashback cost instead of the mana cost, and its life: a player can pay life only if their total is at least
        that much (CR 119.4). */
     const back = flashback ? flashbackCost(state, player, id) : null;
     if (back && back.life > state.players[player].life) continue;
+    /* The escape cost's mana instead of the mana cost (CR 702.138a); its cards are picked once the offer is taken. */
+    const fled = escape ? escapeWays(state, player, id).find((w) => w.kind === escape) ?? null : null;
     for (const way of [null, ...alternatives]) {
     if (way && way.life > state.players[player].life) continue;
     for (const freely of way ? [false] : free ? (free.limited ? [false, true] : [true]) : [false]) {
-    const {cost, x} = castCost(state, player, id, tax, freely, back ? back.mana : way ? way.mana : null);
+    const {cost, x} = castCost(state, player, id, tax, freely, back ? back.mana : fled ? fled.mana : way ? way.mana : null);
     /* {X} (CR 107.3, 601.2b): one offer per value the pool can pay, from nothing up; a spell without X, one. */
     /* The pool, and mana that may be spent only on this spell (rules/restricted-mana.mjs). */
     const pool = poolFor(state, player, {spell: id});
@@ -543,7 +608,7 @@ export function legalActions(state, player) {
       const paysFor = extra.length ? additionalChoices(state, player, id, extra) : [null];
       for (const costChoice of paysFor) {
         const base = {kind: "cast", objectId: id, label: object.card, payment, from, tax, ...(X !== null ? {x: X} : {}), ...(costChoice ? {costChoice, costNames: Object.values(costChoice).map((c) => state.objects[c].card)} : {}),
-          ...(freely ? {free: true} : {}), ...(back ? {flashback: true} : {}), ...(way ? {alternative: way.index} : {})};
+          ...(freely ? {free: true} : {}), ...(back ? {flashback: true} : {}), ...(fled ? {escape: fled.kind} : {}), ...(way ? {alternative: way.index} : {})};
         actions.push(...(object.spell?.modal ? withModes(state, base, object.spell.modal, {controller: player, source: id}) : withTargets(state, base, object.spell, {controller: player, source: id})));
       }
     }
@@ -658,6 +723,15 @@ export function nothingToDo(state, player, actions = legalActions(state, player)
   const mainNow = player === state.activePlayer && MAIN_PHASES.includes(state.phase);
   /* And what a permanent lets them cast from another zone (the top of the library, say). */
   const spells = [...cardsIn(state, "hand", player), ...cardsIn(state, "command", player).filter((id) => state.objects[id].commander === true), ...playableElsewhere(state, player, "spell")];
+  /* And what they may cast from their graveyard for another cost -- flashback (CR 702.34a), escape (702.138a) -- counted at
+     that cost's mana: a Woe Strider that could escape is something to do. */
+  const fromGraveyard = cardsIn(state, "graveyard", player).some((id) => {
+    const object = state.objects[id];
+    if (sorcerySpeed(object) && !hasFlash(state, id) && !flashGranted(state, player, id) && !mainNow) return false;
+    const costs = [flashbackCost(state, player, id)?.mana, ...escapeWays(state, player, id).map((way) => way.mana)].filter((m) => typeof m === "string");
+    return costs.some((m) => manaValue(parseManaCost(m)) <= mana);
+  });
+  if (fromGraveyard) return false;
   return !spells.some((id) => {
     const object = state.objects[id];
     if (!object.manaCost || (sorcerySpeed(object) && !hasFlash(state, id) && !flashGranted(state, player, id) && !mainNow)) return false;
@@ -683,6 +757,9 @@ const sameAction = (a, b) => a.kind === b.kind
   && (a.x ?? null) === (b.x ?? null)
   /* A cast with flashback is another action than the same card cast another way: it is exiled after (CR 702.34a). */
   && (a.flashback === true) === (b.flashback === true)
+  /* And with escape, its own or one given (CR 702.138a): another cost, and what it cast escaped. The cards it exiles are
+     picked after the offer is taken, so they are not part of it. */
+  && (a.escape ?? null) === (b.escape ?? null)
   /* An alternative cost (CR 118.9) is another action than paying the mana cost. */
   && (a.alternative ?? null) === (b.alternative ?? null)
   /* And the modes chosen as it is cast (CR 700.2): another choice is another action. */
@@ -808,6 +885,12 @@ function perform(state, player, action, during = null) {
       }
     }
     countedProblem(state, player, action);
+    /* ESCAPE'S OTHER CARDS (CR 702.138a, 601.2h): taken without them, the cast stops to ask which, nothing moved or paid
+       before the answer (rules/turn.mjs, "choose-cost"); taken with them, they are checked as it is cast. */
+    if (action.kind === "cast" && action.escape !== undefined && !Array.isArray(action.escapeExile)) {
+      state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
+      return [];
+    }
   }
 
   /* Passing is the priority module's business, because what a full round of passes means depends on
@@ -898,7 +981,11 @@ function perform(state, player, action, during = null) {
     /* Its alternative cost (CR 118.9), asked again now. */
     const way = action.alternative !== undefined ? alternativeCosts(state, player, action.objectId).find((w) => w.index === action.alternative) : null;
     if (action.alternative !== undefined && !way) throw new Error(`${object.card} cannot be cast that way now`);
-    const {cost, x} = castCost(state, player, action.objectId, tax, Boolean(free), back ? back.mana : way ? way.mana : null);
+    /* Escape (CR 702.138a): its cost's mana rather than the mana cost, and the other cards its caster picked. */
+    const fled = action.escape !== undefined ? escapeWays(state, player, action.objectId).find((w) => w.kind === action.escape) : null;
+    if (action.escape !== undefined && !fled) throw new Error(`${object.card} cannot escape now`);
+    const exiling = fled && !during ? escapeExiled(state, player, action, fled) : [];
+    const {cost, x} = castCost(state, player, action.objectId, tax, Boolean(free), back ? back.mana : fled ? fled.mana : way ? way.mana : null);
     const payment = during ? {mana: {}, life: 0} : automaticPayment(poolFor(state, player, {spell: action.objectId}), cost, {life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0), x: x + (action.x ?? 0) * cost.variable});
     if (!payment || (back && back.life > state.players[player].life) || (way && way.life > state.players[player].life)) throw new Error(`${object.card} cannot be paid for from this pool`);
     const card = cardRef(state, action.objectId);
@@ -936,6 +1023,8 @@ function perform(state, player, action, during = null) {
     entry.cast = {from: castFrom, mainPhase: player === state.activePlayer && MAIN_PHASES.includes(state.phase)};
     /* Cast with flashback: exiled, whatever would move it, as it leaves the stack (rules/stack.mjs, effects/zones.mjs). */
     if (back) entry.flashback = true;
+    /* Cast with escape, it escaped (CR 702.138b): the permanent it becomes is marked so (rules/stack.mjs). */
+    if (fled) entry.escaped = true;
     /* "And that spell can't be countered" (Cavern of Souls): paid with mana that said so. */
     if (paid.uncounterable) entry.uncounterable = true;
     /* "If a spell cast this way would be put into your graveyard, exile it instead" (Kess): to exile, if to a graveyard. */
@@ -947,6 +1036,8 @@ function perform(state, player, action, during = null) {
       const paid = kind === "sacrifice" ? sacrificeOne(state, id, events) : moveOne(state, id, kind === "exile" ? "exile" : "graveyard", events, {owner: state.objects[id].owner});
       if (kind === "discard" && paid !== null) events[events.length - 1].data.fields.discarded = true;
     }
+    /* Escape's other cards, exiled as the rest of the cost is paid (CR 601.2h). */
+    for (const id of exiling) if (state.objects[id]) moveOne(state, id, "exile", events, {owner: state.objects[id].owner});
     /* What it is aimed at becomes its target (ward, CR 702.21a). */
     events.push(...becameTarget(state, entry));
     /* STORM (CR 702.40a): "when you cast this spell, copy it for each spell cast before it this turn. You may choose new

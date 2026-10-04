@@ -49,7 +49,7 @@ import {endCopies} from "../script/effects/permanents.mjs";
 import {runEffect} from "../script/effects/index.mjs";
 import {askEntering, enteringChoice, resolveEnteringChoice} from "./entering.mjs";
 import {collectTriggers, openTriggers, triggerChoice, resolveTriggerOrder, triggerTargetsChoice, resolveTriggerTargets, triggerCountedChoice, resolveTriggerCounted} from "./trigger.mjs";
-import {chooseTargetsChoice, resolveChooseTargets} from "./actions.mjs";
+import {chooseTargetsChoice, resolveChooseTargets, escapeCostChoice, resolveEscapeCost} from "./actions.mjs";
 
 /* The steps of a turn, CR 500.1, in order.
  *
@@ -238,6 +238,8 @@ export function awaitingChoice(state) {
   if (awaiting.kind === "trigger-targets") return triggerTargetsChoice(state, awaiting);
   /* A counted target ("up to two target creatures"), a trigger's or an offer's (CR 601.2c; script/bind.mjs). */
   if (awaiting.kind === "choose-targets") return awaiting.stackId !== undefined ? triggerCountedChoice(state, awaiting) : chooseTargetsChoice(state, awaiting);
+  /* Escape's other cards (CR 702.138a): which to exile, asked once its cast is taken (rules/actions.mjs). */
+  if (awaiting.kind === "choose-cost") return escapeCostChoice(state, awaiting);
   if (awaiting.kind === "entering-choice") return enteringChoice(state, awaiting);
   if (awaiting.kind === "declare-attackers") return attackers.choice(state, awaiting);
   if (awaiting.kind === "attack-tax") return attackers.taxChoice(state, awaiting);
@@ -315,6 +317,8 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
   }
   /* A counted target picked: a trigger's, then the next trigger's targets, as trigger-targets goes on; an offer's, then the
      offer taken -- cast or activated, its player holding priority after it (CR 117.3c, rules/actions.mjs applyAction). */
+  /* Escape's other cards picked: the cast taken, its player holding priority after it (CR 117.3c). */
+  if (awaiting.kind === "choose-cost") return resolveEscapeCost(state, awaiting, indices);
   if (awaiting.kind === "choose-targets") {
     if (awaiting.stackId === undefined) return resolveChooseTargets(state, awaiting, indices);
     const events = resolveTriggerCounted(state, awaiting, indices);

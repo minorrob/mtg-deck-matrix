@@ -1,0 +1,205 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Underworld Breach",
+  "scenarios": [
+    {
+      "name": "Lightning Bolt escapes for {R} and three other cards -- and goes back to the graveyard, to escape again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Underworld Breach",
+            "Mountain",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Lightning Bolt",
+            "Plains",
+            "Island",
+            "Forest",
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Lightning Bolt",
+          "escape": "given",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Plains",
+            "Island",
+            "Forest"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 37
+            },
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Lightning Bolt",
+                "Swamp",
+                "Wastes",
+                "Wastes"
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Lightning Bolt",
+          "escape": "given",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Swamp",
+            "Wastes (1)",
+            "Wastes (2)"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 34
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Forest",
+            "Island",
+            "Plains",
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "At the beginning of the end step it is sacrificed",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Underworld Breach"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Underworld Breach"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Any player's end step: put there on Maya's turn, it is sacrificed at hers",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Underworld Breach"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Underworld Breach"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -279,7 +279,7 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     const object = state.objects[entry.objectId];
     const entering = to === "battlefield"
       ? enteringModifications(state, {objectId: entry.objectId, player: entry.playerId,
-        types: object.types, abilities: object.abilities, x: entry.x ?? 0})
+        types: object.types, abilities: object.abilities, x: entry.x ?? 0, escaped: entry.escaped === true})
       : null;
     const arrived = moveObject(state, entry.objectId, to, to === "graveyard" ? owner : null);
     /* CR 608.3a: it enters under its caster's control -- not its owner's, when a card was cast by another player (Tinybones,
@@ -292,6 +292,9 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     }
     /* "When this enters, each creature gets -X/-X": the X paid stays with the permanent (CR 107.3m). */
     if (to === "battlefield" && entry.x !== undefined) state.objects[arrived].xPaid = entry.x;
+    /* Cast with escape, the permanent it became escaped (CR 702.138b): "sacrifice it unless it escaped" reads this
+       (script/condition.mjs). A new object after it moves again (CR 400.7), so the mark does not follow it. */
+    if (to === "battlefield" && entry.escaped) state.objects[arrived].escaped = true;
     /* "If you cast a creature spell this way, it gains haste until end of turn" (rules/actions.mjs, castGains). */
     if (to === "battlefield" && (object.castGains ?? []).length)
       (state.effects ??= []).push({id: `cast-gains:${arrived}`, layer: 6, affects: {ids: [arrived]}, apply: {addKeywords: [...object.castGains]}, until: "end-of-turn", sourceController: entry.playerId});
