@@ -1,0 +1,99 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Avatar of Burgeoning Echoes",
+    "oracleId": "08e8a63c-9fcc-48cf-a9af-15cbaeec943f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Avatar"
+    ],
+    "manaCost": "{G}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Landfall — Whenever a land you control enters, empower Jace 2. (Put two loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")\nPlaneswalkers you control have \"[−10]: Put a +1/+1 counter on target creature for each land you control.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Landfall — Whenever a land you control enters, empower Jace 2. (Put two loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "empowerJace",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Planeswalkers you control have \"[−10]: Put a +1/+1 counter on target creature for each land you control.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "types": [
+          "Planeswalker"
+        ]
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "activated",
+            "text": "[−10]: Put a +1/+1 counter on target creature for each land you control.",
+            "cost": [
+              {
+                "atom": "loyalty",
+                "amount": -10
+              }
+            ],
+            "targets": [
+              {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ]
+              }
+            ],
+            "effects": [
+              {
+                "effect": "putCounter",
+                "targets": {
+                  "target": 0
+                },
+                "counter": "+1/+1",
+                "count": {
+                  "count": {
+                    "types": [
+                      "Land"
+                    ],
+                    "controller": "you"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

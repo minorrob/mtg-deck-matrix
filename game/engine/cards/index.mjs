@@ -281,6 +281,8 @@ function manaAbility(ability, id) {
      the mana is added as it resolves ("Any number of target players each lose 2 life ... You add {B}{B}", Priest of
      Forgotten Gods). */
   if ((ability.targets ?? []).length) return null;
+  /* Nor is a loyalty ability (CR 605.1a): "[+1]: Add {R}" (Way of the Pyromancer) goes on the stack, at sorcery speed. */
+  if ((ability.cost ?? []).some((a) => a?.atom === "loyalty")) return null;
   const [first, ...then] = ability.effects ?? [];
   if (first?.effect !== "addMana") return (ability.effects ?? []).some((e) => e?.effect === "addMana") ? "unbuilt" : null;
   const cost = ability.cost ?? [];
@@ -713,9 +715,11 @@ export function compileScript(script) {
       /* MODES CHOSEN AS IT IS PUT ON THE STACK (CR 603.3c, 700.2b): a triggered ability whose one effect is a modal -- its
          modes and their targets are chosen then (rules/trigger.mjs), never as it resolves, whether its modes name targets or
          not (Tireless Provisioner). "You may choose two" (`mayChooseNone`): that many, or none, and it is removed from the
-         stack. "Each mode must target a different player" (`differentPlayers`, Shadrix Silverquill). */
+         stack. "Each mode must target a different player" (`differentPlayers`, Shadrix Silverquill). A choice another player
+         makes as it resolves ("the owner of up to one other target nonland permanent puts it on their choice of the top or
+         bottom of their library", Plan for All Outcomes: `chooser`) is no mode of the ability's, and waits for it to resolve. */
       const lone = (ability.effects ?? []).length === 1 ? ability.effects[0] : null;
-      const modal = lone?.effect === "modal"
+      const modal = lone?.effect === "modal" && lone.chooser === undefined
         ? {choose: lone.choose ?? 1, ...(lone.mayChooseNone ? {mayChooseNone: true} : {}), ...(lone.differentPlayers ? {differentPlayers: true} : {}),
           modes: (lone.modes ?? []).map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? []}))} : null;
       if (modal && (ability.optional || (ability.targets ?? []).length)) problems.push(`${ability.text}: a modal triggered ability names its targets in its modes, and "you may" as mayChooseNone`);

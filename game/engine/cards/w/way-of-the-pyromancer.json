@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Way of the Pyromancer",
+    "oracleId": "68d3f547-674a-4d8a-b02f-01bc2f161916",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When Way of the Pyromancer enters, empower Jace 2. (Put two loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")\nPlaneswalkers you control have \"[+1]: Add {R}.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Way of the Pyromancer enters, empower Jace 2. (Put two loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "empowerJace",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Planeswalkers you control have \"[+1]: Add {R}.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "types": [
+          "Planeswalker"
+        ]
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "activated",
+            "text": "[+1]: Add {R}.",
+            "cost": [
+              {
+                "atom": "loyalty",
+                "amount": 1
+              }
+            ],
+            "effects": [
+              {
+                "effect": "addMana",
+                "mana": {
+                  "R": 1
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

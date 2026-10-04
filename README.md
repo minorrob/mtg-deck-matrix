@@ -595,6 +595,9 @@ player for the turn; and "discard your hand", nobody asked.
 `engine-opponents-lands` holds "this land enters tapped unless your opponents control eight or more lands" (the
 Turbulent lands): what every opponent of the player who plays it controls, counted together, at least and at most, a
 land of the player's own or an opponent's creature never one; and "unless you control a planeswalker", the player's own.
+`engine-empower-jace` holds "empower Jace N": a blue Jace planeswalker token made when its controller has none, the one
+there is, or the controller's choice of two; a Jace card and another player's token aside; a loyalty ability that adds
+mana, on the stack; and a resolution-time choice by a target's owner in a triggered ability, with "up to one".
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -713,7 +716,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 287 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 288 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -972,6 +975,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-granted-loyalty` — `tests/engine-granted-loyalty.mjs`
 - `engine-loyalty-activated` — `tests/engine-loyalty-activated.mjs`
 - `engine-opponents-lands` — `tests/engine-opponents-lands.mjs`
+- `engine-empower-jace` — `tests/engine-empower-jace.mjs`
 
 ## Design and execution record
 

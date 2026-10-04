@@ -52,7 +52,8 @@ const NAMED = ["remembered", "that card", "target"];
 function namedObject(about, {remembered, targets, about: subject}) {
   if (about === "remembered") return remembered?.[0] ?? null;
   if (about === "that card") return subject?.card ?? null;
-  if (about === "target") { const t = targets?.[0]; return t && t.kind === "object" ? t.id : null; }
+  /* A counted target ("up to one other target nonland permanent", Plan for All Outcomes): its first chosen, or none. */
+  if (about === "target") { const t = [].concat(targets?.[0] ?? [])[0]; return t && t.kind === "object" ? t.id : null; }
   return null;
 }
 function namedIs(state, id, selector, context, was = null) {

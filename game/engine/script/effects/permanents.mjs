@@ -51,6 +51,16 @@ export const PREDEFINED_TOKENS = Object.freeze({
   Clue: {name: "Clue", types: ["Artifact"], subtypes: ["Clue"],
     abilities: [{id: "clue", kind: "activated", text: "{2}, Sacrifice this artifact: Draw a card.", targets: [],
       cost: [{atom: "mana", cost: "{2}"}, {atom: "sacrifice", self: true}], effects: [{effect: "draw", count: 1}]}]},
+  /* EMPOWER JACE's token (the live-game plan of 2026-10-04): "a blue Jace planeswalker token with '[-1]: Surveil 1' and
+     '[-3]: Draw a card.'" -- no printed loyalty, so it enters with none and the empower puts its counters on (CR 306.5b is a
+     printed loyalty's; script/resolution.mjs). Its abilities as a card's are compiled (cards/index.mjs, a loyalty cost). */
+  Jace: {name: "Jace", types: ["Planeswalker"], subtypes: ["Jace"], colors: ["U"],
+    abilities: [
+      {id: "jace-surveil", kind: "activated", text: "\u22121: Surveil 1.", targets: [], loyalty: -1, timing: "sorcery",
+        cost: [{atom: "removeCounters", self: true, counter: "loyalty", count: 1}], effects: [{effect: "surveil", count: 1}]},
+      {id: "jace-draw", kind: "activated", text: "\u22123: Draw a card.", targets: [], loyalty: -3, timing: "sorcery",
+        cost: [{atom: "removeCounters", self: true, counter: "loyalty", count: 3}], effects: [{effect: "draw", count: 1}]},
+    ]},
   /* CR 111.10v (Splinter, the Mentor) */
   Mutagen: {name: "Mutagen", types: ["Artifact"], subtypes: ["Mutagen"],
     abilities: [{id: "mutagen", kind: "activated", text: "{1}, {T}, Sacrifice this token: Put a +1/+1 counter on target creature. Activate only as a sorcery.",
