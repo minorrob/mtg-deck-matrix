@@ -1,0 +1,115 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Restless Spire",
+    "oracleId": "0ca4e80e-c19c-4b74-b531-c5a4dc5a8ba9",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This land enters tapped.\n{T}: Add {U} or {R}.\n{U}{R}: Until end of turn, this land becomes a 2/1 blue and red Elemental creature with \"During your turn, this creature has first strike.\" It's still a land.\nWhenever this land attacks, scry 1.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This land enters tapped.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {U} or {R}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "U": 1
+            },
+            {
+              "R": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{U}{R}: Until end of turn, this land becomes a 2/1 blue and red Elemental creature with \"During your turn, this creature has first strike.\" It's still a land.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{U}{R}"
+        }
+      ],
+      "targets": [],
+      "effects": [
+        {
+          "effect": "animate",
+          "targets": "self",
+          "power": 2,
+          "toughness": 1,
+          "subtypes": [
+            "Elemental"
+          ],
+          "colors": [
+            "U",
+            "R"
+          ],
+          "until": "end-of-turn"
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "yourTurn": true
+          },
+          "then": [
+            {
+              "effect": "pump",
+              "targets": "self",
+              "power": 0,
+              "toughness": 0,
+              "keywords": [
+                "First Strike"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this land attacks, scry 1.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "scry",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

@@ -374,6 +374,16 @@ export function animate(state, params, context) {
     until: params.until ?? null,
     sourceController: context.controller,
   });
+  /* "Becomes a 2/1 blue and red Elemental creature" (Restless Spire): its colors, in their own layer (CR 613.1e). */
+  if (Array.isArray(params.colors)) {
+    pushEffect(state, {
+      id: `animate-colors:${context.source ?? "effect"}`,
+      layer: 5, affects,
+      apply: {setColors: [...params.colors]},
+      until: params.until ?? null,
+      sourceController: context.controller,
+    });
+  }
   if (Number.isInteger(params.power) || Number.isInteger(params.toughness)) {
     pushEffect(state, {
       id: `animate-pt:${context.source ?? "effect"}`,
