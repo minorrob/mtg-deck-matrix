@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1117,
-  "everyRule": 2413
+  "defined": 1119,
+  "everyRule": 2416
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -3205,9 +3205,9 @@
   },
   "Effects": {
    "tally": {
-    "built": 58,
+    "built": 59,
     "partial": 1,
-    "named": 13,
+    "named": 12,
     "missing": 120
    },
    "entries": [
@@ -4200,12 +4200,12 @@
      "rule": null,
      "name": "Investigate",
      "engine": "investigate",
-     "status": "named",
+     "status": "built",
      "forge": "Investigate",
      "top": 3,
      "all": 142,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",

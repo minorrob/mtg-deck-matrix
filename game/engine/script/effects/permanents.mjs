@@ -288,6 +288,14 @@ export function endCopies(state) {
   }
 }
 
+/**
+ * `investigate` — CR 701.16a: "Investigate" means "create a Clue token" (CR 111.10f). "Investigate twice" is `count: 2`;
+ * "its controller investigates" (Fateful Absence) is `controller`, as a token's: `{controllerOf: {target: 0}}`.
+ */
+export function investigate(state, params, context) {
+  return createToken(state, {...(params.controller !== undefined ? {controller: params.controller} : {}), count: params.count ?? 1, token: {predefined: "Clue"}}, context);
+}
+
 /** `createToken` — CR 111. */
 export function createToken(state, params, context) {
   const events = [];

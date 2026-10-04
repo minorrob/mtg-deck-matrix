@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,117 defined and playable today; 2,413 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,119 defined and playable today; 2,416 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -20,7 +20,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 37 | 0 | 18 | 139 |
 | Keyword actions (CR 701) | 70 | 18 | 3 | 5 | 44 |
-| Effects | 192 | 58 | 1 | 13 | 120 |
+| Effects | 192 | 59 | 1 | 12 | 120 |
 | Triggers | 138 | 15 | 4 | 6 | 113 |
 | Static abilities | 77 | 10 | 2 | 0 | 65 |
 | Replacement effects | 34 | 0 | 4 | 0 | 30 |
@@ -412,7 +412,7 @@ The things that alone hold back the most of the most-played cards.
 | Fog | — | missing | 4 | 34 | 4 | 3 |
 | Radiation | — | missing | 4 | 22 | 4 | 1 |
 | Airbend | — | missing | 4 | 13 | 4 | 2 |
-| Investigate | investigate | named | 3 | 142 | 3 | 3 |
+| Investigate | investigate | built | 3 | 142 | 0 | 0 |
 | Connive | connive | named | 3 | 51 | 3 | 2 |
 | TapOrUntap | — | missing | 3 | 48 | 3 | 3 |
 | Manifest | — | missing | 3 | 32 | 3 | 3 |
