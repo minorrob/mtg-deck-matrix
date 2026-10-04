@@ -34,7 +34,7 @@ import {cardsIn} from "../state/index.mjs";
 import {matchesSelector, compileSelector, matchesLastKnown} from "./filter.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
 
-const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "spent", "enduringStory", "loyaltyThisTurn"];
+const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "spent", "enduringStory", "loyaltyThisTurn", "impending"];
 /* The mana a condition may ask was spent to cast its object: the five colors and colorless (CR 106.1). */
 const SPENT_KEYS = ["W", "U", "B", "R", "G", "C"];
 /* A counted comparison's keys: what is counted, and against what. */
@@ -85,7 +85,7 @@ function castHolds(rule, cast) {
 }
 
 /** Whether a condition holds now, for an ability controlled by `controller` on object `source`. No condition holds. */
-export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined, excessDamage = undefined} = {}) {
+export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined, excessDamage = undefined, rememberedControllers = undefined} = {}) {
   if (!condition) return true;
   if (condition.cast !== undefined && !castHolds(condition.cast, cast)) return false;
   /* "Khans -- ...": what its permanent chose as it entered (the Sieges). */
@@ -94,6 +94,8 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   if (condition.escaped !== undefined && ((source !== null && state.objects[source]?.escaped === true) !== condition.escaped)) return false;
   /* "If its evoke cost was paid" (CR 702.74a): whether its own permanent was cast for its evoke cost (rules/stack.mjs). */
   if (condition.evoked !== undefined && ((source !== null && state.objects[source]?.evoked === true) !== condition.evoked)) return false;
+  /* "If this permanent's impending cost was paid" (CR 702.176a). */
+  if (condition.impending !== undefined && ((source !== null && state.objects[source]?.impending === true) !== condition.impending)) return false;
   /* "If {W}{W} was spent to cast it" (CR 601.2h): the mana spent to cast its own object (rules/actions.mjs) -- or, once that
      object has gone, as it last was: what the trigger remembered as it triggered (`spent`, rules/trigger.mjs; CR 608.2h). */
   if (condition.spent !== undefined) {
@@ -131,7 +133,9 @@ export function conditionHolds(state, condition, {controller, source = null, abo
        remembered (`rememberedCount`). */
     const counted = {controller, source, ...(about ? {about} : {}), ...(x !== undefined ? {x} : {}), ...(remembered ? {remembered} : {}),
       /* "If excess damage was dealt this way" (Violent Echoes): what the damage before it left (script/resolution.mjs). */
-      ...(excessDamage !== undefined ? {excessDamage} : {})};
+      ...(excessDamage !== undefined ? {excessDamage} : {}),
+      /* "For each creature exiled this way, its controller ..." (Winds of Abandon): who controlled what was remembered. */
+      ...(rememberedControllers !== undefined ? {rememberedControllers} : {})};
     const n = amountOf(state, condition.compare.count, counted), than = (v) => amountOf(state, v, counted);
     if (condition.compare.atLeast !== undefined && n < than(condition.compare.atLeast)) return false;
     if (condition.compare.atMost !== undefined && n > than(condition.compare.atMost)) return false;
@@ -181,6 +185,7 @@ export function conditionProblems(condition) {
   if ("chosen" in condition && typeof condition.chosen !== "string") problems.push("chosen names what was chosen");
   if ("escaped" in condition && typeof condition.escaped !== "boolean") problems.push("escaped is true or false");
   if ("evoked" in condition && typeof condition.evoked !== "boolean") problems.push("evoked is true or false");
+  if ("impending" in condition && typeof condition.impending !== "boolean") problems.push("impending is true or false");
   if ("spent" in condition) {
     const spent = condition.spent;
     if (!spent || typeof spent !== "object" || Array.isArray(spent) || !Object.keys(spent).length

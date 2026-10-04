@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Oblivion Ring",
+    "oracleId": "bd9b9772-f5f9-4c6b-913e-7193bea5d0a7",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When this enchantment enters, exile another target nonland permanent.\nWhen this enchantment leaves the battlefield, return the exiled card to the battlefield under its owner's control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this enchantment enters, exile another target nonland permanent.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "link": true
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "nonTypes": [
+            "Land"
+          ],
+          "another": true
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When this enchantment leaves the battlefield, return the exiled card to the battlefield under its owner's control.",
+      "trigger": {
+        "on": "leaves"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "linked": true,
+          "to": "battlefield"
+        }
+      ]
+    }
+  ]
+}

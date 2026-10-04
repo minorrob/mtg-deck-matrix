@@ -163,6 +163,8 @@ function subjects(state, event, condition, sourceId, controller) {
     if (condition.atLeast && attacks.length < condition.atLeast) return [];
     /* "Whenever you attack with one or more non-Gnome creatures" (Anim Pakal): an attacker the filter fits. */
     if (condition.filter && !attacks.some((a) => fits(state, a.card?.cardId, {filter: condition.filter}, sourceId, controller))) return [];
+    /* "Each player mills that many cards" (The Ur-Sphinx): the attackers the filter fits, as "those cards". */
+    const those = condition.filter ? attacks.filter((a) => fits(state, a.card?.cardId, {filter: condition.filter}, sourceId, controller)).map((a) => a.card?.cardId) : null;
     /* Attacking a planeswalker of a player's is not attacking that player (CR 506.3): not "attacking you", and no player
        attacked for "that player". */
     if (condition.notAttacking === "you" && attacks.some((a) => a.defender?.playerId === controller && !a.defender.planeswalker)) return [];
@@ -170,7 +172,7 @@ function subjects(state, event, condition, sourceId, controller) {
        this ability's controller's opponents only, when it says so (CR 508.3e). */
     if (condition.eachDefender) return [...new Set(attacks.filter((a) => !a.defender?.planeswalker).map((a) => a.defender?.playerId))]
       .filter((player) => condition.defender !== "opponent" || player !== controller).map((player) => ({player, attacker}));
-    return [{player: attacker}];
+    return [{player: attacker, ...(those ? {cards: those} : {})}];
   }
   if (condition.on === "GameEventAttackersDeclared") {
     const matched = (fields.attackers ?? []).filter((a) => fits(state, a.card?.cardId, condition, sourceId, controller))

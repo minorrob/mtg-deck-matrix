@@ -955,7 +955,10 @@ export const chooseCard = {
     const except = params.except === "remembered" ? new Set(context.remembered ?? []) : null;
     const pool = (among ? (context.remembered ?? []).filter((id) => state.objects[id]?.zone === zone) : onField ? [...state.zones.battlefield] : cardsIn(state, zone, player))
       .filter((id) => !except?.has(id));
-    const cards = pool.filter((id) => matchers.some((m) => m(state, id, {controller: player, source: context.source})));
+    const fitting = pool.filter((id) => matchers.some((m) => m(state, id, {controller: player, source: context.source})));
+    /* "Up to four cards with different names" (Gifts Ungiven): one of each name offered -- which of two identical cards in a
+       library is found changes nothing, and no answer can then name two of a name. */
+    const cards = params.differentNames === true ? fitting.filter((id, i) => fitting.findIndex((other) => state.objects[other].card === state.objects[id].card) === i) : fitting;
     /* From among what was looked at or moved (Risen Reef's "if it's a land card"), with nothing that fits: nothing to choose,
        and nobody is asked -- the cards are face up to the chooser, so there is no failing to find (CR 701.23b is a search's). */
     if ((among || onField) && cards.length === 0) return false;
@@ -1085,7 +1088,9 @@ export const play = {
     const from = params.from ?? "hand";
     const pool = from === "hand" ? cardsIn(state, "hand", player)
       : from === "command" ? cardsIn(state, "command", player).filter((id) => state.objects[id].commander === true)
-      : (params.targets ?? []).filter((id) => state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone));
+      : (params.targets ?? []).filter((id) => state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone)
+        /* "For each player, you may cast a card that player milled this way" (The Ur-Sphinx): `ownedBy` "that player". */
+        && (params.ownedBy !== "that player" || state.objects[id].owner === context.about?.player));
     const terms = {most, free: params.free === true, anyMana: params.anyMana === true};
     const choices = playable(state, player, pool, terms);
     if (!choices.length) return false;

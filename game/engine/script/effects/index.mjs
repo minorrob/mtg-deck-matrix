@@ -83,7 +83,7 @@ export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "surveil", "discar
 
 /* What "each" ranges over (`repeatFor`), each with what it binds: a player -- in turn order from the active player
    (CR 101.4) -- as "that player"; a creature as "that card", and its controller as "that player". */
-function eachOf(state, each, context) {
+export function eachOf(state, each, context) {
   const seats = state.players.map((p) => p.id), from = seats.indexOf(state.activePlayer ?? 0);
   const players = [...seats.slice(from), ...seats.slice(0, from)].filter((id) => !state.players[id].lost);
   if (each === "player") return players.map((player) => ({player}));

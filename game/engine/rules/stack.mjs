@@ -178,6 +178,8 @@ export function pushCopy(state, original, {controller, nonLegendary = false} = {
 function scriptOf(state, entry) {
   if (entry.kind === "spell") {
     const spell = entry.objectId === null ? null : state.objects[entry.objectId]?.spell;
+    /* Overloaded (CR 702.96b): what it does cast so. */
+    if (entry.overload) return entry.overload;
     /* Its modes, chosen as it was cast (CR 700.2): their targets in order, their effects aimed at them. */
     if (spell?.modal && Array.isArray(entry.modes)) return modalScript(spell.modal, entry.modes);
     return spell && (spell.effects ?? []).length ? spell : null;
@@ -232,7 +234,10 @@ export function resolveTop(state, effect = null, rng = null) {
     ...(entry.cast ? {cast: entry.cast} : {}),
     /* What its permanent chose as it entered: "draw a card for each creature of the chosen type". */
     ...(source !== null && state.objects[source]?.chosen !== undefined ? {chosen: state.objects[source].chosen} : {})};
-  const {targets, fizzles} = recheckTargets(state, script.targets, entry.targets, context);
+  /* "Another target" asked again with its source gone (Oblivion Ring destroyed with its trigger waiting): another than the
+     source as it last existed, which no target can now be (CR 608.2b, 113.7a). */
+  const {targets, fizzles} = recheckTargets(state, script.targets, entry.targets, source === null && (entry.cardId ?? entry.lastKnown?.cardId ?? null) !== null
+    ? {...context, source: entry.cardId ?? entry.lastKnown.cardId} : context);
   if (fizzles) return finishTop(state, entry, events, true);
   /* An intervening "if" asked again as it resolves (CR 603.4): false now, and the ability does nothing. A triggered
      ability's own condition only -- "activate only if" was asked as it was activated (CR 602.5b) and is not again. */
@@ -305,6 +310,11 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     if (to === "battlefield" && entry.escaped) state.objects[arrived].escaped = true;
     /* Cast for its evoke cost, the permanent it became was evoked (CR 702.74a): its own sacrifice trigger reads this. */
     if (to === "battlefield" && entry.evoked) state.objects[arrived].evoked = true;
+    /* And for its impending cost (CR 702.176a): marked, with its N time counters (put on it as it enters, CR 122.6). */
+    if (to === "battlefield" && entry.impending) {
+      state.objects[arrived].impending = true;
+      state.objects[arrived].counters.time = (state.objects[arrived].counters.time ?? 0) + countersPlaced(state, arrived, "time", entry.impending);
+    }
     /* And the mana spent to cast it (rules/actions.mjs): "if {G}{G} was spent to cast it" asks the permanent. */
     if (to === "battlefield" && object.spent) state.objects[arrived].spent = {...object.spent};
     /* "If you cast a creature spell this way, it gains haste until end of turn" (rules/actions.mjs, castGains). */
