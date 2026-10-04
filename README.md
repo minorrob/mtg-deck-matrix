@@ -548,6 +548,9 @@ Lute): beside the pool, for what it admits, gone with the pool; every addMana's 
 mana ability that carries one refused. `engine-graveyard-triggers` holds cards put into a graveyard from anywhere and
 cards leaving one (Moonshadow, Garrison Excavator, the two Quintorius cards): a card and not a token, its owner's
 graveyard, a filter, "one or more" once an action, and a card cast from a graveyard.
+`engine-cleanup-step` holds the cleanup step in its order (CR 514): the discard to hand size first and "this turn" after
+it, what the discard triggers on the stack with the active player holding priority, and another cleanup step after,
+which ends what was made "until end of turn" in between.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -666,7 +669,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 271 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 272 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -909,6 +912,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-cost-exile-counter` — `tests/engine-cost-exile-counter.mjs`
 - `engine-spend-only-effect` — `tests/engine-spend-only-effect.mjs`
 - `engine-graveyard-triggers` — `tests/engine-graveyard-triggers.mjs`
+- `engine-cleanup-step` — `tests/engine-cleanup-step.mjs`
 
 ## Design and execution record
 

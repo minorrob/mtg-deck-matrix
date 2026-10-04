@@ -183,21 +183,33 @@ function emptyManaPools(state, events) {
   }
 }
 
-/* CR 514.1 and 514.2, which happen simultaneously: the active player discards down to their
-   maximum hand size, and all damage wears off. Without the second, damage accumulates across turns
-   and every creature eventually dies to a scratch it took ten turns ago.
+/* THE CLEANUP STEP (CR 514), in its order. First the active player discards down to their maximum hand size (514.1);
+   then, at once, all damage wears off and every "until end of turn" and "this turn" effect ends (514.2) -- without that,
+   damage accumulates across turns and every creature eventually dies to a scratch it took ten turns ago.
  *
  * THE DISCARD IS A DECISION, SO THE ENGINE STOPS HERE AND ASKS. It does not pick cards. `awaiting`
  * is how a turn-based action that needs an answer reaches the driver: the engine runs until it
  * needs one, records what it needs, and returns. Declaring attackers and blockers (CR 508.1, 509.1)
- * are the same shape and arrive in 1.4 through the same field.
+ * are the same shape and arrive in 1.4 through the same field. The rest of the step waits for the answer
+ * (resolveAwaiting), so what lasts "this turn" -- "whenever you discard a card this turn" -- still sees the discard.
  *
- * What is NOT here: CR 514.3a's second cleanup step, which happens when something triggers during
- * cleanup or a state-based action is performed. There are no triggers until 1.6, so there is
- * nothing that could cause one; it is named so the omission is visible rather than forgotten. */
+ * Then CR 514.3a: no player receives priority in this step, unless a state-based action is performed or an ability
+ * triggered -- a discard trigger, a death -- and then the active player does, and once the stack is empty and all pass,
+ * another cleanup step begins (grantStepPriority, advance). */
 function cleanup(state, events) {
-  /* CR 514.2, as one event: all damage is removed from permanents AND every "until end of turn" effect ends. Without
-     the second half, a Giant Growth's +3/+3, Heroic Intervention's indestructible and Craterhoof's +X/+X lasted the
+  const player = state.players[state.activePlayer];
+  /* CR 800.4: a turn whose active player has left the game runs to its end without them, so nobody discards. */
+  /* CR 402.2: seven, unless a static ability says the player has no maximum hand size. */
+  const limit = playerRuleChanged(state, "no-maximum-hand-size", state.activePlayer) ? Infinity : (player.maxHandSize ?? 7);
+  const over = player.lost ? 0 : cardsIn(state, "hand", state.activePlayer).length - limit;
+  if (over > 0) { state.awaiting = {kind: "discard-to-hand-size", player: state.activePlayer, count: over}; return; }
+  endOfTurn(state);
+  void events;
+}
+
+/* CR 514.2, as one event: all damage is removed from permanents AND every "until end of turn" effect ends. */
+function endOfTurn(state) {
+  /* Without the second half, a Giant Growth's +3/+3, Heroic Intervention's indestructible and Craterhoof's +X/+X lasted the
      rest of the game -- and the scenarios, which look within a turn, never saw it. */
   for (const id of state.zones.battlefield) {
     if (state.objects[id].damage !== 0) state.objects[id].damage = 0;
@@ -216,13 +228,6 @@ function cleanup(state, events) {
   endCopies(state);
   /* And a delayed trigger that lasted "this turn" ("whenever a creature dies this turn", CR 603.7b) ends with them. */
   if ((state.delayedTriggers ?? []).some((d) => d.thisTurn)) state.delayedTriggers = state.delayedTriggers.filter((d) => !d.thisTurn);
-  const player = state.players[state.activePlayer];
-  /* CR 800.4: a turn whose active player has left the game runs to its end without them, so nobody discards. */
-  /* CR 402.2: seven, unless a static ability says the player has no maximum hand size. */
-  const limit = playerRuleChanged(state, "no-maximum-hand-size", state.activePlayer) ? Infinity : (player.maxHandSize ?? 7);
-  const over = player.lost ? 0 : cardsIn(state, "hand", state.activePlayer).length - limit;
-  if (over > 0) state.awaiting = {kind: "discard-to-hand-size", player: state.activePlayer, count: over};
-  void events;
 }
 
 /**
@@ -408,16 +413,23 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
   for (const id of chosen) {
     const card = cardRef(state, id);
     const owner = state.objects[id].owner;
-    moveObject(state, id, "graveyard", owner);
+    const discarded = moveObject(state, id, "graveyard", owner);
     events.push(event("GameEventCardChangeZone", state, {
       card,
       from: {zoneType: ZONE_LABEL.hand, player: {playerId: awaiting.player}},
       to: {zoneType: ZONE_LABEL.graveyard, player: {playerId: owner}},
       discarded: true,
+      /* The card it became in the graveyard (CR 400.7e), as every discard says: what "whenever you discard a creature card"
+         and "put into your graveyard" read. */
+      becomes: discarded,
     }));
   }
   state.awaiting = null;
-  grantStepPriority(state, events);
+  /* What the discard triggered, as it happened (CR 603.2) -- a "this turn" ability among them, before CR 514.2 ends it;
+     then CR 514.2; then CR 514.3a, those triggers on the stack and the active player with priority. */
+  collectTriggers(state, events);
+  endOfTurn(state);
+  grantStepPriority(state, events, []);
   return events;
 }
 
@@ -464,7 +476,21 @@ function arrive(state, events) {
  * this the right and only place for it in the turn structure. Combat damage is dealt as this step
  * begins, so the creatures it killed are already gone by the time anybody could respond. */
 function grantStepPriority(state, events = [], triggering = events) {
-  if (hasPriority(state) && !state.awaiting) {
+  /* CR 514.3a: in the cleanup step, what happened in it -- a discard that triggered, a state-based action -- gives the
+     active player priority, the triggers on the stack first; and `cleanupAgain` makes the step happen again once the
+     stack is empty and everyone has passed (advance). */
+  if (state.phase === "CLEANUP" && !state.awaiting) {
+    collectTriggers(state, triggering);
+    const sba = checkStateBasedActions(state);
+    events.push(...sba);
+    collectTriggers(state, sba);
+    /* A trigger whose controller has left the game never goes on the stack (CR 800.4a; rules/trigger.mjs, openTriggers): it
+       is no reason for another step, or the step would repeat for ever. */
+    if (sba.length || (state.pendingTriggers ?? []).some((t) => !state.players[t.controller]?.lost)) {
+      state.cleanupAgain = true;
+      openTriggers(state);
+    }
+  } else if (hasPriority(state) && !state.awaiting) {
     /* What just happened triggers now (CR 603.2). A permanent that entered asking is then answered before anything
        else happens (rules/entering.mjs). */
     collectTriggers(state, triggering);
@@ -484,7 +510,7 @@ function grantStepPriority(state, events = [], triggering = events) {
   /* Re-read after the above: a player can lose during their own turn, and ordering triggers can
      have set a new wait. Either way priority goes to nobody. */
   const active = state.players[state.activePlayer];
-  state.priorityPlayer = hasPriority(state) && !state.awaiting && active && !active.lost
+  state.priorityPlayer = (hasPriority(state) || (state.phase === "CLEANUP" && state.cleanupAgain === true)) && !state.awaiting && active && !active.lost
     ? state.activePlayer : null;
   return events;
 }
@@ -536,6 +562,13 @@ export function advance(state) {
 
   /* CR 500.4, on the way out of the step that is ending. */
   emptyManaPools(state, events);
+
+  /* CR 514.3a: a cleanup step that gave priority is followed by another. */
+  if (state.phase === "CLEANUP" && state.cleanupAgain === true) {
+    state.cleanupAgain = false;
+    arrive(state, events);
+    return events;
+  }
 
   /* CR 500.8: phases added after the one now ending go directly after it -- the most recently added first -- and then the
      turn goes on from where it was (`resumeAfter`). A conditional step among them happens only if it would. */
