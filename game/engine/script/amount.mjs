@@ -47,7 +47,7 @@ import {parseManaCost, manaValue} from "../rules/mana.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
 export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "toughnessOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
-  "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn", "playersDealtCombatDamage", "cardTypesAmong"]);
+  "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn", "playersDealtCombatDamage", "cardTypesAmong", "manaSpent"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -66,6 +66,7 @@ export function amountProblems(value) {
   for (const key of ["lifeGainedThisTurn", "tokensCreatedThisTurn", "permanentsLeftThisTurn"]) if (key in value && !["you", "that player"].includes(value[key])) problems.push(`${key} is "you" or "that player"`);
   if ("playersDealtCombatDamage" in value && !["opponent", "any"].includes(value.playersDealtCombatDamage)) problems.push('playersDealtCombatDamage is "opponent" or "any"');
   if ("cardTypesAmong" in value && value.cardTypesAmong !== "remembered") problems.push('cardTypesAmong is "remembered"');
+  if ("manaSpent" in value && !["that card", "self"].includes(value.manaSpent)) problems.push('manaSpent is "that card" or "self"');
   if ("devotion" in value && !(Array.isArray(value.devotion) && value.devotion.length && value.devotion.every((c) => COLORS.includes(c)))) problems.push("Devotion is to one or more colors: {devotion: [\"B\"]}");
   for (const key of ["times", "plus", "atMost"]) if (key in value && !Number.isInteger(value[key])) problems.push(`An amount's ${key} is a whole number`);
   if ("if" in value) {
@@ -216,6 +217,12 @@ export function amountOf(state, value, context = {}) {
   else if ("manaValueOf" in value) {
     const id = objectOf(value.manaValueOf, context);
     n = id !== null && state.objects[id]?.manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0;
+  }
+  /* "If five or more mana was spent to cast that spell" (Expressive Firedancer; CR 601.2h): every mana spent on it, of
+     whatever kind, as rules/actions.mjs recorded it on the spell. */
+  else if ("manaSpent" in value) {
+    const id = objectOf(value.manaSpent, context);
+    n = id !== null ? Object.values(state.objects[id]?.spent ?? {}).reduce((a, b) => a + b, 0) : 0;
   }
   /* "For each other instant and sorcery spell you've cast before it this turn": counted as the trigger triggered. */
   else if ("castBefore" in value) n = context.about?.castBefore ?? 0;
