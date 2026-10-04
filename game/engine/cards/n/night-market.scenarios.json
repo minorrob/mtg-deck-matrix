@@ -1,0 +1,245 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Night Market",
+  "fixtures": {
+    "Elf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Sprite": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Faerie"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Frog": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Frog"
+      ],
+      "manaCost": "{U}{R}",
+      "colors": [
+        "U",
+        "R"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters tapped; Blue chosen, it taps for {U} the next turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Night Market"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Night Market"
+        },
+        {
+          "choose": [
+            "Blue"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Night Market",
+              "is": true
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Night Market"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "tap": "Night Market",
+          "mana": {
+            "U": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Red chosen: {R}, and it casts the Frog with an Island",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Night Market",
+            "Frog"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Night Market"
+        },
+        {
+          "choose": [
+            "Red"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Night Market",
+          "mana": {
+            "R": 1
+          }
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Frog"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Island",
+            "Night Market",
+            "Frog"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cycling {3}: a card",
+      "library": [
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Night Market"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Night Market"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Night Market"
+          ]
+        }
+      ]
+    }
+  ]
+}
