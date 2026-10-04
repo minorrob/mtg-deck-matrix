@@ -25,7 +25,7 @@ import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector} from "../filter.mjs";
 import {applyReplacements, enteringModifications, regenerated} from "../../rules/replacement.mjs";
-import {cantBeCountered, entersUntapped} from "../../rules/statics.mjs";
+import {cantBeCountered, entersUntapped, countersPlaced} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
 
@@ -102,8 +102,9 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false} = 
     if ((entering.tapped || tapped) && !entersUntapped(state, moved)) state.objects[moved].tapped = true;
     /* A question it asks as it enters waits for the next priority (rules/entering.mjs). */
     for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: moved, ...ask});
+    /* Counters it enters with are put on it (CR 122.6): "twice that many instead" sees them. */
     for (const [counter, count] of Object.entries(entering.counters)) {
-      state.objects[moved].counters[counter] = (state.objects[moved].counters[counter] ?? 0) + count;
+      state.objects[moved].counters[counter] = (state.objects[moved].counters[counter] ?? 0) + countersPlaced(state, moved, counter, count);
     }
   }
   events.push(event("GameEventCardChangeZone", state, {
@@ -257,8 +258,10 @@ export function moveZone(state, params, context, rng = null) {
   /* "The top card of your library", "the top seven cards of that player's library" (`fromTop`, `who`), revealed first if
      it says so (Dark Confidant) -- or simply moved, face up, to exile (Lord of the Void). "The top card of each player's
      library" (Etali, batch 79): of every library `who` names; "the top X cards" (Villainous Wealth): an amount. */
-  const moving = params.fromTop !== undefined
-    ? playersFor(state, params.who, context.controller).flatMap((whose) => cardsIn(state, "library", whose).slice(0, params.fromTop))
+  /* "Exile all but the bottom card of each opponent's library" (Jace, Reality Sculptor): `allButBottom`. */
+  const moving = params.fromTop !== undefined || params.allButBottom === true
+    ? playersFor(state, params.who, context.controller).flatMap((whose) => { const library = cardsIn(state, "library", whose);
+      return params.allButBottom === true ? library.slice(0, Math.max(0, library.length - 1)) : library.slice(0, params.fromTop); })
     : params.targets ?? [];
   if (params.reveal) for (const id of moving) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: state.objects[id].owner}}));
   /* "Put the rest on the bottom of your library in a random order" (Sunbird's Invocation; batch 80, `random`). */

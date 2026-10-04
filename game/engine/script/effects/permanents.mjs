@@ -630,7 +630,10 @@ export function delayedTrigger(state, params, context) {
   /* "That creature": the object, now; gone already, and the trigger waits on nothing (CR 603.7a's example). */
   const watch = waits && params.watch !== undefined ? ((bindEffect({targets: params.watch}, context).targets ?? [])[0] ?? null) : undefined;
   state.delayedTriggers.push({
-    ...(waits ? {on: structuredClone(params.on), ...(watch !== undefined ? {watch} : {}), ...(params.thisTurn ? {thisTurn: true} : {}), ...(params.once ? {once: true} : {}), fresh: true}
+    ...(waits ? {on: structuredClone(params.on), ...(watch !== undefined ? {watch} : {}), ...(params.thisTurn ? {thisTurn: true} : {}), ...(params.once ? {once: true} : {}),
+      /* "Until your next turn, whenever a creature attacks you ..." (Jace, Reality Sculptor): every time, until its controller's
+         next turn begins (rules/turn.mjs). */
+      ...(params.untilYourNextTurn ? {untilYourNextTurn: true} : {}), fresh: true}
       : {at: params.at ?? "end step"}),
     controller: context.controller,
     source: context.source ?? null,

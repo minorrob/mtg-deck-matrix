@@ -181,6 +181,11 @@ const TRIGGERS = {
     ...(t.countBefore ? {countBefore: true} : {}),
     /* "An instant or sorcery spell that targets a creature" (Rehearsed Debater): what one of its targets is (rules/trigger.mjs). */
     ...(t.targets ? {targets: t.targets} : {})}),
+  /* "Whenever one or more +1/+1 counters are put on Berta" (CR 122.1): counters of `counter` put on this permanent, once
+     for each time they are put on, however many. */
+  "counter added": (t) => ((t.who ?? "self") === "self" && typeof t.counter === "string" ? {on: "GameEventCardCounters", counterAdded: true, counter: t.counter} : null),
+  /* "Whenever you scry or surveil" (Proft, Consulting Detective; CR 701.22a, 701.25a): once each is done, by `scrier`. */
+  scried: (t) => ({on: "GameEventScried", scrier: t.scrier ?? "you"}),
   /* "Whenever you activate a loyalty ability" (Ajani Unrelenting; CR 606, 602.2): a loyalty ability put on the stack by
      you (`activator`), any permanent's; "if you removed two or more loyalty counters to activate it" (`removedAtLeast`,
      its cost, CR 606.4). About the permanent and the player. */
@@ -490,6 +495,17 @@ export function compileScript(script) {
       keywords.push("Prowess");
       return;
     }
+    /* INCREMENT (the live-game plan of 2026-10-04; Berta, Wise Extrapolator): "Whenever you cast a spell, if the amount of
+       mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature" -- the
+       keyword IS that triggered ability, its "if" an intervening one (CR 603.4): the mana spent on that spell (CR 601.2h),
+       greater than the lesser of the two. */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "increment") {
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS["spell cast"]({caster: "you"}),
+        condition: {compare: {count: {manaSpent: "that card"}, moreThan: {lesserOf: [{powerOf: "self"}, {toughnessOf: "self"}]}}},
+        effects: [{effect: "putCounter", targets: "self", counter: "+1/+1", count: 1}]});
+      keywords.push("Increment");
+      return;
+    }
     /* DEVOID (CR 702.114a, batch 77): "this object is colorless" in every zone -- the card's colors none, as its identity
        must say (keywords/types.mjs). */
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "devoid") {
@@ -665,7 +681,15 @@ export function compileScript(script) {
       /* Cycling and typecycling ("Basic landcycling {1}") say so, or "whenever you cycle a card" would miss them (CR 702.29f). */
       if (/^[A-Za-z ]*cycling\b/i.test(ability.text ?? "") !== (ability.cycling === true))
         problems.push(`${ability.text}: a cycling ability, and only one, says \`cycling: true\` (CR 702.29a, 702.29f)`);
-      abilities.push({id, kind: "activated", text: ability.text, cost, targets: ability.targets ?? [],
+      /* MODES CHOSEN AS IT IS ACTIVATED (CR 700.2, 602.2b): an activated ability whose one effect is a modal whose modes
+         name targets ("Choose one -- Double the number of each kind of counter on target permanent; or ... you have",
+         Aetheric Amplifier) -- its modes and their targets chosen with the offer (rules/actions.mjs), as a modal spell's
+         are. One whose modes name none is asked as it resolves, as it was. */
+      const sole = (ability.effects ?? []).length === 1 ? ability.effects[0] : null;
+      const chosenModes = sole?.effect === "modal" && sole.chooser === undefined && (sole.modes ?? []).some((m) => (m.targets ?? []).length)
+        ? {choose: sole.choose ?? 1, modes: sole.modes.map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? []}))} : null;
+      if (chosenModes && (ability.targets ?? []).length) problems.push(`${ability.text}: a modal activated ability names its targets in its modes, not beside them`);
+      abilities.push({id, kind: "activated", text: ability.text, cost, targets: ability.targets ?? [], ...(chosenModes ? {modal: chosenModes} : {}),
         effects: ability.effects, ...(loyalty !== undefined ? {loyalty, timing: "sorcery"} : ability.timing ? {timing: ability.timing} : {}), ...(ability.zone === "hand" ? {zone: "hand"} : {}),
         /* "{W}, Exile this card from your graveyard: ..." (Goldmeadow Nomad): an ability of the card in its owner's graveyard,
            offered there as encore's is (rules/actions.mjs). */

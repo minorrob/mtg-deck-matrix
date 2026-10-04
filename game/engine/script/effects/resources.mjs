@@ -22,8 +22,8 @@ import {runFollowUps} from "./index.mjs";
 import {selectMatching} from "../filter.mjs";
 import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
-import {typesOf, powerOf, keywordsOf, isKeywordCounter} from "../../rules/layers.mjs";
-import {cantGainLife} from "../../rules/statics.mjs";
+import {typesOf, powerOf, toughnessOf, keywordsOf, isKeywordCounter} from "../../rules/layers.mjs";
+import {cantGainLife, countersPlaced} from "../../rules/statics.mjs";
 
 /** `addMana` — into the controller's pool, which empties at the end of the step (CR 500.4). */
 export function addMana(state, params, context) {
@@ -192,6 +192,10 @@ export function dealDamage(state, params, context) {
         amount: proposal.amount, combat: false, infect,
       }));
     } else if (state.objects[toCard]) {
+      /* EXCESS DAMAGE (CR 120.4a): "if excess damage was dealt to that permanent this way" (Violent Echoes) -- past lethal
+         to a creature (its damage marked counted; from deathtouch, anything past 1, 702.2c), past its loyalty to a
+         planeswalker, the greater for one that is both -- read before it is dealt, and kept for the effects after it. */
+      context.excessDamage = (context.excessDamage ?? 0) + excessOf(state, toCard, proposal.amount, source);
       damagePermanent(state, toCard, proposal.amount, events, {infect});
       events.push(event("GameEventCardDamaged", state, {
         card: cardRef(state, toCard),
@@ -206,6 +210,19 @@ export function dealDamage(state, params, context) {
     if (linked > 0 && state.objects[source]) changeLife(state, state.objects[source].controller, linked, events);
   }
   return events;
+}
+
+/* How much of `amount` dealt to this permanent now would be excess damage (CR 120.4a). */
+function excessOf(state, id, amount, source) {
+  const types = typesOf(state, id), object = state.objects[id];
+  let excess = 0;
+  if (types.includes("Creature")) {
+    const deathtouch = source !== null && state.objects[source] && keywordsOf(state, source).includes("Deathtouch");
+    const lethal = Math.max(0, toughnessOf(state, id) - (object.damage ?? 0));
+    excess = Math.max(excess, amount - (deathtouch ? Math.min(lethal, 1) : lethal));
+  }
+  if (types.includes("Planeswalker")) excess = Math.max(excess, amount - (object.counters?.loyalty ?? 0));
+  return Math.max(0, excess);
 }
 
 /**
@@ -249,6 +266,8 @@ export function addCounters(state, id, kind, count, events) {
   if (count === 0) return;
   const object = state.objects[id];
   if (!object) return;
+  /* "Twice that many instead" (Branching Evolution; rules/statics.mjs). */
+  if (object.zone === "battlefield") count = countersPlaced(state, id, kind, count);
   const before = object.counters[kind] ?? 0;
   object.counters[kind] = before + count;
   /* A keyword counter's ability has the timestamp of the counter's placing (CR 122.1b, 613.7): a "loses all abilities"
@@ -352,6 +371,24 @@ export function putCounterAll(state, params, context) {
   const events = [];
   for (const id of selectMatching(state, params.selector ?? {what: "permanent"}, context))
     addCounters(state, id, params.counter ?? "+1/+1", params.count ?? 1, events);
+  return events;
+}
+
+/**
+ * `multiplyCounters` -- "double the number of each kind of counter on any number of target permanents" (Deepglow Skate;
+ * Forge's MultiplyCounter): on each target, as many more of each kind as it has now, put on as counters are (CR 122.1 --
+ * doubling is putting that many on, which "if counters would be put on" sees); `who`, the players whose own counters
+ * double ("each kind of counter you have": poison, CR 122.1c). `times` 2 unless it says.
+ */
+export function multiplyCounters(state, params, context) {
+  const events = [], more = Math.max(1, params.times ?? 2) - 1;
+  for (const id of params.targets ?? []) {
+    const object = state.objects[id];
+    if (!object || object.zone !== "battlefield") continue;
+    for (const [kind, n] of Object.entries({...object.counters})) if (n > 0) addCounters(state, id, kind, n * more, events);
+  }
+  for (const player of params.who !== undefined ? playersFor(state, params.who, context.controller) : [])
+    if ((state.players[player].poison ?? 0) > 0) events.push(...givePoison(state, player, state.players[player].poison * more));
   return events;
 }
 

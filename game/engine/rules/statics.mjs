@@ -26,6 +26,10 @@ import {parseManaCost, manaValue} from "./mana.mjs";
 
 /** Every rule a static ability may change, with the module that reads it. */
 export const STATIC_RULES = Object.freeze({
+  /** CR 614.1a, 122.6: "If one or more +1/+1 counters would be put on a creature you control, twice that many +1/+1
+      counters are put on that creature instead" (Branching Evolution): `affects` the permanent, `counter` the kind, `times`.
+      Read wherever counters are put on a permanent, as it enters too (countersPlaced, below). */
+  "more-counters": "rules/statics.mjs",
   /** CR 903.3a: "Freyalise, Llanowar's Fury can be your commander" -- a rule of the deck, not of the game: the card's
       definition says `canBeCommander` (cards/index.mjs), and the table holds a deck's commander to it (room/table.mjs,
       commanderLegal). */
@@ -215,6 +219,25 @@ export function cantGainLife(state, player) {
     }
   }
   return false;
+}
+
+/**
+ * HOW MANY COUNTERS ARE PUT ON, after "twice that many ... instead" (`more-counters`; CR 614.1a): each such static over
+ * this permanent and this kind multiplies them. Only multiplying is built, so their order does not change the result
+ * and nobody need be asked (CR 616.1 asks when it would). A permanent entering with counters is read as it has entered.
+ */
+export function countersPlaced(state, id, kind, count) {
+  if (!(count > 0) || !state.objects[id]) return count;
+  let n = count;
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static" || ability.rule !== "more-counters" || (ability.counter && ability.counter !== kind)) continue;
+      if (!matchesSelector({what: "permanent", ...ability.affects}, state, id, {controller: holder.controller, source: holderId})) continue;
+      n *= Math.max(1, ability.times ?? 2);
+    }
+  }
+  return n;
 }
 
 /** Who has goaded this creature (CR 701.15; effects/permanents.mjs goad), each until their next turn. */

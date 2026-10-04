@@ -85,7 +85,7 @@ function castHolds(rule, cast) {
 }
 
 /** Whether a condition holds now, for an ability controlled by `controller` on object `source`. No condition holds. */
-export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined} = {}) {
+export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined, excessDamage = undefined} = {}) {
   if (!condition) return true;
   if (condition.cast !== undefined && !castHolds(condition.cast, cast)) return false;
   /* "Khans -- ...": what its permanent chose as it entered (the Sieges). */
@@ -129,7 +129,9 @@ export function conditionHolds(state, condition, {controller, source = null, abo
     /* "If X is 5 or more" (Martial Coup): the X its spell was cast with, as the resolution knows it (CR 107.3a). */
     /* And "if you do" counted ("you may discard two cards. If you do", Thrilling Discovery): what the effect before it
        remembered (`rememberedCount`). */
-    const counted = {controller, source, ...(about ? {about} : {}), ...(x !== undefined ? {x} : {}), ...(remembered ? {remembered} : {})};
+    const counted = {controller, source, ...(about ? {about} : {}), ...(x !== undefined ? {x} : {}), ...(remembered ? {remembered} : {}),
+      /* "If excess damage was dealt this way" (Violent Echoes): what the damage before it left (script/resolution.mjs). */
+      ...(excessDamage !== undefined ? {excessDamage} : {})};
     const n = amountOf(state, condition.compare.count, counted), than = (v) => amountOf(state, v, counted);
     if (condition.compare.atLeast !== undefined && n < than(condition.compare.atLeast)) return false;
     if (condition.compare.atMost !== undefined && n > than(condition.compare.atMost)) return false;
