@@ -595,9 +595,11 @@ export function compileScript(script) {
       /* MODES CHOSEN AS IT IS CAST (CR 700.2, 601.2b): a spell whose one effect is a modal -- its modes, and their targets,
          are chosen as it is cast (rules/actions.mjs), never as it resolves, whether its modes name targets or not (Austere
          Command); the spell's own targets are then its modes'. "You may choose two instead" (`chooseMore`) and "choose one
-         or both" (`chooseUpTo`, Perfect Intimidation) say how many. */
+         or both" (`chooseUpTo`, Perfect Intimidation) say how many. A choice another player makes as it resolves ("the owner
+         of target nonland permanent puts it ... second from the top or on the bottom", Temporal Cleansing: `chooser`) is
+         no mode of the spell's, and waits for it to resolve. */
       const only = (ability.effects ?? []).length === 1 ? ability.effects[0] : null;
-      const modal = only?.effect === "modal"
+      const modal = only?.effect === "modal" && only.chooser === undefined
         ? {choose: only.choose ?? 1, ...(only.chooseMore ? {more: structuredClone(only.chooseMore)} : {}), ...(only.chooseUpTo ? {upTo: only.chooseUpTo} : {}),
           modes: (only.modes ?? []).map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? []}))} : null;
       if (modal && (ability.targets ?? []).length) problems.push("a modal spell chosen as it is cast names its targets in its modes, not beside them");

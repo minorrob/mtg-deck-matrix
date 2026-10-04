@@ -270,11 +270,12 @@ export function moveZone(state, params, context, rng = null) {
     /* What it is now, for `remember`: what it became -- or, exiled and returned at once, the permanent that came back
        ("if that creature is a Bird", Splash Portal, batch 79), set below. */
     let landed = moved;
-    /* "On top of your library" (Mystic Sanctuary): a card put into a library goes to the bottom unless it says the top. */
-    if (moved !== null && to === "library" && params.top === true && state.objects[moved]) {
+    /* "On top of your library" (Mystic Sanctuary): a card put into a library goes to the bottom unless it says the top --
+       or how far down from it ("second from the top", Temporal Cleansing: `position: 2`), the bottom of a shorter one. */
+    if (moved !== null && to === "library" && (params.top === true || Number.isInteger(params.position)) && state.objects[moved]) {
       const library = state.zones.library[state.objects[moved].owner];
       library.splice(library.indexOf(moved), 1);
-      library.unshift(moved);
+      library.splice(params.top === true ? 0 : Math.min(Math.max(params.position, 1) - 1, library.length), 0, moved);
     }
     /* "Onto the battlefield under your control" (Reanimate): the ability's controller, not the card's owner. */
     if (moved !== null && params.to === "battlefield" && params.controller !== undefined && state.objects[moved])
