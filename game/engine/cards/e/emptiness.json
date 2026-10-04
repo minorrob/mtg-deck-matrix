@@ -1,0 +1,110 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Emptiness",
+    "oracleId": "dc5dd7f7-375e-4d51-85cb-1abf16ca3854",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental",
+      "Incarnation"
+    ],
+    "manaCost": "{4}{W/B}{W/B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 5
+  },
+  "oracleText": "When this creature enters, if {W}{W} was spent to cast it, return target creature card with mana value 3 or less from your graveyard to the battlefield.\nWhen this creature enters, if {B}{B} was spent to cast it, put three -1/-1 counters on up to one target creature.\nEvoke {W/B}{W/B}",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, if {W}{W} was spent to cast it, return target creature card with mana value 3 or less from your graveyard to the battlefield.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "battlefield"
+        }
+      ],
+      "condition": {
+        "spent": {
+          "W": 2
+        }
+      },
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "manaValue": {
+            "max": 3
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, if {B}{B} was spent to cast it, put three -1/-1 counters on up to one target creature.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "-1/-1",
+          "count": 3
+        }
+      ],
+      "condition": {
+        "spent": {
+          "B": 2
+        }
+      },
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Evoke {W/B}{W/B}",
+      "keyword": "evoke",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{W/B}{W/B}"
+        }
+      ]
+    }
+  ]
+}

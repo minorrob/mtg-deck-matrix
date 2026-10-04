@@ -1,0 +1,105 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wistfulness",
+    "oracleId": "e5e8fce4-c97a-4ae4-9583-003c565e3bd6",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental",
+      "Incarnation"
+    ],
+    "manaCost": "{3}{G/U}{G/U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": 6,
+    "toughness": 5
+  },
+  "oracleText": "When this creature enters, if {G}{G} was spent to cast it, exile target artifact or enchantment an opponent controls.\nWhen this creature enters, if {U}{U} was spent to cast it, draw two cards, then discard a card.\nEvoke {G/U}{G/U} (You may cast this spell for its evoke cost. If you do, it's sacrificed when it enters.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, if {G}{G} was spent to cast it, exile target artifact or enchantment an opponent controls.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile"
+        }
+      ],
+      "condition": {
+        "spent": {
+          "G": 2
+        }
+      },
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ],
+              "controller": "opponent"
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Enchantment"
+              ],
+              "controller": "opponent"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, if {U}{U} was spent to cast it, draw two cards, then discard a card.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2
+        },
+        {
+          "effect": "discard",
+          "count": 1
+        }
+      ],
+      "condition": {
+        "spent": {
+          "U": 2
+        }
+      }
+    },
+    {
+      "kind": "keyword",
+      "text": "Evoke {G/U}{G/U}",
+      "keyword": "evoke",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{G/U}{G/U}"
+        }
+      ]
+    }
+  ]
+}

@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,117 defined and playable today; 2,412 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,117 defined and playable today; 2,413 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -26,7 +26,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Replacement effects | 34 | 0 | 4 | 0 | 30 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
 | Options and conditions | 37 | 23 | 5 | 0 | 9 |
-| Amounts the game counts | 188 | 11 | 1 | 0 | 176 |
+| Amounts the game counts | 188 | 12 | 1 | 0 | 175 |
 | Choices | 15 | 11 | 0 | 1 | 3 |
 | Other keyword constructs | 16 | 3 | 0 | 1 | 12 |
 
@@ -909,7 +909,7 @@ The things that alone hold back the most of the most-played cards.
 | — | CastTotalManaSpent | — | missing | 1 | 32 | 1 | 0 |
 | — | Colors of mana spent (converge) | — | missing | 1 | 31 | 1 | 1 |
 | — | CardToughness | — | missing | 1 | 20 | 1 | 0 |
-| — | Adamant | — | missing | 1 | 19 | 1 | 1 |
+| — | Mana of a color spent to cast it (adamant; "if {G}{G} was spent to cast it") | condition {spent: {color: n}} (script/condition.mjs) | built | 1 | 19 | 0 | 0 |
 | — | TotalCommanderCastFromCommandZone | — | missing | 1 | 16 | 1 | 1 |
 | — | YourTurns | — | missing | 1 | 11 | 1 | 1 |
 | — | Blessing | — | missing | 1 | 10 | 1 | 0 |

@@ -123,7 +123,7 @@ export function pushSpell(state, objectId, {controller, targets = [], permanent 
  * `sourceId` may be null for an ability whose source has already left the battlefield, which is a
  * legal position (CR 113.7a) rather than a bug.
  */
-export function pushAbility(state, {sourceId = null, controller, abilityId, kind = "ability", targets = [], script = null, about = null, x = null, lastKnown = null} = {}) {
+export function pushAbility(state, {sourceId = null, controller, abilityId, kind = "ability", targets = [], script = null, about = null, x = null, lastKnown = null, spent = null} = {}) {
   if (!abilityId) throw new Error("An ability on the stack needs an abilityId, or nothing can resolve it");
   const source = sourceId === null ? null : state.objects[sourceId];
   const entry = entryFor(state, {
@@ -139,6 +139,8 @@ export function pushAbility(state, {sourceId = null, controller, abilityId, kind
   /* X chosen as it was activated (CR 602.2b); and its source as it last was, for a source the cost sacrificed. */
   if (x !== null) entry.x = x;
   if (lastKnown) entry.lastKnown = structuredClone(lastKnown);
+  /* The mana spent to cast its source, as it triggered (rules/trigger.mjs): its "if" is asked again as it resolves. */
+  if (spent) entry.spent = {...spent};
   state.stack.push(entry);
   return entry;
 }
@@ -231,7 +233,8 @@ export function resolveTop(state, effect = null, rng = null) {
   if (fizzles) return finishTop(state, entry, events, true);
   /* An intervening "if" asked again as it resolves (CR 603.4): false now, and the ability does nothing. A triggered
      ability's own condition only -- "activate only if" was asked as it was activated (CR 602.5b) and is not again. */
-  if (entry.kind === "trigger" && script.condition && !conditionHolds(state, script.condition, {controller: entry.playerId, source, about: entry.about ?? undefined})) return finishTop(state, entry, events, false);
+  if (entry.kind === "trigger" && script.condition && !conditionHolds(state, script.condition, {controller: entry.playerId, source, about: entry.about ?? undefined,
+    ...(entry.spent ? {spent: entry.spent} : {})})) return finishTop(state, entry, events, false);
   /* What its effects need to know about their targets, read once, now (CR 608.2h). */
   const outcome = beginResolution(state, script.effects, {...context, targets, facts: factsOf(state, targets)}, rng);
   events.push(...outcome.events);
@@ -299,6 +302,8 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     if (to === "battlefield" && entry.escaped) state.objects[arrived].escaped = true;
     /* Cast for its evoke cost, the permanent it became was evoked (CR 702.74a): its own sacrifice trigger reads this. */
     if (to === "battlefield" && entry.evoked) state.objects[arrived].evoked = true;
+    /* And the mana spent to cast it (rules/actions.mjs): "if {G}{G} was spent to cast it" asks the permanent. */
+    if (to === "battlefield" && object.spent) state.objects[arrived].spent = {...object.spent};
     /* "If you cast a creature spell this way, it gains haste until end of turn" (rules/actions.mjs, castGains). */
     if (to === "battlefield" && (object.castGains ?? []).length)
       (state.effects ??= []).push({id: `cast-gains:${arrived}`, layer: 6, affects: {ids: [arrived]}, apply: {addKeywords: [...object.castGains]}, until: "end-of-turn", sourceController: entry.playerId});

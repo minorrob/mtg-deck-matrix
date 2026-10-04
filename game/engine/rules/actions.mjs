@@ -1280,6 +1280,12 @@ function perform(state, player, action, during = null) {
     if (permission?.ability.graveyardToExile) entry.graveyardToExile = true;
     /* On the spell as it now is: moving to the stack made a new object (CR 400.7). */
     if (gains.length && state.objects[entry.objectId]) state.objects[entry.objectId].castGains = gains;
+    /* THE MANA SPENT TO CAST IT (CR 601.2h): "if {W}{W} was spent to cast it" (Wistfulness), "if at least three red mana was
+       spent to cast this spell" (adamant) -- by color, on the spell as it now is, and on the permanent it becomes (rules/
+       stack.mjs). What the pool paid, tax and all: a creature that convoked it paid no mana (CR 702.51a), and a spell cast
+       without paying its mana cost spent none. A copy is not cast and has none (CR 707.10). */
+    const spent = Object.fromEntries(Object.entries(payment.mana ?? {}).filter(([, n]) => n > 0));
+    if (Object.keys(spent).length && state.objects[entry.objectId]) state.objects[entry.objectId].spent = spent;
     for (const [kind, id] of extraPaid) {
       /* A card exiled from the hand (Force of Will) goes to exile; a discard or a sacrifice to its owner's graveyard. */
       const paid = kind === "sacrifice" ? sacrificeOne(state, id, events) : moveOne(state, id, kind === "exile" ? "exile" : "graveyard", events, {owner: state.objects[id].owner});
