@@ -33,7 +33,7 @@
  */
 
 import {usesThisTurn} from "../state/index.mjs";
-import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf} from "../rules/layers.mjs";
+import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf, subtypesOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {hasSubtype, isCreatureType} from "../keywords/types.mjs";
 import {protectedFrom} from "../rules/protection.mjs";
@@ -45,7 +45,7 @@ const BLOCKERS_DECLARED = ["COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAG
 export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
   "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander", "nonColors", "owner", "enteredThisTurn", "toughnessOverPower",
-  "unblocked", "singleTarget", "goaded", "uniqueName", "sharesCreatureType", "multicolored",
+  "unblocked", "singleTarget", "goaded", "uniqueName", "sharesCreatureType", "multicolored", "sharesColor",
 ]);
 
 /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
@@ -111,6 +111,7 @@ function assertGrammar(selector) {
   /* What it shares a creature type with: a selector of permanents, held to the same grammar. */
   if (selector.sharesCreatureType !== undefined) compileSelector({...selector.sharesCreatureType, what: "permanent"});
   if (selector.multicolored !== undefined && selector.multicolored !== true) throw new Error("A selector's multicolored is true: two or more colors");
+  if (selector.sharesColor !== undefined && selector.sharesColor !== "self") throw new Error("A selector's sharesColor is \"self\": a color of its source's");
 }
 
 /* A player with hexproof (CR 702.11c): a permanent of theirs with the static "you have hexproof" (rules/statics.mjs). */
@@ -187,6 +188,12 @@ export function compileSelector(selector) {
     if (selector.colorless === false && colorsOf(state, id).length === 0) return false;
     /* "A multicolored spell" (CR 105.2b, Mage Tower Referee): two or more colors, through the layers. */
     if (selector.multicolored === true && colorsOf(state, id).length < 2) return false;
+    /* "An instant or sorcery card that shares a color with this planeswalker" (Kasmina): a color of its source's, now. */
+    if (selector.sharesColor === "self") {
+      const source = context.source !== null && context.source !== undefined && state.objects[context.source] ? colorsOf(state, context.source) : [];
+      const own = state.objects[id]?.zone === "battlefield" ? colorsOf(state, id) : (state.objects[id]?.colors ?? []);
+      if (!own.some((color) => source.includes(color))) return false;
+    }
     if (selector.colors) {
       const current = colorsOf(state, id);
       if (!selector.colors.every((color) => current.includes(color))) return false;
@@ -205,7 +212,7 @@ export function compileSelector(selector) {
        with its types. "A Forest" is a land with the subtype Forest, basic or not (CR 305.6). */
     /* A changeling is every creature type (CR 702.73a; keywords/types.mjs), in every zone. */
     if (selector.subtypes) {
-      const current = [...typesOf(state, id), ...(object.subtypes ?? [])], every = everyCreatureTypeOf(state, id);
+      const current = [...typesOf(state, id), ...(object.zone === "battlefield" ? subtypesOf(state, id) : object.subtypes ?? [])], every = everyCreatureTypeOf(state, id);
       if (!selector.subtypes.every((subtype) => hasSubtype(current, every, subtype))) return false;
     }
 
@@ -217,7 +224,7 @@ export function compileSelector(selector) {
     /* "Nonartifact creature", "non-Elf creature", "noncreature spell": none of these -- and an artifact creature is an
        artifact (CR 205.2b), so "nonartifact" excludes it. */
     if (selector.nonTypes || selector.nonSubtypes) {
-      const current = [...typesOf(state, id), ...(object.subtypes ?? [])], every = everyCreatureTypeOf(state, id);
+      const current = [...typesOf(state, id), ...(object.zone === "battlefield" ? subtypesOf(state, id) : object.subtypes ?? [])], every = everyCreatureTypeOf(state, id);
       if ((selector.nonTypes ?? []).some((type) => current.includes(type))) return false;
       /* "Non-Elf": a changeling is an Elf. */
       if ((selector.nonSubtypes ?? []).some((subtype) => hasSubtype(current, every, subtype))) return false;

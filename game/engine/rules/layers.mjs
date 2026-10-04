@@ -70,6 +70,8 @@ function printed(state, id) {
     id,
     card: object.card,
     types: [...(object.types ?? [])],
+    /* Subtypes, which layer 4 may set ("is a colorless Forest land", Song of the Dryads). */
+    subtypes: [...(object.subtypes ?? [])],
     colors: [...(object.colors ?? [])],
     keywords: [...new Set([...(object.keywords ?? []), ...counterKeywords(object.counters)])],
     counterKeywords: stampedCounterKeywords(object),
@@ -115,7 +117,7 @@ function affects(state, effect, current, sourceController) {
   if (rule.token !== undefined && (state.objects[current.id]?.token ?? false) !== rule.token) return false;
   /* "Other Elf creatures you control get +1/+1": a subtype (printed, or a type the layers added), and not the source. */
   /* A changeling is every creature type (CR 702.73a): an Elf lord's "other Elves" takes it in. */
-  if (rule.subtypes && !rule.subtypes.every((t) => current.types.includes(t) || hasSubtype(state.objects[current.id]?.subtypes ?? [], current.everyCreatureType, t))) return false;
+  if (rule.subtypes && !rule.subtypes.every((t) => current.types.includes(t) || hasSubtype(current.subtypes, current.everyCreatureType, t))) return false;
   /* "Legendary Humans you control have indestructible" (General's Enforcer): printed supertypes, which no layer changes. */
   if (rule.supertypes && !rule.supertypes.every((t) => (state.objects[current.id]?.supertypes ?? []).includes(t))) return false;
   if (rule.another === true && current.id === effect.sourceId) return false;
@@ -144,6 +146,8 @@ function applyEffect(current, effect) {
   /* CR 613.1d: "in addition to its other types" adds; setTypes replaces. */
   if (change.addTypes) for (const type of change.addTypes) if (!current.types.includes(type)) current.types.push(type);
   if (change.setTypes) current.types = [...change.setTypes];
+  /* "Enchanted permanent is a colorless Forest land" (Song of the Dryads): its subtypes set, every other one lost (CR 205.1b). */
+  if (change.setSubtypes) { current.subtypes = [...change.setSubtypes]; current.everyCreatureType = false; }
   /* "It's not a creature" (impending, CR 702.176a): that type taken away, the rest kept. */
   if (change.removeTypes) current.types = current.types.filter((type) => !change.removeTypes.includes(type));
   if (change.setColors) current.colors = [...change.setColors];
@@ -409,6 +413,8 @@ export const typesOf = (state, id) => [...derived(state, id, false).types];
 export const keywordsOf = (state, id) => [...derived(state, id, false).keywords];
 /** Its colors, after layer 5. */
 export const colorsOf = (state, id) => [...(derived(state, id, false).colors ?? [])];
+/** Its subtypes, after layer 4. */
+export const subtypesOf = (state, id) => [...derived(state, id, false).subtypes];
 /** Whether it is every creature type (a changeling, CR 702.73a, or an effect's, layer 4). */
 export const everyCreatureTypeOf = (state, id) => derived(state, id, false).everyCreatureType === true;
 
@@ -465,7 +471,7 @@ export function lastKnown(state, id) {
     controller: current.controller,
     types: [...current.types],
     /* What "another Vampire you control dies" and "equipped creature dies" ask of a thing that is gone. */
-    subtypes: [...(object.subtypes ?? [])],
+    subtypes: [...current.subtypes],
     supertypes: [...(object.supertypes ?? [])],
     /* What it chose as it entered, for its abilities read as it last was. */
     ...(object.chosen !== undefined ? {chosen: object.chosen} : {}),

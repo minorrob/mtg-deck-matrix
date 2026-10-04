@@ -1,0 +1,94 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Song of the Dryads",
+    "oracleId": "7c3944fa-7c86-4979-85a9-86196aa94594",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant permanent\nEnchanted permanent is a colorless Forest land.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Enchant permanent",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted permanent is a colorless Forest land.",
+      "layer": 4,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "setTypes": [
+          "Land"
+        ],
+        "setSubtypes": [
+          "Forest"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted permanent is a colorless Forest land.",
+      "layer": 5,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "setColors": []
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted permanent is a colorless Forest land.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "removeAllAbilities": true,
+        "addAbilities": [
+          {
+            "kind": "activated",
+            "text": "{T}: Add {G}.",
+            "cost": [
+              {
+                "atom": "{T}"
+              }
+            ],
+            "effects": [
+              {
+                "effect": "addMana",
+                "mana": {
+                  "G": 1
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

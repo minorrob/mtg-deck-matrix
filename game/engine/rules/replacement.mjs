@@ -293,7 +293,7 @@ function applyOne(state, {holderId, ability}, proposal, dry = false) {
     /* "With X +1/+1 counters on it" (CR 107.3m: the X paid to cast it), "a +1/+1 counter for each Zombie card in your
        graveyard", "X, where X is the greatest power among other creatures you control": counted as it is about to enter,
        "you" its controller. */
-    const n = isCounted(count) ? amountOf(state, count, {controller: proposal.player, source: proposal.objectId, x: proposal.x ?? 0}) : count;
+    const n = isCounted(count) ? amountOf(state, count, {controller: proposal.player, source: proposal.objectId, x: proposal.x ?? 0, kicked: proposal.kicked ?? 0}) : count;
     next.counters = {...(next.counters ?? {})};
     if (n > 0) next.counters[counter] = (next.counters[counter] ?? 0) + n;
   }
@@ -410,9 +410,9 @@ export function applyReplacements(state, proposal, {orders = [], askable = false
  *
  * @returns {{tapped: boolean, counters: object}}
  */
-export function enteringModifications(state, {objectId, player, types, abilities, x = 0, escaped = false}) {
+export function enteringModifications(state, {objectId, player, types, abilities, x = 0, escaped = false, kicked = 0}) {
   const {proposal} = applyReplacements(state, {
-    event: "enters", objectId, player, types: types ?? [], x, escaped,
+    event: "enters", objectId, player, types: types ?? [], x, escaped, kicked,
     entering: {abilities: abilities ?? []},
     tapped: false, counters: {},
   });
