@@ -115,16 +115,14 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Austere Command"
+          "cast": "Austere Command",
+          "modes": [
+            0,
+            2
+          ]
         },
         {
           "resolve": true
-        },
-        {
-          "choose": [
-            "Destroy all artifacts.",
-            "Destroy all creatures with mana value 3 or less."
-          ]
         }
       ],
       "expect": [

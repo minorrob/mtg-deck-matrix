@@ -70,15 +70,13 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Return of the Wildspeaker"
+          "cast": "Return of the Wildspeaker",
+          "modes": [
+            0
+          ]
         },
         {
           "resolve": true
-        },
-        {
-          "choose": [
-            "Draw cards equal to the greatest power among non-Human creatures you control."
-          ]
         }
       ],
       "expect": [
@@ -130,15 +128,13 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Return of the Wildspeaker"
+          "cast": "Return of the Wildspeaker",
+          "modes": [
+            1
+          ]
         },
         {
           "resolve": true
-        },
-        {
-          "choose": [
-            "Non-Human creatures you control get +3/+3 until end of turn."
-          ]
         }
       ],
       "expect": [

@@ -529,12 +529,12 @@ export function compileScript(script) {
           problems.push(`${alt.text}: an alternative cost of ${atom?.atom ?? "something"} nothing pays yet`);
       for (const atom of ability.additionalCost ?? [])
         if (!["discard", "sacrifice"].includes(atom?.atom)) problems.push(`${atom?.atom ?? "an additional cost"}: an additional cost nothing pays yet`);
-      /* MODES CHOSEN AS IT IS CAST (CR 700.2): a spell whose one effect is a modal with targets in its modes, or with "you
-         may choose two instead" -- its modes, and their targets, are chosen as it is cast (rules/actions.mjs), not as it
-         resolves; the spell's own targets are then its modes'. */
+      /* MODES CHOSEN AS IT IS CAST (CR 700.2, 601.2b): a spell whose one effect is a modal -- its modes, and their targets,
+         are chosen as it is cast (rules/actions.mjs), never as it resolves, whether its modes name targets or not (Austere
+         Command); the spell's own targets are then its modes'. "You may choose two instead" (`chooseMore`) and "choose one
+         or both" (`chooseUpTo`, Perfect Intimidation) say how many. */
       const only = (ability.effects ?? []).length === 1 ? ability.effects[0] : null;
-      /* "Choose one or both" (Perfect Intimidation): `chooseUpTo`, as many as that beyond `choose`, chosen as it is cast. */
-      const modal = only?.effect === "modal" && ((only.modes ?? []).some((m) => (m.targets ?? []).length) || only.chooseMore || only.chooseUpTo)
+      const modal = only?.effect === "modal"
         ? {choose: only.choose ?? 1, ...(only.chooseMore ? {more: structuredClone(only.chooseMore)} : {}), ...(only.chooseUpTo ? {upTo: only.chooseUpTo} : {}),
           modes: (only.modes ?? []).map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? []}))} : null;
       if (modal && (ability.targets ?? []).length) problems.push("a modal spell chosen as it is cast names its targets in its modes, not beside them");
@@ -597,12 +597,12 @@ export function compileScript(script) {
       const [adds] = effects ?? [];
       if (trigger?.on === "GameEventManaPool" && effects.length === 1 && adds?.effect === "addMana" && !(ability.targets ?? []).length && !ability.optional
         && (MANA(adds.mana) || adds.produced === true)) trigger.manaAbility = adds.produced === true ? {produced: true} : {mana: {...adds.mana}};
-      /* MODES CHOSEN AS IT IS PUT ON THE STACK (CR 603.3c, 700.2b): a triggered ability whose one effect is a modal with
-         targets in its modes -- its modes and their targets are chosen then (rules/trigger.mjs), not as it resolves. "You
-         may choose two" (`mayChooseNone`): that many, or none, and it is removed from the stack. "Each mode must target a
-         different player" (`differentPlayers`, Shadrix Silverquill). */
+      /* MODES CHOSEN AS IT IS PUT ON THE STACK (CR 603.3c, 700.2b): a triggered ability whose one effect is a modal -- its
+         modes and their targets are chosen then (rules/trigger.mjs), never as it resolves, whether its modes name targets or
+         not (Tireless Provisioner). "You may choose two" (`mayChooseNone`): that many, or none, and it is removed from the
+         stack. "Each mode must target a different player" (`differentPlayers`, Shadrix Silverquill). */
       const lone = (ability.effects ?? []).length === 1 ? ability.effects[0] : null;
-      const modal = lone?.effect === "modal" && (lone.modes ?? []).some((m) => (m.targets ?? []).length)
+      const modal = lone?.effect === "modal"
         ? {choose: lone.choose ?? 1, ...(lone.mayChooseNone ? {mayChooseNone: true} : {}), ...(lone.differentPlayers ? {differentPlayers: true} : {}),
           modes: (lone.modes ?? []).map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? []}))} : null;
       if (modal && (ability.optional || (ability.targets ?? []).length)) problems.push(`${ability.text}: a modal triggered ability names its targets in its modes, and "you may" as mayChooseNone`);

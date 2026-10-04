@@ -3,7 +3,7 @@
   "card": "Tireless Provisioner",
   "scenarios": [
     {
-      "name": "A land enters: he chooses a Treasure",
+      "name": "A land enters: Rob chooses a Treasure as the trigger goes on the stack",
       "setup": [
         {
           "seat": 0,
@@ -25,12 +25,12 @@
           "play": "Forest"
         },
         {
-          "resolve": true
-        },
-        {
           "choose": [
             "Create a Treasure token."
           ]
+        },
+        {
+          "resolve": true
         }
       ],
       "expect": [
