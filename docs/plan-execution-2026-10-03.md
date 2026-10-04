@@ -7,6 +7,23 @@ step is a pull request-sized unit with its scope, its proof, its estimate (sessi
 needs from Rob. The decisions are asked once, here, at the top, each with the recommended answer; the executor takes the
 recommended answer wherever Rob has not said otherwise and says so in the PR.
 
+## Status, 2026-10-04 15:45 UTC, and the priority now
+
+**The live game comes first** (`docs/plan-live-game-2026-10-04.md`): Rob plays the four decks of the "Live Game Load 10.4"
+sheet, one human seat and three AI seats, at about 22:25 UTC on 2026-10-04, at staging. Its trains (that plan's §6.2) go
+ahead of every step below; the steps resume in their order after the game.
+
+| Step | Status |
+| --- | --- |
+| X1-X4 | done (#577-#582) |
+| X5 | built (#583-#598); Rob's game with D5 at staging waits on a release |
+| X6 | the worker pool done (#599); the runner is Rob's (D7) |
+| X7 | not started (D8, Rob's) |
+| X8 | X8a done (#600); X8b, X8c not started |
+| X9, X10 | not started |
+| X11 | under way as Rob's Priority Batch 10.3, in Rob's order: 641 of its 1,095 cards defined; the seven decks 84.1% with every rule |
+| X12-X14, G-D to G-F | not started |
+
 ## The decisions, asked once
 
 | # | Decision | Recommended | Why | If Rob says no |

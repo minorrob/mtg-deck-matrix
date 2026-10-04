@@ -1,0 +1,97 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Budding Insurgent",
+    "oracleId": "723669e0-4a04-45ec-8c76-b1a369aa6892",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dryad",
+      "Scout"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Vigilance\nSacrifice this creature: Destroy target artifact or enchantment. If that permanent was a legendary enchantment, draw a card. Activate only as a sorcery.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "activated",
+      "text": "Sacrifice this creature: Destroy target artifact or enchantment. If that permanent was a legendary enchantment, draw a card. Activate only as a sorcery.",
+      "timing": "sorcery",
+      "cost": [
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Enchantment"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "about": "target",
+            "is": {
+              "types": [
+                "Enchantment"
+              ],
+              "supertypes": [
+                "Legendary"
+              ]
+            }
+          },
+          "then": [
+            {
+              "effect": "destroy",
+              "targets": {
+                "target": 0
+              }
+            },
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "destroy",
+              "targets": {
+                "target": 0
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
