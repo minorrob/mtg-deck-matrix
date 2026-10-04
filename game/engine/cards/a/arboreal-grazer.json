@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Arboreal Grazer",
+    "oracleId": "d18a0815-59d3-4667-b52b-9acda741215e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Sloth",
+      "Beast"
+    ],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 0,
+    "toughness": 3
+  },
+  "oracleText": "Reach\nWhen this creature enters, you may put a land card from your hand onto the battlefield tapped.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Reach",
+      "keyword": "reach"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, you may put a land card from your hand onto the battlefield tapped.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "hand",
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          },
+          "to": "battlefield",
+          "tapped": true,
+          "upTo": true
+        }
+      ]
+    }
+  ]
+}

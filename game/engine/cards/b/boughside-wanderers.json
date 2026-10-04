@@ -1,0 +1,103 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Boughside Wanderers",
+    "oracleId": "dc788b66-d03d-4066-be35-481be96ed2f7",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Scout"
+    ],
+    "manaCost": "{4}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "When this creature enters, look at the top four cards of your library. You may reveal a permanent card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.\nLandfall — Whenever a land you control enters, this creature gets +2/+2 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, look at the top four cards of your library. You may reveal a permanent card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "dig",
+          "count": 4,
+          "take": 1,
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Artifact"
+                ]
+              },
+              {
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "types": [
+                  "Enchantment"
+                ]
+              },
+              {
+                "types": [
+                  "Land"
+                ]
+              },
+              {
+                "types": [
+                  "Planeswalker"
+                ]
+              },
+              {
+                "types": [
+                  "Battle"
+                ]
+              }
+            ]
+          },
+          "upTo": true,
+          "to": "hand",
+          "reveal": true,
+          "rest": "bottom",
+          "random": true
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Landfall — Whenever a land you control enters, this creature gets +2/+2 until end of turn.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 2,
+          "toughness": 2
+        }
+      ]
+    }
+  ]
+}

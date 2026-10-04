@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bloom Hulk",
+    "oracleId": "c99896a8-8b58-4946-8f2d-b4e2562f278a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Plant",
+      "Elemental"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "When this creature enters, proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "proliferate"
+        }
+      ]
+    }
+  ]
+}

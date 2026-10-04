@@ -1,0 +1,25 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ordinary Bear",
+    "oracleId": "89a2fab8-b074-42aa-a871-d9c5de2d0895",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bear"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "",
+  "source": "hand",
+  "abilities": []
+}
