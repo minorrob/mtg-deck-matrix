@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ori, Keeper of Songs",
+    "oracleId": "69cc089a-abd3-4edb-bc79-f02daac70837",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dwarf",
+      "Bard"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Storied (If you control three or more artifacts, legendaries, and/or Sagas, you have an enduring story for the rest of the game.)\nAs long as you have an enduring story, Ori gets +1/+0 and has vigilance.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Storied",
+      "keyword": "storied"
+    },
+    {
+      "kind": "static",
+      "text": "As long as you have an enduring story, Ori gets +1/+0 and has vigilance.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 0
+      },
+      "condition": {
+        "enduringStory": true
+      }
+    },
+    {
+      "kind": "static",
+      "text": "As long as you have an enduring story, Ori gets +1/+0 and has vigilance.",
+      "layer": 6,
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Vigilance"
+        ]
+      },
+      "condition": {
+        "enduringStory": true
+      }
+    }
+  ]
+}

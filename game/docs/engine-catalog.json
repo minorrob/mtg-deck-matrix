@@ -15,10 +15,10 @@
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 35,
+    "built": 36,
     "partial": 0,
     "named": 19,
-    "missing": 140
+    "missing": 139
    },
    "entries": [
     {
@@ -1993,8 +1993,8 @@
      "kind": "keyword ability",
      "rule": "702.195",
      "name": "Storied",
-     "engine": null,
-     "status": "missing",
+     "engine": "Storied",
+     "status": "built",
      "forge": "Storied",
      "top": 0,
      "all": 9,

@@ -156,7 +156,9 @@ const BEYOND_TIER0 = ["shroud", "ward",
   /* Batch 78: annihilator (CR 702.86). */
   "annihilator",
   /* Batch 79: commander ninjutsu (CR 702.49d), ninjutsu that also works from the command zone. */
-  "commander ninjutsu"];
+  "commander ninjutsu",
+  /* Rob's Priority Batch 10.3, its seventeenth slice: storied (CR 702.195), an enduring story (keywords/designations.mjs). */
+  "storied"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

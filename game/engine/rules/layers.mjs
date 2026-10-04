@@ -97,10 +97,16 @@ function printed(state, id) {
 /* THE KEYS A LAYER STATIC'S `affects` MAY CARRY -- this matcher's, narrower than the selector grammar because the layers
    cannot ask what they are still deriving. Anything else would be ignored, and a static would affect more than it says:
    the card compiler refuses it (cards/index.mjs). */
-export const LAYER_AFFECTS_KEYS = Object.freeze(["what", "ids", "types", "subtypes", "supertypes", "controller", "token", "another", "self", "attachedBy", "colors", "colorless", "countersAtLeast", "tapped"]);
+export const LAYER_AFFECTS_KEYS = Object.freeze(["anyOf", "what", "ids", "types", "subtypes", "supertypes", "controller", "token", "another", "self", "attachedBy", "colors", "colorless", "countersAtLeast", "tapped"]);
 
 function affects(state, effect, current, sourceController) {
   const rule = effect.affects ?? {};
+  /* "Artifacts and creatures you control have ward {1}" (Thorin): any of these, each with what they share -- an artifact
+     creature once, where two statics would give it the ability twice. */
+  if (Array.isArray(rule.anyOf)) {
+    const {anyOf, ...shared} = rule;
+    return anyOf.some((one) => affects(state, {...effect, affects: {...shared, ...one}}, current, sourceController));
+  }
   if (rule.ids && !rule.ids.includes(current.id)) return false;
   if (rule.types && !rule.types.every((type) => current.types.includes(type))) return false;
   if (rule.controller === "you" && current.controller !== sourceController) return false;
