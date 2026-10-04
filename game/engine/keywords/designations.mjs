@@ -11,7 +11,7 @@
  * (script/condition.mjs). A player who has it carries `enduringStory: true`; nobody else carries the key, so a game made
  * before it hashes and replays as it did.
  */
-import {keywordsOf, controllerOf} from "../rules/layers.mjs";
+import {keywordsOf, controllerOf, deriving} from "../rules/layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 
 /** The family of §3.1, so `engine-coverage` counts these as behavior and not as words. */
@@ -31,14 +31,19 @@ const tells = (state, id) => STORY.some((selector) => matchesSelector(selector, 
  * @returns {Array} an event for each player who gained one
  */
 export function enduringStories(state) {
-  const events = [];
-  for (const player of state.players) {
-    if (player.enduringStory === true || player.lost) continue;
-    const mine = state.zones.battlefield.filter((id) => controllerOf(state, id) === player.id);
-    if (!mine.some((id) => keywordsOf(state, id).includes("Storied"))) continue;
-    if (mine.filter((id) => tells(state, id)).length < 3) continue;
-    player.enduringStory = true;
-    events.push({kind: "GameEventEnduringStory", data: {turn: state.turn, phase: state.phase, fields: {player: {playerId: player.id}}}});
-  }
-  return events;
+  /* Nobody left who could gain one: nothing to read. */
+  if (state.players.every((player) => player.enduringStory === true || player.lost)) return [];
+  /* One question, each permanent derived once in it (rules/layers.mjs, deriving), as the rest of the check is. */
+  return deriving(state, () => {
+    const events = [];
+    const storied = state.zones.battlefield.filter((id) => keywordsOf(state, id).includes("Storied"));
+    for (const player of state.players) {
+      if (player.enduringStory === true || player.lost) continue;
+      if (!storied.some((id) => controllerOf(state, id) === player.id)) continue;
+      if (state.zones.battlefield.filter((id) => controllerOf(state, id) === player.id && tells(state, id)).length < 3) continue;
+      player.enduringStory = true;
+      events.push({kind: "GameEventEnduringStory", data: {turn: state.turn, phase: state.phase, fields: {player: {playerId: player.id}}}});
+    }
+    return events;
+  });
 }
