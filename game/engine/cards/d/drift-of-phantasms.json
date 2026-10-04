@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Drift of Phantasms",
+    "oracleId": "6ee51134-c4ad-4101-8ce2-23dde9359cd4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 0,
+    "toughness": 5
+  },
+  "oracleText": "Defender (This creature can't attack.)\nFlying\nTransmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender",
+      "keyword": "defender"
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "activated",
+      "text": "Transmute {1}{U}{U}",
+      "zone": "hand",
+      "timing": "sorcery",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{U}{U}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "manaValue": {
+              "exactly": 3
+            }
+          },
+          "to": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ]
+    }
+  ]
+}

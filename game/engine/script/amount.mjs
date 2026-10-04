@@ -14,6 +14,7 @@
  *   {countersOn: ref, counter: kind}     counters of a kind on an object ("for each burden counter on The One Ring"), or
  *                                        of every kind, `counter: "any"` ("for each counter on this creature")
  *   {powerOf: ref}                       an object's power ("Krenko's power"): "self", or "that card"
+ *   {toughnessOf: ref}                   its toughness ("its controller gains life equal to its toughness", Condemn)
  *   {greatestPower: selector}            the greatest power among what the selector matches, 0 if nothing (CR 208.1)
  *   {totalPower: selector}               their powers added together
  *   {devotion: [colors]}                 CR 700.5: the mana symbols of those colors among the mana costs of permanents you
@@ -39,11 +40,11 @@
 
 import {conditionHolds, conditionProblems} from "./condition.mjs";
 import {selectMatching, compileSelector} from "./filter.mjs";
-import {powerOf, characteristicsOf, controllerOf} from "../rules/layers.mjs";
+import {powerOf, toughnessOf, characteristicsOf, controllerOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
-export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
+export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "toughnessOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
   "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half"];
 const COLORS = ["W", "U", "B", "R", "G"];
@@ -136,6 +137,9 @@ export function amountOf(state, value, context = {}) {
   } else if ("powerOf" in value) {
     const id = objectOf(value.powerOf, context);
     n = id !== null && state.objects[id]?.zone === "battlefield" ? powerOf(state, id) : (context.lastKnown?.power ?? 0);
+  } else if ("toughnessOf" in value) {
+    const id = objectOf(value.toughnessOf, context);
+    n = id !== null && state.objects[id]?.zone === "battlefield" ? toughnessOf(state, id) : (context.lastKnown?.toughness ?? 0);
   } else if ("countersAmong" in value) {
     /* "The number of +1/+1 counters on lands you control" (Toph, the Blind Bandit): all of them, of the kind. */
     n = matching(state, value.countersAmong, who).reduce((sum, id) => sum + (state.objects[id].counters?.[value.counter ?? "+1/+1"] ?? 0), 0);

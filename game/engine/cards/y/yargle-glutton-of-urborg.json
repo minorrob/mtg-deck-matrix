@@ -1,0 +1,29 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Yargle, Glutton of Urborg",
+    "oracleId": "ed66cd31-958f-4b28-82a3-e04acc819afc",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Frog",
+      "Spirit"
+    ],
+    "manaCost": "{4}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 9,
+    "toughness": 3
+  },
+  "oracleText": "",
+  "source": "hand",
+  "abilities": []
+}

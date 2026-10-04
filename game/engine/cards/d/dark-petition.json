@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dark Petition",
+    "oracleId": "79acdb37-8d52-4bc8-a7be-a7e92b6166e5",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Search your library for a card, put that card into your hand, then shuffle.\nSpell mastery — If there are two or more instant and/or sorcery cards in your graveyard, add {B}{B}{B}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Search your library for a card, put that card into your hand, then shuffle.\nSpell mastery — If there are two or more instant and/or sorcery cards in your graveyard, add {B}{B}{B}.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {},
+          "count": 1,
+          "to": "hand",
+          "shuffle": true
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "compare": {
+              "count": {
+                "count": {
+                  "what": "card",
+                  "zone": "graveyard",
+                  "controller": "you",
+                  "anyOf": [
+                    {
+                      "types": [
+                        "Instant"
+                      ]
+                    },
+                    {
+                      "types": [
+                        "Sorcery"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "atLeast": 2
+            }
+          },
+          "then": [
+            {
+              "effect": "addMana",
+              "mana": {
+                "B": 3
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

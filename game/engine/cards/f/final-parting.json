@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Final Parting",
+    "oracleId": "a5852994-d816-4e62-8a03-254223714544",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Search your library for two cards. Put one into your hand and the other into your graveyard. Then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Search your library for two cards. Put one into your hand and the other into your graveyard. Then shuffle.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {},
+          "count": 2,
+          "shuffle": true,
+          "destinations": [
+            {
+              "to": "hand"
+            },
+            {
+              "to": "graveyard"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

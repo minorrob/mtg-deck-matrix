@@ -1,0 +1,259 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Condemn",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Tall Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{2}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 4
+    },
+    "Healer": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Cleric"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "h",
+          "kind": "triggered",
+          "text": "When this creature enters, you gain 2 life.",
+          "trigger": {
+            "on": "GameEventCardChangeZone",
+            "to": "Battlefield",
+            "who": "self"
+          },
+          "effects": [
+            {
+              "effect": "gainLife",
+              "amount": 2
+            }
+          ]
+        }
+      ]
+    },
+    "Small Insight": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Draw a card.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Divination": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{2}{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Draw two cards.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 2
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's attacking Tall Bear (2/4) put on the bottom of Maya's library; Maya gains 4 life, its toughness",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Condemn"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Tall Bear"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Tall Bear"
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Condemn",
+          "targets": [
+            {
+              "card": "Tall Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 44
+        },
+        {
+          "seat": 1,
+          "controls": []
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Not attacking: Maya's Tall Bear is no target",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Condemn"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Tall Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Condemn"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Tall Bear"
+          ]
+        }
+      ]
+    }
+  ]
+}
