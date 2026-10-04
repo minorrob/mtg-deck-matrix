@@ -166,6 +166,9 @@ export function runScenario(scenario, cards, fixtures = {}) {
     /* With escape (CR 702.138a): its own ("own"), or one a permanent gives it ("given"); `false`, not with escape. Its other
        cards are a question once it is taken, answered by the next step's `choose`. */
     if (step.escape !== undefined) found = found.filter((a) => (a.escape ?? false) === step.escape);
+    /* Convoked (CR 702.51a): `convoke: true` takes the offer the caster's creatures help pay, its creatures a question once it
+       is taken, answered by the next step's `choose`; without it, the cast the pool pays alone. */
+    found = found.filter((a) => (a.convoke ?? false) === (step.convoke ?? false));
     for (const key of ["exile"]) if (step[key] !== undefined) found = found.filter((a) => (a.costNames ?? []).includes(step[key]));
     /* Which permanent a "Sacrifice a creature" cost takes, which card a discard does, or which creature an "untap a tapped
        creature you control" cost untaps: the offer that names it. */

@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sun-Dappled Celebrant",
+    "oracleId": "27c87371-697e-4ca6-a7f4-d99215d908bc",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Treefolk",
+      "Cleric"
+    ],
+    "manaCost": "{4}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 5,
+    "toughness": 6
+  },
+  "oracleText": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nVigilance",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Convoke",
+      "keyword": "convoke"
+    },
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    }
+  ]
+}

@@ -1,0 +1,332 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Merrow Skyswimmer",
+  "fixtures": {
+    "White Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Blue Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Merfolk"
+      ],
+      "manaCost": "{1}{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Wolf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wolf"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Elk": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elk"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Gray Golem": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Golem"
+      ],
+      "manaCost": "{2}",
+      "colors": [],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Convoked by five creatures, summoning sick, for no mana: the white and the blue pay {W/U}{W/U}, the rest {3}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "White Pal",
+            "Blue Pal",
+            "Bear",
+            "Wolf",
+            "Elk"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Merrow Skyswimmer"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Merrow Skyswimmer",
+          "convoke": true
+        },
+        {
+          "choose": [
+            "White Pal",
+            "Blue Pal",
+            "Bear",
+            "Wolf",
+            "Elk"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "White Pal",
+            "Blue Pal",
+            "Bear",
+            "Wolf",
+            "Elk",
+            "Merrow Skyswimmer",
+            "Merfolk"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "White Pal"
+        },
+        {
+          "seat": 0,
+          "tapped": "Elk"
+        },
+        {
+          "seat": 0,
+          "tapped": "Merrow Skyswimmer",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "Two Islands pay {W/U}{W/U} and three green creatures {3}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Bear",
+            "Wolf",
+            "Elk"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Merrow Skyswimmer"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Merrow Skyswimmer",
+          "convoke": true
+        },
+        {
+          "choose": [
+            "Bear",
+            "Wolf",
+            "Elk"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Island",
+            "Island",
+            "Bear",
+            "Wolf",
+            "Elk",
+            "Merrow Skyswimmer"
+          ]
+        },
+        {
+          "seat": 0,
+          "pool": {}
+        }
+      ]
+    },
+    {
+      "name": "Five green creatures cannot pay {W/U}{W/U}: not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Wolf",
+            "Elk",
+            "Gray Golem",
+            "Gray Golem"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Merrow Skyswimmer"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "offers": {
+                "kind": "cast",
+                "card": "Merrow Skyswimmer"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "With the mana for all of it, both offers: paid from the pool, or convoked",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Merrow Skyswimmer"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "offers": {
+                "kind": "cast",
+                "card": "Merrow Skyswimmer"
+              },
+              "count": 2
+            }
+          ]
+        },
+        {
+          "cast": "Merrow Skyswimmer"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Bear",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "pool": {}
+        }
+      ]
+    }
+  ]
+}

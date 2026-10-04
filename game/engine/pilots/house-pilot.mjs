@@ -97,7 +97,8 @@ export function housePilot({seat, cards = () => null} = {}) {
       const loyal = actions.filter((a) => a.kind === "activate" && a.loyalty !== undefined && (!(a.targets ?? []).length || aim(view, a) > 0));
       if (loyal.length) return loyal.reduce((best, a) => (a.loyalty > best.loyalty ? a : best));
       /* An X spell at X = 0 does next to nothing; at its largest it does the most (CR 107.3). */
-      const casts = actions.filter((a) => a.kind === "cast" && a.x !== 0 && (!(a.targets ?? []).length || aim(view, a) > 0));
+      /* Never convoked (CR 702.51a): which creatures to tap is a plan of its own, and the pool or the lands pay instead. */
+      const casts = actions.filter((a) => a.kind === "cast" && a.x !== 0 && !a.convoke && (!(a.targets ?? []).length || aim(view, a) > 0));
       const worth = (a) => manaValue(a.label) + (a.x ?? 0);
       const best = casts.length ? casts.reduce((top, a) => (worth(a) > worth(top) || (worth(a) === worth(top) && aim(view, a) > aim(view, top)) ? a : top)) : null;
       /* An X spell waits for every source to be tapped first, so X is as large as the mana allows. */

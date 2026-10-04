@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Unexpected Assistance",
+    "oracleId": "c452e748-8a2a-4f68-8869-e294925a8b0b",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nDraw three cards, then discard a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Convoke",
+      "keyword": "convoke"
+    },
+    {
+      "kind": "spell",
+      "text": "Draw three cards, then discard a card.",
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 3
+        },
+        {
+          "effect": "discard",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

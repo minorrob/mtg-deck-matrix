@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,114 defined and playable today; 2,398 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,114 defined and playable today; 2,403 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 34 | 0 | 20 | 140 |
+| Keyword abilities (CR 702) | 194 | 35 | 0 | 19 | 140 |
 | Keyword actions (CR 701) | 70 | 18 | 3 | 5 | 44 |
 | Effects | 192 | 58 | 1 | 13 | 120 |
 | Triggers | 138 | 14 | 4 | 6 | 114 |
@@ -42,15 +42,15 @@ The things that alone hold back the most of the most-played cards.
 | keyword construct | ETBReplacement | — | missing | 10 | 33 |
 | effect | MultiplyCounter | multiplyCounters | named | 10 | 12 |
 | effect | SetState | setState | named | 9 | 19 |
-| count | Cards in a library | — | missing | 8 | 13 |
+| count | Cards in a library | — | missing | 9 | 13 |
+| count | What entered or died this turn | — | missing | 9 | 10 |
 | effect | RingTemptsYou | — | missing | 8 | 11 |
-| count | What entered or died this turn | — | missing | 8 | 10 |
 | count | Spells cast this turn | — | missing | 7 | 12 |
 | option | Imprint (a card exiled with this) | — | missing | 7 | 10 |
+| effect | Phases | phaseOut | named | 6 | 9 |
 | keyword ability | Evoke | — | named | 6 | 6 |
-| keyword ability | Convoke | — | named | 5 | 11 |
 | trigger | CounterAddedOnce | counter added once | named | 5 | 10 |
-| effect | Phases | phaseOut | named | 5 | 9 |
+| option | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 5 | 9 |
 
 ## Keyword abilities (CR 702)
 
@@ -75,7 +75,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.122 | Crew | Crew | built | 15 | 192 | 0 | 0 |
 | 702.34 | Flashback | Flashback | built | 14 | 214 | 0 | 0 |
 | 702.49 | Ninjutsu | Ninjutsu | built | 14 | 45 | 0 | 0 |
-| 702.51 | Convoke | — | named | 11 | 106 | 11 | 5 |
+| 702.51 | Convoke | Convoke | built | 11 | 106 | 0 | 0 |
 | 702.184 | Station | Station | built | 11 | 35 | 0 | 0 |
 | 702.4 | Double Strike | Double Strike | built | 10 | 125 | 0 | 0 |
 | 702.73 | Changeling | Changeling | built | 10 | 63 | 0 | 0 |
@@ -106,7 +106,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.175 | Offspring | — | missing | 4 | 21 | 4 | 4 |
 | 702.75 | Hideaway | — | named | 4 | 15 | 4 | 2 |
 | 702.62 | Suspend | — | missing | 3 | 72 | 3 | 3 |
-| 702.35 | Madness | — | missing | 3 | 62 | 3 | 1 |
+| 702.35 | Madness | — | missing | 3 | 62 | 3 | 2 |
 | 702.84 | Unearth | — | named | 3 | 58 | 3 | 3 |
 | 702.88 | Rebound | — | named | 3 | 35 | 3 | 3 |
 | 702.189 | Firebending | — | missing | 3 | 26 | 3 | 2 |
@@ -280,7 +280,7 @@ The things that alone hold back the most of the most-played cards.
 | 701.57 | Discover | discover | named | 6 | 35 | 6 | 5 |
 | 701.65 | Airbend | — | missing | 4 | 13 | 0 | 0 |
 | 701.16 | Investigate (a Clue (CR 111.10f)) | createToken | built | 3 | 142 | 0 | 0 |
-| 701.50 | Connive | connive | named | 3 | 51 | 3 | 1 |
+| 701.50 | Connive | connive | named | 3 | 51 | 3 | 2 |
 | 701.12 | Exchange | exchangeLife | named | 3 | 38 | 2 | 2 |
 | 701.40 | Manifest | — | missing | 3 | 32 | 0 | 0 |
 | 701.44 | Explore | — | missing | 1 | 42 | 0 | 0 |
@@ -395,7 +395,7 @@ The things that alone hold back the most of the most-played cards.
 | BecomeMonarch | — | missing | 10 | 62 | 10 | 3 |
 | ChangeTargets | — | missing | 10 | 43 | 8 | 5 |
 | Earthbend | earthbend | built | 10 | 36 | 0 | 0 |
-| Phases | phaseOut | named | 9 | 56 | 9 | 5 |
+| Phases | phaseOut | named | 9 | 56 | 9 | 6 |
 | RemoveCounter | removeCounter | built | 8 | 198 | 0 | 0 |
 | ChoosePlayer | — | missing | 8 | 120 | 8 | 3 |
 | Repeat | — | missing | 8 | 58 | 8 | 0 |
@@ -413,7 +413,7 @@ The things that alone hold back the most of the most-played cards.
 | Radiation | — | missing | 4 | 22 | 4 | 1 |
 | Airbend | — | missing | 4 | 13 | 4 | 2 |
 | Investigate | investigate | named | 3 | 142 | 3 | 3 |
-| Connive | connive | named | 3 | 51 | 3 | 1 |
+| Connive | connive | named | 3 | 51 | 3 | 2 |
 | TapOrUntap | — | missing | 3 | 48 | 3 | 3 |
 | Manifest | — | missing | 3 | 32 | 3 | 3 |
 | RearrangeTopOfLibrary | — | missing | 3 | 32 | 3 | 3 |
@@ -873,10 +873,10 @@ The things that alone hold back the most of the most-played cards.
 | — | This card's power | {powerOf: "self"} | built | 25 | 251 | 0 | 0 |
 | — | A comparison ("if you control ...") | {if: condition, then, else}; a modal's chooseMore, as it is cast | built | 17 | 146 | 0 | 0 |
 | — | CounterNum | — | missing | 16 | 32 | 16 | 0 |
-| — | Cards in a library | — | missing | 13 | 63 | 13 | 8 |
+| — | Cards in a library | — | missing | 13 | 63 | 13 | 9 |
 | — | Spells cast this turn | — | missing | 12 | 139 | 12 | 7 |
 | — | Life you gained this turn | amount {lifeGainedThisTurn} (effects/resources.mjs and rules/combat.mjs keep it) | built | 12 | 84 | 0 | 0 |
-| — | What entered or died this turn | — | missing | 11 | 174 | 10 | 8 |
+| — | What entered or died this turn | — | missing | 11 | 174 | 10 | 9 |
 | 700.5 | Devotion to a color (CR 700.5) | {devotion: [color]} | built | 11 | 49 | 0 | 0 |
 | — | That much life ("loses that much life", the life gained) | {lifeGained: true}: the life the trigger is about (batch 68) | built | 11 | 38 | 0 | 0 |
 | — | Your life total | — | missing | 10 | 92 | 10 | 4 |

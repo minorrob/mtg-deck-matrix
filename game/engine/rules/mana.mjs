@@ -324,6 +324,65 @@ export function tapPlans(units, cost, limit = 2) {
   });
 }
 
+/* ---- convoke (CR 702.51a): creatures help cast a spell ----
+ *
+ * "For each colored mana in this spell's total cost, you may tap an untapped creature of that color you control rather
+ * than pay that mana. For each generic mana in this spell's total cost, you may tap an untapped creature you control
+ * rather than pay that mana." Not an additional or alternative cost: it pays part of the total cost, once that is known
+ * (702.51b). Each creature pays one symbol: generic, or a colored or hybrid one of a color it is; a colorless creature
+ * pays only generic, never {C}. The rest is paid with mana from the pool. Phyrexian, snow and {2/W} symbols are left to the
+ * pool, and a cost with {X} is not convoked here (rules/actions.mjs does not offer it).
+ */
+const convokable = (symbol) => symbol.kind === "colored" && symbol.color !== "C" || symbol.kind === "hybrid";
+const paysSymbol = (colors, symbol) => (symbol.kind === "colored" ? colors.includes(symbol.color) : symbol.either.some((c) => colors.includes(c)));
+/* What is left of `cost` once these of its symbols (indices into cost.symbols) and this much generic are paid. */
+function leftOf(cost, paid, generic) {
+  const symbols = cost.symbols.filter((s, i) => s.kind !== "generic" && !paid.includes(i));
+  const left = Math.max(0, cost.generic - generic);
+  const colored = emptyColored();
+  for (const s of symbols) if (s.kind === "colored") colored[s.color] += 1;
+  return {symbols: [...symbols, ...(left > 0 ? [{kind: "generic", amount: left}] : [])], generic: left, colored, variable: cost.variable};
+}
+
+/**
+ * Whether the pool and these untapped creatures, each paying one symbol, can pay `cost` at all -- the creatures as units of
+ * their colors beside the pool's mana (tapPlans): a colorless one pays only generic.
+ *
+ * @param {Array<{id: number, colors: string[]}>} creatures
+ */
+export function convokeCanPay(pool, cost, creatures) {
+  /* tapPlans leaves {X}, Phyrexian, snow and {2/W} costs alone, so none of them is convoked here. */
+  const units = [...creatures.map((c) => ({id: `creature:${c.id}`, colors: c.colors.filter((k) => k !== "C")})),
+    ...MANA_KEYS.flatMap((k) => Array.from({length: pool[k] ?? 0}, (_, n) => ({id: `pool:${k}:${n}`, colors: [k]})))];
+  return tapPlans(units, cost, 1).length > 0;
+}
+
+/**
+ * What the pool pays once exactly these creatures have each paid one symbol of `cost`: every way they could have been
+ * assigned, and every way the pool could then pay the rest, told apart by the mana it spends. One answer is the payment;
+ * none, and they cannot pay; more than one, and which mana stays in the pool is the caster's to decide -- the payment
+ * question (the plan's X8b), not built, so it is refused rather than decided for them.
+ *
+ * @returns {Array<{mana: object, life: number}>}
+ */
+export function convokePayments(pool, cost, creatures, options = {}) {
+  const needs = cost.symbols.map((s, i) => [s, i]).filter(([s]) => convokable(s));
+  const found = new Map();
+  /* Each creature pays one of the symbols left that it can, or generic. */
+  const assign = (k, paid, generic) => {
+    if (found.size > 1) return;
+    if (k === creatures.length) {
+      for (const way of payments(pool, leftOf(cost, paid, generic), options, 2)) found.set(JSON.stringify(way.mana) + `|${way.life}`, way);
+      return;
+    }
+    const colors = creatures[k].colors.filter((c) => c !== "C");
+    for (const [symbol, i] of needs) if (!paid.includes(i) && paysSymbol(colors, symbol)) assign(k + 1, [...paid, i], generic);
+    if (generic < cost.generic) assign(k + 1, paid, generic + 1);
+  };
+  assign(0, [], 0);
+  return [...found.values()];
+}
+
 /* ---- paying "unless" (CR 118.12) for a player who does not hold priority ----
  *
  * The payer answers a question in the middle of a resolution and has no priority in which to tap, so paying taps for
