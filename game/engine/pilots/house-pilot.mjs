@@ -87,7 +87,8 @@ export function housePilot({seat, cards = () => null} = {}) {
     choose(view, actions) {
       const self = me(view);
       if (!Array.isArray(actions) || actions.length === 0) throw new Error("There are no legal actions to choose from");
-      const land = actions.find((a) => a.kind === "play-land");
+      /* A real land before a double-faced card's land face: the spell on its front is worth keeping. */
+      const land = actions.find((a) => a.kind === "play-land" && !a.face) ?? actions.find((a) => a.kind === "play-land");
       if (land) return land;
       /* An X spell at X = 0 does next to nothing; at its largest it does the most (CR 107.3). */
       const casts = actions.filter((a) => a.kind === "cast" && a.x !== 0 && (!(a.targets ?? []).length || aim(view, a) > 0));

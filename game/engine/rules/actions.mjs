@@ -52,7 +52,7 @@
  * `sacrifice` of the source itself; a card with any other is refused at prepare (cards/index.mjs).
  */
 
-import {cardsIn, moveObject, usesThisTurn, recordUse} from "../state/index.mjs";
+import {cardsIn, moveObject, usesThisTurn, recordUse, showFace} from "../state/index.mjs";
 import {pushSpell, pushAbility, becameTarget} from "./stack.mjs";
 import {addMana, spend, parseManaCost, automaticPayment, manaValue, poolSize} from "./mana.mjs";
 import {commanderTax, recordCommanderCast, colorIdentity} from "./commander.mjs";
@@ -86,6 +86,8 @@ const cardRef = (state, id) => {
 };
 
 const isLand = (object) => (object.types ?? []).includes("Land");
+/* A modal double-faced card whose back face is a land, front face up (CR 712.12). */
+const backLand = (object) => object.mdfc !== undefined && object.face !== "back" && (object.mdfc.back.types ?? []).includes("Land");
 
 /* WHAT A SPELL COSTS TO CAST NOW (CR 601.2f): its mana cost plus the commander tax, less what "spells cost {N} less"
    takes off -- generic mana only, the printed generic first and then the tax, never below nothing. The offer and the
@@ -571,8 +573,9 @@ function offers(state, player) {
       && state.stack.length === 0
       && landDropsLeft(state, player) > 0) {
     for (const id of cardsIn(state, "hand", player)) {
-      if (!isLand(state.objects[id])) continue;
-      actions.push({kind: "play-land", objectId: id, label: state.objects[id].card});
+      if (isLand(state.objects[id])) actions.push({kind: "play-land", objectId: id, label: state.objects[id].card});
+      /* A modal double-faced card with a land on its back (CR 712.12): played with that face up. */
+      if (backLand(state.objects[id])) actions.push({kind: "play-land", objectId: id, label: state.objects[id].mdfc.back.card, face: "back"});
     }
     /* From the graveyard, or the top of the library, when a permanent says so: the same land drop (CR 305.2). */
     for (const id of playableElsewhere(state, player, "land")) actions.push({kind: "play-land", objectId: id, label: state.objects[id].card, from: state.objects[id].zone});
@@ -822,6 +825,8 @@ const sameAction = (a, b) => a.kind === b.kind
   && (a.x ?? null) === (b.x ?? null)
   /* A cast with flashback is another action than the same card cast another way: it is exiled after (CR 702.34a). */
   && (a.flashback === true) === (b.flashback === true)
+  /* And a double-faced card played with its back face up another than with its front (CR 712.12). */
+  && (a.face ?? null) === (b.face ?? null)
   /* And with escape, its own or one given (CR 702.138a): another cost, and what it cast escaped. The cards it exiles are
      picked after the offer is taken, so they are not part of it. */
   && (a.escape ?? null) === (b.escape ?? null)
@@ -979,6 +984,9 @@ function perform(state, player, action, during = null) {
     /* From another zone, by a permission with a limit: spent. */
     const permission = state.objects[action.objectId].zone !== "hand" ? playPermission(state, player, action.objectId, "land") : null;
     if (permission?.ability.limit !== undefined) recordUse(state, permission.source, playKey(permission.ability));
+    /* A double-faced card's land face, turned up before it moves (CR 712.12): it enters with that face up, and how it
+       enters is that face's "as this land enters". */
+    if (action.face === "back") showFace(state, action.objectId, "back");
     /* CR 614.12: a land played enters the way any permanent does -- through the replacements that change how it
        enters, its own "This land enters tapped" first. Moving it straight there let a tapped land arrive untapped. */
     moveOne(state, action.objectId, "battlefield", events);
