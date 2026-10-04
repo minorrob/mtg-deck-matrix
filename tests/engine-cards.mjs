@@ -177,6 +177,8 @@ const files = loadCardScenarios();
   scenario.expect = [{seat: 1, life: 38}];
   throws(() => runScenario(scenario, index.definition, bolt.fixtures), /Maya is at 37 life, not 38/, "a wrong expectation fails, saying what was there");
   const illegal = structuredClone(bolt.scenarios[0]);
+  /* No land to tap: since tap-and-cast (the plan's X8), a Mountain untapped would pay for it as it is cast. */
+  illegal.setup = illegal.setup.map((entry) => ({...entry, cards: entry.cards.filter((name) => name !== "Mountain")}));
   illegal.steps = [{cast: "Lightning Bolt", targets: [{card: "Grizzly Bears"}]}];
   throws(() => runScenario(illegal, index.definition, bolt.fixtures), /not offered cast Lightning Bolt/, "a move the rules do not offer fails: no mana, no cast");
   throws(() => runScenario({name: "x", setup: [{seat: 0, zone: "hand", cards: ["Black Lotus"]}]}, index.definition), /no definition of Black Lotus/,

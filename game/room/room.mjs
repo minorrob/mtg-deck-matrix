@@ -34,7 +34,7 @@
  */
 import {createState, addObject} from "../engine/state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../engine/rules/turn.mjs";
-import {legalActions, applyAction, nothingToDo, escapeWays, flashbackCost, tappersInWords} from "../engine/rules/actions.mjs";
+import {legalActions, applyAction, nothingToDo, escapeWays, flashbackCost, tappersInWords, castTapPlans, tapWords} from "../engine/rules/actions.mjs";
 import {passPriority} from "../engine/rules/priority.mjs";
 import {gameOver, concede} from "../engine/rules/sba.mjs";
 import {beginMulligans} from "../engine/rules/mulligan.mjs";
@@ -170,6 +170,11 @@ export function offerDetails(state, seat, actions) {
     }
     /* "Without paying its mana cost", beside the paid cast of the same card (rules/actions.mjs). */
     if (a.free) parts.push("without paying its mana cost");
+    /* Tapped for as it is cast (the board's one click): the sources, or that the caster picks them. */
+    if (a.autoTap) {
+      const ways = castTapPlans(state, seat, a, 2);
+      parts.push(ways.length === 1 ? `tapping ${tapWords(state, ways[0])}` : "tapping what you choose");
+    }
     /* Flashback (CR 702.34a): from the graveyard for its flashback cost, exiled after -- and the creatures it taps, picked
        once it is taken. */
     if (a.flashback) {

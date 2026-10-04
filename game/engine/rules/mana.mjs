@@ -203,7 +203,7 @@ function payments(pool, cost, {x = 0, life = 0} = {}, limit = 2) {
     }
   };
 
-  const spendGeneric = (left, spentMana, spentLife, need, out, cap) => {
+  const spendGeneric = (left, spentMana, spentLife, need, out, cap, from = 0) => {
     if (need === 0) {
       const mana = {...emptyColored()};
       for (const [key, amount] of Object.entries(spentMana)) mana[key] = amount;
@@ -213,11 +213,13 @@ function payments(pool, cost, {x = 0, life = 0} = {}, limit = 2) {
     }
     if (out.size >= cap) return;
     /* Choose which color pays the next generic. Only colors with mana left, and only in a
-       non-decreasing key order, so the same multiset is not enumerated many times over. */
-    for (const key of KEY_ORDER) {
+       non-decreasing key order (`from`), so the same multiset is not enumerated many times over: every ordering of
+       twelve mana paying {12} was walked, seconds each time a pool held exactly the cost (the plan's X8). */
+    for (let i = from; i < KEY_ORDER.length; i += 1) {
+      const key = KEY_ORDER[i];
       if (left[key] <= 0) continue;
       left[key] -= 1;
-      spendGeneric(left, {...spentMana, [key]: (spentMana[key] ?? 0) + 1}, spentLife, need - 1, out, cap);
+      spendGeneric(left, {...spentMana, [key]: (spentMana[key] ?? 0) + 1}, spentLife, need - 1, out, cap, i);
       left[key] += 1;
       if (out.size >= cap) return;
     }
@@ -249,6 +251,77 @@ export function automaticPayment(pool, cost, options = {}) {
 /** Every distinct way to pay, up to `limit`, for offering as a choice. */
 export function paymentOptions(pool, cost, options = {}, limit = 12) {
   return payments(pool, cost, options, limit);
+}
+
+/* ---- tapping to cast (the plan's X8: a spell cast in one click) ----
+ *
+ * A spell the pool cannot pay may still be cast in one action when tapping its caster's untapped sources can pay it: each
+ * source one mana of its own, for nothing but {T} (rules/actions.mjs, tapUnits). Sources that make the same mana are
+ * interchangeable -- which of two Islands taps changes nothing -- and the mana is all spent at once, so the ways to pay are
+ * told apart by the KINDS of source tapped, not by the colors they make. One way, and it is tapped without asking; more,
+ * and the caster chooses (CR 601.2g-h: they activate the mana abilities, then pay). A cost with {X}, Phyrexian, snow or
+ * monohybrid symbols is left to tapping by hand: its choices are not only which source.
+ */
+
+/**
+ * The ways to pay `cost` by tapping these units, up to `limit`, each `{taps: [{id, color}], key}`: the units to tap and the
+ * color each makes, and the kinds tapped. The least flexible first -- a colorless source before a basic, a basic before a
+ * dual, a dual before a source of any color -- so the first way leaves the most choices untapped.
+ *
+ * @param {Array<{id: number, colors: string[]}>} units  untapped sources, one mana each, in the order they sit
+ */
+export function tapPlans(units, cost, limit = 2) {
+  if (cost.variable > 0 || cost.symbols.some((s) => !["generic", "colored", "hybrid"].includes(s.kind))) return [];
+  /* Kinds: the colors a source can make. Fewer colors first (colorless alone, fewest of all: it pays only generic and
+     {C}), then the order they sit. */
+  const kinds = new Map();
+  for (const unit of units) {
+    const key = [...unit.colors].sort().join("");
+    if (!kinds.has(key)) kinds.set(key, {colors: [...unit.colors], ids: []});
+    kinds.get(key).ids.push(unit.id);
+  }
+  const flexibility = (k) => (kinds.get(k).colors.every((c) => c === "C") ? 0 : kinds.get(k).colors.length);
+  const order = [...kinds.keys()].sort((a, b) => flexibility(a) - flexibility(b));
+  const left = new Map(order.map((k) => [k, kinds.get(k).ids.length]));
+  const needs = cost.symbols.filter((s) => s.kind !== "generic").map((s) => (s.kind === "colored" ? [s.color] : s.either));
+  const found = new Map();
+  const take = (k) => left.set(k, left.get(k) - 1), give = (k) => left.set(k, left.get(k) + 1);
+  /* Generic mana: which kinds pay it, as a multiset -- the kinds in order, never back, so each multiset is met once. */
+  const generic = (from, n, used) => {
+    if (found.size >= limit) return;
+    if (n === 0) {
+      const key = used.map(([k]) => k).sort().join(",");
+      if (!found.has(key)) found.set(key, used);
+      return;
+    }
+    for (let j = from; j < order.length; j += 1) {
+      const k = order[j];
+      if (left.get(k) <= 0) continue;
+      take(k); generic(j, n - 1, [...used, [k, null]]); give(k);
+      if (found.size >= limit) return;
+    }
+  };
+  /* Each colored or hybrid symbol a kind that makes its color. */
+  const colored = (i, used) => {
+    if (found.size >= limit) return;
+    if (i === needs.length) { generic(0, cost.generic, used); return; }
+    for (const k of order) for (const color of needs[i]) {
+      if (left.get(k) <= 0 || !kinds.get(k).colors.includes(color)) continue;
+      take(k); colored(i + 1, [...used, [k, color]]); give(k);
+      if (found.size >= limit) return;
+    }
+  };
+  colored(0, []);
+  /* Each way's units: of each kind, the first that sit there. */
+  return [...found.entries()].map(([key, used]) => {
+    const at = new Map();
+    const taps = used.map(([k, color]) => {
+      const n = at.get(k) ?? 0;
+      at.set(k, n + 1);
+      return {id: kinds.get(k).ids[n], color: color ?? kinds.get(k).colors[0]};
+    });
+    return {taps, key};
+  });
 }
 
 /* ---- paying "unless" (CR 118.12) for a player who does not hold priority ----
