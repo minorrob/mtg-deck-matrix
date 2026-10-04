@@ -1,0 +1,235 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Keeper of the Accord",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Goblin Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "White Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Soldier"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Ally Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Ally"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Wall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 4,
+      "keywords": [
+        "Defender"
+      ]
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Ruins": {
+      "types": [
+        "Land"
+      ],
+      "manaCost": "",
+      "colors": []
+    },
+    "Shrine Pal": {
+      "types": [
+        "Enchantment"
+      ],
+      "subtypes": [
+        "Shrine"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's end step, ahead in creatures and lands: a Soldier, and a Plains found",
+      "library": [
+        "Plains"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Keeper of the Accord"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Big Bear",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        },
+        {
+          "choose": [
+            "Plains"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Keeper of the Accord",
+            "Soldier",
+            "Plains"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maya's end step, behind: nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Keeper of the Accord",
+            "Bear",
+            "Forest",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Keeper of the Accord",
+            "Bear",
+            "Forest",
+            "Forest"
+          ]
+        }
+      ]
+    }
+  ]
+}

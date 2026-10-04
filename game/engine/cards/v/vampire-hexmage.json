@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vampire Hexmage",
+    "oracleId": "fcb2a95b-cef0-4b29-8b2b-538f380aff2b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire",
+      "Shaman"
+    ],
+    "manaCost": "{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "First strike\nSacrifice this creature: Remove all counters from target permanent.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "First strike",
+      "keyword": "first strike"
+    },
+    {
+      "kind": "activated",
+      "text": "Sacrifice this creature: Remove all counters from target permanent.",
+      "cost": [
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "removeCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "all"
+        }
+      ]
+    }
+  ]
+}

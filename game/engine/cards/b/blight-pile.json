@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blight Pile",
+    "oracleId": "1c0fc9b4-177e-4529-827f-a1e17ff7a752",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Defender\n{2}{B}, {T}: Each opponent loses X life, where X is the number of creatures with defender you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender",
+      "keyword": "defender"
+    },
+    {
+      "kind": "activated",
+      "text": "{2}{B}, {T}: Each opponent loses X life, where X is the number of creatures with defender you control.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{B}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "loseLife",
+          "who": "opponent",
+          "amount": {
+            "count": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you",
+              "keywords": [
+                "Defender"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

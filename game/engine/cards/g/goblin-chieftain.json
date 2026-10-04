@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Goblin Chieftain",
+    "oracleId": "368b4052-174e-4458-a6e6-eaf8093aa0fe",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin"
+    ],
+    "manaCost": "{1}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Haste (This creature can attack and {T} as soon as it comes under your control.)\nOther Goblin creatures you control get +1/+1 and have haste.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Haste",
+      "keyword": "haste"
+    },
+    {
+      "kind": "static",
+      "text": "Other Goblin creatures you control get +1/+1 and have haste.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Goblin"
+        ],
+        "controller": "you",
+        "another": true
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Other Goblin creatures you control get +1/+1 and have haste.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Goblin"
+        ],
+        "controller": "you",
+        "another": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Haste"
+        ]
+      }
+    }
+  ]
+}

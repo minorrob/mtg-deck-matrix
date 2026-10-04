@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Warstorm Surge",
+    "oracleId": "42fb1a1c-ab3d-4cdc-a6ff-a591f7481583",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever a creature you control enters, it deals damage equal to its power to any target.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature you control enters, it deals damage equal to its power to any target.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": {
+            "powerOf": "that card"
+          },
+          "from": "that card",
+          "targets": {
+            "target": 0
+          },
+          "who": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Battle"
+              ]
+            },
+            {
+              "what": "player"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

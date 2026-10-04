@@ -1,0 +1,88 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "White Orchid Phantom",
+    "oracleId": "6edd2a36-3d65-4bf9-bd82-b6d03a7e8fea",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit",
+      "Knight"
+    ],
+    "manaCost": "{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying, first strike\nWhen this creature enters, destroy up to one target nonbasic land. Its controller may search their library for a basic land card, put it onto the battlefield tapped, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "first strike",
+      "keyword": "first strike"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, destroy up to one target nonbasic land. Its controller may search their library for a basic land card, put it onto the battlefield tapped, then shuffle.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "who": {
+            "controllerOf": {
+              "target": 0
+            }
+          },
+          "to": "battlefield",
+          "tapped": true,
+          "shuffle": true
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Land"
+          ],
+          "nonSupertypes": [
+            "Basic"
+          ],
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    }
+  ]
+}

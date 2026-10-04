@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wakestone Gargoyle",
+    "oracleId": "11284767-7095-4e0e-bc60-c69d58098348",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Gargoyle"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Defender, flying\n{1}{W}: Creatures you control with defender can attack this turn as though they didn't have defender.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender",
+      "keyword": "defender"
+    },
+    {
+      "kind": "keyword",
+      "text": "flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "activated",
+      "text": "{1}{W}: Creatures you control with defender can attack this turn as though they didn't have defender.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{W}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "rule": "attacks-despite-defender",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "keywords": [
+              "Defender"
+            ]
+          },
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

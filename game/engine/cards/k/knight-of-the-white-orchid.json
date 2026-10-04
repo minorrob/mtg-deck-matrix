@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Knight of the White Orchid",
+    "oracleId": "7d0efc64-151f-45b4-8c0b-c32609f9d862",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Knight"
+    ],
+    "manaCost": "{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "First strike\nWhen this creature enters, if an opponent controls more lands than you, you may search your library for a Plains card, put it onto the battlefield, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "First strike",
+      "keyword": "first strike"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, if an opponent controls more lands than you, you may search your library for a Plains card, put it onto the battlefield, then shuffle.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "subtypes": [
+              "Plains"
+            ]
+          },
+          "to": "battlefield",
+          "shuffle": true
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "mostAmongOpponents": {
+              "what": "permanent",
+              "types": [
+                "Land"
+              ],
+              "controller": "you"
+            }
+          },
+          "moreThan": {
+            "count": {
+              "what": "permanent",
+              "types": [
+                "Land"
+              ],
+              "controller": "you"
+            }
+          }
+        }
+      },
+      "optional": true
+    }
+  ]
+}

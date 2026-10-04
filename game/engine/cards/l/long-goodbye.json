@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Long Goodbye",
+    "oracleId": "9d63ba8a-a5cd-4fdb-bba3-95612be0077c",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This spell can't be countered. (This includes by the ward ability.)\nDestroy target creature or planeswalker with mana value 3 or less.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell can't be countered.",
+      "rule": "cant-be-countered",
+      "affects": {
+        "what": "spell",
+        "self": true
+      }
+    },
+    {
+      "kind": "spell",
+      "text": "Destroy target creature or planeswalker with mana value 3 or less.",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "manaValue": {
+                "max": 3
+              }
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ],
+              "manaValue": {
+                "max": 3
+              }
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}
