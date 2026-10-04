@@ -85,7 +85,7 @@ function castHolds(rule, cast) {
 }
 
 /** Whether a condition holds now, for an ability controlled by `controller` on object `source`. No condition holds. */
-export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined, excessDamage = undefined} = {}) {
+export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined, excessDamage = undefined, rememberedControllers = undefined} = {}) {
   if (!condition) return true;
   if (condition.cast !== undefined && !castHolds(condition.cast, cast)) return false;
   /* "Khans -- ...": what its permanent chose as it entered (the Sieges). */
@@ -133,7 +133,9 @@ export function conditionHolds(state, condition, {controller, source = null, abo
        remembered (`rememberedCount`). */
     const counted = {controller, source, ...(about ? {about} : {}), ...(x !== undefined ? {x} : {}), ...(remembered ? {remembered} : {}),
       /* "If excess damage was dealt this way" (Violent Echoes): what the damage before it left (script/resolution.mjs). */
-      ...(excessDamage !== undefined ? {excessDamage} : {})};
+      ...(excessDamage !== undefined ? {excessDamage} : {}),
+      /* "For each creature exiled this way, its controller ..." (Winds of Abandon): who controlled what was remembered. */
+      ...(rememberedControllers !== undefined ? {rememberedControllers} : {})};
     const n = amountOf(state, condition.compare.count, counted), than = (v) => amountOf(state, v, counted);
     if (condition.compare.atLeast !== undefined && n < than(condition.compare.atLeast)) return false;
     if (condition.compare.atMost !== undefined && n > than(condition.compare.atMost)) return false;

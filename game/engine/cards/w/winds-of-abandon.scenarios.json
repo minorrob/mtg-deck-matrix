@@ -1,0 +1,257 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Winds of Abandon",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    }
+  },
+  "scenarios": [
+    {
+      "name": "For {1}{W}: Maya's Bear exiled, and Maya searches for a basic land, onto the battlefield tapped",
+      "library": [
+        "Wastes",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Winds of Abandon"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Winds of Abandon",
+          "alternative": false,
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 1,
+          "tapped": "Forest",
+          "is": true
+        }
+      ]
+    },
+    {
+      "name": "Overloaded for {4}{W}{W}, four players: each creature Rob doesn't control exiled; Maya, with two, finds two lands; Trey, with one, one; Sam none, and is not asked",
+      "seats": 4,
+      "library": [
+        "Forest",
+        "Forest",
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Winds of Abandon"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 2,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Winds of Abandon",
+          "alternative": 0
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Forest",
+            "Island"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 2
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Forest",
+            "Island"
+          ]
+        },
+        {
+          "seat": 2,
+          "controls": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 3,
+          "controls": []
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

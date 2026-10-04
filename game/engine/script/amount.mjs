@@ -51,7 +51,7 @@ import {parseManaCost, manaValue} from "../rules/mana.mjs";
 export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "toughnessOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
   "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn", "playersDealtCombatDamage", "cardTypesAmong", "manaSpent",
   "permanentsEnteredThisTurn", "excessDamage", "lesserOf"]);
-const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "filter"];
+const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "filter", "controlledBy"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
 /** Whether a value is a counted amount rather than a plain number. */
@@ -75,6 +75,7 @@ export function amountProblems(value) {
   if ("playersDealtCombatDamage" in value && !["opponent", "any"].includes(value.playersDealtCombatDamage)) problems.push('playersDealtCombatDamage is "opponent" or "any"');
   if ("cardTypesAmong" in value && value.cardTypesAmong !== "remembered") problems.push('cardTypesAmong is "remembered"');
   if ("manaSpent" in value && !["that card", "self"].includes(value.manaSpent)) problems.push('manaSpent is "that card" or "self"');
+  if ("controlledBy" in value && !("rememberedCount" in value && value.controlledBy === "that player")) problems.push('controlledBy is "that player", of a rememberedCount');
   if ("lesserOf" in value && !(Array.isArray(value.lesserOf) && value.lesserOf.length >= 2)) problems.push("lesserOf is two or more amounts");
   else if ("lesserOf" in value) for (const one of value.lesserOf) problems.push(...amountProblems(one).map((p) => `lesserOf: ${p}`));
   if ("devotion" in value && !(Array.isArray(value.devotion) && value.devotion.length && value.devotion.every((c) => COLORS.includes(c)))) problems.push("Devotion is to one or more colors: {devotion: [\"B\"]}");
@@ -169,7 +170,11 @@ export function amountOf(state, value, context = {}) {
   } else if ("devotion" in value) n = devotion(state, context.controller, value.devotion);
   else if ("lifeLostThisWay" in value) n = context.lifeLost ?? 0;
   /* "Then draws that many cards" (Winds of Change): what the effect before it moved, and remembered, counted. */
-  else if ("rememberedCount" in value) n = (context.remembered ?? []).length;
+  /* "For each creature exiled this way, its controller searches" (Winds of Abandon): `controlledBy` "that player", those of
+     them that player controlled as they left the battlefield (script/effects/zones.mjs). */
+  else if ("rememberedCount" in value) n = value.controlledBy === "that player"
+    ? (context.remembered ?? []).filter((id) => (context.rememberedControllers ?? {})[id] === context.about?.player).length
+    : (context.remembered ?? []).length;
   /* "Empower Jace X, where X is that excess damage" (Violent Echoes): the excess the damage before it dealt (effects/resources.mjs). */
   else if ("excessDamage" in value) n = context.excessDamage ?? 0;
   /* "For each card type among cards discarded this way" (Occult Epiphany): the card types (CR 205.2a) the remembered

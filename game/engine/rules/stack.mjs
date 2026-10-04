@@ -178,6 +178,8 @@ export function pushCopy(state, original, {controller, nonLegendary = false} = {
 function scriptOf(state, entry) {
   if (entry.kind === "spell") {
     const spell = entry.objectId === null ? null : state.objects[entry.objectId]?.spell;
+    /* Overloaded (CR 702.96b): what it does cast so. */
+    if (entry.overload) return entry.overload;
     /* Its modes, chosen as it was cast (CR 700.2): their targets in order, their effects aimed at them. */
     if (spell?.modal && Array.isArray(entry.modes)) return modalScript(spell.modal, entry.modes);
     return spell && (spell.effects ?? []).length ? spell : null;

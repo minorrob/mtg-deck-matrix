@@ -22,7 +22,7 @@ import {afterwards, delayedTrigger, enchantable, enchantOnArrival} from "./perma
 import {typesOf} from "../../rules/layers.mjs";
 import {moveObject, cardsIn, PUBLIC_ZONES, removeObject} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
-import {keywordsOf} from "../../rules/layers.mjs";
+import {keywordsOf, controllerOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector} from "../filter.mjs";
 import {applyReplacements, enteringModifications, regenerated} from "../../rules/replacement.mjs";
 import {cantBeCountered, entersUntapped, countersPlaced} from "../../rules/statics.mjs";
@@ -258,6 +258,8 @@ const linkOf = (context) => context.source ?? context.lastKnown?.cardId ?? null;
 export function moveZone(state, params, context, rng = null) {
   const events = [];
   const arrived = [], became = [];
+  /* Who controlled each as it left the battlefield, for `remember` (moveZoneAll says why). */
+  const leftBy = new Map(), was = {};
   /* "The top card of your library", "the top seven cards of that player's library" (`fromTop`, `who`), revealed first if
      it says so (Dark Confidant) -- or simply moved, face up, to exile (Lord of the Void). "The top card of each player's
      library" (Etali, batch 79): of every library `who` names; "the top X cards" (Villainous Wealth): an amount. */
@@ -276,6 +278,7 @@ export function moveZone(state, params, context, rng = null) {
     /* "Sacrifice it" (`sacrifice: true`): to its owner's graveyard, as a sacrifice. */
     /* A commander whose owner chose the command zone instead (CR 903.9b; effects/asking.mjs, commanderHome). */
     const to = (params.commanderHome ?? []).includes(id) ? "command" : params.to ?? "graveyard";
+    if (state.objects[id]?.zone === "battlefield") leftBy.set(id, controllerOf(state, id));
     const moved = params.sacrifice === true ? sacrificeOne(state, id, events) : moveOne(state, id, to, events, {tapped: params.tapped === true});
     /* What it is now, for `remember`: what it became -- or, exiled and returned at once, the permanent that came back
        ("if that creature is a Bird", Splash Portal, batch 79), set below. */
@@ -305,13 +308,13 @@ export function moveZone(state, params, context, rng = null) {
         landed = returning.remembered?.[0] ?? null;
       }
     }
-    if (landed !== null) became.push(landed);
+    if (landed !== null) { became.push(landed); if (leftBy.has(id)) was[landed] = leftBy.get(id); }
   }
   /* "Shuffle it into its owner's library" (`shuffle`, batch 80): each library a card was put into, shuffled after. */
   if (params.shuffle === true) for (const owner of new Set(became.filter((id) => state.objects[id]?.zone === "library").map((id) => state.objects[id].owner))) shuffleLibrary(state, owner, rng, events);
   /* "Exile target creature card from a graveyard. Create a token that's a copy of it": what this moved, as the new
      objects it became (CR 400.7), for the effects after it to name as "remembered" (script/bind.mjs). */
-  if (params.remember) context.remembered = became.filter((id) => state.objects[id]);
+  if (params.remember) { context.remembered = became.filter((id) => state.objects[id]); context.rememberedControllers = was; }
   /* "Exile another target nonland permanent" (Oblivion Ring, `link`): what it exiled, kept against this source for the
      ability linked to it (CR 607.2a); used, the link is spent. */
   if (params.link === true && context.source !== null && context.source !== undefined) (state.links ??= {})[context.source] = became.filter((id) => state.objects[id]);
@@ -345,9 +348,11 @@ export function moveZoneAll(state, params, context, rng = null) {
   const arrivedAll = [];
   const matched = selectMatching(state, params.selector ?? {what: "permanent"}, context);
   /* A copy, because each move rewrites the zone list underneath the iteration. */
+  const was = {};
   for (const id of [...matched]) {
+    const controller = state.objects[id]?.zone === "battlefield" ? controllerOf(state, id) : null;
     const moved = moveOne(state, id, params.to ?? "graveyard", events, {tapped: params.tapped === true});
-    if (moved !== null) arrivedAll.push(moved);
+    if (moved !== null) { arrivedAll.push(moved); if (controller !== null) was[moved] = controller; }
   }
   /* "Each player shuffles the cards from their hand into their library" (Winds of Change, batch 80, `shuffle`): each library
      a card was put into, shuffled after. */
@@ -355,6 +360,9 @@ export function moveZoneAll(state, params, context, rng = null) {
   /* "Then puts all cards they exiled this way onto the battlefield" (Living Death, batch 79): what this moved, as the new
      objects it became (CR 400.7), for the effects after it to name as "remembered" -- every player's at once. */
   if (params.remember) context.remembered = arrivedAll.filter((id) => state.objects[id]);
+  /* And who controlled each as it left the battlefield: "for each creature exiled this way, its controller searches"
+     (Winds of Abandon; script/amount.mjs, rememberedCount's `controlledBy`). */
+  if (params.remember) context.rememberedControllers = was;
   /* "They gain haste until end of turn" (Wake the Past). */
   afterwards(state, arrivedAll, params, context);
   return events;

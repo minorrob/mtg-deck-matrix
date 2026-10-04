@@ -293,7 +293,9 @@ export function alternativeCosts(state, player, id) {
     return [{index, mana: cost.find((a) => a.atom === "mana")?.cost ?? "", life: cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0),
       extra: cost.filter((a) => a.atom === "exileFromHand" || a.atom === "sacrifice"), evoke: ability.evoke === true,
       /* Impending (CR 702.176a): how many time counters it enters with. */
-      ...(Number.isInteger(ability.impending) ? {impending: ability.impending} : {})}];
+      ...(Number.isInteger(ability.impending) ? {impending: ability.impending} : {}),
+      /* Overload (CR 702.96b): what the spell does cast this way, "each" in place of "target". */
+      ...(ability.overload ? {overload: ability.overload} : {})}];
   });
 }
 
@@ -849,7 +851,7 @@ function offers(state, player) {
           ...(convoke ? {convoke: true} : {}), ...(variant.mana ? {extraMana: variant.mana} : {}),
           ...(costChoice ? {costChoice, costNames: Object.values(costChoice).map((c) => state.objects[c].card)} : {}),
           ...(freely ? {free: true} : {}), ...(back ? {flashback: true} : {}), ...(fled ? {escape: fled.kind} : {}), ...(way ? {alternative: way.index} : {})};
-        actions.push(...(object.spell?.modal ? withModes(state, base, object.spell.modal, {controller: player, source: id}) : withTargets(state, base, object.spell, {controller: player, source: id})));
+        actions.push(...(object.spell?.modal && !way?.overload ? withModes(state, base, object.spell.modal, {controller: player, source: id}) : withTargets(state, base, way?.overload ?? object.spell, {controller: player, source: id})));
       }
     }
     }
@@ -1358,6 +1360,8 @@ function perform(state, player, action, during = null) {
     if (way?.evoke) entry.evoked = true;
     /* Cast for its impending cost (CR 702.176a): the permanent it becomes is marked so, and enters with that many time counters. */
     if (way?.impending) entry.impending = way.impending;
+    /* Overloaded (CR 702.96b): the spell's effects as they then are, carried on the stack. */
+    if (way?.overload) entry.overload = structuredClone(way.overload);
     /* "And that spell can't be countered" (Cavern of Souls): paid with mana that said so. */
     if (paid.uncounterable) entry.uncounterable = true;
     /* "The next spell you cast this turn can't be countered" (Theorist's Proxy): an effect of its caster's, used up by the
