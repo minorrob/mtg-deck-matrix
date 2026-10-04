@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mistmeadow Witch",
+    "oracleId": "38e274e2-bd04-48de-a1df-44f0ee987ba8",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Kithkin",
+      "Wizard"
+    ],
+    "manaCost": "{1}{W/U}",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{2}{W}{U}: Exile target creature. Return that card to the battlefield under its owner's control at the beginning of the next end step.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{2}{W}{U}: Exile target creature. Return that card to the battlefield under its owner's control at the beginning of the next end step.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{W}{U}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "andReturn": "end step"
+        }
+      ]
+    }
+  ]
+}

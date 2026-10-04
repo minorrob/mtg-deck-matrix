@@ -1,0 +1,87 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Charming Prince",
+    "oracleId": "c48d844c-3976-4fa5-8e0d-3f0e535e7619",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Noble"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, choose one —\n• Scry 2.\n• You gain 3 life.\n• Exile another target creature you own. Return it to the battlefield under your control at the beginning of the next end step.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, choose one —\n• Scry 2.\n• You gain 3 life.\n• Exile another target creature you own. Return it to the battlefield under your control at the beginning of the next end step.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Scry 2.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "scry",
+                  "count": 2
+                }
+              ]
+            },
+            {
+              "text": "You gain 3 life.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "gainLife",
+                  "amount": 3
+                }
+              ]
+            },
+            {
+              "text": "Exile another target creature you own. Return it to the battlefield under your control at the beginning of the next end step.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ],
+                  "another": true,
+                  "owner": "you"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": {
+                    "target": 0
+                  },
+                  "to": "exile",
+                  "andReturn": "end step",
+                  "under": "you"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

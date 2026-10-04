@@ -1,0 +1,125 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Voyager Staff",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Snowy Forest": {
+      "types": [
+        "Land"
+      ],
+      "supertypes": [
+        "Basic",
+        "Snow"
+      ],
+      "subtypes": [
+        "Forest"
+      ],
+      "manaCost": "",
+      "colors": [],
+      "abilities": [
+        {
+          "id": "t-g",
+          "kind": "mana",
+          "tapSelf": true,
+          "produces": {
+            "G": 1
+          }
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{2}, sacrificed: Maya's Bear exiled, back at the next end step",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Voyager Staff",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Voyager Staff",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "zone": "exile",
+              "cards": [
+                "Bear"
+              ]
+            },
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Voyager Staff"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        }
+      ]
+    }
+  ]
+}

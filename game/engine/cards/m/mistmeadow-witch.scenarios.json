@@ -1,0 +1,126 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mistmeadow Witch",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Snowy Forest": {
+      "types": [
+        "Land"
+      ],
+      "supertypes": [
+        "Basic",
+        "Snow"
+      ],
+      "subtypes": [
+        "Forest"
+      ],
+      "manaCost": "",
+      "colors": [],
+      "abilities": [
+        {
+          "id": "t-g",
+          "kind": "mana",
+          "tapSelf": true,
+          "produces": {
+            "G": 1
+          }
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{2}{W}{U}: Maya's Bear exiled, back at the next end step",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mistmeadow Witch",
+            "Plains",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Mistmeadow Witch",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "zone": "exile",
+              "cards": [
+                "Bear"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        }
+      ]
+    }
+  ]
+}
