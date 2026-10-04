@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1113,
-  "everyRule": 2393
+  "defined": 1114,
+  "everyRule": 2398
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -2353,9 +2353,9 @@
   },
   "Keyword actions (CR 701)": {
    "tally": {
-    "built": 17,
+    "built": 18,
     "partial": 3,
-    "named": 6,
+    "named": 5,
     "missing": 44
    },
    "entries": [
@@ -2605,12 +2605,12 @@
      "rule": "701.47",
      "name": "Amass",
      "engine": "amass",
-     "status": "named",
+     "status": "built",
      "forge": "Amass",
      "top": 7,
      "all": 72,
-     "blocks": 7,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword action",
@@ -3205,9 +3205,9 @@
   },
   "Effects": {
    "tally": {
-    "built": 57,
+    "built": 58,
     "partial": 1,
-    "named": 14,
+    "named": 13,
     "missing": 120
    },
    "entries": [
@@ -4056,12 +4056,12 @@
      "rule": null,
      "name": "Amass",
      "engine": "amass",
-     "status": "named",
+     "status": "built",
      "forge": "Amass",
      "top": 7,
      "all": 72,
-     "blocks": 7,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -9749,7 +9749,7 @@
      "top": 2,
      "all": 41,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "count",

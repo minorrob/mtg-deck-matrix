@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Misty Mountains Raider",
+    "oracleId": "c394b767-620c-4310-b78f-ece312259e46",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Soldier"
+    ],
+    "manaCost": "{4}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Whenever you attack, amass Goblins 2. (Put two +1/+1 counters on an Army you control. It's also a Goblin. If you don't control an Army, create a 0/0 black Goblin Army creature token first.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you attack, amass Goblins 2.",
+      "trigger": {
+        "on": "attackers declared"
+      },
+      "effects": [
+        {
+          "effect": "amass",
+          "subtype": "Goblin",
+          "count": 2
+        }
+      ]
+    }
+  ]
+}
