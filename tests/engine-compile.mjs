@@ -57,6 +57,9 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
      green creature" a green one. */
   eq(["Essence Scatter", "Dispel", "Red Elemental Blast", "Natural Order"].filter((name) => smoked.find((r) => r.name === name)?.played !== true), [],
     "Essence Scatter, Dispel, Red Elemental Blast and Natural Order are cast in their smoke games");
+  /* A choice of additional costs (`oneOf`): the fodder for each choice is there, and the spell is cast. */
+  eq(["Silence the Echo", "Bogslither's Embrace"].filter((name) => smoked.find((r) => r.name === name)?.played !== true), [],
+    "Silence the Echo (sacrifice a creature or planeswalker, or pay {3}) and Bogslither's Embrace (blight 1, or pay {3}) are cast in their smoke games");
   ok(smoked.find((r) => r.name === "Kitsa, Otterball Elite")?.played === true, "Kitsa, Otterball Elite is cast in its smoke game: only a spell's own aim at its controller's spell waits for one");
   /* What a smoke game gives a card to aim at is read from its modes too, and a graveyard target finds a sorcery card as
      well as a creature card: two cards written for these games, not in the directory. */
