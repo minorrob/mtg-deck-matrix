@@ -160,8 +160,12 @@ export function offerDetails(state, seat, actions) {
     if ((a.targets ?? []).length) parts.push(`→ ${a.targets.map(aimed).join(", ")}`);
     /* What the cost takes: one card, or a set of them ("sacrificing Bear and Wolf", "discarding Ponder and Opt"), each
        said with what it does to them. */
-    const DOING = {discard: "discarding", returnToHand: "returning", exile: "exiling", crew: "crewing with", tap: "tapping", untap: "untapping"};
-    for (const [kind, id] of Object.entries(a.costChoice ?? {})) parts.push(`${DOING[kind] ?? "sacrificing"} ${[].concat(id).map((x) => object(x, plain)).join(" and ")}`);
+    /* "Blight 1" puts its counters on the creature (CR 701.68a); "tap three untapped creatures you control", a set tapped; and
+       "remove a counter from this creature" names the kind of counter, not a card. */
+    const DOING = {discard: "discarding", returnToHand: "returning", exile: "exiling", crew: "crewing with", tap: "tapping", tapAll: "tapping", untap: "untapping",
+      blight: "blighting"};
+    for (const [kind, id] of Object.entries(a.costChoice ?? {}))
+      parts.push(kind === "counter" ? `removing a ${id} counter` : `${DOING[kind] ?? "sacrificing"} ${[].concat(id).map((x) => object(x, plain)).join(" and ")}`);
     /* An alternative cost (CR 118.9): what is paid instead of the mana cost -- an evoke cost by its name (CR 702.74a), as
        the permanent will be sacrificed as it enters. */
     if (a.alternative !== undefined) {

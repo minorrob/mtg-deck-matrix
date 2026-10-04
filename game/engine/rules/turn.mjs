@@ -46,6 +46,7 @@ import {finishResolving} from "./stack.mjs";
 import {playerRuleChanged, untapsDuringOthers, ruleChanged} from "./statics.mjs";
 import {emptyRestricted} from "./restricted-mana.mjs";
 import {endCopies} from "../script/effects/permanents.mjs";
+import {untapOne} from "../script/effects/resources.mjs";
 import {runEffect} from "../script/effects/index.mjs";
 import {askEntering, enteringChoice, resolveEnteringChoice} from "./entering.mjs";
 import {collectTriggers, openTriggers, triggerChoice, resolveTriggerOrder, triggerTargetsChoice, resolveTriggerTargets, triggerCountedChoice, resolveTriggerCounted} from "./trigger.mjs";
@@ -138,8 +139,8 @@ function untap(state, events) {
     if (!o.tapped || (o.controller !== state.activePlayer && !untapsDuringOthers(state, id))) continue;
     /* "Doesn't untap during your untap step" (Mana Vault, Meekstone). */
     if (ruleChanged(state, "doesnt-untap", id)) continue;
-    o.tapped = false;
-    events.push(event("GameEventCardTapped", state, {card: cardRef(state, id), tapped: false}));
+    /* A stun counter removed instead (CR 122.1d). */
+    untapOne(state, id, events);
   }
 }
 
