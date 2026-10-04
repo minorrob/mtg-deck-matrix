@@ -219,4 +219,13 @@ const BOLT = {
     /nope/, "assertScript throws with the problem in the message"); checks += 1;
 }
 
+/* Where a countered spell goes instead of its owner's graveyard is a closed word: "exile" (Force of Negation) or "top"
+   (Memory Lapse). Any other was read as the graveyard, silently. */
+{
+  const counter = (to) => ({...BOLT, oracleText: "Counter target spell.", abilities: [{kind: "spell", text: "Counter target spell.", targets: [{what: "spell"}],
+    effects: [{effect: "counterSpell", spells: {target: 0}, ...(to === undefined ? {} : {to})}]}]});
+  ok(validateScript(counter()).valid && validateScript(counter("exile")).valid && validateScript(counter("top")).valid, "a countered spell to its graveyard, exile or the top of its library");
+  ok(!validateScript(counter("hand")).valid, "and nowhere else: a word the engine does not read is refused");
+}
+
 console.log(`engine-schema: ${checks} checks passed — every effect names a declared primitive, every ability carries its oracle sentence, each kind is held to what its engine module needs, and all the errors come back at once.`);

@@ -106,6 +106,10 @@ function checkEffect(effect, path, errors) {
   /* "Exile ... until this leaves the battlefield" (CR 610.3): the one "until" the engine returns from. */
   if (name === "exileUntil" && effect.until !== "this leaves")
     errors.push({path: `${path}.until`, message: "exileUntil returns what it exiled when its source leaves the battlefield: `until: \"this leaves\"`"});
+  /* Where a countered spell goes instead of its owner's graveyard: exile (Force of Negation) or the top of its owner's
+     library (Memory Lapse) -- any other word would be read as the graveyard. */
+  if (name === "counterSpell" && effect.to !== undefined && !["exile", "top"].includes(effect.to))
+    errors.push({path: `${path}.to`, message: "A countered spell goes to its owner's graveyard, or `to` \"exile\" or \"top\" instead"});
   /* A branch's test: a condition, and there must be one. */
   if (name === "branch") {
     if (effect.if === undefined) errors.push({path: `${path}.if`, message: "A branch says what decides it: `if`, a condition"});

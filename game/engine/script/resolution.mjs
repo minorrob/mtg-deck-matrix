@@ -95,7 +95,7 @@ export function runResolution(state, rng = null) {
     }
     /* CR 903.9b: a commander this would put into its owner's hand or library may go to the command zone instead -- a
        replacement, so the owners are asked before anything moves (effects/asking.mjs, commanderHome). */
-    const home = effect?.effect === "moveZone" ? commandersGoingHome(state, effect) : [];
+    const home = effect?.effect === "moveZone" || effect?.effect === "counterSpell" ? commandersGoingHome(state, effect) : [];
     if (home.length) resolving.queue[0] = {effect: "commanderHome", commanders: home, move: effect};
     /* CR 616.1: damage that two or more effects would change, where the order changes how it ends -- the player dealt it
        chooses which applies first, before any of it is dealt (effects/asking.mjs, orderDamage). */
