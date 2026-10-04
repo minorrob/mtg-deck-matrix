@@ -65,6 +65,7 @@
       "kind": "activated",
       "text": "Cycling {3}",
       "zone": "hand",
+      "cycling": true,
       "cost": [
         {
           "atom": "mana",

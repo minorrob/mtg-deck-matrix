@@ -177,6 +177,17 @@ function subjects(state, event, condition, sourceId, controller) {
   }
   /* "Whenever you sacrifice a permanent": the card it became, and who sacrificed it. */
   if (condition.on === "GameEventCardChangeZone" && condition.sacrificed) return matches(state, event, condition, sourceId, controller) ? [{card: fields.becomes, player: fields.sacrificer}] : [];
+  /* "Whenever you cycle a card" (Escape Protocol) and "when you cycle this card" -- this card discarded to pay a cycling
+     cost (CR 702.29c): the card it became in the graveyard, who cycled it, and the X paid for it. A card's own, from the
+     zone it went to (collectTriggers). */
+  if (condition.on === "GameEventCardChangeZone" && condition.cycled) {
+    if (fields.cycled !== true) return [];
+    const cycler = fields.from?.player?.playerId;
+    if (!whoseIs(condition.cycler ?? "you", cycler, controller)) return [];
+    const card = fields.becomes;
+    if (condition.who === "self" && card !== sourceId) return [];
+    return [{card, player: cycler, ...(fields.cycledX !== undefined ? {x: fields.cycledX} : {})}];
+  }
   /* "Whenever you discard a card", "whenever an opponent discards a creature card" (CR 701.9): the card it became in the
      graveyard (a discard as a cost -- cycling, "discard a card:" -- is a discard too), and who discarded it. */
   if (condition.on === "GameEventCardChangeZone" && condition.discarded) {
@@ -399,8 +410,12 @@ export function collectTriggers(state, events) {
   for (const event of events ?? []) {
     /* An arrival waiting to be told what it is a copy of triggers once it is (rules/entering.mjs). */
     if (event.data?.fields?.awaitingCopy === true) continue;
-    for (const zone of WATCHING_ZONES) {
-      for (const id of state.zones[zone]) {
+    /* And a card just cycled, in the graveyard it went to: its own "when you cycle this card" alone, which works from the
+       zone the card went to (CR 702.29c). */
+    const cycled = event.kind === "GameEventCardChangeZone" && event.data?.fields?.cycled === true ? event.data.fields.becomes : undefined;
+    const wentTo = cycled !== undefined && state.objects[cycled] ? [cycled] : [];
+    for (const zone of [...WATCHING_ZONES, "cycled"]) {
+      for (const id of zone === "cycled" ? wentTo : state.zones[zone]) {
         const object = state.objects[id];
         /* A permanent's abilities now, the ones given it included (layers.mjs); a card's elsewhere. */
         for (const own of abilitiesOf(state, id)) {
@@ -408,6 +423,7 @@ export function collectTriggers(state, events) {
           const ability = chosenFor(own, object);
           /* A triggered mana ability happened with the mana ability that triggered it (manaTriggered). */
           if (ability.kind !== "triggered" || !ability.trigger || ability.trigger.manaAbility) continue;
+          if (zone === "cycled" && !(ability.trigger.cycled && ability.trigger.who === "self")) continue;
           for (const about of subjects(state, event, ability.trigger, id, object.controller)) {
           /* "If it isn't that player's turn" asks about the player the event is about. */
           if (!conditionHolds(state, ability.condition, {controller: object.controller, source: id, about})) continue;
@@ -431,6 +447,8 @@ export function collectTriggers(state, events) {
                longer anywhere, and `card` carries only enough to name it. */
             cause: event.data?.fields?.leftBehind ?? event.data?.fields?.card ?? null,
             optional: ability.optional === true,
+            /* "Create an X/X Shark": the X paid for the cycling that triggered it (CR 702.29c). */
+            ...(about.x !== undefined ? {x: about.x} : {}),
             /* The mana spent to cast its source (rules/actions.mjs), as it triggers: "if {W}{W} was spent to cast it" is asked
                again as it resolves (CR 603.4), when its source may be gone -- sacrificed for its evoke cost -- and is then read
                as it last was (CR 608.2h). What was spent to cast an object never changes while it exists. */
@@ -739,6 +757,7 @@ function putOnStack(state, triggers) {
          this creature". Only its own departure: another creature's last state is what "that creature" means, not "this". */
       lastKnown: trigger.cause && trigger.cause.cardId === trigger.source?.cardId && !state.objects[trigger.source.cardId] ? trigger.cause : null,
       spent: trigger.spent ?? null,
+      x: trigger.x ?? null,
     });
     /* Its targets are asked for once every trigger of the round is on the stack (askTriggerTargets) -- and a modal one's
        modes with them (CR 603.3c). */

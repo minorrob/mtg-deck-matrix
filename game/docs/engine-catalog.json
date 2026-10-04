@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1128,
-  "everyRule": 2426
+  "defined": 1130,
+  "everyRule": 2429
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -5519,10 +5519,10 @@
   },
   "Triggers": {
    "tally": {
-    "built": 15,
+    "built": 16,
     "partial": 4,
     "named": 6,
-    "missing": 113
+    "missing": 112
    },
    "entries": [
     {
@@ -5757,13 +5757,13 @@
      "kind": "trigger",
      "rule": null,
      "name": "Cycled",
-     "engine": null,
-     "status": "missing",
+     "engine": "cycled",
+     "status": "built",
      "forge": "Cycled",
      "top": 4,
      "all": 77,
-     "blocks": 4,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -9521,7 +9521,7 @@
      "top": 10,
      "all": 43,
      "blocks": 10,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "count",

@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,128 defined and playable today; 2,426 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,130 defined and playable today; 2,429 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -21,7 +21,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Keyword abilities (CR 702) | 194 | 37 | 0 | 18 | 139 |
 | Keyword actions (CR 701) | 70 | 18 | 3 | 5 | 44 |
 | Effects | 192 | 59 | 1 | 12 | 120 |
-| Triggers | 138 | 15 | 4 | 6 | 113 |
+| Triggers | 138 | 16 | 4 | 6 | 112 |
 | Static abilities | 77 | 11 | 2 | 0 | 64 |
 | Replacement effects | 34 | 0 | 4 | 0 | 30 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
@@ -546,7 +546,7 @@ The things that alone hold back the most of the most-played cards.
 | LifeLost | life lost | built | 6 | 20 | 0 | 0 |
 | BecomesTarget | becomes target | built | 5 | 116 | 0 | 0 |
 | AbilityCast | — | missing | 5 | 42 | 5 | 5 |
-| Cycled | — | missing | 4 | 77 | 4 | 3 |
+| Cycled | cycled | built | 4 | 77 | 0 | 0 |
 | LandPlayed | land played | named | 4 | 40 | 4 | 3 |
 | CommitCrime | — | missing | 4 | 21 | 4 | 4 |
 | AttackerBlocked | — | missing | 3 | 126 | 3 | 3 |
@@ -880,7 +880,7 @@ The things that alone hold back the most of the most-played cards.
 | 700.5 | Devotion to a color (CR 700.5) | {devotion: [color]} | built | 11 | 49 | 0 | 0 |
 | — | That much life ("loses that much life", the life gained) | {lifeGained: true}: the life the trigger is about (batch 68) | built | 11 | 38 | 0 | 0 |
 | — | Your life total | — | missing | 10 | 92 | 10 | 4 |
-| — | Amount | — | missing | 10 | 43 | 10 | 1 |
+| — | Amount | — | missing | 10 | 43 | 10 | 2 |
 | — | How many things an effect remembered | — | missing | 8 | 71 | 8 | 3 |
 | — | Times this resolved this turn | — | missing | 7 | 31 | 7 | 5 |
 | — | The monarch | — | missing | 7 | 15 | 7 | 0 |

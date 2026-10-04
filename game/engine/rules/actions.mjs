@@ -854,13 +854,16 @@ function offers(state, player) {
       if (object.zone === "command" && ability.alsoCommand !== true) continue;
       if (ability.timing === "sorcery" && !sorceryTime) continue;
       if (!conditionHolds(state, ability.condition, {controller: player, source: id})) continue;
-      const payment = costPayment(state, player, id, ability.cost, 0, abilityLess(state, player, id, ability));
-      if (!payment) continue;
-      /* "Return an unblocked attacking creature you control to its owner's hand" (ninjutsu): one offer per creature it may be. */
-      const back = returnAtom(ability.cost);
-      for (const costChoice of back ? sacrificeChoices(state, player, id, back.selector).map((r) => ({returnToHand: r})) : [null])
-        actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment,
-          ...(costChoice ? {costChoice, costNames: [state.objects[costChoice.returnToHand].card]} : {})}, ability, {controller: player, source: id}));
+      /* "Cycling {X}{1}{U}" (Shark Typhoon): one offer for each X the pool can pay, as a permanent's ability has (CR 107.3). */
+      for (const X of abilityXValues(state, player, ability, id)) {
+        const payment = costPayment(state, player, id, ability.cost, X ?? 0, abilityLess(state, player, id, ability));
+        if (!payment) continue;
+        /* "Return an unblocked attacking creature you control to its owner's hand" (ninjutsu): one offer per creature it may be. */
+        const back = returnAtom(ability.cost);
+        for (const costChoice of back ? sacrificeChoices(state, player, id, back.selector).map((r) => ({returnToHand: r})) : [null])
+          actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment, ...(X !== null ? {x: X} : {}),
+            ...(costChoice ? {costChoice, costNames: [state.objects[costChoice.returnToHand].card]} : {})}, ability, {controller: player, source: id, ...(X !== null ? {x: X} : {})}));
+      }
     }
   }
 
@@ -1389,8 +1392,13 @@ function perform(state, player, action, during = null) {
         const exiled = moveOne(state, action.objectId, "exile", events, {owner: object.owner});
         if (exiled !== null) entry.about = {...(entry.about ?? {}), card: exiled};
       }
-      /* Discarding it is the cost of cycling: paid after the ability is on the stack (CR 602.2b, 601.2h), a discard. */
-      if (atom.atom === "discard" && atom.self === true && moveOne(state, action.objectId, "graveyard", events, {owner: object.owner}) !== null) events[events.length - 1].data.fields.discarded = true;
+      /* Discarding it is the cost of cycling: paid after the ability is on the stack (CR 602.2b, 601.2h), a discard. A cycling
+         ability's discard is the card being cycled (CR 702.29c), with the X paid for it ("create an X/X Shark"). */
+      if (atom.atom === "discard" && atom.self === true && moveOne(state, action.objectId, "graveyard", events, {owner: object.owner}) !== null) {
+        const fields = events[events.length - 1].data.fields;
+        fields.discarded = true;
+        if (ability.cycling === true) Object.assign(fields, {cycled: true}, action.x !== undefined ? {cycledX: action.x} : {});
+      }
       /* Each permanent of the set chosen, sacrificed (CR 701.21a). */
       if (atom.atom === "sacrifice" && atom.selector && action.costChoice?.sacrifice !== undefined)
         for (const fodder of [].concat(action.costChoice.sacrifice)) sacrificeOne(state, fodder, events);
