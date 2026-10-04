@@ -980,6 +980,9 @@ function perform(state, player, action, during = null) {
 
   if (action.kind === "play-land") {
     const events = [];
+    /* A double-faced card's land face, turned up first (CR 712.12): it is played as that face, so it is announced by that
+       face's name, and it enters with that face up -- how it enters is that face's "as this land enters". */
+    if (action.face === "back") showFace(state, action.objectId, "back");
     const card = cardRef(state, action.objectId);
     state.players[player].landsPlayed += 1;
     /* The order matters to a reader: the land is announced as a land, then as the zone change it
@@ -988,9 +991,6 @@ function perform(state, player, action, during = null) {
     /* From another zone, by a permission with a limit: spent. */
     const permission = state.objects[action.objectId].zone !== "hand" ? playPermission(state, player, action.objectId, "land") : null;
     if (permission?.ability.limit !== undefined) recordUse(state, permission.source, playKey(permission.ability));
-    /* A double-faced card's land face, turned up before it moves (CR 712.12): it enters with that face up, and how it
-       enters is that face's "as this land enters". */
-    if (action.face === "back") showFace(state, action.objectId, "back");
     /* CR 614.12: a land played enters the way any permanent does -- through the replacements that change how it
        enters, its own "This land enters tapped" first. Moving it straight there let a tapped land arrive untapped. */
     moveOne(state, action.objectId, "battlefield", events);
