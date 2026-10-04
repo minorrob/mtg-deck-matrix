@@ -38,6 +38,7 @@ import {holdArrival} from "./entering.mjs";
 import {conditionHolds} from "../script/condition.mjs";
 import {moveObject, addObject, removeObject} from "../state/index.mjs";
 import {enteringModifications} from "./replacement.mjs";
+import {countersPlaced} from "./statics.mjs";
 import {beginResolution, resolutionPending} from "../script/resolution.mjs";
 import {recheckTargets, factsOf, modalScript} from "../script/bind.mjs";
 
@@ -312,8 +313,9 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     if (entering) {
       if (entering.tapped) state.objects[arrived].tapped = true;
       for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: arrived, ...ask});
+      /* Counters it enters with are put on it (CR 122.6): "twice that many instead" sees them. */
       for (const [counter, count] of Object.entries(entering.counters)) {
-        state.objects[arrived].counters[counter] = (state.objects[arrived].counters[counter] ?? 0) + count;
+        state.objects[arrived].counters[counter] = (state.objects[arrived].counters[counter] ?? 0) + countersPlaced(state, arrived, counter, count);
       }
     }
     events.push(event("GameEventCardChangeZone", state, {

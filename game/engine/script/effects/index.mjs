@@ -32,7 +32,7 @@ import {controllerOf, typesOf} from "../../rules/layers.mjs";
 import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sacrificeAll, digUntil, peekAndReveal, shuffle, exileUntil, mayPlay} from "./zones.mjs";
 import {
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
-  putCounter, putCounterAll, removeCounter, proliferate, damageAll, fight, poison, winGame,
+  putCounter, putCounterAll, removeCounter, proliferate, damageAll, fight, poison, winGame, multiplyCounters,
 } from "./resources.mjs";
 import {
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
@@ -79,7 +79,7 @@ export const TOP_25 = Object.freeze([
  * `effects/asking.mjs`, driven by `resolution.mjs`. Putting a throwing stub in the registry would
  * have made "is this built" answer yes to something no caller can use.
  */
-export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "surveil", "discard", "modal", "chooseCard", "proliferate", "sacrifice", "populate", "amass", "unlessPays", "copySpell", "chooseType", "play", "changeTargets", "empowerJace"]);
+export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "surveil", "discard", "modal", "chooseCard", "proliferate", "sacrifice", "populate", "amass", "unlessPays", "copySpell", "chooseType", "play", "changeTargets", "empowerJace", "twoPiles"]);
 
 /* What "each" ranges over (`repeatFor`), each with what it binds: a player -- in turn order from the active player
    (CR 101.4) -- as "that player"; a creature as "that card", and its controller as "that player". */
@@ -128,6 +128,8 @@ export const EFFECTS = Object.freeze({
   destroyAll, mill,
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
   putCounter, putCounterAll, removeCounter, proliferate,
+  /* The live-game plan of 2026-10-04: "double the number of each kind of counter" (Deepglow Skate). */
+  multiplyCounters,
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup,
   /* Phase 3, batch 6: Equip. Batch 13: a token that's a copy (CR 707). */
   attach, copyPermanent,

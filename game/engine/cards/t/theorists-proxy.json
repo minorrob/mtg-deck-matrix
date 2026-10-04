@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Theorist's Proxy",
+    "oracleId": "0089acfe-da66-4dd7-b1e5-4d7407f58257",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Illusion"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 0,
+    "toughness": 3
+  },
+  "oracleText": "Flash\nWhen this creature enters, empower Jace 3. (Put three loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")\n{U}, Sacrifice this creature: The next spell you cast this turn can't be countered.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, empower Jace 3. (Put three loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "empowerJace",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{U}, Sacrifice this creature: The next spell you cast this turn can't be countered.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{U}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "rule": "next-spell-uncounterable"
+        }
+      ]
+    }
+  ]
+}

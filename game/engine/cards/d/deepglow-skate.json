@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Deepglow Skate",
+    "oracleId": "debce64a-18bd-42f5-9e85-158c2242e9e9",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Fish"
+    ],
+    "manaCost": "{4}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "When this creature enters, double the number of each kind of counter on any number of target permanents.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, double the number of each kind of counter on any number of target permanents.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "multiplyCounters",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "count": {
+            "min": 0
+          }
+        }
+      ]
+    }
+  ]
+}

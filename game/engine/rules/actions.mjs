@@ -357,6 +357,10 @@ function withModes(state, base, modal, context) {
   });
 }
 
+/* An activated ability's offers: one per choice of modes and their targets when its modes are chosen as it is activated
+   (cards/index.mjs, `modal`; CR 700.2), or per way to choose its targets. */
+const withModesOrTargets = (state, base, ability, context) => (ability.modal ? withModes(state, base, ability.modal, context) : withTargets(state, base, ability, context));
+
 /* One offer per way to choose the targets (script/bind.mjs); a single offer, unchanged, when there are none. */
 function withTargets(state, base, ability, context) {
   const specs = ability?.targets ?? [];
@@ -889,7 +893,7 @@ function offers(state, player) {
           : blighter ? blightChoices(state, player).map((c) => ({blight: c}))
           : anyCounter ? Object.entries(object.counters ?? {}).filter(([, n]) => n > 0).map(([counter]) => ({counter})) : [null];
         for (const costChoice of fodder)
-          actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment, ...(X !== null ? {x: X} : {}),
+          actions.push(...withModesOrTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment, ...(X !== null ? {x: X} : {}),
             /* A loyalty ability says its loyalty cost (CR 606.4), for a pilot to weigh. */
             ...(ability.loyalty !== undefined ? {loyalty: ability.loyalty} : {}),
             ...(costChoice ? {costChoice, costNames: costChoice.crew ? costChoice.crew.map((c) => state.objects[c].card)
@@ -1053,7 +1057,7 @@ export function offerSpecs(state, player, action) {
   const context = {controller: player, source: action.objectId};
   if (action.kind === "cast") return {specs: object.spell?.modal && Array.isArray(action.modes) ? modalScript(object.spell.modal, action.modes).targets : object.spell?.targets ?? [], context};
   const ability = chosenFor(abilitiesOf(state, action.objectId).find((candidate) => candidate.id === action.abilityId), object);
-  return {specs: ability?.targets ?? [], context};
+  return {specs: ability?.modal && Array.isArray(action.modes) ? modalScript(ability.modal, action.modes).targets : ability?.targets ?? [], context};
 }
 
 /* The next counted target of an offer still to be picked, or -1. One with nothing it could choose is no question: it is
@@ -1352,6 +1356,10 @@ function perform(state, player, action, during = null) {
     if (way?.evoke) entry.evoked = true;
     /* "And that spell can't be countered" (Cavern of Souls): paid with mana that said so. */
     if (paid.uncounterable) entry.uncounterable = true;
+    /* "The next spell you cast this turn can't be countered" (Theorist's Proxy): an effect of its caster's, used up by the
+       first spell they cast after it (effectUntil's `rule: "next-spell-uncounterable"`). */
+    const next = (state.effects ?? []).findIndex((e) => e.rule === "next-spell-uncounterable" && e.sourceController === player);
+    if (next >= 0) { entry.uncounterable = true; state.effects.splice(next, 1); }
     /* "If a spell cast this way would be put into your graveyard, exile it instead" (Kess): to exile, if to a graveyard. */
     if (permission?.ability.graveyardToExile) entry.graveyardToExile = true;
     /* On the spell as it now is: moving to the stack made a new object (CR 400.7). */
@@ -1425,7 +1433,9 @@ function perform(state, player, action, during = null) {
     const was = returning !== undefined ? (state.combat?.attacks ?? []).find((attack) => attack.attacker === returning) : undefined;
     const attacked = was?.defender;
     /* CR 602.2a, then 602.2b and 601.2h: on the stack first, then the costs. */
-    const entry = pushAbility(state, {sourceId: action.objectId, controller: player, abilityId: ability.id, kind: "ability", targets, script: ability,
+    /* Its modes, chosen as it was activated: their targets in order, their effects aimed at them (CR 700.2). */
+    const script = ability.modal && Array.isArray(action.modes) ? {...ability, ...modalScript(ability.modal, action.modes)} : ability;
+    const entry = pushAbility(state, {sourceId: action.objectId, controller: player, abilityId: ability.id, kind: "ability", targets, script,
       ...(attacked !== undefined ? {about: {player: attacked, ...(was.planeswalker !== undefined ? {planeswalker: was.planeswalker} : {})}} : {}),
       /* Station: "charge counters equal to the tapped creature's power" -- the creature it tapped is what it is about. */
       ...(action.costChoice?.tap !== undefined ? {about: {card: action.costChoice.tap}} : {}),

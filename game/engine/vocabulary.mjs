@@ -109,6 +109,8 @@ export const TRIGGER_EVENTS = Object.freeze([
   "becomes monstrous", "chapter",
   /* "Whenever you activate a loyalty ability" (CR 606; the live-game plan of 2026-10-04, P4). */
   "loyalty activated",
+  /* "Whenever you scry or surveil" (CR 701.22a, 701.25a). */
+  "scried",
 ]);
 
 /** The cost atoms of §12.2. The two symbolic ones are named; the rest are structural. */
@@ -158,6 +160,8 @@ const BEYOND_TIER0 = ["shroud", "ward",
   "toxic", "prowess", "devoid",
   /* Batch 78: annihilator (CR 702.86). */
   "annihilator",
+  /* The live-game plan of 2026-10-04: increment (Berta, Wise Extrapolator; cards/index.mjs, a triggered ability). */
+  "increment",
   /* Batch 79: commander ninjutsu (CR 702.49d), ninjutsu that also works from the command zone. */
   "commander ninjutsu",
   /* Rob's Priority Batch 10.3, its seventeenth slice: storied (CR 702.195), an enduring story (keywords/designations.mjs). */

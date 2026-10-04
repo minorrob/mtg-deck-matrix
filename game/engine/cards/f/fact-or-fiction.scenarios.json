@@ -1,0 +1,335 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Fact or Fiction",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya separates Island and Forest from the rest; Rob takes the three into hand, the two to the graveyard",
+      "library": [
+        "Island",
+        "Forest",
+        "Plains",
+        "Swamp",
+        "Mountain"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Fact or Fiction"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Fact or Fiction"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Island",
+            "Forest"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Pile 1: Island, Forest",
+                  "Pile 2: Plains, Swamp, Mountain"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Pile 2: Plains, Swamp, Mountain"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Plains",
+            "Swamp",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Fact or Fiction",
+            "Island",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 15
+        }
+      ]
+    },
+    {
+      "name": "An empty pile: Maya puts all five in one, and Rob takes them",
+      "library": [
+        "Island",
+        "Forest",
+        "Plains",
+        "Swamp",
+        "Mountain"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Fact or Fiction"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Fact or Fiction"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Island",
+            "Forest",
+            "Plains",
+            "Swamp",
+            "Mountain"
+          ]
+        },
+        {
+          "choose": [
+            "Pile 1: Island, Forest, Plains, Swamp, Mountain"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island",
+            "Forest",
+            "Plains",
+            "Swamp",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Fact or Fiction"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Four players (Rob drew the Island): Rob chooses Sam to separate them",
+      "seats": 4,
+      "library": [
+        "Island",
+        "Forest",
+        "Plains",
+        "Swamp",
+        "Mountain"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Fact or Fiction"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Fact or Fiction"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Maya",
+                  "Trey",
+                  "Sam"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Sam"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 3
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "choose": [
+            "Pile 1: Forest"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Fact or Fiction",
+            "Plains",
+            "Swamp",
+            "Mountain",
+            "Wastes"
+          ]
+        }
+      ]
+    }
+  ]
+}

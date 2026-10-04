@@ -1,0 +1,116 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Jace, Reality Sculptor",
+    "oracleId": "bf0e9e00-fba5-448a-9052-ae730aea4bf8",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Planeswalker"
+    ],
+    "subtypes": [
+      "Jace"
+    ],
+    "manaCost": "{3}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null,
+    "loyalty": 5
+  },
+  "oracleText": "+1: Empower Jace X, where X is the number of Islands you control.\n−3: Until your next turn, whenever a creature attacks you or a planeswalker you control, it gets -5/-0 until end of turn.\n0: Exile all but the bottom card of each opponent's library. Activate only if there are twenty-five or more loyalty counters among Jaces you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "+1: Empower Jace X, where X is the number of Islands you control.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": 1
+        }
+      ],
+      "effects": [
+        {
+          "effect": "empowerJace",
+          "count": {
+            "count": {
+              "subtypes": [
+                "Island"
+              ],
+              "controller": "you"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−3: Until your next turn, whenever a creature attacks you or a planeswalker you control, it gets -5/-0 until end of turn.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -3
+        }
+      ],
+      "effects": [
+        {
+          "effect": "delayedTrigger",
+          "when": {
+            "on": "attacks",
+            "who": "any",
+            "defender": "you",
+            "planeswalkers": true
+          },
+          "untilYourNextTurn": true,
+          "text": "Whenever a creature attacks you or a planeswalker you control, it gets -5/-0 until end of turn.",
+          "effects": [
+            {
+              "effect": "pump",
+              "targets": "that card",
+              "power": -5,
+              "toughness": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "0: Exile all but the bottom card of each opponent's library. Activate only if there are twenty-five or more loyalty counters among Jaces you control.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": 0
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "countersAmong": {
+              "subtypes": [
+                "Jace"
+              ],
+              "controller": "you"
+            },
+            "counter": "loyalty"
+          },
+          "atLeast": 25
+        }
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "who": "opponent",
+          "allButBottom": true,
+          "to": "exile"
+        }
+      ]
+    }
+  ]
+}
