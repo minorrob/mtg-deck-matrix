@@ -1,0 +1,430 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Moonshadow",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ghost": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Spirit"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Snuff": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Grind": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Mill two cards.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "mill",
+            "count": 2
+          }
+        ]
+      }
+    },
+    "Raise": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Return target creature card from your graveyard to your hand.",
+        "targets": [
+          {
+            "what": "card",
+            "zone": "graveyard",
+            "controller": "you",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "moveZone",
+            "targets": {
+              "target": 0
+            },
+            "to": "hand"
+          }
+        ]
+      }
+    },
+    "Cleanse": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Exile all cards from all graveyards.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "moveZoneAll",
+            "selector": {
+              "what": "card",
+              "zone": "graveyard"
+            },
+            "to": "exile"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters with six -1/-1 counters: a 1/1 with menace",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Moonshadow"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Moonshadow"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Moonshadow",
+            "power": 1,
+            "toughness": 1
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Moonshadow",
+            "counter": "-1/-1",
+            "count": 6
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Moonshadow",
+            "has": [
+              "Menace"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rob's Bear destroyed: a permanent card into Rob's graveyard, a counter off -- Snuff, an instant, does not count",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Moonshadow",
+            "Snuff"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Moonshadow"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Snuff",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Moonshadow",
+            "counter": "-1/-1",
+            "count": 5
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Moonshadow",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Snuff"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Two lands milled at once, from the library: one or more, so one counter",
+      "library": [
+        "Forest",
+        "Island",
+        "Plains"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Moonshadow",
+            "Grind"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Moonshadow"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Grind"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Moonshadow",
+            "counter": "-1/-1",
+            "count": 5
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Forest",
+            "Island",
+            "Grind"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maya's Bear goes to Maya's graveyard, not Rob's: no counter off",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Moonshadow",
+            "Snuff"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Moonshadow"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Snuff",
+          "targets": [
+            {
+              "card": "Bear",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Moonshadow",
+            "counter": "-1/-1",
+            "count": 6
+          }
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ]
+    }
+  ]
+}

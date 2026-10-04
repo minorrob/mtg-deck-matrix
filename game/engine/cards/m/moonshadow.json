@@ -1,0 +1,104 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Moonshadow",
+    "oracleId": "a3635b3f-839c-4fe5-83a5-7c70e8630184",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental"
+    ],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 7,
+    "toughness": 7
+  },
+  "oracleText": "Menace\nThis creature enters with six -1/-1 counters on it.\nWhenever one or more permanent cards are put into your graveyard from anywhere while this creature has a -1/-1 counter on it, remove a -1/-1 counter from this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Menace",
+      "keyword": "menace"
+    },
+    {
+      "kind": "replacement",
+      "text": "This creature enters with six -1/-1 counters on it.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "-1/-1",
+          "count": 6
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever one or more permanent cards are put into your graveyard from anywhere while this creature has a -1/-1 counter on it, remove a -1/-1 counter from this creature.",
+      "trigger": {
+        "on": "put into graveyard",
+        "batch": true,
+        "filter": {
+          "anyOf": [
+            {
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "types": [
+                "Battle"
+              ]
+            },
+            {
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "types": [
+                "Enchantment"
+              ]
+            },
+            {
+              "types": [
+                "Land"
+              ]
+            },
+            {
+              "types": [
+                "Planeswalker"
+              ]
+            }
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "removeCounter",
+          "targets": "self",
+          "counter": "-1/-1",
+          "count": 1
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "countersOn": "self",
+            "counter": "-1/-1"
+          },
+          "atLeast": 1
+        }
+      }
+    }
+  ]
+}

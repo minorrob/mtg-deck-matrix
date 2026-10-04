@@ -157,6 +157,14 @@ const TRIGGERS = {
      existed (CR 603.10a). */
   leaves: (t) => (ARRIVALS.includes(t.who ?? "self")
     ? {on: "GameEventCardChangeZone", from: "Battlefield", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {})} : null),
+  /* "Whenever one or more permanent cards are put into your graveyard from anywhere" (Moonshadow): a card arriving in a
+     graveyard, from any zone, read as the card it became there -- a token is no card (CR 108.2b) -- `owner` whose
+     graveyard (a card goes to its owner's, CR 400.3), `filter` what the card must be. "One or more" is `batch`. */
+  "put into graveyard": (t) => (["you", "opponent", "any"].includes(t.owner ?? "you")
+    ? {on: "GameEventCardChangeZone", to: "Graveyard", intoGraveyard: true, owner: t.owner ?? "you", ...(t.filter ? {filter: t.filter} : {})} : null),
+  /* "Whenever one or more cards leave your graveyard" (Garrison Excavator): to any zone, a card cast from it included. */
+  "left graveyard": (t) => (["you", "opponent", "any"].includes(t.owner ?? "you") && !t.filter
+    ? {on: "GameEventCardChangeZone", from: "Graveyard", leftGraveyard: true, owner: t.owner ?? "you"} : null),
   upkeep: (t) => ({on: "GameEventTurnPhase", phase: "UPKEEP", ...(t.yours === false ? {} : {yourTurn: true})}),
   /* "Whenever you cast a noncreature spell", "whenever an opponent casts a spell": `caster` you, opponent or any;
      `filter` the spell (CR 601.2i). */
