@@ -59,7 +59,7 @@ function wardCost(cost) {
 
 /* The rule statics that read their own condition: an alternative cost's "if you control a commander" (rules/actions.mjs);
    an attack tax and "doesn't untap" "as long as" or "unless you have an enduring story" (rules/statics.mjs). */
-const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "triggers-again", "cant-cast", "attack-tax", "doesnt-untap"];
+const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "triggers-again", "cant-cast", "attack-tax", "doesnt-untap", "cast-without-paying"];
 
 /* What a flashback cost may be made of (CR 702.34a): mana, life ("Flashback--{1}{U}, Pay 3 life"), and creatures to tap
    ("Flashback--Tap three untapped white creatures you control", Battle Screech: `tapCreature`, its `count` and `selector`). */
@@ -174,7 +174,9 @@ const TRIGGERS = {
     /* "From your hand" (Jodah): where it was cast from (rules/actions.mjs). */
     ...(t.from ? {castFrom: t.from} : {}),
     /* "For each other instant and sorcery spell you've cast before it this turn": counted as it triggers. */
-    ...(t.countBefore ? {countBefore: true} : {})}),
+    ...(t.countBefore ? {countBefore: true} : {}),
+    /* "An instant or sorcery spell that targets a creature" (Rehearsed Debater): what one of its targets is (rules/trigger.mjs). */
+    ...(t.targets ? {targets: t.targets} : {})}),
   /* "Whenever you attack" (CR 508.1): the attack as a whole, once, about the attacking player; "whenever you attack a player"
      (`each: "defender"`): once for each player attacked; "with two or more creatures" (`atLeast`); "if none of those
      creatures attacked you" (`notAttacking: "you"`); "with one or more non-Gnome creatures", "whenever one or more Goblins
@@ -662,6 +664,12 @@ export function compileScript(script) {
         const each = Array.isArray(anyOf) ? anyOf.map((one) => ({...shared, ...one, ...(ability.trigger.on === "spell cast" ? {what: "spell"} : {})}))
           : [{...ability.trigger.filter, ...(ability.trigger.on === "spell cast" ? {what: "spell"} : {})}];
         try { for (const one of each) compileSelector(one); } catch (error) { problems.push(`${ability.text}: ${error.message}`); }
+      }
+      /* What a spell cast targets ("that targets a creature"): a selector of its own, read only as a spell is cast -- another
+         trigger would drop it, and trigger on everything. */
+      if (ability.trigger.targets !== undefined) {
+        if (ability.trigger.on !== "spell cast") problems.push(`${ability.text}: what a spell targets is read as it is cast, and by no other trigger`);
+        else try { compileSelector(ability.trigger.targets); } catch (error) { problems.push(`${ability.text}: ${error.message}`); }
       }
 
       /* "YOU MAY" (CR 603.5): an optional triggered ability goes on the stack like any other, and as it resolves its

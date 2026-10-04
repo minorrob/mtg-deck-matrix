@@ -44,7 +44,7 @@ const BLOCKERS_DECLARED = ["COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAG
 export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
   "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander", "nonColors", "owner", "enteredThisTurn", "toughnessOverPower",
-  "unblocked", "singleTarget", "goaded", "uniqueName", "sharesCreatureType",
+  "unblocked", "singleTarget", "goaded", "uniqueName", "sharesCreatureType", "multicolored",
 ]);
 
 /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
@@ -109,6 +109,7 @@ function assertGrammar(selector) {
     if (selector[key] !== undefined && !Array.isArray(selector[key])) throw new Error(`A selector's ${key} are a list`);
   /* What it shares a creature type with: a selector of permanents, held to the same grammar. */
   if (selector.sharesCreatureType !== undefined) compileSelector({...selector.sharesCreatureType, what: "permanent"});
+  if (selector.multicolored !== undefined && selector.multicolored !== true) throw new Error("A selector's multicolored is true: two or more colors");
 }
 
 /* A player with hexproof (CR 702.11c): a permanent of theirs with the static "you have hexproof" (rules/statics.mjs). */
@@ -182,6 +183,8 @@ export function compileSelector(selector) {
     if (selector.colorless === true && colorsOf(state, id).length > 0) return false;
     /* "Permanents that are one or more colors" (All Is Dust). */
     if (selector.colorless === false && colorsOf(state, id).length === 0) return false;
+    /* "A multicolored spell" (CR 105.2b, Mage Tower Referee): two or more colors, through the layers. */
+    if (selector.multicolored === true && colorsOf(state, id).length < 2) return false;
     if (selector.colors) {
       const current = colorsOf(state, id);
       if (!selector.colors.every((color) => current.includes(color))) return false;
