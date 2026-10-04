@@ -701,9 +701,11 @@ export function compileScript(script) {
          many loyalty counters (606.4), activated at sorcery speed and only if no loyalty ability of the permanent has been
          this turn (606.3; rules/actions.mjs). A negative one needs that many counters (606.6). */
       const loyalties = ability.cost.filter((atom) => atom?.atom === "loyalty");
-      if (loyalties.length > 1 || loyalties.some((atom) => !Number.isInteger(atom.amount))) problems.push(`${ability.text}: a loyalty cost is one number of loyalty counters`);
-      const loyalty = loyalties.length === 1 && Number.isInteger(loyalties[0].amount) ? loyalties[0].amount : undefined;
-      const cost = ability.cost.flatMap((atom) => (atom?.atom !== "loyalty" ? [atom] : atom.amount > 0 ? [{atom: "addCounters", self: true, counter: "loyalty", count: atom.amount}]
+      /* "−X:" (Kasmina, Enigma Sage): `"-X"`, X chosen as it is activated, from none to its loyalty (rules/actions.mjs). */
+      if (loyalties.length > 1 || loyalties.some((atom) => !Number.isInteger(atom.amount) && atom.amount !== "-X")) problems.push(`${ability.text}: a loyalty cost is one number of loyalty counters, or -X`);
+      const loyalty = loyalties.length === 1 && (Number.isInteger(loyalties[0].amount) || loyalties[0].amount === "-X") ? loyalties[0].amount : undefined;
+      const cost = ability.cost.flatMap((atom) => (atom?.atom !== "loyalty" ? [atom] : atom.amount === "-X" ? [{atom: "removeCounters", self: true, counter: "loyalty", count: "X"}]
+        : atom.amount > 0 ? [{atom: "addCounters", self: true, counter: "loyalty", count: atom.amount}]
         : atom.amount < 0 ? [{atom: "removeCounters", self: true, counter: "loyalty", count: -atom.amount}] : []));
       for (const atom of cost) if (!costAtomBuilt(atom)) problems.push(`${atom?.atom ?? "a cost"}: a cost atom nothing pays yet`);
       if (ability.cycling === true && !(ability.zone === "hand" && cost.some((atom) => atom?.atom === "discard" && atom.self === true)))

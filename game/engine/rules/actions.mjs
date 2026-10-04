@@ -526,7 +526,8 @@ function costPayment(state, player, id, cost, x = 0, less = 0) {
     }
     /* CR 119.4: a player can pay life only if their life total is at least the amount. */
     if (atom.atom === "payLife") life += atom.amount ?? 0;
-    if (atom.atom === "removeCounters" && (object.counters?.[atom.counter] ?? 0) < (atom.count ?? 1)) return null;
+    /* A −X loyalty cost is offered only for the X it can pay (abilityXValues). */
+    if (atom.atom === "removeCounters" && atom.count !== "X" && (object.counters?.[atom.counter] ?? 0) < (atom.count ?? 1)) return null;
   }
   if (life + (mana?.life ?? 0) > state.players[player].life) return null;
   return {mana, life};
@@ -609,6 +610,8 @@ function xValues(pool, cost, extra = 0) {
 }
 const abilityLess = (state, player, id, ability) => (ability.costLess === undefined ? 0 : amountOf(state, ability.costLess, {controller: player, source: id}));
 function abilityXValues(state, player, ability, id) {
+  /* "−X:" (CR 606.4): any X from none to the loyalty it has. */
+  if (ability.loyalty === "-X") return Array.from({length: (state.objects[id]?.counters?.loyalty ?? 0) + 1}, (_, n) => n);
   const atom = (ability.cost ?? []).find((a) => a?.atom === "mana");
   return atom ? xValues(poolFor(state, player, {ability: id}), parseManaCost(atom.cost)) : [null];
 }
@@ -899,7 +902,7 @@ function offers(state, player) {
         for (const costChoice of fodder)
           actions.push(...withModesOrTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment, ...(X !== null ? {x: X} : {}),
             /* A loyalty ability says its loyalty cost (CR 606.4), for a pilot to weigh. */
-            ...(ability.loyalty !== undefined ? {loyalty: ability.loyalty} : {}),
+            ...(ability.loyalty !== undefined ? {loyalty: ability.loyalty === "-X" ? -(X ?? 0) : ability.loyalty} : {}),
             ...(costChoice ? {costChoice, costNames: costChoice.crew ? costChoice.crew.map((c) => state.objects[c].card)
               : costChoice.untap ? costChoice.untap.map((c) => state.objects[c].card)
               : costChoice.tapAll ? costChoice.tapAll.map((c) => state.objects[c].card)
@@ -1452,7 +1455,7 @@ function perform(state, player, action, during = null) {
       card,
       sa: {isSpell: false, abilityId: entry.abilityId, stackId: entry.stackId, description: ability.text,
         /* A loyalty ability says its cost (CR 606.4): "whenever you activate a loyalty ability" (rules/trigger.mjs). */
-        ...(ability.loyalty !== undefined ? {loyalty: ability.loyalty} : {})},
+        ...(ability.loyalty !== undefined ? {loyalty: ability.loyalty === "-X" ? -(action.x ?? 0) : ability.loyalty} : {})},
       si: {isTrigger: false, actor: {playerId: player, name: state.players[player].name}},
       targetDescription,
     }));
@@ -1468,7 +1471,7 @@ function perform(state, player, action, during = null) {
       }
       if (atom.atom === "payLife") changeLife(state, player, -(atom.amount ?? 0), events);
       if (atom.atom === "addCounters" || atom.atom === "removeCounters")
-        payCounters(state, action.objectId, [{counter: atom.counter, count: atom.count ?? 1, put: atom.atom === "addCounters"}]);
+        payCounters(state, action.objectId, [{counter: atom.counter, count: atom.count === "X" ? action.x ?? 0 : atom.count ?? 1, put: atom.atom === "addCounters"}]);
       /* "Return a Forest you control to its owner's hand": the one chosen with the offer. */
       if (atom.atom === "returnToHand" && action.costChoice?.returnToHand !== undefined) moveOne(state, action.costChoice.returnToHand, "hand", events);
       /* "Discard a card": the one chosen with the offer, a discard -- "whenever you discard a card" sees it. */
