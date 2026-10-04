@@ -474,8 +474,18 @@ export function counterSpell(state, params, context) {
     if (entry.objectId !== null && state.objects[entry.objectId]?.copy === true) removeObject(state, entry.objectId);
     else if (entry.objectId !== null && state.objects[entry.objectId]) {
       /* Countered after a flashback cast, it is exiled instead (CR 702.34a). */
-      /* "If that spell is countered this way, exile it instead" (Force of Negation, `to: "exile"`). */
-      moveOne(state, entry.objectId, entry.flashback || entry.graveyardToExile || params.to === "exile" ? "exile" : "graveyard", events, {owner: state.objects[entry.objectId].owner});
+      /* "If that spell is countered this way, exile it instead" (Force of Negation, `to: "exile"`); "put it on top of its
+         owner's library instead of into that player's graveyard" (Memory Lapse, `to: "top"`) -- or, a commander whose owner
+         chose so, the command zone (CR 903.9b; effects/asking.mjs, commandersGoingHome). */
+      const owner = state.objects[entry.objectId].owner;
+      const to = entry.flashback || entry.graveyardToExile || params.to === "exile" ? "exile"
+        : (params.commanderHome ?? []).includes(entry.objectId) ? "command" : params.to === "top" ? "library" : "graveyard";
+      const moved = moveOne(state, entry.objectId, to, events, {owner});
+      if (to === "library" && moved !== null && state.objects[moved]) {
+        const library = state.zones.library[owner];
+        library.splice(library.indexOf(moved), 1);
+        library.unshift(moved);
+      }
     }
     events.push(event("GameEventSpellResolved", state, {
       stackId: entry.stackId, abilityId: entry.abilityId, playerId: entry.playerId,

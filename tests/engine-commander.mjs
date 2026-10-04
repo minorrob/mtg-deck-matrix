@@ -296,6 +296,39 @@ function started() {
       "a commander bounced or tucked: its owner is asked BEFORE it moves (CR 903.9b) -- yes, the command zone and never the hand; no, the hand or the library, and nothing more is asked");
   }
 
+  /* CR 903.9b from ANY effect that would put it into its owner's hand or library, not a moveZone's alone: a permanent
+     chosen as an effect resolves (Dream Stalker's "return a permanent you control to its owner's hand"), cards chosen from
+     a hand for the top of the library (Brainstorm), a spell countered onto the library (Memory Lapse). */
+  {
+    const where = (st) => Object.values(st.objects).find((o) => o.card === "Boss")?.zone;
+    const topOf = (st, seat) => st.zones.library[seat].slice(0, 2).map((id) => st.objects[id].card);
+    const stalker = (answer) => runScenario({name: `Dream Stalker, ${answer}`, setup: [
+      {seat: 0, zone: "command", cards: ["Boss"]}, {seat: 0, zone: "battlefield", cards: ["Mountain", "Island", "Wastes"]}, {seat: 0, zone: "hand", cards: ["Dream Stalker"]},
+    ], steps: [...cast, {tap: "Island"}, {tap: "Wastes"}, {cast: "Dream Stalker"}, {resolve: true}, {resolve: true}, {choose: ["Boss"]},
+      {expect: [{asks: {seat: 0, options: [ZONE, "Let it go to your hand"]}}]}, {choose: [answer]}]}, index.definition, {Boss: BOSS}).state;
+    eq([where(stalker(ZONE)), where(stalker("Let it go to your hand"))], ["command", "hand"],
+      "Dream Stalker returns Rob's commander: Rob is asked first -- the command zone, or the hand");
+
+    const brainstorm = (answer) => runScenario({name: `Brainstorm, ${answer}`, library: ["Plains", "Forest", "Swamp"], setup: [
+      {seat: 0, zone: "command", cards: ["Boss"]}, {seat: 0, zone: "battlefield", cards: ["Mountain", "Island"]}, {seat: 0, zone: "hand", cards: ["Brainstorm"]},
+      {seat: 1, zone: "battlefield", cards: ["Island"]}, {seat: 1, zone: "hand", cards: ["Bounce"]},
+    ], steps: [...cast, {pass: 1}, {tap: "Island", seat: 1}, {cast: "Bounce", seat: 1, targets: [{card: "Boss"}]}, {resolve: true}, {choose: ["Let it go to your hand"]},
+      {to: {turn: 3, phase: "MAIN1"}}, {tap: "Island"}, {cast: "Brainstorm"}, {resolve: true}, {choose: ["Boss", "Forest"]},
+      {expect: [{asks: {seat: 0, options: [ZONE, "Let it go to your library"]}}]}, {choose: [answer]}]}, index.definition, {Boss: BOSS, Bounce: BOUNCE}).state;
+    const home = brainstorm(ZONE), kept = brainstorm("Let it go to your library");
+    eq([where(home), topOf(home, 0)[0]], ["command", "Forest"], "Brainstorm puts Rob's commander back: yes, the command zone, and the other card alone on top");
+    eq([where(kept), topOf(kept, 0)], ["library", ["Boss", "Forest"]], "no: both on top, in the order chosen -- the commander first");
+
+    const lapse = (answer) => runScenario({name: `Memory Lapse, ${answer}`, setup: [
+      {seat: 0, zone: "command", cards: ["Boss"]}, {seat: 0, zone: "battlefield", cards: ["Mountain"]},
+      {seat: 1, zone: "battlefield", cards: ["Island", "Wastes"]}, {seat: 1, zone: "hand", cards: ["Memory Lapse"]},
+    ], steps: [{tap: "Mountain"}, {cast: "Boss"}, {pass: 1}, {tap: "Island", seat: 1}, {tap: "Wastes", seat: 1}, {cast: "Memory Lapse", seat: 1, targets: [{card: "Boss"}]}, {resolve: true},
+      {expect: [{asks: {seat: 0, options: [ZONE, "Let it go to your library"]}}]}, {choose: [answer]}]}, index.definition, {Boss: BOSS}).state;
+    const lapsed = lapse("Let it go to your library");
+    eq([where(lapse(ZONE)), where(lapsed), topOf(lapsed, 0)[0]], ["command", "library", "Boss"],
+      "Memory Lapse counters Rob's commander: Rob is asked -- the command zone, or the top of the library");
+  }
+
   /* The tax (CR 903.8) follows the commander, not the object: after one cast and one return it costs {2} more. */
   {
     const {state} = play("the tax after a return", [

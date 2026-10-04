@@ -38,6 +38,7 @@ import {loseLife, DAMAGING, damageQuestion} from "./resources.mjs";
 import {damageOrderChoice} from "../../rules/replacement.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
 import {commanderTax} from "../../rules/commander.mjs";
+import {cantBeCountered} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
 import {castNow, castChoicesNow} from "../../rules/actions.mjs";
 
@@ -879,9 +880,23 @@ export const chooseCard = {
       throw new Error("Invalid selection");
     const player = awaiting.player;
     const tops = [], arrivedHere = [], found = [];
+    /* A commander chosen for its owner's hand or library may go to the command zone instead (CR 903.9b): Dream Stalker's
+       "return a permanent you control to its owner's hand", Brainstorm's put-back. Its move is left to moveZone, after this
+       answer, and its owner is asked first (script/resolution.mjs). One bound for the top takes every card chosen for the
+       top with it, so the order chosen holds. */
+    const whereOf = (i) => awaiting.destinations[Math.min(i, awaiting.destinations.length - 1)];
+    const goingHome = (id, i) => {
+      const to = whereOf(i).to, object = state.objects[id];
+      if (object?.commander !== true) return false;
+      return to === "hand" ? object.zone !== "hand" : (to === "top" || to === "library") && object.zone !== "library";
+    };
+    const homeTop = chosen.some((id, i) => whereOf(i).to === "top" && goingHome(id, i));
+    const home = {hand: [], library: []};
     chosen.forEach((id, i) => {
-      const where = awaiting.destinations[Math.min(i, awaiting.destinations.length - 1)];
+      const where = whereOf(i);
       if (awaiting.reveal) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: player}}));
+      if (where.to === "top" && homeTop) return;
+      if (goingHome(id, i)) { home[where.to === "hand" ? "hand" : "library"].push(id); return; }
       /* On top: a card a search found is in the library already; one chosen from a hand ("then put two cards from your
          hand on top of your library", Brainstorm) is moved there first -- a new object (CR 400.7) -- and then put on top. */
       if (where.to === "top") {
@@ -912,6 +927,14 @@ export const chooseCard = {
       const library = state.zones.library[player].filter((id) => !tops.includes(id));
       state.zones.library[player] = [...tops, ...library];
     }
+    /* The moves a commander's owner is asked about first: each card put on top in turn, the last chosen first, so the first
+       chosen ends on top. */
+    const splice = [
+      ...(homeTop ? [{effect: "moveZone", targets: chosen.filter((id, i) => whereOf(i).to === "top").reverse(), to: "library", top: true}] : []),
+      ...(home.hand.length ? [{effect: "moveZone", targets: home.hand, to: "hand"}] : []),
+      ...(home.library.length ? [{effect: "moveZone", targets: home.library, to: "library"}] : []),
+    ];
+    if (splice.length) return {events, splice, ...(awaiting.remember ? {remembered: [...found, ...tops]} : {})};
     return awaiting.remember ? {events, remembered: [...found, ...tops]} : events;
   },
 };
@@ -1009,7 +1032,17 @@ export const play = {
    every owner has answered. A move other than moveZone (a cost that returns a permanent to its owner's hand) is named,
    not built. */
 export function commandersGoingHome(state, params) {
-  if (!["hand", "library"].includes(params.to) || params.sacrifice === true || params.fromTop !== undefined || params.commandersAsked) return [];
+  if (params.commandersAsked) return [];
+  /* "Counter target spell. If that spell is countered this way, put it on top of its owner's library instead" (Memory
+     Lapse): a commander spell, unless it can't be countered or would be exiled instead (CR 702.34a). */
+  if (params.effect === "counterSpell") {
+    if (params.to !== "top") return [];
+    return (params.spells ?? []).filter((id) => {
+      const entry = state.stack.find((e) => e.objectId === id);
+      return state.objects[id]?.commander === true && entry && !entry.flashback && !entry.graveyardToExile && !cantBeCountered(state, id);
+    });
+  }
+  if (!["hand", "library"].includes(params.to) || params.sacrifice === true || params.fromTop !== undefined) return [];
   return (params.targets ?? []).filter((id) => state.objects[id]?.commander === true && state.objects[id].zone !== params.to);
 }
 export const commanderHome = {
@@ -1023,7 +1056,7 @@ export const commanderHome = {
   choice(state, awaiting) {
     return {id: `commander-home:${state.turn}:${awaiting.objectId}`, title: `Put ${state.objects[awaiting.objectId]?.card ?? "your commander"} into the command zone instead?`,
       mode: "boolean", min: 1, max: 1,
-      options: [{index: 0, label: "Put it into the command zone"}, {index: 1, label: `Let it go to your ${awaiting.move.to}`}]};
+      options: [{index: 0, label: "Put it into the command zone"}, {index: 1, label: `Let it go to your ${awaiting.move.to === "top" ? "library" : awaiting.move.to}`}]};
   },
   apply(state, awaiting, indices) {
     if (!Array.isArray(indices) || indices.length !== 1 || ![0, 1].includes(indices[0])) throw new Error("Answer yes or no");
