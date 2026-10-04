@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Monologue Tax",
+    "oracleId": "ace8e88e-ca6a-4bdf-8c6d-1b914fc00259",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever an opponent casts their second spell each turn, you create a Treasure token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent casts their second spell each turn, you create a Treasure token.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "opponent",
+        "nthThisTurn": 2
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Treasure"
+          }
+        }
+      ]
+    }
+  ]
+}

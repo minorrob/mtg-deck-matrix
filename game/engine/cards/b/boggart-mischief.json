@@ -1,0 +1,107 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Boggart Mischief",
+    "oracleId": "ac65ed8c-abe8-4044-9ce5-70b1370d0e19",
+    "types": [
+      "Kindred",
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Goblin"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When this enchantment enters, you may blight 1. If you do, create two 1/1 black and red Goblin creature tokens. (To blight 1, put a -1/-1 counter on a creature you control.)\nWhenever a Goblin creature you control dies, each opponent loses 1 life and you gain 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this enchantment enters, you may blight 1. If you do, create two 1/1 black and red Goblin creature tokens.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "battlefield",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "to": "stay",
+          "remember": true
+        },
+        {
+          "effect": "putCounter",
+          "targets": "remembered",
+          "counter": "-1/-1",
+          "count": 1
+        },
+        {
+          "effect": "createToken",
+          "count": 2,
+          "token": {
+            "name": "Goblin",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Goblin"
+            ],
+            "colors": [
+              "B",
+              "R"
+            ],
+            "power": 1,
+            "toughness": 1
+          },
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ],
+      "optional": true
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a Goblin creature you control dies, each opponent loses 1 life and you gain 1 life.",
+      "trigger": {
+        "on": "dies",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "subtypes": [
+            "Goblin"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "who": "opponent",
+          "amount": 1
+        },
+        {
+          "effect": "gainLife",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

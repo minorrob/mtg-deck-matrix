@@ -100,10 +100,12 @@ function subjects(state, event, condition, sourceId, controller) {
     /* "Their first noncreature spell each turn": this is the first of the caster's spells this turn the filter fits. And
        "copy it for each other instant and sorcery spell you've cast before it this turn" (Thousand-Year Storm): how many
        of them came before this one, counted now, as it triggers -- a spell cast later, in response, did not. */
-    if (condition.firstThisTurn || condition.countBefore) {
+    /* "Whenever an opponent casts their second spell each turn" (Monologue Tax): the Nth, `nthThisTurn`. */
+    if (condition.firstThisTurn || condition.nthThisTurn || condition.countBefore) {
       const {what: _ignored, ...shape} = condition.filter ?? {};
       const fitted = (state.players[caster]?.castThisTurn ?? []).filter((cast) => matchesLastKnown(shape, {...cast, controller: caster}, {controller}));
       if (condition.firstThisTurn && fitted.length !== 1) return [];
+      if (condition.nthThisTurn && fitted.length !== condition.nthThisTurn) return [];
       if (condition.countBefore) return [{card: spell, player: caster, castBefore: Math.max(0, fitted.length - 1), ...spellWas(state, spell)}];
     }
     return [{card: spell, player: caster, ...spellWas(state, spell)}];

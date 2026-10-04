@@ -1,0 +1,437 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Odric, Lunarch Marshal",
+    "oracleId": "bad76170-c773-4be5-9457-20dc9f745cb4",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "At the beginning of each combat, creatures you control gain first strike until end of turn if a creature you control has first strike. The same is true for flying, deathtouch, double strike, haste, hexproof, indestructible, lifelink, menace, reach, skulk, trample, and vigilance.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of each combat, creatures you control gain first strike until end of turn if a creature you control has first strike. The same is true for flying, deathtouch, double strike, haste, hexproof, indestructible, lifelink, menace, reach, skulk, trample, and vigilance.",
+      "trigger": {
+        "step": "COMBAT_BEGIN",
+        "on": "step",
+        "yours": false
+      },
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "present": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you",
+              "keywords": [
+                "First Strike"
+              ]
+            }
+          },
+          "then": [
+            {
+              "effect": "pumpAll",
+              "selector": {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              },
+              "power": 0,
+              "toughness": 0,
+              "keywords": [
+                "First Strike"
+              ],
+              "until": "end-of-turn"
+            }
+          ]
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "present": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you",
+              "keywords": [
+                "Flying"
+              ]
+            }
+          },
+          "then": [
+            {
+              "effect": "pumpAll",
+              "selector": {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              },
+              "power": 0,
+              "toughness": 0,
+              "keywords": [
+                "Flying"
+              ],
+              "until": "end-of-turn"
+            }
+          ]
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "present": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you",
+              "keywords": [
+                "Deathtouch"
+              ]
+            }
+          },
+          "then": [
+            {
+              "effect": "pumpAll",
+              "selector": {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              },
+              "power": 0,
+              "toughness": 0,
+              "keywords": [
+                "Deathtouch"
+              ],
+              "until": "end-of-turn"
+            }
+          ]
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "present": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you",
+              "keywords": [
+                "Double Strike"
+              ]
+            }
+          },
+          "then": [
+            {
+              "effect": "pumpAll",
+              "selector": {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              },
+              "power": 0,
+              "toughness": 0,
+              "keywords": [
+                "Double Strike"
+              ],
+              "until": "end-of-turn"
+            }
+          ]
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "present": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you",
+              "keywords": [
+                "Haste"
+              ]
+            }
+          },
+          "then": [
+            {
+              "effect": "pumpAll",
+              "selector": {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              },
+              "power": 0,
+              "toughness": 0,
+              "keywords": [
+                "Haste"
+              ],
+              "until": "end-of-turn"
+            }
+          ]
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "present": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you",
+              "keywords": [
+                "Hexproof"
+              ]
+            }
+          },
+          "then": [
+            {
+              "effect": "pumpAll",
+              "selector": {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              },
+              "power": 0,
+              "toughness": 0,
+              "keywords": [
+                "Hexproof"
+              ],
+              "until": "end-of-turn"
+            }
+          ]
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "present": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you",
+              "keywords": [
+                "Indestructible"
+              ]
+            }
+          },
+          "then": [
+            {
+              "effect": "pumpAll",
+              "selector": {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              },
+              "power": 0,
+              "toughness": 0,
+              "keywords": [
+                "Indestructible"
+              ],
+              "until": "end-of-turn"
+            }
+          ]
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "present": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you",
+              "keywords": [
+                "Lifelink"
+              ]
+            }
+          },
+          "then": [
+            {
+              "effect": "pumpAll",
+              "selector": {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              },
+              "power": 0,
+              "toughness": 0,
+              "keywords": [
+                "Lifelink"
+              ],
+              "until": "end-of-turn"
+            }
+          ]
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "present": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you",
+              "keywords": [
+                "Menace"
+              ]
+            }
+          },
+          "then": [
+            {
+              "effect": "pumpAll",
+              "selector": {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              },
+              "power": 0,
+              "toughness": 0,
+              "keywords": [
+                "Menace"
+              ],
+              "until": "end-of-turn"
+            }
+          ]
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "present": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you",
+              "keywords": [
+                "Reach"
+              ]
+            }
+          },
+          "then": [
+            {
+              "effect": "pumpAll",
+              "selector": {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              },
+              "power": 0,
+              "toughness": 0,
+              "keywords": [
+                "Reach"
+              ],
+              "until": "end-of-turn"
+            }
+          ]
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "present": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you",
+              "keywords": [
+                "Trample"
+              ]
+            }
+          },
+          "then": [
+            {
+              "effect": "pumpAll",
+              "selector": {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              },
+              "power": 0,
+              "toughness": 0,
+              "keywords": [
+                "Trample"
+              ],
+              "until": "end-of-turn"
+            }
+          ]
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "present": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you",
+              "keywords": [
+                "Vigilance"
+              ]
+            }
+          },
+          "then": [
+            {
+              "effect": "pumpAll",
+              "selector": {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              },
+              "power": 0,
+              "toughness": 0,
+              "keywords": [
+                "Vigilance"
+              ],
+              "until": "end-of-turn"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

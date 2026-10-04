@@ -571,6 +571,8 @@ export function advance(state) {
       /* And what each gained and made this turn (script/amount.mjs, lifeGainedThisTurn, tokensCreatedThisTurn). */
       if (player.gainedThisTurn) player.gainedThisTurn = 0;
       if (player.tokensThisTurn) player.tokensThisTurn = 0;
+      /* And how many permanents left the battlefield under each one's control (state/index.mjs, revolt). */
+      if (player.leftThisTurn) player.leftThisTurn = 0;
     }
     next = 0;
   }

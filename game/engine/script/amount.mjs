@@ -44,7 +44,7 @@ import {parseManaCost, manaValue} from "../rules/mana.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
 export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
-  "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents"]);
+  "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -60,7 +60,7 @@ export function amountProblems(value) {
   const problems = [];
   for (const key of Object.keys(value)) if (!AMOUNT_KINDS.includes(key) && !AMOUNT_EXTRAS.includes(key)) problems.push(`An amount has no key ${JSON.stringify(key)}`);
   if ("countersOn" in value && typeof value.counter !== "string") problems.push("Counting counters says which kind: {countersOn, counter}");
-  for (const key of ["lifeGainedThisTurn", "tokensCreatedThisTurn"]) if (key in value && !["you", "that player"].includes(value[key])) problems.push(`${key} is "you" or "that player"`);
+  for (const key of ["lifeGainedThisTurn", "tokensCreatedThisTurn", "permanentsLeftThisTurn"]) if (key in value && !["you", "that player"].includes(value[key])) problems.push(`${key} is "you" or "that player"`);
   if ("devotion" in value && !(Array.isArray(value.devotion) && value.devotion.length && value.devotion.every((c) => COLORS.includes(c)))) problems.push("Devotion is to one or more colors: {devotion: [\"B\"]}");
   for (const key of ["times", "plus", "atMost"]) if (key in value && !Number.isInteger(value[key])) problems.push(`An amount's ${key} is a whole number`);
   if ("if" in value) {
@@ -183,6 +183,12 @@ export function amountOf(state, value, context = {}) {
   } else if ("tokensCreatedThisTurn" in value) {
     const player = playerOf(value.tokensCreatedThisTurn, context);
     n = player !== null ? state.players[player]?.tokensThisTurn ?? 0 : 0;
+  }
+  /* Revolt, "if a permanent left the battlefield under your control this turn" (Hidden Stockpile): how many did, under that
+     player's control (state/index.mjs keeps it). */
+  else if ("permanentsLeftThisTurn" in value) {
+    const player = playerOf(value.permanentsLeftThisTurn, context);
+    n = player !== null ? state.players[player]?.leftThisTurn ?? 0 : 0;
   }
   /* "If an opponent controls more lands than you" (Weathered Wayfarer): the most of them any one opponent has -- the
      selector counted as each opponent still in the game sees it ("you" being that opponent). */

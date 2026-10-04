@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Nadier's Nightblade",
+    "oracleId": "391978f6-0bbc-41e8-9246-f7d0e21c7900",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Warrior"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Whenever a token you control leaves the battlefield, each opponent loses 1 life and you gain 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever a token you control leaves the battlefield, each opponent loses 1 life and you gain 1 life.",
+      "trigger": {
+        "on": "leaves",
+        "who": "any",
+        "filter": {
+          "token": true,
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "who": "opponent",
+          "amount": 1
+        },
+        {
+          "effect": "gainLife",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}
