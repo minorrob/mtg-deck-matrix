@@ -389,6 +389,9 @@ function legendToAsk(state) {
   const count = state.players.length;
   for (let step = 0; step < count; step += 1) {
     const player = ((state.activePlayer ?? 0) + step) % count;
+    /* "The 'legend rule' doesn't apply to permanents you control this turn" (Hall of Echoes): an effect of that player's
+       (effectUntil's `rule: "no-legend-rule"`), for the turn. */
+    if ((state.effects ?? []).some((e) => e.rule === "no-legend-rule" && e.sourceController === player)) continue;
     const byName = new Map();
     for (const id of state.zones.battlefield) {
       const object = state.objects[id];

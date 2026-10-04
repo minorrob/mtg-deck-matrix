@@ -1,0 +1,99 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Way of the Cryomancer",
+    "oracleId": "7d32c63d-aa9e-4f5d-a3e6-51377a786009",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When Way of the Cryomancer enters, empower Jace 5. (Put five loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")\nPlaneswalkers you control have \"[−3]: When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Way of the Cryomancer enters, empower Jace 5. (Put five loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "empowerJace",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Planeswalkers you control have \"[−3]: When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "types": [
+          "Planeswalker"
+        ]
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "activated",
+            "text": "[−3]: When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.",
+            "cost": [
+              {
+                "atom": "loyalty",
+                "amount": -3
+              }
+            ],
+            "effects": [
+              {
+                "effect": "delayedTrigger",
+                "when": {
+                  "on": "spell cast",
+                  "caster": "you",
+                  "filter": {
+                    "anyOf": [
+                      {
+                        "types": [
+                          "Instant"
+                        ]
+                      },
+                      {
+                        "types": [
+                          "Sorcery"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "thisTurn": true,
+                "once": true,
+                "text": "When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.",
+                "effects": [
+                  {
+                    "effect": "copySpell",
+                    "spells": "that card",
+                    "newTargets": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
