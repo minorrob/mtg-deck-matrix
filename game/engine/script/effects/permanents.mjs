@@ -23,6 +23,7 @@ import {bindEffect, rememberNow} from "../bind.mjs";
 import {amountOf} from "../amount.mjs";
 import {event, cardRef} from "./zones.mjs";
 import {typesOf} from "../../rules/layers.mjs";
+import {protectedFrom} from "../../rules/protection.mjs";
 
 /* A continuous effect needs a timestamp to be ordered by (CR 613.7), and it has to be part of the
    state so a checkpoint carries it. The state's own counter is the right source: it is monotonic
@@ -81,6 +82,8 @@ export function attach(state, params, context) {
   if (!source || !host || source.zone !== "battlefield" || host.zone !== "battlefield" || sourceId === hostId) return events;
   /* CR 701.3b: attaching it to what it is already attached to does nothing. */
   if (source.attachedTo === hostId) return events;
+  /* Protection (CR 702.16c-d): not equipped or enchanted by a permanent with the quality -- it does not move. */
+  if (protectedFrom(state, {card: hostId}, sourceId)) return events;
   const before = source.attachedTo !== null && source.attachedTo !== undefined ? state.objects[source.attachedTo] : null;
   if (before) before.attachments = (before.attachments ?? []).filter((id) => id !== sourceId);
   source.attachedTo = hostId;

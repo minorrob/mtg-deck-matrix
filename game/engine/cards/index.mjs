@@ -574,6 +574,34 @@ export function compileScript(script) {
        evoked: a cast for it marks the spell, and the permanent it becomes, evoked (rules/stack.mjs), which the trigger's
        condition reads as it triggers and again as it resolves (CR 603.4; script/condition.mjs). A new object after it
        moves (CR 400.7) was never evoked, so one flickered in response stays. */
+    /* OVERLOAD (CR 702.96a-b): an alternative cost; cast for it, the spell's text has "each" where it had "target" -- written
+       out as the effects it then has (`effects`, no targets), which the spell carries onto the stack in place of its own
+       (rules/actions.mjs, rules/stack.mjs). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "overload") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      if (!cost.length || !cost.every((atom) => atom?.atom === "mana")) problems.push(`${ability.text}: overload is a mana cost`);
+      if (!Array.isArray(ability.effects) || !ability.effects.length) problems.push(`${ability.text}: overload says what the spell does then, as its effects`);
+      for (const effect of effectsIn(ability.effects ?? [])) if (!isBuilt(effect.effect)) problems.push(`${effect.effect}: declared, not built`);
+      abilities.push({id, kind: "static", rule: "alternative-cost", overload: {targets: [], effects: structuredClone(ability.effects ?? [])}, text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
+      keywords.push("Overload");
+      return;
+    }
+    /* IMPENDING (CR 702.176a): four abilities. An alternative cost -- "Impending 4--{2}{W}{W}" -- that marks the spell, and the
+       permanent it becomes, as cast for it (rules/actions.mjs, rules/stack.mjs), the permanent entering with N time counters;
+       while it was and it has a time counter, it is not a creature (layer 4); and at the beginning of its controller's end
+       step, while it was and it has one, a time counter removed. */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "impending") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      if (!Number.isInteger(ability.count) || ability.count < 1 || !cost.length || !cost.every((atom) => atom?.atom === "mana"))
+        problems.push(`${ability.text}: impending is a number of time counters and a mana cost`);
+      const waiting = {impending: true, selfCounters: {counter: "time", atLeast: 1}};
+      abilities.push({id, kind: "static", rule: "alternative-cost", impending: ability.count, text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
+      abilities.push({id: `${id}-not-a-creature`, kind: "static", text: ability.text, layer: 4, affects: {self: true}, condition: waiting, apply: {removeTypes: ["Creature"]}});
+      abilities.push({id: `${id}-time`, kind: "triggered", text: ability.text, trigger: TRIGGERS.step({step: "END_OF_TURN"}), condition: waiting,
+        effects: [{effect: "removeCounter", targets: "self", counter: "time", count: 1}]});
+      keywords.push("Impending");
+      return;
+    }
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "evoke") {
       const cost = Array.isArray(ability.cost) ? ability.cost : [];
       if (!cost.length || !cost.every((atom) => EVOKE_ATOMS.includes(atom?.atom) && (atom.atom !== "exileFromHand" || (atom.selector && typeof atom.selector === "object"))))
@@ -593,7 +621,9 @@ export function compileScript(script) {
       /* What repeats for each (effects/index.mjs) ranges over players, opponents or creatures, and does not stop to ask. */
       if (effect.effect === "repeatFor") {
         if (!REPEAT_EACH.includes(effect.each)) problems.push(`repeatFor: each of ${REPEAT_EACH.join(", ")}`);
-        for (const inner of effect.effects ?? []) if (!EFFECTS[inner?.effect]) problems.push(`repeatFor: ${inner?.effect} asks a question, and what repeats cannot yet`);
+        /* What repeats may ask (a search for each player, Winds of Abandon): in a resolution it is spliced in for each
+           (script/resolution.mjs). */
+        for (const inner of effect.effects ?? []) if (!EFFECTS[inner?.effect] && !NEEDS_A_DECISION.includes(inner?.effect)) problems.push(`repeatFor: ${inner?.effect} is not something that repeats`);
       }
       /* An added phase is a combat, a main or a beginning phase (effects/permanents.mjs). */
       if (effect.effect === "addPhase" && !(effect.phases ?? ["combat"]).every((kind) => ADDED_PHASES.includes(kind))) problems.push(`addPhase: a phase of ${ADDED_PHASES.join(", ")}`);

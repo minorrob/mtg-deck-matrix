@@ -48,6 +48,7 @@
 import {compileSelector, matchesSelector} from "../script/filter.mjs";
 import {amountOf, isCounted} from "../script/amount.mjs";
 import {chosenFor} from "../script/chosen.mjs";
+import {protectedFrom} from "./protection.mjs";
 
 /* "This land enters tapped unless you control a Forest or a Plains" (a check land), "... unless you control two or
    fewer other lands" (a fast land): the arrival's `unless`, read as the land is about to enter -- so the land itself,
@@ -360,6 +361,9 @@ export function applyReplacements(state, proposal, {orders = [], askable = false
      -- an effect with a duration (`rule: "prevent-damage"`, effects/permanents.mjs's effectUntil). It prevents all of
      the damage, so nothing is left for another effect to apply to, and there is no order to ask (CR 616.1). */
   if (proposal.event === "damage" && preventedForAWhile(state, current))
+    return {proposal: {...current, amount: 0, prevented: true}, applied: current.applied, awaiting: false};
+  /* PROTECTION (CR 702.16e, 702.16j; rules/protection.mjs): damage from a source with the quality is prevented, all of it. */
+  if (proposal.event === "damage" && protectedFrom(state, {card: current.toCard ?? null, player: current.toPlayer ?? null}, current.sourceId))
     return {proposal: {...current, amount: 0, prevented: true}, applied: current.applied, awaiting: false};
 
   /* Each round finds what still applies to the event AS IT NOW IS, which is what makes an effect

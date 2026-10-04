@@ -24,10 +24,13 @@ import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
 import {typesOf, powerOf, toughnessOf, keywordsOf, isKeywordCounter} from "../../rules/layers.mjs";
 import {cantGainLife, countersPlaced} from "../../rules/statics.mjs";
+import {playerRuled} from "../../rules/sba.mjs";
 
 /** `addMana` — into the controller's pool, which empties at the end of the step (CR 500.4). */
 export function addMana(state, params, context) {
-  const mana = params.mana ?? {};
+  /* "Add {R} for each card exiled this way" (Quintorius Kand): `count` times, counted as it resolves. */
+  const times = params.count === undefined ? 1 : Math.max(0, params.count);
+  const mana = Object.fromEntries(Object.entries(params.mana ?? {}).map(([color, n]) => [color, n * times]));
   if (Object.values(mana).every((n) => !n)) return [];
   /* "Spend this mana only to cast instant and sorcery spells" (Abstract Paintmage; CR 106.6): beside the pool, what it may
      pay for read as it is added, as a mana ability's is (rules/restricted-mana.mjs). */
@@ -268,6 +271,7 @@ export function addCounters(state, id, kind, count, events) {
   if (!object) return;
   /* "Twice that many instead" (Branching Evolution; rules/statics.mjs). */
   if (object.zone === "battlefield") count = countersPlaced(state, id, kind, count);
+  if (count === 0) return;
   const before = object.counters[kind] ?? 0;
   object.counters[kind] = before + count;
   /* A keyword counter's ability has the timestamp of the counter's placing (CR 122.1b, 613.7): a "loses all abilities"
@@ -354,7 +358,8 @@ export function givePoison(state, id, count) {
  * actions report it (rules/sba.mjs, gameOver). A player no longer in the game wins nothing (playersFor names none).
  */
 export function winGame(state, params, context) {
-  for (const id of playersFor(state, params.who ?? "you", context.controller)) state.players[id].won = true;
+  /* "Your opponents can't win the game" (Darksteel Angel; CR 104.2b): a player one of whose opponents has it does not. */
+  for (const id of playersFor(state, params.who ?? "you", context.controller)) if (!playerRuled(state, "opponents-cant-win", id, {opponents: true})) state.players[id].won = true;
   return [];
 }
 

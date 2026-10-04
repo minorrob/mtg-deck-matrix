@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Serra's Emissary",
+    "oracleId": "7a56c6e1-0509-4783-9b29-cf3163977166",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{4}{W}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 7,
+    "toughness": 7
+  },
+  "oracleText": "Flying\nAs this creature enters, choose a card type.\nYou and creatures you control have protection from the chosen card type.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "replacement",
+      "text": "As this creature enters, choose a card type.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "choose": [
+          "Artifact",
+          "Battle",
+          "Creature",
+          "Enchantment",
+          "Instant",
+          "Kindred",
+          "Land",
+          "Planeswalker",
+          "Sorcery"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "You and creatures you control have protection from the chosen card type.",
+      "rule": "protection",
+      "affects": {
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "players": "you",
+      "from": {
+        "types": [
+          "$chosen"
+        ]
+      }
+    }
+  ]
+}

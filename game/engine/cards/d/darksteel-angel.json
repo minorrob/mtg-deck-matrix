@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Darksteel Angel",
+    "oracleId": "d0259f7d-9bd7-4722-8fb9-439768308516",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{9}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Flying, indestructible\nYou can't lose the game and your opponents can't win the game.\nCreatures you control can't have -1/-1 counters put on them.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "indestructible",
+      "keyword": "indestructible"
+    },
+    {
+      "kind": "static",
+      "text": "You can't lose the game and your opponents can't win the game.",
+      "rule": "cant-lose",
+      "affects": {
+        "self": true
+      }
+    },
+    {
+      "kind": "static",
+      "text": "You can't lose the game and your opponents can't win the game.",
+      "rule": "opponents-cant-win",
+      "affects": {
+        "self": true
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Creatures you control can't have -1/-1 counters put on them.",
+      "rule": "more-counters",
+      "affects": {
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "counter": "-1/-1",
+      "times": 0
+    }
+  ]
+}

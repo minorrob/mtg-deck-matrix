@@ -19,7 +19,7 @@
  * would have made §3.2.4 true of everything except the part players spend the most time in.
  */
 
-import {runEffect} from "./effects/index.mjs";
+import {runEffect, eachOf} from "./effects/index.mjs";
 import {ASKING, commandersGoingHome} from "./effects/asking.mjs";
 import {damageQuestion} from "./effects/resources.mjs";
 import {bindEffect} from "./bind.mjs";
@@ -81,7 +81,7 @@ export function runResolution(state, rng = null) {
     if (effect?.condition && !conditionHolds(state, effect.condition, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about,
       remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast, x: resolving.context.x,
       /* "If excess damage was dealt to that permanent this way" (Violent Echoes; effects/resources.mjs). */
-      excessDamage: resolving.context.excessDamage})) {
+      excessDamage: resolving.context.excessDamage, rememberedControllers: resolving.context.rememberedControllers})) {
       resolving.queue.shift();
       continue;
     }
@@ -99,6 +99,22 @@ export function runResolution(state, rng = null) {
        control one, first create a blue Jace planeswalker token" -- a token of yours with the subtype Jace. With two or
        more, which one is its controller's choice (chooseCard, kept where it is); with one, that one; with none, the
        predefined token made first (effects/permanents.mjs). Put in front of what follows, as a branch is. */
+    /* "FOR EACH ..., THAT PLAYER SEARCHES" (Winds of Abandon, overloaded): a repetition whose effects ask, spliced in for each
+       of what it ranges over (script/effects/index.mjs, eachOf: players in turn order, CR 101.4) -- each one's effects after
+       a mark that makes it what "that player" and "that card" are while they run, so each is bound and counted as it reaches
+       the head, as it would be repeated directly; and the resolution's own subject back after the last. */
+    if (effect?.effect === "repeatFor" && (effect.effects ?? []).some((inner) => ASKING[inner?.effect])) {
+      resolving.queue.shift();
+      const before = resolving.context.about;
+      const spliced = eachOf(state, effect.each, resolving.context).flatMap((about) => [{effect: "__about", about: {...(before ?? {}), ...about}}, ...structuredClone(effect.effects ?? [])]);
+      resolving.queue.unshift(...spliced, {effect: "__about", about: before});
+      continue;
+    }
+    if (effect?.effect === "__about") {
+      resolving.queue.shift();
+      if (effect.about === undefined) delete resolving.context.about; else resolving.context.about = effect.about;
+      continue;
+    }
     if (effect?.effect === "empowerJace") {
       const jace = {what: "permanent", token: true, subtypes: ["Jace"], controller: "you"};
       const count = Math.max(0, effect.count ?? 0);

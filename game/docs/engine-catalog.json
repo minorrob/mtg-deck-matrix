@@ -9,16 +9,16 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1141,
-  "everyRule": 2452
+  "defined": 1142,
+  "everyRule": 2453
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
     "built": 38,
     "partial": 0,
-    "named": 18,
-    "missing": 138
+    "named": 19,
+    "missing": 137
    },
    "entries": [
     {
@@ -1382,7 +1382,7 @@
      "rule": "702.176",
      "name": "Impending",
      "engine": null,
-     "status": "missing",
+     "status": "named",
      "forge": "Impending",
      "top": 1,
      "all": 6,
@@ -11784,8 +11784,8 @@
      "forge": "ETBReplacement",
      "top": 68,
      "all": 408,
-     "blocks": 33,
-     "alone": 10
+     "blocks": 32,
+     "alone": 9
     },
     {
      "kind": "keyword construct",

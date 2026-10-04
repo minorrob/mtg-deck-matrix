@@ -612,6 +612,22 @@ as they enter too, four times for two; and "whenever you scry or surveil" (Proft
 (Berta), by the lesser of power and toughness; "whenever counters are put on this"; an activated ability's modes chosen
 as it is activated when they name targets (Aetheric Amplifier); "until your next turn, whenever a creature attacks you or
 a planeswalker you control" (Jace, Reality Sculptor); and "all but the bottom card".
+`engine-linked-exile` holds Oblivion Ring's two linked triggers: the card it exiled returned by its leaves trigger, under
+its owner, once, each Ring its own; nothing once that card has left exile.
+`engine-protection` holds protection from a card type (Serra's Emissary): damage prevented, not enchanted or equipped,
+not blocked, not targeted, for permanents and their controller; nothing before the choice.
+`engine-cant-lose` holds "you can't lose the game and your opponents can't win the game" (Darksteel Angel): no loss to
+life, poison or an empty library, conceding aside, and no win by an effect; no -1/-1 counters on its controller's
+creatures; and an emblem (Ajani Resolute), an effect with no source and no end, and its Pridemate token.
+`engine-impending` holds impending (Overlord of the Mistmoors): time counters, not a creature while it has one and was
+cast so, one removed at its controller's end step, and none of it when cast for its mana cost; and "cards with
+different names" (Gifts Ungiven), one of each name offered.
+`engine-overload` holds overload (Winds of Abandon): offered beside the mana cost, with no target; a repetition that
+asks, each player in turn; and each search by the creature's controller as it left the battlefield.
+`engine-discover` holds discover (Quintorius Kand), written with what was built: past what doesn't fit, the rest under,
+cast free from exile or put into hand; each opponent dealt 2 for a spell cast from exile; and mana for each card exiled.
+`engine-eminence` holds eminence (The Ur-Sphinx), from the command zone and its owner's other Sphinxes only; "that many"
+for the Sphinxes attacking; and, for each player, a card that player milled, cast free.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -730,7 +746,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 292 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 299 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -994,6 +1010,13 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-excess-and-next-spell` — `tests/engine-excess-and-next-spell.mjs`
 - `engine-counters-doubled` — `tests/engine-counters-doubled.mjs`
 - `engine-piles-and-modes` — `tests/engine-piles-and-modes.mjs`
+- `engine-linked-exile` — `tests/engine-linked-exile.mjs`
+- `engine-protection` — `tests/engine-protection.mjs`
+- `engine-cant-lose` — `tests/engine-cant-lose.mjs`
+- `engine-impending` — `tests/engine-impending.mjs`
+- `engine-overload` — `tests/engine-overload.mjs`
+- `engine-discover` — `tests/engine-discover.mjs`
+- `engine-eminence` — `tests/engine-eminence.mjs`
 
 ## Design and execution record
 
