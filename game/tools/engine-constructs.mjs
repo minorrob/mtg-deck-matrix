@@ -85,6 +85,8 @@ export const FORGE_STATIC = {Continuous: "layers", CombatDamageToughness: "rules
   /* "Your opponents can't cast spells from anywhere other than their hands", "during your turn", "more than one spell each
      turn" (batch 63): the static `cant-cast`, read where a cast is offered (rules/statics.mjs castForbidden). */
   CantBeCast: "rules/actions",
+  /* "Your opponents can't gain life" (CR 119.7; Rob's Priority Batch 10.3, its twenty-sixth slice): `cant-gain-life`. */
+  CantGainLife: "rules/statics",
   /* "Creatures can't attack you unless their controller pays {2} for each" (batch 66): `attack-tax`, rules/combat.mjs. */
   CantAttackUnless: "rules/combat",
   /* "Can't be blocked by creatures with power 3 or greater", "your opponents can't block with creatures with even mana

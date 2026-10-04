@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rampaging Ferocidon",
+    "oracleId": "3e5ca524-8dd1-4f7f-a467-5210d768b8a1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dinosaur"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Menace\nPlayers can't gain life.\nWhenever another creature enters, this creature deals 1 damage to that creature's controller.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Menace",
+      "keyword": "menace"
+    },
+    {
+      "kind": "static",
+      "text": "Players can't gain life.",
+      "rule": "cant-gain-life",
+      "affects": {
+        "what": "player"
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another creature enters, this creature deals 1 damage to that creature's controller.",
+      "trigger": {
+        "on": "enters",
+        "who": "another",
+        "filter": {
+          "types": [
+            "Creature"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "who": "that card's controller"
+        }
+      ]
+    }
+  ]
+}

@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,126 defined and playable today; 2,423 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,128 defined and playable today; 2,426 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -22,7 +22,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Keyword actions (CR 701) | 70 | 18 | 3 | 5 | 44 |
 | Effects | 192 | 59 | 1 | 12 | 120 |
 | Triggers | 138 | 15 | 4 | 6 | 113 |
-| Static abilities | 77 | 10 | 2 | 0 | 65 |
+| Static abilities | 77 | 11 | 2 | 0 | 64 |
 | Replacement effects | 34 | 0 | 4 | 0 | 30 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
 | Options and conditions | 37 | 23 | 5 | 0 | 9 |
@@ -684,7 +684,7 @@ The things that alone hold back the most of the most-played cards.
 | UntapOtherPlayer | rules/turn | built | 7 | 15 | 0 | 0 |
 | CantBeActivated | — | missing | 5 | 34 | 5 | 5 |
 | MustAttack | — | missing | 4 | 100 | 4 | 2 |
-| CantGainLife | — | missing | 4 | 20 | 4 | 3 |
+| CantGainLife | rules/statics | built | 4 | 20 | 0 | 0 |
 | AttackRestrict | — | missing | 4 | 8 | 4 | 2 |
 | CombatDamageToughness | rules/statics | built | 3 | 20 | 0 | 0 |
 | ManaConvert | — | missing | 3 | 14 | 3 | 2 |
@@ -692,7 +692,7 @@ The things that alone hold back the most of the most-played cards.
 | UnspentMana | — | missing | 3 | 6 | 3 | 2 |
 | MinMaxBlocker | — | missing | 2 | 41 | 2 | 2 |
 | CanAttackDefender | — | missing | 2 | 32 | 2 | 2 |
-| CantPreventDamage | — | missing | 2 | 11 | 2 | 1 |
+| CantPreventDamage | — | missing | 2 | 11 | 2 | 2 |
 | CantSacrifice | — | missing | 2 | 10 | 2 | 0 |
 | ActivateAbilityAsIfHaste | — | missing | 2 | 4 | 2 | 2 |
 | OptionalCost | — | missing | 1 | 40 | 1 | 1 |

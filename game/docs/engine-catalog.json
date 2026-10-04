@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1126,
-  "everyRule": 2423
+  "defined": 1128,
+  "everyRule": 2426
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -7185,10 +7185,10 @@
   },
   "Static abilities": {
    "tally": {
-    "built": 10,
+    "built": 11,
     "partial": 2,
     "named": 0,
-    "missing": 65
+    "missing": 64
    },
    "entries": [
     {
@@ -7363,13 +7363,13 @@
      "kind": "static",
      "rule": null,
      "name": "CantGainLife",
-     "engine": null,
-     "status": "missing",
+     "engine": "rules/statics",
+     "status": "built",
      "forge": "CantGainLife",
      "top": 4,
      "all": 20,
-     "blocks": 4,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "static",
@@ -7465,7 +7465,7 @@
      "top": 2,
      "all": 11,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "static",
