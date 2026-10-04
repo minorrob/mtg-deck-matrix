@@ -33,6 +33,7 @@
 import {keywordsOf, characteristicsOf} from "../rules/layers.mjs";
 import {toughnessOf} from "../rules/layers.mjs";
 import {combatDamageOf, ruleChanged, cantBeBlockedBy} from "../rules/statics.mjs";
+import {protectedFrom} from "../rules/protection.mjs";
 
 /** The families of §3.1, so a caller can ask what this module covers. */
 export const KEYWORD_FAMILIES = Object.freeze({
@@ -71,6 +72,8 @@ export function canBlockAttacker(state, blockerId, attackerId) {
   if (ruleChanged(state, "cant-be-blocked", attackerId)) return false;
   /* "Can't be blocked except by Slivers", "by creatures with power 2 or less": this blocker, by what it is. */
   if (cantBeBlockedBy(state, attackerId, blockerId)) return false;
+  /* Protection (CR 702.16f): not blocked by a creature with the quality. */
+  if (protectedFrom(state, {card: attackerId}, blockerId)) return false;
   /* CR 702.9b: flying can be blocked only by flying or reach (CR 702.17b). Note which way round it
      is — flying restricts who may block IT, and does not restrict what it may block. */
   if (has(state, attackerId, "Flying")

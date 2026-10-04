@@ -608,6 +608,10 @@ as they enter too, four times for two; and "whenever you scry or surveil" (Proft
 (Berta), by the lesser of power and toughness; "whenever counters are put on this"; an activated ability's modes chosen
 as it is activated when they name targets (Aetheric Amplifier); "until your next turn, whenever a creature attacks you or
 a planeswalker you control" (Jace, Reality Sculptor); and "all but the bottom card".
+`engine-linked-exile` holds Oblivion Ring's two linked triggers: the card it exiled returned by its leaves trigger, under
+its owner, once, each Ring its own; nothing once that card has left exile.
+`engine-protection` holds protection from a card type (Serra's Emissary): damage prevented, not enchanted or equipped,
+not blocked, not targeted, for permanents and their controller; nothing before the choice.
 `engine-destroyed-and-walker-damage` holds a board wipe that remembers what it destroyed (Ob Nixilis, the Ascended's
 "1 life for each creature destroyed this way"), the indestructible never among them; and "whenever this creature deals
 combat damage to a player or planeswalker" (Grateful Apparition): combat damage to a planeswalker triggers it, about its
@@ -730,7 +734,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 292 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 294 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -993,6 +997,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-excess-and-next-spell` — `tests/engine-excess-and-next-spell.mjs`
 - `engine-counters-doubled` — `tests/engine-counters-doubled.mjs`
 - `engine-piles-and-modes` — `tests/engine-piles-and-modes.mjs`
+- `engine-linked-exile` — `tests/engine-linked-exile.mjs`
+- `engine-protection` — `tests/engine-protection.mjs`
 - `engine-destroyed-and-walker-damage` — `tests/engine-destroyed-and-walker-damage.mjs`
 
 ## Design and execution record

@@ -52,6 +52,7 @@ import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./c
 import {sacrificeOne, moveOne, returnExiledUntil} from "../script/effects/zones.mjs";
 import {changeLife} from "../script/effects/resources.mjs";
 import {enduringStories} from "../keywords/designations.mjs";
+import {protectedFrom} from "./protection.mjs";
 
 /* The capitalized zone names the projection and the telemetry use. */
 const ZONE_LABEL = {
@@ -202,7 +203,10 @@ export function checkStateBasedActions(state) {
       if (object.attachedTo === null || object.attachedTo === undefined) continue;
       const host = state.objects[object.attachedTo];
       const equipment = (object.subtypes ?? []).includes("Equipment");
-      if (host && host.zone === "battlefield" && (!equipment || typesOf(state, object.attachedTo).includes("Creature"))) continue;
+      if (host && host.zone === "battlefield" && (!equipment || typesOf(state, object.attachedTo).includes("Creature"))
+        /* Nor enchanted or equipped by one it has protection from (CR 702.16c-d): unattached here, an Aura then put into
+           its owner's graveyard by the check above, as an Aura attached to nothing (CR 704.5m). */
+        && !protectedFrom(state, {card: object.attachedTo}, id)) continue;
       if (host) host.attachments = (host.attachments ?? []).filter((a) => a !== id);
       object.attachedTo = null;
       acted = true;

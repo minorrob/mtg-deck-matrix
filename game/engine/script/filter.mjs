@@ -36,6 +36,7 @@ import {usesThisTurn} from "../state/index.mjs";
 import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {hasSubtype, isCreatureType} from "../keywords/types.mjs";
+import {protectedFrom} from "../rules/protection.mjs";
 
 /* The steps after blockers are declared, in which an attacker is blocked or unblocked (CR 509.1h). */
 const BLOCKERS_DECLARED = ["COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAGE", "COMBAT_DAMAGE", "COMBAT_END"];
@@ -118,13 +119,12 @@ const playerHasHexproof = (state, player) => state.zones.battlefield.some((id) =
 
 /* CR 115.2, and the difference between the two keywords is the part worth getting right:
    hexproof stops opponents only (CR 702.11b); shroud stops everybody, its controller included. */
-function canBeTargetedBy(state, id, chooser) {
+function canBeTargetedBy(state, id, chooser, source = null) {
   const keywords = keywordsOf(state, id);
   if (keywords.includes("Shroud")) return false;
   if (keywords.includes("Hexproof") && controllerOf(state, id) !== chooser) return false;
-  /* Protection is deferred and named: "protection from" carries a quality the card script has to
-     express, and there is nothing yet to express it with. When phase 2 gives it one, it goes
-     here and every targeting selector gains it at once. */
+  /* Protection (CR 702.16b; rules/protection.mjs): no target of a spell or ability from a source with the quality. */
+  if (protectedFrom(state, {card: id}, source)) return false;
   return true;
 }
 
@@ -166,6 +166,8 @@ export function compileSelector(selector) {
       if (!player || player.lost) return false;
       /* "You have hexproof" (Crystal Barricade, batch 71; CR 702.11c): no target of a spell or ability an opponent controls. */
       if (selector.target === true && id !== chooser && playerHasHexproof(state, id)) return false;
+      /* "You ... have protection from" (CR 702.16j): no target of a spell or ability from a source with the quality. */
+      if (selector.target === true && protectedFrom(state, {player: id}, context.source ?? null)) return false;
       const who = selector.who ?? "any";
       if (who === "you") return id === chooser;
       if (who === "opponent") return id !== chooser;
@@ -313,7 +315,7 @@ export function compileSelector(selector) {
     if (selector.self === true && id !== context.source) return false;
     /* "A creature with flying": its keywords now, through the layers (CR 702). */
     if (selector.keywords && !selector.keywords.every((word) => keywordsOf(state, id).includes(word))) return false;
-    if (selector.target === true && !canBeTargetedBy(state, id, chooser)) return false;
+    if (selector.target === true && !canBeTargetedBy(state, id, chooser, context.source ?? null)) return false;
 
     return true;
   };

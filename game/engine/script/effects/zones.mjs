@@ -252,6 +252,9 @@ export function peekAndReveal(state, params, context) {
 }
 
 /** `moveZone` — put the named objects somewhere. */
+/* The source a link is kept against: this ability's, or -- one that left the battlefield to trigger it -- as it last was. */
+const linkOf = (context) => context.source ?? context.lastKnown?.cardId ?? null;
+
 export function moveZone(state, params, context, rng = null) {
   const events = [];
   const arrived = [], became = [];
@@ -262,6 +265,10 @@ export function moveZone(state, params, context, rng = null) {
   const moving = params.fromTop !== undefined || params.allButBottom === true
     ? playersFor(state, params.who, context.controller).flatMap((whose) => { const library = cardsIn(state, "library", whose);
       return params.allButBottom === true ? library.slice(0, Math.max(0, library.length - 1)) : library.slice(0, params.fromTop); })
+    /* LINKED ABILITIES (CR 607.2a): "return the exiled card to the battlefield" (Oblivion Ring) -- what this permanent's
+       other ability exiled (`link`, below), while it is still that card in exile (CR 400.7: gone from there, it is a new
+       object, and nothing returns). */
+    : params.linked === true ? [...(state.links?.[linkOf(context)] ?? [])]
     : params.targets ?? [];
   if (params.reveal) for (const id of moving) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: state.objects[id].owner}}));
   /* "Put the rest on the bottom of your library in a random order" (Sunbird's Invocation; batch 80, `random`). */
@@ -305,6 +312,10 @@ export function moveZone(state, params, context, rng = null) {
   /* "Exile target creature card from a graveyard. Create a token that's a copy of it": what this moved, as the new
      objects it became (CR 400.7), for the effects after it to name as "remembered" (script/bind.mjs). */
   if (params.remember) context.remembered = became.filter((id) => state.objects[id]);
+  /* "Exile another target nonland permanent" (Oblivion Ring, `link`): what it exiled, kept against this source for the
+     ability linked to it (CR 607.2a); used, the link is spent. */
+  if (params.link === true && context.source !== null && context.source !== undefined) (state.links ??= {})[context.source] = became.filter((id) => state.objects[id]);
+  if (params.linked === true && state.links) delete state.links[linkOf(context)];
   /* Teferi's Time Twist: "if it enters as a creature, it enters with an additional +1/+1 counter on it". */
   if (params.withCounter) for (const id of arrived) if (typesOf(state, id).includes("Creature")) state.objects[id].counters[params.withCounter] = (state.objects[id].counters[params.withCounter] ?? 0) + 1;
   afterwards(state, arrived, params, context);

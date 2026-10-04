@@ -26,6 +26,9 @@ import {parseManaCost, manaValue} from "./mana.mjs";
 
 /** Every rule a static ability may change, with the module that reads it. */
 export const STATIC_RULES = Object.freeze({
+  /** CR 702.16: "you and creatures you control have protection from the chosen card type" (Serra's Emissary): `affects`,
+      `players`, `from`. rules/protection.mjs. */
+  "protection": "rules/protection.mjs",
   /** CR 614.1a, 122.6: "If one or more +1/+1 counters would be put on a creature you control, twice that many +1/+1
       counters are put on that creature instead" (Branching Evolution): `affects` the permanent, `counter` the kind, `times`.
       Read wherever counters are put on a permanent, as it enters too (countersPlaced, below). */

@@ -232,7 +232,10 @@ export function resolveTop(state, effect = null, rng = null) {
     ...(entry.cast ? {cast: entry.cast} : {}),
     /* What its permanent chose as it entered: "draw a card for each creature of the chosen type". */
     ...(source !== null && state.objects[source]?.chosen !== undefined ? {chosen: state.objects[source].chosen} : {})};
-  const {targets, fizzles} = recheckTargets(state, script.targets, entry.targets, context);
+  /* "Another target" asked again with its source gone (Oblivion Ring destroyed with its trigger waiting): another than the
+     source as it last existed, which no target can now be (CR 608.2b, 113.7a). */
+  const {targets, fizzles} = recheckTargets(state, script.targets, entry.targets, source === null && (entry.cardId ?? entry.lastKnown?.cardId ?? null) !== null
+    ? {...context, source: entry.cardId ?? entry.lastKnown.cardId} : context);
   if (fizzles) return finishTop(state, entry, events, true);
   /* An intervening "if" asked again as it resolves (CR 603.4): false now, and the ability does nothing. A triggered
      ability's own condition only -- "activate only if" was asked as it was activated (CR 602.5b) and is not again. */
