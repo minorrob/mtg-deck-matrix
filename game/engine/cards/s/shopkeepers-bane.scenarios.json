@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Shopkeeper's Bane",
+  "scenarios": [
+    {
+      "name": "It attacks: Rob gains 2 life, and it tramples in for 4",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Shopkeeper's Bane"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Shopkeeper's Bane"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_END"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 42
+        },
+        {
+          "seat": 1,
+          "life": 36
+        }
+      ]
+    }
+  ]
+}

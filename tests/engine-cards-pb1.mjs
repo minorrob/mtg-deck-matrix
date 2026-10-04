@@ -69,26 +69,26 @@ function blockersAgainst(s, attacker) {
 
 /* ---- can't block ---- */
 {
-  /* White Sun's Twilight for 2: two Mites that can't block. On Maya's turn her Bear attacks Rob: his Bear is offered, the
-     Mites are not. */
+  /* White Sun's Twilight for 2: two Mites that can't block. On Maya's turn Maya's Bear attacks Rob: Rob's Bear is offered,
+     the Mites are not. */
   const s = play("mites", [at(0, "battlefield", "Plains", "Plains", "Wastes", "Wastes", "Bear"), at(0, "hand", "White Sun's Twilight"), at(1, "battlefield", "Bear")],
     [{tap: "Plains"}, {tap: "Plains"}, {tap: "Wastes"}, {tap: "Wastes"}, {cast: "White Sun's Twilight", x: 2}, {resolve: true}, {to: {turn: 2, phase: "MAIN1"}}]);
   eq(named(s, "Phyrexian Mite").length, 2, "two Mites");
-  eq(blockersAgainst(s, named(s, "Bear").find((o) => o.controller === 1).id), ["Bear"], "Rob's Bear may block Maya's; his Mites may not (CR 509.1b)");
+  eq(blockersAgainst(s, named(s, "Bear").find((o) => o.controller === 1).id), ["Bear"], "Rob's Bear may block Maya's; Rob's Mites may not (CR 509.1b)");
 }
 {
-  /* Clan Guildmage: "Target creature can't block this turn." Maya's Bear can't block on Rob's turn; her Bird can. On his
-     next turn the Bear can again: the effect ended with the turn. */
+  /* Clan Guildmage: "Target creature can't block this turn." Maya's Bear can't block on Rob's turn; Maya's Bird can. On
+     Rob's next turn the Bear can again: the effect ended with the turn. */
   const s = play("guildmage", [at(0, "battlefield", "Clan Guildmage", "Mountain", "Wastes", "Bear"), at(1, "battlefield", "Bear", "Bird")],
     [{tap: "Mountain"}, {tap: "Wastes"}, {activate: "Clan Guildmage", ability: "a0", targets: [{card: "Bear", seat: 1}]}, {resolve: true}]);
   const robs = named(s, "Bear").find((o) => o.controller === 0).id;
-  eq(blockersAgainst(s, robs), ["Bird"], "this turn Maya may block with her Bird, not the Bear");
+  eq(blockersAgainst(s, robs), ["Bird"], "this turn Maya may block with the Bird, not the Bear");
   const later = play("guildmage, a turn later", [at(0, "battlefield", "Clan Guildmage", "Mountain", "Wastes", "Bear"), at(1, "battlefield", "Bear", "Bird")],
     [{tap: "Mountain"}, {tap: "Wastes"}, {activate: "Clan Guildmage", ability: "a0", targets: [{card: "Bear", seat: 1}]}, {resolve: true}, {to: {turn: 3, phase: "MAIN1"}}]);
   eq(blockersAgainst(later, named(later, "Bear").find((o) => o.controller === 0).id), ["Bear", "Bird"], "on Rob's next turn the Bear may block again");
 }
 {
-  /* On a selector: Rob's Bully keeps Maya's creatures from blocking -- every one of them -- and not his own. */
+  /* On a selector: Rob's Bully keeps Maya's creatures from blocking -- every one of them -- and not Rob's own. */
   const s = play("bully", [at(0, "battlefield", "Bully", "Bear"), at(1, "battlefield", "Bear", "Bird")], []);
   eq(blockersAgainst(s, named(s, "Bear").find((o) => o.controller === 0).id), [], "Maya is asked, and offered no blocker");
   const back = play("bully, Maya's turn", [at(0, "battlefield", "Bully", "Bear"), at(1, "battlefield", "Bear")], [{to: {turn: 2, phase: "MAIN1"}}]);
