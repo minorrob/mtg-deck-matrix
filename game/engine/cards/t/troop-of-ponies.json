@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Troop of Ponies",
+    "oracleId": "bb52b3c3-09f0-4506-b7c0-250ab0b91866",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Horse"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "{2}, {T}, Sacrifice this creature: Search your library for up to two basic land cards, reveal them, put one onto the battlefield tapped and the other into your hand, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{2}, {T}, Sacrifice this creature: Search your library for up to two basic land cards, reveal them, put one onto the battlefield tapped and the other into your hand, then shuffle.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "targets": [],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "shuffle": true,
+          "count": 2,
+          "upTo": true,
+          "reveal": true,
+          "destinations": [
+            {
+              "to": "battlefield",
+              "tapped": true
+            },
+            {
+              "to": "hand"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

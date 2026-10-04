@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thrilling Discovery",
+    "oracleId": "c5f5a234-c751-4976-a3e1-fbd52b3255c9",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You gain 2 life. Then you may discard two cards. If you do, draw three cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "You gain 2 life. Then you may discard two cards. If you do, draw three cards.",
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 2
+        },
+        {
+          "effect": "modal",
+          "title": "Then you may discard two cards. If you do, draw three cards.",
+          "modes": [
+            {
+              "text": "Yes",
+              "effects": [
+                {
+                  "effect": "discard",
+                  "count": 2,
+                  "remember": true
+                },
+                {
+                  "effect": "draw",
+                  "count": 3,
+                  "condition": {
+                    "compare": {
+                      "count": {
+                        "rememberedCount": true
+                      },
+                      "atLeast": 2
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "text": "No",
+              "effects": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

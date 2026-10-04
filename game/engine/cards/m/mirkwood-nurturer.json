@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mirkwood Nurturer",
+    "oracleId": "66630640-9605-44da-afdf-eb9d458d056f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Ranger"
+    ],
+    "manaCost": "{2}{G/U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, return up to one other target permanent you control to its owner's hand. If you do, put a +1/+1 counter on this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, return up to one other target permanent you control to its owner's hand. If you do, put a +1/+1 counter on this creature.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand",
+          "remember": true
+        },
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1,
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "controller": "you",
+          "another": true,
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    }
+  ]
+}
