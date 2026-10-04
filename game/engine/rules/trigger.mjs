@@ -97,6 +97,12 @@ function subjects(state, event, condition, sourceId, controller) {
     if (!whoseIs(condition.caster ?? "you", caster, controller)) return [];
     if (condition.castFrom && fields.castFrom !== condition.castFrom) return [];
     if (condition.filter && !(state.objects[spell] && matchesSelector({...condition.filter, what: "spell"}, state, spell, {controller, source: sourceId}))) return [];
+    /* "An instant or sorcery spell that targets a creature" (Rehearsed Debater): one of what it targets, chosen as it was
+       cast (CR 601.2c) and so before it became cast (601.2i), fits `targets`. A player it targets fits no such selector. */
+    if (condition.targets) {
+      const aimed = (state.stack.find((e) => e.stackId === fields.sa?.stackId)?.targets ?? []).flat();
+      if (!aimed.some((t) => t?.kind === "object" && state.objects[t.id] && matchesSelector(condition.targets, state, t.id, {controller, source: sourceId}))) return [];
+    }
     /* "Their first noncreature spell each turn": this is the first of the caster's spells this turn the filter fits. And
        "copy it for each other instant and sorcery spell you've cast before it this turn" (Thousand-Year Storm): how many
        of them came before this one, counted now, as it triggers -- a spell cast later, in response, did not. */

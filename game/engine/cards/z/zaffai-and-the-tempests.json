@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Zaffai and the Tempests",
+    "oracleId": "3f8a8650-0e38-4926-8f48-526351e6a863",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Bard",
+      "Sorcerer"
+    ],
+    "manaCost": "{5}{U}{R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": 5,
+    "toughness": 7
+  },
+  "oracleText": "Once during each of your turns, you may cast an instant or sorcery spell from your hand without paying its mana cost.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Once during each of your turns, you may cast an instant or sorcery spell from your hand without paying its mana cost.",
+      "rule": "cast-without-paying",
+      "affects": {
+        "anyOf": [
+          {
+            "types": [
+              "Instant"
+            ]
+          },
+          {
+            "types": [
+              "Sorcery"
+            ]
+          }
+        ]
+      },
+      "zones": [
+        "hand"
+      ],
+      "limit": 1,
+      "condition": {
+        "yourTurn": true
+      }
+    }
+  ]
+}

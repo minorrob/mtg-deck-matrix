@@ -135,7 +135,8 @@ export const STATIC_RULES = Object.freeze({
       "once each turn, you may pay {0} rather than pay the mana cost for a colorless spell you cast from your hand"
       (Darksteel Monolith): an alternative cost of nothing (CR 118.9; additional costs, the commander tax included, are
       still paid). `affects` the spells, `zones` where they are cast from, `limit` how often each turn, and
-      `manaValueAtMost` a counted cap (As Foretold's time counters). rules/actions.mjs. */
+      `manaValueAtMost` a counted cap (As Foretold's time counters), and `condition` its own ("once during each of your
+      turns", Zaffai and the Tempests: yourTurn, with a limit of one). rules/actions.mjs. */
   "cast-without-paying": "rules/actions.mjs",
 });
 
@@ -153,6 +154,7 @@ export function freeCast(state, player, cardId) {
     for (const ability of holder.abilities ?? []) {
       if (ability.kind !== "static" || ability.rule !== "cast-without-paying") continue;
       if (ability.zones && !ability.zones.includes(object.zone)) continue;
+      if (!conditionHolds(state, ability.condition, {controller: holder.controller, source: holderId})) continue;
       if (!matchesSelector({...(ability.affects ?? {}), what: "card", zone: object.zone}, state, cardId, {controller: holder.controller, source: holderId})) continue;
       if (ability.manaValueAtMost !== undefined) {
         const cap = amountOf(state, ability.manaValueAtMost, {controller: holder.controller, source: holderId});

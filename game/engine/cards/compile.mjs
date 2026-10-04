@@ -310,7 +310,7 @@ export function scriptVocabulary() {
     effects: [...Object.keys(EFFECTS), ...NEEDS_A_DECISION].sort(),
     selectorKeys: [...SELECTOR_KEYS, "anyOf (a choice of selectors, for 'any target')"],
     triggers: ["enters (who: self|another|any, filter?: selector)", "dies (who: self|another|any, filter?: selector)", "upkeep (yours: true|false)", "end step (yours: true|false)",
-      "spell cast (caster: you|opponent|any, filter?: selector of the spell)", "attacks (who: self|another|any, filter?)",
+      "spell cast (caster: you|opponent|any, filter?: selector of the spell, targets?: selector of what one of its targets is)", "attacks (who: self|another|any, filter?)",
       "damage dealt (who: self|another|any, combat?: true, to: player|opponent, filter?)", "drawn (drawer: you|opponent|any)"],
     costAtoms: ["{atom: \"{T}\"}", "{atom: \"mana\", cost: \"{1}{G}\"}", "{atom: \"payLife\", amount: n}", "{atom: \"sacrifice\", self: true}"],
     additionalCosts: ["{atom: \"discard\"}", "{atom: \"sacrifice\", selector: {types: [\"Creature\"]}} (or anyOf)"],
