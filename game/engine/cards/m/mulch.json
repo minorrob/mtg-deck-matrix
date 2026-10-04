@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mulch",
+    "oracleId": "12c03a03-36bf-487e-b8be-e55399525da5",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Reveal the top four cards of your library. Put all land cards revealed this way into your hand and the rest into your graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Reveal the top four cards of your library. Put all land cards revealed this way into your hand and the rest into your graveyard.",
+      "effects": [
+        {
+          "effect": "dig",
+          "count": 4,
+          "take": 4,
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          },
+          "to": "hand",
+          "reveal": true,
+          "rest": "graveyard"
+        }
+      ]
+    }
+  ]
+}

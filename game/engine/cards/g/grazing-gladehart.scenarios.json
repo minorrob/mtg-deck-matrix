@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Grazing Gladehart",
+  "scenarios": [
+    {
+      "name": "A land enters: Rob may gain 2",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grazing Gladehart"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Forest"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 42
+        }
+      ]
+    }
+  ]
+}

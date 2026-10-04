@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Satyr Wayfinder",
+    "oracleId": "ead4c01a-e2ae-49c9-95d9-651d81005907",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Satyr"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters, reveal the top four cards of your library. You may put a land card from among them into your hand. Put the rest into your graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, reveal the top four cards of your library. You may put a land card from among them into your hand. Put the rest into your graveyard.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "dig",
+          "count": 4,
+          "take": 1,
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          },
+          "upTo": true,
+          "to": "hand",
+          "reveal": true,
+          "rest": "graveyard"
+        }
+      ]
+    }
+  ]
+}
