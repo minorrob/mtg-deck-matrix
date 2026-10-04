@@ -370,8 +370,10 @@ const tapAtom = (cost) => (cost ?? []).find((a) => a?.atom === "tapCreature");
 const tapChoices = (state, player, sourceId, selector) => state.zones.battlefield.filter((id) => id !== sourceId && state.objects[id].controller === player
   && !state.objects[id].tapped && compileSelector({...selector, what: "permanent"})(state, id, {controller: player, source: sourceId}));
 
-/* Whether an ability is within its limit this turn ("activate only once each turn", CR 602.5b). */
-const withinLimit = (state, id, ability) => !ability.limit || usesThisTurn(state, id, ability.id) < ability.limit;
+/* Whether an ability is within its limit this turn ("activate only once each turn", CR 602.5b), and an exhaust ability
+   not yet activated by this object (CR 702.177a). */
+const withinLimit = (state, id, ability) => (!ability.limit || usesThisTurn(state, id, ability.id) < ability.limit)
+  && !(ability.exhaust && (state.objects[id]?.exhausted ?? []).includes(ability.id));
 /* Whether a mana ability's counters can be paid: every removal has the counters to remove. */
 const countersPayable = (state, id, costs) => (costs ?? []).every((c) => c.put || (state.objects[id].counters?.[c.counter] ?? 0) >= c.count);
 function payCounters(state, id, costs) {
@@ -766,7 +768,9 @@ function offers(state, player) {
            cards of "discard two cards" are; fewer than that there, and it can't be activated. */
         const fodder = atom ? discardSets(sacrificeChoices(state, player, id, atom.selector), atom.count ?? 1).map((s) => ({sacrifice: s}))
           : back ? sacrificeChoices(state, player, id, back.selector).map((r) => ({returnToHand: r}))
-          : toss ? discardSets(cardsIn(state, "hand", player).filter((c) => c !== id), toss.count ?? 1).map((d) => ({discard: d}))
+          /* "Discard a creature card" (Fauna Shaman): only a card its selector describes. */
+          : toss ? discardSets(cardsIn(state, "hand", player).filter((c) => c !== id && (!toss.selector || compileSelector({...toss.selector, what: "card", zone: "hand"})(state, c, {controller: player, source: id}))),
+            toss.count ?? 1).map((d) => ({discard: d}))
           : crew ? crewChoices(state, player, id, crew.power).map((set) => ({crew: set}))
           : tapper ? tapChoices(state, player, id, tapper.selector).map((t) => ({tap: t}))
           : untapper ? untapChoices(state, player, untapper.count).map((set) => ({untap: set})) : [null];
@@ -1336,6 +1340,9 @@ function perform(state, player, action, during = null) {
       }
     }
     if (ability.limit) recordUse(state, action.objectId, ability.id);
+    /* Exhausted: this object never activates it again (CR 702.177a). It is a new object once it changes zones (CR 400.7),
+       and moveObject makes it one, so the record goes with the old. */
+    if (ability.exhaust) (object.exhausted ??= []).push(ability.id);
     /* A loyalty ability activated: none other of this permanent's this turn (CR 606.3). */
     if (ability.loyalty !== undefined) recordUse(state, action.objectId, "loyalty");
     return events;
