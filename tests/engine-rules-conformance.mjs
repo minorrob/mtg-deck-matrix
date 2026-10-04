@@ -310,7 +310,7 @@ const named = (s, name) => s.zones.battlefield.filter((id) => s.objects[id].card
   const {state} = play("Counterspell", [at(0, "battlefield", "Mountain"), at(0, "hand", "Lightning Bolt"), at(1, "battlefield", "Island", "Island"), at(1, "hand", "Counterspell")],
     [{tap: "Mountain"}, {cast: "Lightning Bolt", targets: [{player: 1}]}, {pass: 1}, {tap: "Island", seat: 1}, {tap: "Island", seat: 1},
       {cast: "Counterspell", seat: 1, targets: [{card: "Lightning Bolt"}]}, {resolve: true}, {expect: [{stack: 0}, {seat: 0, zone: "graveyard", cards: ["Lightning Bolt"]}]}]);
-  eq(state.players[1].life, 40, "CR 701.6a, 608.2b: a countered spell is put into its owner's graveyard and does nothing");
+  eq(state.players[1].life, 40, "CR 701.6a, 608.2b: a countered spell does nothing, and its card goes to its owner's graveyard");
 }
 {
   const {state} = play("flashback countered", [at(0, "battlefield", "Mountain", "Mountain", "Mountain"), at(0, "graveyard", "Faithless Looting"),

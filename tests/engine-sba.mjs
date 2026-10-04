@@ -231,8 +231,8 @@ const creature = (over) => ({types: ["Creature"], power: 2, toughness: 2, ...ove
 }
 
 /* ---- the legend rule (CR 704.5j; the plan review's C2, 2026-10-03) ----
-   Two or more legendary permanents with the same name controlled by one player: that player chooses one, and the rest are
-   PUT INTO their owners' graveyards -- not destroyed, so indestructible does not save them, and not sacrificed -- which is
+   A player with two or more legendary permanents of one name keeps the one they choose, and each of the others GOES TO its
+   owner's graveyard -- not destroyed, so indestructible does not save them, and not sacrificed -- which is
    a death, so "dies" sees it. The same name under two players is two legends. */
 {
   const s = fresh();

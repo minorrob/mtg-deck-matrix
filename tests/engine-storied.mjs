@@ -2,9 +2,8 @@
 
 /* STORIED (CR 702.195), FOR ROB'S PRIORITY LIST: WHAT THE CARDS' SCENARIOS CANNOT REACH.
  *
- * "Any time you control three or more permanents that are artifacts, Sagas, and/or legendary and you don't have an enduring
- * story, you have an enduring story for the rest of the game" (702.195a) -- read where the game is checked, as
- * state-based actions are (keywords/designations.mjs, rules/sba.mjs). The designation is the player's: a permanent with
+ * A player who controls a permanent with storied and three or more artifacts, Sagas and legendary permanents in any mix has
+ * an enduring story from then on (702.195a) -- read where the game is checked, as state-based actions are (keywords/designations.mjs, rules/sba.mjs). The designation is the player's: a permanent with
  * storied must be theirs, it stays when the permanents go, any number of players may have it (702.195b), and a player who
  * has none carries no key, so a game made before it hashes as it did. "As long as you have an enduring story" is the
  * condition `enduringStory`, which a layer's static, an attack tax (Dain) and "doesn't untap" (Bombur) read. And a layer's
