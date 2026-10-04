@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Foraging Wickermaw",
+    "oracleId": "11ceb2db-021e-422d-976e-7bfe3b67a8aa",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Scarecrow"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "When this creature enters, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)\n{1}: Add one mana of any color. This creature becomes that color until end of turn. Activate only once each turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "surveil",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{1}: Add one mana of any color. This creature becomes that color until end of turn. Activate only once each turn.",
+      "mana": true,
+      "limit": 1,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true
+        },
+        {
+          "effect": "animate",
+          "targets": "self",
+          "addTypes": [],
+          "colors": "produced",
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

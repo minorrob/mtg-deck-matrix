@@ -182,6 +182,9 @@ export function runScenario(scenario, cards, fixtures = {}) {
       && [].concat(step.tapping).every((n) => (a.costNames ?? []).includes(n)));
     /* Which kind of counter a "remove a counter from this creature" cost removes: the offer for that kind. */
     if (step.counter !== undefined) found = found.filter((a) => a.costChoice?.counter === step.counter);
+    /* "Blight 1 or pay {3}": the cast that pays the additional cost's mana (`extraMana: "{3}"`), or the one that does not
+       (`extraMana: ""`). */
+    if (step.extraMana !== undefined) found = found.filter((a) => (a.extraMana ?? "") === step.extraMana);
     if (!found.length && step.optional) return;
     if (!found.length) fail(`${names[seat]} is not offered ${kind} ${card}${step.targets ? ` at ${JSON.stringify(step.targets)}` : ""}`);
     record(applyAction(state, seat, found[0]));

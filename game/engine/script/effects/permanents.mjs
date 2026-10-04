@@ -374,12 +374,15 @@ export function animate(state, params, context) {
     until: params.until ?? null,
     sourceController: context.controller,
   });
-  /* "Becomes a 2/1 blue and red Elemental creature" (Restless Spire): its colors, in their own layer (CR 613.1e). */
-  if (Array.isArray(params.colors)) {
+  /* "Becomes a 2/1 blue and red Elemental creature" (Restless Spire): its colors, in their own layer (CR 613.1e). "Becomes
+     that color" (Foraging Wickermaw, `colors: "produced"`): the colors of the mana its mana ability just added -- and no
+     type, with `addTypes: []`. */
+  const colors = params.colors === "produced" ? ["W", "U", "B", "R", "G"].filter((c) => (context.produced?.[c] ?? 0) > 0) : params.colors;
+  if (Array.isArray(colors)) {
     pushEffect(state, {
       id: `animate-colors:${context.source ?? "effect"}`,
       layer: 5, affects,
-      apply: {setColors: [...params.colors]},
+      apply: {setColors: [...colors]},
       until: params.until ?? null,
       sourceController: context.controller,
     });
