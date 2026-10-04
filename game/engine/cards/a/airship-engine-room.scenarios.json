@@ -1,0 +1,85 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Airship Engine Room",
+  "scenarios": [
+    {
+      "name": "Played, it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Airship Engine Room"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Airship Engine Room"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Airship Engine Room"
+        }
+      ]
+    },
+    {
+      "name": "It taps for {R}; {4}, {T}, sacrificed: a card drawn",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Airship Engine Room",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Airship Engine Room",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Airship Engine Room"
+          ]
+        }
+      ]
+    }
+  ]
+}

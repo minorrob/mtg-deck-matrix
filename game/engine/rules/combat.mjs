@@ -92,9 +92,10 @@ export function canAttack(state, id, player) {
     && (!hasNow(state, id, "Defender") || ruleChanged(state, "attacks-despite-defender", id));
 }
 
-/** CR 509.1a: untapped, yours, and you are the one being attacked. */
+/** CR 509.1a: untapped, yours, and you are the one being attacked -- and nothing saying it can't block (509.1b). */
 export function canBlock(state, id, player) {
-  return isCreatureNow(state, id) && controllerOf(state, id) === player && !state.objects[id].tapped;
+  return isCreatureNow(state, id) && controllerOf(state, id) === player && !state.objects[id].tapped
+    && !ruleChanged(state, "cant-block", id);
 }
 
 /** Everyone still in the game who is not the attacking player (CR 506.2). */

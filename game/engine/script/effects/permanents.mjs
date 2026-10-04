@@ -336,6 +336,9 @@ export function createToken(state, params, context) {
   }
   /* "They gain haste until end of turn" (Ovika), and the rest a made permanent may gain (afterwards). */
   afterwards(state, made, {...params, controller}, context);
+  /* "Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all OTHER creatures" (Martial Coup): the
+     tokens this made, for the effects after it. */
+  if (params.remember) context.remembered = made;
   return events;
 }
 

@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1018,
-  "everyRule": 2389
+  "defined": 1027,
+  "everyRule": 2393
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -595,7 +595,7 @@
      "top": 4,
      "all": 21,
      "blocks": 4,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "keyword ability",
@@ -5787,7 +5787,7 @@
      "top": 4,
      "all": 21,
      "blocks": 4,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "trigger",
@@ -7185,10 +7185,10 @@
   },
   "Static abilities": {
    "tally": {
-    "built": 9,
+    "built": 10,
     "partial": 2,
     "named": 0,
-    "missing": 66
+    "missing": 65
    },
    "entries": [
     {
@@ -7303,13 +7303,13 @@
      "kind": "static",
      "rule": null,
      "name": "CantBlock",
-     "engine": null,
-     "status": "missing",
+     "engine": "rules/combat",
+     "status": "built",
      "forge": "CantBlock",
      "top": 8,
      "all": 139,
-     "blocks": 8,
-     "alone": 4
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "static",
@@ -9007,7 +9007,7 @@
      "top": 99,
      "all": 625,
      "blocks": 79,
-     "alone": 17
+     "alone": 18
     },
     {
      "kind": "option",

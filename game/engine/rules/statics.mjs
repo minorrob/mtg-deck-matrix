@@ -86,6 +86,9 @@ export const STATIC_RULES = Object.freeze({
   "player-hexproof": "script/filter.mjs",
   /** A restriction on attacking (CR 508.1c): `affects`, `defender`, `unless` (cantAttack, below). rules/combat.mjs. */
   "cant-attack": "rules/combat.mjs",
+  /** A restriction on blocking (CR 509.1b): "This token can't block" (White Sun's Twilight's Mites), "target creature
+      can't block this turn" given until end of turn: `affects` what can't. rules/combat.mjs, canBlock. */
+  "cant-block": "rules/combat.mjs",
   /** Flashback (CR 702.34a): the card's own, from its keyword and cost (cards/index.mjs), or given until end of turn
       (Past in Flames: effectUntil, its cards fixed as it resolves, their mana costs the cost). rules/actions.mjs offers
       the cast from its owner's graveyard; rules/stack.mjs and effects/zones.mjs exile it as it leaves the stack. */

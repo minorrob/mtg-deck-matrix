@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Flamekin Gildweaver",
+  "scenarios": [
+    {
+      "name": "It enters: a Treasure",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Flamekin Gildweaver"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Flamekin Gildweaver"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Flamekin Gildweaver",
+            "Treasure"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Flamekin Gildweaver",
+            "has": [
+              "Trample"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

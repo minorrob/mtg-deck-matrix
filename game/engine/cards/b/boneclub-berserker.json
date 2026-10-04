@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Boneclub Berserker",
+    "oracleId": "a08f69f9-de48-46d6-8b75-31886159cf45",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Berserker"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "This creature gets +2/+0 for each other Goblin you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This creature gets +2/+0 for each other Goblin you control.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "power": {
+          "count": {
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Goblin"
+            ],
+            "controller": "you",
+            "another": true
+          },
+          "times": 2
+        },
+        "toughness": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Contaminated Landscape",
+    "oracleId": "28196fd9-00c9-4cd0-b603-0eec8511ec79",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "B",
+      "U",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {C}.\n{T}, Sacrifice this land: Search your library for a basic Plains, Island, or Swamp card, put it onto the battlefield tapped, then shuffle.\nCycling {W}{U}{B} ({W}{U}{B}, Discard this card: Draw a card.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}, Sacrifice this land: Search your library for a basic Plains, Island, or Swamp card, put it onto the battlefield tapped, then shuffle.",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "anyOf": [
+              {
+                "supertypes": [
+                  "Basic"
+                ],
+                "subtypes": [
+                  "Plains"
+                ]
+              },
+              {
+                "supertypes": [
+                  "Basic"
+                ],
+                "subtypes": [
+                  "Island"
+                ]
+              },
+              {
+                "supertypes": [
+                  "Basic"
+                ],
+                "subtypes": [
+                  "Swamp"
+                ]
+              }
+            ]
+          },
+          "to": "battlefield",
+          "tapped": true,
+          "shuffle": true
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Cycling {W}{U}{B}",
+      "zone": "hand",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{W}{U}{B}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kher Keep",
+    "oracleId": "79638767-fbc7-451a-b29f-d93f2ac6f102",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {C}.\n{1}{R}, {T}: Create a 0/1 red Kobold creature token named Kobolds of Kher Keep.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{1}{R}, {T}: Create a 0/1 red Kobold creature token named Kobolds of Kher Keep.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{R}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Kobolds of Kher Keep",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Kobold"
+            ],
+            "colors": [
+              "R"
+            ],
+            "power": 0,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  ]
+}

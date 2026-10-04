@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Kher Keep",
+  "scenarios": [
+    {
+      "name": "{1}{R}, {T}: a 0/1 red Kobold named Kobolds of Kher Keep",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Kher Keep",
+            "Mountain",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Kher Keep",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Kher Keep",
+            "Kobolds of Kher Keep",
+            "Mountain",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Kobolds of Kher Keep",
+            "power": 0,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  ]
+}

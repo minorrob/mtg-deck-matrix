@@ -1,0 +1,72 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sunken Ruins",
+    "oracleId": "e6415ffb-8b7a-41c3-bedf-0d4112b7b795",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {C}.\n{U/B}, {T}: Add {U}{U}, {U}{B}, or {B}{B}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{U/B}, {T}: Add {U}{U}, {U}{B}, or {B}{B}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{U/B}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "U": 2
+            },
+            {
+              "U": 1,
+              "B": 1
+            },
+            {
+              "B": 2
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Clan Guildmage",
+  "scenarios": [
+    {
+      "name": "{2}{G}, {T}: a Wastes becomes a 4/4 Elemental with haste, still a land, and attacks",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Clan Guildmage",
+            "Forest",
+            "Mountain",
+            "Plains",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "activate": "Clan Guildmage",
+          "ability": "a1",
+          "targets": [
+            {
+              "card": "Wastes"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Wastes",
+                "power": 4,
+                "toughness": 4
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Wastes",
+                "has": [
+                  "Haste"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Wastes"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 36
+        }
+      ]
+    }
+  ]
+}

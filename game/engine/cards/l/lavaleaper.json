@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lavaleaper",
+    "oracleId": "a107fb84-6874-4964-a729-4425dad98330",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "All creatures have haste.\nWhenever a player taps a basic land for mana, that player adds one mana of any type that land produced.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "All creatures have haste.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "apply": {
+        "addKeywords": [
+          "Haste"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a player taps a basic land for mana, that player adds one mana of any type that land produced.",
+      "trigger": {
+        "on": "tapped for mana",
+        "tapper": "any",
+        "filter": {
+          "types": [
+            "Land"
+          ],
+          "supertypes": [
+            "Basic"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "addMana",
+          "produced": true
+        }
+      ]
+    }
+  ]
+}

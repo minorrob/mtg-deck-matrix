@@ -1,0 +1,95 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "White Sun's Twilight",
+    "oracleId": "a38828be-781e-4340-9c6f-f40b1d34773f",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{X}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You gain X life. Create X 1/1 colorless Phyrexian Mite artifact creature tokens with toxic 1 and \"This token can't block.\" If X is 5 or more, destroy all other creatures. (Players dealt combat damage by a creature with toxic 1 also get a poison counter.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "You gain X life. Create X 1/1 colorless Phyrexian Mite artifact creature tokens with toxic 1 and \"This token can't block.\" If X is 5 or more, destroy all other creatures. (Players dealt combat damage by a creature with toxic 1 also get a poison counter.)",
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": "X"
+        },
+        {
+          "effect": "createToken",
+          "count": "X",
+          "token": {
+            "name": "Phyrexian Mite",
+            "types": [
+              "Artifact",
+              "Creature"
+            ],
+            "subtypes": [
+              "Phyrexian",
+              "Mite"
+            ],
+            "colors": [],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Toxic"
+            ],
+            "abilities": [
+              {
+                "id": "toxic",
+                "kind": "static",
+                "rule": "toxic",
+                "text": "Toxic 1",
+                "amount": 1,
+                "affects": {
+                  "what": "permanent",
+                  "self": true
+                }
+              },
+              {
+                "id": "noblock",
+                "kind": "static",
+                "rule": "cant-block",
+                "text": "This token can't block.",
+                "affects": {
+                  "what": "permanent",
+                  "self": true
+                }
+              }
+            ]
+          },
+          "remember": true
+        },
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          },
+          "except": "remembered",
+          "condition": {
+            "compare": {
+              "count": "X",
+              "atLeast": 5
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

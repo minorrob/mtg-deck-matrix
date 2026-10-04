@@ -1,0 +1,72 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Jungle Barrier",
+  "scenarios": [
+    {
+      "name": "It enters: a card drawn",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Jungle Barrier"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Jungle Barrier"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Jungle Barrier",
+            "has": [
+              "Defender"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
