@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Boldwyr Aggressor",
+    "oracleId": "ab32c671-7686-435b-a987-14a08f6790eb",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Giant",
+      "Warrior"
+    ],
+    "manaCost": "{3}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 5
+  },
+  "oracleText": "Double strike\nOther Giants you control have double strike.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Double strike",
+      "keyword": "double strike"
+    },
+    {
+      "kind": "static",
+      "text": "Other Giants you control have double strike.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Giant"
+        ],
+        "controller": "you",
+        "another": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Double Strike"
+        ]
+      }
+    }
+  ]
+}

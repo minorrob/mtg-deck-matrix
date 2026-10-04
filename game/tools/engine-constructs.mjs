@@ -91,7 +91,10 @@ export const FORGE_STATIC = {Continuous: "layers", CombatDamageToughness: "rules
   CantBlockBy: "keywords/combat",
   /* "Inklings can't attack you", "can't attack its owner", "a player it has already attacked this turn", "unless you control
      seven or more lands" (X5g): the static `cant-attack`, rules/combat.mjs, before any requirement (CR 508.1c-d). */
-  CantAttack: "rules/combat"};
+  CantAttack: "rules/combat",
+  /* "This token can't block" (White Sun's Twilight's Mites), "this creature can't block" (Bloodghast, Gravecrawler), on a
+     selector of creatures (priority batch 1): the static `cant-block`, rules/combat.mjs canBlock (CR 509.1b). */
+  CantBlock: "rules/combat"};
 export const FORGE_REPLACEMENT = {Moved: "replacement",
   /* "This artifact doesn't untap during your untap step" (batch 66): the static `doesnt-untap`, rules/turn.mjs. */
   Untap: "rules/turn",

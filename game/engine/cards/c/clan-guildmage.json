@@ -1,0 +1,107 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Clan Guildmage",
+    "oracleId": "838eeca8-02f9-44fa-8170-1426622adf30",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Shaman"
+    ],
+    "manaCost": "{R}{G}",
+    "colors": [
+      "G",
+      "R"
+    ],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "{1}{R}, {T}: Target creature can't block this turn.\n{2}{G}, {T}: Target land you control becomes a 4/4 Elemental creature with haste until end of turn. It's still a land.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{1}{R}, {T}: Target creature can't block this turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{R}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "targets": {
+            "target": 0
+          },
+          "rule": "cant-block",
+          "until": "end-of-turn"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{2}{G}, {T}: Target land you control becomes a 4/4 Elemental creature with haste until end of turn. It's still a land.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{G}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "animate",
+          "targets": {
+            "target": 0
+          },
+          "power": 4,
+          "toughness": 4,
+          "subtypes": [
+            "Elemental"
+          ],
+          "until": "end-of-turn"
+        },
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Haste"
+          ]
+        }
+      ]
+    }
+  ]
+}

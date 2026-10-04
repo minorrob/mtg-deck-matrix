@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pretending Poxbearers",
+    "oracleId": "fefef024-3a05-4221-bb74-419ee08716e5",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Citizen",
+      "Ally"
+    ],
+    "manaCost": "{1}{W/B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "When this creature dies, create a 1/1 white Ally creature token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature dies, create a 1/1 white Ally creature token.",
+      "trigger": {
+        "on": "dies"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Ally",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Ally"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  ]
+}

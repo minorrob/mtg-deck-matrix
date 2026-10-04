@@ -282,7 +282,7 @@ function additionalChoices(state, player, spellId, costs) {
    and per way to choose the chosen modes' targets (601.2c), in the order of the modes. A mode is chosen once (700.2d). */
 function withModes(state, base, modal, context) {
   const least = Math.max(1, modal.choose ?? 1);
-  const most = Math.min(modal.modes.length, modal.more && conditionHolds(state, modal.more.condition, context) ? modal.more.choose : least);
+  const most = Math.min(modal.modes.length, modal.more && conditionHolds(state, modal.more.condition, context) ? modal.more.choose : modal.upTo ?? least);
   const picks = [];
   const pick = (from, chosen) => {
     if (chosen.length >= least) picks.push(chosen);

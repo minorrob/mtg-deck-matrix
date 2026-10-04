@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Flame-Chain Mauler",
+  "scenarios": [
+    {
+      "name": "{1}{R}: 3/2 with menace until end of turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Flame-Chain Mauler",
+            "Mountain",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Flame-Chain Mauler"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Flame-Chain Mauler",
+            "power": 3,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Flame-Chain Mauler",
+            "has": [
+              "Menace"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

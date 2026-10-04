@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mystic Gate",
+  "scenarios": [
+    {
+      "name": "{W} from a Plains filtered into {U}{U}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mystic Gate",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Mystic Gate",
+          "mana": {
+            "U": 2
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "or into {W}{U}; alone, it adds {C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mystic Gate",
+            "Island",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Mystic Gate",
+          "mana": {
+            "W": 1,
+            "U": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1,
+            "U": 1
+          }
+        }
+      ]
+    }
+  ]
+}

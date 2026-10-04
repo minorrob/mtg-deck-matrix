@@ -1,0 +1,186 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Lavaleaper",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Giant Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Goblin Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Elf Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob taps a Mountain: {R}{R}; a Wastes, {C}{C}; Maya's creature has haste too",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Lavaleaper",
+            "Mountain",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 2,
+            "C": 2
+          }
+        },
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Bear",
+            "has": [
+              "Haste"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Maya taps a Forest: Maya adds {G}{G}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Lavaleaper"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "pool": {
+            "G": 2
+          }
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "G": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "A land that is not basic adds only its own",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Lavaleaper",
+            "Kher Keep"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Kher Keep"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        }
+      ]
+    }
+  ]
+}

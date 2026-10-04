@@ -75,7 +75,7 @@ function castHolds(rule, cast) {
 }
 
 /** Whether a condition holds now, for an ability controlled by `controller` on object `source`. No condition holds. */
-export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined} = {}) {
+export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined} = {}) {
   if (!condition) return true;
   if (condition.cast !== undefined && !castHolds(condition.cast, cast)) return false;
   /* "Khans -- ...": what its permanent chose as it entered (the Sieges). */
@@ -108,7 +108,8 @@ export function conditionHolds(state, condition, {controller, source = null, abo
      or another amount counted now -- "if you gained 3 or more life this turn" (Indulging Patrician), "only if you created
      a token this turn" (Idol of Oblivion), "only if an opponent controls more lands than you" (Weathered Wayfarer). */
   if (condition.compare !== undefined) {
-    const counted = {controller, source, ...(about ? {about} : {})};
+    /* "If X is 5 or more" (Martial Coup): the X its spell was cast with, as the resolution knows it (CR 107.3a). */
+    const counted = {controller, source, ...(about ? {about} : {}), ...(x !== undefined ? {x} : {})};
     const n = amountOf(state, condition.compare.count, counted), than = (v) => amountOf(state, v, counted);
     if (condition.compare.atLeast !== undefined && n < than(condition.compare.atLeast)) return false;
     if (condition.compare.atMost !== undefined && n > than(condition.compare.atMost)) return false;

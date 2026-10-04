@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Pretending Poxbearers",
+  "scenarios": [
+    {
+      "name": "It dies: a 1/1 white Ally",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Pretending Poxbearers",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Lightning Bolt",
+          "targets": [
+            {
+              "card": "Pretending Poxbearers"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Ally",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Ally",
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  ]
+}

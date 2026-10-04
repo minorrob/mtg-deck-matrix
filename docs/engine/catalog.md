@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,018 defined and playable today; 2,389 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,027 defined and playable today; 2,393 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -22,7 +22,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Keyword actions (CR 701) | 70 | 17 | 3 | 6 | 44 |
 | Effects | 192 | 57 | 1 | 14 | 120 |
 | Triggers | 138 | 14 | 4 | 6 | 114 |
-| Static abilities | 77 | 9 | 2 | 0 | 66 |
+| Static abilities | 77 | 10 | 2 | 0 | 65 |
 | Replacement effects | 34 | 0 | 4 | 0 | 30 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
 | Options and conditions | 37 | 23 | 5 | 0 | 9 |
@@ -38,7 +38,7 @@ The things that alone hold back the most of the most-played cards.
 | --- | --- | --- | --- | ---: | ---: |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 26 | 106 |
 | option | Remembering what an effect moved | — | missing | 23 | 102 |
-| option | You may play or cast a card from another zone | — | missing | 17 | 79 |
+| option | You may play or cast a card from another zone | — | missing | 18 | 79 |
 | keyword construct | ETBReplacement | — | missing | 10 | 33 |
 | effect | MultiplyCounter | multiplyCounters | named | 10 | 12 |
 | effect | SetState | setState | named | 9 | 19 |
@@ -103,7 +103,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.79 | Persist | — | missing | 4 | 24 | 4 | 3 |
 | 702.100 | Evolve | — | named | 4 | 23 | 4 | 2 |
 | 702.61 | Split Second | — | missing | 4 | 22 | 4 | 3 |
-| 702.175 | Offspring | — | missing | 4 | 21 | 4 | 3 |
+| 702.175 | Offspring | — | missing | 4 | 21 | 4 | 4 |
 | 702.75 | Hideaway | — | named | 4 | 15 | 4 | 2 |
 | 702.62 | Suspend | — | missing | 3 | 72 | 3 | 3 |
 | 702.35 | Madness | — | missing | 3 | 62 | 3 | 1 |
@@ -548,7 +548,7 @@ The things that alone hold back the most of the most-played cards.
 | AbilityCast | — | missing | 5 | 42 | 5 | 5 |
 | Cycled | — | missing | 4 | 77 | 4 | 3 |
 | LandPlayed | land played | named | 4 | 40 | 4 | 3 |
-| CommitCrime | — | missing | 4 | 21 | 4 | 3 |
+| CommitCrime | — | missing | 4 | 21 | 4 | 4 |
 | AttackerBlocked | — | missing | 3 | 126 | 3 | 3 |
 | Taps | — | missing | 3 | 112 | 3 | 3 |
 | Untaps | — | missing | 3 | 30 | 3 | 1 |
@@ -679,7 +679,7 @@ The things that alone hold back the most of the most-played cards.
 | CastWithFlash | rules/actions | built | 12 | 56 | 0 | 0 |
 | CantAttack | rules/combat | built | 10 | 204 | 0 | 0 |
 | RaiseCost | — | missing | 10 | 91 | 6 | 4 |
-| CantBlock | — | missing | 8 | 139 | 8 | 4 |
+| CantBlock | rules/combat | built | 8 | 139 | 0 | 0 |
 | CantAttackUnless | rules/combat | built | 7 | 26 | 0 | 0 |
 | UntapOtherPlayer | rules/turn | built | 7 | 15 | 0 | 0 |
 | CantBeActivated | — | missing | 5 | 34 | 5 | 5 |
@@ -833,7 +833,7 @@ The things that alone hold back the most of the most-played cards.
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost} | built | 104 | 684 | 0 | 0 |
 | You may (an optional effect, CR 603.5) | modal (Yes / No) | built | 101 | 1094 | 0 | 0 |
-| You may play or cast a card from another zone | — | missing | 99 | 625 | 79 | 17 |
+| You may play or cast a card from another zone | — | missing | 99 | 625 | 79 | 18 |
 | An intervening "if" or "activate only if": a counted value | condition {compare} | built | 79 | 974 | 0 | 0 |
 | An effect's condition: a counted value | condition {compare: {count, atLeast / atMost / moreThan / fewerThan}} | built | 75 | 603 | 0 | 0 |
 | Unless a player pays | unlessPays, by kind | partial | 66 | 677 | 0 | 0 |

@@ -1,0 +1,149 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Archon of Cruelty",
+    "oracleId": "aa1a6646-c1e6-4bff-9092-43ee3e137914",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Archon"
+    ],
+    "manaCost": "{6}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Flying\nWhenever this creature enters or attacks, target opponent sacrifices a creature or planeswalker of their choice, discards a card, and loses 3 life. You draw a card and gain 3 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature enters or attacks, target opponent sacrifices a creature or planeswalker of their choice, discards a card, and loses 3 life. You draw a card and gain 3 life.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "who": {
+            "target": 0
+          },
+          "count": 1,
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "types": [
+                  "Planeswalker"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "effect": "discard",
+          "who": {
+            "target": 0
+          },
+          "count": 1
+        },
+        {
+          "effect": "loseLife",
+          "amount": 3,
+          "who": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "gainLife",
+          "amount": 3
+        }
+      ],
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature enters or attacks, target opponent sacrifices a creature or planeswalker of their choice, discards a card, and loses 3 life. You draw a card and gain 3 life.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "who": {
+            "target": 0
+          },
+          "count": 1,
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "types": [
+                  "Planeswalker"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "effect": "discard",
+          "who": {
+            "target": 0
+          },
+          "count": 1
+        },
+        {
+          "effect": "loseLife",
+          "amount": 3,
+          "who": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "gainLife",
+          "amount": 3
+        }
+      ],
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ]
+    }
+  ]
+}

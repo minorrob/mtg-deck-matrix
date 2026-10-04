@@ -1,0 +1,125 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Contaminated Landscape",
+  "scenarios": [
+    {
+      "name": "Sacrificed: a basic Plains found and put onto the battlefield tapped; a Forest is not one to find",
+      "library": [
+        "Forest",
+        "Plains"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Contaminated Landscape"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Contaminated Landscape",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Plains"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Plains"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Contaminated Landscape"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Plains"
+        }
+      ]
+    },
+    {
+      "name": "Cycled for {W}{U}{B}: a card drawn",
+      "library": [
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Island",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Contaminated Landscape"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "activate": "Contaminated Landscape",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Contaminated Landscape"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ]
+    }
+  ]
+}

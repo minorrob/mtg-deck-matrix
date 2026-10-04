@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Jungle Barrier",
+    "oracleId": "dcf65293-14a0-46a5-a0b0-ca2b7fda8bef",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Plant",
+      "Wall"
+    ],
+    "manaCost": "{2}{G}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": 2,
+    "toughness": 6
+  },
+  "oracleText": "Defender (This creature can't attack.)\nWhen this creature enters, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender (This creature can't attack.)",
+      "keyword": "defender"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, draw a card.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

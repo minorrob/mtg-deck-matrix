@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Perfect Intimidation",
+    "oracleId": "da099c34-74b2-4db8-8583-09bf2c56606f",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one or both —\n• Target opponent exiles two cards from their hand.\n• Remove all counters from target creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one or both —\n• Target opponent exiles two cards from their hand.\n• Remove all counters from target creature.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "chooseUpTo": 2,
+          "modes": [
+            {
+              "text": "Target opponent exiles two cards from their hand.",
+              "targets": [
+                {
+                  "what": "player",
+                  "who": "opponent"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "chooseCard",
+                  "who": {
+                    "target": 0
+                  },
+                  "zone": "hand",
+                  "count": 2,
+                  "to": "exile"
+                }
+              ]
+            },
+            {
+              "text": "Remove all counters from target creature.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "removeCounter",
+                  "targets": {
+                    "target": 0
+                  },
+                  "counter": "all"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

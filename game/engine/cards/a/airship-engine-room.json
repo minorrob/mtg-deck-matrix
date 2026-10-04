@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Airship Engine Room",
+    "oracleId": "01ed9139-293d-4477-a145-3c6fe59266c7",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This land enters tapped.\n{T}: Add {U} or {R}.\n{4}, {T}, Sacrifice this land: Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This land enters tapped.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {U} or {R}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "U": 1
+            },
+            {
+              "R": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{4}, {T}, Sacrifice this land: Draw a card.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

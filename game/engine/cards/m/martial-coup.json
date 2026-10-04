@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Martial Coup",
+    "oracleId": "2b7c4dab-e432-4b34-b058-3cec5c0d72df",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{X}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all other creatures.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all other creatures.",
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": "X",
+          "token": {
+            "name": "Soldier",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Soldier"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1
+          },
+          "remember": true
+        },
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          },
+          "except": "remembered",
+          "condition": {
+            "compare": {
+              "count": "X",
+              "atLeast": 5
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

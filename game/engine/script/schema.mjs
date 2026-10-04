@@ -192,6 +192,16 @@ function checkAbility(ability, path, errors) {
   /* A condition (script/condition.mjs): closed, like the rest. */
   for (const message of conditionProblems(ability.condition)) errors.push({path: `${path}.condition`, message});
 
+  /* "Choose one or both" (`chooseUpTo`, Perfect Intimidation): built for a spell whose one effect is the modal, its modes
+     chosen as it is cast (cards/index.mjs, rules/actions.mjs). Anywhere else the modal is asked as it resolves, as one. */
+  for (const [index, effect] of (ability.effects ?? []).entries()) {
+    if (effect?.effect !== "modal" || effect.chooseUpTo === undefined) continue;
+    if (ability.kind !== "spell" || (ability.effects ?? []).length !== 1)
+      errors.push({path: `${path}.effects[${index}].chooseUpTo`, message: "\"Choose one or both\" is built for a spell whose one effect is the modal"});
+    if (!Number.isInteger(effect.chooseUpTo) || effect.chooseUpTo <= (effect.choose ?? 1))
+      errors.push({path: `${path}.effects[${index}].chooseUpTo`, message: "chooseUpTo is how many modes at most: a whole number more than choose"});
+  }
+
   const effectful = ["spell", "activated", "triggered"].includes(ability.kind);
   if (effectful) {
     const effects = ability.effects ?? [];

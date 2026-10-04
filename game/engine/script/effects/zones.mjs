@@ -368,10 +368,14 @@ export function destroy(state, params, context) {
  * Which permanents die is decided before any of them moves. Done one at a time, a wipe that killed a lord first
  * would strip the indestructible it was granting and then kill what it had protected; at once, whatever was
  * indestructible when the wipe resolved survives it (CR 702.12b), whatever else it took with it.
+ *
+ * "Destroy all OTHER creatures" (Martial Coup, White Sun's Twilight): `except: "remembered"`, what an earlier effect of
+ * this resolution remembered -- the tokens it just made -- spared.
  */
 export function destroyAll(state, params, context) {
   const events = [];
-  const matched = [...selectMatching(state, params.selector ?? {what: "permanent"}, context)];
+  const spared = params.except === "remembered" ? new Set(context.remembered ?? []) : null;
+  const matched = [...selectMatching(state, params.selector ?? {what: "permanent"}, context)].filter((id) => !spared?.has(id));
   const doomed = matched.filter((id) => state.objects[id]?.zone === "battlefield" && !keywordsOf(state, id).includes("Indestructible"));
   /* Each regenerated one stays (CR 701.19a), unless the card says "they can't be regenerated" (`noRegenerate`). */
   for (const id of doomed) {

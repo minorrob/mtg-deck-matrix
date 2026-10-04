@@ -334,20 +334,23 @@ export function putCounterAll(state, params, context) {
   return events;
 }
 
-/** `removeCounter` — the other direction, and never below zero. */
+/** `removeCounter` — the other direction, and never below zero. "Remove all counters from target creature" (Perfect
+    Intimidation): `counter: "all"`, every kind it has, all of each. */
 export function removeCounter(state, params, context) {
   const events = [];
-  const kind = params.counter ?? "+1/+1";
   for (const id of params.targets ?? []) {
     const object = state.objects[id];
     if (!object) continue;
-    const before = object.counters[kind] ?? 0;
-    const after = Math.max(0, before - (params.count ?? 1));
-    if (after === before) continue;
-    object.counters[kind] = after;
-    events.push(event("GameEventCardCounters", state, {
-      card: cardRef(state, id), type: kind, oldValue: before, newValue: after,
-    }));
+    const kinds = params.counter === "all" ? Object.keys(object.counters ?? {}) : [params.counter ?? "+1/+1"];
+    for (const kind of kinds) {
+      const before = object.counters[kind] ?? 0;
+      const after = params.counter === "all" ? 0 : Math.max(0, before - (params.count ?? 1));
+      if (after === before) continue;
+      object.counters[kind] = after;
+      events.push(event("GameEventCardCounters", state, {
+        card: cardRef(state, id), type: kind, oldValue: before, newValue: after,
+      }));
+    }
   }
   void context;
   return events;

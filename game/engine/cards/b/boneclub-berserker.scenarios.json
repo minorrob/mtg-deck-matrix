@@ -1,0 +1,126 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Boneclub Berserker",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Giant Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Goblin Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Elf Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Two other Goblins of Rob's: 6/4; Maya's Goblin does not count",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Boneclub Berserker",
+            "Goblin Pal",
+            "Goblin Pal"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin Pal"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Boneclub Berserker",
+            "power": 6,
+            "toughness": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "None: 2/4, itself a Goblin not counted",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Boneclub Berserker"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Boneclub Berserker",
+            "power": 2,
+            "toughness": 4
+          }
+        }
+      ]
+    }
+  ]
+}
