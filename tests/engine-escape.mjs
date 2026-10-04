@@ -2,8 +2,8 @@
 
 /* ESCAPE (the plan's X5, D5 Shadrix Aristocrats: Woe Strider; X5e).
  *
- * "Escape [cost]" means "you may cast this card from your graveyard by paying [cost] rather than paying its mana cost"
- * (CR 702.138a): an alternative cost (CR 118.9), at the speed of the card's type. Its cost is mana and "exile N other cards
+ * Escape (CR 702.138a) lets the card be cast from its owner's graveyard for its escape cost instead of its mana cost: an
+ * alternative cost (CR 118.9), at the speed of the card's type. Its cost is mana and "exile N other cards
  * from your graveyard", so the cast is offered once, not once per set of cards (a graveyard of twenty has 3,876 ways to
  * pick four). Once the cast is taken, its caster picks which cards, as a pick-several, before anything moves or is paid
  * (rules/turn.mjs, "choose-cost"; CR 601.2h). A spell or permanent cast that way "escaped" (CR 702.138b). "Escapes with

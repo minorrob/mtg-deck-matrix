@@ -2,8 +2,8 @@
 
 /* INVESTIGATE (Rob's Priority Batch 10.3, its twenty-second slice: Wavesifter, Fateful Absence).
  *
- * "Investigate" means "create a Clue token" (CR 701.16a), and a Clue is "a colorless Clue artifact token with '{2},
- * Sacrifice this token: Draw a card'" (CR 111.10f) -- the engine's predefined Clue (effects/permanents.mjs). The effect
+ * To investigate is to create a Clue token (CR 701.16a): a colorless Clue artifact token that its controller may sacrifice
+ * for {2} to draw a card (CR 111.10f) -- the engine's predefined Clue (effects/permanents.mjs). The effect
  * is createToken's, with the Clue: "investigate twice" is `count: 2`, and "its controller investigates" (Fateful Absence)
  * names whose Clue it is as a token's controller is named, `{controllerOf: {target: 0}}`, read once as the spell begins
  * to resolve, so the controller of a creature it has just destroyed is still known (CR 608.2h).

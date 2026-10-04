@@ -1070,8 +1070,8 @@ export const play = {
 
 /* ---- a commander going to its owner's hand or library (CR 903.9b) ----
 
-   "If a commander would be put into its owner's hand or library from anywhere, its owner may put it into the command zone
-   instead." A replacement, so it is asked BEFORE the move -- the card is never seen in the hand -- and of the OWNER. The
+   A commander on its way to its owner's hand or library from anywhere may go to the command zone instead, if its owner
+   chooses. A replacement, so it is asked BEFORE the move -- the card is never seen in the hand -- and of the OWNER. The
    resolution puts this question in front of a moveZone that would move a commander there (script/resolution.mjs): each
    owner in turn order from the active player (CR 101.4), and then the move happens, with the commanders whose owners said
    yes going to the command zone instead (effects/zones.mjs, `commanderHome`). Moved as a whole, so nothing moves before

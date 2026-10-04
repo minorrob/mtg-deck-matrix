@@ -21,8 +21,8 @@
  *                                      active player (Tataru Taru)
  *   {escaped: true|false}              its own permanent escaped, or did not (CR 702.138b): "sacrifice it unless it
  *                                      escaped" (Uro)
- *   {evoked: true|false}               its own permanent's evoke cost was paid, or was not (CR 702.74a): "when this
- *                                      permanent enters, if its evoke cost was paid, its controller sacrifices it"
+ *   {evoked: true|false}               its own permanent was cast for its evoke cost, or was not (CR 702.74a): the
+ *                                      evoke trigger's "if it was evoked"
  *   {spent: {G: 2}}                    at least that much mana of each color was spent to cast its own object (CR
  *                                      601.2h): "if {G}{G} was spent to cast it" (Wistfulness); adamant's "if at least
  *                                      three red mana was spent to cast this spell" is {R: 3}, colorless {C: 3}
