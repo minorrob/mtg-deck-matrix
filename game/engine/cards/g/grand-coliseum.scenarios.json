@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Grand Coliseum",
+  "scenarios": [
+    {
+      "name": "{T}: {R}, and 1 damage to Rob",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grand Coliseum"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Grand Coliseum",
+          "mana": {
+            "R": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1
+          }
+        },
+        {
+          "seat": 0,
+          "life": 39
+        }
+      ]
+    },
+    {
+      "name": "Played: tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Grand Coliseum"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Grand Coliseum"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Grand Coliseum"
+        }
+      ]
+    }
+  ]
+}

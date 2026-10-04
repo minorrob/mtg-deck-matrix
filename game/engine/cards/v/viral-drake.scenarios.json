@@ -1,0 +1,99 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Viral Drake",
+  "scenarios": [
+    {
+      "name": "It attacks: a poison counter, not damage",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Viral Drake"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Viral Drake"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 1,
+          "poison": 1
+        }
+      ]
+    },
+    {
+      "name": "{3}{U}: proliferate -- a second poison counter",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Viral Drake",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Viral Drake"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Viral Drake"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Maya (1 poison)"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "poison": 2
+        }
+      ]
+    }
+  ]
+}

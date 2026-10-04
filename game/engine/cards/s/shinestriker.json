@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shinestriker",
+    "oracleId": "1b94ee87-a2f4-47f1-9fc7-4a167cad1b3b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental"
+    ],
+    "manaCost": "{4}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Flying\nVivid — When this creature enters, draw cards equal to the number of colors among permanents you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Vivid — When this creature enters, draw cards equal to the number of colors among permanents you control.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": {
+            "colorsAmong": {
+              "what": "permanent",
+              "controller": "you"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

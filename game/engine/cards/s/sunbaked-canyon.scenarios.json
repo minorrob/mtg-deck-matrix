@@ -1,0 +1,81 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sunbaked Canyon",
+  "scenarios": [
+    {
+      "name": "{T}, 1 life: {W}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sunbaked Canyon"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Sunbaked Canyon",
+          "mana": {
+            "W": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1
+          }
+        },
+        {
+          "seat": 0,
+          "life": 39
+        }
+      ]
+    },
+    {
+      "name": "{1}, {T}, sacrificed: a card",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sunbaked Canyon",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Sunbaked Canyon"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Sunbaked Canyon"
+          ]
+        }
+      ]
+    }
+  ]
+}

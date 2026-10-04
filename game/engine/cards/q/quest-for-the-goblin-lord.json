@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Quest for the Goblin Lord",
+    "oracleId": "2e19baba-2d66-4e3a-b2bf-cb27dce89f44",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever a Goblin you control enters, you may put a quest counter on this enchantment.\nAs long as this enchantment has five or more quest counters on it, creatures you control get +2/+0.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever a Goblin you control enters, you may put a quest counter on this enchantment.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "subtypes": [
+            "Goblin"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "quest",
+          "count": 1
+        }
+      ],
+      "optional": true
+    },
+    {
+      "kind": "static",
+      "text": "As long as this enchantment has five or more quest counters on it, creatures you control get +2/+0.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 0
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "self": true,
+          "countersAtLeast": {
+            "counter": "quest",
+            "count": 5
+          }
+        }
+      }
+    }
+  ]
+}
