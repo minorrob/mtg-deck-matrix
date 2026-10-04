@@ -271,6 +271,8 @@ export function zoneProblems(state) {
       void seat;
     }));
   }
+  /* A phased-out permanent is in no zone's list, by design (CR 702.26d): it is in `state.phasedOut` instead. */
+  for (const id of state.phasedOut ?? []) { note(id, "phased"); if (state.objects[id]?.zone !== "phased") problems.push(`object ${id} is phased out and says it is in ${state.objects[id]?.zone}`); }
   for (const id of Object.keys(state.objects)) if (!seen.has(Number(id))) problems.push(`${state.objects[id].card} is in no zone`);
   return problems;
 }

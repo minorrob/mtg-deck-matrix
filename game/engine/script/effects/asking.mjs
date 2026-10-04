@@ -670,7 +670,7 @@ const lifeAsked = (awaiting) => awaiting.life > 0 || (awaiting.life === 0 && !(a
 const noun = (selector) => (selector?.subtypes?.length ? `a ${selector.subtypes[0]}` : selector?.types?.length ? `a ${selector.types[0].toLowerCase()}` : "a permanent");
 function costWords(awaiting) {
   const paid = [awaiting.amount > 0 ? `{${awaiting.amount}}` : null, lifeAsked(awaiting) ? `${awaiting.life} life` : null].filter(Boolean);
-  const other = awaiting.discard ? "discard a card" : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}` : null;
+  const other = awaiting.discard ? "discard a card" : awaiting.sacrificeCount ? `sacrifice ${awaiting.sacrificeCount} permanents` : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}` : null;
   return [other, paid.length ? `pay ${paid.join(" and ")}` : null].filter(Boolean).join(" and ") || `pay {${awaiting.amount}}`;
 }
 function payOptions(state, awaiting) {
@@ -682,6 +682,12 @@ function payOptions(state, awaiting) {
   if (awaiting.sacrifice) {
     const alternatives = Array.isArray(awaiting.sacrifice.anyOf) ? awaiting.sacrifice.anyOf : [awaiting.sacrifice];
     const matchers = alternatives.map((one) => compileSelector({...one, what: "permanent", controller: "you"}));
+    /* "Sacrifice three permanents": one option, to pay it, if they have that many; which ones is asked next (`sacrificing`). */
+    if (awaiting.sacrificeCount) {
+      const mine = state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player})));
+      return awaiting.sacrificing ? mine.map((id) => ({label: state.objects[id].card, cardId: id}))
+        : mine.length >= awaiting.sacrificeCount ? [{label: `Sacrifice ${awaiting.sacrificeCount} permanents${also}`, pay: true, sacrificeMany: true}] : [];
+    }
     return state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player})))
       .map((id) => ({label: `Sacrifice ${state.objects[id].card}${also}`, pay: true, sacrifice: id, cardId: id}));
   }
@@ -697,6 +703,7 @@ export const unlessPays = {
     if (params.ifPaid && !params.life && !params.discard && !params.sacrifice && !canPayGeneric(state, payer, Math.max(0, params.amount ?? 0))) return false;
     state.awaiting = {kind: "effect-choice", effect: "unlessPays", player: payer, amount: Math.max(0, params.amount ?? 0),
       ...(params.life !== undefined ? {life: params.life} : {}), ...(params.discard ? {discard: params.discard} : {}), ...(params.sacrifice ? {sacrifice: structuredClone(params.sacrifice)} : {}),
+      ...(params.sacrificeCount ? {sacrificeCount: params.sacrificeCount} : {}),
       effects: structuredClone(params.effects ?? []), source: context.source ?? null,
       /* "You may pay {1}. If you do, ...": the effects when it is paid, not when it is not. */
       ...(params.ifPaid ? {ifPaid: true} : {})};
@@ -705,6 +712,9 @@ export const unlessPays = {
   choice(state, awaiting) {
     /* Having said they pay: which mana pays, when that is a choice (rules/mana.mjs, paymentUnits). */
     if (awaiting.paying) return paymentChoice(`unless-mana:${awaiting.player}:${state.turn}:${awaiting.amount}`, awaiting.amount, paymentUnits(state, awaiting.player));
+    /* Having said they sacrifice that many: which ones. */
+    if (awaiting.sacrificing) return {id: `unless-sacrifice:${awaiting.player}:${state.turn}`, title: `Choose ${awaiting.sacrificeCount} permanents to sacrifice`, mode: "many",
+      min: awaiting.sacrificeCount, max: awaiting.sacrificeCount, options: payOptions(state, awaiting).map((option, index) => ({index, ...option}))};
     const source = awaiting.source !== null ? state.objects[awaiting.source]?.card : null;
     const pays = payOptions(state, awaiting).map((option, index) => ({index, ...option}));
     return {id: `unless:${awaiting.player}:${state.turn}:${awaiting.amount}`, title: `${source ? `${source}: ` : ""}${costWords(awaiting)}?`, mode: "one", min: 1, max: 1,
@@ -716,9 +726,24 @@ export const unlessPays = {
       const events = payWithUnits(state, awaiting.player, paymentUnits(state, awaiting.player), indices, awaiting.amount);
       return unlessPaid(state, awaiting, awaiting.paying.option, events);
     }
+    if (awaiting.sacrificing) {
+      const ids = payOptions(state, awaiting).map((o) => o.cardId);
+      const chosen = [...new Set(indices ?? [])].map((i) => ids[i]);
+      if (chosen.length !== awaiting.sacrificeCount || chosen.some((id) => id === undefined)) throw new Error("Invalid selection");
+      const {sacrificing, ...rest} = awaiting;
+      return unlessPays.paid(state, rest, {...sacrificing.option, sacrifice: chosen});
+    }
     const option = unlessPays.choice(state, awaiting).options[(indices ?? [])[0]];
     if (!option) throw new Error("Invalid selection");
+    if (option.sacrificeMany) {
+      state.awaiting = {...awaiting, sacrificing: {option}};
+      return {events: [], again: true};
+    }
     if (!option.pay) return awaiting.ifPaid ? [] : {events: [], splice: structuredClone(awaiting.effects)};
+    return unlessPays.paid(state, awaiting, option);
+  },
+  /* Paying, with the option chosen: its mana, then the rest. */
+  paid(state, awaiting, option) {
     /* Which mana pays is the payer's: asked next when the ways to pay differ, paid at once when they do not. */
     if ((awaiting.amount ?? 0) > 0 && paymentIsAChoice(paymentUnits(state, awaiting.player), awaiting.amount)) {
       state.awaiting = {...awaiting, paying: {option}};
@@ -739,7 +764,7 @@ function unlessPaid(state, awaiting, option, events) {
   if (option.discard !== undefined && state.objects[option.discard]) {
     if (moveOne(state, option.discard, "graveyard", events, {owner: awaiting.player}) !== null) events[events.length - 1].data.fields.discarded = true;
   }
-  if (option.sacrifice !== undefined && state.objects[option.sacrifice]) sacrificeOne(state, option.sacrifice, events);
+  for (const id of option.sacrifice === undefined ? [] : [].concat(option.sacrifice)) if (state.objects[id]) sacrificeOne(state, id, events);
   return awaiting.ifPaid ? {events, splice: structuredClone(awaiting.effects)} : events;
 }
 

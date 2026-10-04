@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Teferi's Reproach",
+    "oracleId": "9381b4a5-a8e0-412d-bc7f-ae15afa0f135",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose target opponent. Until that player's next turn, they gain protection from everything and their life total can't change. All nonland permanents they control phase out. (While they're phased out, they're treated as though they don't exist. They phase in before that player untaps during their next untap step.)\nExile Teferi's Reproach.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose target opponent. Until that player's next turn, they gain protection from everything and their life total can't change. All nonland permanents they control phase out. (While they're phased out, they're treated as though they don't exist. They phase in before that player untaps during their next untap step.)\nExile Teferi's Reproach.",
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "rule": "protection",
+          "from": "everything",
+          "who": {
+            "target": 0
+          },
+          "until": "their-next-turn"
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "life-cant-change",
+          "who": {
+            "target": 0
+          },
+          "until": "their-next-turn"
+        },
+        {
+          "effect": "phaseOut",
+          "selector": {
+            "what": "permanent",
+            "nonTypes": [
+              "Land"
+            ],
+            "controller": {
+              "target": 0
+            }
+          }
+        },
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "exile"
+        }
+      ]
+    }
+  ]
+}

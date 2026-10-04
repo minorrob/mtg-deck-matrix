@@ -52,7 +52,11 @@ function wardCost(cost) {
     if (atom?.atom === "mana" && /^\{\d+\}$/.test(atom.cost ?? "")) unless.amount = Number(atom.cost.slice(1, -1));
     else if (atom?.atom === "payLife" && Number.isInteger(atom.amount)) unless.life = atom.amount;
     else if (atom?.atom === "discard" && atom.self !== true) unless.discard = 1;
-    else if (atom?.atom === "sacrifice" && atom.selector && typeof atom.selector === "object") unless.sacrifice = structuredClone(atom.selector);
+    else if (atom?.atom === "sacrifice" && atom.selector && typeof atom.selector === "object") {
+      unless.sacrifice = structuredClone(atom.selector);
+      /* "Ward--Sacrifice three permanents" (Emrakul, the Exigent Doom): that many, chosen together. */
+      if (Number.isInteger(atom.count) && atom.count > 1) unless.sacrificeCount = atom.count;
+    }
     else return null;
   }
   return unless;
@@ -65,8 +69,9 @@ const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "trig
 /* What a flashback cost may be made of (CR 702.34a): mana, life ("Flashback--{1}{U}, Pay 3 life"), and creatures to tap
    ("Flashback--Tap three untapped white creatures you control", Battle Screech: `tapCreature`, its `count` and `selector`). */
 const FLASHBACK_ATOMS = ["mana", "payLife", "tapCreature"];
-/* How long "you may play that card" lasts (script/effects/zones.mjs, mayPlay): this turn, or until the end of your next turn. */
-const MAY_PLAY_UNTIL = ["end-of-turn", "your-next-end"];
+/* How long "you may play that card" lasts (script/effects/zones.mjs, mayPlay): this turn, until the end of your next turn,
+   or for as long as it remains there ("ever": a card that moves is a new object, CR 400.7, Emrakul, the Exigent Doom). */
+const MAY_PLAY_UNTIL = ["end-of-turn", "your-next-end", "ever"];
 /* What an evoke cost may be made of (CR 702.74a): what an alternative cost is paid with (rules/actions.mjs) -- mana
    ("Evoke {2}{U}", Mulldrifter), and a card exiled from the hand ("Evoke--Exile a red card from your hand", Fury). */
 const EVOKE_ATOMS = ["mana", "payLife", "exileFromHand"];
@@ -177,6 +182,8 @@ const TRIGGERS = {
     ...(Number.isInteger(t.nthThisTurn) && t.nthThisTurn >= 2 ? {nthThisTurn: t.nthThisTurn} : {}),
     /* "From your hand" (Jodah): where it was cast from (rules/actions.mjs). */
     ...(t.from ? {castFrom: t.from} : {}),
+    /* "When you cast this spell" (Emrakul, the Exigent Doom): its own cast, from the stack (rules/trigger.mjs). */
+    ...(t.who === "self" ? {who: "self"} : {}),
     /* "For each other instant and sorcery spell you've cast before it this turn": counted as it triggers. */
     ...(t.countBefore ? {countBefore: true} : {}),
     /* "An instant or sorcery spell that targets a creature" (Rehearsed Debater): what one of its targets is (rules/trigger.mjs). */
