@@ -130,3 +130,53 @@ Appearance; `docs/plan-appearance.md`), and whatever else follows the person rat
 keeps the device's own choices (card size, reduce motion).
 
 **Why it waits.** The four themes land first, in Settings, and move or are linked here when the page exists.
+
+---
+
+## 8 · Delete and add cards in the Library
+
+**Asked for.** Rob, 2026-10-04: "I should be able to delete cards ... I should also be able to 'Add Card' ... Add both of
+these as backlog items we will take up later."
+
+**Delete.** In Library, check one card's row, or every card's, and press **Delete**, which sits beside **Offer for
+Sell/Trade**. The cards are gone from the profile at once, whatever they were: in a deck, reserved, owned, ordered.
+
+**Add Card.** A pop-up with a search bar and a results window: search by all or part of a card's name, and pick the one
+meant from the results. Right under the search bar, **Upload list** slides a panel out of the pop-up's side. Paste a list
+in the format a new commander deck takes ("1 Azorius Signet") and press Save. The panel then shows how each line was
+read, the card it became, and asks Rob to confirm any it is unsure of. The list, or the one card picked from the search,
+then comes back to the pop-up to be given:
+- a status;
+- a group (Bench, unless another is picked);
+- a deck, if it goes in one (it need not);
+
+and Save adds them.
+
+**Where it goes.** The bar that appears when rows are ticked (`crankmagic-collection.js`, beside its `batch-offer`
+button).
+
+**To settle when it is built.**
+- Whether a delete wants an undo, given "immediately deleted".
+- What a deck shows for a card deleted out of it: the hole it leaves.
+- Whether Upload list reads lines exactly as the new-deck import does. It should: one reader, one set of rules.
+
+---
+
+## 9 · A deck's commander, changed -- and Build from Deck's error in production
+
+**Asked for.** Rob, 2026-10-04: "the build from Deck selection when creating a new deck throws an error in prod. And we
+should have a way of changing the commander on a deck ... Add both of these as backlog items we will take up later."
+
+**The error.** Creating a new deck from **Build from Deck** throws an error on production. It is not reproduced yet. When
+this is taken up, it comes first: reproduce it on crankmagic.com or staging, then fix it under a test that fails
+without the fix.
+
+**Changing the commander.** On a deck, remove the commander and leave the seat empty, or pick a new one. When the new
+commander's color identity is not the old one's, a card outside it can no longer be in the deck (CR 903.4, 903.5c). The
+deck screen then:
+- shows how many such cards it holds;
+- makes removing and replacing them the next recommended action.
+
+In the Library, filtered to that commander, each such card's row has a faint, transparent red fill and a red outline.
+
+**Why it waits.** Rob is taking it up later. The production error is the part not to leave long.
