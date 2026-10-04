@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Pterafractyl",
+  "scenarios": [
+    {
+      "name": "X is 2: a 3/2 flier, and 2 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Pterafractyl"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Pterafractyl",
+          "x": 2
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Pterafractyl",
+            "power": 3,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "life": 42
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Pest Mascot",
+  "scenarios": [
+    {
+      "name": "Rob gains life: a +1/+1 counter",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Pest Mascot",
+            "Shopkeeper's Bane"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Shopkeeper's Bane"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Pest Mascot",
+            "power": 3,
+            "toughness": 4
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Strixhaven Skycoach",
+    "oracleId": "e286a191-39d4-4073-b844-11d2aba911b4",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Vehicle"
+    ],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "Flying\nWhen this Vehicle enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle.\nCrew 2 (Tap any number of creatures you control with total power 2 or more: This Vehicle becomes an artifact creature until end of turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this Vehicle enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "to": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "optional": true
+    },
+    {
+      "kind": "keyword",
+      "text": "Crew 2",
+      "keyword": "crew",
+      "amount": 2
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Follow the Lumarets",
+    "oracleId": "5bb38d08-582e-43aa-9507-7c20759978ec",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Infusion — Look at the top four cards of your library. You may reveal a creature or land card from among them and put it into your hand. If you gained life this turn, you may instead reveal two creature and/or land cards from among them and put them into your hand. Put the rest on the bottom of your library in a random order.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Infusion — Look at the top four cards of your library. You may reveal a creature or land card from among them and put it into your hand. If you gained life this turn, you may instead reveal two creature and/or land cards from among them and put them into your hand. Put the rest on the bottom of your library in a random order.",
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "compare": {
+              "count": {
+                "lifeGainedThisTurn": "you"
+              },
+              "atLeast": 1
+            }
+          },
+          "then": [
+            {
+              "effect": "dig",
+              "count": 4,
+              "take": 2,
+              "selector": {
+                "anyOf": [
+                  {
+                    "types": [
+                      "Creature"
+                    ]
+                  },
+                  {
+                    "types": [
+                      "Land"
+                    ]
+                  }
+                ]
+              },
+              "upTo": true,
+              "to": "hand",
+              "reveal": true,
+              "rest": "bottom",
+              "random": true
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "dig",
+              "count": 4,
+              "take": 1,
+              "selector": {
+                "anyOf": [
+                  {
+                    "types": [
+                      "Creature"
+                    ]
+                  },
+                  {
+                    "types": [
+                      "Land"
+                    ]
+                  }
+                ]
+              },
+              "upTo": true,
+              "to": "hand",
+              "reveal": true,
+              "rest": "bottom",
+              "random": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Noxious Newt",
+  "scenarios": [
+    {
+      "name": "It taps for {G}, and has deathtouch",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Noxious Newt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Noxious Newt"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Noxious Newt",
+            "has": [
+              "Deathtouch"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

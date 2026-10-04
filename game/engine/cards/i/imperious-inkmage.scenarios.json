@@ -1,0 +1,89 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Imperious Inkmage",
+  "scenarios": [
+    {
+      "name": "It enters: surveil 2",
+      "library": [
+        "Island",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Imperious Inkmage"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Imperious Inkmage"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Island",
+                  "Forest"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0,
+            1
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Island",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Imperious Inkmage",
+            "has": [
+              "Vigilance"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

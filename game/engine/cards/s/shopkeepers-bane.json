@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shopkeeper's Bane",
+    "oracleId": "e7572317-6bec-4fb0-81ac-76aec04f14ad",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Badger",
+      "Pest"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 2
+  },
+  "oracleText": "Trample\nWhenever this creature attacks, you gain 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks, you gain 2 life.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 2
+        }
+      ]
+    }
+  ]
+}

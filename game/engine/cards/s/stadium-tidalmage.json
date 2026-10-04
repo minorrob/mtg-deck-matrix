@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Stadium Tidalmage",
+    "oracleId": "1c45e872-3af8-47a4-9dc7-a99c293338f8",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Djinn",
+      "Sorcerer"
+    ],
+    "manaCost": "{2}{U}{R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Whenever this creature enters or attacks, you may draw a card. If you do, discard a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature enters or attacks, you may draw a card. If you do, discard a card.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "discard",
+          "count": 1
+        }
+      ],
+      "optional": true
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature enters or attacks, you may draw a card. If you do, discard a card.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "discard",
+          "count": 1
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Visionary's Dance",
+    "oracleId": "c9f35490-462a-4c8f-9d8b-d8abca6596f7",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}{U}{R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Create two 3/3 blue and red Elemental creature tokens with flying.\n{2}, Discard this card: Look at the top two cards of your library. Put one of them into your hand and the other into your graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Create two 3/3 blue and red Elemental creature tokens with flying.",
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 2,
+          "token": {
+            "name": "Elemental",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Elemental"
+            ],
+            "colors": [
+              "U",
+              "R"
+            ],
+            "power": 3,
+            "toughness": 3,
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{2}, Discard this card: Look at the top two cards of your library. Put one of them into your hand and the other into your graveyard.",
+      "zone": "hand",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dig",
+          "count": 2,
+          "take": 1,
+          "to": "hand",
+          "rest": "graveyard"
+        }
+      ]
+    }
+  ]
+}

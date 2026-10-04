@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wild Hypothesis",
+    "oracleId": "2e56507d-af77-47c8-a29a-410cf14cfe20",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{X}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Create a 0/0 green and blue Fractal creature token. Put X +1/+1 counters on it.\nSurveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Create a 0/0 green and blue Fractal creature token. Put X +1/+1 counters on it.\nSurveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)",
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "remember": true,
+          "token": {
+            "name": "Fractal",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Fractal"
+            ],
+            "colors": [
+              "G",
+              "U"
+            ],
+            "power": 0,
+            "toughness": 0
+          }
+        },
+        {
+          "effect": "putCounter",
+          "targets": "remembered",
+          "counter": "+1/+1",
+          "count": "X"
+        },
+        {
+          "effect": "surveil",
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

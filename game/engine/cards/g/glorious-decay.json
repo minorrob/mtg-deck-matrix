@@ -1,0 +1,100 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Glorious Decay",
+    "oracleId": "ac4277d7-d78a-4d6e-8d6d-11f9e56f8ae7",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Destroy target artifact.\n• Glorious Decay deals 4 damage to target creature with flying.\n• Exile target card from a graveyard. Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Destroy target artifact.\n• Glorious Decay deals 4 damage to target creature with flying.\n• Exile target card from a graveyard. Draw a card.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Destroy target artifact.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Artifact"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "destroy",
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Glorious Decay deals 4 damage to target creature with flying.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ],
+                  "keywords": [
+                    "Flying"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "dealDamage",
+                  "amount": 4,
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Exile target card from a graveyard. Draw a card.",
+              "targets": [
+                {
+                  "what": "card",
+                  "zone": "graveyard"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": {
+                    "target": 0
+                  },
+                  "to": "exile"
+                },
+                {
+                  "effect": "draw",
+                  "count": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

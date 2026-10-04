@@ -1,6 +1,6 @@
 {
   "schema": "CrankCardScenarios@1",
-  "card": "Spectacular Tactics",
+  "card": "Glorious Decay",
   "fixtures": {
     "Bear": {
       "types": [
@@ -30,40 +30,19 @@
       "power": 5,
       "toughness": 5
     },
-    "Rock": {
-      "types": [
-        "Artifact"
-      ],
-      "manaCost": "{1}",
-      "colors": []
-    },
-    "Kithkin Pal": {
+    "Ogre": {
       "types": [
         "Creature"
       ],
       "subtypes": [
-        "Kithkin"
+        "Ogre"
       ],
-      "manaCost": "{W}",
+      "manaCost": "{2}{R}",
       "colors": [
-        "W"
+        "R"
       ],
-      "power": 1,
-      "toughness": 1
-    },
-    "Elf Pal": {
-      "types": [
-        "Creature"
-      ],
-      "subtypes": [
-        "Elf"
-      ],
-      "manaCost": "{G}",
-      "colors": [
-        "G"
-      ],
-      "power": 1,
-      "toughness": 1
+      "power": 3,
+      "toughness": 3
     },
     "Bird": {
       "types": [
@@ -82,66 +61,198 @@
         "Flying"
       ]
     },
-    "Golem": {
+    "Rock": {
       "types": [
-        "Artifact",
-        "Creature"
+        "Artifact"
       ],
-      "subtypes": [
-        "Golem"
-      ],
-      "manaCost": "{3}",
-      "colors": [],
-      "power": 3,
-      "toughness": 3
+      "manaCost": "{1}",
+      "colors": []
     },
-    "Goblin Pal": {
+    "Charm Ward": {
       "types": [
-        "Creature"
+        "Enchantment"
       ],
-      "subtypes": [
-        "Goblin"
-      ],
-      "manaCost": "{R}",
+      "manaCost": "{1}{W}",
       "colors": [
-        "R"
-      ],
-      "power": 1,
-      "toughness": 1
+        "W"
+      ]
     }
   },
   "scenarios": [
     {
-      "name": "Rob's Bear: a +1/+1 counter and hexproof",
+      "name": "Maya's Rock destroyed",
       "setup": [
         {
           "seat": 0,
           "zone": "battlefield",
           "cards": [
-            "Plains",
-            "Wastes",
-            "Bear"
+            "Forest",
+            "Wastes"
           ]
         },
         {
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Spectacular Tactics"
+            "Glorious Decay"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Rock"
           ]
         }
       ],
       "steps": [
         {
-          "tap": "Plains"
+          "tap": "Forest"
         },
         {
           "tap": "Wastes"
         },
         {
-          "cast": "Spectacular Tactics",
+          "cast": "Glorious Decay",
           "modes": [
             0
+          ],
+          "targets": [
+            {
+              "card": "Rock"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Rock"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4 to Maya's flier",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Glorious Decay"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bird",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "offers": {
+                "kind": "cast",
+                "card": "Glorious Decay"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Bird"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Glorious Decay",
+          "modes": [
+            1
+          ],
+          "targets": [
+            {
+              "card": "Bird"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bird"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A card in Maya's graveyard exiled; Rob draws",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Glorious Decay"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Glorious Decay",
+          "modes": [
+            2
           ],
           "targets": [
             {
@@ -155,96 +266,17 @@
       ],
       "expect": [
         {
-          "seat": 0,
-          "stats": {
-            "card": "Bear",
-            "power": 3,
-            "toughness": 3
-          }
-        },
-        {
-          "seat": 0,
-          "keywords": {
-            "card": "Bear",
-            "has": [
-              "Hexproof"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "Maya's 5/5 destroyed; Maya's 2/2 is no target for it",
-      "setup": [
-        {
-          "seat": 0,
-          "zone": "battlefield",
+          "seat": 1,
+          "zone": "exile",
           "cards": [
-            "Plains",
-            "Wastes"
+            "Bear"
           ]
         },
         {
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Spectacular Tactics"
-          ]
-        },
-        {
-          "seat": 1,
-          "zone": "battlefield",
-          "cards": [
-            "Big Bear",
-            "Bear"
-          ]
-        }
-      ],
-      "steps": [
-        {
-          "tap": "Plains"
-        },
-        {
-          "tap": "Wastes"
-        },
-        {
-          "expect": [
-            {
-              "seat": 0,
-              "offers": {
-                "kind": "cast",
-                "card": "Spectacular Tactics"
-              },
-              "count": 1,
-              "targets": [
-                [
-                  "Big Bear"
-                ]
-              ]
-            }
-          ]
-        },
-        {
-          "cast": "Spectacular Tactics",
-          "modes": [
-            1
-          ],
-          "targets": [
-            {
-              "card": "Big Bear"
-            }
-          ]
-        },
-        {
-          "resolve": true
-        }
-      ],
-      "expect": [
-        {
-          "seat": 1,
-          "zone": "graveyard",
-          "cards": [
-            "Big Bear"
+            "Island"
           ]
         }
       ]
