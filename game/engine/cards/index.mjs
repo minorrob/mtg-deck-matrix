@@ -64,6 +64,9 @@ const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "trig
 /* What a flashback cost may be made of (CR 702.34a): mana, life ("Flashback--{1}{U}, Pay 3 life"), and creatures to tap
    ("Flashback--Tap three untapped white creatures you control", Battle Screech: `tapCreature`, its `count` and `selector`). */
 const FLASHBACK_ATOMS = ["mana", "payLife", "tapCreature"];
+/* What an evoke cost may be made of (CR 702.74a): what an alternative cost is paid with (rules/actions.mjs) -- mana
+   ("Evoke {2}{U}", Mulldrifter), and a card exiled from the hand ("Evoke--Exile a red card from your hand", Fury). */
+const EVOKE_ATOMS = ["mana", "payLife", "exileFromHand"];
 /* What an escape cost is made of (CR 702.138a): mana, and "exile N other cards from your graveyard" (`exileFromGraveyard`,
    its `count`) -- every escape cost printed has both. */
 export function escapeCostProblems(cost, {given = false} = {}) {
@@ -510,6 +513,23 @@ export function compileScript(script) {
       if ((identity.types ?? []).includes("Land")) problems.push(`${ability.text}: escape on a land, which is never cast`);
       abilities.push({id, kind: "static", rule: "escape", text: ability.text, cost: structuredClone(Array.isArray(ability.cost) ? ability.cost : []), affects: {what: "card", self: true}});
       keywords.push("Escape");
+      return;
+    }
+    /* EVOKE (CR 702.74a): two abilities. "You may cast this card by paying [cost] rather than paying its mana cost" -- an
+       alternative cost (CR 118.9), offered beside the mana cost wherever the card may be cast (rules/actions.mjs), its cost
+       mana or "exile a red card from your hand" (Fury) -- and "When this permanent enters, if its evoke cost was paid, its
+       controller sacrifices it": a cast for it marks the spell, and the permanent it becomes, evoked (rules/stack.mjs),
+       which the trigger's condition reads as it triggers and again as it resolves (CR 603.4; script/condition.mjs). A new
+       object after it moves (CR 400.7) was never evoked, so one flickered in response stays. */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "evoke") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      if (!cost.length || !cost.every((atom) => EVOKE_ATOMS.includes(atom?.atom) && (atom.atom !== "exileFromHand" || (atom.selector && typeof atom.selector === "object"))))
+        problems.push(`${ability.text}: an evoke cost of ${EVOKE_ATOMS.join(", ")} (a card exiled from the hand by a selector), and at least one`);
+      if ((identity.types ?? []).some((t) => ["Instant", "Sorcery", "Land"].includes(t))) problems.push(`${ability.text}: evoke on a card that never enters from the stack`);
+      abilities.push({id, kind: "static", rule: "alternative-cost", evoke: true, text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
+      abilities.push({id: `${id}-evoked`, kind: "triggered", text: "When this permanent enters, if its evoke cost was paid, its controller sacrifices it.",
+        trigger: TRIGGERS.enters({who: "self"}), condition: {evoked: true}, effects: [{effect: "moveZone", targets: "self", sacrifice: true}]});
+      keywords.push("Evoke");
       return;
     }
     for (const effect of effectsIn(ability.effects)) {
