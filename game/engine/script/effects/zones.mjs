@@ -308,6 +308,23 @@ export function moveZone(state, params, context, rng = null) {
 }
 
 /** `moveZoneAll` — every object a selector matches (a board wipe, a mass bounce). */
+/**
+ * `mayPlay` — "Until the end of your next turn, you may play that card" (Blazing Crescendo), "you may play them this turn":
+ * a permission, not a cast now (that is `play`). Its controller may play the named cards from where they are, each the way
+ * it could be played from a hand -- a land as their land for the turn (CR 305.2), a spell at its type's speed, its costs
+ * paid (CR 601.2a) -- until `until`: "end-of-turn", or "your-next-end", the end of that player's next turn (rules/turn.mjs).
+ * `spellsOnly` for "you may cast that card". It names objects, as `remembered` binds them: a card that moves becomes a new
+ * object (CR 400.7) and leaves the permission behind -- played, or put back into a library.
+ */
+export function mayPlay(state, params, context) {
+  const ids = (params.targets ?? []).filter((id) => state.objects[id]);
+  const player = context.controller;
+  if (!ids.length || !state.players[player]) return [];
+  (state.effects ??= []).push({id: `may-play:${ids.join(",")}:${state.effects.length}`, rule: "may-play", affects: {ids}, player,
+    ...(params.spellsOnly === true ? {spellsOnly: true} : {}), until: params.until ?? "end-of-turn", madeOnTurn: state.turn, sourceController: player});
+  return [];
+}
+
 export function moveZoneAll(state, params, context, rng = null) {
   const events = [];
   const arrivedAll = [];

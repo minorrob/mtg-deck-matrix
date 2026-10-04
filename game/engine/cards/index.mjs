@@ -64,6 +64,8 @@ const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "trig
 /* What a flashback cost may be made of (CR 702.34a): mana, life ("Flashback--{1}{U}, Pay 3 life"), and creatures to tap
    ("Flashback--Tap three untapped white creatures you control", Battle Screech: `tapCreature`, its `count` and `selector`). */
 const FLASHBACK_ATOMS = ["mana", "payLife", "tapCreature"];
+/* How long "you may play that card" lasts (script/effects/zones.mjs, mayPlay): this turn, or until the end of your next turn. */
+const MAY_PLAY_UNTIL = ["end-of-turn", "your-next-end"];
 /* What an evoke cost may be made of (CR 702.74a): what an alternative cost is paid with (rules/actions.mjs) -- mana
    ("Evoke {2}{U}", Mulldrifter), and a card exiled from the hand ("Evoke--Exile a red card from your hand", Fury). */
 const EVOKE_ATOMS = ["mana", "payLife", "exileFromHand"];
@@ -544,6 +546,8 @@ export function compileScript(script) {
       }
       /* An added phase is a combat, a main or a beginning phase (effects/permanents.mjs). */
       if (effect.effect === "addPhase" && !(effect.phases ?? ["combat"]).every((kind) => ADDED_PHASES.includes(kind))) problems.push(`addPhase: a phase of ${ADDED_PHASES.join(", ")}`);
+      /* "You may play that card" until a time (effects/zones.mjs): this turn, or the end of its controller's next turn. */
+      if (effect.effect === "mayPlay" && !MAY_PLAY_UNTIL.includes(effect.until ?? "end-of-turn")) problems.push(`mayPlay: until ${MAY_PLAY_UNTIL.join(" or ")}`);
     }
 
     if (ability.kind === "spell") {

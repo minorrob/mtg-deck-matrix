@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1119,
-  "everyRule": 2416
+  "defined": 1125,
+  "everyRule": 2422
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -8922,7 +8922,7 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 102,
+     "blocks": 96,
      "alone": 23
     },
     {
@@ -8946,7 +8946,7 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 106,
+     "blocks": 100,
      "alone": 26
     },
     {
@@ -9006,7 +9006,7 @@
      "forge": "MayPlay",
      "top": 99,
      "all": 625,
-     "blocks": 79,
+     "blocks": 73,
      "alone": 18
     },
     {

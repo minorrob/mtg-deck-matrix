@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Inspired Tinkering",
+    "oracleId": "3088b09b-1dce-4fc9-99de-2ca9c752eb12",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Exile the top three cards of your library. Until the end of your next turn, you may play those cards.\nCreate three Treasure tokens. (They're artifacts with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Exile the top three cards of your library. Until the end of your next turn, you may play those cards.\nCreate three Treasure tokens.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "fromTop": 3,
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "mayPlay",
+          "targets": "remembered",
+          "until": "your-next-end"
+        },
+        {
+          "effect": "createToken",
+          "count": 3,
+          "token": {
+            "predefined": "Treasure"
+          }
+        }
+      ]
+    }
+  ]
+}

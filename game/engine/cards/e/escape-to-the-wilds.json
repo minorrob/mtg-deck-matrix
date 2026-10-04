@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Escape to the Wilds",
+    "oracleId": "45a8c126-5396-4736-a37e-460a50706a98",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{R}{G}",
+    "colors": [
+      "G",
+      "R"
+    ],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Exile the top five cards of your library. You may play cards exiled this way until the end of your next turn.\nYou may play an additional land this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Exile the top five cards of your library. You may play cards exiled this way until the end of your next turn.\nYou may play an additional land this turn.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "fromTop": 5,
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "mayPlay",
+          "targets": "remembered",
+          "until": "your-next-end"
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "extra-land-drop",
+          "affects": {
+            "what": "player",
+            "who": "you"
+          }
+        }
+      ]
+    }
+  ]
+}
