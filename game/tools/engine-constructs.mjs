@@ -238,6 +238,8 @@ export const FORGE_COUNTS = Object.freeze({
   ColorsColorIdentity: {name: "Colors in your commanders' identity", status: "missing"},
   CommanderCastFromCommandZone: {name: "Times your commander was cast from the command zone", status: "missing"},
   Converge: {name: "Colors of mana spent (converge)", status: "missing"},
+  /* Rob's Priority Batch 10.3, its twenty-first slice: the mana spent to cast an object, by color (rules/actions.mjs). */
+  Adamant: {name: "Mana of a color spent to cast it (adamant; \"if {G}{G} was spent to cast it\")", status: "built", engine: "condition {spent: {color: n}} (script/condition.mjs)"},
   Threshold: {name: "Threshold (seven cards in your graveyard)", status: "missing"},
   Morbid: {name: "Morbid (a creature died this turn)", status: "missing"},
   UrzaLands: {name: "The Urza lands", status: "missing"},

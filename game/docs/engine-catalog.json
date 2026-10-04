@@ -10,7 +10,7 @@
  "top": {
   "cards": 3238,
   "defined": 1117,
-  "everyRule": 2412
+  "everyRule": 2413
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -9313,10 +9313,10 @@
   },
   "Amounts the game counts": {
    "tally": {
-    "built": 11,
+    "built": 12,
     "partial": 1,
     "named": 0,
-    "missing": 176
+    "missing": 175
    },
    "entries": [
     {
@@ -9862,14 +9862,14 @@
     {
      "kind": "count",
      "rule": null,
-     "name": "Adamant",
-     "engine": null,
-     "status": "missing",
+     "name": "Mana of a color spent to cast it (adamant; \"if {G}{G} was spent to cast it\")",
+     "engine": "condition {spent: {color: n}} (script/condition.mjs)",
+     "status": "built",
      "forge": "Adamant",
      "top": 1,
      "all": 19,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",

@@ -431,6 +431,10 @@ export function collectTriggers(state, events) {
                longer anywhere, and `card` carries only enough to name it. */
             cause: event.data?.fields?.leftBehind ?? event.data?.fields?.card ?? null,
             optional: ability.optional === true,
+            /* The mana spent to cast its source (rules/actions.mjs), as it triggers: "if {W}{W} was spent to cast it" is asked
+               again as it resolves (CR 603.4), when its source may be gone -- sacrificed for its evoke cost -- and is then read
+               as it last was (CR 608.2h). What was spent to cast an object never changes while it exists. */
+            ...(object.spent ? {spent: {...object.spent}} : {}),
             /* What it is about ("that player", "that card", "that much"), when the event says. */
             ...(about.card !== undefined || about.player !== undefined || about.amount !== undefined ? {about} : {}),
             /* What it does, from the card script (phase 2.4), carried to the stack with it. */
@@ -734,6 +738,7 @@ function putOnStack(state, triggers) {
       /* A permanent's own "when this dies" reads it as it last existed (CR 603.10a): "its power", "for each +1/+1 counter on
          this creature". Only its own departure: another creature's last state is what "that creature" means, not "this". */
       lastKnown: trigger.cause && trigger.cause.cardId === trigger.source?.cardId && !state.objects[trigger.source.cardId] ? trigger.cause : null,
+      spent: trigger.spent ?? null,
     });
     /* Its targets are asked for once every trigger of the round is on the stack (askTriggerTargets) -- and a modal one's
        modes with them (CR 603.3c). */

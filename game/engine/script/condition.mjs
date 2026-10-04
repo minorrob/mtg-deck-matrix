@@ -23,6 +23,9 @@
  *                                      escaped" (Uro)
  *   {evoked: true|false}               its own permanent's evoke cost was paid, or was not (CR 702.74a): "when this
  *                                      permanent enters, if its evoke cost was paid, its controller sacrifices it"
+ *   {spent: {G: 2}}                    at least that much mana of each color was spent to cast its own object (CR
+ *                                      601.2h): "if {G}{G} was spent to cast it" (Wistfulness); adamant's "if at least
+ *                                      three red mana was spent to cast this spell" is {R: 3}, colorless {C: 3}
  *
  * The keys are closed, like every other grammar here: an unknown one is refused at the schema rather than read as true.
  */
@@ -31,7 +34,9 @@ import {cardsIn} from "../state/index.mjs";
 import {matchesSelector, compileSelector, matchesLastKnown} from "./filter.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
 
-const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "enduringStory"];
+const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "spent", "enduringStory"];
+/* The mana a condition may ask was spent to cast its object: the five colors and colorless (CR 106.1). */
+const SPENT_KEYS = ["W", "U", "B", "R", "G", "C"];
 /* A counted comparison's keys: what is counted, and against what. */
 const COMPARE_KEYS = ["count", "atLeast", "atMost", "moreThan", "fewerThan"];
 /* A NAMED OBJECT (Forge's ConditionDefined): "if it was a creature card" (Scavenging Ooze: what was exiled), "if it's
@@ -77,7 +82,7 @@ function castHolds(rule, cast) {
 }
 
 /** Whether a condition holds now, for an ability controlled by `controller` on object `source`. No condition holds. */
-export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined} = {}) {
+export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined} = {}) {
   if (!condition) return true;
   if (condition.cast !== undefined && !castHolds(condition.cast, cast)) return false;
   /* "Khans -- ...": what its permanent chose as it entered (the Sieges). */
@@ -86,6 +91,12 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   if (condition.escaped !== undefined && ((source !== null && state.objects[source]?.escaped === true) !== condition.escaped)) return false;
   /* "If its evoke cost was paid" (CR 702.74a): whether its own permanent was cast for its evoke cost (rules/stack.mjs). */
   if (condition.evoked !== undefined && ((source !== null && state.objects[source]?.evoked === true) !== condition.evoked)) return false;
+  /* "If {W}{W} was spent to cast it" (CR 601.2h): the mana spent to cast its own object (rules/actions.mjs) -- or, once that
+     object has gone, as it last was: what the trigger remembered as it triggered (`spent`, rules/trigger.mjs; CR 608.2h). */
+  if (condition.spent !== undefined) {
+    const paid = (source !== null ? state.objects[source]?.spent : undefined) ?? spent ?? {};
+    if (!Object.entries(condition.spent).every(([key, n]) => (paid[key] ?? 0) >= n)) return false;
+  }
   /* "12+ | Flying" (a station symbol, CR 721.2a): as long as its own object has that many counters of the kind. */
   if (condition.selfCounters !== undefined && (source === null ? 0 : state.objects[source]?.counters?.[condition.selfCounters.counter] ?? 0) < condition.selfCounters.atLeast) return false;
   if (condition.about !== undefined && !namedIs(state, namedObject(condition.about, {remembered, targets, about}), condition.is ?? {}, {controller, source},
@@ -162,6 +173,12 @@ export function conditionProblems(condition) {
   if ("chosen" in condition && typeof condition.chosen !== "string") problems.push("chosen names what was chosen");
   if ("escaped" in condition && typeof condition.escaped !== "boolean") problems.push("escaped is true or false");
   if ("evoked" in condition && typeof condition.evoked !== "boolean") problems.push("evoked is true or false");
+  if ("spent" in condition) {
+    const spent = condition.spent;
+    if (!spent || typeof spent !== "object" || Array.isArray(spent) || !Object.keys(spent).length
+      || !Object.entries(spent).every(([key, n]) => SPENT_KEYS.includes(key) && Number.isInteger(n) && n >= 1))
+      problems.push(`spent is mana by color, ${SPENT_KEYS.join(", ")}, each a whole number 1 or more: {G: 2} is "if {G}{G} was spent to cast it"`);
+  }
   if ("compare" in condition) {
     const compare = condition.compare;
     if (!compare || typeof compare !== "object" || Array.isArray(compare)) problems.push("compare is {count, atLeast | atMost | moreThan | fewerThan}");
