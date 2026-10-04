@@ -302,8 +302,8 @@ export function bindEffect(effect, context, state = null) {
  * now, while there is a resolution to count: "exile all creatures you control. At the beginning of the next end step,
  * reveal cards ... until you reveal that many creature cards" (Synthetic Destiny).
  */
-const THIS_WAY = ["rememberedCount", "lifeLostThisWay"];
-export function rememberNow(effects, context, {keepThat = false} = {}) {
+const THIS_WAY = ["rememberedCount", "lifeLostThisWay", "cardTypesAmong"];
+export function rememberNow(effects, context, {keepThat = false, state = null} = {}) {
   const walk = (effect) => {
     if (!effect || typeof effect !== "object") return effect;
     const kept = {};
@@ -311,7 +311,7 @@ export function rememberNow(effects, context, {keepThat = false} = {}) {
       if (["that card", "that player", "that card's controller"].includes(effect[key])) kept[key] = effect[key];
     const bound = {...bindEffect(effect, context), ...kept};
     for (const key of AMOUNT_PARAMS)
-      if (bound[key] && typeof bound[key] === "object" && THIS_WAY.some((kind) => kind in bound[key])) bound[key] = amountOf(null, bound[key], context);
+      if (bound[key] && typeof bound[key] === "object" && THIS_WAY.some((kind) => kind in bound[key])) bound[key] = amountOf(state, bound[key], context);
     for (const key of ["effects", "then", "otherwise"]) if (Array.isArray(bound[key])) bound[key] = bound[key].map(walk);
     if (Array.isArray(bound.modes)) bound.modes = bound.modes.map((mode) => ({...mode, effects: (mode.effects ?? []).map(walk)}));
     return bound;

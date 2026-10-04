@@ -603,7 +603,7 @@ export function delayedTrigger(state, params, context) {
       : {at: params.at ?? "end step"}),
     controller: context.controller,
     source: context.source ?? null,
-    effects: rememberNow(params.effects ?? [], context, {keepThat: waits}),
+    effects: rememberNow(params.effects ?? [], context, {keepThat: waits, state}),
     text: params.text ?? null,
   });
   return [];
