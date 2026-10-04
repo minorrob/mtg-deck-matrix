@@ -17,7 +17,7 @@
     "power": null,
     "toughness": null
   },
-  "oracleText": "Destroy target creature or planeswalker. Its controller investigates. (Create a Clue token. It's an artifact with \"{2}, Sacrifice this token: Draw a card.\")",
+  "oracleText": "Destroy target creature or planeswalker. Its controller investigates. (They create a Clue token. It's an artifact with \"{2}, Sacrifice this token: Draw a card.\")",
   "source": "hand",
   "abilities": [
     {

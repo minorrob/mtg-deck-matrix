@@ -17,12 +17,12 @@
     "power": null,
     "toughness": null
   },
-  "oracleText": "At the beginning of your upkeep, you draw a card and you lose 1 life.",
+  "oracleText": "At the beginning of your upkeep, you draw a card and lose 1 life.",
   "source": "hand",
   "abilities": [
     {
       "kind": "triggered",
-      "text": "At the beginning of your upkeep, you draw a card and you lose 1 life.",
+      "text": "At the beginning of your upkeep, you draw a card and lose 1 life.",
       "trigger": {
         "on": "upkeep",
         "yours": true
