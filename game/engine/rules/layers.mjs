@@ -468,6 +468,8 @@ export function lastKnown(state, id) {
     /* What it chose as it entered, for its abilities read as it last was. */
     ...(object.chosen !== undefined ? {chosen: object.chosen} : {}),
     attachments: [...(object.attachments ?? [])],
+    /* What it was attached to: "sacrifice this Aura: exile enchanted creature" (Spiral into Solitude). */
+    attachedTo: object.attachedTo ?? null,
     colors: [...current.colors],
     keywords: [...current.keywords],
     /* Every creature type, as it last was (Changeling, or an effect's). */
