@@ -14,6 +14,7 @@ import {isBuilt} from "../engine/script/effects/index.mjs";
 import {KEYWORD_FAMILIES} from "../engine/keywords/combat.mjs";
 import {KEYWORD_FAMILIES as TIMING_FAMILIES} from "../engine/keywords/timing.mjs";
 import {KEYWORD_FAMILIES as TYPE_FAMILIES} from "../engine/keywords/types.mjs";
+import {KEYWORD_FAMILIES as DESIGNATION_FAMILIES} from "../engine/keywords/designations.mjs";
 import {TRIGGER_KINDS} from "../engine/cards/index.mjs";
 
 /* Forge's API names to the engine's primitives — §12.2's parenthesised pairs, as data. A name that
@@ -109,7 +110,7 @@ export const FORGE_REPLACEMENT = {Moved: "replacement",
    `Flying` in the vocabulary is what lets a card script say it; `keywords/combat.mjs` is what makes
    a flier unblockable by the ground. Coverage has to mean the second — the whole reason this file
    exists is that the engine knew the word `Flying` for a week and did nothing with it. */
-export const BEHAVIORAL_KEYWORDS = new Set([...Object.values(KEYWORD_FAMILIES), ...Object.values(TIMING_FAMILIES), ...Object.values(TYPE_FAMILIES)].flat());
+export const BEHAVIORAL_KEYWORDS = new Set([...Object.values(KEYWORD_FAMILIES), ...Object.values(TIMING_FAMILIES), ...Object.values(TYPE_FAMILIES), ...Object.values(DESIGNATION_FAMILIES)].flat());
 
 /* Keywords that stand for an ability rather than a behavior, built once the primitive the ability uses is. Equip is
    "[Cost]: Attach this permanent to target creature you control. Activate only as a sorcery" (CR 702.6a): an

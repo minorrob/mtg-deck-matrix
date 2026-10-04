@@ -51,6 +51,7 @@ import {matchesSelector} from "../script/filter.mjs";
 import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./commander.mjs";
 import {sacrificeOne, moveOne, returnExiledUntil} from "../script/effects/zones.mjs";
 import {changeLife} from "../script/effects/resources.mjs";
+import {enduringStories} from "../keywords/designations.mjs";
 
 /* The capitalized zone names the projection and the telemetry use. */
 const ZONE_LABEL = {
@@ -127,7 +128,9 @@ function removePlayerFromBoard(state, playerId, events) {
  * @returns {Array} events for the caller to journal
  */
 export function checkStateBasedActions(state) {
-  const events = [];
+  /* Storied (CR 702.195a): "any time" its controller has three artifacts, Sagas or legendaries -- read as the game is
+     checked, before the actions, which never add a permanent (keywords/designations.mjs). */
+  const events = enduringStories(state);
   /* A creature dying can put a player to zero, and that player leaving can empty a zone. Ten passes
      is far more than any real position needs; reaching it would mean two actions were undoing each
      other, which is a bug worth an exception rather than an infinite loop. */

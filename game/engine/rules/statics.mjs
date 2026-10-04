@@ -251,7 +251,9 @@ export function attackTax(state, picked) {
   for (const {defenderId, planeswalkerId} of picked) for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
     if (holder.controller !== defenderId) continue;
-    for (const ability of holder.abilities ?? []) if (ability.kind === "static" && ability.rule === "attack-tax" && (planeswalkerId === undefined || ability.planeswalkers === true))
+    for (const ability of holder.abilities ?? []) if (ability.kind === "static" && ability.rule === "attack-tax" && (planeswalkerId === undefined || ability.planeswalkers === true)
+      /* "As long as you have an enduring story, creatures can't attack you unless ..." (Dain): only while it holds. */
+      && conditionHolds(state, ability.condition, {controller: holder.controller, source: holderId}))
       total += amountOf(state, ability.amount ?? 0, {controller: holder.controller, source: holderId});
   }
   return total;
@@ -411,6 +413,8 @@ export function ruleChanged(state, rule, id) {
     const holder = state.objects[holderId];
     for (const ability of holder.abilities ?? []) {
       if (ability.kind !== "static" || ability.rule !== rule) continue;
+      /* "Unless you have an enduring story" (Bombur): a rule changed only while its condition holds. */
+      if (!conditionHolds(state, ability.condition, {controller: holder.controller, source: holderId})) continue;
       /* The whole selector grammar ("creatures you control with power 2 or less"): a rule changes nothing a layer
          derives, so reading it through the layers cannot loop, as the layers' own narrower matcher has to avoid. */
       if (matchesSelector(chosenFor(ability, holder).affects, state, id, {controller: holder.controller, source: holderId})) return true;

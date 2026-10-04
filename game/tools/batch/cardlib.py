@@ -22,14 +22,17 @@ SCEN maps each card to (fixtures or None, [scenario, ...]); every card in CARDS 
 import json
 import os
 import re
+import unicodedata
 
 SUPERTYPES = {'Legendary', 'Basic', 'Snow', 'World'}
 LAND_FOR = {'W': 'Plains', 'U': 'Island', 'B': 'Swamp', 'R': 'Mountain', 'G': 'Forest'}
 
 
 def slug(name):
-    """The file name a definition is written under: game/engine/cards/<first letter>/<slug>.json."""
-    return re.sub(r'[^a-z0-9]+', '-', name.lower().replace("'", '')).strip('-')
+    """The file name a definition is written under: game/engine/cards/<first letter>/<slug>.json. Accents folded, as the
+    card index folds a name (cards/index.mjs): "Óin the Brave" is oin-the-brave, under o."""
+    folded = ''.join(c for c in unicodedata.normalize('NFKD', name) if not unicodedata.combining(c))
+    return re.sub(r'[^a-z0-9]+', '-', folded.lower().replace("'", '')).strip('-')
 
 
 def bare(line):

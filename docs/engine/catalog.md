@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 35 | 0 | 19 | 140 |
+| Keyword abilities (CR 702) | 194 | 36 | 0 | 19 | 139 |
 | Keyword actions (CR 701) | 70 | 18 | 3 | 5 | 44 |
 | Effects | 192 | 58 | 1 | 13 | 120 |
 | Triggers | 138 | 14 | 4 | 6 | 114 |
@@ -220,7 +220,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.155 | Read Ahead | — | missing | 0 | 10 | 0 | 0 |
 | 702.38 | Amplify | — | missing | 0 | 9 | 0 | 0 |
 | 702.115 | Ingest | — | missing | 0 | 9 | 0 | 0 |
-| 702.195 | Storied | — | missing | 0 | 9 | 0 | 0 |
+| 702.195 | Storied | Storied | built | 0 | 9 | 0 | 0 |
 | 702.39 | Provoke | — | missing | 0 | 8 | 0 | 0 |
 | 702.59 | Recover | — | missing | 0 | 7 | 0 | 0 |
 | 702.144 | Demonstrate | — | missing | 0 | 6 | 0 | 0 |

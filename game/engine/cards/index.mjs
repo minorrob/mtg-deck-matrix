@@ -33,13 +33,14 @@ import {isBuilt, NEEDS_A_DECISION, EFFECTS, REPEAT_EACH} from "../script/effects
 import {KEYWORD_FAMILIES} from "../keywords/combat.mjs";
 import {KEYWORD_FAMILIES as TIMING_FAMILIES} from "../keywords/timing.mjs";
 import {KEYWORD_FAMILIES as TYPE_FAMILIES} from "../keywords/types.mjs";
+import {KEYWORD_FAMILIES as DESIGNATION_FAMILIES} from "../keywords/designations.mjs";
 import {costAtomBuilt} from "../rules/actions.mjs";
 import {compileSelector} from "../script/filter.mjs";
 import {LAYER_AFFECTS_KEYS} from "../rules/layers.mjs";
 import {SPEND_ONLY_KEYS} from "../rules/restricted-mana.mjs";
 
 /** The keywords some rules module acts on, in its own spelling. A keyword not here is a word with no behavior. */
-const KEYWORDS_WITH_BEHAVIOR = new Set([...Object.values(KEYWORD_FAMILIES), ...Object.values(TIMING_FAMILIES), ...Object.values(TYPE_FAMILIES)].flat());
+const KEYWORDS_WITH_BEHAVIOR = new Set([...Object.values(KEYWORD_FAMILIES), ...Object.values(TIMING_FAMILIES), ...Object.values(TYPE_FAMILIES), ...Object.values(DESIGNATION_FAMILIES)].flat());
 
 /* A ward cost as "unless that player pays" asks it (effects/asking.mjs): `amount` generic mana, `life`, `discard` a
    card, `sacrifice` a permanent the selector describes. Null for a cost it cannot ask. */
@@ -56,8 +57,9 @@ function wardCost(cost) {
   return unless;
 }
 
-/* The rule statics that read their own condition: an alternative cost's "if you control a commander" (rules/actions.mjs). */
-const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "triggers-again", "cant-cast"];
+/* The rule statics that read their own condition: an alternative cost's "if you control a commander" (rules/actions.mjs);
+   an attack tax and "doesn't untap" "as long as" or "unless you have an enduring story" (rules/statics.mjs). */
+const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "triggers-again", "cant-cast", "attack-tax", "doesnt-untap"];
 
 /* What a flashback cost may be made of (CR 702.34a): mana, life ("Flashback--{1}{U}, Pay 3 life"), and creatures to tap
    ("Flashback--Tap three untapped white creatures you control", Battle Screech: `tapCreature`, its `count` and `selector`). */

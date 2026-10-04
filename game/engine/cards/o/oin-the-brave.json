@@ -1,0 +1,90 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Óin the Brave",
+    "oracleId": "a25ba5cc-6ff8-4215-b70d-7e86e15e3c1a",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dwarf",
+      "Warrior"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Storied (If you control three or more artifacts, legendaries, and/or Sagas, you have an enduring story for the rest of the game.)\nAs long as you have an enduring story, Óin gets +1/+0 and has haste.\n{1}, {T}, Discard a card: Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Storied",
+      "keyword": "storied"
+    },
+    {
+      "kind": "static",
+      "text": "As long as you have an enduring story, Óin gets +1/+0 and has haste.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 0
+      },
+      "condition": {
+        "enduringStory": true
+      }
+    },
+    {
+      "kind": "static",
+      "text": "As long as you have an enduring story, Óin gets +1/+0 and has haste.",
+      "layer": 6,
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Haste"
+        ]
+      },
+      "condition": {
+        "enduringStory": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{1}, {T}, Discard a card: Draw a card.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "discard"
+        }
+      ],
+      "targets": [],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}
