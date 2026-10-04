@@ -366,8 +366,9 @@ export const costAtomBuilt = (atom) => (COST_ATOMS_BUILT.includes(atom?.atom) &&
   || (["addCounters", "removeCounters"].includes(atom?.atom) && atom.self === true && typeof atom.counter === "string")
   /* "Crew 3": other untapped creatures with total power 3 or more, the player's choice (crewChoices). */
   || (atom?.atom === "crew" && Number.isInteger(atom.power) && atom.power >= 0)
-  /* "Tap another untapped creature you control" (station, CR 702.184a): which one, chosen as it is activated (tapChoices). */
-  || (atom?.atom === "tapCreature" && Boolean(atom.selector) && typeof atom.selector === "object")
+  /* "Tap another untapped creature you control" (station, CR 702.184a): which one, chosen as it is activated (tapChoices);
+     "tap three untapped creatures you control" (Kithkeeper): `count`, which set (tapSets). */
+  || (atom?.atom === "tapCreature" && Boolean(atom.selector) && typeof atom.selector === "object" && (atom.count === undefined || (Number.isInteger(atom.count) && atom.count >= 1)))
   /* "Untap a tapped creature you control", "untap two" (Halo Fountain, batch 75): which, chosen as it is activated (untapChoices). */
   || (atom?.atom === "untapCreature" && Number.isInteger(atom.count) && atom.count >= 1)
   /* "Exile this card from your graveyard" (encore, CR 702.141a): an ability of the card in its owner's graveyard. */
@@ -421,6 +422,21 @@ const tapAtom = (cost) => (cost ?? []).find((a) => a?.atom === "tapCreature");
    not its own {T} (CR 302.6). */
 const tapChoices = (state, player, sourceId, selector) => state.zones.battlefield.filter((id) => id !== sourceId && state.objects[id].controller === player
   && !state.objects[id].tapped && compileSelector({...selector, what: "permanent"})(state, id, {controller: player, source: sourceId}));
+/* "Tap three untapped creatures you control" (Kithkeeper): each set of `count` of them, ids ascending, no more than
+   CREW_OFFERS_MAX (as crew). Its own source may be among them, since the cost says no "other" (a selector's `another` says
+   so when one does), and a summoning-sick one too: none of it is the creature's own {T} (CR 302.6). Too few, and none. */
+function tapSets(state, player, sourceId, selector, count) {
+  const able = state.zones.battlefield.filter((id) => !state.objects[id].tapped && characteristicsOf(state, id).controller === player
+    && compileSelector({...selector, what: "permanent"})(state, id, {controller: player, source: sourceId})).sort((a, b) => a - b);
+  const sets = [];
+  const walk = (from, chosen) => {
+    if (sets.length >= CREW_OFFERS_MAX) return;
+    if (chosen.length === count) { sets.push(chosen); return; }
+    for (let i = from; i < able.length; i += 1) walk(i + 1, [...chosen, able[i]]);
+  };
+  walk(0, []);
+  return sets;
+}
 
 /* Whether an ability is within its limit this turn ("activate only once each turn", CR 602.5b), and an exhaust ability
    not yet activated by this object (CR 702.177a). */
@@ -850,7 +866,8 @@ function offers(state, player) {
           : toss ? discardSets(cardsIn(state, "hand", player).filter((c) => c !== id && (!toss.selector || compileSelector({...toss.selector, what: "card", zone: "hand"})(state, c, {controller: player, source: id}))),
             toss.count ?? 1).map((d) => ({discard: d}))
           : crew ? crewChoices(state, player, id, crew.power).map((set) => ({crew: set}))
-          : tapper ? tapChoices(state, player, id, tapper.selector).map((t) => ({tap: t}))
+          : tapper ? ((tapper.count ?? 1) > 1 ? tapSets(state, player, id, tapper.selector, tapper.count).map((set) => ({tapAll: set}))
+            : tapChoices(state, player, id, tapper.selector).map((t) => ({tap: t})))
           : untapper ? untapChoices(state, player, untapper.count).map((set) => ({untap: set}))
           : blighter ? blightChoices(state, player).map((c) => ({blight: c}))
           : anyCounter ? Object.entries(object.counters ?? {}).filter(([, n]) => n > 0).map(([counter]) => ({counter})) : [null];
@@ -860,6 +877,7 @@ function offers(state, player) {
             ...(ability.loyalty !== undefined ? {loyalty: ability.loyalty} : {}),
             ...(costChoice ? {costChoice, costNames: costChoice.crew ? costChoice.crew.map((c) => state.objects[c].card)
               : costChoice.untap ? costChoice.untap.map((c) => state.objects[c].card)
+              : costChoice.tapAll ? costChoice.tapAll.map((c) => state.objects[c].card)
               : Array.isArray(costChoice.discard) ? costChoice.discard.map((c) => state.objects[c].card)
               : Array.isArray(costChoice.sacrifice) ? costChoice.sacrifice.map((c) => state.objects[c].card)
               : costChoice.counter !== undefined ? [`a ${costChoice.counter} counter`]
@@ -1448,8 +1466,8 @@ function perform(state, player, action, during = null) {
         for (const fodder of [].concat(action.costChoice.sacrifice)) sacrificeOne(state, fodder, events);
       /* Crew: the creatures chosen, tapped (CR 702.122a). */
       /* Station: the creature chosen, tapped. */
-      if (atom.atom === "tapCreature") {
-        const tapped = action.costChoice?.tap;
+      /* And "tap three untapped creatures you control": each of the set chosen. */
+      if (atom.atom === "tapCreature") for (const tapped of action.costChoice?.tapAll ?? [action.costChoice?.tap]) {
         if (!state.objects[tapped] || state.objects[tapped].tapped) throw new Error("That creature can no longer be tapped");
         state.objects[tapped].tapped = true;
         events.push(event("GameEventCardTapped", state, {card: cardRef(state, tapped), tapped: true}));

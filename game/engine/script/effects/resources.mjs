@@ -58,11 +58,25 @@ export function untap(state, params, context) {
   for (const id of params.targets ?? []) {
     const object = state.objects[id];
     if (!object || !object.tapped) continue;
-    object.tapped = false;
-    events.push(event("GameEventCardTapped", state, {card: cardRef(state, id), tapped: false}));
+    untapOne(state, id, events);
   }
   void context;
   return events;
+}
+
+/**
+ * A STUN COUNTER (CR 122.1d): a permanent with one that would become untapped has one removed instead, and stays tapped --
+ * in its controller's untap step (rules/turn.mjs) and by an untap effect alike. Whether it untapped.
+ */
+export function untapOne(state, id, events) {
+  const object = state.objects[id];
+  if ((object.counters?.stun ?? 0) > 0) {
+    events.push(...removeCounter(state, {targets: [id], counter: "stun", count: 1}, {}));
+    return false;
+  }
+  object.tapped = false;
+  events.push(event("GameEventCardTapped", state, {card: cardRef(state, id), tapped: false}));
+  return true;
 }
 
 /** `untapAll` — everything a selector matches. */

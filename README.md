@@ -570,6 +570,10 @@ two colors or more; and a spell that targets a creature, one of its targets enou
 `engine-entered-this-turn` holds what entered the battlefield this turn (Kinbinding, Wary Farmer): kept for the player
 it entered under the control of, as it then was, so one destroyed since still counts; "another"; cleared as a turn
 begins; and the count's schema.
+`engine-stun-and-tap-three` holds stun counters and "tap three untapped creatures you control" (Rime Chill, Kithkeeper):
+a stun counter removed instead of an untap, by the untap step or an effect, one at a time; each set of three untapped
+creatures, the source among them, at most sixty-four, each tapped as it is paid; and the room's words for a set tapped,
+a blight and a counter removed.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -688,7 +692,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 279 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 280 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -939,6 +943,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-chosen-color` — `tests/engine-chosen-color.mjs`
 - `engine-spell-cast-filters` — `tests/engine-spell-cast-filters.mjs`
 - `engine-entered-this-turn` — `tests/engine-entered-this-turn.mjs`
+- `engine-stun-and-tap-three` — `tests/engine-stun-and-tap-three.mjs`
 
 ## Design and execution record
 

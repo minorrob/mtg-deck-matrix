@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kithkeeper",
+    "oracleId": "5c5766f9-befd-4426-9527-d50af0699ca1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental"
+    ],
+    "manaCost": "{6}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Vivid — When this creature enters, create X 1/1 green and white Kithkin creature tokens, where X is the number of colors among permanents you control.\nTap three untapped creatures you control: This creature gets +3/+0 and gains flying until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Vivid — When this creature enters, create X 1/1 green and white Kithkin creature tokens, where X is the number of colors among permanents you control.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": {
+            "colorsAmong": {
+              "what": "permanent",
+              "controller": "you"
+            }
+          },
+          "token": {
+            "name": "Kithkin",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Kithkin"
+            ],
+            "colors": [
+              "G",
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Tap three untapped creatures you control: This creature gets +3/+0 and gains flying until end of turn.",
+      "cost": [
+        {
+          "atom": "tapCreature",
+          "count": 3,
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 3,
+          "toughness": 0,
+          "keywords": [
+            "Flying"
+          ]
+        }
+      ]
+    }
+  ]
+}

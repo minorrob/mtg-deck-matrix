@@ -176,8 +176,10 @@ export function runScenario(scenario, cards, fixtures = {}) {
        creature you control" cost untaps, or which one a "Blight 1" cost puts its counter on: the offer that names it. */
     /* A set ("sacrifice two other creatures"): the offer that names every one of them. */
     for (const key of ["sacrifice", "discard", "untap", "blight"]) if (step[key] !== undefined) found = found.filter((a) => [].concat(step[key]).every((n) => (a.costNames ?? []).includes(n)));
-    /* Which creature a "tap another untapped creature you control" cost taps (station): the offer that names it. */
-    if (step.tapping !== undefined) found = found.filter((a) => a.costChoice?.tap !== undefined && state.objects[a.costChoice.tap]?.card === step.tapping);
+    /* Which creature a "tap another untapped creature you control" cost taps (station), or which ones "tap three untapped
+       creatures you control" does (a list): the offer that names every one of them. */
+    if (step.tapping !== undefined) found = found.filter((a) => (a.costChoice?.tap !== undefined || a.costChoice?.tapAll !== undefined)
+      && [].concat(step.tapping).every((n) => (a.costNames ?? []).includes(n)));
     /* Which kind of counter a "remove a counter from this creature" cost removes: the offer for that kind. */
     if (step.counter !== undefined) found = found.filter((a) => a.costChoice?.counter === step.counter);
     if (!found.length && step.optional) return;

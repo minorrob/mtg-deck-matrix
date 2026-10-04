@@ -1,0 +1,306 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Rime Chill",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Elf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Frog": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Frog"
+      ],
+      "manaCost": "{U}{R}",
+      "colors": [
+        "U",
+        "R"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Three colors among Rob's permanents: {3}{U}; Maya's Bear and Ogre tapped, each with a stun counter; Rob draws",
+      "library": [
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elf",
+            "Frog",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rime Chill"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Rime Chill",
+          "targets": [
+            [
+              {
+                "card": "Bear",
+                "seat": 1
+              },
+              {
+                "card": "Ogre",
+                "seat": 1
+              }
+            ]
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "tapped": "Bear",
+          "is": true
+        },
+        {
+          "seat": 1,
+          "tapped": "Ogre",
+          "is": true
+        },
+        {
+          "seat": 1,
+          "counters": {
+            "card": "Bear",
+            "counter": "stun",
+            "count": 1
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maya's untap step removes the stun counter instead, and the Bear stays tapped; the next one untaps it",
+      "library": [
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elf",
+            "Frog",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rime Chill"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Rime Chill",
+          "targets": [
+            [
+              {
+                "card": "Bear",
+                "seat": 1
+              },
+              {
+                "card": "Ogre",
+                "seat": 1
+              }
+            ]
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "tapped": "Bear",
+              "is": true
+            },
+            {
+              "seat": 1,
+              "counters": {
+                "card": "Bear",
+                "counter": "stun",
+                "count": 0
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 4,
+            "phase": "UPKEEP"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "tapped": "Bear",
+          "is": false
+        },
+        {
+          "seat": 1,
+          "tapped": "Ogre",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "Nothing colored: {6}{U}, and four lands cannot cast it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rime Chill"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Rime Chill"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

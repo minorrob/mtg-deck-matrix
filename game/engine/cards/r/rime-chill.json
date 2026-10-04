@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rime Chill",
+    "oracleId": "bad84deb-3f2c-46fd-9dcb-4e3ba9732769",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{6}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Vivid — This spell costs {1} less to cast for each color among permanents you control.\nTap up to two target creatures. Put a stun counter on each of them. (If a permanent with a stun counter would become untapped, remove one from it instead.)\nDraw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Vivid — This spell costs {1} less to cast for each color among permanents you control.",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": {
+        "colorsAmong": {
+          "what": "permanent",
+          "controller": "you"
+        }
+      }
+    },
+    {
+      "kind": "spell",
+      "text": "Tap up to two target creatures. Put a stun counter on each of them. (If a permanent with a stun counter would become untapped, remove one from it instead.)\nDraw a card.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "count": {
+            "min": 0,
+            "max": 2
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "tap",
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "stun",
+          "count": 1
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}
