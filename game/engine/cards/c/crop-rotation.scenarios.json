@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Crop Rotation",
+  "scenarios": [
+    {
+      "name": "A Forest sacrificed: an Island found, untapped",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Crop Rotation"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Crop Rotation",
+          "sacrifice": "Forest"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Island"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Forest",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Island",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Forest",
+            "Crop Rotation"
+          ]
+        }
+      ]
+    }
+  ]
+}

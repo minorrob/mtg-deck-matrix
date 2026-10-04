@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Eladamri's Call",
+    "oracleId": "4acb6612-54e8-428d-acb6-c7259a5ad6a8",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{G}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Search your library for a creature card, reveal that card, put it into your hand, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Search your library for a creature card, reveal that card, put it into your hand, then shuffle.",
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "to": "hand",
+          "shuffle": true,
+          "reveal": true
+        }
+      ]
+    }
+  ]
+}

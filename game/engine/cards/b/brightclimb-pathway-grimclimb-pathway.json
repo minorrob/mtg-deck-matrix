@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Brightclimb Pathway // Grimclimb Pathway",
+    "oracleId": "1c633e02-95ef-445e-b4e0-fbfbc5ed9cc9",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {W}.",
+  "source": "hand",
+  "back": {
+    "identity": {
+      "name": "Grimclimb Pathway",
+      "types": [
+        "Land"
+      ],
+      "subtypes": [],
+      "manaCost": null,
+      "colors": [],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "{T}: Add {B}.",
+    "abilities": [
+      {
+        "kind": "activated",
+        "text": "{T}: Add {B}.",
+        "mana": true,
+        "cost": [
+          {
+            "atom": "{T}"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "addMana",
+            "mana": {
+              "B": 1
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {W}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "W": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Imperial Recruiter",
+    "oracleId": "4d6a1391-817a-4ddc-840d-886b138eeb3f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Advisor"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters, search your library for a creature card with power 2 or less, reveal it, put it into your hand, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, search your library for a creature card with power 2 or less, reveal it, put it into your hand, then shuffle.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "power": {
+              "max": 2
+            }
+          },
+          "to": "hand",
+          "shuffle": true,
+          "reveal": true
+        }
+      ]
+    }
+  ]
+}

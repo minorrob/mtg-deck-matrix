@@ -165,13 +165,17 @@ function landsFor(cost) {
 }
 const SMOKE_FIXTURES = Object.freeze({
   "Smoke Commander": {types: ["Creature"], manaCost: "{W}{U}{B}{R}{G}", colorIdentity: ["W", "U", "B", "R", "G"], power: 5, toughness: 5},
-  "Smoke Bear": {types: ["Creature"], manaCost: "{1}{G}", power: 2, toughness: 2},
+  /* Green, as its cost says: "sacrifice a green creature" (Natural Order) finds it. */
+  "Smoke Bear": {types: ["Creature"], manaCost: "{1}{G}", colors: ["G"], power: 2, toughness: 2},
   "Smoke Relic": {types: ["Artifact"], manaCost: "{2}"},
   "Smoke Charm": {types: ["Enchantment"], manaCost: "{2}"},
   "Smoke Giant": {types: ["Creature"], manaCost: "{4}{G}", power: 5, toughness: 5},
   /* A free sorcery the opponent casts, so a card cast at instant speed has a spell to answer -- aimed at a player, so a card
      that changes a spell's target has one to change. */
   "Smoke Sorcery": {types: ["Sorcery"], manaCost: "{0}", spell: {id: "s", text: "Target player draws a card.", targets: [{what: "player"}], effects: [{effect: "draw", count: 1, who: {target: 0}}]}},
+  /* The same, a blue instant: what "counter target instant spell" (Dispel) and "counter target blue spell" (Red Elemental
+     Blast) answer. */
+  "Smoke Instant": {types: ["Instant"], manaCost: "{0}", colors: ["U"], spell: {id: "s", text: "Target player draws a card.", targets: [{what: "player"}], effects: [{effect: "draw", count: 1, who: {target: 0}}]}},
   /* A free creature the card's own player casts, so a card aimed at its controller's creature spell has one to answer. */
   "Smoke Whelp": {types: ["Creature"], manaCost: "{0}", power: 1, toughness: 1},
 });
@@ -195,6 +199,12 @@ export function smokeScenario(script) {
      creature spell its player casts on their own turn, not the opponent's sorcery. Only the spell's own aim: a creature
      whose activated ability copies its controller's spells (Kitsa) is cast as any creature is, with nothing on the stack. */
   const ownSpell = (script.abilities ?? []).some((a) => a?.kind === "spell" && aims(a).some((t) => JSON.stringify(t).includes('"what":"spell"') && JSON.stringify(t).includes('"controller":"you"')));
+  /* A counterspell for a particular spell answers one: a creature spell (Essence Scatter) the opponent's free creature, an
+     instant or a colored one (Dispel, Red Elemental Blast) the blue instant; any other, the colorless sorcery. */
+  const spellAims = (script.abilities ?? []).filter((a) => a?.kind === "spell").flatMap(aims).filter((t) => JSON.stringify(t).includes('"what":"spell"'));
+  const wants = (test) => spellAims.some((t) => [t, ...(Array.isArray(t.anyOf) ? t.anyOf : [])].some(test));
+  const answered = wants((o) => (o.types ?? []).includes("Creature")) ? "Smoke Whelp"
+    : wants((o) => (o.types ?? []).includes("Instant") || (o.colors ?? []).length > 0) ? "Smoke Instant" : "Smoke Sorcery";
   const instantSpeed = !ownSpell && !isLand && Boolean(script.identity.manaCost)
     && ((script.identity.types ?? []).includes("Instant") || (script.abilities ?? []).some((a) => a?.kind === "keyword" && a.keyword === "flash"));
   /* A spell's additional cost (CR 601.2b): a card to discard, and a creature and an artifact to sacrifice. */
@@ -211,9 +221,10 @@ export function smokeScenario(script) {
   const graveTargets = (script.abilities ?? []).some((a) => aims(a).some((t) => JSON.stringify(t).includes('"zone":"graveyard"')));
   const steps = [];
   /* A land that asks as it enters, or triggers (a scry land), is answered and resolved before the game moves on. */
-  if (isLand) steps.push({play: name, seat: 0}, {settle: true});
+  /* A double-faced card is played, as it is cast, by its front face's name (Brightclimb Pathway // Grimclimb Pathway). */
+  if (isLand) steps.push({play: front, seat: 0}, {settle: true});
   else if (script.identity.manaCost) {
-    if (instantSpeed) steps.push({cast: "Smoke Sorcery", seat: 1, targets: "any"}, {pass: 1});
+    if (instantSpeed) steps.push({cast: answered, seat: 1, targets: "any"}, {pass: 1});
     if (ownSpell) steps.push({cast: "Smoke Whelp", seat: 0});
     for (let i = 0; i < lands.length - 2; i += 1) steps.push({tap: lands[i], seat: 0, optional: true});
     steps.push({cast: front, seat: 0, targets: "any", optional: true}, {settle: true});
@@ -221,8 +232,8 @@ export function smokeScenario(script) {
   steps.push({to: {turn: 3, phase: "MAIN1", settle: true}});
   for (const ability of script.abilities ?? []) {
     if (ability?.kind !== "activated") continue;
-    if (ability.mana) steps.push({tap: name, seat: 0, optional: true});
-    else steps.push({tap: "Wastes", seat: 0, optional: true}, {tap: "Wastes", seat: 0, optional: true}, {activate: name, seat: 0, targets: "any", optional: true}, {settle: true});
+    if (ability.mana) steps.push({tap: front, seat: 0, optional: true});
+    else steps.push({tap: "Wastes", seat: 0, optional: true}, {tap: "Wastes", seat: 0, optional: true}, {activate: front, seat: 0, targets: "any", optional: true}, {settle: true});
   }
   return {
     fixtures: SMOKE_FIXTURES,
@@ -235,7 +246,7 @@ export function smokeScenario(script) {
         ...(graveTargets ? [{seat: 0, zone: "graveyard", cards: ["Smoke Bear", "Smoke Sorcery"]}] : []),
         ...(isLand || script.identity.manaCost ? [{seat: 0, zone: "hand", cards: [name, ...fodderHand, ...(ownSpell ? ["Smoke Whelp"] : [])]}] : [{seat: 0, zone: "battlefield", cards: [name]}]),
         {seat: 1, zone: "battlefield", cards: ["Smoke Bear", "Smoke Giant", "Smoke Relic", "Smoke Charm", "Wastes"]},
-        {seat: 1, zone: "hand", cards: ["Smoke Sorcery"]},
+        {seat: 1, zone: "hand", cards: [answered]},
       ],
       steps,
       expect: [],

@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Braids, Cabal Minion",
+    "oracleId": "d85aa59b-c6aa-4b2f-885c-59d6e5e6e8b9",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Minion"
+    ],
+    "manaCost": "{2}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "At the beginning of each player's upkeep, that player sacrifices an artifact, creature, or land of their choice.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of each player's upkeep, that player sacrifices an artifact, creature, or land of their choice.",
+      "trigger": {
+        "on": "upkeep",
+        "yours": false
+      },
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "who": "that player",
+          "count": 1,
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Artifact"
+                ]
+              },
+              {
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "types": [
+                  "Land"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

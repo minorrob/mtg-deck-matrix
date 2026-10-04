@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Brightclimb Pathway // Grimclimb Pathway",
+  "scenarios": [
+    {
+      "name": "Played as Brightclimb Pathway: {W}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Brightclimb Pathway // Grimclimb Pathway"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Brightclimb Pathway"
+        },
+        {
+          "tap": "Brightclimb Pathway"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Brightclimb Pathway"
+          ]
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Played as Grimclimb Pathway: {B}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Brightclimb Pathway // Grimclimb Pathway"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Grimclimb Pathway"
+        },
+        {
+          "tap": "Grimclimb Pathway"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Grimclimb Pathway"
+          ]
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1
+          }
+        }
+      ]
+    }
+  ]
+}

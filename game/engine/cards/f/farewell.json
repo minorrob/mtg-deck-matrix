@@ -1,0 +1,99 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Farewell",
+    "oracleId": "4eb813fd-2d5a-4b02-8193-662681ef4e7d",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one or more —\n• Exile all artifacts.\n• Exile all creatures.\n• Exile all enchantments.\n• Exile all graveyards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one or more —\n• Exile all artifacts.\n• Exile all creatures.\n• Exile all enchantments.\n• Exile all graveyards.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "chooseUpTo": 4,
+          "modes": [
+            {
+              "text": "Exile all artifacts.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "moveZoneAll",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Artifact"
+                    ]
+                  },
+                  "to": "exile"
+                }
+              ]
+            },
+            {
+              "text": "Exile all creatures.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "moveZoneAll",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ]
+                  },
+                  "to": "exile"
+                }
+              ]
+            },
+            {
+              "text": "Exile all enchantments.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "moveZoneAll",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Enchantment"
+                    ]
+                  },
+                  "to": "exile"
+                }
+              ]
+            },
+            {
+              "text": "Exile all graveyards.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "moveZoneAll",
+                  "selector": {
+                    "what": "card",
+                    "zone": "graveyard"
+                  },
+                  "to": "exile"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
