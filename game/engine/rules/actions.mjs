@@ -54,7 +54,7 @@
 
 import {cardsIn, moveObject, usesThisTurn, recordUse, showFace} from "../state/index.mjs";
 import {pushSpell, pushAbility, becameTarget} from "./stack.mjs";
-import {addMana, spend, parseManaCost, automaticPayment, manaValue, poolSize, tapPlans} from "./mana.mjs";
+import {addMana, spend, parseManaCost, automaticPayment, manaValue, poolSize, tapPlans, convokeCanPay, convokePayments} from "./mana.mjs";
 import {commanderTax, recordCommanderCast, colorIdentity} from "./commander.mjs";
 import {COLORS, MANA_KEYS} from "./mana.mjs";
 import {summoningSick, hasFlash} from "../keywords/timing.mjs";
@@ -68,7 +68,7 @@ import {costReduction, costIncrease, playerStatics, freeCast, flashGranted, cast
 import {countMana, amountOf, countEffect} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
-import {lastKnown, characteristicsOf, abilitiesOf, deriving} from "./layers.mjs";
+import {lastKnown, characteristicsOf, abilitiesOf, deriving, keywordsOf, colorsOf} from "./layers.mjs";
 import {namesChosen, withChosen, chosenFor} from "../script/chosen.mjs";
 import {poolFor, spendFor, addRestricted} from "./restricted-mana.mjs";
 import {askEntering} from "./entering.mjs";
@@ -172,6 +172,35 @@ export function escapeWays(state, player, id) {
  * escape exiles (CR 702.138a), or which creatures a flashback cost taps (CR 702.34a; "tap three untapped white creatures
  * you control", Battle Screech). `cost` says which: "exile" or "tap".
  */
+/* CONVOKE (CR 702.51a): "each creature you tap while casting this spell pays for {1} or one mana of that creature's color".
+   The untapped creatures a player controls, each with its colors as it is now: a summoning-sick one too, since tapping it
+   is not its own {T} (CR 302.6). Not an additional or alternative cost (702.51b): it pays part of the total cost, the rest
+   from the pool (rules/mana.mjs, convokePayments). */
+const hasConvoke = (state, id) => keywordsOf(state, id).includes("Convoke");
+export const convokers = (state, player) => state.zones.battlefield.filter((id) => !state.objects[id].tapped
+  && characteristicsOf(state, id).controller === player && characteristicsOf(state, id).types.includes("Creature"))
+  .map((id) => ({id, colors: colorsOf(state, id)}));
+/* The total cost a convoked spell pays (CR 601.2f), its tax and reductions in, as castCost says it. */
+function convokeCost(state, player, action) {
+  const {cost, x} = castCost(state, player, action.objectId, action.tax ?? 0);
+  return {...cost, generic: cost.generic + x};
+}
+/* The creatures a convoke picked, and what the pool pays besides: each untapped and the caster's, none twice, and one way
+   for the pool to pay the rest. Refused before anything is tapped, saying what to do instead. */
+function convoked(state, player, action, cost) {
+  const name = state.objects[action.objectId]?.card ?? "That spell";
+  const list = action.convokeTap;
+  const fitting = new Map(convokers(state, player).map((c) => [c.id, c]));
+  if (!Array.isArray(list) || new Set(list).size !== list.length || !list.every((id) => fitting.has(id)))
+    throw new Error(`Those are not untapped creatures you control: pick the creatures to tap for ${name} again`);
+  const ways = convokePayments(poolFor(state, player, {spell: action.objectId}), cost, list.map((id) => fitting.get(id)), {life: state.players[player].life});
+  if (ways.length === 0)
+    throw new Error(`Those creatures and the mana in your pool cannot pay for ${name}: each creature pays {1} or one mana of its color. Pick other creatures, or add mana first`);
+  if (ways.length > 1)
+    throw new Error(`With those creatures, your pool could pay the rest of ${name} more than one way: pick creatures that leave one way, or spend the mana it should not use first`);
+  return {ids: [...list], payment: ways[0]};
+}
+
 export function castCostChoice(state, awaiting) {
   const {action, player} = awaiting;
   const name = state.objects[action.objectId]?.card ?? "That card";
@@ -193,6 +222,15 @@ export function castCostChoice(state, awaiting) {
     }
     return options;
   };
+  /* Convoke (CR 702.51a): which of the caster's untapped creatures help pay -- as many as there are symbols they could pay,
+     and none when the pool can pay it all. */
+  if (action.convoke === true) {
+    const cost = convokeCost(state, player, action), creatures = convokers(state, player);
+    const symbols = cost.generic + cost.symbols.filter((s) => (s.kind === "colored" && s.color !== "C") || s.kind === "hybrid").length;
+    const alone = automaticPayment(poolFor(state, player, {spell: action.objectId}), cost, {life: state.players[player].life}) !== null;
+    return {id: `choose-cost:${action.objectId}`, title: `${name}: tap creatures to convoke it`, mode: "many", min: alone ? 0 : 1, max: Math.min(creatures.length, symbols),
+      cost: "convoke", options: named(creatures.map((c) => c.id))};
+  }
   if (action.escape === undefined) {
     const tap = flashbackCost(state, player, action.objectId)?.tap ?? {count: 0, selector: {}};
     return {id: `choose-cost:${action.objectId}`, title: `${name}'s flashback: tap ${tappersInWords(tap)}`, mode: "many", min: tap.count, max: tap.count, cost: "tap",
@@ -207,11 +245,14 @@ export function castCostChoice(state, awaiting) {
 export function resolveCastCost(state, awaiting, indices) {
   const choice = castCostChoice(state, awaiting);
   const picked = [...new Set(indices ?? [])].sort((a, b) => a - b);
-  if (picked.length !== (indices ?? []).length || picked.length !== choice.min || picked.some((i) => !choice.options[i]))
+  /* Convoke's, any number from its least to its most; the others, exactly as many as they take. */
+  const counted = choice.cost === "convoke" ? picked.length >= choice.min && picked.length <= choice.max : picked.length === choice.min;
+  if (picked.length !== (indices ?? []).length || !counted || picked.some((i) => !choice.options[i]))
     throw new Error("Invalid selection");
   const ids = picked.map((i) => choice.options[i].cardId);
   const way = choice.cost === "mana" ? castTapPlans(state, awaiting.player, awaiting.action, TAP_CHOICES)[picked[0]] : null;
-  const action = {...structuredClone(awaiting.action), ...(way ? {tapPlan: way.key} : choice.cost === "tap" ? {flashbackTap: ids} : {escapeExile: ids})};
+  const action = {...structuredClone(awaiting.action), ...(way ? {tapPlan: way.key} : choice.cost === "tap" ? {flashbackTap: ids}
+    : choice.cost === "convoke" ? {convokeTap: ids} : {escapeExile: ids})};
   state.awaiting = null;
   state.priorityPlayer = awaiting.player;
   return applyAction(state, awaiting.player, action);
@@ -728,11 +769,18 @@ function offers(state, player) {
           payment = {mana: Object.fromEntries(MANA_KEYS.map((k) => [k, plan.taps.filter((t) => t.color === k).length])), life: 0};
         }
       }
-      if (!payment) continue;
+      /* CONVOKE (CR 702.51a): the caster's creatures help pay, and the pool the rest -- one offer, beside any the pool or its
+         sources pay alone, when the pool and their untapped creatures could pay it together; which creatures, picked once it
+         is taken (castCostChoice). Not with {X}, without paying its mana cost, or with another way to pay. */
+      const convokes = X === null && !freely && !back && !fled && !way && hasConvoke(state, id)
+        && convokeCanPay(pool, {...cost, generic: cost.generic + x}, convokers(state, player));
+      if (!payment && !convokes) continue;
       const extra = [...(object.spell?.additionalCost ?? []), ...(way?.extra ?? [])];
       const paysFor = extra.length ? additionalChoices(state, player, id, extra) : [null];
+      for (const convoke of [...(payment ? [false] : []), ...(convokes ? [true] : [])])
       for (const costChoice of paysFor) {
-        const base = {kind: "cast", objectId: id, label: object.card, payment, from, tax, ...(X !== null ? {x: X} : {}), ...(autoTap ? {autoTap: true} : {}),
+        const base = {kind: "cast", objectId: id, label: object.card, payment: convoke ? null : payment, from, tax, ...(X !== null ? {x: X} : {}), ...(autoTap && !convoke ? {autoTap: true} : {}),
+          ...(convoke ? {convoke: true} : {}),
           ...(costChoice ? {costChoice, costNames: Object.values(costChoice).map((c) => state.objects[c].card)} : {}),
           ...(freely ? {free: true} : {}), ...(back ? {flashback: true} : {}), ...(fled ? {escape: fled.kind} : {}), ...(way ? {alternative: way.index} : {})};
         actions.push(...(object.spell?.modal ? withModes(state, base, object.spell.modal, {controller: player, source: id}) : withTargets(state, base, object.spell, {controller: player, source: id})));
@@ -911,6 +959,9 @@ const sameAction = (a, b) => a.kind === b.kind
   /* And one that taps for itself another than one the pool pays (castTapPlans). Which way it taps is picked after the
      offer is taken, so it is not part of it. */
   && (a.autoTap === true) === (b.autoTap === true)
+  /* And one convoked another than one the pool pays alone (CR 702.51a). Which creatures it taps is picked after the offer
+     is taken, so they are not part of it. */
+  && (a.convoke === true) === (b.convoke === true)
   /* And a double-faced card played with its back face up another than with its front (CR 712.12). */
   && (a.face ?? null) === (b.face ?? null)
   /* And with escape, its own or one given (CR 702.138a): another cost, and what it cast escaped. The cards it exiles are
@@ -1052,6 +1103,11 @@ function perform(state, player, action, during = null) {
       state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
       return [];
     }
+    /* CONVOKE (CR 702.51a): which creatures help pay, asked before anything is tapped or paid. */
+    if (action.kind === "cast" && action.convoke === true && !Array.isArray(action.convokeTap)) {
+      state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
+      return [];
+    }
     /* A CAST THAT TAPS FOR ITSELF, more than one way (castTapPlans): which sources, asked before anything is tapped. */
     if (action.kind === "cast" && action.autoTap === true && action.tapPlan === undefined && castTapPlans(state, player, action, 2).length > 1) {
       state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
@@ -1173,7 +1229,10 @@ function perform(state, player, action, during = null) {
        pool (CR 106.4). */
     const covered = (pool, mana) => MANA_KEYS.every((k) => (pool[k] ?? 0) >= (mana[k] ?? 0));
     const spending = during ? null : poolFor(state, player, {spell: action.objectId});
-    const fromPool = during ? {mana: {}, life: 0} : automaticPayment(spending, cost, {life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0), x: x + (action.x ?? 0) * cost.variable});
+    /* Convoked (CR 702.51a): the creatures picked, and what the pool pays besides -- refused before anything is tapped. */
+    const convoke = action.convoke === true && !during ? convoked(state, player, action, {...cost, generic: cost.generic + x}) : null;
+    const fromPool = during ? {mana: {}, life: 0} : convoke ? convoke.payment
+      : automaticPayment(spending, cost, {life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0), x: x + (action.x ?? 0) * cost.variable});
     const payment = fromPool ?? (tappedFor && covered(spending, tappedFor.mana) ? tappedFor : null);
     if (!payment || (back && back.life > state.players[player].life) || (way && way.life > state.players[player].life)) throw new Error(`${object.card} cannot be paid for from this pool`);
     const card = cardRef(state, action.objectId);
@@ -1226,8 +1285,8 @@ function perform(state, player, action, during = null) {
     }
     /* Escape's other cards, exiled as the rest of the cost is paid (CR 601.2h). */
     for (const id of exiling) if (state.objects[id]) moveOne(state, id, "exile", events, {owner: state.objects[id].owner});
-    /* And a flashback cost's creatures, tapped. */
-    for (const id of tapping) {
+    /* And a flashback cost's creatures, tapped; and a convoke's (CR 702.51c: they convoked it), for no mana. */
+    for (const id of [...tapping, ...(convoke?.ids ?? [])]) {
       state.objects[id].tapped = true;
       events.push(event("GameEventCardTapped", state, {card: cardRef(state, id), tapped: true}));
     }

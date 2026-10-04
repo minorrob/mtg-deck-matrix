@@ -39,6 +39,9 @@ export const KEYWORD_FAMILIES = Object.freeze({
   /** What happens as a spell is cast: Storm (CR 702.40a), "when you cast this spell, copy it for each spell cast before
       it this turn" -- a triggered ability of the spell (rules/actions.mjs). */
   cast: Object.freeze(["Storm"]),
+  /** How a spell may be paid for: Convoke (CR 702.51a), each creature its caster taps paying {1} or one mana of its color --
+      offered beside the cast the pool pays, the creatures picked once it is taken (rules/actions.mjs, rules/mana.mjs). */
+  pay: Object.freeze(["Convoke"]),
 });
 
 /**

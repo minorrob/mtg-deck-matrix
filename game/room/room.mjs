@@ -175,6 +175,8 @@ export function offerDetails(state, seat, actions) {
       const ways = castTapPlans(state, seat, a, 2);
       parts.push(ways.length === 1 ? `tapping ${tapWords(state, ways[0])}` : "tapping what you choose");
     }
+    /* Convoke (CR 702.51a): creatures help pay, picked once it is taken. */
+    if (a.convoke) parts.push("convoking, tapping creatures you choose");
     /* Flashback (CR 702.34a): from the graveyard for its flashback cost, exiled after -- and the creatures it taps, picked
        once it is taken. */
     if (a.flashback) {
