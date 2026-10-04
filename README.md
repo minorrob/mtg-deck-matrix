@@ -580,6 +580,12 @@ library, on top, or on the bottom.
 `engine-blight-or-pay` holds a choice between additional costs and a color a mana ability gives (Bogslither's Embrace,
 Foraging Wickermaw): blight 1 or pay {3}, each its own cast, its mana part of the offer, tapped for and spent, said by
 the table; its compiler; and "becomes that color until end of turn", the color of the mana added.
+`engine-reveal-until-creature` holds "reveal cards until you reveal a creature or planeswalker card" (Jace, Multiverse
+Architect's -3): the card found onto the battlefield, a planeswalker with its loyalty, the rest under what was not
+revealed in a random order, a library with neither put back whole, and nothing revealed once the target is gone.
+`engine-cant-attack-jaces` holds "they may pay {2}; if they don't, creatures they control can't attack Jaces you control
+this turn" (Jace, Multiverse Architect), at a table of four: the player whose turn it is asked, their creatures held as
+they are, toward its controller's Jaces only, for the turn.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -698,7 +704,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 282 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 284 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -952,6 +958,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-stun-and-tap-three` — `tests/engine-stun-and-tap-three.mjs`
 - `engine-owner-chooses-library` — `tests/engine-owner-chooses-library.mjs`
 - `engine-blight-or-pay` — `tests/engine-blight-or-pay.mjs`
+- `engine-reveal-until-creature` — `tests/engine-reveal-until-creature.mjs`
+- `engine-cant-attack-jaces` — `tests/engine-cant-attack-jaces.mjs`
 
 ## Design and execution record
 

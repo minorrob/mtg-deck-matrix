@@ -1,0 +1,161 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Jace, Multiverse Architect",
+    "oracleId": "3321c134-bf5b-4f63-8035-fca0bbdfa86b",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Planeswalker"
+    ],
+    "subtypes": [
+      "Jace"
+    ],
+    "manaCost": "{1}{W}{U}{B}{R}",
+    "colors": [
+      "B",
+      "R",
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "R",
+      "U",
+      "W"
+    ],
+    "power": null,
+    "toughness": null,
+    "loyalty": 4
+  },
+  "oracleText": "At the beginning of combat on each opponent's turn, they may pay {2}. If they don't, creatures they control can't attack Jaces you control this turn.\n+1: Draw two cards, then put a card from your hand on the bottom of your library.\n−3: Exile another target planeswalker or creature you control. Reveal cards from the top of your library until you reveal a creature or planeswalker card. Put that card onto the battlefield and the rest on the bottom of your library in a random order.\nJace, Multiverse Architect can be your commander.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of combat on each opponent's turn, they may pay {2}. If they don't, creatures they control can't attack Jaces you control this turn.",
+      "trigger": {
+        "on": "step",
+        "step": "COMBAT_BEGIN",
+        "yours": false
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "that player",
+          "amount": 2,
+          "effects": [
+            {
+              "effect": "effectUntil",
+              "rule": "cant-attack",
+              "who": "that player",
+              "toward": {
+                "subtypes": [
+                  "Jace"
+                ],
+                "controller": "you"
+              }
+            }
+          ]
+        }
+      ],
+      "condition": {
+        "notYourTurn": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "+1: Draw two cards, then put a card from your hand on the bottom of your library.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": 1
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "hand",
+          "count": 1,
+          "to": "library"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−3: Exile another target planeswalker or creature you control. Reveal cards from the top of your library until you reveal a creature or planeswalker card. Put that card onto the battlefield and the rest on the bottom of your library in a random order.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -3
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "controller": "you",
+              "another": true,
+              "types": [
+                "Planeswalker"
+              ]
+            },
+            {
+              "what": "permanent",
+              "controller": "you",
+              "another": true,
+              "types": [
+                "Creature"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile"
+        },
+        {
+          "effect": "digUntil",
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "types": [
+                  "Planeswalker"
+                ]
+              }
+            ]
+          },
+          "count": 1,
+          "found": {
+            "to": "battlefield"
+          },
+          "rest": "bottom"
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Jace, Multiverse Architect can be your commander.",
+      "rule": "can-be-commander",
+      "affects": {
+        "self": true
+      }
+    }
+  ]
+}

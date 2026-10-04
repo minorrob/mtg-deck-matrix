@@ -246,7 +246,13 @@ export function cantAttack(state, attacker, defender, planeswalker = null) {
   }
   /* "Target creature can't attack or block this turn" (Endbringer): a restriction an effect left until it ends
      (effectUntil's `rule: "cant-attack"`), on the creatures fixed as it resolved -- attacking anyone. */
-  for (const effect of state.effects ?? []) if (effect.rule === "cant-attack" && staticAffects(state, effect, attacker, effect.sourceController)) return true;
+  for (const effect of state.effects ?? []) {
+    if (effect.rule !== "cant-attack" || !staticAffects(state, effect, attacker, effect.sourceController)) continue;
+    /* "Can't attack Jaces you control" (`toward`): only a planeswalker it describes, "you" the effect's controller -- never
+       a player (no planeswalker, and no match). */
+    if (effect.toward && !(matchesSelector({what: "permanent", ...effect.toward}, state, planeswalker, {controller: effect.sourceController}))) continue;
+    return true;
+  }
   return false;
 }
 /** The words `defender` may say on a `cant-attack` static. */
