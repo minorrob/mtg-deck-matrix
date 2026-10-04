@@ -260,6 +260,15 @@ function matches(state, event, condition, sourceId, controller) {
     }
     if (condition.from && fields.from?.zoneType !== condition.from) return false;
     if (condition.to && fields.to?.zoneType !== condition.to) return false;
+    /* "Put into your graveyard from anywhere" (Moonshadow): the card it became there, read where it now is -- a token is no
+       card (CR 108.2b) -- in the graveyard of its owner (CR 400.3). */
+    if (condition.intoGraveyard) {
+      const card = fields.becomes !== undefined ? state.objects[fields.becomes] : undefined;
+      if (!card || card.token || !whoseIs(condition.owner ?? "you", card.owner, controller)) return false;
+      return !condition.filter || matchesSelector({...condition.filter, what: "card", zone: "graveyard"}, state, fields.becomes, {controller, source: sourceId});
+    }
+    /* "Whenever one or more cards leave your graveyard" (Garrison Excavator): the graveyard is its card's owner's. */
+    if (condition.leftGraveyard) return whoseIs(condition.owner ?? "you", fields.card?.owner, controller);
     /* `self` means this permanent, compared against the card AS IT WAS — the event's snapshot, not
        the object, because for a death the object no longer exists. An arrival is the other way round:
        the card that moved was the one on the stack or in hand, and the permanent that arrived is a new

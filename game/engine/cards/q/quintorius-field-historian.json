@@ -1,0 +1,81 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Quintorius, Field Historian",
+    "oracleId": "28b64167-b7ea-4b4f-8434-061298050366",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elephant",
+      "Cleric"
+    ],
+    "manaCost": "{3}{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Spirits you control get +1/+0.\nWhenever one or more cards leave your graveyard, create a 3/2 red and white Spirit creature token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Spirits you control get +1/+0.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Spirit"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 0
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever one or more cards leave your graveyard, create a 3/2 red and white Spirit creature token.",
+      "trigger": {
+        "on": "left graveyard",
+        "batch": true
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Spirit",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Spirit"
+            ],
+            "colors": [
+              "R",
+              "W"
+            ],
+            "power": 3,
+            "toughness": 2
+          }
+        }
+      ]
+    }
+  ]
+}
