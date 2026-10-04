@@ -133,7 +133,10 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
      credited. A kicker count is Multikicker's, and converge is Converge's: each is measured, and held back, on its own.
      Named, not built: "if you cast it" (Nine-Lives Familiar, held back by RememberObjects too) and shield counters' rule
      (CR 122.1c; Sanctuary Warden enters with two and they would do nothing). */
-  etbCounter: "putCounter"};
+  etbCounter: "putCounter",
+  /* Encore (X5f): the card's activated ability in its owner's graveyard, a hasty token copy for each opponent, each required
+     to attack that opponent this turn (cards/index.mjs, rules/combat.mjs). */
+  Encore: "copyPermanent"};
 
 
 /* What a card needs that the engine has not got. Empty means the engine can play it. */

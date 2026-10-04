@@ -9,15 +9,15 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1000,
-  "everyRule": 2382
+  "defined": 1001,
+  "everyRule": 2383
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 33,
+    "built": 34,
     "partial": 0,
-    "named": 21,
+    "named": 20,
     "missing": 140
    },
    "entries": [
@@ -1093,13 +1093,13 @@
      "kind": "keyword ability",
      "rule": "702.141",
      "name": "Encore",
-     "engine": null,
-     "status": "named",
+     "engine": "Encore",
+     "status": "built",
      "forge": "Encore",
      "top": 1,
      "all": 26,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",

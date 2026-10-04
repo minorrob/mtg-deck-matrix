@@ -149,7 +149,8 @@ export function offerDetails(state, seat, actions) {
   for (const a of actions) if (a.kind === "activate") abilities.set(a.objectId, new Set([...(abilities.get(a.objectId) ?? []), a.abilityId]));
   const say = (a, plain) => {
     const parts = [];
-    if (a.kind === "activate" && (abilities.get(a.objectId)?.size ?? 0) > 1 && a.text) parts.push(`“${a.text}”`);
+    /* Which ability: one of several, or one a card has in a graveyard (encore), which its name alone does not say. */
+    if (a.kind === "activate" && a.text && ((abilities.get(a.objectId)?.size ?? 0) > 1 || state.objects[a.objectId]?.zone === "graveyard")) parts.push(`“${a.text}”`);
     /* The modes chosen as it is cast (CR 700.2), in the card's words. */
     if (Array.isArray(a.modes)) parts.push(a.modes.map((i) => state.objects[a.objectId]?.spell?.modal?.modes?.[i]?.text ?? `mode ${i + 1}`).join(" + "));
     if (a.x !== undefined) parts.push(`X = ${a.x}`);

@@ -1,0 +1,249 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Angel of Indemnity",
+  "scenarios": [
+    {
+      "name": "Cast: a 5/5 with flying and lifelink, and Woe Strider -- mana value 3 -- returned from the graveyard; Grave Titan, 6, is not a choice",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Angel of Indemnity"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Woe Strider",
+            "Grave Titan"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Angel of Indemnity"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Woe Strider"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Angel of Indemnity",
+            "Goat",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Woe Strider"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Grave Titan"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Angel of Indemnity",
+            "has": [
+              "Flying",
+              "Lifelink"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Encore with two opponents: the card exiled, two hasty token copies, each attacking its own opponent; sacrificed at the end step",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Angel of Indemnity"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Angel of Indemnity"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Angel of Indemnity"
+              ]
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Angel of Indemnity",
+                "Angel of Indemnity",
+                "Plains",
+                "Plains",
+                "Wastes",
+                "Wastes",
+                "Wastes",
+                "Wastes",
+                "Wastes",
+                "Wastes"
+              ]
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Angel of Indemnity",
+                "has": [
+                  "Flying",
+                  "Lifelink",
+                  "Haste"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "settle": true
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN",
+            "settle": true
+          }
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 35
+        },
+        {
+          "seat": 2,
+          "life": 35
+        },
+        {
+          "seat": 0,
+          "life": 50
+        }
+      ]
+    }
+  ]
+}

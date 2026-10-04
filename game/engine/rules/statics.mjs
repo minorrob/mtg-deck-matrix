@@ -186,6 +186,12 @@ export function castForbidden(state, player, cardId) {
 }
 
 /** Who has goaded this creature (CR 701.15; effects/permanents.mjs goad), each until their next turn. */
+/** "Attacks that opponent this turn if able" (encore, CR 702.141a; effects/permanents.mjs): the players this creature is
+ * required to attack this turn (CR 508.1d). rules/combat.mjs asks only those it could attack now. */
+export function mustAttackOf(state, id) {
+  return [...new Set((state.effects ?? []).filter((e) => e.rule === "must-attack" && e.affects?.ids?.includes(id)).map((e) => e.defender))];
+}
+
 export function goadersOf(state, id) {
   return [...new Set((state.effects ?? []).filter((e) => e.rule === "goaded" && e.affects.ids.includes(id)).map((e) => e.sourceController))];
 }
