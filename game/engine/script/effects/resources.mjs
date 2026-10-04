@@ -22,6 +22,7 @@ import {selectMatching} from "../filter.mjs";
 import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
 import {typesOf, powerOf, keywordsOf, isKeywordCounter} from "../../rules/layers.mjs";
+import {cantGainLife} from "../../rules/statics.mjs";
 
 /** `addMana` — into the controller's pool, which empties at the end of the step (CR 500.4). */
 export function addMana(state, params, context) {
@@ -75,6 +76,8 @@ export const infects = (state, id) => Boolean(state.objects[id]) && keywordsOf(s
  */
 export function changeLife(state, player, delta, events) {
   if (delta === 0) return;
+  /* "Your opponents can't gain life" (CR 119.7): a gain that does not happen, and is not said to. */
+  if (delta > 0 && cantGainLife(state, player)) return;
   const before = state.players[player].life;
   state.players[player].life += delta;
   /* The life each player has lost this turn (Wound Reflection; script/amount.mjs), cleared as a turn begins (turn.mjs). */

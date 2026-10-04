@@ -1,0 +1,227 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Rampaging Ferocidon",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Lifelinker": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Cleric"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "keywords": [
+        "Lifelink"
+      ]
+    },
+    "Salve": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "You gain 4 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 4
+          }
+        ]
+      }
+    },
+    "Shock": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Shock deals 2 damage to any target.",
+        "targets": [
+          {
+            "anyOf": [
+              {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "what": "player"
+              }
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 2,
+            "targets": {
+              "target": 0
+            },
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob's Bear enters: 1 damage to Rob; and no player gains life, Rob's Salve included",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Rampaging Ferocidon",
+            "Forest",
+            "Wastes",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Salve"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bear"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 39
+            }
+          ]
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Salve"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 39
+        }
+      ]
+    },
+    {
+      "name": "Maya's Bear enters on Maya's turn: 1 damage to Maya",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Rampaging Ferocidon"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Bear",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

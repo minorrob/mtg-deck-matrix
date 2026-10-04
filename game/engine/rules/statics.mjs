@@ -72,6 +72,10 @@ export const STATIC_RULES = Object.freeze({
   "top-revealed": "projection.mjs",
   /** "You may play an additional land on each of your turns" (CR 305.2): one more land drop. rules/actions.mjs. */
   "extra-land-drop": "rules/actions.mjs",
+  /** "Your opponents can't gain life" (Archfiend of Despair), "players can't gain life" (Rampaging Ferocidon; CR 119.7):
+      the players `affects` names, from its controller's side. cantGainLife, read wherever life is gained: an effect's gain
+      (script/effects/resources.mjs, changeLife) and lifelink in combat (rules/combat.mjs). */
+  "cant-gain-life": "script/effects/resources.mjs",
   /** "Your opponents can't cast spells from anywhere other than their hands", "during your turn", "more than one spell each
       turn" (CantBeCast): castForbidden, read where a cast is offered. rules/actions.mjs. */
   "cant-cast": "rules/actions.mjs",
@@ -189,6 +193,23 @@ export function castForbidden(state, player, cardId) {
         const already = (state.players[player].castThisTurn ?? []).filter(fits).length;
         if (already >= ability.moreThan && fits({types: object.types ?? [], colors: object.colors ?? []})) return true;
       }
+    }
+  }
+  return false;
+}
+
+/**
+ * WHETHER A PLAYER CAN'T GAIN LIFE (CR 119.7): a permanent's "your opponents can't gain life" or "players can't gain life",
+ * whose `affects` names this player from its controller's side. Effects that would have them gain life don't, lifelink
+ * gains them nothing (702.15b), and no life is gained to be seen ("whenever you gain life").
+ */
+export function cantGainLife(state, player) {
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static" || ability.rule !== "cant-gain-life") continue;
+      const context = {controller: holder.controller, source: holderId};
+      if (compileSelector({what: "player", ...(ability.affects ?? {})})(state, player, context) && conditionHolds(state, ability.condition, context)) return true;
     }
   }
   return false;

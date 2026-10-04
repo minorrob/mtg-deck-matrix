@@ -56,7 +56,7 @@ import {runFollowUps} from "../script/effects/index.mjs";
 import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf, deriving} from "./layers.mjs";
 import {givePoison, changeLife, infects, addCounters, damagePermanent} from "../script/effects/resources.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
-import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack} from "./statics.mjs";
+import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack, cantGainLife} from "./statics.mjs";
 import {paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits} from "./mana.mjs";
 import {recordCommanderDamage} from "./commander.mjs";
 import {damageAssignmentProblem} from "../controller.mjs";
@@ -614,7 +614,8 @@ export const combatDamage = {
       const linked = lifelinkFrom(state, hit.source, hit.amount);
       if (linked > 0) {
         const gains = state.objects[hit.source]?.controller;
-        if (gains !== undefined) {
+        /* Unless its controller can't gain life (CR 119.7): the damage is dealt, and no life gained. */
+        if (gains !== undefined && !cantGainLife(state, gains)) {
           const before = state.players[gains].life;
           state.players[gains].life += linked;
           /* Life gained this turn, as every other gain is kept (effects/resources.mjs changeLife). */

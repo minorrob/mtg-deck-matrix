@@ -1,0 +1,274 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Archfiend of Despair",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Lifelinker": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Cleric"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "keywords": [
+        "Lifelink"
+      ]
+    },
+    "Salve": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "You gain 4 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 4
+          }
+        ]
+      }
+    },
+    "Shock": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Shock deals 2 damage to any target.",
+        "targets": [
+          {
+            "anyOf": [
+              {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "what": "player"
+              }
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 2,
+            "targets": {
+              "target": 0
+            },
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya, Shocked for 2, loses 2 more at the end step; Maya's Salve gains Maya nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Archfiend of Despair",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Shock"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Salve"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Shock",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Plains",
+          "seat": 1
+        },
+        {
+          "cast": "Salve",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 40
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 38
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 36
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Rob's own Salve gains Rob 4 (the rule is for Rob's opponents); Maya's lifelinker hits Rob for 2, and Maya gains nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Archfiend of Despair",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Salve"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Lifelinker"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Salve"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 44
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Lifelinker"
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 42
+        },
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

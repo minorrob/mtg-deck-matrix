@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Archfiend of Despair",
+    "oracleId": "9c36760b-57c5-488b-afc9-ef141942c6ab",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Demon"
+    ],
+    "manaCost": "{6}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Flying\nYour opponents can't gain life.\nAt the beginning of each end step, each opponent loses life equal to the life that player lost this turn. (Damage causes loss of life.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "static",
+      "text": "Your opponents can't gain life.",
+      "rule": "cant-gain-life",
+      "affects": {
+        "what": "player",
+        "who": "opponent"
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of each end step, each opponent loses life equal to the life that player lost this turn.",
+      "trigger": {
+        "on": "end step",
+        "yours": false
+      },
+      "effects": [
+        {
+          "effect": "repeatFor",
+          "each": "opponent",
+          "effects": [
+            {
+              "effect": "loseLife",
+              "who": "that player",
+              "amount": {
+                "lifeLostThisTurn": "that player"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
