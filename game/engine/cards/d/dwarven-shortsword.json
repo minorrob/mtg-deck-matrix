@@ -1,0 +1,101 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dwarven Shortsword",
+    "oracleId": "9cc52afb-9788-46f6-9f9b-347513f8a64f",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When this Equipment enters, create a 2/2 red Dwarf creature token, then attach this Equipment to it.\nEquipped creature gets +1/+2.\nEquip {2} ({2}: Attach to target creature you control. Equip only as a sorcery.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this Equipment enters, create a 2/2 red Dwarf creature token, then attach this Equipment to it.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "remember": true,
+          "token": {
+            "name": "Dwarf",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Dwarf"
+            ],
+            "colors": [
+              "R"
+            ],
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "effect": "attach",
+          "targets": "remembered"
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +1/+2.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 2
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Equip {2}",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

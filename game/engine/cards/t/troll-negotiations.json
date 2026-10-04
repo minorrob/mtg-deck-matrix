@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Troll Negotiations",
+    "oracleId": "6e275711-eb76-4924-ba38-c38a36d9d82a",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Put two +1/+1 counters on target creature you control. Then it fights target creature an opponent controls. (Each deals damage equal to its power to the other.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Put two +1/+1 counters on target creature you control. Then it fights target creature an opponent controls. (Each deals damage equal to its power to the other.)",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        },
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "+1/+1",
+          "count": 2
+        },
+        {
+          "effect": "fight",
+          "from": {
+            "target": 0
+          },
+          "targets": {
+            "target": 1
+          }
+        }
+      ]
+    }
+  ]
+}

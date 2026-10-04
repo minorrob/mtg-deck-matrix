@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Wood Elves",
+  "scenarios": [
+    {
+      "name": "It enters: a Forest found, onto the battlefield untapped",
+      "library": [
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wood Elves"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Wood Elves"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Forest",
+            "Wood Elves"
+          ]
+        }
+      ]
+    }
+  ]
+}

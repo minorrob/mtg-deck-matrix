@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pull from the Grave",
+    "oracleId": "c5373026-8b43-42a7-aa69-a1b0f1619795",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Return up to two target creature cards from your graveyard to your hand. You gain 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Return up to two target creature cards from your graveyard to your hand. You gain 2 life.",
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "types": [
+            "Creature"
+          ],
+          "count": {
+            "min": 0,
+            "max": 2
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        },
+        {
+          "effect": "gainLife",
+          "amount": 2
+        }
+      ]
+    }
+  ]
+}

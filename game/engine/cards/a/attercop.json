@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Attercop",
+    "oracleId": "45d652c4-188e-4f00-acdd-1be014922cbc",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spider"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Reach, deathtouch\nLandfall — Whenever a land you control enters, this creature gets +1/+1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Reach",
+      "keyword": "reach"
+    },
+    {
+      "kind": "keyword",
+      "text": "deathtouch",
+      "keyword": "deathtouch"
+    },
+    {
+      "kind": "triggered",
+      "text": "Landfall — Whenever a land you control enters, this creature gets +1/+1 until end of turn.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Stone Docent",
+    "oracleId": "dbb1690a-f6f5-459c-9d7f-cb6541fb6688",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit",
+      "Chimera"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "{W}, Exile this card from your graveyard: You gain 2 life. Surveil 1. Activate only as a sorcery. (Look at the top card of your library. You may put it into your graveyard.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{W}, Exile this card from your graveyard: You gain 2 life. Surveil 1. Activate only as a sorcery.",
+      "zone": "graveyard",
+      "timing": "sorcery",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{W}"
+        },
+        {
+          "atom": "exileFromGraveyard",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 2
+        },
+        {
+          "effect": "surveil",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

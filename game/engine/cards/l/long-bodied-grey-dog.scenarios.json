@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Long-Bodied Grey Dog",
+  "scenarios": [
+    {
+      "name": "Flashed in on Maya's turn: a tapped Treasure",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Long-Bodied Grey Dog"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "cast": "Long-Bodied Grey Dog",
+          "seat": 0
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Treasure"
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Long-Bodied Grey Dog",
+            "has": [
+              "Reach"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Warg Tactics",
+    "oracleId": "d1663b51-37a1-45a0-b477-2d3e7dd0828e",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Destroy target creature with flying.\n• Put a +1/+1 counter on target creature you control. It gains trample and hexproof until end of turn. (It can't be the target of spells or abilities your opponents control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Destroy target creature with flying.\n• Put a +1/+1 counter on target creature you control. It gains trample and hexproof until end of turn. (It can't be the target of spells or abilities your opponents control.)",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Destroy target creature with flying.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ],
+                  "keywords": [
+                    "Flying"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "destroy",
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Put a +1/+1 counter on target creature you control. It gains trample and hexproof until end of turn. (It can't be the target of spells or abilities your opponents control.)",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ],
+                  "controller": "you"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "putCounter",
+                  "targets": {
+                    "target": 0
+                  },
+                  "counter": "+1/+1",
+                  "count": 1
+                },
+                {
+                  "effect": "pump",
+                  "targets": {
+                    "target": 0
+                  },
+                  "power": 0,
+                  "toughness": 0,
+                  "keywords": [
+                    "Trample",
+                    "Hexproof"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

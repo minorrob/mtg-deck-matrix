@@ -1,0 +1,92 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ragged Short Spear",
+    "oracleId": "bb67d0a4-864e-4f46-8538-fdd920bf0197",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When this Equipment enters, you may discard a card. If you do, draw two cards.\nEquipped creature gets +2/+0.\nEquip {3} ({3}: Attach to target creature you control. Equip only as a sorcery.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this Equipment enters, you may discard a card. If you do, draw two cards.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "discard",
+          "count": 1,
+          "remember": true
+        },
+        {
+          "effect": "draw",
+          "count": 2,
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ],
+      "optional": true
+    },
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +2/+0.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 0
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Equip {3}",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}"
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Muse's Encouragement",
+  "scenarios": [
+    {
+      "name": "A 3/3 flying Elemental; surveil 2",
+      "library": [
+        "Island",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Muse's Encouragement"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Muse's Encouragement"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Elemental",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Elemental",
+            "has": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
