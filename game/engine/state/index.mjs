@@ -126,7 +126,7 @@ const listFor = (state, zone, player) => (PER_PLAYER.includes(zone) ? state.zone
  * reference, so a state stays small and the card directory stays the one place text lives.
  */
 /* A modal double-faced card's face (CR 712.8): its characteristics, from the card's own two. */
-const FACE_KEYS = ["card", "types", "subtypes", "supertypes", "manaCost", "colors", "power", "toughness", "keywords", "abilities", "spell", "enchant"];
+const FACE_KEYS = ["card", "types", "subtypes", "supertypes", "manaCost", "colors", "power", "toughness", "loyalty", "keywords", "abilities", "spell", "enchant"];
 function faceOf(mdfc, face) {
   const side = face === "back" ? mdfc.back : mdfc.front;
   return Object.fromEntries(FACE_KEYS.map((key) => [key, side[key]]));
@@ -165,6 +165,8 @@ export function addObject(state, object, zone, player = null) {
        is not a creature; the layer system (CR 613, 1.8) decides what they currently are. */
     power: Number.isInteger(object.power) ? object.power : null,
     toughness: Number.isInteger(object.toughness) ? object.toughness : null,
+    /* A planeswalker's printed loyalty (CR 306.5a); on the battlefield its loyalty is its loyalty counters (306.5c). */
+    ...(Number.isInteger(object.loyalty) ? {loyalty: object.loyalty} : {}),
     keywords: Array.isArray(object.keywords) ? [...object.keywords] : [],
     /* CR 302.6, summoning sickness: the turn this object came under its controller's control. A
        zone change makes a new object, so an entering permanent gets the current turn and a creature
@@ -291,7 +293,7 @@ export function moveObject(state, id, zone, player = null) {
        it is its front (CR 712.8a). */
     ...(from.mdfc ? {mdfc: from.mdfc, face: zone === "battlefield" && from.face === "back" ? "back" : undefined} : {}),
     card: from.card, types: from.types, manaCost: from.manaCost, abilities: from.abilities,
-    power: from.power, toughness: from.toughness, keywords: from.keywords,
+    power: from.power, toughness: from.toughness, loyalty: from.loyalty, keywords: from.keywords,
     owner: from.owner, controller: from.owner, token: from.token, copy: from.copy, commander: from.commander,
     commanderKey: from.commander === true ? commanderKeyOf(from) : undefined,
     spell: from.spell, subtypes: from.subtypes, supertypes: from.supertypes, colorIdentity: from.colorIdentity, colors: from.colors,

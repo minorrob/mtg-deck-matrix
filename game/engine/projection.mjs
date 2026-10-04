@@ -186,7 +186,7 @@ function project(state, viewer) {
         attackingPlayerId: state.combat.attackingPlayerId,
         defenders: [...state.combat.defenders],
         attacks: state.combat.attacks.map((a) => ({
-          attacker: a.attacker, defender: a.defender, blocked: a.blocked, blockers: [...a.blockers],
+          attacker: a.attacker, defender: a.defender, ...(a.planeswalker !== undefined ? {planeswalker: a.planeswalker} : {}), blocked: a.blocked, blockers: [...a.blockers],
         })),
       }
       : null,

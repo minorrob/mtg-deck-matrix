@@ -52,9 +52,12 @@ const files = loadCardScenarios();
     /* A modal double-faced card (CR 712.3): its identity is its front face's, its back face the oracle's second. */
     const double = card.layout === "modal_dfc";
     const front = double ? card.faces[0] : card;
-    const want = {oracleId: card.id, manaCost: front.mana, colors: front.colors, colorIdentity: card.ci, power: num(front.power), toughness: num(front.toughness)};
+    /* And a planeswalker's printed loyalty (CR 306.5a). */
+    const want = {oracleId: card.id, manaCost: front.mana, colors: front.colors, colorIdentity: card.ci, power: num(front.power), toughness: num(front.toughness),
+      ...(front.loyalty ? {loyalty: num(front.loyalty)} : {})};
     const got = {oracleId: script.identity.oracleId, manaCost: script.identity.manaCost, colors: script.identity.colors,
-      colorIdentity: script.identity.colorIdentity, power: script.identity.power, toughness: script.identity.toughness};
+      colorIdentity: script.identity.colorIdentity, power: script.identity.power, toughness: script.identity.toughness,
+      ...(script.identity.loyalty !== undefined ? {loyalty: script.identity.loyalty} : {})};
     if (JSON.stringify(got) !== JSON.stringify(want)) drift.push(`${path}: identity ${JSON.stringify(got)} is not the oracle's ${JSON.stringify(want)}`);
     if (script.oracleText !== front.text) drift.push(`${path}: its oracle text is not the oracle's`);
     for (const ability of script.abilities) if (!front.text.includes(ability.text)) drift.push(`${path}: "${ability.text}" is not a sentence of the card`);

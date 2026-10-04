@@ -1,0 +1,499 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Elspeth, Sun's Nemesis",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Lion": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Cat"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Cast, she enters with 5 loyalty; -2: two 1/1 Human Soldiers, and 3 loyalty left",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Elspeth, Sun's Nemesis"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Elspeth, Sun's Nemesis"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Elspeth, Sun's Nemesis",
+                "counter": "loyalty",
+                "count": 5
+              }
+            }
+          ]
+        },
+        {
+          "activate": "Elspeth, Sun's Nemesis",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Elspeth, Sun's Nemesis",
+            "Human Soldier",
+            "Human Soldier"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Elspeth, Sun's Nemesis",
+            "counter": "loyalty",
+            "count": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "-3: Rob gains 5 life; one loyalty ability a turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Elspeth, Sun's Nemesis"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Elspeth, Sun's Nemesis"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Elspeth, Sun's Nemesis",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Elspeth, Sun's Nemesis"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 45
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Elspeth, Sun's Nemesis",
+            "counter": "loyalty",
+            "count": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "-1: Rob's Bear and Lion each get +2/+1",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Bear",
+            "Lion"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Elspeth, Sun's Nemesis"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Elspeth, Sun's Nemesis"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Elspeth, Sun's Nemesis",
+          "ability": "a0",
+          "targets": [
+            [
+              {
+                "card": "Bear"
+              },
+              {
+                "card": "Lion"
+              }
+            ]
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 4,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Lion",
+            "power": 4,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Elspeth, Sun's Nemesis",
+            "counter": "loyalty",
+            "count": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "Maya's Bear attacks her and is unblocked: 2 loyalty gone",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elspeth, Sun's Nemesis"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "steps": [
+        {
+          "attack": [
+            "Bear"
+          ],
+          "at": "Elspeth, Sun's Nemesis (Rob)"
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Elspeth, Sun's Nemesis",
+            "counter": "loyalty",
+            "count": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "Escaped from the graveyard for {4}{W}{W} and four other cards: she enters with 5 loyalty",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Elspeth, Sun's Nemesis",
+            "Bear",
+            "Bear",
+            "Lion",
+            "Lion"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Elspeth, Sun's Nemesis",
+          "escape": "own"
+        },
+        {
+          "choose": [
+            "Bear (1)",
+            "Bear (2)",
+            "Lion (1)",
+            "Lion (2)"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Elspeth, Sun's Nemesis",
+            "counter": "loyalty",
+            "count": 5
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "At 3 loyalty, -3: she has none left and goes to the graveyard, and Rob still gains 5 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Elspeth, Sun's Nemesis"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Elspeth, Sun's Nemesis"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Elspeth, Sun's Nemesis",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Elspeth, Sun's Nemesis",
+          "ability": "a2"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Elspeth, Sun's Nemesis"
+              ]
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 45
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Human Soldier",
+            "Human Soldier"
+          ]
+        }
+      ]
+    }
+  ]
+}

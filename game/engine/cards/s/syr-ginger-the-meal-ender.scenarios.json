@@ -6,7 +6,8 @@
       "types": [
         "Planeswalker"
       ],
-      "manaCost": "{3}"
+      "manaCost": "{3}",
+      "loyalty": 3
     },
     "Relic": {
       "types": [

@@ -36,7 +36,8 @@
           ],
           "controller": "you"
         }
-      }
+      },
+      "planeswalkers": true
     }
   ]
 }

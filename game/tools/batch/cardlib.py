@@ -92,6 +92,7 @@ class Batch:
             'subtypes': right.split() if right else [],
             'manaCost': c['mana'], 'colors': c['colors'], 'colorIdentity': c['ci'],
             'power': num(c['power']), 'toughness': num(c['toughness']),
+            **({'loyalty': num(c['loyalty'])} if c.get('loyalty') else {}),
         }
 
     def pay(self, name, seat=None):

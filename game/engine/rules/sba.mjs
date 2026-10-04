@@ -209,12 +209,16 @@ export function checkStateBasedActions(state) {
        damage is read once for the whole board, every object derived once (rules/layers.mjs, deriving) -- asking it again
        for each creature derived the board once per creature. Each one found is asked again below as it is acted on; one
        that only a death in this pass brings down dies in the next check. */
-    const lethal = deriving(state, () => new Set(state.zones.battlefield.filter((id) => {
-      const object = state.objects[id];
-      if (!typesOf(state, id).includes("Creature")) return false;
-      const toughness = toughnessOf(state, id);
-      return toughness <= 0 || (object.deathtouched === true && toughness > 0) || (object.damage > 0 && object.damage >= toughness);
-    })));
+    const {lethal, spent} = deriving(state, () => ({
+      lethal: new Set(state.zones.battlefield.filter((id) => {
+        const object = state.objects[id];
+        if (!typesOf(state, id).includes("Creature")) return false;
+        const toughness = toughnessOf(state, id);
+        return toughness <= 0 || (object.deathtouched === true && toughness > 0) || (object.damage > 0 && object.damage >= toughness);
+      })),
+      /* And the planeswalkers with no loyalty left (CR 704.5i), acted on below. */
+      spent: state.zones.battlefield.filter((id) => typesOf(state, id).includes("Planeswalker") && (state.objects[id].counters?.loyalty ?? 0) <= 0),
+    }));
     for (const id of [...state.zones.battlefield]) {
       if (!lethal.has(id) || !state.objects[id]) continue;
       const object = state.objects[id];
@@ -268,6 +272,25 @@ export function checkStateBasedActions(state) {
         returnExiledUntil(state, id, events);
         acted = true;
       }
+    }
+
+    /* CR 704.5i: a planeswalker with loyalty 0 is put into its owner's graveyard -- put, not destroyed, so indestructible
+       does not keep it; through the replacements and with its last known information. Read with the lethal creatures
+       above, so one that was a creature too and died is gone. */
+    for (const id of spent) {
+      const object = state.objects[id];
+      if (!object || object.zone !== "battlefield") continue;
+      const card = cardRef(state, id);
+      const leftBehind = lastKnown(state, id);
+      const {proposal} = applyReplacements(state, {event: "zone-change", objectId: id, from: "battlefield", to: "graveyard", player: object.controller});
+      const went = moveObject(state, id, proposal.to, PER_PLAYER.includes(proposal.to) ? object.owner : null);
+      events.push(event("GameEventCardChangeZone", state, {
+        card, leftBehind, ...(PUBLIC_ZONES.includes(proposal.to) ? {becomes: went} : {}),
+        from: {zoneType: "Battlefield", player: {playerId: object.controller}},
+        to: {zoneType: ZONE_LABEL[proposal.to] ?? proposal.to, player: {playerId: object.owner}},
+      }));
+      returnExiledUntil(state, id, events);
+      acted = true;
     }
 
     /* CR 714.4: a Saga whose lore counters have reached its final chapter, and that is the source of no chapter ability

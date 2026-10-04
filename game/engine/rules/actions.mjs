@@ -678,6 +678,8 @@ function offers(state, player) {
       if (ability.timing === "sorcery" && !sorceryTime) continue;
       if (!conditionHolds(state, ability.condition, {controller: player, source: id})) continue;
       if (!withinLimit(state, id, ability)) continue;
+      /* A loyalty ability: only if none of this permanent's has been activated this turn (CR 606.3). */
+      if (ability.loyalty !== undefined && usesThisTurn(state, id, "loyalty") > 0) continue;
       for (const X of abilityXValues(state, player, ability, id)) {
         const payment = costPayment(state, player, id, ability.cost, X ?? 0, abilityLess(state, player, id, ability));
         if (!payment) continue;
@@ -695,6 +697,8 @@ function offers(state, player) {
           : untapper ? untapChoices(state, player, untapper.count).map((set) => ({untap: set})) : [null];
         for (const costChoice of fodder)
           actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment, ...(X !== null ? {x: X} : {}),
+            /* A loyalty ability says its loyalty cost (CR 606.4), for a pilot to weigh. */
+            ...(ability.loyalty !== undefined ? {loyalty: ability.loyalty} : {}),
             ...(costChoice ? {costChoice, costNames: costChoice.crew ? costChoice.crew.map((c) => state.objects[c].card)
               : costChoice.untap ? costChoice.untap.map((c) => state.objects[c].card)
               : Array.isArray(costChoice.discard) ? costChoice.discard.map((c) => state.objects[c].card)
@@ -1161,12 +1165,14 @@ function perform(state, player, action, during = null) {
     const card = cardRef(state, action.objectId);
     const targets = structuredClone(action.targets ?? []);
     const targetDescription = targets.map((t) => targetName(state, t)).join(", ");
-    /* Whom an attacker the cost returns was attacking: "tapped and attacking" (ninjutsu) attacks the same player. */
+    /* Whom an attacker the cost returns was attacking: "tapped and attacking" (ninjutsu) attacks the same player, or the same
+       planeswalker (CR 702.49c). */
     const returning = action.costChoice?.returnToHand;
-    const attacked = returning !== undefined ? (state.combat?.attacks ?? []).find((attack) => attack.attacker === returning)?.defender : undefined;
+    const was = returning !== undefined ? (state.combat?.attacks ?? []).find((attack) => attack.attacker === returning) : undefined;
+    const attacked = was?.defender;
     /* CR 602.2a, then 602.2b and 601.2h: on the stack first, then the costs. */
     const entry = pushAbility(state, {sourceId: action.objectId, controller: player, abilityId: ability.id, kind: "ability", targets, script: ability,
-      ...(attacked !== undefined ? {about: {player: attacked}} : {}),
+      ...(attacked !== undefined ? {about: {player: attacked, ...(was.planeswalker !== undefined ? {planeswalker: was.planeswalker} : {})}} : {}),
       /* Station: "charge counters equal to the tapped creature's power" -- the creature it tapped is what it is about. */
       ...(action.costChoice?.tap !== undefined ? {about: {card: action.costChoice.tap}} : {}),
       ...(action.x !== undefined ? {x: action.x} : {}), ...(sacrificesSelf && object.zone === "battlefield" ? {lastKnown: lastKnown(state, action.objectId)} : {})});
@@ -1230,6 +1236,8 @@ function perform(state, player, action, during = null) {
       }
     }
     if (ability.limit) recordUse(state, action.objectId, ability.id);
+    /* A loyalty ability activated: none other of this permanent's this turn (CR 606.3). */
+    if (ability.loyalty !== undefined) recordUse(state, action.objectId, "loyalty");
     return events;
   }
 

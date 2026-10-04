@@ -163,8 +163,9 @@ const TRIGGERS = {
     ...(t.each === "defender" && t.defender === "opponent" ? {defender: "opponent"} : {})}),
   /* "Whenever this creature attacks", "whenever a creature you control attacks": once per attacker (CR 508.1m). */
   attacks: (t) => (ARRIVALS.includes(t.who ?? "self") ? {on: "GameEventAttackersDeclared", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {}),
-    /* "Attack one of your opponents"; "attacks with three or more creatures" (rules/trigger.mjs). */
-    ...(t.defender ? {defender: t.defender} : {}), ...(t.atLeast ? {atLeast: t.atLeast} : {}),
+    /* "Attack one of your opponents" -- "or a planeswalker they control" (`planeswalkers`, CR 506.3); "attacks with three or
+       more creatures" (rules/trigger.mjs). */
+    ...(t.defender ? {defender: t.defender} : {}), ...(t.planeswalkers === true ? {planeswalkers: true} : {}), ...(t.atLeast ? {atLeast: t.atLeast} : {}),
     /* "Whenever Aurelia attacks for the first time each turn" (rules/trigger.mjs). */
     ...(t.firstTime ? {firstTime: true} : {})} : null),
   /* "Whenever this creature becomes the target of a spell" (Goldspan Dragon), "whenever a Dragon you control becomes the
@@ -548,9 +549,17 @@ export function compileScript(script) {
       const mana = manaAbility(ability, id);
       if (mana === "unbuilt") { problems.push(`${ability.text}: a mana ability the engine cannot run yet (a sacrifice, a target, or a question in it, or a spending restriction it cannot read)`); return; }
       if (mana) { abilities.push(mana); return; }
-      for (const atom of ability.cost) if (!costAtomBuilt(atom)) problems.push(`${atom?.atom ?? "a cost"}: a cost atom nothing pays yet`);
-      abilities.push({id, kind: "activated", text: ability.text, cost: ability.cost, targets: ability.targets ?? [],
-        effects: ability.effects, ...(ability.timing ? {timing: ability.timing} : {}), ...(ability.zone === "hand" ? {zone: "hand"} : {}),
+      /* A LOYALTY ABILITY (CR 606): "+1:", "−2:", "0:" -- `{atom: "loyalty", amount}`, paid by putting on or removing that
+         many loyalty counters (606.4), activated at sorcery speed and only if no loyalty ability of the permanent has been
+         this turn (606.3; rules/actions.mjs). A negative one needs that many counters (606.6). */
+      const loyalties = ability.cost.filter((atom) => atom?.atom === "loyalty");
+      if (loyalties.length > 1 || loyalties.some((atom) => !Number.isInteger(atom.amount))) problems.push(`${ability.text}: a loyalty cost is one number of loyalty counters`);
+      const loyalty = loyalties.length === 1 && Number.isInteger(loyalties[0].amount) ? loyalties[0].amount : undefined;
+      const cost = ability.cost.flatMap((atom) => (atom?.atom !== "loyalty" ? [atom] : atom.amount > 0 ? [{atom: "addCounters", self: true, counter: "loyalty", count: atom.amount}]
+        : atom.amount < 0 ? [{atom: "removeCounters", self: true, counter: "loyalty", count: -atom.amount}] : []));
+      for (const atom of cost) if (!costAtomBuilt(atom)) problems.push(`${atom?.atom ?? "a cost"}: a cost atom nothing pays yet`);
+      abilities.push({id, kind: "activated", text: ability.text, cost, targets: ability.targets ?? [],
+        effects: ability.effects, ...(loyalty !== undefined ? {loyalty, timing: "sorcery"} : ability.timing ? {timing: ability.timing} : {}), ...(ability.zone === "hand" ? {zone: "hand"} : {}),
         /* "This ability costs {1} less to activate for each legendary creature you control" (CR 602.2b, 601.2f). */
         ...(ability.costLess !== undefined ? {costLess: ability.costLess} : {}), ...(ability.condition ? {condition: ability.condition} : {}),
         /* "Activate only once each turn" (CR 602.5b): how many times each turn. */
@@ -654,6 +663,8 @@ export function compileScript(script) {
     colorIdentity: [...(identity.colorIdentity ?? [])],
     power: identity.power ?? null,
     toughness: identity.toughness ?? null,
+    /* A planeswalker's printed loyalty (CR 306.5a): the loyalty counters it enters with (306.5b; rules/replacement.mjs). */
+    ...(Number.isInteger(identity.loyalty) ? {loyalty: identity.loyalty} : {}),
     keywords,
     abilities,
     ...(spell ? {spell} : {}),
@@ -670,7 +681,7 @@ export function compileScript(script) {
     for (const problem of back.problems) problems.push(`back face: ${problem}`);
     if (back.definition) {
       const face = (d, name) => ({card: name, types: [...d.types], subtypes: [...d.subtypes], ...(d.supertypes ? {supertypes: [...d.supertypes]} : {}), manaCost: d.manaCost,
-        colors: [...d.colors], power: d.power, toughness: d.toughness, keywords: [...d.keywords], abilities: structuredClone(d.abilities),
+        colors: [...d.colors], power: d.power, toughness: d.toughness, ...(Number.isInteger(d.loyalty) ? {loyalty: d.loyalty} : {}), keywords: [...d.keywords], abilities: structuredClone(d.abilities),
         ...(d.spell ? {spell: structuredClone(d.spell)} : {}), ...(d.enchant ? {enchant: structuredClone(d.enchant)} : {})});
       definition.mdfc = {front: face(definition, names[0]), back: face(back.definition, names[1])};
     }

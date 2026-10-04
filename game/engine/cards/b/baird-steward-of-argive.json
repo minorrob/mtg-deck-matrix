@@ -39,7 +39,8 @@
         "what": "player",
         "who": "you"
       },
-      "amount": 1
+      "amount": 1,
+      "planeswalkers": true
     }
   ]
 }

@@ -53,6 +53,8 @@ export function identityOf(card) {
     types: words.filter((w) => !SUPERTYPES.includes(w)), subtypes: right.split(/\s+/).filter(Boolean),
     manaCost: face.mana ?? null, colors: [...(face.colors ?? [])], colorIdentity: [...(card.ci ?? [])],
     power: num(face.power), toughness: num(face.toughness),
+    /* A planeswalker's printed loyalty (CR 306.5a). */
+    ...(num(face.loyalty) !== null ? {loyalty: num(face.loyalty)} : {}),
   };
 }
 

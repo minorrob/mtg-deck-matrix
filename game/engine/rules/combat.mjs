@@ -54,7 +54,7 @@ import {cardsIn, recordUse} from "../state/index.mjs";
 import {applyReplacements, hitKey, damageChoicesPossible} from "./replacement.mjs";
 import {runFollowUps} from "../script/effects/index.mjs";
 import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf, deriving} from "./layers.mjs";
-import {givePoison, changeLife, infects, addCounters} from "../script/effects/resources.mjs";
+import {givePoison, changeLife, infects, addCounters, damagePermanent} from "../script/effects/resources.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
 import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack} from "./statics.mjs";
 import {paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits} from "./mana.mjs";
@@ -100,6 +100,16 @@ export function canBlock(state, id, player) {
 /** Everyone still in the game who is not the attacking player (CR 506.2). */
 const defendersFor = (state, player) =>
   state.players.filter((p) => p.id !== player && !p.lost).map((p) => p.id);
+/** The planeswalkers a player controls (CR 506.2: they may be attacked too). */
+const planeswalkersOf = (state, player) =>
+  state.zones.battlefield.filter((id) => typesOf(state, id).includes("Planeswalker") && controllerOf(state, id) === player);
+/* Whether the planeswalker an attack is on is still in combat (CR 506.4): on the battlefield, a planeswalker, its
+   controller unchanged. Gone, the creature still attacks, but unblocked deals no combat damage (506.4c). */
+const planeswalkerInCombat = (state, attack) => attack.planeswalker !== undefined && Boolean(state.objects[attack.planeswalker])
+  && typesOf(state, attack.planeswalker).includes("Planeswalker") && controllerOf(state, attack.planeswalker) === attack.defender;
+/* Combat damage to what it attacks: the player, or the planeswalker while it is in combat; or none. */
+const toAttacked = (state, attack, amount) => (attack.planeswalker === undefined ? {toPlayer: attack.defender, amount, source: attack.attacker}
+  : planeswalkerInCombat(state, attack) ? {toCard: attack.planeswalker, amount, source: attack.attacker} : null);
 
 /* ---- declare attackers ---- */
 
@@ -110,7 +120,7 @@ export const attackers = {
     if (state.players[state.activePlayer]?.lost) return false;
     /* One that some restriction keeps from every defending player (CR 508.1c) is no candidate. */
     const candidates = state.zones.battlefield.filter((id) => canAttack(state, id, state.activePlayer)
-      && defendersFor(state, state.activePlayer).some((d) => !cantAttack(state, id, d)));
+      && defendersFor(state, state.activePlayer).some((d) => !cantAttack(state, id, d) || planeswalkersOf(state, d).some((pw) => !cantAttack(state, id, d, pw))));
     /* CR 508.1: the active player declares attackers whether or not they have any. With no legal
        attacker there is nothing to decide, so nothing is asked and the step simply proceeds. */
     if (candidates.length === 0) return false;
@@ -142,6 +152,14 @@ export const attackers = {
           cardId: id,
           defenderId: defender,
         });
+      }
+      /* A PLANESWALKER (CR 506.3, 508.1b): each one a defending player controls may be attacked -- which is not attacking
+         that player. A creature that must attack a player (goaded, CR 701.15b; required to, 508.1d) is offered none. */
+      if (goaders.length || owed.length) continue;
+      for (const defender of defendersFor(state, awaiting.player)) for (const pw of planeswalkersOf(state, defender)) {
+        if (cantAttack(state, id, defender, pw)) continue;
+        options.push({index: options.length, label: `${state.objects[id].card} → ${state.objects[pw].card} (${state.players[defender].name})`,
+          cardId: id, defenderId: defender, planeswalkerId: pw});
       }
     }
     return {
@@ -220,7 +238,7 @@ export const attackers = {
       const units = taxUnits(state, awaiting.player, picked);
       if (units.length < tax) throw new Error(`Those attackers cost {${tax}} to attack with, more than can be paid`);
       if (paymentIsAChoice(units, tax)) {
-        state.awaiting = {kind: "attack-tax", player: awaiting.player, tax, picked: picked.map(({cardId, defenderId}) => ({cardId, defenderId}))};
+        state.awaiting = {kind: "attack-tax", player: awaiting.player, tax, picked: picked.map(({cardId, defenderId, planeswalkerId}) => ({cardId, defenderId, ...(planeswalkerId !== undefined ? {planeswalkerId} : {})}))};
         return events;
       }
       events.push(...payWithUnits(state, awaiting.player, units, units.slice(0, tax).map((_, i) => i), tax));
@@ -251,7 +269,8 @@ function declareAttacks(state, player, picked, events) {
   state.combat = {
     attackingPlayerId: player,
     defenders: [...new Set(picked.map((o) => o.defenderId))],
-    attacks: picked.map((o) => ({attacker: o.cardId, defender: o.defenderId, blocked: false, blockers: []})),
+    /* `defender` the defending player (CR 506.2) -- the one who blocks -- and `planeswalker` the one attacked, when it is. */
+    attacks: picked.map((o) => ({attacker: o.cardId, defender: o.defenderId, ...(o.planeswalkerId !== undefined ? {planeswalker: o.planeswalkerId} : {}), blocked: false, blockers: []})),
     /* Read by the turn table to decide whether the first-strike damage step happens (CR 510.4).
        Recomputed once blockers are in, because a blocker with first strike makes the step
        happen just as an attacker with it does. */
@@ -262,7 +281,7 @@ function declareAttacks(state, player, picked, events) {
   /* "Creatures that attacked this turn", "attacks for the first time each turn": counted on each attacker. */
   for (const attack of state.combat.attacks) recordUse(state, attack.attacker, "attacked");
   /* And whom it attacked: "a player it has already attacked this turn" (Port Razer; rules/statics.mjs, cantAttack). */
-  for (const attack of state.combat.attacks) recordUse(state, attack.attacker, `attacked:${attack.defender}`);
+  for (const attack of state.combat.attacks) if (attack.planeswalker === undefined) recordUse(state, attack.attacker, `attacked:${attack.defender}`);
 
   /* CR 508.1f: attacking creatures become tapped. CR 702.20b: vigilance does not. */
   for (const attack of state.combat.attacks) {
@@ -276,7 +295,7 @@ function declareAttacks(state, player, picked, events) {
     player: {playerId: player, name: state.players[player].name},
     attackers: state.combat.attacks.map((a) => ({
       card: cardRef(state, a.attacker),
-      defender: {playerId: a.defender, name: state.players[a.defender].name},
+      defender: {playerId: a.defender, name: state.players[a.defender].name, ...(a.planeswalker !== undefined ? {planeswalker: cardRef(state, a.planeswalker)} : {})},
     })),
   }));
   state.awaiting = null;
@@ -429,7 +448,8 @@ export const combatDamage = {
     }));
     /* CR 702.19b: a trampler's damage may go on to the player it attacks, once every blocker has lethal. */
     if (hasNow(state, awaiting.attacker, "Trample"))
-      options.push({index: options.length, label: `${state.players[attack.defender].name}, once every blocker has lethal damage`, lethal: 0, defender: true, playerId: attack.defender});
+      options.push({index: options.length, label: `${attack.planeswalker !== undefined ? `${state.objects[attack.planeswalker]?.card ?? "The planeswalker"} (${state.players[attack.defender].name})` : state.players[attack.defender].name}, once every blocker has lethal damage`,
+        lethal: 0, defender: true, playerId: attack.defender, ...(attack.planeswalker !== undefined ? {planeswalkerId: attack.planeswalker} : {})});
     return {
       id: `assign-damage:${state.turn}:${awaiting.step ?? "regular"}:${awaiting.attacker}`,
       title: `Assign ${power(state, awaiting.attacker)} damage`,
@@ -494,13 +514,15 @@ export const combatDamage = {
       if (dealsNow(attack.attacker) && attackPower > 0) {
         if (!attack.blocked) {
           /* CR 510.1a: an unblocked attacker assigns its damage to the player it is attacking. */
-          pending.push({toPlayer: attack.defender, amount: attackPower, source: attack.attacker});
+          const hit = toAttacked(state, attack, attackPower);
+          if (hit) pending.push(hit);
         } else {
           const standing = attack.blockers.filter(stillThere);
           if (standing.length === 0) {
             /* CR 702.19d: blocked, with nothing left blocking it -- with trample, all of it to the player; without,
                none (CR 510.1c). */
-            if (trampleOver(state, attack.attacker, 0) > 0) pending.push({toPlayer: attack.defender, amount: attackPower, source: attack.attacker});
+            const hit = trampleOver(state, attack.attacker, 0) > 0 ? toAttacked(state, attack, attackPower) : null;
+            if (hit) pending.push(hit);
           } else if (standing.length === 1) {
             /* CR 702.19b: with trample, only LETHAL has to be assigned to the blocker and the rest
                may be pushed through. Without it the excess is simply lost, which is the whole point
@@ -510,7 +532,8 @@ export const combatDamage = {
             const over = trampleOver(state, attack.attacker, lethal);
             const toBlocker = over > 0 ? lethal : attackPower;
             if (toBlocker > 0) pending.push({toCard: standing[0], amount: toBlocker, source: attack.attacker});
-            if (over > 0) pending.push({toPlayer: attack.defender, amount: over, source: attack.attacker});
+            const hit = over > 0 ? toAttacked(state, attack, over) : null;
+            if (hit) pending.push(hit);
           } else {
             /* Divided as its controller chose for this step (open, resolve). */
             const assignment = attack.assignment?.step === step ? attack.assignment : {toBlockers: {}, toDefender: 0};
@@ -518,7 +541,8 @@ export const combatDamage = {
               const amount = assignment.toBlockers[id] ?? 0;
               if (amount > 0) pending.push({toCard: id, amount, source: attack.attacker});
             }
-            if (assignment.toDefender > 0) pending.push({toPlayer: attack.defender, amount: assignment.toDefender, source: attack.attacker});
+            const hit = assignment.toDefender > 0 ? toAttacked(state, attack, assignment.toDefender) : null;
+            if (hit) pending.push(hit);
           }
         }
       }
@@ -576,8 +600,7 @@ export const combatDamage = {
         const toxic = abilitiesOf(state, hit.source).filter((a) => a.kind === "static" && a.rule === "toxic").reduce((n, a) => n + (a.amount ?? 0), 0);
         if (toxic > 0) events.push(...givePoison(state, hit.toPlayer, toxic));
       } else {
-        if (infect) addCounters(state, hit.toCard, "-1/-1", hit.amount, events);
-        else state.objects[hit.toCard].damage += hit.amount;
+        damagePermanent(state, hit.toCard, hit.amount, events, {infect});
         /* CR 704.5h: the mark that makes state-based actions destroy it whatever its toughness. */
         markDeathtouch(state, hit.source, hit.toCard);
         events.push(event("GameEventCardDamaged", state, {

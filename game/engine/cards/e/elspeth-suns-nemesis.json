@@ -1,0 +1,124 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Elspeth, Sun's Nemesis",
+    "oracleId": "faf296b0-59e5-4ec9-9912-e5e21c0ce9f5",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Planeswalker"
+    ],
+    "subtypes": [
+      "Elspeth"
+    ],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null,
+    "loyalty": 5
+  },
+  "oracleText": "−1: Up to two target creatures you control each get +2/+1 until end of turn.\n−2: Create two 1/1 white Human Soldier creature tokens.\n−3: You gain 5 life.\nEscape—{4}{W}{W}, Exile four other cards from your graveyard. (You may cast this card from your graveyard for its escape cost.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "−1: Up to two target creatures you control each get +2/+1 until end of turn.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -1
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "count": {
+            "max": 2
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 2,
+          "toughness": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−2: Create two 1/1 white Human Soldier creature tokens.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -2
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 2,
+          "token": {
+            "name": "Human Soldier",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Human",
+              "Soldier"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−3: You gain 5 life.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -3
+        }
+      ],
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Escape—{4}{W}{W}, Exile four other cards from your graveyard.",
+      "keyword": "escape",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}{W}{W}"
+        },
+        {
+          "atom": "exileFromGraveyard",
+          "count": 4
+        }
+      ]
+    }
+  ]
+}

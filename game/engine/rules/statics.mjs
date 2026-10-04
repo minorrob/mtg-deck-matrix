@@ -195,15 +195,18 @@ export function castForbidden(state, player, cardId) {
  * read as they are now, "you" its controller; `defender` whom they can't attack -- "you" (its controller), "owner" (the
  * attacker's owner), "attacked" (a player that creature has already attacked this turn) -- or no one at all, unsaid;
  * `unless` a condition under which it does not apply ("unless you control seven or more lands"), "you" its controller.
- * Planeswalkers are not attacked yet, so "or planeswalkers you control" has nothing to keep them from.
+ * `planeswalker`: the one attacked, when it is one `defender` controls (CR 506.3) -- attacking it is not attacking that
+ * player, so only a restriction on attacking anyone, or one that says "or planeswalkers you control" (`planeswalkers`),
+ * keeps a creature from it.
  */
-export function cantAttack(state, attacker, defender) {
+export function cantAttack(state, attacker, defender, planeswalker = null) {
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
     for (const ability of holder.abilities ?? []) {
       if (ability.kind !== "static" || ability.rule !== "cant-attack") continue;
       const context = {controller: holder.controller, source: holderId};
       if (!matchesSelector({what: "permanent", ...ability.affects}, state, attacker, context)) continue;
+      if (planeswalker !== null && ability.defender !== undefined && !(ability.defender === "you" && ability.planeswalkers === true)) continue;
       if (ability.defender === "you" && defender !== holder.controller) continue;
       if (ability.defender === "owner" && defender !== state.objects[attacker]?.owner) continue;
       if (ability.defender === "attacked" && usesThisTurn(state, attacker, `attacked:${defender}`) === 0) continue;
@@ -230,13 +233,16 @@ export function goadersOf(state, id) {
  * "CREATURES CAN'T ATTACK YOU UNLESS THEIR CONTROLLER PAYS {2} FOR EACH" (Propaganda; Forge's CantAttackUnless; CR 508.1g):
  * what these attackers cost their controller, from each defending player's `attack-tax` statics -- `amount` for each
  * creature attacking that player ("{X} ... where X is the number of enchantments you control": an amount, counted now).
+ * One attacking a planeswalker of theirs is not attacking them: only "you or planeswalkers you control" (`planeswalkers`,
+ * Baird) taxes it.
  */
 export function attackTax(state, picked) {
   let total = 0;
-  for (const {defenderId} of picked) for (const holderId of state.zones.battlefield) {
+  for (const {defenderId, planeswalkerId} of picked) for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
     if (holder.controller !== defenderId) continue;
-    for (const ability of holder.abilities ?? []) if (ability.kind === "static" && ability.rule === "attack-tax") total += amountOf(state, ability.amount ?? 0, {controller: holder.controller, source: holderId});
+    for (const ability of holder.abilities ?? []) if (ability.kind === "static" && ability.rule === "attack-tax" && (planeswalkerId === undefined || ability.planeswalkers === true))
+      total += amountOf(state, ability.amount ?? 0, {controller: holder.controller, source: holderId});
   }
   return total;
 }

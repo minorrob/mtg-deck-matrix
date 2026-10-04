@@ -57,7 +57,7 @@ const ON_BOARD = [at(0, "battlefield", "Mountain", "Elf"), at(1, "battlefield", 
 {
   const s = play("the offer", [...ON_BOARD, at(0, "hand", "Split Shot")], [{tap: "Mountain"}]);
   const offers = legalActions(s, 0).filter((a) => a.kind === "cast");
-  eq([offers.length, offers[0].targets, offers[0].targetNames], [1, [{kind: "choose", min: 0, max: 2}], ["up to two targets"]],
+  eq([offers.length, offers[0].targets, offers[0].targetNames], [1, [{kind: "choose", min: 0, max: 2, of: 3}], ["up to two targets"]],
     "Split Shot is offered once, its counted target a placeholder -- not once per way to choose up to two of four creatures");
   eq(offerDetails(s, 0, offers), ["→ up to two targets"], "the room words the offer for the board by what is still to be picked, not a blank");
   applyAction(s, 0, offers[0]);

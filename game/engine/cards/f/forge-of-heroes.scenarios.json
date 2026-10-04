@@ -22,7 +22,8 @@
         "Legendary"
       ],
       "manaCost": "{1}",
-      "colors": []
+      "colors": [],
+      "loyalty": 3
     }
   },
   "scenarios": [
@@ -123,7 +124,17 @@
         {
           "event": "GameEventCardCounters",
           "where": {
-            "type": "loyalty"
+            "type": "loyalty",
+            "oldValue": 3,
+            "newValue": 4
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Walker",
+            "counter": "loyalty",
+            "count": 4
           }
         }
       ]

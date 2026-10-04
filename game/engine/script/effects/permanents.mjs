@@ -131,10 +131,10 @@ export function defendingPlayers(state, controller) {
   return [...seats.slice(from + 1), ...seats.slice(0, from)].filter((id) => !state.players[id].lost);
 }
 
-/* It attacks that player in this combat: never declared as an attacker (CR 508.4: no "whenever ... attacks" for it), and
-   blocked or not as the combat goes. The player defends now, so they declare blockers. */
-export function joinAttack(state, id, player) {
-  state.combat.attacks.push({attacker: id, defender: player, blocked: false, blockers: []});
+/* It attacks that player in this combat -- or that planeswalker of theirs: never declared as an attacker (CR 508.4: no
+   "whenever ... attacks" for it), and blocked or not as the combat goes. The player defends now, so they declare blockers. */
+export function joinAttack(state, id, player, planeswalker = undefined) {
+  state.combat.attacks.push({attacker: id, defender: player, ...(planeswalker !== undefined ? {planeswalker} : {}), blocked: false, blockers: []});
   if (!state.combat.defenders.includes(player)) state.combat.defenders.push(player);
 }
 
@@ -150,9 +150,12 @@ export function enterAttacking(state, ids, whom, context, controller) {
   const creatures = ids.filter((id) => state.objects[id]?.zone === "battlefield" && typesOf(state, id).includes("Creature"));
   if (!creatures.length) return;
   if (whom === "that player") {
-    const player = context.about?.player;
+    const player = context.about?.player, planeswalker = context.about?.planeswalker;
     if (player === controller || !state.players[player] || state.players[player].lost) return;
-    for (const id of creatures) joinAttack(state, id, player);
+    /* The same planeswalker (ninjutsu, CR 702.49c) -- one no longer on the battlefield, or no longer that player's, is
+       attacked by nothing (CR 506.3c). */
+    if (planeswalker !== undefined && !(state.objects[planeswalker] && typesOf(state, planeswalker).includes("Planeswalker") && state.objects[planeswalker].controller === player)) return;
+    for (const id of creatures) joinAttack(state, id, player, planeswalker);
     return;
   }
   const players = defendingPlayers(state, controller);
