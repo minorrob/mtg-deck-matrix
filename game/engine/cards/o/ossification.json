@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ossification",
+    "oracleId": "e29bfd62-286f-4982-813f-7086573c333b",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant basic land you control\nWhen this Aura enters, exile target creature or planeswalker an opponent controls until this Aura leaves the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Enchant basic land you control",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Land"
+        ],
+        "supertypes": [
+          "Basic"
+        ],
+        "controller": "you"
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "When this Aura enters, exile target creature or planeswalker an opponent controls until this Aura leaves the battlefield.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "exileUntil",
+          "targets": {
+            "target": 0
+          },
+          "until": "this leaves"
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "opponent"
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ],
+              "controller": "opponent"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

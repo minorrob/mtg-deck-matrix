@@ -1,0 +1,450 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ossification",
+  "fixtures": {
+    "Lion": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Cat"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 1
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's Bear exiled until Ossification leaves: Maya's Beast Within destroys it, and the Bear is back, hers",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ossification"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Beast Within"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Ossification",
+          "targets": [
+            {
+              "card": "Island",
+              "seat": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "zone": "exile",
+              "cards": [
+                "Bear"
+              ]
+            },
+            {
+              "seat": 1,
+              "controls": [
+                "Forest",
+                "Wastes",
+                "Wastes"
+              ]
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Beast Within",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Ossification"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Bear",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "exile",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Ossification"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The land it enchants destroyed: Ossification goes to the graveyard, and the Bear is back",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ossification"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Beast Within"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Ossification",
+          "targets": [
+            {
+              "card": "Island",
+              "seat": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Beast Within",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Island",
+              "seat": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Bear",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Island",
+            "Ossification"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Ossification destroyed before its trigger resolves: the Bear is not exiled at all",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ossification"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Beast Within"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Ossification",
+          "targets": [
+            {
+              "card": "Island",
+              "seat": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Beast Within",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Ossification"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Bear",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "exile",
+          "count": 0
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Enchant basic land you control: Rob's Plains or Wastes, not his Command Tower or Maya's Plains",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Command Tower"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ossification"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Ossification"
+          },
+          "count": 2,
+          "targets": [
+            [
+              "Plains"
+            ],
+            [
+              "Wastes"
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

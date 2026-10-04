@@ -107,9 +107,11 @@ function castCost(state, player, id, tax, free = false, instead = null) {
 /**
  * FLASHBACK (CR 702.34a): what it costs to cast this card from its owner's graveyard, or null when it cannot be. Its own
  * keyword's cost, or -- given until end of turn ("each instant and sorcery card in your graveyard gains flashback",
- * Past in Flames) -- its mana cost. Only an instant or sorcery, and only from the caster's own graveyard.
+ * Past in Flames) -- its mana cost. Only an instant or sorcery, and only from the caster's own graveyard. A cost that taps
+ * creatures ("Flashback--Tap three untapped white creatures you control", Battle Screech) says how many and which
+ * (`tap`); whether they are there is the offer's to ask (flashbackTappers).
  *
- * @returns {?{mana: string, life: number}}
+ * @returns {?{mana: string, life: number, tap?: {count: number, selector: object}}}
  */
 export function flashbackCost(state, player, id) {
   const object = state.objects[id];
@@ -122,8 +124,22 @@ export function flashbackCost(state, player, id) {
       && matchesSelector({...a.affects, what: "card", zone: "graveyard"}, state, id, {controller: state.objects[h].controller, source: h})));
   const cost = own?.cost ?? (given ? [{atom: "mana", cost: object.manaCost ?? ""}] : null);
   if (!cost) return null;
-  return {mana: cost.find((a) => a.atom === "mana")?.cost ?? "", life: cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0)};
+  const tap = cost.find((a) => a.atom === "tapCreature");
+  return {mana: cost.find((a) => a.atom === "mana")?.cost ?? "", life: cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0),
+    ...(tap ? {tap: {count: tap.count ?? 1, selector: tap.selector ?? {}}} : {})};
 }
+
+/* The untapped creatures a player controls that a flashback cost may tap: each fits its selector ("white creatures"), a
+   summoning-sick one too, since tapping it is not its own {T} (CR 302.6). */
+export const flashbackTappers = (state, player, tap) => state.zones.battlefield.filter((id) => !state.objects[id].tapped
+  && characteristicsOf(state, id).controller === player && characteristicsOf(state, id).types.includes("Creature")
+  && compileSelector({...(tap?.selector ?? {}), what: "permanent"})(state, id, {controller: player, source: null}));
+/* Whether a flashback cost can be paid in full but for its mana: the life, and enough creatures to tap (CR 118.3). */
+const flashbackPayable = (state, player, back) => back.life <= state.players[player].life
+  && (!back.tap || flashbackTappers(state, player, back.tap).length >= back.tap.count);
+const COLOR_WORDS = {W: "white", U: "blue", B: "black", R: "red", G: "green"};
+/** The creatures a flashback cost taps, as the card says them: "three untapped white creatures you control". */
+export const tappersInWords = (tap) => `${inWords(tap.count)} untapped ${[...(tap.selector?.colors ?? []).map((c) => COLOR_WORDS[c] ?? c), ...(tap.selector?.subtypes ?? [])].join(" ")}${(tap.selector?.colors ?? []).length || (tap.selector?.subtypes ?? []).length ? " " : ""}creature${tap.count === 1 ? "" : "s"} you control`;
 
 /**
  * ESCAPE (CR 702.138a): the ways this card may be cast from its owner's graveyard rather than for its mana cost, each
@@ -149,30 +165,54 @@ export function escapeWays(state, player, id) {
   return ways.filter((way) => way.exile <= others);
 }
 
-/** The question an escape asks once its cast is taken (CR 702.138a, 601.2h): which other cards of the graveyard to exile. */
-export function escapeCostChoice(state, awaiting) {
+/**
+ * The question a cast asks once it is taken, before anything is paid (CR 601.2h): which other cards of the graveyard an
+ * escape exiles (CR 702.138a), or which creatures a flashback cost taps (CR 702.34a; "tap three untapped white creatures
+ * you control", Battle Screech). `cost` says which: "exile" or "tap".
+ */
+export function castCostChoice(state, awaiting) {
   const {action, player} = awaiting;
-  const n = escapeWays(state, player, action.objectId).find((way) => way.kind === action.escape)?.exile ?? 0;
-  const options = cardsIn(state, "graveyard", player).filter((id) => id !== action.objectId).map((cardId, index) => ({index, label: state.objects[cardId].card, cardId}));
-  /* Two that read alike, numbered: "Wastes (1)", "Wastes (2)". */
-  for (const option of options) {
-    const alike = options.filter((o) => o.label === option.label);
-    if (alike.length > 1) alike.forEach((o, k) => { o.label = `${o.label} (${k + 1})`; });
+  const name = state.objects[action.objectId]?.card ?? "That card";
+  const named = (ids) => {
+    const options = ids.map((cardId, index) => ({index, label: state.objects[cardId].card, cardId}));
+    /* Two that read alike, numbered: "Wastes (1)", "Wastes (2)". */
+    for (const option of options) {
+      const alike = options.filter((o) => o.label === option.label);
+      if (alike.length > 1) alike.forEach((o, k) => { o.label = `${o.label} (${k + 1})`; });
+    }
+    return options;
+  };
+  if (action.escape === undefined) {
+    const tap = flashbackCost(state, player, action.objectId)?.tap ?? {count: 0, selector: {}};
+    return {id: `choose-cost:${action.objectId}`, title: `${name}'s flashback: tap ${tappersInWords(tap)}`, mode: "many", min: tap.count, max: tap.count, cost: "tap",
+      options: named(flashbackTappers(state, player, tap))};
   }
-  return {id: `choose-cost:${action.objectId}`, title: `${state.objects[action.objectId]?.card ?? "That card"}'s escape: exile ${inWords(n)} other card${n === 1 ? "" : "s"} from your graveyard`,
-    mode: "many", min: n, max: n, options};
+  const n = escapeWays(state, player, action.objectId).find((way) => way.kind === action.escape)?.exile ?? 0;
+  return {id: `choose-cost:${action.objectId}`, title: `${name}'s escape: exile ${inWords(n)} other card${n === 1 ? "" : "s"} from your graveyard`,
+    mode: "many", min: n, max: n, cost: "exile", options: named(cardsIn(state, "graveyard", player).filter((id) => id !== action.objectId))};
 }
 
-/** Escape's other cards picked: the cast taken with them, as it would have been had they been chosen with it (CR 601.2h). */
-export function resolveEscapeCost(state, awaiting, indices) {
-  const choice = escapeCostChoice(state, awaiting);
+/** What the cast's cost takes, picked: the cast taken with it, as it would have been had it been chosen with it (CR 601.2h). */
+export function resolveCastCost(state, awaiting, indices) {
+  const choice = castCostChoice(state, awaiting);
   const picked = [...new Set(indices ?? [])].sort((a, b) => a - b);
   if (picked.length !== (indices ?? []).length || picked.length !== choice.min || picked.some((i) => !choice.options[i]))
     throw new Error("Invalid selection");
-  const action = {...structuredClone(awaiting.action), escapeExile: picked.map((i) => choice.options[i].cardId)};
+  const ids = picked.map((i) => choice.options[i].cardId);
+  const action = {...structuredClone(awaiting.action), ...(choice.cost === "tap" ? {flashbackTap: ids} : {escapeExile: ids})};
   state.awaiting = null;
   state.priorityPlayer = awaiting.player;
   return applyAction(state, awaiting.player, action);
+}
+
+/* The creatures a flashback cost taps, as its caster picked them: that many, none twice, each untapped and fitting.
+   Refused before anything moves. */
+function flashbackTapped(state, player, action, tap) {
+  const list = action.flashbackTap;
+  const fitting = flashbackTappers(state, player, tap);
+  if (!Array.isArray(list) || list.length !== tap.count || new Set(list).size !== list.length || !list.every((id) => fitting.includes(id)))
+    throw new Error(`Those are not ${tappersInWords(tap)} for its flashback`);
+  return [...list];
 }
 
 /* The cards an escape exiles, as its caster picked them: that many, none twice, each another card in their graveyard.
@@ -578,7 +618,7 @@ function offers(state, player) {
     /* Flashback (CR 702.34a): from the graveyard, for the flashback cost. */
     ...cardsIn(state, "graveyard", player).filter((id) => flashbackCost(state, player, id)).map((id) => ({id, from: "graveyard", flashback: true})),
     /* Escape (CR 702.138a): from the graveyard, for an escape cost -- each way one offer, its other cards picked once it is
-       taken (`escapeCostChoice`), never one offer per set of them. */
+       taken (`castCostChoice`), never one offer per set of them. */
     ...cardsIn(state, "graveyard", player).flatMap((id) => escapeWays(state, player, id).map((way) => ({id, from: "graveyard", escape: way.kind}))),
   ];
   for (const {id, from, flashback, escape} of castable) {
@@ -597,7 +637,7 @@ function offers(state, player) {
     /* The flashback cost instead of the mana cost, and its life: a player can pay life only if their total is at least
        that much (CR 119.4). */
     const back = flashback ? flashbackCost(state, player, id) : null;
-    if (back && back.life > state.players[player].life) continue;
+    if (back && !flashbackPayable(state, player, back)) continue;
     /* The escape cost's mana instead of the mana cost (CR 702.138a); its cards are picked once the offer is taken. */
     const fled = escape ? escapeWays(state, player, id).find((w) => w.kind === escape) ?? null : null;
     for (const way of [null, ...alternatives]) {
@@ -752,7 +792,8 @@ function idle(state, player, actions) {
   const fromGraveyard = cardsIn(state, "graveyard", player).some((id) => {
     const object = state.objects[id];
     if (sorcerySpeed(object) && !hasFlash(state, id) && !flashGranted(state, player, id) && !mainNow) return false;
-    const costs = [flashbackCost(state, player, id)?.mana, ...escapeWays(state, player, id).map((way) => way.mana)].filter((m) => typeof m === "string");
+    const back = flashbackCost(state, player, id);
+    const costs = [back && flashbackPayable(state, player, back) ? back.mana : null, ...escapeWays(state, player, id).map((way) => way.mana)].filter((m) => typeof m === "string");
     return costs.some((m) => manaValue(parseManaCost(m)) <= mana);
   });
   if (fromGraveyard) return false;
@@ -915,6 +956,11 @@ function perform(state, player, action, during = null) {
       state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
       return [];
     }
+    /* A FLASHBACK COST THAT TAPS CREATURES (Battle Screech): the same -- which ones, asked before anything is paid. */
+    if (action.kind === "cast" && action.flashback === true && !Array.isArray(action.flashbackTap) && flashbackCost(state, player, action.objectId)?.tap) {
+      state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
+      return [];
+    }
   }
 
   /* Passing is the priority module's business, because what a full round of passes means depends on
@@ -1009,6 +1055,8 @@ function perform(state, player, action, during = null) {
     const fled = action.escape !== undefined ? escapeWays(state, player, action.objectId).find((w) => w.kind === action.escape) : null;
     if (action.escape !== undefined && !fled) throw new Error(`${object.card} cannot escape now`);
     const exiling = fled && !during ? escapeExiled(state, player, action, fled) : [];
+    /* A flashback cost's creatures, as its caster picked them. */
+    const tapping = back?.tap && !during ? flashbackTapped(state, player, action, back.tap) : [];
     const {cost, x} = castCost(state, player, action.objectId, tax, Boolean(free), back ? back.mana : fled ? fled.mana : way ? way.mana : null);
     const payment = during ? {mana: {}, life: 0} : automaticPayment(poolFor(state, player, {spell: action.objectId}), cost, {life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0), x: x + (action.x ?? 0) * cost.variable});
     if (!payment || (back && back.life > state.players[player].life) || (way && way.life > state.players[player].life)) throw new Error(`${object.card} cannot be paid for from this pool`);
@@ -1062,6 +1110,11 @@ function perform(state, player, action, during = null) {
     }
     /* Escape's other cards, exiled as the rest of the cost is paid (CR 601.2h). */
     for (const id of exiling) if (state.objects[id]) moveOne(state, id, "exile", events, {owner: state.objects[id].owner});
+    /* And a flashback cost's creatures, tapped. */
+    for (const id of tapping) {
+      state.objects[id].tapped = true;
+      events.push(event("GameEventCardTapped", state, {card: cardRef(state, id), tapped: true}));
+    }
     /* What it is aimed at becomes its target (ward, CR 702.21a). */
     events.push(...becameTarget(state, entry));
     /* STORM (CR 702.40a): "when you cast this spell, copy it for each spell cast before it this turn. You may choose new

@@ -8,11 +8,20 @@
  * whenever it would leave the stack: resolved, countered, returned to a hand. Cast from a hand, it is not. Past in
  * Flames gives flashback, until end of turn, to the instants and sorceries in its controller's graveyard as it resolves
  * (CR 611.2c), for their mana costs -- not to a card put there later.
+ *
+ * A flashback cost need not be mana (the plan's X5, D5: Battle Screech, "Flashback--Tap three untapped white creatures
+ * you control"). Offered only while that many untapped creatures fit; which ones, asked once the cast is taken and
+ * before anything is paid (CR 601.2h), as escape's other cards are; a summoning-sick creature may be tapped, since it is
+ * not its own {T} (CR 302.6).
  */
 import assert from "node:assert/strict";
 import {createState, addObject} from "../game/engine/state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
-import {legalActions, applyAction, flashbackCost} from "../game/engine/rules/actions.mjs";
+import {legalActions, applyAction, flashbackCost, nothingToDo} from "../game/engine/rules/actions.mjs";
+import {compileScript} from "../game/engine/cards/index.mjs";
+import {housePilot} from "../game/engine/pilots/house-pilot.mjs";
+import {projectFor} from "../game/engine/projection.mjs";
+import {summoningSick} from "../game/engine/keywords/timing.mjs";
 import {resolveTop} from "../game/engine/rules/stack.mjs";
 import {passPriority} from "../game/engine/rules/priority.mjs";
 import {beginResolution} from "../game/engine/script/resolution.mjs";
@@ -22,6 +31,7 @@ import {loadCardIndex} from "../game/tools/engine-cards.mjs";
 
 let checks = 0;
 const eq = (a, b, m) => { assert.deepEqual(a, b, m); checks += 1; };
+const ok = (c, m) => { assert.ok(c, m); checks += 1; };
 
 const cards = loadCardIndex();
 const card = (name) => ({...cards.definition(name), card: name});
@@ -122,8 +132,66 @@ const zoneNames = (s, zone, seat) => (zone === "exile" ? s.zones.exile : s.zones
   void theirs;
 }
 {
+  /* "Flashback--Tap three untapped white creatures you control" (Battle Screech): offered only while three untapped white
+     creatures are Rob's; which three, asked once it is taken, before anything is paid. */
+  const LION = {card: "Lion", types: ["Creature"], subtypes: ["Cat"], colors: ["W"], manaCost: "{W}", power: 2, toughness: 1};
+  const KNIGHT = {card: "Knight", types: ["Creature"], subtypes: ["Knight"], colors: ["W"], manaCost: "{2}{W}", power: 3, toughness: 3};
+  const BEAR = {card: "Bear", types: ["Creature"], subtypes: ["Bear"], colors: ["G"], manaCost: "{1}{G}", power: 2, toughness: 2};
+  const s = main(table());
+  const screech = put(s, card("Battle Screech"), 0, "graveyard");
+  eq(flashbackCost(s, 0, screech), {mana: "", life: 0, tap: {count: 3, selector: {types: ["Creature"], colors: ["W"]}}}, "its flashback cost is no mana: three white creatures to tap");
+  const lions = [put(s, LION, 0, "battlefield"), put(s, LION, 0, "battlefield")];
+  const bear = put(s, BEAR, 0, "battlefield");
+  put(s, LION, 1, "battlefield");
+  eq([casts(s, 0, "Battle Screech").length, nothingToDo(s, 0)], [0, true], "two white creatures, a green Bear and Maya's Lion: not offered, and nothing to do");
+  lions.push(put(s, LION, 0, "battlefield"));
+  s.objects[lions[2]].tapped = true;
+  eq(casts(s, 0, "Battle Screech").length, 0, "a third Lion, tapped: still not");
+  s.objects[lions[2]].tapped = false;
+  const offers = casts(s, 0, "Battle Screech");
+  eq([offers.length, offers[0]?.flashback, nothingToDo(s, 0), lions.every((id) => summoningSick(s, id))], [1, true, false, true], "three untapped, summoning sick (CR 302.6): offered once, with flashback");
+  eq(offerDetails(s, 0, offers), ["flashback, tapping three untapped white creatures you control"], "the table says what it taps");
+  applyAction(s, 0, offers[0]);
+  const q = awaitingChoice(s);
+  eq([q.id, q.title, q.min, q.max, q.options.map((o) => o.label)], [`choose-cost:${screech}`, "Battle Screech's flashback: tap three untapped white creatures you control", 3, 3, ["Lion (1)", "Lion (2)", "Lion (3)"]],
+    "which three: Rob's untapped Lions, not the Bear or Maya's");
+  eq([s.stack.length, lions.map((id) => s.objects[id].tapped), s.objects[screech].zone], [0, [false, false, false], "graveyard"], "nothing cast or tapped before the answer");
+  assert.throws(() => resolveAwaiting(s, [0, 1]), /Invalid selection/);
+  checks += 1;
+  /* Taken with its creatures named (a pilot across the network): they are checked -- the Bear is not white. */
+  const forged = structuredClone(s);
+  forged.awaiting = null;
+  forged.priorityPlayer = 0;
+  assert.throws(() => applyAction(forged, 0, {...offers[0], flashbackTap: [lions[0], lions[1], bear]}), /three untapped white creatures you control/);
+  checks += 1;
+  resolveAwaiting(s, [0, 1, 2]);
+  eq([s.stack.length, s.stack[0]?.flashback, lions.map((id) => s.objects[id].tapped), s.objects[bear].tapped], [1, true, [true, true, true], false], "cast: the three Lions tapped, the Bear not");
+  resolveTop(s);
+  eq([zoneNames(s, "exile"), s.zones.battlefield.filter((id) => s.objects[id].card === "Bird").length], [["Battle Screech"], 2], "two Birds, and it is exiled");
+
+  /* The house pilot taps the weakest: three Lions, not the Knight. */
+  const p = main(table());
+  put(p, card("Battle Screech"), 0, "graveyard");
+  const knight = put(p, KNIGHT, 0, "battlefield");
+  for (let i = 0; i < 3; i += 1) put(p, LION, 0, "battlefield");
+  applyAction(p, 0, casts(p, 0, "Battle Screech")[0]);
+  const pq = awaitingChoice(p);
+  const answer = housePilot({seat: 0, cards: (name) => cards.definition(name)}).answer(projectFor(p, 0), pq);
+  eq(answer.indices.map((i) => pq.options[i].label).sort(), ["Lion (1)", "Lion (2)", "Lion (3)"], "the house pilot keeps its Knight untapped");
+  resolveAwaiting(p, answer.indices);
+  eq(p.objects[knight].tapped, false, "and the Knight is untapped");
+
+  /* A cost the engine would get wrong is refused. */
+  const script = (cost) => ({schema: "CrankCardScript@1", identity: {name: "Test", oracleId: "00000000-0000-4000-8000-000000000000", types: ["Sorcery"], manaCost: "{W}"},
+    oracleText: "Draw a card.", source: "hand", abilities: [{kind: "spell", text: "Draw a card.", effects: [{effect: "draw", count: 1}]}, {kind: "keyword", text: "Flashback", keyword: "flashback", cost}]});
+  const TAP = {atom: "tapCreature", count: 2, selector: {types: ["Creature"]}};
+  eq(compileScript(script([TAP])).problems, [], "tapping two creatures is a flashback cost");
+  ok(compileScript(script([{atom: "tapCreature", selector: {types: ["Creature"]}}])).problems.length > 0, "without how many: refused");
+  ok(compileScript(script([TAP, TAP])).problems.length > 0, "twice: refused");
+}
+{
   /* The catalog: Flashback is built now. */
   eq(missingFor({keywords: ["Flashback"]}), [], "a card with Flashback misses nothing for it");
 }
 
-console.log(`engine-flashback: ${checks} checks passed — cast from its owner's graveyard for the flashback cost, at its type's speed, life only if it can be paid; exiled as it leaves the stack, not when cast from a hand; Past in Flames gives it for a turn to what is there as it resolves.`);
+console.log(`engine-flashback: ${checks} checks passed — cast from its owner's graveyard for the flashback cost, at its type's speed, life only if it can be paid; exiled as it leaves the stack, not when cast from a hand; Past in Flames gives it for a turn to what is there as it resolves; a cost that taps creatures, which ones asked before anything is paid.`);

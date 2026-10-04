@@ -34,7 +34,7 @@
  */
 import {createState, addObject} from "../engine/state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../engine/rules/turn.mjs";
-import {legalActions, applyAction, nothingToDo, escapeWays} from "../engine/rules/actions.mjs";
+import {legalActions, applyAction, nothingToDo, escapeWays, flashbackCost, tappersInWords} from "../engine/rules/actions.mjs";
 import {passPriority} from "../engine/rules/priority.mjs";
 import {gameOver, concede} from "../engine/rules/sba.mjs";
 import {beginMulligans} from "../engine/rules/mulligan.mjs";
@@ -170,8 +170,12 @@ export function offerDetails(state, seat, actions) {
     }
     /* "Without paying its mana cost", beside the paid cast of the same card (rules/actions.mjs). */
     if (a.free) parts.push("without paying its mana cost");
-    /* Flashback (CR 702.34a): from the graveyard for its flashback cost, exiled after. */
-    if (a.flashback) parts.push("flashback");
+    /* Flashback (CR 702.34a): from the graveyard for its flashback cost, exiled after -- and the creatures it taps, picked
+       once it is taken. */
+    if (a.flashback) {
+      const tap = flashbackCost(state, seat, a.objectId)?.tap;
+      parts.push(tap ? `flashback, tapping ${tappersInWords(tap)}` : "flashback");
+    }
     /* Escape (CR 702.138a): from the graveyard for its escape cost -- its mana, and the other cards it will take. */
     if (a.escape !== undefined) {
       const way = escapeWays(state, seat, a.objectId).find((w) => w.kind === a.escape);

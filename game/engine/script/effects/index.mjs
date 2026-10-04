@@ -29,7 +29,7 @@ import {bindEffect} from "../bind.mjs";
 import {countEffect} from "../amount.mjs";
 import {conditionHolds} from "../condition.mjs";
 import {controllerOf, typesOf} from "../../rules/layers.mjs";
-import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sacrificeAll, digUntil, peekAndReveal, shuffle} from "./zones.mjs";
+import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sacrificeAll, digUntil, peekAndReveal, shuffle, exileUntil} from "./zones.mjs";
 import {
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
   putCounter, putCounterAll, removeCounter, proliferate, damageAll, fight, poison, winGame,
@@ -156,6 +156,8 @@ export const EFFECTS = Object.freeze({
   peekAndReveal,
   /* Batch 80: a library shuffled (CR 701.24), from the game's random stream. */
   shuffle,
+  /* X5k: "exile ... until this leaves the battlefield" (CR 610.3). */
+  exileUntil,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */

@@ -114,7 +114,47 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false} = 
   }));
   /* "You may have this creature enter as a copy of ...": its arrival waits for the answer (rules/entering.mjs). */
   if (destination === "battlefield") holdArrival(state, moved, events[events.length - 1]);
+  /* What it exiled "until this leaves the battlefield", back now (CR 610.3). */
+  if (from === "battlefield") returnExiledUntil(state, id, events);
   return moved;
+}
+
+/**
+ * `exileUntil` -- "exile target creature or planeswalker an opponent controls until this Aura leaves the battlefield"
+ * (Ossification; CR 610.3). Each target exiled and linked to the source as it is on the battlefield; immediately after
+ * that permanent leaves, a second one-shot effect returns them (returnExiledUntil). If it has already left by the time
+ * the exile would happen -- after the ability triggered, or was put on the stack -- nothing moves (CR 610.3a, 610.3b).
+ */
+export function exileUntil(state, params, context) {
+  const events = [];
+  /* The source as it is now: null once it has left the battlefield (rules/stack.mjs), and then nothing moves. */
+  const source = context.source ?? null;
+  if (source === null || state.objects[source]?.zone !== "battlefield") return events;
+  for (const id of params.targets ?? []) {
+    if (!state.objects[id]) continue;
+    const moved = moveOne(state, id, "exile", events);
+    if (moved !== null && state.objects[moved]?.zone === "exile") (state.exiledUntil ??= []).push({source, exiled: moved});
+  }
+  return events;
+}
+
+/**
+ * THE RETURN (CR 610.3): `departed`, a permanent's id as it was on the battlefield, has just left it -- what it exiled
+ * "until this leaves the battlefield" returns to the battlefield under its owner's control (610.3c), at once: a one-shot
+ * effect, not a trigger, nothing on the stack. A card that has left exile since is a new object (CR 400.7) and stays
+ * where it is; a token exiled has ceased to exist (CR 704.5d); a card whose owner has left the game left with them (CR
+ * 800.4a). Every departure from the battlefield calls this: moveOne here, and the state-based actions that move a
+ * permanent themselves -- a player leaving the game among them (rules/sba.mjs).
+ */
+export function returnExiledUntil(state, departed, events) {
+  const due = (state.exiledUntil ?? []).filter((link) => link.source === departed);
+  if (!due.length) return;
+  state.exiledUntil = state.exiledUntil.filter((link) => link.source !== departed);
+  for (const {exiled} of due) {
+    const card = state.objects[exiled];
+    if (card?.zone !== "exile" || state.players[card.owner]?.lost) continue;
+    moveOne(state, exiled, "battlefield", events, {owner: card.owner});
+  }
 }
 
 /** Which players an effect is aimed at. */
