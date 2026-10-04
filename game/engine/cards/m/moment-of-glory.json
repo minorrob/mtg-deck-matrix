@@ -1,0 +1,82 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Moment of Glory",
+    "oracleId": "3d39db09-67b7-4a4e-9667-4e1b806f51a5",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Put a +1/+1 counter on target creature you control. If this spell was cast from a graveyard, also put a +1/+1 counter on each other creature you control.\nFlashback {4}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Put a +1/+1 counter on target creature you control. If this spell was cast from a graveyard, also put a +1/+1 counter on each other creature you control.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "cast": {
+              "from": "graveyard"
+            }
+          },
+          "then": [
+            {
+              "effect": "putCounterAll",
+              "selector": {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              },
+              "counter": "+1/+1",
+              "count": 1
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "putCounter",
+              "targets": {
+                "target": 0
+              },
+              "counter": "+1/+1",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Flashback {4}{W}",
+      "keyword": "flashback",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}{W}"
+        }
+      ]
+    }
+  ]
+}

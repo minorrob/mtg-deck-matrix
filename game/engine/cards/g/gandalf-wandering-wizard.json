@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gandalf, Wandering Wizard",
+    "oracleId": "c996bc53-184d-4dc3-8244-e8d9528516a0",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Avatar",
+      "Wizard"
+    ],
+    "manaCost": "{4}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Ward {3} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {3}.)\n{6}: Gandalf's owner shuffles him into their library and draws three cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Ward {3}",
+      "keyword": "ward",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{6}: Gandalf's owner shuffles him into their library and draws three cards.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{6}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "library",
+          "shuffle": true
+        },
+        {
+          "effect": "draw",
+          "count": 3
+        }
+      ]
+    }
+  ]
+}

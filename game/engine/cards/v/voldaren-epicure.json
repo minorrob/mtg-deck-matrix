@@ -1,0 +1,85 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Voldaren Epicure",
+    "oracleId": "cef82674-1f61-407b-801b-a76a3803e598",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire"
+    ],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters, it deals 1 damage to each opponent. Create a Blood token. (It's an artifact with \"{1}, {T}, Discard a card, Sacrifice this token: Draw a card.\")",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, it deals 1 damage to each opponent. Create a Blood token. (It's an artifact with \"{1}, {T}, Discard a card, Sacrifice this token: Draw a card.\")",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "who": "opponent"
+        },
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Blood",
+            "types": [
+              "Artifact"
+            ],
+            "subtypes": [
+              "Blood"
+            ],
+            "colors": [],
+            "abilities": [
+              {
+                "id": "blood",
+                "kind": "activated",
+                "text": "{1}, {T}, Discard a card, Sacrifice this token: Draw a card.",
+                "cost": [
+                  {
+                    "atom": "mana",
+                    "cost": "{1}"
+                  },
+                  {
+                    "atom": "{T}"
+                  },
+                  {
+                    "atom": "discard"
+                  },
+                  {
+                    "atom": "sacrifice",
+                    "self": true
+                  }
+                ],
+                "targets": [],
+                "effects": [
+                  {
+                    "effect": "draw",
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
