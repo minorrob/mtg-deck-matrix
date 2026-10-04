@@ -620,6 +620,8 @@ cast so, one removed at its controller's end step, and none of it when cast for 
 different names" (Gifts Ungiven), one of each name offered.
 `engine-overload` holds overload (Winds of Abandon): offered beside the mana cost, with no target; a repetition that
 asks, each player in turn; and each search by the creature's controller as it left the battlefield.
+`engine-discover` holds discover (Quintorius Kand), written with what was built: past what doesn't fit, the rest under,
+cast free from exile or put into hand; each opponent dealt 2 for a spell cast from exile; and mana for each card exiled.
 `engine-destroyed-and-walker-damage` holds a board wipe that remembers what it destroyed (Ob Nixilis, the Ascended's
 "1 life for each creature destroyed this way"), the indestructible never among them; and "whenever this creature deals
 combat damage to a player or planeswalker" (Grateful Apparition): combat damage to a planeswalker triggers it, about its
@@ -742,7 +744,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 297 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 298 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1010,6 +1012,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-cant-lose` — `tests/engine-cant-lose.mjs`
 - `engine-impending` — `tests/engine-impending.mjs`
 - `engine-overload` — `tests/engine-overload.mjs`
+- `engine-discover` — `tests/engine-discover.mjs`
 - `engine-destroyed-and-walker-damage` — `tests/engine-destroyed-and-walker-damage.mjs`
 
 ## Design and execution record

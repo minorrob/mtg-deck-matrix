@@ -28,7 +28,9 @@ import {playerRuled} from "../../rules/sba.mjs";
 
 /** `addMana` — into the controller's pool, which empties at the end of the step (CR 500.4). */
 export function addMana(state, params, context) {
-  const mana = params.mana ?? {};
+  /* "Add {R} for each card exiled this way" (Quintorius Kand): `count` times, counted as it resolves. */
+  const times = params.count === undefined ? 1 : Math.max(0, params.count);
+  const mana = Object.fromEntries(Object.entries(params.mana ?? {}).map(([color, n]) => [color, n * times]));
   if (Object.values(mana).every((n) => !n)) return [];
   /* "Spend this mana only to cast instant and sorcery spells" (Abstract Paintmage; CR 106.6): beside the pool, what it may
      pay for read as it is added, as a mana ability's is (rules/restricted-mana.mjs). */
