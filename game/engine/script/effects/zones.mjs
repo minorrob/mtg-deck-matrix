@@ -399,10 +399,15 @@ export function destroyAll(state, params, context) {
   const matched = [...selectMatching(state, params.selector ?? {what: "permanent"}, context)].filter((id) => !spared?.has(id));
   const doomed = matched.filter((id) => state.objects[id]?.zone === "battlefield" && !keywordsOf(state, id).includes("Indestructible"));
   /* Each regenerated one stays (CR 701.19a), unless the card says "they can't be regenerated" (`noRegenerate`). */
+  const destroyed = [];
   for (const id of doomed) {
     if (params.noRegenerate !== true && regenerated(state, id, events)) continue;
-    moveOne(state, id, "graveyard", events);
+    const moved = moveOne(state, id, "graveyard", events);
+    if (moved !== null) destroyed.push(moved);
   }
+  /* "You gain 1 life for each creature destroyed this way" (Ob Nixilis, the Ascended): `remember`, what it destroyed --
+     neither the indestructible nor the regenerated -- for the effects after it ({rememberedCount: true}). */
+  if (params.remember) context.remembered = destroyed;
   return events;
 }
 

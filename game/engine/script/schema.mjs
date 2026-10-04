@@ -234,9 +234,12 @@ function checkAbility(ability, path, errors) {
          `trigger.mjs` will never match it. */
       errors.push({path: `${path}.trigger.on`, message: `${JSON.stringify(on)} is not a trigger event the engine declares; the app's terms are bridged in vocabulary.mjs, not accepted here`});
     }
-    /* "Attack one of your opponents or a planeswalker they control" (CR 506.3): planeswalkers: true, beside defender: "opponent". */
-    if (ability.trigger?.planeswalkers !== undefined && (ability.trigger.planeswalkers !== true || on !== "attacks" || ability.trigger.defender !== "opponent"))
-      errors.push({path: `${path}.trigger.planeswalkers`, message: "\"Or a planeswalker they control\" is planeswalkers: true, on an attack trigger with defender: \"opponent\""});
+    /* "Attack one of your opponents or a planeswalker they control" (CR 506.3): planeswalkers: true, beside defender: "opponent".
+       "Deals combat damage to a player or planeswalker" (Grateful Apparition): planeswalkers: true, on a damage trigger
+       about a player. */
+    const damageToPlayer = ["damage dealt", "damage dealt once"].includes(on) && ["player", "opponent"].includes(ability.trigger?.to ?? "player");
+    if (ability.trigger?.planeswalkers !== undefined && (ability.trigger.planeswalkers !== true || !((on === "attacks" && ability.trigger.defender === "opponent") || damageToPlayer)))
+      errors.push({path: `${path}.trigger.planeswalkers`, message: "\"Or a planeswalker they control\" is planeswalkers: true, on an attack trigger with defender: \"opponent\"; \"or planeswalker\", on a damage trigger about a player"});
   }
 
   if (ability.kind === "keyword") {

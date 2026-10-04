@@ -200,7 +200,7 @@ export function dealDamage(state, params, context) {
       events.push(event("GameEventCardDamaged", state, {
         card: cardRef(state, toCard),
         source: source === null ? null : cardRef(state, source),
-        amount: proposal.amount,
+        amount: proposal.amount, combat: false,
       }));
       /* CR 702.2b: deathtouch is any damage from the source, not only combat damage. */
       markDeathtouch(state, source, toCard);

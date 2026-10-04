@@ -1,0 +1,101 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ob Nixilis, the Ascended",
+    "oracleId": "3a49b518-61c8-4dea-8008-c5edf8384581",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{5}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nWhen Ob Nixilis enters, destroy all tapped creatures your opponents control. You gain 1 life for each creature destroyed this way.\nAt the beginning of each end step, if you gained life this turn, create a 4/4 white Angel creature token with flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "When Ob Nixilis enters, destroy all tapped creatures your opponents control. You gain 1 life for each creature destroyed this way.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "opponent",
+            "tapped": true
+          },
+          "remember": true
+        },
+        {
+          "effect": "gainLife",
+          "amount": {
+            "rememberedCount": true
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of each end step, if you gained life this turn, create a 4/4 white Angel creature token with flying.",
+      "trigger": {
+        "on": "end step",
+        "yours": false
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Angel",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Angel"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 4,
+            "toughness": 4,
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "lifeGainedThisTurn": "you"
+          },
+          "atLeast": 1
+        }
+      }
+    }
+  ]
+}

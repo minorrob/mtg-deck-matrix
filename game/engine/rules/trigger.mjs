@@ -108,7 +108,9 @@ function recordArrivals(state, events) {
  * it was dealt to, the player who drew -- for "that player" and "that card" in what the ability does.
  */
 function subjects(state, event, condition, sourceId, controller) {
-  if (event.kind !== condition.on) return [];
+  /* "Deals combat damage to a player or planeswalker" (Grateful Apparition): damage dealt to a permanent is watched too. */
+  const toPermanent = condition.planeswalkers === true && condition.on === "GameEventPlayerDamaged" && event.kind === "GameEventCardDamaged";
+  if (event.kind !== condition.on && !toPermanent) return [];
   const fields = event.data?.fields ?? {};
   /* "Whenever you cast a noncreature spell" (CR 601.2i): the spell on the stack, and who cast it. */
   /* "Whenever you scry or surveil" (CR 701.22a, 701.25a): who did it. */
@@ -195,7 +197,10 @@ function subjects(state, event, condition, sourceId, controller) {
     if (condition.noncombat && fields.combat === true) return [];
     /* "A source you control" -- a permanent or a spell: its controller as the damage was dealt. */
     if (condition.sourceYours && fields.source?.controller !== controller) return [];
-    const to = fields.target?.playerId, source = fields.source?.cardId;
+    /* A planeswalker dealt it, still there as triggers are collected (before state-based actions): about its controller. */
+    const damaged = toPermanent ? fields.card?.cardId : undefined;
+    if (toPermanent && !(state.objects[damaged] && characteristicsOf(state, damaged).types.includes("Planeswalker"))) return [];
+    const to = toPermanent ? state.objects[damaged].controller : fields.target?.playerId, source = fields.source?.cardId;
     if (condition.to === "opponent" && to === controller) return [];
     if (!fits(state, source, condition, sourceId, controller)) return [];
     /* "Create that many Treasure tokens": the damage dealt (CR 120.3), with who dealt it and to whom. */
