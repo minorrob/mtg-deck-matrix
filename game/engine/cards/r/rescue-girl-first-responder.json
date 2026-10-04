@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rescue Girl, First Responder",
+    "oracleId": "df6fc0b4-333b-4f6c-804c-ba6c8e29c88e",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Cleric"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Flying\n{T}: Return another target permanent you control to its owner's hand. Activate only during your turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Return another target permanent you control to its owner's hand. Activate only during your turn.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "condition": {
+        "yourTurn": true
+      },
+      "targets": [
+        {
+          "what": "permanent",
+          "controller": "you",
+          "another": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        }
+      ]
+    }
+  ]
+}

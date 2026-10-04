@@ -1,0 +1,168 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Geist of Saint Thalia",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Idol": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    },
+    "Shrine": {
+      "types": [
+        "Enchantment"
+      ],
+      "supertypes": [
+        "Legendary"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    },
+    "Ward Charm": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    },
+    "Jolt": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{1}{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Jolt deals 2 damage to target player.",
+        "targets": [
+          {
+            "what": "player"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 2,
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Jolt for {R} alone: 2 damage to Maya",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Geist of Saint Thalia",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Jolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Jolt",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Geist of Saint Thalia",
+            "has": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A creature spell costs what it costs: one Forest is not the Bear",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Geist of Saint Thalia",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Bear"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

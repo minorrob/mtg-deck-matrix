@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Geist of Saint Thalia",
+    "oracleId": "ef32a4a9-14e2-4738-b4c2-53ce5e1d2a53",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit",
+      "Cleric"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "Flying\nNoncreature spells you cast cost {1} less to cast.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "static",
+      "text": "Noncreature spells you cast cost {1} less to cast.",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "nonTypes": [
+          "Creature"
+        ]
+      },
+      "amount": 1
+    }
+  ]
+}

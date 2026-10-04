@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Stingerquill Annex",
+    "oracleId": "26e20ae5-4059-4d63-9db5-6e12421d1aba",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This land enters tapped unless you control a planeswalker.\n{T}: Add {B} or {R}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This land enters tapped unless you control a planeswalker.",
+      "watches": {
+        "event": "enters",
+        "who": "self",
+        "unless": {
+          "controls": {
+            "what": "permanent",
+            "types": [
+              "Planeswalker"
+            ]
+          }
+        }
+      },
+      "change": {
+        "entersTapped": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {B} or {R}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "B": 1
+            },
+            {
+              "R": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
