@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Rugged Prairie",
+  "scenarios": [
+    {
+      "name": "{R} from a Mountain filtered into {R}{W}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Rugged Prairie",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Rugged Prairie",
+          "mana": {
+            "R": 1,
+            "W": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1,
+            "W": 1
+          }
+        }
+      ]
+    }
+  ]
+}

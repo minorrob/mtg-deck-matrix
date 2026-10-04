@@ -298,10 +298,11 @@ function objectCtx() {
   eq([isBasicLandsTestDeck(["Wastes"], TEST_DECK.cards), isBasicLandsTestDeck(["Wastes", "Forest"], []), isBasicLandsTestDeck(["Sol Ring"], [])], [true, false, false],
     "the test deck is one basic land at the head of basic lands");
   const script = structuredClone(loadCardScripts()[0].script);
+  const line = `${script.identity.name} can be your commander.`;
   const says = compileScript({...script, oracleText: `${script.oracleText}
-${script.identity.name} can be your commander.`});
+${line}`, abilities: [...script.abilities, {kind: "static", text: line, rule: "can-be-commander", affects: {self: true}}]});
   eq([compileScript(script).definition.canBeCommander ?? false, says.definition.canBeCommander], [false, true],
-    "a definition says canBeCommander only when its card says it can be your commander");
+    "a definition says canBeCommander only when its card says it can be your commander (CR 903.3a), a static ability claiming the line");
 }
 
 /* WHAT THE CLOUD TABLE PLAYS (M5; the plan review's C4). Handed no cards, the table plays the basic lands and every

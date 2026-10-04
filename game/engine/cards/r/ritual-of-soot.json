@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ritual of Soot",
+    "oracleId": "29e9cf1c-a6bd-4bee-9000-ac1b4e19d6b0",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy all creatures with mana value 3 or less.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Destroy all creatures with mana value 3 or less.",
+      "effects": [
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "manaValue": {
+              "max": 3
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

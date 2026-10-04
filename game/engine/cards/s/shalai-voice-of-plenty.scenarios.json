@@ -1,0 +1,222 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Shalai, Voice of Plenty",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Ally Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Ally"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Goblin Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "White Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Soldier"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Charm Ward": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's Bolt may aim only at Shalai, Maya, or Maya's Bear",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Shalai, Voice of Plenty",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Lightning Bolt",
+            "seat": 1
+          },
+          "count": 3
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bear",
+            "has": [
+              "Hexproof"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Shalai, Voice of Plenty",
+            "lacks": [
+              "Hexproof"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "{4}{G}{G}: a +1/+1 counter on each of Rob's creatures",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Shalai, Voice of Plenty",
+            "Bear",
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Shalai, Voice of Plenty"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Shalai, Voice of Plenty",
+            "power": 4,
+            "toughness": 5
+          }
+        }
+      ]
+    }
+  ]
+}

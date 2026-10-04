@@ -1,0 +1,89 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Shore Lurker",
+  "scenarios": [
+    {
+      "name": "It enters: surveil 1, the Island into the graveyard",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Shore Lurker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Shore Lurker"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Island"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Shore Lurker",
+            "has": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

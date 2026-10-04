@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dragonlord Dromoka",
+    "oracleId": "82cdd612-3322-4372-810f-1ff106ea8e6a",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elder",
+      "Dragon"
+    ],
+    "manaCost": "{4}{G}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": 5,
+    "toughness": 7
+  },
+  "oracleText": "This spell can't be countered.\nFlying, lifelink\nYour opponents can't cast spells during your turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell can't be countered.",
+      "rule": "cant-be-countered",
+      "affects": {
+        "what": "spell",
+        "self": true
+      }
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "lifelink",
+      "keyword": "lifelink"
+    },
+    {
+      "kind": "static",
+      "text": "Your opponents can't cast spells during your turn.",
+      "rule": "cant-cast",
+      "affects": {
+        "what": "player",
+        "who": "opponent"
+      },
+      "duringYourTurn": true
+    }
+  ]
+}

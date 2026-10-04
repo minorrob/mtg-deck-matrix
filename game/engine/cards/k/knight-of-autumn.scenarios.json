@@ -1,0 +1,265 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Knight of Autumn",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Ally Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Ally"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Goblin Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "White Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Soldier"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Charm Ward": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: Maya's Rock destroyed",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Knight of Autumn"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Knight of Autumn"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Destroy target artifact or enchantment. → Rock"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Rock"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "It enters: two +1/+1 counters, a 4/3",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Knight of Autumn"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Knight of Autumn"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Put two +1/+1 counters on this creature."
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Knight of Autumn",
+            "power": 4,
+            "toughness": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "It enters: 4 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Knight of Autumn"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Knight of Autumn"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "You gain 4 life."
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 44
+        }
+      ]
+    }
+  ]
+}

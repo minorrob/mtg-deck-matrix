@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wild Pack Squad",
+    "oracleId": "294b2aa7-cb46-46bd-8241-69b26d73aa2d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Mercenary"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "At the beginning of combat on your turn, up to one target creature gains first strike and vigilance until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of combat on your turn, up to one target creature gains first strike and vigilance until end of turn.",
+      "trigger": {
+        "on": "step",
+        "step": "COMBAT_BEGIN",
+        "yours": true
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "First Strike",
+            "Vigilance"
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    }
+  ]
+}

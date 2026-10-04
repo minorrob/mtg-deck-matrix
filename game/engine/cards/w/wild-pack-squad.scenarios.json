@@ -1,0 +1,145 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Wild Pack Squad",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Ally Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Ally"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Goblin Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "White Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Soldier"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Charm Ward": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob's combat begins: Rob's Bear gains first strike and vigilance",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wild Pack Squad",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_BEGIN"
+          }
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bear",
+            "has": [
+              "First Strike",
+              "Vigilance"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Wild Pack Squad",
+            "lacks": [
+              "First Strike"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Timid Shieldbearer",
+    "oracleId": "8bef3511-ceeb-4d57-972a-ab363ecacd5b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Kithkin",
+      "Soldier"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "{4}{W}: Creatures you control get +1/+1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{4}{W}: Creatures you control get +1/+1 until end of turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}{W}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 1,
+          "toughness": 1,
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

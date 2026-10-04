@@ -1,0 +1,110 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Glittering Massif",
+  "scenarios": [
+    {
+      "name": "Played: it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Glittering Massif"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Glittering Massif"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Glittering Massif"
+        }
+      ]
+    },
+    {
+      "name": "Cycled for {2}: a card",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Glittering Massif"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Glittering Massif"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Glittering Massif"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "{T}: {W}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Glittering Massif"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Glittering Massif",
+          "mana": {
+            "W": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -26,6 +26,10 @@ import {parseManaCost, manaValue} from "./mana.mjs";
 
 /** Every rule a static ability may change, with the module that reads it. */
 export const STATIC_RULES = Object.freeze({
+  /** CR 903.3a: "Freyalise, Llanowar's Fury can be your commander" -- a rule of the deck, not of the game: the card's
+      definition says `canBeCommander` (cards/index.mjs), and the table holds a deck's commander to it (room/table.mjs,
+      commanderLegal). */
+  "can-be-commander": "cards/index.mjs",
   /** CR 510.1a's exception: assigns combat damage equal to its toughness rather than its power. combat.mjs. */
   "combat-damage-by-toughness": "rules/combat.mjs",
   /** CR 402.2's exception: "You have no maximum hand size" (Reliquary Tower, Thought Vessel). turn.mjs, at cleanup. */
@@ -217,6 +221,9 @@ export function cantAttack(state, attacker, defender, planeswalker = null) {
       return true;
     }
   }
+  /* "Target creature can't attack or block this turn" (Endbringer): a restriction an effect left until it ends
+     (effectUntil's `rule: "cant-attack"`), on the creatures fixed as it resolved -- attacking anyone. */
+  for (const effect of state.effects ?? []) if (effect.rule === "cant-attack" && staticAffects(state, effect, attacker, effect.sourceController)) return true;
   return false;
 }
 /** The words `defender` may say on a `cant-attack` static. */

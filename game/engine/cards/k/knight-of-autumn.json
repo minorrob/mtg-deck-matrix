@@ -1,0 +1,96 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Knight of Autumn",
+    "oracleId": "c4212ba4-8c43-40ca-aa36-b3b535659fa8",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dryad",
+      "Knight"
+    ],
+    "manaCost": "{1}{G}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters, choose one —\n• Put two +1/+1 counters on this creature.\n• Destroy target artifact or enchantment.\n• You gain 4 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, choose one —\n• Put two +1/+1 counters on this creature.\n• Destroy target artifact or enchantment.\n• You gain 4 life.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Put two +1/+1 counters on this creature.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "putCounter",
+                  "targets": "self",
+                  "counter": "+1/+1",
+                  "count": 2
+                }
+              ]
+            },
+            {
+              "text": "Destroy target artifact or enchantment.",
+              "targets": [
+                {
+                  "anyOf": [
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Artifact"
+                      ]
+                    },
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Enchantment"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "destroy",
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "You gain 4 life.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "gainLife",
+                  "amount": 4
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

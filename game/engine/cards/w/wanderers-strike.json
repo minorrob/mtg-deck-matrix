@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wanderer's Strike",
+    "oracleId": "d6239ada-c72a-49b2-882c-6dae1dd366e3",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Exile target creature, then proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Exile target creature, then proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile"
+        },
+        {
+          "effect": "proliferate"
+        }
+      ]
+    }
+  ]
+}

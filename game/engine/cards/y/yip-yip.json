@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Yip Yip!",
+    "oracleId": "5453550f-9136-4568-baf8-c3d20e33fbb6",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [
+      "Lesson"
+    ],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature you control gets +2/+2 until end of turn. If that creature is an Ally, it also gains flying until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Target creature you control gets +2/+2 until end of turn. If that creature is an Ally, it also gains flying until end of turn.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 2,
+          "toughness": 2
+        },
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Flying"
+          ],
+          "condition": {
+            "about": "target",
+            "is": {
+              "subtypes": [
+                "Ally"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

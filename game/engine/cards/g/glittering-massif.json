@@ -1,0 +1,81 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Glittering Massif",
+    "oracleId": "23732d20-aba6-46cc-89d0-0542629bc6b5",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Mountain",
+      "Plains"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "({T}: Add {R} or {W}.)\nThis land enters tapped.\nCycling {2} ({2}, Discard this card: Draw a card.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {R} or {W}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "R": 1
+            },
+            {
+              "W": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "replacement",
+      "text": "This land enters tapped.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Cycling {2}",
+      "zone": "hand",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

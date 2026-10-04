@@ -1,0 +1,153 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Freyalise, Llanowar's Fury",
+    "oracleId": "659dfdbf-5e9d-4828-a967-348cb3bcf05a",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Planeswalker"
+    ],
+    "subtypes": [
+      "Freyalise"
+    ],
+    "manaCost": "{3}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null,
+    "loyalty": 3
+  },
+  "oracleText": "+2: Create a 1/1 green Elf Druid creature token with \"{T}: Add {G}.\"\n−2: Destroy target artifact or enchantment.\n−6: Draw a card for each green creature you control.\nFreyalise, Llanowar's Fury can be your commander.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "+2: Create a 1/1 green Elf Druid creature token with \"{T}: Add {G}.\"",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": 2
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Elf Druid",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Elf",
+              "Druid"
+            ],
+            "colors": [
+              "G"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "abilities": [
+              {
+                "id": "elf-druid",
+                "kind": "activated",
+                "text": "{T}: Add {G}.",
+                "mana": true,
+                "cost": [
+                  {
+                    "atom": "{T}"
+                  }
+                ],
+                "effects": [
+                  {
+                    "effect": "addMana",
+                    "mana": {
+                      "G": 1
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−2: Destroy target artifact or enchantment.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -2
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Enchantment"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−6: Draw a card for each green creature you control.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -6
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": {
+            "count": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "colors": [
+                "G"
+              ],
+              "controller": "you"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Freyalise, Llanowar's Fury can be your commander.",
+      "rule": "can-be-commander",
+      "affects": {
+        "self": true
+      }
+    }
+  ]
+}

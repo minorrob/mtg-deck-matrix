@@ -1,0 +1,82 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Lotus Field",
+  "scenarios": [
+    {
+      "name": "Played: tapped, and Rob sacrifices the Forest and the Island",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lotus Field"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Lotus Field"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Forest",
+            "Island"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Forest",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Lotus Field"
+        }
+      ]
+    },
+    {
+      "name": "{T}: {G}{G}{G}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Lotus Field"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Lotus Field",
+          "mana": {
+            "G": 3
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 3
+          }
+        }
+      ]
+    }
+  ]
+}

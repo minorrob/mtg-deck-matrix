@@ -1,0 +1,154 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lorehold Command",
+    "oracleId": "107becb1-f8a3-4777-b39f-a0456c2d580e",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose two —\n• Create a 3/2 red and white Spirit creature token.\n• Creatures you control get +1/+0 and gain indestructible and haste until end of turn.\n• Lorehold Command deals 3 damage to any target. Target player gains 3 life.\n• Sacrifice a permanent, then draw two cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose two —\n• Create a 3/2 red and white Spirit creature token.\n• Creatures you control get +1/+0 and gain indestructible and haste until end of turn.\n• Lorehold Command deals 3 damage to any target. Target player gains 3 life.\n• Sacrifice a permanent, then draw two cards.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 2,
+          "modes": [
+            {
+              "text": "Create a 3/2 red and white Spirit creature token.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "createToken",
+                  "count": 1,
+                  "token": {
+                    "name": "Spirit",
+                    "types": [
+                      "Creature"
+                    ],
+                    "subtypes": [
+                      "Spirit"
+                    ],
+                    "colors": [
+                      "R",
+                      "W"
+                    ],
+                    "power": 3,
+                    "toughness": 2
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Creatures you control get +1/+0 and gain indestructible and haste until end of turn.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "pumpAll",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ],
+                    "controller": "you"
+                  },
+                  "power": 1,
+                  "toughness": 0,
+                  "keywords": [
+                    "Indestructible",
+                    "Haste"
+                  ],
+                  "until": "end-of-turn"
+                }
+              ]
+            },
+            {
+              "text": "Lorehold Command deals 3 damage to any target. Target player gains 3 life.",
+              "targets": [
+                {
+                  "anyOf": [
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Creature"
+                      ]
+                    },
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Planeswalker"
+                      ]
+                    },
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Battle"
+                      ]
+                    },
+                    {
+                      "what": "player"
+                    }
+                  ]
+                },
+                {
+                  "what": "player"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "dealDamage",
+                  "amount": 3,
+                  "targets": {
+                    "target": 0
+                  },
+                  "who": {
+                    "target": 0
+                  }
+                },
+                {
+                  "effect": "gainLife",
+                  "amount": 3,
+                  "who": {
+                    "target": 1
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Sacrifice a permanent, then draw two cards.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "sacrifice",
+                  "who": "you",
+                  "count": 1,
+                  "selector": {}
+                },
+                {
+                  "effect": "draw",
+                  "count": 2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

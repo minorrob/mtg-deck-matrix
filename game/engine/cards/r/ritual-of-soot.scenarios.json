@@ -1,0 +1,160 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ritual of Soot",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Ally Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Ally"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Goblin Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "White Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Soldier"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Charm Ward": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's Bear destroyed; the 5/5 stays",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ritual of Soot"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Big Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Ritual of Soot"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Big Bear"
+          ]
+        }
+      ]
+    }
+  ]
+}
