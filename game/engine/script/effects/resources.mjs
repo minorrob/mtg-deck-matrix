@@ -99,6 +99,8 @@ export function changeLife(state, player, delta, events) {
   if (delta === 0) return;
   /* "Your opponents can't gain life" (CR 119.7): a gain that does not happen, and is not said to. */
   if (delta > 0 && cantGainLife(state, player)) return;
+  /* "Their life total can't change" (Teferi's Reproach; CR 119.7-8): no gain, no loss. */
+  if ((state.effects ?? []).some((e) => e.rule === "life-cant-change" && (e.players ?? []).includes(player))) return;
   const before = state.players[player].life;
   state.players[player].life += delta;
   /* The life each player has lost this turn (Wound Reflection; script/amount.mjs), cleared as a turn begins (turn.mjs). */

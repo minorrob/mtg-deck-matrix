@@ -10,7 +10,7 @@
  "top": {
   "cards": 3238,
   "defined": 1144,
-  "everyRule": 2454
+  "everyRule": 2460
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -3205,9 +3205,9 @@
   },
   "Effects": {
    "tally": {
-    "built": 61,
+    "built": 62,
     "partial": 1,
-    "named": 10,
+    "named": 9,
     "missing": 120
    },
    "entries": [
@@ -3953,7 +3953,7 @@
      "top": 10,
      "all": 65,
      "blocks": 10,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -3996,12 +3996,12 @@
      "rule": null,
      "name": "Phases",
      "engine": "phaseOut",
-     "status": "named",
+     "status": "built",
      "forge": "Phases",
      "top": 9,
      "all": 56,
-     "blocks": 9,
-     "alone": 6
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -7297,7 +7297,7 @@
      "top": 10,
      "all": 91,
      "blocks": 6,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "static",

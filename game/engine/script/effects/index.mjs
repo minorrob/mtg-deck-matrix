@@ -36,7 +36,7 @@ import {
 } from "./resources.mjs";
 import {
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
-  becomeCopy, earthbend, goad, immediateTrigger, investigate,
+  becomeCopy, earthbend, goad, immediateTrigger, investigate, phaseOut,
 } from "./permanents.mjs";
 
 /**
@@ -163,6 +163,8 @@ export const EFFECTS = Object.freeze({
   /* Rob's Priority Batch 10.3, its twenty-second slice: investigate, a Clue token (CR 701.16a). Its twenty-third: "you may
      play that card" until a time, a permission (rules/actions.mjs reads it). */
   investigate, mayPlay,
+  /* The live-game plan of 2026-10-04: phasing out (CR 702.26; Teferi's Reproach). */
+  phaseOut,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */
