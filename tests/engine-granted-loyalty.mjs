@@ -52,7 +52,7 @@ const minus8 = (s, card) => offers(s, card).filter((a) => a.loyalty === -8);
   eq(ran.players[0].loyaltyThisTurn, 1, "and it is a loyalty ability activated");
   const gone = play([at(0, "battlefield", KIORA, "Walker")]);
   runEffect(gone, {effect: "moveZone", targets: [idOf(gone, KIORA)], to: "graveyard"}, {controller: 1, source: null});
-  eq(minus8(gone, "Walker").length, 0, "Kiora gone: the -8 with her");
+  eq(minus8(gone, "Walker").length, 0, "Kiora gone: the -8 gone too");
 }
 /* ---- the -8 makes Ajani's Cadet too ---- */
 {
