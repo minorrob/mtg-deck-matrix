@@ -467,7 +467,11 @@ turn, each held to its rule by number through real cards, then invariants at eve
 house-pilot games (one object in one zone, no token off the battlefield, life moved only by
 logged events, the commander tally equal to the combat damage dealt). `engine-room-games` plays
 seeded four-seat games of the engine's own definitions through the cloud table's card source and
-the real room, house pilots in every seat, each to its end with no exception inside a time budget. `engine-targets-up-to`
+the real room, house pilots in every seat, each to its end with no exception inside a time budget, dealt from a pinned
+pool of cards (`tests/fixtures/room-games-pool.json`) so a batch of new definitions does not change every seed's decks.
+`engine-derive-once` holds the layers' memo: each object derived once per question and guard level, the same answers as
+without it on a board where the guard levels differ, a question that only reads changing nothing, and the work linear in
+the board. `engine-targets-up-to`
 holds a counted target ("up to two target creatures", "any number of target players"): offered once and picked as a
 pick-several before anything moves, never the same object twice, none chosen still resolving. `engine-afterlife-tokens`
 holds Afterlife's Spirits and "whenever you create one or more creature tokens": once for all made at once, never for
@@ -594,7 +598,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 244 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 245 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -810,6 +814,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-escape` — `tests/engine-escape.mjs`
 - `engine-encore` — `tests/engine-encore.mjs`
 - `engine-attack-restrictions` — `tests/engine-attack-restrictions.mjs`
+- `engine-derive-once` — `tests/engine-derive-once.mjs`
 
 ## Design and execution record
 

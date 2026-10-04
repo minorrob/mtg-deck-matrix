@@ -92,8 +92,16 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   /* How many permanents the selector finds now (Forge's PresentCompare): at least `atLeast` ("five or more lands", one
      when it says nothing), at most `atMost` ("if you control no Snakes": none). */
   if (condition.present) {
-    const n = state.zones.battlefield.filter((id) => matchesSelector(condition.present, state, id, {controller, source})).length;
-    if (n < (condition.atLeast ?? (condition.atMost !== undefined ? 0 : 1))) return false;
+    const least = condition.atLeast ?? (condition.atMost !== undefined ? 0 : 1);
+    /* Counted only as far as the answer needs: "you control a Mountain" stops at the first (Anger, from a graveyard, asks
+       it of every derivation); "at most" stops one past. */
+    let n = 0;
+    for (const id of state.zones.battlefield) {
+      if (!matchesSelector(condition.present, state, id, {controller, source})) continue;
+      n += 1;
+      if (condition.atMost === undefined ? n >= least : n > condition.atMost) break;
+    }
+    if (n < least) return false;
     if (condition.atMost !== undefined && n > condition.atMost) return false;
   }
   /* A COUNTED COMPARISON (Forge's CheckSVar and SVarCompare): an amount (script/amount.mjs) counted now, against a number

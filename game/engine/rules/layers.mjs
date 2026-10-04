@@ -180,8 +180,16 @@ function holdsNow(state, condition, context) {
 
 /* Every continuous effect in play: the static abilities of permanents, plus effects with a
    duration that a resolved spell left behind in `state.effects`. And a card's static that works from its owner's
-   graveyard (`worksFrom: "graveyard"`, CR 113.6b): "as long as this card is in your graveyard and you control a Mountain". */
+   graveyard (`worksFrom: "graveyard"`, CR 113.6b): "as long as this card is in your graveyard and you control a Mountain".
+   Gathered once per derivation and guard level (`memo`). */
 function allEffects(state) {
+  const key = memo !== null && memo.state === state ? (conditioning > 0 ? "inner" : "outer") : null;
+  if (key !== null && memo.effects.has(key)) return memo.effects.get(key);
+  const found = gatherEffects(state);
+  if (key !== null) memo.effects.set(key, found);
+  return found;
+}
+function gatherEffects(state) {
   const found = [];
   for (const graveyard of state.zones.graveyard ?? []) for (const id of graveyard) {
     const card = state.objects[id];
@@ -233,6 +241,14 @@ function counted(state, effect) {
   }
 }
 
+/* The same effect without its counted amounts, for a derivation that will not be asked power or toughness: what else it
+   does (a keyword it gives with them) still applies. */
+function uncounted(effect) {
+  const change = effect.apply ?? {};
+  if (!Object.values(change).some(isCounted)) return effect;
+  return {...effect, apply: Object.fromEntries(Object.entries(change).filter(([, v]) => !isCounted(v)))};
+}
+
 /* Two derived objects compared by VALUE, not by the order things happen to sit in their lists.
    Without this, two effects that each add a type produce the same set in a different order and look
    mutually dependent — which resolves as a dependency loop and quietly falls back to timestamps,
@@ -278,6 +294,26 @@ function orderWithin(state, effects, base, sourceOf) {
   return out;
 }
 
+/* A DERIVATION'S MEMO. Deriving an object asks about others -- a static's condition counts Mountains, a counted power
+   counts creatures -- and each of those is derived in turn, the same ones again and again: with Anger in a graveyard ("as
+   long as you control a Mountain") and Adeline's power counting creatures on a board of 57 permanents, one projection
+   derived the board hundreds of thousands of times, and a game took seconds a step (engine-room-games seed 1,
+   2026-10-03). Deriving changes nothing in the game. So while a derivation runs -- or a question that only reads and
+   asks many (`deriving`: a projection, the offers) -- each object is derived once per guard level (a condition being
+   asked, a count being made: each leaves something out, holdsNow and counted) and the effects in play are gathered once
+   per level; every answer handed out is a copy. The memo lives no longer than the call that opened it, so nothing that
+   changes the game meets an answer from before the change. `memoOff` is for the suite that compares the two. */
+let memo = null, memoOff = false, derivations = 0;
+/** Run `fn`, a question that reads the game and changes nothing, with one memo for every derivation it makes. */
+export function deriving(state, fn) {
+  if (memo !== null || memoOff) return fn();
+  memo = {state, characteristics: new Map(), effects: new Map()};
+  try { return fn(); } finally { memo = null; }
+}
+/** For the suites: turn the memo off (to compare), and how many derivations were made since `reset`. */
+export const deriveMemo = {off(value = true) { memoOff = value; }, count() { return derivations; }, reset() { derivations = 0; }};
+const copy = (v) => (Array.isArray(v) ? v.map(copy) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, copy(x)])) : v);
+
 /**
  * What an object currently is: printed characteristics with every continuous effect applied in the
  * order CR 613 gives.
@@ -286,7 +322,30 @@ function orderWithin(state, effects, base, sourceOf) {
  * is the same promise the projection makes and for the same reason.
  */
 export function characteristicsOf(state, id) {
+  /* Outside a memo the answer is this call's alone; inside one it is shared, and handed out as a copy. */
+  const shared = memo !== null;
+  const current = derived(state, id);
+  return shared ? copy(current) : current;
+}
+
+/* The derivation, from the memo when one is open: shared, never to be edited -- the accessors below hand out a field.
+   `counts`: whether the question needs power and toughness. A counted change ("+1/+1 for each creature you control",
+   "power equal to the number of cards in your hand") changes only those (`counted`), and counting asks about the whole
+   board again; who controls an object, what it is and what it has are derived with every effect but its counted
+   amounts. A derivation with them answers a question without. */
+function derived(state, id, counts = true) {
   if (!state.objects[id]) throw new Error(`There is no object ${id} to describe`);
+  if (memo === null && !memoOff) return deriving(state, () => derived(state, id, counts));
+  const key = memo !== null && memo.state === state ? `${id}|${conditioning > 0 ? 1 : 0}|${counting > 0 ? 1 : 0}` : null;
+  const known = key !== null ? memo.characteristics.get(key) : undefined;
+  if (known && (known.counts || !counts)) return known.current;
+  const current = derive(state, id, counts);
+  if (key !== null) memo.characteristics.set(key, {counts, current});
+  return current;
+}
+
+function derive(state, id, counts = true) {
+  derivations += 1;
   let current = printed(state, id);
   const effects = allEffects(state);
   const sourceOf = (effect) => effect.sourceController;
@@ -321,7 +380,7 @@ export function characteristicsOf(state, id) {
       const here = inLayer.filter((effect) => (effect.sublayer ?? "c") === sublayer);
       for (const effect of orderWithin(state, here, current, sourceOf)) {
         if (!affects(state, effect, current, sourceOf(effect))) continue;
-        const now = counted(state, effect);
+        const now = counts ? counted(state, effect) : uncounted(effect);
         if (now) current = applyEffect(current, now);
       }
     }
@@ -331,15 +390,19 @@ export function characteristicsOf(state, id) {
 }
 
 /** Current power. Null for an object that has none — which is not the same as zero. */
-export const powerOf = (state, id) => characteristicsOf(state, id).power ?? 0;
+export const powerOf = (state, id) => derived(state, id).power ?? 0;
 /** Current toughness, by the same rule. */
-export const toughnessOf = (state, id) => characteristicsOf(state, id).toughness ?? 0;
+export const toughnessOf = (state, id) => derived(state, id).toughness ?? 0;
 /** Who currently controls it, after layer 2. */
-export const controllerOf = (state, id) => characteristicsOf(state, id).controller;
-/** What it currently is, after layer 4. */
-export const typesOf = (state, id) => characteristicsOf(state, id).types;
+export const controllerOf = (state, id) => derived(state, id, false).controller;
+/** What it currently is, after layer 4 (a copy, as every answer here is). */
+export const typesOf = (state, id) => [...derived(state, id, false).types];
 /** What it currently has, after layer 6. */
-export const keywordsOf = (state, id) => characteristicsOf(state, id).keywords;
+export const keywordsOf = (state, id) => [...derived(state, id, false).keywords];
+/** Its colors, after layer 5. */
+export const colorsOf = (state, id) => [...(derived(state, id, false).colors ?? [])];
+/** Whether it is every creature type (a changeling, CR 702.73a, or an effect's, layer 4). */
+export const everyCreatureTypeOf = (state, id) => derived(state, id, false).everyCreatureType === true;
 
 /* Its own abilities unless it lost them, then the ones given it. */
 const heldAbilities = (object, current) => [...(current.lostAbilities ? [] : object.abilities ?? []), ...current.granted];
