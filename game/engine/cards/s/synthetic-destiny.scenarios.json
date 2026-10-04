@@ -1,0 +1,182 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Synthetic Destiny",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Elf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "Wolf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wolf"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob's Bear exiled in the main phase; at the end step, one creature card revealed -- the Giant -- onto the battlefield, an Elf cast meanwhile not counted",
+      "library": [
+        "Island",
+        "Giant",
+        "Wolf"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Synthetic Destiny",
+            "Elf"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Synthetic Destiny"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Bear"
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Elf"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Forest",
+            "Elf",
+            "Giant"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ]
+    }
+  ]
+}
