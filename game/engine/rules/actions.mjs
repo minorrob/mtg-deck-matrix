@@ -306,11 +306,18 @@ export function alternativeCosts(state, player, id) {
 /* "As an additional cost to cast this spell, blight 1 or pay {3}" (Bogslither's Embrace; `{atom: "oneOf", options}`): each
    choice between additional costs a variant of the cast of its own -- its mana (`mana`) added to what the cast costs, the
    rest (`atoms`) picked as any additional cost is (additionalChoices). A spell without a choice has the one variant. */
+/* MULTIKICKER (CR 702.33c): "you may pay an additional [cost] any number of times" -- each number of times its own cast, from
+   none up to `MULTIKICK_MOST` (a cast that cannot be paid is not offered), that many times its mana added. */
+const MULTIKICK_MOST = 10;
 function additionalVariants(costs) {
   let variants = [{atoms: [], mana: ""}];
   for (const atom of costs ?? []) {
+    if (atom?.atom === "multikicker") {
+      variants = variants.flatMap((v) => Array.from({length: MULTIKICK_MOST + 1}, (_, k) => ({...v, mana: v.mana + (atom.cost ?? "").repeat(k), kicked: k})));
+      continue;
+    }
     const options = atom?.atom === "oneOf" ? atom.options ?? [] : [[atom]];
-    variants = variants.flatMap((v) => options.map((option) => ({atoms: [...v.atoms, ...option.filter((a) => a.atom !== "mana")],
+    variants = variants.flatMap((v) => options.map((option) => ({...v, atoms: [...v.atoms, ...option.filter((a) => a.atom !== "mana")],
       mana: v.mana + option.filter((a) => a.atom === "mana").map((a) => a.cost ?? "").join("")})));
   }
   return variants;
@@ -851,7 +858,7 @@ function offers(state, player) {
       for (const convoke of [...(payment ? [false] : []), ...(convokes ? [true] : [])])
       for (const costChoice of paysFor) {
         const base = {kind: "cast", objectId: id, label: object.card, payment: convoke ? null : payment, from, tax, ...(X !== null ? {x: X} : {}), ...(autoTap && !convoke ? {autoTap: true} : {}),
-          ...(convoke ? {convoke: true} : {}), ...(variant.mana ? {extraMana: variant.mana} : {}),
+          ...(convoke ? {convoke: true} : {}), ...(variant.mana ? {extraMana: variant.mana} : {}), ...(variant.kicked ? {kicked: variant.kicked} : {}),
           ...(costChoice ? {costChoice, costNames: Object.values(costChoice).map((c) => state.objects[c].card)} : {}),
           ...(freely ? {free: true} : {}), ...(back ? {flashback: true} : {}), ...(fled ? {escape: fled.kind} : {}), ...(way ? {alternative: way.index} : {})};
         actions.push(...(object.spell?.modal && !way?.overload ? withModes(state, base, object.spell.modal, {controller: player, source: id}) : withTargets(state, base, way?.overload ?? object.spell, {controller: player, source: id})));
@@ -1355,6 +1362,8 @@ function perform(state, player, action, during = null) {
     entry.cast = {from: castFrom, mainPhase: player === state.activePlayer && MAIN_PHASES.includes(state.phase),
       /* "If this spell's additional cost was paid" (Cinder Strike): an optional one, paid -- its mana too. */
       ...(extraPaid.length || action.extraMana ? {additionalPaid: true} : {})};
+    /* Kicked that many times (multikicker, CR 702.33c): the permanent it becomes knows it as it enters (rules/stack.mjs). */
+    if (action.kicked) entry.kicked = action.kicked;
     /* Cast with flashback: exiled, whatever would move it, as it leaves the stack (rules/stack.mjs, effects/zones.mjs). */
     if (back) entry.flashback = true;
     /* Cast with escape, it escaped (CR 702.138b): the permanent it becomes is marked so (rules/stack.mjs). */

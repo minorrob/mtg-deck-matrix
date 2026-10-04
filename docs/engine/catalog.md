@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,142 defined and playable today; 2,453 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,143 defined and playable today; 2,454 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -891,7 +891,7 @@ The things that alone hold back the most of the most-played cards.
 | — | Your starting life total | — | missing | 5 | 23 | 5 | 0 |
 | — | LifeGained | — | missing | 5 | 20 | 5 | 0 |
 | — | Whether it was kicked | — | missing | 3 | 92 | 3 | 0 |
-| — | Times kicked | — | missing | 3 | 30 | 3 | 0 |
+| — | Times kicked | — | missing | 3 | 30 | 2 | 0 |
 | — | Life your opponents lost this turn | — | missing | 3 | 26 | 3 | 1 |
 | — | An amount the trigger carries | — | missing | 3 | 21 | 3 | 2 |
 | — | Your experience counters | — | missing | 3 | 15 | 3 | 3 |
@@ -1089,7 +1089,7 @@ The things that alone hold back the most of the most-played cards.
 | Protection from black | — | missing | 2 | 48 | 2 | 0 |
 | Protection from white | — | missing | 2 | 32 | 2 | 1 |
 | Strive | — | missing | 2 | 20 | 2 | 2 |
-| Multikicker | — | named | 2 | 19 | 2 | 0 |
+| Multikicker | — | named | 2 | 19 | 1 | 0 |
 | Partner with | — | missing | 1 | 52 | 1 | 0 |
 | MayFlashSac | — | missing | 1 | 10 | 1 | 0 |
 | DeckLimit | — | missing | 1 | 5 | 1 | 0 |

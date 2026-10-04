@@ -402,6 +402,7 @@ export function compileScript(script) {
   const abilities = [];
   const keywords = [];
   let spell = null;
+  let multikicker = null;
 
   /* "ENCHANT CREATURE" (CR 702.5, 303.4): an Aura spell targets what it will enchant, and the permanent may be attached
      only to what the same words describe. One keyword ability, `target` its selector; `hostile` when the Aura is a
@@ -574,6 +575,17 @@ export function compileScript(script) {
        evoked: a cast for it marks the spell, and the permanent it becomes, evoked (rules/stack.mjs), which the trigger's
        condition reads as it triggers and again as it resolves (CR 603.4; script/condition.mjs). A new object after it
        moves (CR 400.7) was never evoked, so one flickered in response stays. */
+    /* MULTIKICKER (CR 702.33c): "you may pay an additional {2} any number of times as you cast this spell" -- an additional
+       cost of the spell's (rules/actions.mjs, additionalVariants), each number of times its own cast; the spell, and the
+       permanent it becomes, kicked that many times (`kicked`, an amount). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "multikicker") {
+      let parsed = null;
+      try { parsed = parseManaCost(ability.cost ?? ""); } catch { /* refused below */ }
+      if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`${ability.text}: multikicker is a mana cost`);
+      multikicker = String(ability.cost ?? "");
+      keywords.push("Multikicker");
+      return;
+    }
     /* OVERLOAD (CR 702.96a-b): an alternative cost; cast for it, the spell's text has "each" where it had "target" -- written
        out as the effects it then has (`effects`, no targets), which the spell carries onto the stack in place of its own
        (rules/actions.mjs, rules/stack.mjs). */
@@ -830,6 +842,8 @@ export function compileScript(script) {
   if (enchant && spell) problems.push("an Aura's spell is its Enchant target, and it has no other");
   /* The Aura as a spell: its one target, nothing done as it resolves -- it enters attached (stack.mjs). */
   if (enchant) spell = {id: "enchant", text: enchant.text, targets: [enchant.target], effects: [], ...(enchant.hostile ? {hostile: true} : {})};
+  /* Multikicker's additional cost, on the spell -- a permanent's too, whose spell does nothing else (CR 608.3). */
+  if (multikicker !== null) spell = {...(spell ?? {id: "multikicker", text: "Multikicker", targets: [], effects: []}), additionalCost: [...(spell?.additionalCost ?? []), {atom: "multikicker", cost: multikicker}]};
 
   const partners = partnersIn(script.oracleText);
   const definition = {

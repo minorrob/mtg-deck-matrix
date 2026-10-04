@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Everflowing Chalice",
+    "oracleId": "0a79237e-0811-4a8a-bd4d-db3ca91bff22",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{0}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Multikicker {2} (You may pay an additional {2} any number of times as you cast this spell.)\nThis artifact enters with a charge counter on it for each time it was kicked.\n{T}: Add {C} for each charge counter on this artifact.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Multikicker {2} (You may pay an additional {2} any number of times as you cast this spell.)",
+      "keyword": "multikicker",
+      "cost": "{2}"
+    },
+    {
+      "kind": "replacement",
+      "text": "This artifact enters with a charge counter on it for each time it was kicked.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "charge",
+          "count": {
+            "kicked": true
+          }
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C} for each charge counter on this artifact.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": {
+              "countersOn": "self",
+              "counter": "charge"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

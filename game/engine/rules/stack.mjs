@@ -292,7 +292,7 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     const object = state.objects[entry.objectId];
     const entering = to === "battlefield"
       ? enteringModifications(state, {objectId: entry.objectId, player: entry.playerId,
-        types: object.types, abilities: object.abilities, x: entry.x ?? 0, escaped: entry.escaped === true})
+        types: object.types, abilities: object.abilities, x: entry.x ?? 0, escaped: entry.escaped === true, kicked: entry.kicked ?? 0})
       : null;
     const arrived = moveObject(state, entry.objectId, to, to === "graveyard" ? owner : null);
     /* CR 608.3a: it enters under its caster's control -- not its owner's, when a card was cast by another player (Tinybones,
