@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mistmeadow Council",
+    "oracleId": "9acfec0d-05a0-4b28-a883-e6863f1cb773",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Kithkin",
+      "Advisor"
+    ],
+    "manaCost": "{4}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "This spell costs {1} less to cast if you control a Kithkin.\nWhen this creature enters, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell costs {1} less to cast if you control a Kithkin.",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": {
+        "count": {
+          "subtypes": [
+            "Kithkin"
+          ],
+          "controller": "you"
+        },
+        "atMost": 1
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, draw a card.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

@@ -562,6 +562,11 @@ export function compileScript(script) {
       for (const atom of cost) if (!costAtomBuilt(atom)) problems.push(`${atom?.atom ?? "a cost"}: a cost atom nothing pays yet`);
       abilities.push({id, kind: "activated", text: ability.text, cost, targets: ability.targets ?? [],
         effects: ability.effects, ...(loyalty !== undefined ? {loyalty, timing: "sorcery"} : ability.timing ? {timing: ability.timing} : {}), ...(ability.zone === "hand" ? {zone: "hand"} : {}),
+        /* "{W}, Exile this card from your graveyard: ..." (Goldmeadow Nomad): an ability of the card in its owner's graveyard,
+           offered there as encore's is (rules/actions.mjs). */
+        ...(ability.zone === "graveyard" ? {zone: "graveyard"} : {}),
+        /* Exhaust (CR 702.177a): "Activate only once" -- this object's, never again; a new object may (CR 400.7). */
+        ...(ability.exhaust === true ? {exhaust: true} : {}),
         /* "This ability costs {1} less to activate for each legendary creature you control" (CR 602.2b, 601.2f). */
         ...(ability.costLess !== undefined ? {costLess: ability.costLess} : {}), ...(ability.condition ? {condition: ability.condition} : {}),
         /* "Activate only once each turn" (CR 602.5b): how many times each turn. */

@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rebellious Captives",
+    "oracleId": "70401db7-edbc-402f-98ef-be74bd316273",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Peasant",
+      "Ally"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Exhaust — {6}: Put two +1/+1 counters on this creature, then earthbend 2. (Target land you control becomes a 0/0 creature with haste that's still a land. Put two +1/+1 counters on it. When it dies or is exiled, return it to the battlefield tapped. Activate each exhaust ability only once.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "Exhaust — {6}: Put two +1/+1 counters on this creature, then earthbend 2.",
+      "exhaust": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{6}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 2
+        },
+        {
+          "effect": "earthbend",
+          "targets": {
+            "target": 0
+          },
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tend the Sprigs",
+    "oracleId": "91363d71-eef0-48e8-9a68-8f363ff2790e",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Then if you control seven or more lands and/or Treefolk, create a 3/4 green Treefolk creature token with reach. (It can block creatures with flying.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Then if you control seven or more lands and/or Treefolk, create a 3/4 green Treefolk creature token with reach. (It can block creatures with flying.)",
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "to": "battlefield",
+          "tapped": true,
+          "shuffle": true
+        },
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Treefolk",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Treefolk"
+            ],
+            "colors": [
+              "G"
+            ],
+            "power": 3,
+            "toughness": 4,
+            "keywords": [
+              "Reach"
+            ]
+          },
+          "condition": {
+            "present": {
+              "controller": "you",
+              "anyOf": [
+                {
+                  "types": [
+                    "Land"
+                  ]
+                },
+                {
+                  "subtypes": [
+                    "Treefolk"
+                  ]
+                }
+              ]
+            },
+            "atLeast": 7
+          }
+        }
+      ]
+    }
+  ]
+}

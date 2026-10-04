@@ -1,0 +1,82 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Flaring Cinder",
+    "oracleId": "f70d65bf-5f1c-4aee-9bd1-f5ee6974b058",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental",
+      "Sorcerer"
+    ],
+    "manaCost": "{1}{U/R}{U/R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters and whenever you cast a spell with mana value 4 or greater, you may discard a card. If you do, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters and whenever you cast a spell with mana value 4 or greater, you may discard a card. If you do, draw a card.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "discard",
+          "count": 1,
+          "remember": true
+        },
+        {
+          "effect": "draw",
+          "count": 1,
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ],
+      "optional": true
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters and whenever you cast a spell with mana value 4 or greater, you may discard a card. If you do, draw a card.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "manaValue": {
+            "min": 4
+          }
+        }
+      },
+      "effects": [
+        {
+          "effect": "discard",
+          "count": 1,
+          "remember": true
+        },
+        {
+          "effect": "draw",
+          "count": 1,
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

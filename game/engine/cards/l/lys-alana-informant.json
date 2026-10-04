@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lys Alana Informant",
+    "oracleId": "b5058b5c-0359-42ec-ba9e-ae1371bb9c22",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Scout"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters or dies, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters or dies, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "surveil",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters or dies, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+      "trigger": {
+        "on": "dies"
+      },
+      "effects": [
+        {
+          "effect": "surveil",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

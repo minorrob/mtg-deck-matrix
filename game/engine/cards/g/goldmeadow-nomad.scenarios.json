@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Goldmeadow Nomad",
+  "scenarios": [
+    {
+      "name": "From the graveyard, {W} and exiled: a 1/1 green and white Kithkin",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Goldmeadow Nomad"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "activate": "Goldmeadow Nomad"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Kithkin",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Goldmeadow Nomad"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        }
+      ]
+    }
+  ]
+}

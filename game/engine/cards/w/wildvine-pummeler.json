@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wildvine Pummeler",
+    "oracleId": "6c34674f-856b-4062-87d5-6ed73d9a9855",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Giant",
+      "Berserker"
+    ],
+    "manaCost": "{6}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 6,
+    "toughness": 5
+  },
+  "oracleText": "Vivid — This spell costs {1} less to cast for each color among permanents you control.\nReach, trample",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Vivid — This spell costs {1} less to cast for each color among permanents you control.",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": {
+        "colorsAmong": {
+          "what": "permanent",
+          "controller": "you"
+        }
+      }
+    },
+    {
+      "kind": "keyword",
+      "text": "Reach",
+      "keyword": "reach"
+    },
+    {
+      "kind": "keyword",
+      "text": "trample",
+      "keyword": "trample"
+    }
+  ]
+}
