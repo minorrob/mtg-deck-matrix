@@ -144,6 +144,8 @@ function applyEffect(current, effect) {
   /* CR 613.1d: "in addition to its other types" adds; setTypes replaces. */
   if (change.addTypes) for (const type of change.addTypes) if (!current.types.includes(type)) current.types.push(type);
   if (change.setTypes) current.types = [...change.setTypes];
+  /* "It's not a creature" (impending, CR 702.176a): that type taken away, the rest kept. */
+  if (change.removeTypes) current.types = current.types.filter((type) => !change.removeTypes.includes(type));
   if (change.setColors) current.colors = [...change.setColors];
   /* "Gain all creature types" (Mirror Entity, batch 74): a type change, layer 4 (CR 613.1d). */
   if (change.allCreatureTypes === true) current.everyCreatureType = true;

@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gifts Ungiven",
+    "oracleId": "58aec411-167d-4709-8560-793eaaed62c5",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Search your library for up to four cards with different names and reveal them. Target opponent chooses two of those cards. Put the chosen cards into your graveyard and the rest into your hand. Then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Search your library for up to four cards with different names and reveal them. Target opponent chooses two of those cards. Put the chosen cards into your graveyard and the rest into your hand. Then shuffle.",
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "count": 4,
+          "upTo": true,
+          "differentNames": true,
+          "to": "stay",
+          "reveal": true,
+          "remember": true
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "among": "remembered",
+          "who": {
+            "target": 0
+          },
+          "count": 2,
+          "destinations": [
+            {
+              "to": "graveyard"
+            }
+          ]
+        },
+        {
+          "effect": "moveZone",
+          "targets": "remembered",
+          "to": "hand"
+        },
+        {
+          "effect": "shuffle"
+        }
+      ]
+    }
+  ]
+}

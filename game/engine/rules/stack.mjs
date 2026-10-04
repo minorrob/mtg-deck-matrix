@@ -308,6 +308,11 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     if (to === "battlefield" && entry.escaped) state.objects[arrived].escaped = true;
     /* Cast for its evoke cost, the permanent it became was evoked (CR 702.74a): its own sacrifice trigger reads this. */
     if (to === "battlefield" && entry.evoked) state.objects[arrived].evoked = true;
+    /* And for its impending cost (CR 702.176a): marked, with its N time counters (put on it as it enters, CR 122.6). */
+    if (to === "battlefield" && entry.impending) {
+      state.objects[arrived].impending = true;
+      state.objects[arrived].counters.time = (state.objects[arrived].counters.time ?? 0) + countersPlaced(state, arrived, "time", entry.impending);
+    }
     /* And the mana spent to cast it (rules/actions.mjs): "if {G}{G} was spent to cast it" asks the permanent. */
     if (to === "battlefield" && object.spent) state.objects[arrived].spent = {...object.spent};
     /* "If you cast a creature spell this way, it gains haste until end of turn" (rules/actions.mjs, castGains). */

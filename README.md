@@ -615,6 +615,9 @@ not blocked, not targeted, for permanents and their controller; nothing before t
 `engine-cant-lose` holds "you can't lose the game and your opponents can't win the game" (Darksteel Angel): no loss to
 life, poison or an empty library, conceding aside, and no win by an effect; no -1/-1 counters on its controller's
 creatures; and an emblem (Ajani Resolute), an effect with no source and no end, and its Pridemate token.
+`engine-impending` holds impending (Overlord of the Mistmoors): time counters, not a creature while it has one and was
+cast so, one removed at its controller's end step, and none of it when cast for its mana cost; and "cards with
+different names" (Gifts Ungiven), one of each name offered.
 `engine-destroyed-and-walker-damage` holds a board wipe that remembers what it destroyed (Ob Nixilis, the Ascended's
 "1 life for each creature destroyed this way"), the indestructible never among them; and "whenever this creature deals
 combat damage to a player or planeswalker" (Grateful Apparition): combat damage to a planeswalker triggers it, about its
@@ -737,7 +740,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 295 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 296 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1003,6 +1006,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-linked-exile` — `tests/engine-linked-exile.mjs`
 - `engine-protection` — `tests/engine-protection.mjs`
 - `engine-cant-lose` — `tests/engine-cant-lose.mjs`
+- `engine-impending` — `tests/engine-impending.mjs`
 - `engine-destroyed-and-walker-damage` — `tests/engine-destroyed-and-walker-damage.mjs`
 
 ## Design and execution record

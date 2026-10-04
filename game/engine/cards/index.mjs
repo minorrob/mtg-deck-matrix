@@ -574,6 +574,22 @@ export function compileScript(script) {
        evoked: a cast for it marks the spell, and the permanent it becomes, evoked (rules/stack.mjs), which the trigger's
        condition reads as it triggers and again as it resolves (CR 603.4; script/condition.mjs). A new object after it
        moves (CR 400.7) was never evoked, so one flickered in response stays. */
+    /* IMPENDING (CR 702.176a): four abilities. An alternative cost -- "Impending 4--{2}{W}{W}" -- that marks the spell, and the
+       permanent it becomes, as cast for it (rules/actions.mjs, rules/stack.mjs), the permanent entering with N time counters;
+       while it was and it has a time counter, it is not a creature (layer 4); and at the beginning of its controller's end
+       step, while it was and it has one, a time counter removed. */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "impending") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      if (!Number.isInteger(ability.count) || ability.count < 1 || !cost.length || !cost.every((atom) => atom?.atom === "mana"))
+        problems.push(`${ability.text}: impending is a number of time counters and a mana cost`);
+      const waiting = {impending: true, selfCounters: {counter: "time", atLeast: 1}};
+      abilities.push({id, kind: "static", rule: "alternative-cost", impending: ability.count, text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
+      abilities.push({id: `${id}-not-a-creature`, kind: "static", text: ability.text, layer: 4, affects: {self: true}, condition: waiting, apply: {removeTypes: ["Creature"]}});
+      abilities.push({id: `${id}-time`, kind: "triggered", text: ability.text, trigger: TRIGGERS.step({step: "END_OF_TURN"}), condition: waiting,
+        effects: [{effect: "removeCounter", targets: "self", counter: "time", count: 1}]});
+      keywords.push("Impending");
+      return;
+    }
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "evoke") {
       const cost = Array.isArray(ability.cost) ? ability.cost : [];
       if (!cost.length || !cost.every((atom) => EVOKE_ATOMS.includes(atom?.atom) && (atom.atom !== "exileFromHand" || (atom.selector && typeof atom.selector === "object"))))

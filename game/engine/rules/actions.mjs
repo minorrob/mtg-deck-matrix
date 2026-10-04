@@ -291,7 +291,9 @@ export function alternativeCosts(state, player, id) {
     if (!conditionHolds(state, ability.condition, {controller: player, source: id})) return [];
     const cost = ability.cost ?? [];
     return [{index, mana: cost.find((a) => a.atom === "mana")?.cost ?? "", life: cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0),
-      extra: cost.filter((a) => a.atom === "exileFromHand" || a.atom === "sacrifice"), evoke: ability.evoke === true}];
+      extra: cost.filter((a) => a.atom === "exileFromHand" || a.atom === "sacrifice"), evoke: ability.evoke === true,
+      /* Impending (CR 702.176a): how many time counters it enters with. */
+      ...(Number.isInteger(ability.impending) ? {impending: ability.impending} : {})}];
   });
 }
 
@@ -1354,6 +1356,8 @@ function perform(state, player, action, during = null) {
     if (fled) entry.escaped = true;
     /* Cast for its evoke cost (CR 702.74a): the permanent it becomes is marked so, for the evoke trigger's condition. */
     if (way?.evoke) entry.evoked = true;
+    /* Cast for its impending cost (CR 702.176a): the permanent it becomes is marked so, and enters with that many time counters. */
+    if (way?.impending) entry.impending = way.impending;
     /* "And that spell can't be countered" (Cavern of Souls): paid with mana that said so. */
     if (paid.uncounterable) entry.uncounterable = true;
     /* "The next spell you cast this turn can't be countered" (Theorist's Proxy): an effect of its caster's, used up by the

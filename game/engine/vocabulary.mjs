@@ -162,6 +162,8 @@ const BEYOND_TIER0 = ["shroud", "ward",
   "annihilator",
   /* The live-game plan of 2026-10-04: increment (Berta, Wise Extrapolator; cards/index.mjs, a triggered ability). */
   "increment",
+  /* And impending (CR 702.176; Overlord of the Mistmoors): an alternative cost, time counters, not a creature meanwhile. */
+  "impending",
   /* Batch 79: commander ninjutsu (CR 702.49d), ninjutsu that also works from the command zone. */
   "commander ninjutsu",
   /* Rob's Priority Batch 10.3, its seventeenth slice: storied (CR 702.195), an enduring story (keywords/designations.mjs). */
