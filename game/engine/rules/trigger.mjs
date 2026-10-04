@@ -667,7 +667,8 @@ export function triggerTargetsChoice(state, awaiting) {
       let at = 0;
       const label = modes.map((m) => {
         const mine = targets.slice(at, at += modal.modes[m].targets.length);
-        return `${modal.modes[m].text} → ${mine.map((t) => targetName(state, t)).join(", ")}`;
+        /* A mode that names no target is its words alone (Tireless Provisioner's "Create a Food token"). */
+        return mine.length ? `${modal.modes[m].text} → ${mine.map((t) => targetName(state, t)).join(", ")}` : modal.modes[m].text;
       }).join("; ");
       return {index, label, modes, targets, hostile: isHostile(modalScript(modal, modes).effects), ...(entry.cardId !== null ? {cardId: entry.cardId} : {})};
     });
