@@ -1,0 +1,209 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Cinder Strike",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Not paid: 2 damage, and Maya's 3/3 Ogre lives",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Cinder Strike"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Cinder Strike",
+          "targets": [
+            {
+              "card": "Ogre",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rob's Bear blighted: 4 damage, and the Ogre dies; the Bear a 1/1",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Cinder Strike"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Cinder Strike",
+          "targets": [
+            {
+              "card": "Ogre",
+              "seat": 1
+            }
+          ],
+          "blight": "Bear"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "No creature of Rob's to blight: only the cast that pays nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Cinder Strike"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Cinder Strike"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Cinder Strike"
+          ]
+        }
+      ]
+    }
+  ]
+}

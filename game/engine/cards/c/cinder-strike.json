@@ -1,0 +1,71 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cinder Strike",
+    "oracleId": "54421e69-d79e-4c2e-8ce6-96994d168835",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As an additional cost to cast this spell, you may blight 1. (You may put a -1/-1 counter on a creature you control.)\nCinder Strike deals 2 damage to target creature. It deals 4 damage to that creature instead if this spell's additional cost was paid.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "As an additional cost to cast this spell, you may blight 1. (You may put a -1/-1 counter on a creature you control.)\nCinder Strike deals 2 damage to target creature. It deals 4 damage to that creature instead if this spell's additional cost was paid.",
+      "additionalCost": [
+        {
+          "atom": "blight",
+          "count": 1,
+          "optional": true
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "cast": {
+              "additionalPaid": true
+            }
+          },
+          "then": [
+            {
+              "effect": "dealDamage",
+              "amount": 4,
+              "targets": {
+                "target": 0
+              }
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "dealDamage",
+              "amount": 2,
+              "targets": {
+                "target": 0
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

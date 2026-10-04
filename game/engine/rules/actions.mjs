@@ -313,6 +313,9 @@ function additionalChoices(state, player, spellId, costs) {
       const matchers = alternatives.map((one) => compileSelector({...one, what: "permanent", controller: "you"}));
       options = state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player}))).map((id) => ({sacrifice: id}));
     }
+    /* "Blight 1" (Cinder Strike): a creature of the caster's for the counters, one offer each -- and "you may" (`optional`),
+       the offer that pays nothing too, first. */
+    if (atom.atom === "blight") options = [...(atom.optional === true ? [{}] : []), ...blightChoices(state, player).map((id) => ({blight: id}))];
     choices = choices.flatMap((chosen) => options.filter((o) => !Object.values(chosen).includes(Object.values(o)[0])).map((o) => ({...chosen, ...o})));
   }
   return choices;
@@ -1293,7 +1296,9 @@ function perform(state, player, action, during = null) {
     /* How it was cast, for its own conditions (script/condition.mjs, `cast`): "if this spell was cast from a graveyard"
        (Sevinne's Reclamation), and Addendum's "if you cast this spell during your main phase" -- its caster's turn, a main
        phase (Unbreakable Formation). A copy is not cast (CR 707.10) and has none. */
-    entry.cast = {from: castFrom, mainPhase: player === state.activePlayer && MAIN_PHASES.includes(state.phase)};
+    entry.cast = {from: castFrom, mainPhase: player === state.activePlayer && MAIN_PHASES.includes(state.phase),
+      /* "If this spell's additional cost was paid" (Cinder Strike): an optional one, paid. */
+      ...(extraPaid.length ? {additionalPaid: true} : {})};
     /* Cast with flashback: exiled, whatever would move it, as it leaves the stack (rules/stack.mjs, effects/zones.mjs). */
     if (back) entry.flashback = true;
     /* Cast with escape, it escaped (CR 702.138b): the permanent it becomes is marked so (rules/stack.mjs). */
@@ -1313,6 +1318,12 @@ function perform(state, player, action, during = null) {
     const spent = Object.fromEntries(Object.entries(payment.mana ?? {}).filter(([, n]) => n > 0));
     if (Object.keys(spent).length && state.objects[entry.objectId]) state.objects[entry.objectId].spent = spent;
     for (const [kind, id] of extraPaid) {
+      /* "Blight 1": its counters on the creature chosen, put as any counters are (CR 701.68a). */
+      if (kind === "blight") {
+        const count = (object.spell?.additionalCost ?? []).find((a) => a?.atom === "blight")?.count ?? 1;
+        events.push(...runEffects(state, [{effect: "putCounter", targets: [id], counter: "-1/-1", count}], {controller: player, source: entry.objectId}));
+        continue;
+      }
       /* A card exiled from the hand (Force of Will) goes to exile; a discard or a sacrifice to its owner's graveyard. */
       const paid = kind === "sacrifice" ? sacrificeOne(state, id, events) : moveOne(state, id, kind === "exile" ? "exile" : "graveyard", events, {owner: state.objects[id].owner});
       if (kind === "discard" && paid !== null) events[events.length - 1].data.fields.discarded = true;

@@ -72,12 +72,14 @@ function namedIs(state, id, selector, context, was = null) {
    graveyard" (Sevinne's Reclamation: `from`, the zone), and Addendum's "if you cast this spell during your main phase"
    (Unbreakable Formation: `mainPhase`). A copy was not cast (CR 707.10), and neither was an ability: no record, and
    neither holds. */
-const CAST_KEYS = ["from", "mainPhase"];
+const CAST_KEYS = ["from", "mainPhase", "additionalPaid"];
 const CAST_ZONES = ["hand", "graveyard", "exile", "library", "command"];
 function castHolds(rule, cast) {
   if (!cast) return false;
   if (rule.from !== undefined && cast.from !== rule.from) return false;
   if (rule.mainPhase === true && cast.mainPhase !== true) return false;
+  /* "If this spell's additional cost was paid" (CR 601.2f; rules/actions.mjs). */
+  if (rule.additionalPaid === true && cast.additionalPaid !== true) return false;
   return true;
 }
 
@@ -206,6 +208,7 @@ export function conditionProblems(condition) {
     else {
       if ("from" in rule && !CAST_ZONES.includes(rule.from)) problems.push(`cast.from is a zone: ${CAST_ZONES.join(", ")}`);
       if ("mainPhase" in rule && rule.mainPhase !== true) problems.push("cast.mainPhase is true");
+      if ("additionalPaid" in rule && rule.additionalPaid !== true) problems.push("cast.additionalPaid is true");
     }
   }
   if ("present" in condition) {
