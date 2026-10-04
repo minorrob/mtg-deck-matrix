@@ -1,0 +1,135 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Everflowing Chalice",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Kicked twice for {4}: two charge counters, and {T} for {C}{C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Everflowing Chalice"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Everflowing Chalice",
+          "extraMana": "{2}{2}"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Everflowing Chalice"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Everflowing Chalice",
+            "counter": "charge",
+            "count": 2
+          }
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "C": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cast for {0}, not kicked: no counter, and {T} adds nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Everflowing Chalice"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Everflowing Chalice",
+          "extraMana": ""
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Everflowing Chalice",
+            "counter": "charge",
+            "count": 0
+          }
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Everflowing Chalice"
+          ]
+        }
+      ]
+    }
+  ]
+}

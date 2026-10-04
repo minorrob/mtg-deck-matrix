@@ -306,11 +306,18 @@ export function alternativeCosts(state, player, id) {
 /* "As an additional cost to cast this spell, blight 1 or pay {3}" (Bogslither's Embrace; `{atom: "oneOf", options}`): each
    choice between additional costs a variant of the cast of its own -- its mana (`mana`) added to what the cast costs, the
    rest (`atoms`) picked as any additional cost is (additionalChoices). A spell without a choice has the one variant. */
+/* MULTIKICKER (CR 702.33c): "you may pay an additional [cost] any number of times" -- each number of times its own cast, from
+   none up to `MULTIKICK_MOST` (a cast that cannot be paid is not offered), that many times its mana added. */
+const MULTIKICK_MOST = 10;
 function additionalVariants(costs) {
   let variants = [{atoms: [], mana: ""}];
   for (const atom of costs ?? []) {
+    if (atom?.atom === "multikicker") {
+      variants = variants.flatMap((v) => Array.from({length: MULTIKICK_MOST + 1}, (_, k) => ({...v, mana: v.mana + (atom.cost ?? "").repeat(k), kicked: k})));
+      continue;
+    }
     const options = atom?.atom === "oneOf" ? atom.options ?? [] : [[atom]];
-    variants = variants.flatMap((v) => options.map((option) => ({atoms: [...v.atoms, ...option.filter((a) => a.atom !== "mana")],
+    variants = variants.flatMap((v) => options.map((option) => ({...v, atoms: [...v.atoms, ...option.filter((a) => a.atom !== "mana")],
       mana: v.mana + option.filter((a) => a.atom === "mana").map((a) => a.cost ?? "").join("")})));
   }
   return variants;
@@ -526,7 +533,8 @@ function costPayment(state, player, id, cost, x = 0, less = 0) {
     }
     /* CR 119.4: a player can pay life only if their life total is at least the amount. */
     if (atom.atom === "payLife") life += atom.amount ?? 0;
-    if (atom.atom === "removeCounters" && (object.counters?.[atom.counter] ?? 0) < (atom.count ?? 1)) return null;
+    /* A −X loyalty cost is offered only for the X it can pay (abilityXValues). */
+    if (atom.atom === "removeCounters" && atom.count !== "X" && (object.counters?.[atom.counter] ?? 0) < (atom.count ?? 1)) return null;
   }
   if (life + (mana?.life ?? 0) > state.players[player].life) return null;
   return {mana, life};
@@ -609,6 +617,8 @@ function xValues(pool, cost, extra = 0) {
 }
 const abilityLess = (state, player, id, ability) => (ability.costLess === undefined ? 0 : amountOf(state, ability.costLess, {controller: player, source: id}));
 function abilityXValues(state, player, ability, id) {
+  /* "−X:" (CR 606.4): any X from none to the loyalty it has. */
+  if (ability.loyalty === "-X") return Array.from({length: (state.objects[id]?.counters?.loyalty ?? 0) + 1}, (_, n) => n);
   const atom = (ability.cost ?? []).find((a) => a?.atom === "mana");
   return atom ? xValues(poolFor(state, player, {ability: id}), parseManaCost(atom.cost)) : [null];
 }
@@ -848,7 +858,7 @@ function offers(state, player) {
       for (const convoke of [...(payment ? [false] : []), ...(convokes ? [true] : [])])
       for (const costChoice of paysFor) {
         const base = {kind: "cast", objectId: id, label: object.card, payment: convoke ? null : payment, from, tax, ...(X !== null ? {x: X} : {}), ...(autoTap && !convoke ? {autoTap: true} : {}),
-          ...(convoke ? {convoke: true} : {}), ...(variant.mana ? {extraMana: variant.mana} : {}),
+          ...(convoke ? {convoke: true} : {}), ...(variant.mana ? {extraMana: variant.mana} : {}), ...(variant.kicked ? {kicked: variant.kicked} : {}),
           ...(costChoice ? {costChoice, costNames: Object.values(costChoice).map((c) => state.objects[c].card)} : {}),
           ...(freely ? {free: true} : {}), ...(back ? {flashback: true} : {}), ...(fled ? {escape: fled.kind} : {}), ...(way ? {alternative: way.index} : {})};
         actions.push(...(object.spell?.modal && !way?.overload ? withModes(state, base, object.spell.modal, {controller: player, source: id}) : withTargets(state, base, way?.overload ?? object.spell, {controller: player, source: id})));
@@ -899,7 +909,7 @@ function offers(state, player) {
         for (const costChoice of fodder)
           actions.push(...withModesOrTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment, ...(X !== null ? {x: X} : {}),
             /* A loyalty ability says its loyalty cost (CR 606.4), for a pilot to weigh. */
-            ...(ability.loyalty !== undefined ? {loyalty: ability.loyalty} : {}),
+            ...(ability.loyalty !== undefined ? {loyalty: ability.loyalty === "-X" ? -(X ?? 0) : ability.loyalty} : {}),
             ...(costChoice ? {costChoice, costNames: costChoice.crew ? costChoice.crew.map((c) => state.objects[c].card)
               : costChoice.untap ? costChoice.untap.map((c) => state.objects[c].card)
               : costChoice.tapAll ? costChoice.tapAll.map((c) => state.objects[c].card)
@@ -1333,6 +1343,8 @@ function perform(state, player, action, during = null) {
     /* "If you cast a creature spell this way, it gains haste until end of turn" (Thundermane Dragon): remembered on the spell,
        given to the permanent it becomes (rules/stack.mjs). */
     const gains = object.zone === "library" ? castFromTopGains(state, player, action.objectId) : [];
+    /* Cast from suspend (CR 702.62a): a suspended card cast from exile, read before it moves. */
+    const fromSuspend = object.suspended === true && object.zone === "exile";
 
     const permanent = !(object.types ?? []).some((type) => ["Instant", "Sorcery"].includes(type));
     const targets = structuredClone(action.targets ?? []);
@@ -1352,6 +1364,8 @@ function perform(state, player, action, during = null) {
     entry.cast = {from: castFrom, mainPhase: player === state.activePlayer && MAIN_PHASES.includes(state.phase),
       /* "If this spell's additional cost was paid" (Cinder Strike): an optional one, paid -- its mana too. */
       ...(extraPaid.length || action.extraMana ? {additionalPaid: true} : {})};
+    /* Kicked that many times (multikicker, CR 702.33c): the permanent it becomes knows it as it enters (rules/stack.mjs). */
+    if (action.kicked) entry.kicked = action.kicked;
     /* Cast with flashback: exiled, whatever would move it, as it leaves the stack (rules/stack.mjs, effects/zones.mjs). */
     if (back) entry.flashback = true;
     /* Cast with escape, it escaped (CR 702.138b): the permanent it becomes is marked so (rules/stack.mjs). */
@@ -1372,6 +1386,8 @@ function perform(state, player, action, during = null) {
     if (permission?.ability.graveyardToExile) entry.graveyardToExile = true;
     /* On the spell as it now is: moving to the stack made a new object (CR 400.7). */
     if (gains.length && state.objects[entry.objectId]) state.objects[entry.objectId].castGains = gains;
+    /* Cast from suspend (CR 702.62a): a creature so cast has haste as long as its caster controls it (rules/stack.mjs). */
+    if (fromSuspend) entry.fromSuspend = true;
     /* THE MANA SPENT TO CAST IT (CR 601.2h): "if {W}{W} was spent to cast it" (Wistfulness), "if at least three red mana was
        spent to cast this spell" (adamant) -- by color, on the spell as it now is, and on the permanent it becomes (rules/
        stack.mjs). What the pool paid, tax and all: a creature that convoked it paid no mana (CR 702.51a), and a spell cast
@@ -1452,7 +1468,7 @@ function perform(state, player, action, during = null) {
       card,
       sa: {isSpell: false, abilityId: entry.abilityId, stackId: entry.stackId, description: ability.text,
         /* A loyalty ability says its cost (CR 606.4): "whenever you activate a loyalty ability" (rules/trigger.mjs). */
-        ...(ability.loyalty !== undefined ? {loyalty: ability.loyalty} : {})},
+        ...(ability.loyalty !== undefined ? {loyalty: ability.loyalty === "-X" ? -(action.x ?? 0) : ability.loyalty} : {})},
       si: {isTrigger: false, actor: {playerId: player, name: state.players[player].name}},
       targetDescription,
     }));
@@ -1468,7 +1484,7 @@ function perform(state, player, action, during = null) {
       }
       if (atom.atom === "payLife") changeLife(state, player, -(atom.amount ?? 0), events);
       if (atom.atom === "addCounters" || atom.atom === "removeCounters")
-        payCounters(state, action.objectId, [{counter: atom.counter, count: atom.count ?? 1, put: atom.atom === "addCounters"}]);
+        payCounters(state, action.objectId, [{counter: atom.counter, count: atom.count === "X" ? action.x ?? 0 : atom.count ?? 1, put: atom.atom === "addCounters"}]);
       /* "Return a Forest you control to its owner's hand": the one chosen with the offer. */
       if (atom.atom === "returnToHand" && action.costChoice?.returnToHand !== undefined) moveOne(state, action.costChoice.returnToHand, "hand", events);
       /* "Discard a card": the one chosen with the offer, a discard -- "whenever you discard a card" sees it. */

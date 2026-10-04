@@ -628,6 +628,16 @@ asks, each player in turn; and each search by the creature's controller as it le
 cast free from exile or put into hand; each opponent dealt 2 for a spell cast from exile; and mana for each card exiled.
 `engine-eminence` holds eminence (The Ur-Sphinx), from the command zone and its owner's other Sphinxes only; "that many"
 for the Sphinxes attacking; and, for each player, a card that player milled, cast free.
+`engine-no-legend-rule` holds "the legend rule doesn't apply to permanents you control this turn" (Hall of Echoes): for
+that player, for the turn; another player's legends still under it.
+`engine-loyalty-x` holds a loyalty cost of -X (Kasmina, Enigma Sage): from none to its loyalty, each its own offer,
+and said as -X; and a card that shares a color with its source.
+`engine-multikicker` holds multikicker (Everflowing Chalice): kicked any number of times it can be paid, each its own
+cast, and the permanent entering with what it was kicked.
+`engine-set-subtypes` holds subtypes through the layers: set in layer 4 and read as they now are, by selectors, statics
+and last known information; Song of the Dryads's colorless Forest land.
+`engine-suspend` holds suspend (Delay): a countered card exiled with time counters and suspended; one removed at its
+owner's upkeep only; cast free with haste when the last goes, or left in exile.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -746,7 +756,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 299 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 304 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1017,6 +1027,11 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-overload` — `tests/engine-overload.mjs`
 - `engine-discover` — `tests/engine-discover.mjs`
 - `engine-eminence` — `tests/engine-eminence.mjs`
+- `engine-no-legend-rule` — `tests/engine-no-legend-rule.mjs`
+- `engine-loyalty-x` — `tests/engine-loyalty-x.mjs`
+- `engine-multikicker` — `tests/engine-multikicker.mjs`
+- `engine-set-subtypes` — `tests/engine-set-subtypes.mjs`
+- `engine-suspend` — `tests/engine-suspend.mjs`
 
 ## Design and execution record
 

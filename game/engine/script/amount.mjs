@@ -50,7 +50,7 @@ import {parseManaCost, manaValue} from "../rules/mana.mjs";
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
 export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "toughnessOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
   "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn", "playersDealtCombatDamage", "cardTypesAmong", "manaSpent",
-  "permanentsEnteredThisTurn", "excessDamage", "lesserOf"]);
+  "permanentsEnteredThisTurn", "excessDamage", "lesserOf", "kicked"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "filter", "controlledBy"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -144,6 +144,8 @@ export function amountOf(state, value, context = {}) {
   const who = {controller: context.controller, source: context.source, ...(context.about ? {about: context.about} : {})};
   let n = 0;
   if ("x" in value) n = Math.max(0, context.x ?? 0);
+  /* "A charge counter on it for each time it was kicked" (Everflowing Chalice; multikicker, CR 702.33c). */
+  else if ("kicked" in value) n = context.kicked ?? 0;
   /* "Greater than this creature's power or toughness" (increment, Berta): the lesser of them. */
   else if ("lesserOf" in value) n = Math.min(...value.lesserOf.map((one) => amountOf(state, one, context)));
   else if ("count" in value) n = matching(state, value.count, who).length;

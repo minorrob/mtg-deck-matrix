@@ -535,6 +535,17 @@ export function collectTriggers(state, events) {
     /* "At the beginning of the next turn's upkeep" (Arcane Denial) the same way: one made during an upkeep waits for the
        next turn's. */
     const moment = event.kind === "GameEventTurnPhase" ? {END_OF_TURN: "end step", UPKEEP: "upkeep"}[event.data?.fields?.phase] : undefined;
+    /* SUSPEND (CR 702.62a): at the beginning of its owner's upkeep, a suspended card in exile with a time counter on it has
+       one removed -- and when the last is, its owner may cast it without paying its mana cost (a creature so cast has haste,
+       rules/actions.mjs). One triggered ability does both, in order. */
+    if (moment === "upkeep") for (const id of state.zones.exile ?? []) {
+      const card = state.objects[id];
+      if (!card?.suspended || (card.counters?.time ?? 0) <= 0 || card.owner !== event.data?.fields?.playerTurn?.playerId) continue;
+      state.pendingTriggers.push({abilityId: "suspend", text: "Suspend: remove a time counter. When the last is removed, you may cast it without paying its mana cost.",
+        controller: card.owner, source: {cardId: id, name: card.card}, cause: null, optional: false, about: {card: id, player: card.owner},
+        script: {targets: [], effects: [{effect: "removeCounter", targets: "that card", counter: "time", count: 1},
+          {effect: "play", from: "targets", targets: "that card", free: true, condition: {compare: {count: {countersOn: "that card", counter: "time"}, atMost: 0}}}]}});
+    }
     if (moment && (state.delayedTriggers ?? []).length) {
       const due = state.delayedTriggers.filter((d) => d.at === moment);
       state.delayedTriggers = state.delayedTriggers.filter((d) => !due.includes(d));

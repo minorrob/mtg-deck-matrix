@@ -1,0 +1,239 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kasmina, Enigma Sage",
+    "oracleId": "06425cb9-d157-4155-a727-78656df12458",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Planeswalker"
+    ],
+    "subtypes": [
+      "Kasmina"
+    ],
+    "manaCost": "{1}{G}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": null,
+    "toughness": null,
+    "loyalty": 2
+  },
+  "oracleText": "Each other planeswalker you control has the loyalty abilities of Kasmina.\n+2: Scry 1.\n−X: Create a 0/0 green and blue Fractal creature token. Put X +1/+1 counters on it.\n−8: Search your library for an instant or sorcery card that shares a color with this planeswalker, exile that card, then shuffle. You may cast that card without paying its mana cost.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Each other planeswalker you control has the loyalty abilities of Kasmina.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "types": [
+          "Planeswalker"
+        ],
+        "another": true
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "activated",
+            "text": "+2: Scry 1.",
+            "cost": [
+              {
+                "atom": "loyalty",
+                "amount": 2
+              }
+            ],
+            "effects": [
+              {
+                "effect": "scry",
+                "count": 1
+              }
+            ]
+          },
+          {
+            "kind": "activated",
+            "text": "−X: Create a 0/0 green and blue Fractal creature token. Put X +1/+1 counters on it.",
+            "cost": [
+              {
+                "atom": "loyalty",
+                "amount": "-X"
+              }
+            ],
+            "effects": [
+              {
+                "effect": "createToken",
+                "count": 1,
+                "token": {
+                  "name": "Fractal",
+                  "types": [
+                    "Creature"
+                  ],
+                  "subtypes": [
+                    "Fractal"
+                  ],
+                  "colors": [
+                    "G",
+                    "U"
+                  ],
+                  "power": 0,
+                  "toughness": 0
+                },
+                "remember": true
+              },
+              {
+                "effect": "putCounter",
+                "targets": "remembered",
+                "counter": "+1/+1",
+                "count": "X"
+              }
+            ]
+          },
+          {
+            "kind": "activated",
+            "text": "−8: Search your library for an instant or sorcery card that shares a color with this planeswalker, exile that card, then shuffle. You may cast that card without paying its mana cost.",
+            "cost": [
+              {
+                "atom": "loyalty",
+                "amount": -8
+              }
+            ],
+            "effects": [
+              {
+                "effect": "chooseCard",
+                "zone": "library",
+                "selector": {
+                  "anyOf": [
+                    {
+                      "types": [
+                        "Instant"
+                      ]
+                    },
+                    {
+                      "types": [
+                        "Sorcery"
+                      ]
+                    }
+                  ],
+                  "sharesColor": "self"
+                },
+                "count": 1,
+                "to": "exile",
+                "remember": true,
+                "shuffle": true
+              },
+              {
+                "effect": "play",
+                "from": "targets",
+                "targets": "remembered",
+                "free": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "+2: Scry 1.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": 2
+        }
+      ],
+      "effects": [
+        {
+          "effect": "scry",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−X: Create a 0/0 green and blue Fractal creature token. Put X +1/+1 counters on it.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": "-X"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Fractal",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Fractal"
+            ],
+            "colors": [
+              "G",
+              "U"
+            ],
+            "power": 0,
+            "toughness": 0
+          },
+          "remember": true
+        },
+        {
+          "effect": "putCounter",
+          "targets": "remembered",
+          "counter": "+1/+1",
+          "count": "X"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−8: Search your library for an instant or sorcery card that shares a color with this planeswalker, exile that card, then shuffle. You may cast that card without paying its mana cost.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -8
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Instant"
+                ]
+              },
+              {
+                "types": [
+                  "Sorcery"
+                ]
+              }
+            ],
+            "sharesColor": "self"
+          },
+          "count": 1,
+          "to": "exile",
+          "remember": true,
+          "shuffle": true
+        },
+        {
+          "effect": "play",
+          "from": "targets",
+          "targets": "remembered",
+          "free": true
+        }
+      ]
+    }
+  ]
+}

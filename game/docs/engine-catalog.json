@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1142,
-  "everyRule": 2453
+  "defined": 1144,
+  "everyRule": 2454
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -9652,7 +9652,7 @@
      "forge": "TimesKicked",
      "top": 3,
      "all": 30,
-     "blocks": 3,
+     "blocks": 2,
      "alone": 0
     },
     {
@@ -11928,7 +11928,7 @@
      "forge": "Multikicker",
      "top": 2,
      "all": 19,
-     "blocks": 2,
+     "blocks": 1,
      "alone": 0
     },
     {
