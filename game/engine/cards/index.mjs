@@ -580,8 +580,14 @@ export function compileScript(script) {
       for (const alt of (script.abilities ?? []).filter((a) => a?.kind === "static" && a.rule === "alternative-cost"))
         for (const atom of alt.cost ?? []) if (!["mana", "payLife", "exileFromHand", "sacrifice"].includes(atom?.atom) || (atom.atom === "sacrifice" && !atom.selector))
           problems.push(`${alt.text}: an alternative cost of ${atom?.atom ?? "something"} nothing pays yet`);
-      for (const atom of ability.additionalCost ?? [])
-        if (!["discard", "sacrifice"].includes(atom?.atom)) problems.push(`${atom?.atom ?? "an additional cost"}: an additional cost nothing pays yet`);
+      for (const atom of ability.additionalCost ?? []) {
+        if (!["discard", "sacrifice", "blight"].includes(atom?.atom)) problems.push(`${atom?.atom ?? "an additional cost"}: an additional cost nothing pays yet`);
+        /* "As an additional cost to cast this spell, blight 1" (CR 701.68a): a whole number of -1/-1 counters, 1 or more. */
+        if (atom?.atom === "blight" && !(Number.isInteger(atom.count ?? 1) && (atom.count ?? 1) >= 1)) problems.push("blight: an additional cost of 1 or more -1/-1 counters");
+        /* "You may blight 1" (Cinder Strike): an optional additional cost, read by "if this spell's additional cost was paid"
+           (script/condition.mjs, `cast.additionalPaid`). A blight's alone, yet. */
+        if (atom?.optional !== undefined && !(atom.optional === true && atom.atom === "blight")) problems.push(`${atom?.atom ?? "an additional cost"}: only a blight may be an optional additional cost yet`);
+      }
       /* MODES CHOSEN AS IT IS CAST (CR 700.2, 601.2b): a spell whose one effect is a modal -- its modes, and their targets,
          are chosen as it is cast (rules/actions.mjs), never as it resolves, whether its modes name targets or not (Austere
          Command); the spell's own targets are then its modes'. "You may choose two instead" (`chooseMore`) and "choose one

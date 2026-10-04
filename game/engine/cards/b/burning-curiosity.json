@@ -1,0 +1,72 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Burning Curiosity",
+    "oracleId": "7f420633-901d-47f9-ae0f-0f5b0ea8359c",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As an additional cost to cast this spell, you may blight 1. (You may put a -1/-1 counter on a creature you control.)\nExile the top two cards of your library. If this spell's additional cost was paid, exile the top three cards instead. Until the end of your next turn, you may play those cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "As an additional cost to cast this spell, you may blight 1. (You may put a -1/-1 counter on a creature you control.)\nExile the top two cards of your library. If this spell's additional cost was paid, exile the top three cards instead. Until the end of your next turn, you may play those cards.",
+      "additionalCost": [
+        {
+          "atom": "blight",
+          "count": 1,
+          "optional": true
+        }
+      ],
+      "targets": [],
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "cast": {
+              "additionalPaid": true
+            }
+          },
+          "then": [
+            {
+              "effect": "moveZone",
+              "fromTop": 3,
+              "to": "exile",
+              "remember": true
+            },
+            {
+              "effect": "mayPlay",
+              "targets": "remembered",
+              "until": "your-next-end"
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "moveZone",
+              "fromTop": 2,
+              "to": "exile",
+              "remember": true
+            },
+            {
+              "effect": "mayPlay",
+              "targets": "remembered",
+              "until": "your-next-end"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
