@@ -65,7 +65,7 @@ export const FORGE_TRIGGER = {
   AttackersDeclaredOneTarget: "attackers declared", Blocks: "blocks",
   SpellCast: "spell cast", DamageDone: "damage dealt", DamageDoneOnce: "damage dealt once", TapsForMana: "tapped for mana",
   Discarded: "discarded", DiscardedAll: "discarded", Drawn: "drawn", LandPlayed: "land played",
-  BecomesTarget: "becomes target", Taps: "becomes tapped", CounterAdded: "counter added", CounterAddedOnce: "counter added once",
+  BecomesTarget: "becomes target", Taps: "becomes tapped", Cycled: "cycled", CounterAdded: "counter added", CounterAddedOnce: "counter added once",
   LifeGained: "life gained", LifeLost: "life lost", TokenCreatedOnce: "token created", BecomeMonstrous: "becomes monstrous",
 };
 

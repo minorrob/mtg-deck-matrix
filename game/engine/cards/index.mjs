@@ -205,6 +205,10 @@ const TRIGGERS = {
   /* "Whenever you discard a card", "whenever an opponent discards a land card" (CR 701.9): `discarder` you, opponent or
      any; `filter` the card discarded. */
   discarded: (t) => ({on: "GameEventCardChangeZone", to: "Graveyard", discarded: true, discarder: t.discarder ?? "you", ...(t.filter ? {filter: t.filter} : {})}),
+  /* "When you cycle this card" (`who: "self"`, CR 702.29c) and "whenever you cycle a card" (`who: "any"`, `cycler`): a card
+     discarded to pay a cycling cost (rules/actions.mjs). Not yet "whenever you cycle a creature card" (a filter). */
+  cycled: (t) => (["self", "any"].includes(t.who ?? "self") && !t.filter
+    ? {on: "GameEventCardChangeZone", to: "Graveyard", cycled: true, who: t.who ?? "self", cycler: t.cycler ?? "you"} : null),
   "end step": (t) => ({on: "GameEventTurnPhase", phase: "END_OF_TURN", ...(t.yours === false ? {} : {yourTurn: true})}),
   /* "Whenever you sacrifice a permanent", "whenever a player sacrifices another permanent" (CR 701.21): `sacrificer` you,
      opponent or any; `filter` what it was; `another`, not this one. */
@@ -589,6 +593,11 @@ export function compileScript(script) {
       const cost = ability.cost.flatMap((atom) => (atom?.atom !== "loyalty" ? [atom] : atom.amount > 0 ? [{atom: "addCounters", self: true, counter: "loyalty", count: atom.amount}]
         : atom.amount < 0 ? [{atom: "removeCounters", self: true, counter: "loyalty", count: -atom.amount}] : []));
       for (const atom of cost) if (!costAtomBuilt(atom)) problems.push(`${atom?.atom ?? "a cost"}: a cost atom nothing pays yet`);
+      if (ability.cycling === true && !(ability.zone === "hand" && cost.some((atom) => atom?.atom === "discard" && atom.self === true)))
+        problems.push(`${ability.text}: cycling is an ability of the card in hand, its cost discarding it (CR 702.29a)`);
+      /* Cycling and typecycling ("Basic landcycling {1}") say so, or "whenever you cycle a card" would miss them (CR 702.29f). */
+      if (/^[A-Za-z ]*cycling\b/i.test(ability.text ?? "") !== (ability.cycling === true))
+        problems.push(`${ability.text}: a cycling ability, and only one, says \`cycling: true\` (CR 702.29a, 702.29f)`);
       abilities.push({id, kind: "activated", text: ability.text, cost, targets: ability.targets ?? [],
         effects: ability.effects, ...(loyalty !== undefined ? {loyalty, timing: "sorcery"} : ability.timing ? {timing: ability.timing} : {}), ...(ability.zone === "hand" ? {zone: "hand"} : {}),
         /* "{W}, Exile this card from your graveyard: ..." (Goldmeadow Nomad): an ability of the card in its owner's graveyard,
@@ -596,6 +605,8 @@ export function compileScript(script) {
         ...(ability.zone === "graveyard" ? {zone: "graveyard"} : {}),
         /* Exhaust (CR 702.177a): "Activate only once" -- this object's, never again; a new object may (CR 400.7). */
         ...(ability.exhaust === true ? {exhaust: true} : {}),
+        /* Cycling (CR 702.29a): its discard is the card being cycled, for "when you cycle this card" (rules/actions.mjs). */
+        ...(ability.cycling === true ? {cycling: true} : {}),
         /* "This ability costs {1} less to activate for each legendary creature you control" (CR 602.2b, 601.2f). */
         ...(ability.costLess !== undefined ? {costLess: ability.costLess} : {}), ...(ability.condition ? {condition: ability.condition} : {}),
         /* "Activate only once each turn" (CR 602.5b): how many times each turn. */

@@ -528,7 +528,10 @@ spell at its type's speed, "you may cast" a spell only, and a card that moved aw
 `engine-cards-pb25` holds a creature's toughness as an amount (Condemn's "equal to its toughness"): its own, on the
 battlefield and as it last was, and a target's, read as the spell begins to resolve. `engine-cant-gain-life` holds "can't
 gain life" (CR 119.7) for the players a permanent names, under its condition: no gain, no event, nothing counted; a loss
-still taken; lifelink outside combat gaining nothing; over when the permanent leaves. `engine-mulligan` holds the
+still taken; lifelink outside combat gaining nothing; over when the permanent leaves. `engine-cycle-triggers` holds
+cycling's triggers (CR 702.29c): "when you cycle this card" from where the card went, "whenever you cycle a card" for its
+controller, an opponent or anyone; a discard that pays a cost but is not a cycle; "cycles or discards" once (702.29d);
+typecycling as cycling (702.29f); the X paid; and every cycling ability saying so. `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
 
@@ -646,7 +649,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 263 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 264 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -881,6 +884,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-may-play` — `tests/engine-may-play.mjs`
 - `engine-cards-pb25` — `tests/engine-cards-pb25.mjs`
 - `engine-cant-gain-life` — `tests/engine-cant-gain-life.mjs`
+- `engine-cycle-triggers` — `tests/engine-cycle-triggers.mjs`
 
 ## Design and execution record
 

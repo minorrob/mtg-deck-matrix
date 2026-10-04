@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Escape Protocol",
+    "oracleId": "e875b468-b475-4573-adf6-312ca4ab6994",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever you cycle a card, you may pay {1}. When you do, exile target artifact or creature you control, then return it to the battlefield under its owner's control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you cycle a card, you may pay {1}. When you do, exile target artifact or creature you control, then return it to the battlefield under its owner's control.",
+      "trigger": {
+        "on": "cycled",
+        "who": "any",
+        "cycler": "you"
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "you",
+          "amount": 1,
+          "ifPaid": true,
+          "effects": [
+            {
+              "effect": "immediateTrigger",
+              "text": "When you do, exile target artifact or creature you control, then return it to the battlefield under its owner's control.",
+              "targets": [
+                {
+                  "anyOf": [
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Artifact"
+                      ],
+                      "controller": "you"
+                    },
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Creature"
+                      ],
+                      "controller": "you"
+                    }
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": {
+                    "target": 0
+                  },
+                  "to": "exile",
+                  "andReturn": "now"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

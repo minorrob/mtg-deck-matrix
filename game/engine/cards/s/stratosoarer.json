@@ -60,6 +60,7 @@
       "kind": "activated",
       "text": "Basic landcycling {1}{U}",
       "zone": "hand",
+      "cycling": true,
       "cost": [
         {
           "atom": "mana",

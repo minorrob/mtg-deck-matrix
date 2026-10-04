@@ -1,0 +1,121 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shark Typhoon",
+    "oracleId": "8c0520fa-276b-4d21-b4a9-dce1fce59f6b",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever you cast a noncreature spell, create an X/X blue Shark creature token with flying, where X is that spell's mana value.\nCycling {X}{1}{U} ({X}{1}{U}, Discard this card: Draw a card.)\nWhen you cycle this card, create an X/X blue Shark creature token with flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a noncreature spell, create an X/X blue Shark creature token with flying, where X is that spell's mana value.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "nonTypes": [
+            "Creature"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Shark",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Shark"
+            ],
+            "colors": [
+              "U"
+            ],
+            "power": {
+              "manaValueOf": "that card"
+            },
+            "toughness": {
+              "manaValueOf": "that card"
+            },
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Cycling {X}{1}{U}",
+      "zone": "hand",
+      "cycling": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{X}{1}{U}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When you cycle this card, create an X/X blue Shark creature token with flying.",
+      "trigger": {
+        "on": "cycled",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Shark",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Shark"
+            ],
+            "colors": [
+              "U"
+            ],
+            "power": {
+              "x": true
+            },
+            "toughness": {
+              "x": true
+            },
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
