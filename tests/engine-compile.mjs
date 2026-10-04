@@ -53,6 +53,10 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
   ok(smoked.find((r) => r.name === "Double Major")?.played === true, "Double Major (\"copy target creature spell you control\") is cast in its smoke game, at its player's own creature spell");
   /* A creature whose ACTIVATED ability copies its controller's spells is cast as any creature is: no spell of its own put on
      the stack first, which would keep a creature from being cast at all. */
+  /* A counterspell for a particular spell has one to answer: a creature spell, an instant, a blue spell; and "sacrifice a
+     green creature" a green one. */
+  eq(["Essence Scatter", "Dispel", "Red Elemental Blast", "Natural Order"].filter((name) => smoked.find((r) => r.name === name)?.played !== true), [],
+    "Essence Scatter, Dispel, Red Elemental Blast and Natural Order are cast in their smoke games");
   ok(smoked.find((r) => r.name === "Kitsa, Otterball Elite")?.played === true, "Kitsa, Otterball Elite is cast in its smoke game: only a spell's own aim at its controller's spell waits for one");
   /* What a smoke game gives a card to aim at is read from its modes too, and a graveyard target finds a sorcery card as
      well as a creature card: two cards written for these games, not in the directory. */
