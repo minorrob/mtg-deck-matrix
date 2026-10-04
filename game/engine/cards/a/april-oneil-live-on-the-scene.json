@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "April O'Neil, Live on the Scene",
+    "oracleId": "4900c157-8d9f-4f92-aaca-5246b6e2832e",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Detective"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Whenever a Mutant, Ninja, or Turtle you control enters, investigate. (Create a Clue token. It's an artifact with \"{2}, Sacrifice this token: Draw a card.\")\nPartner—Character select",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever a Mutant, Ninja, or Turtle you control enters, investigate.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "anyOf": [
+            {
+              "subtypes": [
+                "Mutant"
+              ]
+            },
+            {
+              "subtypes": [
+                "Ninja"
+              ]
+            },
+            {
+              "subtypes": [
+                "Turtle"
+              ]
+            }
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "investigate"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Partner—Character select",
+      "keyword": "partner"
+    }
+  ]
+}

@@ -119,6 +119,11 @@ export const BEHAVIORAL_KEYWORDS = new Set([...Object.values(KEYWORD_FAMILIES), 
    activated ability with the `attach` effect, and what the Equipment grants a static ability on the creature it is
    attached to (`attachedBy`). Cycling is "{cost}, discard this card: draw a card" activated from the hand (CR 702.29a),
    and typecycling the same searching for a card of the type (702.29e): built with activation from the hand (batch 9). */
+/* Keywords that are a deck rule, held at the table and never in the game: the partner abilities (CR 702.124), read from
+   the card's own words (cards/index.mjs, partnersIn) and held by room/table.mjs when a deck names two commanders. Not
+   "Partner with", which is also a trigger as the card enters (702.124j). */
+export const DECK_RULE_KEYWORDS = {Partner: "room/table.mjs", "Choose a Background": "room/table.mjs"};
+
 export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: "chooseCard", Enchant: "attach",
   /* Ninjutsu (batch 54): an ability of the card in hand, returning an unblocked attacker, the Ninja put onto the battlefield
      tapped and attacking (cards/index.mjs). */
@@ -146,6 +151,11 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   /* Encore (X5f): the card's activated ability in its owner's graveyard, a hasty token copy for each opponent, each required
      to attack that opponent this turn (cards/index.mjs, rules/combat.mjs). */
   Encore: "copyPermanent"};
+
+/** Whether a keyword is built: one a rules module acts on, an ability keyword whose primitive is built, or a deck rule the
+    table holds. The one rule `missingFor` and the catalog (engine-catalog.mjs) both read. */
+export const keywordBuilt = (word) => [...BEHAVIORAL_KEYWORDS].some((k) => k.toLowerCase() === word.toLowerCase())
+  || Boolean(ABILITY_KEYWORDS[word] && isBuilt(ABILITY_KEYWORDS[word])) || Boolean(DECK_RULE_KEYWORDS[word]);
 
 
 /* What a card needs that the engine has not got. Empty means the engine can play it. */
@@ -301,9 +311,7 @@ export function missingFor(card) {
   }
   for (const keyword of card.keywords ?? []) {
     const word = normalizeKeyword(keyword);
-    const known = [...BEHAVIORAL_KEYWORDS].some((k) => k.toLowerCase() === word.toLowerCase());
-    if (known) continue;
-    if (ABILITY_KEYWORDS[word] && isBuilt(ABILITY_KEYWORDS[word])) continue;
+    if (keywordBuilt(word)) continue;
     missing.push({kind: "keyword", name: keyword, why: isKeyword(word.toLowerCase()) ? "declared, no behavior" : "not declared"});
   }
   return missing;

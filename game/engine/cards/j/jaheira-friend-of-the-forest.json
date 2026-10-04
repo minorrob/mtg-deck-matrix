@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Jaheira, Friend of the Forest",
+    "oracleId": "0aeeb0d7-15a3-4722-ad67-8fc7fe89220d",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Elf",
+      "Druid"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Tokens you control have \"{T}: Add {G}.\"\nChoose a Background (You can have a Background as a second commander.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Tokens you control have \"{T}: Add {G}.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "token": true
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "activated",
+            "text": "{T}: Add {G}.",
+            "cost": [
+              {
+                "atom": "{T}"
+              }
+            ],
+            "effects": [
+              {
+                "effect": "addMana",
+                "mana": {
+                  "G": 1
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "keyword",
+      "text": "Choose a Background",
+      "keyword": "choose a background"
+    }
+  ]
+}

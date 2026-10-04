@@ -161,7 +161,9 @@ const BEYOND_TIER0 = ["shroud", "ward",
   "storied",
   /* Its twentieth: fear (CR 702.36), printed (Shriekmaw). The blocking rule has been keywords/combat.mjs's since batch 59,
      reached only by a static granting it ("has fear"); a card printed with it could not say so. */
-  "fear"];
+  "fear",
+  /* Its twenty-eighth: Choose a Background (CR 702.124k), a partner ability -- a deck rule, as Partner is (cards/index.mjs). */
+  "choose a background"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

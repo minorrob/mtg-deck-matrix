@@ -15,7 +15,7 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {isBuilt} from "../game/engine/script/effects/index.mjs";
 import {loadCardIndex} from "../game/tools/engine-cards.mjs";
-import {missingFor, BEHAVIORAL_KEYWORDS, ABILITY_KEYWORDS, FORGE_OPTIONS, FORGE_COUNTS} from "../game/tools/engine-constructs.mjs";
+import {missingFor, BEHAVIORAL_KEYWORDS, ABILITY_KEYWORDS, DECK_RULE_KEYWORDS, FORGE_OPTIONS, FORGE_COUNTS} from "../game/tools/engine-constructs.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -61,8 +61,10 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
 {
   const bad = section("Effects").filter((e) => e.status === "built" && !isBuilt(e.engine)).map((e) => e.name);
   eq(bad, [], "an effect marked built has its primitive built");
-  const behaves = (w) => [...BEHAVIORAL_KEYWORDS].some((k) => k.toLowerCase() === w.toLowerCase()) || (ABILITY_KEYWORDS[w] && isBuilt(ABILITY_KEYWORDS[w]));
+  /* Or a partner ability, a deck rule the table holds (room/table.mjs). */
+  const behaves = (w) => [...BEHAVIORAL_KEYWORDS].some((k) => k.toLowerCase() === w.toLowerCase()) || (ABILITY_KEYWORDS[w] && isBuilt(ABILITY_KEYWORDS[w])) || DECK_RULE_KEYWORDS[w];
   eq(section("Keyword abilities (CR 702)").filter((e) => (e.status === "built") !== Boolean(behaves(e.name))).map((e) => e.name), [], "a keyword ability is built exactly when it behaves");
+  eq(section("Keyword abilities (CR 702)").find((e) => e.rule === "702.124").status, "built", "Partner (CR 702.124) is built: the table holds it");
   ok(["built", "partial", "named", "missing"].includes(section("Choices").find((c) => c.rule === "603.5").status) && section("Choices").find((c) => c.rule === "603.5").status === "built",
     "\"you may\" is a built choice (CR 603.5)");
 }

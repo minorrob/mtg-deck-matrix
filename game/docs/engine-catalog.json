@@ -9,15 +9,15 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1130,
-  "everyRule": 2429
+  "defined": 1134,
+  "everyRule": 2436
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 37,
+    "built": 38,
     "partial": 0,
-    "named": 18,
+    "named": 17,
     "missing": 139
    },
    "entries": [
@@ -385,13 +385,13 @@
      "kind": "keyword ability",
      "rule": "702.124",
      "name": "Partner",
-     "engine": null,
-     "status": "named",
+     "engine": "Partner",
+     "status": "built",
      "forge": "Partner",
      "top": 6,
      "all": 78,
-     "blocks": 6,
-     "alone": 4
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -5931,7 +5931,7 @@
      "top": 2,
      "all": 9,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "trigger",
@@ -6087,7 +6087,7 @@
      "top": 1,
      "all": 2,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "trigger",
@@ -11769,10 +11769,10 @@
   },
   "Other keyword constructs": {
    "tally": {
-    "built": 3,
+    "built": 4,
     "partial": 0,
     "named": 1,
-    "missing": 12
+    "missing": 11
    },
    "entries": [
     {
@@ -11827,13 +11827,13 @@
      "kind": "keyword construct",
      "rule": null,
      "name": "Choose a Background",
-     "engine": null,
-     "status": "missing",
+     "engine": "Choose a Background",
+     "status": "built",
      "forge": "Choose a Background",
      "top": 5,
      "all": 32,
-     "blocks": 5,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword construct",

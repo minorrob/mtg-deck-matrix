@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ikra Shidiqi, the Usurper",
+    "oracleId": "a1a1761c-88e5-40b4-ba4c-60735c054b09",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Snake",
+      "Wizard"
+    ],
+    "manaCost": "{3}{B}{G}",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "power": 3,
+    "toughness": 7
+  },
+  "oracleText": "Menace\nWhenever a creature you control deals combat damage to a player, you gain life equal to that creature's toughness.\nPartner (You can have two commanders if both have partner.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Menace",
+      "keyword": "menace"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature you control deals combat damage to a player, you gain life equal to that creature's toughness.",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "any",
+        "to": "player",
+        "combat": true,
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": {
+            "toughnessOf": "that card"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Partner",
+      "keyword": "partner"
+    }
+  ]
+}

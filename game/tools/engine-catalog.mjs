@@ -33,7 +33,7 @@ import {isPrimitive, isKeyword, isTriggerEvent, normalizeKeyword} from "../engin
 import {isBuilt} from "../engine/script/effects/index.mjs";
 import {TRIGGER_KINDS} from "../engine/cards/index.mjs";
 import {loadCardIndex} from "./engine-cards.mjs";
-import {FORGE_API, FORGE_TRIGGER, FORGE_STATIC, FORGE_REPLACEMENT, FORGE_OPTIONS, FORGE_COUNTS, BEHAVIORAL_KEYWORDS, ABILITY_KEYWORDS, BROAD_TRIGGERS, missingFor} from "./engine-constructs.mjs";
+import {FORGE_API, FORGE_TRIGGER, FORGE_STATIC, FORGE_REPLACEMENT, FORGE_OPTIONS, FORGE_COUNTS, BROAD_TRIGGERS, keywordBuilt, missingFor} from "./engine-constructs.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const CR_INDEX = path.join(REPO, "game", "docs", "cr-index.json");
@@ -97,8 +97,9 @@ function main() {
   const byKey = (key) => ({blocks: blocks.get(key) ?? 0, alone: alone.get(key) ?? 0});
 
   /* Keyword abilities (CR 702): a keyword the rules modules act on behaves; one the vocabulary names but nothing acts on
-     is named; an ability keyword is built once the primitive its ability uses is (Equip, attach). */
-  const behaves = (word) => [...BEHAVIORAL_KEYWORDS].some((k) => k.toLowerCase() === word.toLowerCase()) || (ABILITY_KEYWORDS[word] && isBuilt(ABILITY_KEYWORDS[word]));
+     is named; an ability keyword is built once the primitive its ability uses is (Equip, attach); a partner ability is a
+     deck rule the table holds (engine-constructs.mjs, keywordBuilt). */
+  const behaves = keywordBuilt;
   const keywordStatus = (word) => (behaves(word) ? "built" : isKeyword(normalizeKeyword(word).toLowerCase()) ? "named" : "missing");
   const forgeKeyword = (name) => [...ALL.keywords.keys(), ...TOP.keywords.keys()].find((k) => k.toLowerCase() === name.toLowerCase()) ?? null;
   const keywordAbilities = cr.keywordAbilities.map(({rule, name}) => {

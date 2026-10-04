@@ -1,0 +1,95 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bruse Tarl, Boorish Herder",
+    "oracleId": "e39a1f6b-6b13-4a8b-ac0c-63ede4636812",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Ally"
+    ],
+    "manaCost": "{2}{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Whenever Bruse Tarl enters or attacks, target creature you control gains double strike and lifelink until end of turn.\nPartner (You can have two commanders if both have partner.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever Bruse Tarl enters or attacks, target creature you control gains double strike and lifelink until end of turn.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "keywords": [
+            "Double Strike",
+            "Lifelink"
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Bruse Tarl enters or attacks, target creature you control gains double strike and lifelink until end of turn.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "keywords": [
+            "Double Strike",
+            "Lifelink"
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Partner",
+      "keyword": "partner"
+    }
+  ]
+}
