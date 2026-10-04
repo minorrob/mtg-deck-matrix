@@ -33,7 +33,7 @@
  */
 
 import {usesThisTurn} from "../state/index.mjs";
-import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf} from "../rules/layers.mjs";
+import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf, subtypesOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {hasSubtype, isCreatureType} from "../keywords/types.mjs";
 import {protectedFrom} from "../rules/protection.mjs";
@@ -212,7 +212,7 @@ export function compileSelector(selector) {
        with its types. "A Forest" is a land with the subtype Forest, basic or not (CR 305.6). */
     /* A changeling is every creature type (CR 702.73a; keywords/types.mjs), in every zone. */
     if (selector.subtypes) {
-      const current = [...typesOf(state, id), ...(object.subtypes ?? [])], every = everyCreatureTypeOf(state, id);
+      const current = [...typesOf(state, id), ...(object.zone === "battlefield" ? subtypesOf(state, id) : object.subtypes ?? [])], every = everyCreatureTypeOf(state, id);
       if (!selector.subtypes.every((subtype) => hasSubtype(current, every, subtype))) return false;
     }
 
@@ -224,7 +224,7 @@ export function compileSelector(selector) {
     /* "Nonartifact creature", "non-Elf creature", "noncreature spell": none of these -- and an artifact creature is an
        artifact (CR 205.2b), so "nonartifact" excludes it. */
     if (selector.nonTypes || selector.nonSubtypes) {
-      const current = [...typesOf(state, id), ...(object.subtypes ?? [])], every = everyCreatureTypeOf(state, id);
+      const current = [...typesOf(state, id), ...(object.zone === "battlefield" ? subtypesOf(state, id) : object.subtypes ?? [])], every = everyCreatureTypeOf(state, id);
       if ((selector.nonTypes ?? []).some((type) => current.includes(type))) return false;
       /* "Non-Elf": a changeling is an Elf. */
       if ((selector.nonSubtypes ?? []).some((subtype) => hasSubtype(current, every, subtype))) return false;

@@ -634,6 +634,8 @@ that player, for the turn; another player's legends still under it.
 and said as -X; and a card that shares a color with its source.
 `engine-multikicker` holds multikicker (Everflowing Chalice): kicked any number of times it can be paid, each its own
 cast, and the permanent entering with what it was kicked.
+`engine-set-subtypes` holds subtypes through the layers: set in layer 4 and read as they now are, by selectors, statics
+and last known information; Song of the Dryads's colorless Forest land.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -752,7 +754,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 302 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 303 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1026,6 +1028,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-no-legend-rule` — `tests/engine-no-legend-rule.mjs`
 - `engine-loyalty-x` — `tests/engine-loyalty-x.mjs`
 - `engine-multikicker` — `tests/engine-multikicker.mjs`
+- `engine-set-subtypes` — `tests/engine-set-subtypes.mjs`
 
 ## Design and execution record
 
