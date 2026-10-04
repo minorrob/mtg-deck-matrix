@@ -1,0 +1,130 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Elspeth, Sun's Champion",
+    "oracleId": "05e6b243-48a6-4a42-bc5f-413441de9c33",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Planeswalker"
+    ],
+    "subtypes": [
+      "Elspeth"
+    ],
+    "manaCost": "{4}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null,
+    "loyalty": 4
+  },
+  "oracleText": "+1: Create three 1/1 white Soldier creature tokens.\n−3: Destroy all creatures with power 4 or greater.\n−7: You get an emblem with \"Creatures you control get +2/+2 and have flying.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "+1: Create three 1/1 white Soldier creature tokens.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": 1
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 3,
+          "token": {
+            "name": "Soldier",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Soldier"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−3: Destroy all creatures with power 4 or greater.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -3
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "power": {
+              "min": 4
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−7: You get an emblem with \"Creatures you control get +2/+2 and have flying.\"",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -7
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "until": "ever",
+          "layer": 7,
+          "sublayer": "c",
+          "affects": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "apply": {
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "effect": "effectUntil",
+          "until": "ever",
+          "layer": 6,
+          "affects": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "apply": {
+            "addKeywords": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
