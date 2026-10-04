@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Synthetic Destiny",
+    "oracleId": "640a7d2c-42c4-4ea7-bd5b-72f12a65785e",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Exile all creatures you control. At the beginning of the next end step, reveal cards from the top of your library until you reveal that many creature cards, put all creature cards revealed this way onto the battlefield, then shuffle the rest of the revealed cards into your library.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Exile all creatures you control. At the beginning of the next end step, reveal cards from the top of your library until you reveal that many creature cards, put all creature cards revealed this way onto the battlefield, then shuffle the rest of the revealed cards into your library.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "delayedTrigger",
+          "at": "end step",
+          "text": "At the beginning of the next end step, reveal cards from the top of your library until you reveal that many creature cards, put all creature cards revealed this way onto the battlefield, then shuffle the rest of the revealed cards into your library.",
+          "effects": [
+            {
+              "effect": "digUntil",
+              "who": "you",
+              "selector": {
+                "types": [
+                  "Creature"
+                ]
+              },
+              "count": {
+                "rememberedCount": true
+              },
+              "found": {
+                "to": "battlefield"
+              },
+              "rest": "shuffle"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

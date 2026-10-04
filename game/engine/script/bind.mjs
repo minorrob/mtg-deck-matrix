@@ -53,6 +53,7 @@ import {compileSelector, selectMatching} from "./filter.mjs";
 import {powerOf, toughnessOf, controllerOf} from "../rules/layers.mjs";
 import {namesChosen, withChosen} from "./chosen.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
+import {amountOf, AMOUNT_PARAMS} from "./amount.mjs";
 
 /** More than this many ways to choose a spell's targets, and the card is refused at prepare rather than offered. */
 export const TARGET_CHOICES_MAX = 4096;
@@ -296,7 +297,12 @@ export function bindEffect(effect, context, state = null) {
  * itself. An object that has since changed zones is a new object (CR 400.7) and the old one is simply not there, which
  * is the rule's "it won't affect it". For a delayed trigger that waits for an event (`keepThat`), "that card" and "that
  * player" mean what THAT event is about, and are left for it.
+ *
+ * And a count of this resolution -- "that many" of what the effect before it moved, the life lost this way -- is counted
+ * now, while there is a resolution to count: "exile all creatures you control. At the beginning of the next end step,
+ * reveal cards ... until you reveal that many creature cards" (Synthetic Destiny).
  */
+const THIS_WAY = ["rememberedCount", "lifeLostThisWay"];
 export function rememberNow(effects, context, {keepThat = false} = {}) {
   const walk = (effect) => {
     if (!effect || typeof effect !== "object") return effect;
@@ -304,6 +310,8 @@ export function rememberNow(effects, context, {keepThat = false} = {}) {
     if (keepThat) for (const key of ["targets", "spells", "who", "toPlayer", "chooser"])
       if (["that card", "that player", "that card's controller"].includes(effect[key])) kept[key] = effect[key];
     const bound = {...bindEffect(effect, context), ...kept};
+    for (const key of AMOUNT_PARAMS)
+      if (bound[key] && typeof bound[key] === "object" && THIS_WAY.some((kind) => kind in bound[key])) bound[key] = amountOf(null, bound[key], context);
     for (const key of ["effects", "then", "otherwise"]) if (Array.isArray(bound[key])) bound[key] = bound[key].map(walk);
     if (Array.isArray(bound.modes)) bound.modes = bound.modes.map((mode) => ({...mode, effects: (mode.effects ?? []).map(walk)}));
     return bound;

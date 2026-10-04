@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mass Polymorph",
+    "oracleId": "b133129d-1ffb-4b78-9f5b-852d163cc9b7",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Exile all creatures you control, then reveal cards from the top of your library until you reveal that many creature cards. Put all creature cards revealed this way onto the battlefield, then shuffle the rest of the revealed cards into your library.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Exile all creatures you control, then reveal cards from the top of your library until you reveal that many creature cards. Put all creature cards revealed this way onto the battlefield, then shuffle the rest of the revealed cards into your library.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "digUntil",
+          "who": "you",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "count": {
+            "rememberedCount": true
+          },
+          "found": {
+            "to": "battlefield"
+          },
+          "rest": "shuffle"
+        }
+      ]
+    }
+  ]
+}

@@ -410,6 +410,11 @@ export function destroyAll(state, params, context) {
  * the one that fits goes (`to`, `tapped`; no `to` and it stays where it is), `remember`ed for the effects after it ("you
  * may cast that card"). `rest`: "graveyard", "bottom" or "exile". A library that runs out stops it, nothing found.
  *
+ * `count`: how many that fit to find before it stops, each put where `found` says -- "until you reveal that many creature
+ * cards. Put all creature cards revealed this way onto the battlefield" (Mass Polymorph); 0, and nothing is revealed.
+ * `rest: "shuffle"`: "then shuffle the rest of the revealed cards into your library" -- they never left it, so it is
+ * shuffled, if anything was revealed.
+ *
  * "The rest on the bottom of your library in a random order" (`rest: "bottom"`, every card that says it): in a random
  * order from the game's stream (batch 80; before it, in the order they were taken, which was not random).
  */
@@ -419,19 +424,20 @@ export function digUntil(state, params, context, rng = null) {
   const below = params.manaValueBelow !== undefined ? amountOf(state, params.manaValueBelow, context) : null;
   const fits = params.selector ? compileSelector({...params.selector, what: "card", zone: params.exile ? "exile" : "library", ...(below !== null ? {manaValue: {max: below - 1}} : {})}) : null;
   const valueOf = (id) => (state.objects[id]?.manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0);
+  const wanted = params.count ?? 1;
   for (const player of playersFor(state, params.who, context.controller)) {
-    const taken = [];
-    let hit = null, total = 0;
-    for (const top of cardsIn(state, "library", player)) {
+    const taken = [], hits = [];
+    let total = 0;
+    if (wanted > 0) for (const top of cardsIn(state, "library", player)) {
       const id = params.exile ? moveOne(state, top, "exile", events, {owner: player}) : top;
       if (id === null) break;
       if (!params.exile) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: player}}));
-      if (fits && fits(state, id, {controller: context.controller, source: context.source})) { hit = id; break; }
-      taken.push(id);
-      total += valueOf(id);
+      if (fits && fits(state, id, {controller: context.controller, source: context.source})) hits.push(id);
+      else { taken.push(id); total += valueOf(id); }
+      if (hits.length >= wanted) break;
       if (params.totalManaValue !== undefined && total >= params.totalManaValue) break;
     }
-    if (hit !== null) {
+    for (const hit of hits) {
       const to = params.found?.to;
       const landed = to ? moveOne(state, hit, to, events, {owner: player, tapped: params.found?.tapped === true}) : hit;
       if (landed !== null) found.push(landed);
@@ -443,6 +449,7 @@ export function digUntil(state, params, context, rng = null) {
       library.splice(library.indexOf(id), 1);
       library.push(id);
     }
+    if (params.rest === "shuffle" && (taken.length || hits.length)) shuffleLibrary(state, player, rng, events);
   }
   if (params.remember) context.remembered = found.filter((id) => state.objects[id]);
   return events;
