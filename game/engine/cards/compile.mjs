@@ -206,7 +206,8 @@ export function smokeScenario(script) {
   const graveTargets = (script.abilities ?? []).some((a) => (a?.targets ?? []).some((t) => JSON.stringify(t).includes('"zone":"graveyard"')));
   const steps = [];
   /* A land that asks as it enters, or triggers (a scry land), is answered and resolved before the game moves on. */
-  if (isLand) steps.push({play: name, seat: 0}, {settle: true});
+  /* A double-faced card is played, as it is cast, by its front face's name (Brightclimb Pathway // Grimclimb Pathway). */
+  if (isLand) steps.push({play: front, seat: 0}, {settle: true});
   else if (script.identity.manaCost) {
     if (instantSpeed) steps.push({cast: "Smoke Sorcery", seat: 1, targets: "any"}, {pass: 1});
     if (ownSpell) steps.push({cast: "Smoke Whelp", seat: 0});
@@ -216,8 +217,8 @@ export function smokeScenario(script) {
   steps.push({to: {turn: 3, phase: "MAIN1", settle: true}});
   for (const ability of script.abilities ?? []) {
     if (ability?.kind !== "activated") continue;
-    if (ability.mana) steps.push({tap: name, seat: 0, optional: true});
-    else steps.push({tap: "Wastes", seat: 0, optional: true}, {tap: "Wastes", seat: 0, optional: true}, {activate: name, seat: 0, targets: "any", optional: true}, {settle: true});
+    if (ability.mana) steps.push({tap: front, seat: 0, optional: true});
+    else steps.push({tap: "Wastes", seat: 0, optional: true}, {tap: "Wastes", seat: 0, optional: true}, {activate: front, seat: 0, targets: "any", optional: true}, {settle: true});
   }
   return {
     fixtures: SMOKE_FIXTURES,
