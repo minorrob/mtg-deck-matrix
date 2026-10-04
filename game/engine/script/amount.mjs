@@ -41,14 +41,15 @@
  */
 
 import {conditionHolds, conditionProblems} from "./condition.mjs";
-import {selectMatching, compileSelector} from "./filter.mjs";
+import {selectMatching, compileSelector, matchesLastKnown} from "./filter.mjs";
 import {powerOf, toughnessOf, characteristicsOf, controllerOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
 export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "toughnessOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
-  "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn", "playersDealtCombatDamage", "cardTypesAmong", "manaSpent"]);
-const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half"];
+  "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn", "playersDealtCombatDamage", "cardTypesAmong", "manaSpent",
+  "permanentsEnteredThisTurn"]);
+const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "filter"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
 /** Whether a value is a counted amount rather than a plain number. */
@@ -63,7 +64,12 @@ export function amountProblems(value) {
   const problems = [];
   for (const key of Object.keys(value)) if (!AMOUNT_KINDS.includes(key) && !AMOUNT_EXTRAS.includes(key)) problems.push(`An amount has no key ${JSON.stringify(key)}`);
   if ("countersOn" in value && typeof value.counter !== "string") problems.push("Counting counters says which kind: {countersOn, counter}");
-  for (const key of ["lifeGainedThisTurn", "tokensCreatedThisTurn", "permanentsLeftThisTurn"]) if (key in value && !["you", "that player"].includes(value[key])) problems.push(`${key} is "you" or "that player"`);
+  for (const key of ["lifeGainedThisTurn", "tokensCreatedThisTurn", "permanentsLeftThisTurn", "permanentsEnteredThisTurn"]) if (key in value && !["you", "that player"].includes(value[key])) problems.push(`${key} is "you" or "that player"`);
+  /* What entered, as it was (rules/trigger.mjs keeps it): a filter of what a last known snapshot answers, and only there. */
+  if ("filter" in value) {
+    if (!("permanentsEnteredThisTurn" in value)) problems.push("Only permanentsEnteredThisTurn takes a filter");
+    else try { matchesLastKnown(value.filter, {}, {}); } catch (error) { problems.push(`What permanentsEnteredThisTurn counts: ${error.message}`); }
+  }
   if ("playersDealtCombatDamage" in value && !["opponent", "any"].includes(value.playersDealtCombatDamage)) problems.push('playersDealtCombatDamage is "opponent" or "any"');
   if ("cardTypesAmong" in value && value.cardTypesAmong !== "remembered") problems.push('cardTypesAmong is "remembered"');
   if ("manaSpent" in value && !["that card", "self"].includes(value.manaSpent)) problems.push('manaSpent is "that card" or "self"');
@@ -201,6 +207,14 @@ export function amountOf(state, value, context = {}) {
   else if ("permanentsLeftThisTurn" in value) {
     const player = playerOf(value.permanentsLeftThisTurn, context);
     n = player !== null ? state.players[player]?.leftThisTurn ?? 0 : 0;
+  }
+  /* "The number of creatures that entered the battlefield under your control this turn" (Kinbinding), and "another
+     creature" (Wary Farmer, `another`: not this one): what entered under that player's control, as it entered (rules/
+     trigger.mjs, recordArrivals), that `filter` fits -- one that has left since included. */
+  else if ("permanentsEnteredThisTurn" in value) {
+    const player = playerOf(value.permanentsEnteredThisTurn, context);
+    const fits = (was) => matchesLastKnown(value.filter ?? {}, was, {controller: context.controller, source: context.source});
+    n = player !== null ? (state.players[player]?.enteredThisTurn ?? []).filter(fits).length : 0;
   }
   /* "The number of opponents that were dealt combat damage this turn" (Tymna the Weaver): the players still in the game
      whom combat damage reached this turn (rules/combat.mjs keeps it, turn.mjs clears it) -- the controller's opponents,

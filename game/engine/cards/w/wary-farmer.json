@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wary Farmer",
+    "oracleId": "63eed1f5-442f-433d-989c-397b88543162",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Kithkin",
+      "Citizen"
+    ],
+    "manaCost": "{1}{G/W}{G/W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "At the beginning of your end step, if another creature entered the battlefield under your control this turn, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, if another creature entered the battlefield under your control this turn, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+      "trigger": {
+        "on": "end step"
+      },
+      "effects": [
+        {
+          "effect": "surveil",
+          "count": 1
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "permanentsEnteredThisTurn": "you",
+            "filter": {
+              "types": [
+                "Creature"
+              ],
+              "another": true
+            }
+          },
+          "atLeast": 1
+        }
+      }
+    }
+  ]
+}

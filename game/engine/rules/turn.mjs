@@ -614,8 +614,10 @@ export function advance(state) {
       /* And what each gained and made this turn (script/amount.mjs, lifeGainedThisTurn, tokensCreatedThisTurn). */
       if (player.gainedThisTurn) player.gainedThisTurn = 0;
       if (player.tokensThisTurn) player.tokensThisTurn = 0;
-      /* And how many permanents left the battlefield under each one's control (state/index.mjs, revolt). */
+      /* And how many permanents left the battlefield under each one's control (state/index.mjs, revolt), and what entered
+         under it (rules/trigger.mjs, recordArrivals). */
       if (player.leftThisTurn) player.leftThisTurn = 0;
+      if (player.enteredThisTurn) player.enteredThisTurn = [];
       /* And whether each was dealt combat damage (rules/combat.mjs). */
       if (player.combatDamagedThisTurn) player.combatDamagedThisTurn = false;
     }
