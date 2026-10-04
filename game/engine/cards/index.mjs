@@ -178,6 +178,11 @@ const TRIGGERS = {
     ...(t.countBefore ? {countBefore: true} : {}),
     /* "An instant or sorcery spell that targets a creature" (Rehearsed Debater): what one of its targets is (rules/trigger.mjs). */
     ...(t.targets ? {targets: t.targets} : {})}),
+  /* "Whenever you activate a loyalty ability" (Ajani Unrelenting; CR 606, 602.2): a loyalty ability put on the stack by
+     you (`activator`), any permanent's; "if you removed two or more loyalty counters to activate it" (`removedAtLeast`,
+     its cost, CR 606.4). About the permanent and the player. */
+  "loyalty activated": (t) => ({on: "GameEventSpellAbilityCast", loyaltyActivated: true, activator: t.activator ?? "you",
+    ...(Number.isInteger(t.removedAtLeast) && t.removedAtLeast >= 1 ? {removedAtLeast: t.removedAtLeast} : {})}),
   /* "Whenever you attack" (CR 508.1): the attack as a whole, once, about the attacking player; "whenever you attack a player"
      (`each: "defender"`): once for each player attacked; "with two or more creatures" (`atLeast`); "if none of those
      creatures attacked you" (`notAttacking: "you"`); "with one or more non-Gnome creatures", "whenever one or more Goblins

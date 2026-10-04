@@ -586,6 +586,12 @@ revealed in a random order, a library with neither put back whole, and nothing r
 `engine-cant-attack-jaces` holds "they may pay {2}; if they don't, creatures they control can't attack Jaces you control
 this turn" (Jace, Multiverse Architect), at a table of four: the player whose turn it is asked, their creatures held as
 they are, toward its controller's Jaces only, for the turn.
+`engine-granted-loyalty` holds "planeswalkers you control have '[-8]: ...'" (Kiora of Salt and Sand): a loyalty ability
+granted in layer 6 to its controller's planeswalkers only, paid in loyalty, once a turn among their own, gone with its
+source; and Kiora's attack trigger, an attacking creature untapped and unblockable.
+`engine-loyalty-activated` holds "whenever you activate a loyalty ability" (Ajani Unrelenting), any permanent's, yours
+only, and "if you removed two or more loyalty counters"; "if you've activated a loyalty ability this turn", kept by the
+player for the turn; and "discard your hand", nobody asked.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -704,7 +710,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 284 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 286 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -960,6 +966,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-blight-or-pay` — `tests/engine-blight-or-pay.mjs`
 - `engine-reveal-until-creature` — `tests/engine-reveal-until-creature.mjs`
 - `engine-cant-attack-jaces` — `tests/engine-cant-attack-jaces.mjs`
+- `engine-granted-loyalty` — `tests/engine-granted-loyalty.mjs`
+- `engine-loyalty-activated` — `tests/engine-loyalty-activated.mjs`
 
 ## Design and execution record
 

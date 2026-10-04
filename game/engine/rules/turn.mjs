@@ -612,6 +612,8 @@ export function advance(state) {
     state.combatsThisTurn = 0;
     for (const player of state.players) {
       if (player.lostThisTurn) player.lostThisTurn = 0;
+      /* And the loyalty abilities each activated (rules/actions.mjs). */
+      if (player.loyaltyThisTurn) player.loyaltyThisTurn = 0;
       /* And what each gained and made this turn (script/amount.mjs, lifeGainedThisTurn, tokensCreatedThisTurn). */
       if (player.gainedThisTurn) player.gainedThisTurn = 0;
       if (player.tokensThisTurn) player.tokensThisTurn = 0;
