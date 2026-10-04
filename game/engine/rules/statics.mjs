@@ -33,6 +33,10 @@ export const STATIC_RULES = Object.freeze({
       counters are put on that creature instead" (Branching Evolution): `affects` the permanent, `counter` the kind, `times`.
       Read wherever counters are put on a permanent, as it enters too (countersPlaced, below). */
   "more-counters": "rules/statics.mjs",
+  /** CR 104.3: "You can't lose the game" (Darksteel Angel): its controller loses to no state-based action. rules/sba.mjs. */
+  "cant-lose": "rules/sba.mjs",
+  /** CR 104.2b: "Your opponents can't win the game" (Darksteel Angel): an effect that says they win does not. effects/resources.mjs, winGame. */
+  "opponents-cant-win": "script/effects/resources.mjs",
   /** CR 903.3a: "Freyalise, Llanowar's Fury can be your commander" -- a rule of the deck, not of the game: the card's
       definition says `canBeCommander` (cards/index.mjs), and the table holds a deck's commander to it (room/table.mjs,
       commanderLegal). */
@@ -237,7 +241,8 @@ export function countersPlaced(state, id, kind, count) {
     for (const ability of holder.abilities ?? []) {
       if (ability.kind !== "static" || ability.rule !== "more-counters" || (ability.counter && ability.counter !== kind)) continue;
       if (!matchesSelector({what: "permanent", ...ability.affects}, state, id, {controller: holder.controller, source: holderId})) continue;
-      n *= Math.max(1, ability.times ?? 2);
+      /* "Can't have -1/-1 counters put on them" (Darksteel Angel): `times` 0, none at all. */
+      n *= Number.isInteger(ability.times) && ability.times >= 0 ? ability.times : 2;
     }
   }
   return n;

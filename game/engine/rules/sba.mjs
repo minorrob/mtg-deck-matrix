@@ -314,6 +314,9 @@ export function checkStateBasedActions(state) {
     for (const player of state.players) {
       const reason = lossReason(state, player);
       if (!reason) continue;
+      /* "You can't lose the game" (Darksteel Angel; CR 104.3, 104.2b): no state-based action takes the game from its
+         controller -- conceding still does (CR 104.3a). */
+      if (reason !== "conceded" && playerRuled(state, "cant-lose", player.id)) continue;
       player.lost = true;
       player.lostTo = reason;
       events.push(event("GameEventPlayerLivesChanged", state, {
@@ -473,6 +476,16 @@ export function finishCommanderReplacement(state, awaiting, indices) {
  * player leaves at once, the game is a draw — which is a real outcome with a real report, not a
  * crash and not an arbitrary winner.
  */
+/* Whether a static ability of a permanent `player` controls changes this rule for them ("you can't lose the game"), or --
+   `opponents` -- one of an opponent of theirs does ("your opponents can't win the game"). */
+export function playerRuled(state, rule, player, {opponents = false} = {}) {
+  return state.zones.battlefield.some((id) => {
+    const controller = controllerOf(state, id);
+    if (opponents ? controller === player : controller !== player) return false;
+    return (state.objects[id].abilities ?? []).some((a) => a.kind === "static" && a.rule === rule);
+  });
+}
+
 export function gameOver(state) {
   /* "You win the game" (CR 104.2b, effects/resources.mjs winGame): over at once, that player the winner -- before any
      state-based action could take it from them (CR 104.1). */

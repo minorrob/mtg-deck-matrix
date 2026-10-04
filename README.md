@@ -612,6 +612,9 @@ a planeswalker you control" (Jace, Reality Sculptor); and "all but the bottom ca
 its owner, once, each Ring its own; nothing once that card has left exile.
 `engine-protection` holds protection from a card type (Serra's Emissary): damage prevented, not enchanted or equipped,
 not blocked, not targeted, for permanents and their controller; nothing before the choice.
+`engine-cant-lose` holds "you can't lose the game and your opponents can't win the game" (Darksteel Angel): no loss to
+life, poison or an empty library, conceding aside, and no win by an effect; no -1/-1 counters on its controller's
+creatures; and an emblem (Ajani Resolute), an effect with no source and no end, and its Pridemate token.
 `engine-destroyed-and-walker-damage` holds a board wipe that remembers what it destroyed (Ob Nixilis, the Ascended's
 "1 life for each creature destroyed this way"), the indestructible never among them; and "whenever this creature deals
 combat damage to a player or planeswalker" (Grateful Apparition): combat damage to a planeswalker triggers it, about its
@@ -734,7 +737,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 294 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 295 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -999,6 +1002,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-piles-and-modes` — `tests/engine-piles-and-modes.mjs`
 - `engine-linked-exile` — `tests/engine-linked-exile.mjs`
 - `engine-protection` — `tests/engine-protection.mjs`
+- `engine-cant-lose` — `tests/engine-cant-lose.mjs`
 - `engine-destroyed-and-walker-damage` — `tests/engine-destroyed-and-walker-damage.mjs`
 
 ## Design and execution record
