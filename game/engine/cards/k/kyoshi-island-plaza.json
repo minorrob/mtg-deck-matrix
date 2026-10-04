@@ -1,0 +1,95 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kyoshi Island Plaza",
+    "oracleId": "c0cdc333-6c5a-401c-9810-220d2027f2fe",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Shrine"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When Kyoshi Island Plaza enters, search your library for up to X basic land cards, where X is the number of Shrines you control. Put those cards onto the battlefield tapped, then shuffle.\nWhenever another Shrine you control enters, search your library for a basic land card, put it onto the battlefield tapped, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Kyoshi Island Plaza enters, search your library for up to X basic land cards, where X is the number of Shrines you control. Put those cards onto the battlefield tapped, then shuffle.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "count": {
+            "count": {
+              "what": "permanent",
+              "subtypes": [
+                "Shrine"
+              ],
+              "controller": "you"
+            }
+          },
+          "upTo": true,
+          "to": "battlefield",
+          "tapped": true,
+          "shuffle": true
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another Shrine you control enters, search your library for a basic land card, put it onto the battlefield tapped, then shuffle.",
+      "trigger": {
+        "on": "enters",
+        "who": "another",
+        "filter": {
+          "subtypes": [
+            "Shrine"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "to": "battlefield",
+          "tapped": true,
+          "shuffle": true
+        }
+      ]
+    }
+  ]
+}

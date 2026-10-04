@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Huatli, the Sun's Heart",
+    "oracleId": "e1a13723-a6b1-4160-8eb5-f7a4860898a3",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Planeswalker"
+    ],
+    "subtypes": [
+      "Huatli"
+    ],
+    "manaCost": "{2}{G/W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": null,
+    "toughness": null,
+    "loyalty": 7
+  },
+  "oracleText": "Each creature you control assigns combat damage equal to its toughness rather than its power.\n−3: You gain life equal to the greatest toughness among creatures you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Each creature you control assigns combat damage equal to its toughness rather than its power.",
+      "rule": "combat-damage-by-toughness",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "−3: You gain life equal to the greatest toughness among creatures you control.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -3
+        }
+      ],
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": {
+            "greatestToughness": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

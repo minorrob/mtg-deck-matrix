@@ -1,0 +1,97 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rip Apart",
+    "oracleId": "cbdbf18f-0180-4ade-a79e-1e644dd42d6f",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Rip Apart deals 3 damage to target creature or planeswalker.\n• Destroy target artifact or enchantment.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Rip Apart deals 3 damage to target creature or planeswalker.\n• Destroy target artifact or enchantment.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Rip Apart deals 3 damage to target creature or planeswalker.",
+              "targets": [
+                {
+                  "anyOf": [
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Creature"
+                      ]
+                    },
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Planeswalker"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "dealDamage",
+                  "amount": 3,
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Destroy target artifact or enchantment.",
+              "targets": [
+                {
+                  "anyOf": [
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Artifact"
+                      ]
+                    },
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Enchantment"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "destroy",
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

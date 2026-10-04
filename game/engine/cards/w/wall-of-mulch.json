@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wall of Mulch",
+    "oracleId": "afd2141f-1b0f-46b5-b1ac-aa28982d16c0",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Wall"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 0,
+    "toughness": 4
+  },
+  "oracleText": "Defender (This creature can't attack.)\n{G}, Sacrifice a Wall: Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender",
+      "keyword": "defender"
+    },
+    {
+      "kind": "activated",
+      "text": "{G}, Sacrifice a Wall: Draw a card.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{G}"
+        },
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "subtypes": [
+              "Wall"
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

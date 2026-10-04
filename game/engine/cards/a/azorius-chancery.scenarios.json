@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Azorius Chancery",
+  "scenarios": [
+    {
+      "name": "Played: tapped, and the Plains back to Rob's hand",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Azorius Chancery"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Azorius Chancery"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Plains"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Azorius Chancery"
+        }
+      ]
+    },
+    {
+      "name": "{T}: {W}{U}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Azorius Chancery"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Azorius Chancery"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1,
+            "U": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Luminollusk",
+    "oracleId": "c8bf2dce-7bcd-45cb-bf15-f53e24333a01",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Deathtouch\nVivid — When this creature enters, you gain life equal to the number of colors among permanents you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Deathtouch",
+      "keyword": "deathtouch"
+    },
+    {
+      "kind": "triggered",
+      "text": "Vivid — When this creature enters, you gain life equal to the number of colors among permanents you control.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": {
+            "colorsAmong": {
+              "what": "permanent",
+              "controller": "you"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

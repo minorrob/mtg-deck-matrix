@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Migration Path",
+  "scenarios": [
+    {
+      "name": "A Forest and an Island, tapped",
+      "library": [
+        "Forest",
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Migration Path"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Migration Path"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Forest",
+            "Island"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Forest",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Island"
+        }
+      ]
+    }
+  ]
+}

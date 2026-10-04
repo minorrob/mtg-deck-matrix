@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Overgrown Battlement",
+    "oracleId": "585f62dc-4461-42f1-a3a4-b19a1e550d2d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Wall"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 0,
+    "toughness": 4
+  },
+  "oracleText": "Defender\n{T}: Add {G} for each creature you control with defender.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender",
+      "keyword": "defender"
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {G} for each creature you control with defender.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": {
+              "count": {
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you",
+                "keywords": [
+                  "Defender"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

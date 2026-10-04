@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Jaddi Offshoot",
+    "oracleId": "20faefbd-059c-4aae-81e3-31683bf9f7bf",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Plant"
+    ],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 0,
+    "toughness": 3
+  },
+  "oracleText": "Defender\nLandfall — Whenever a land you control enters, you gain 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender",
+      "keyword": "defender"
+    },
+    {
+      "kind": "triggered",
+      "text": "Landfall — Whenever a land you control enters, you gain 1 life.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

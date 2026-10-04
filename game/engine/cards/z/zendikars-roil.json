@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Zendikar's Roil",
+    "oracleId": "a842cc2b-52eb-4dc5-86c6-6575c2ed913d",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Landfall — Whenever a land you control enters, create a 2/2 green Elemental creature token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Landfall — Whenever a land you control enters, create a 2/2 green Elemental creature token.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Elemental",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Elemental"
+            ],
+            "colors": [
+              "G"
+            ],
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    }
+  ]
+}
