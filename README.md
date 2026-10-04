@@ -484,7 +484,9 @@ own. `engine-encore` holds encore: offered from its owner's graveyard at sorcery
 token copy for each opponent that must attack that opponent if able (a cost to attack lifts it), all sacrificed at the end
 step. `engine-attack-restrictions` holds whom a creature can't attack (you, its owner, a player it attacked this turn,
 anyone; unless a condition), before any requirement, and "whenever a player attacks one of your opponents": once per
-opponent attacked, the attacking player's token tapped and attacking. `engine-mulligan` holds the
+opponent attacked, the attacking player's token tapped and attacking. `engine-modal-triggers` holds a modal triggered
+ability's modes chosen as it goes on the stack, with their targets: a different player for each mode, none twice, or none
+and it is gone, the chosen modes' targets checked again as it resolves. `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
 
@@ -599,7 +601,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 245 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 246 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -816,6 +818,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-encore` — `tests/engine-encore.mjs`
 - `engine-attack-restrictions` — `tests/engine-attack-restrictions.mjs`
 - `engine-derive-once` — `tests/engine-derive-once.mjs`
+- `engine-modal-triggers` — `tests/engine-modal-triggers.mjs`
 
 ## Design and execution record
 

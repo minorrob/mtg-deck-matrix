@@ -577,7 +577,18 @@ export function compileScript(script) {
       const [adds] = effects ?? [];
       if (trigger?.on === "GameEventManaPool" && effects.length === 1 && adds?.effect === "addMana" && !(ability.targets ?? []).length && !ability.optional
         && (MANA(adds.mana) || adds.produced === true)) trigger.manaAbility = adds.produced === true ? {produced: true} : {mana: {...adds.mana}};
-      abilities.push({id, kind: "triggered", text: ability.text, trigger: trigger ?? {on: null}, effects,
+      /* MODES CHOSEN AS IT IS PUT ON THE STACK (CR 603.3c, 700.2b): a triggered ability whose one effect is a modal with
+         targets in its modes -- its modes and their targets are chosen then (rules/trigger.mjs), not as it resolves. "You
+         may choose two" (`mayChooseNone`): that many, or none, and it is removed from the stack. "Each mode must target a
+         different player" (`differentPlayers`, Shadrix Silverquill). */
+      const lone = (ability.effects ?? []).length === 1 ? ability.effects[0] : null;
+      const modal = lone?.effect === "modal" && (lone.modes ?? []).some((m) => (m.targets ?? []).length)
+        ? {choose: lone.choose ?? 1, ...(lone.mayChooseNone ? {mayChooseNone: true} : {}), ...(lone.differentPlayers ? {differentPlayers: true} : {}),
+          modes: (lone.modes ?? []).map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? []}))} : null;
+      if (modal && (ability.optional || (ability.targets ?? []).length)) problems.push(`${ability.text}: a modal triggered ability names its targets in its modes, and "you may" as mayChooseNone`);
+      if (modal && modal.modes.some((m) => m.targets.some((t) => t && typeof t === "object" && t.count !== undefined)))
+        problems.push(`${ability.text}: a counted target in a triggered ability's mode is not built`);
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: trigger ?? {on: null}, effects: modal ? [] : effects, ...(modal ? {modal} : {}),
         ...((ability.targets ?? []).length ? {targets: ability.targets} : {}),
         ...(ability.condition ? {condition: ability.condition} : {}), ...(ability.optional ? {optional: true} : {}),
         /* "This ability triggers only once each turn". */
