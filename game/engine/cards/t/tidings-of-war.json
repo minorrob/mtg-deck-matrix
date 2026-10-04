@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tidings of War",
+    "oracleId": "5753f4d6-08d0-4e12-85c5-875ee6441626",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Amass Goblins 1. If this spell was cast from a graveyard, amass Goblins 3 instead. (To amass Goblins X, put X +1/+1 counters on an Army you control. It's also a Goblin. If you don't control an Army, create a 0/0 black Goblin Army creature token first.)\nFlashback {3}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Amass Goblins 1. If this spell was cast from a graveyard, amass Goblins 3 instead.",
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "cast": {
+              "from": "graveyard"
+            }
+          },
+          "then": [
+            {
+              "effect": "amass",
+              "subtype": "Goblin",
+              "count": 3
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "amass",
+              "subtype": "Goblin",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Flashback {3}{R}",
+      "keyword": "flashback",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{R}"
+        }
+      ]
+    }
+  ]
+}

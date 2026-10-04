@@ -29,10 +29,10 @@
 import {cardsIn, moveObject} from "../../state/index.mjs";
 import {compileSelector} from "../filter.mjs";
 import {event, cardRef, moveOne, playersFor, sacrificeOne} from "./zones.mjs";
-import {proliferate as giveEachAnother} from "./resources.mjs";
-import {makeCopies, afterwards, joinAttack, defendingPlayers, attachTo} from "./permanents.mjs";
+import {proliferate as giveEachAnother, addCounters} from "./resources.mjs";
+import {makeCopies, afterwards, joinAttack, defendingPlayers, attachTo, createToken, effectUntil} from "./permanents.mjs";
 import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits} from "../../rules/mana.mjs";
-import {typesOf, characteristicsOf} from "../../rules/layers.mjs";
+import {typesOf, characteristicsOf, everyCreatureTypeOf} from "../../rules/layers.mjs";
 import {pushCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
 import {loseLife, DAMAGING, damageQuestion} from "./resources.mjs";
 import {damageOrderChoice} from "../../rules/replacement.mjs";
@@ -543,6 +543,52 @@ export const populate = {
     const events = [];
     makeCopies(state, [chosen], awaiting.params ?? {}, {controller: awaiting.player, source: awaiting.source}, events);
     return events;
+  },
+};
+
+/* ---- amass (CR 701.47a): "amass Goblins 2" -- with no Army creature, a 0/0 black Goblin Army creature token is made
+   first; then an Army creature its controller controls is chosen, gets the +1/+1 counters, and is a Goblin as well as what
+   it was, for as long as it stays (CR 611.2a). Which Army is the player's choice when there are two or more (a changeling
+   is one, CR 702.73a); with one, it is that one. "The amassed Army" (CR 701.47c) is the creature chosen, counters or not:
+   remembered (`remember`) for the effects after it ("attach this Equipment to the amassed Army"). `count` may be counted. ---- */
+const ARMY = compileSelector({what: "permanent", types: ["Creature"], subtypes: ["Army"], controller: "you"});
+const armiesOf = (state, player) => state.zones.battlefield.filter((id) => ARMY(state, id, {controller: player}));
+function amassOnto(state, army, params, player, source, events) {
+  const count = Number.isInteger(params.count) ? params.count : 1;
+  addCounters(state, army, "+1/+1", count, events);
+  const current = [...typesOf(state, army), ...(state.objects[army].subtypes ?? [])];
+  if (!current.includes(params.subtype) && !everyCreatureTypeOf(state, army))
+    effectUntil(state, {id: `amass:${params.subtype}:${army}`, layer: 4, targets: [army], apply: {addTypes: [params.subtype]}, until: "ever"}, {controller: player, source});
+}
+export const amass = {
+  open(state, params, context) {
+    const player = context.controller;
+    if (!state.players[player]) return false;
+    const armies = armiesOf(state, player);
+    if (armies.length > 1) {
+      state.awaiting = {kind: "effect-choice", effect: "amass", player, armies, params: {subtype: params.subtype, count: params.count, remember: params.remember === true},
+        source: context.source ?? null};
+      return true;
+    }
+    /* None: the token is made first, and is then the one Army there is. */
+    const events = armies.length === 0
+      ? createToken(state, {token: {name: `${params.subtype} Army`, types: ["Creature"], subtypes: [params.subtype, "Army"], colors: ["B"], power: 0, toughness: 0}}, {controller: player, source: context.source})
+      : [];
+    const [army] = armiesOf(state, player);
+    if (army !== undefined) amassOnto(state, army, params, player, context.source, events);
+    if (params.remember) context.remembered = army === undefined ? [] : [army];
+    return {events};
+  },
+  choice(state, awaiting) {
+    return {id: `amass:${awaiting.player}:${state.turn}:${awaiting.armies.join(",")}`, title: `Amass ${awaiting.params.subtype}s ${awaiting.params.count ?? 1}: put the counters on which Army?`,
+      mode: "one", min: 1, max: 1, options: awaiting.armies.map((id, index) => ({index, label: state.objects[id]?.card ?? "Army", cardId: id}))};
+  },
+  apply(state, awaiting, indices) {
+    const chosen = awaiting.armies[(indices ?? [])[0]];
+    if (chosen === undefined || !Array.isArray(indices) || indices.length !== 1) throw new Error("Invalid selection");
+    const events = [];
+    if (state.objects[chosen]?.zone === "battlefield") amassOnto(state, chosen, awaiting.params, awaiting.player, awaiting.source, events);
+    return awaiting.params.remember ? {events, remembered: [chosen]} : {events};
   },
 };
 
@@ -1099,4 +1145,4 @@ export const orderDamage = {
   },
 };
 
-export const ASKING = Object.freeze({scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage});
+export const ASKING = Object.freeze({scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage});

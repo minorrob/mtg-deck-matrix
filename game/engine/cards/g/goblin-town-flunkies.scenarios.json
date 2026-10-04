@@ -1,0 +1,81 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Goblin-town Flunkies",
+  "scenarios": [
+    {
+      "name": "It enters: a 0/0 black Goblin Army made, with a counter; the Flunkies attack at once, the Army may not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Goblin-town Flunkies"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Goblin-town Flunkies"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Mountain",
+                "Wastes",
+                "Goblin-town Flunkies",
+                "Goblin Army"
+              ]
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Goblin Army",
+                "power": 1,
+                "toughness": 1
+              }
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Goblin-town Flunkies"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        }
+      ]
+    }
+  ]
+}

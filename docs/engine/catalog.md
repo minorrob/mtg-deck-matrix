@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,113 defined and playable today; 2,393 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,114 defined and playable today; 2,398 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -19,8 +19,8 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 34 | 0 | 20 | 140 |
-| Keyword actions (CR 701) | 70 | 17 | 3 | 6 | 44 |
-| Effects | 192 | 57 | 1 | 14 | 120 |
+| Keyword actions (CR 701) | 70 | 18 | 3 | 5 | 44 |
+| Effects | 192 | 58 | 1 | 13 | 120 |
 | Triggers | 138 | 14 | 4 | 6 | 114 |
 | Static abilities | 77 | 10 | 2 | 0 | 65 |
 | Replacement effects | 34 | 0 | 4 | 0 | 30 |
@@ -275,7 +275,7 @@ The things that alone hold back the most of the most-played cards.
 | 701.10 | Double | multiplyCounters | named | 12 | 53 | 12 | 10 |
 | 701.15 | Goad | — | missing | 11 | 67 | 0 | 0 |
 | 701.66 | Earthbend | — | missing | 10 | 36 | 0 | 0 |
-| 701.47 | Amass | amass | named | 7 | 72 | 7 | 5 |
+| 701.47 | Amass | amass | built | 7 | 72 | 0 | 0 |
 | 701.24 | Shuffle | shuffle | built | 6 | 66 | 0 | 0 |
 | 701.57 | Discover | discover | named | 6 | 35 | 6 | 5 |
 | 701.65 | Airbend | — | missing | 4 | 13 | 0 | 0 |
@@ -400,7 +400,7 @@ The things that alone hold back the most of the most-played cards.
 | ChoosePlayer | — | missing | 8 | 120 | 8 | 3 |
 | Repeat | — | missing | 8 | 58 | 8 | 0 |
 | RollDice | — | missing | 7 | 131 | 7 | 3 |
-| Amass | amass | named | 7 | 72 | 7 | 5 |
+| Amass | amass | built | 7 | 72 | 0 | 0 |
 | StoreSVar | — | missing | 6 | 68 | 6 | 2 |
 | Shuffle | shuffle | built | 6 | 66 | 0 | 0 |
 | LosesGame | — | missing | 6 | 45 | 6 | 3 |
@@ -899,7 +899,7 @@ The things that alone hold back the most of the most-played cards.
 | — | A gift promised | — | missing | 3 | 11 | 3 | 0 |
 | — | Number | — | missing | 3 | 8 | 3 | 0 |
 | — | The Urza lands | — | missing | 3 | 3 | 3 | 3 |
-| — | Morbid (a creature died this turn) | — | missing | 2 | 41 | 2 | 1 |
+| — | Morbid (a creature died this turn) | — | missing | 2 | 41 | 2 | 2 |
 | — | A number an effect remembered | — | missing | 2 | 38 | 2 | 2 |
 | — | Cards you drew this turn | — | missing | 2 | 30 | 2 | 2 |
 | — | This card's mana value | — | missing | 2 | 12 | 2 | 2 |

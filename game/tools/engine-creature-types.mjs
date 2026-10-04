@@ -21,6 +21,10 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, "..", "..");
 const OUT = path.join(REPO, "game", "engine", "keywords", "creature-types.mjs");
 
+/* A creature token a card makes, as its text describes it: "create a 0/0 black Zombie Army creature token" (amass). Its
+   subtypes are the capitalized words between its colors and "creature token". */
+const TOKEN = /(?:\d+|X)\/(?:\d+|X) (?:(?:white|blue|black|red|green|colorless|multicolored|and)[ ,]+)*((?:[A-Z][A-Za-z'-]+ )+)(?:(?:legendary|snow|artifact|enchantment) )*creature tokens?/g;
+
 /** Every creature type the oracle data shows, sorted. */
 export function creatureTypesFrom(oracle) {
   const creature = new Set(), other = new Set();
@@ -32,6 +36,11 @@ export function creatureTypesFrom(oracle) {
       const into = words.includes("Creature") || words.includes("Kindred") || words.includes("Tribal") ? creature : other;
       for (const subtype of subtypes) into.add(subtype);
     }
+    /* And a creature token's: Army, Servo, Germ and their kin are creature types no card's type line carries, and a
+       changeling is each of them ("if you don't control an Army creature"). An enchantment creature token's Shrine is an
+       enchantment type, and the type lines that carry it leave it out below. */
+    const texts = Array.isArray(card.faces) && card.faces.length ? card.faces.map((f) => f.text ?? "") : [card.text ?? ""];
+    for (const text of texts) for (const [, named] of text.matchAll(TOKEN)) for (const subtype of named.trim().split(/\s+/)) creature.add(subtype);
   }
   return [...creature].filter((t) => !other.has(t)).sort();
 }

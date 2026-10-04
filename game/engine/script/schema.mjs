@@ -39,6 +39,7 @@ import {LAYERS} from "../rules/layers.mjs";
 import {STATIC_RULES, CANT_ATTACK_DEFENDERS} from "../rules/statics.mjs";
 import {amountProblems, AMOUNT_PARAMS} from "./amount.mjs";
 import {conditionProblems} from "./condition.mjs";
+import {isCreatureType} from "../keywords/types.mjs";
 
 /* The facts about a target an effect may name where it takes a number (script/bind.mjs). */
 const FACT_KEYS = ["powerOf", "manaValueOf", "controllerOf"];
@@ -110,6 +111,12 @@ function checkEffect(effect, path, errors) {
      library (Memory Lapse) -- any other word would be read as the graveyard. */
   if (name === "counterSpell" && effect.to !== undefined && !["exile", "top"].includes(effect.to))
     errors.push({path: `${path}.to`, message: "A countered spell goes to its owner's graveyard, or `to` \"exile\" or \"top\" instead"});
+  /* Amass (CR 701.47a): the creature type its Army is, "Goblin" for "amass Goblins 2"; the Army chosen remembered or not. */
+  if (name === "amass") {
+    if (!isText(effect.subtype) || !isCreatureType(effect.subtype))
+      errors.push({path: `${path}.subtype`, message: "Amass names the creature type its Army is: `subtype`, \"Goblin\" for \"amass Goblins\""});
+    if (effect.remember !== undefined && effect.remember !== true) errors.push({path: `${path}.remember`, message: "Amass remembers the amassed Army with `remember: true`"});
+  }
   /* A branch's test: a condition, and there must be one. */
   if (name === "branch") {
     if (effect.if === undefined) errors.push({path: `${path}.if`, message: "A branch says what decides it: `if`, a condition"});
