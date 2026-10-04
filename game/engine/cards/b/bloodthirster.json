@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bloodthirster",
+    "oracleId": "e971249a-64a3-4a9b-9a0c-e9d858ca8a55",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Demon"
+    ],
+    "manaCost": "{5}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Flying, trample\nWhenever this creature deals combat damage to a player, untap it. After this phase, there is an additional combat phase.\nThis creature can't attack a player it has already attacked this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature deals combat damage to a player, untap it. After this phase, there is an additional combat phase.",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "self",
+        "to": "player",
+        "combat": true
+      },
+      "effects": [
+        {
+          "effect": "untap",
+          "targets": "self"
+        },
+        {
+          "effect": "addPhase",
+          "phases": [
+            "combat"
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "This creature can't attack a player it has already attacked this turn.",
+      "rule": "cant-attack",
+      "affects": {
+        "self": true
+      },
+      "defender": "attacked"
+    }
+  ]
+}

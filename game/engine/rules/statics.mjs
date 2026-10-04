@@ -84,6 +84,8 @@ export const STATIC_RULES = Object.freeze({
   /** "You have hexproof" (Crystal Barricade; CR 702.11c): its controller can't be the target of spells or abilities their
       opponents control. script/filter.mjs, as a player is targeted. */
   "player-hexproof": "script/filter.mjs",
+  /** A restriction on attacking (CR 508.1c): `affects`, `defender`, `unless` (cantAttack, below). rules/combat.mjs. */
+  "cant-attack": "rules/combat.mjs",
   /** Flashback (CR 702.34a): the card's own, from its keyword and cost (cards/index.mjs), or given until end of turn
       (Past in Flames: effectUntil, its cards fixed as it resolves, their mana costs the cost). rules/actions.mjs offers
       the cast from its owner's graveyard; rules/stack.mjs and effects/zones.mjs exile it as it leaves the stack. */
@@ -186,6 +188,34 @@ export function castForbidden(state, player, cardId) {
 }
 
 /** Who has goaded this creature (CR 701.15; effects/permanents.mjs goad), each until their next turn. */
+/**
+ * A RESTRICTION ON ATTACKING (CR 508.1c; Forge's CantAttack): "Inklings can't attack you or planeswalkers you control"
+ * (Combat Calligrapher), "creatures with flying can't attack you" (Sandwurm Convergence), "this creature can't attack a
+ * player it has already attacked this turn" (Port Razer). A static `cant-attack` on a permanent: `affects` the creatures,
+ * read as they are now, "you" its controller; `defender` whom they can't attack -- "you" (its controller), "owner" (the
+ * attacker's owner), "attacked" (a player that creature has already attacked this turn) -- or no one at all, unsaid;
+ * `unless` a condition under which it does not apply ("unless you control seven or more lands"), "you" its controller.
+ * Planeswalkers are not attacked yet, so "or planeswalkers you control" has nothing to keep them from.
+ */
+export function cantAttack(state, attacker, defender) {
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static" || ability.rule !== "cant-attack") continue;
+      const context = {controller: holder.controller, source: holderId};
+      if (!matchesSelector({what: "permanent", ...ability.affects}, state, attacker, context)) continue;
+      if (ability.defender === "you" && defender !== holder.controller) continue;
+      if (ability.defender === "owner" && defender !== state.objects[attacker]?.owner) continue;
+      if (ability.defender === "attacked" && usesThisTurn(state, attacker, `attacked:${defender}`) === 0) continue;
+      if (ability.unless && conditionHolds(state, ability.unless, context)) continue;
+      return true;
+    }
+  }
+  return false;
+}
+/** The words `defender` may say on a `cant-attack` static. */
+export const CANT_ATTACK_DEFENDERS = Object.freeze(["you", "owner", "attacked"]);
+
 /** "Attacks that opponent this turn if able" (encore, CR 702.141a; effects/permanents.mjs): the players this creature is
  * required to attack this turn (CR 508.1d). rules/combat.mjs asks only those it could attack now. */
 export function mustAttackOf(state, id) {

@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Port Razer",
+    "oracleId": "653e4b68-3184-4352-ac91-127f7e6d7c12",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Orc",
+      "Pirate"
+    ],
+    "manaCost": "{3}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Whenever this creature deals combat damage to a player, untap each creature you control. After this phase, there is an additional combat phase.\nThis creature can't attack a player it has already attacked this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature deals combat damage to a player, untap each creature you control. After this phase, there is an additional combat phase.",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "self",
+        "to": "player",
+        "combat": true
+      },
+      "effects": [
+        {
+          "effect": "untapAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          }
+        },
+        {
+          "effect": "addPhase",
+          "phases": [
+            "combat"
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "This creature can't attack a player it has already attacked this turn.",
+      "rule": "cant-attack",
+      "affects": {
+        "self": true
+      },
+      "defender": "attacked"
+    }
+  ]
+}
