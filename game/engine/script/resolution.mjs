@@ -93,7 +93,7 @@ export function runResolution(state, rng = null) {
       resolving.queue.unshift(...structuredClone((holds ? effect.then : effect.otherwise) ?? []));
       continue;
     }
-    /* CR 903.9b: a commander this would put into its owner's hand or library may go to the command zone instead -- a
+    /* CR 903.9b: a commander this sends to its owner's hand or library may go to the command zone instead -- a
        replacement, so the owners are asked before anything moves (effects/asking.mjs, commanderHome). */
     const home = effect?.effect === "moveZone" || effect?.effect === "counterSpell" ? commandersGoingHome(state, effect) : [];
     if (home.length) resolving.queue[0] = {effect: "commanderHome", commanders: home, move: effect};

@@ -269,7 +269,7 @@ function started() {
       "a commander that dies is a creature that died: Zulaport Cutthroat drains for it, and its owner still moves it to the command zone");
   }
 
-  /* CR 903.9b: a commander that would be put into its owner's hand or library may go to the command zone instead -- a
+  /* CR 903.9b: a commander on its way to its owner's hand or library may go to the command zone instead -- a
      replacement, so its owner is asked before it moves, and "no" lets it go where the effect sends it. */
   const BOUNCE = {types: ["Instant"], manaCost: "{U}", colors: ["U"], spell: {id: "s", text: "Return target creature to its owner's hand.",
     targets: [{what: "permanent", types: ["Creature"]}], effects: [{effect: "moveZone", targets: {target: 0}, to: "hand"}]}};

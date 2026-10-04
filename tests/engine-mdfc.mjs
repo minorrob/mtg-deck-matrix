@@ -6,7 +6,7 @@
  * its front face's (712.8a): in a hand, a library or a graveyard Fell the Profane is an instant that costs {2}{B}{B}, and
  * a search for a land card does not find it. Cast, it is its front face (712.11b). Played as a land, its player chooses a
  * face that is a land and it enters with that face up (712.12): Fell Mire, which asks as it enters whether to pay 3 life
- * or have it enter tapped. On the battlefield it has only the characteristics of the face that is up (712.8f), so it
+ * or have it enter tapped. On the battlefield only the face that is up counts (712.8f), so it
  * costs nothing and is no color; when it leaves, it is its front face again. Told to enter with its front face up when
  * that face is no permanent's, it stays where it is (712.14b). Its color identity is both faces' (CR 903.4).
  */

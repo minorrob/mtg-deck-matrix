@@ -30,9 +30,9 @@
  * else has settled: it died, or was exiled, like any card, and what watches for that saw it. Asked once each time it
  * arrives (rules/commander.mjs), never while the game is over.
  *
- * THE LEGEND RULE IS A CHOICE (CR 704.5j). Two or more legendary permanents with one name under one
- * controller: that player chooses the one to keep, and the rest are PUT INTO their owners' graveyards
- * -- not destroyed, so indestructible does not save them, and a death all the same, so "dies" sees
+ * THE LEGEND RULE IS A CHOICE (CR 704.5j). A player with two or more legendary permanents of one name
+ * keeps the one they choose, and each of the others GOES TO its owner's graveyard -- not destroyed,
+ * so indestructible does not save them, and a death all the same, so "dies" sees
  * it. Asked here like the commander's question, once everything else has settled.
  *
  * +1/+1 AND -1/-1 COUNTERS ANNIHILATE (CR 704.5q): N of each go, N the smaller count.

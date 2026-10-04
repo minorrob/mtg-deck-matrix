@@ -2,9 +2,9 @@
 
 /* THE KEYWORDS THAT GIVE A PLAYER A DESIGNATION (Rob's Priority Batch 10.3, its seventeenth slice).
  *
- * STORIED (CR 702.195a) is a static ability: "Any time you control three or more permanents that are artifacts, Sagas,
- * and/or legendary and you don't have an enduring story, you have an enduring story for the rest of the game." Read where
- * the game is checked, as state-based actions are (rules/sba.mjs): a permanent with it on the battlefield, and three such
+ * STORIED (CR 702.195a) is a static ability: its controller, once they control three or more artifacts, Sagas and
+ * legendary permanents in any mix, has an enduring story from then on, if they did not already. Read where the game is
+ * checked, as state-based actions are (rules/sba.mjs): a permanent with it on the battlefield, and three such
  * permanents its controller controls -- the storied one among them when it is legendary. The designation is the player's,
  * for the rest of the game: it stays when the permanents go, and any number of players may have it (702.195b). Nothing
  * else in the rules reads it; "as long as you have an enduring story" is the condition `enduringStory`
