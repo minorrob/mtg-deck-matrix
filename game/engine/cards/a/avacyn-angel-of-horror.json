@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Avacyn, Angel of Horror",
+    "oracleId": "4af61d45-7114-4eb4-a905-9e03caf87454",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{5}{B}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 8,
+    "toughness": 8
+  },
+  "oracleText": "Flying, deathtouch\nWhenever Avacyn or another nontoken creature you control dies, return that card to the battlefield under your control at the beginning of the next end step.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying, deathtouch",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying, deathtouch",
+      "keyword": "deathtouch"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Avacyn or another nontoken creature you control dies, return that card to the battlefield under your control at the beginning of the next end step.",
+      "trigger": {
+        "on": "dies",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "token": false,
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "delayedTrigger",
+          "at": "end step",
+          "text": "Return that card to the battlefield under your control at the beginning of the next end step.",
+          "effects": [
+            {
+              "effect": "moveZone",
+              "targets": "that card",
+              "to": "battlefield",
+              "controller": "you"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

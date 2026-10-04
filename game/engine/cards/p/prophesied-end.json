@@ -1,0 +1,72 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Prophesied End",
+    "oracleId": "45f4d057-5134-40a2-9590-ddba73a65582",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy target creature. If it wasn't attacking, its controller draws a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Destroy target creature. If it wasn't attacking, its controller draws a card.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "about": "target",
+            "is": {
+              "attacking": true
+            }
+          },
+          "then": [
+            {
+              "effect": "destroy",
+              "targets": {
+                "target": 0
+              }
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "destroy",
+              "targets": {
+                "target": 0
+              }
+            },
+            {
+              "effect": "draw",
+              "count": 1,
+              "who": {
+                "controllerOf": {
+                  "target": 0
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

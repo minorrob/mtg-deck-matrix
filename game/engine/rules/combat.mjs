@@ -607,8 +607,9 @@ export const combatDamage = {
         damagePermanent(state, hit.toCard, hit.amount, events, {infect});
         /* CR 704.5h: the mark that makes state-based actions destroy it whatever its toughness. */
         markDeathtouch(state, hit.source, hit.toCard);
+        /* Combat damage, as damage to a player says (Grateful Apparition's "to a player or planeswalker", rules/trigger.mjs). */
         events.push(event("GameEventCardDamaged", state, {
-          card: cardRef(state, hit.toCard), source: cardRef(state, hit.source), amount: hit.amount,
+          card: cardRef(state, hit.toCard), source: cardRef(state, hit.source), amount: hit.amount, combat: true,
         }));
       }
 

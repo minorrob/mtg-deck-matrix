@@ -598,6 +598,10 @@ land of the player's own or an opponent's creature never one; and "unless you co
 `engine-empower-jace` holds "empower Jace N": a blue Jace planeswalker token made when its controller has none, the one
 there is, or the controller's choice of two; a Jace card and another player's token aside; a loyalty ability that adds
 mana, on the stack; and a resolution-time choice by a target's owner in a triggered ability, with "up to one".
+`engine-destroyed-and-walker-damage` holds a board wipe that remembers what it destroyed (Ob Nixilis, the Ascended's
+"1 life for each creature destroyed this way"), the indestructible never among them; and "whenever this creature deals
+combat damage to a player or planeswalker" (Grateful Apparition): combat damage to a planeswalker triggers it, about its
+controller, while damage to a creature and noncombat damage do not.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -716,7 +720,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 288 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 289 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -976,6 +980,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-loyalty-activated` — `tests/engine-loyalty-activated.mjs`
 - `engine-opponents-lands` — `tests/engine-opponents-lands.mjs`
 - `engine-empower-jace` — `tests/engine-empower-jace.mjs`
+- `engine-destroyed-and-walker-damage` — `tests/engine-destroyed-and-walker-damage.mjs`
 
 ## Design and execution record
 
