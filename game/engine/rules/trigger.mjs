@@ -111,6 +111,15 @@ function subjects(state, event, condition, sourceId, controller) {
   if (event.kind !== condition.on) return [];
   const fields = event.data?.fields ?? {};
   /* "Whenever you cast a noncreature spell" (CR 601.2i): the spell on the stack, and who cast it. */
+  /* "Whenever you activate a loyalty ability" (CR 606): an ability, not a spell, with a loyalty cost, by `activator`; the
+     counters its cost removed at least `removedAtLeast`. */
+  if (condition.on === "GameEventSpellAbilityCast" && condition.loyaltyActivated) {
+    if (fields.sa?.isSpell !== false || !Number.isInteger(fields.sa?.loyalty)) return [];
+    const activator = fields.si?.actor?.playerId;
+    if (!whoseIs(condition.activator ?? "you", activator, controller)) return [];
+    if (condition.removedAtLeast && -fields.sa.loyalty < condition.removedAtLeast) return [];
+    return [{card: fields.card?.cardId, player: activator}];
+  }
   if (condition.on === "GameEventSpellAbilityCast") {
     if (!fields.sa?.isSpell) return [];
     /* The spell is the stack entry's object: the card in hand became a new object as it moved to the stack (CR 400.7). */

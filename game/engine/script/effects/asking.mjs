@@ -291,6 +291,13 @@ export const discard = {
        effects after it -- nothing, until they do. */
     if (params.remember) context.remembered = [];
     if (queue.length === 0) return false;
+    /* "Discard your hand" (Ajani Unrelenting): every card in it, so there is nothing to choose and nobody is asked. */
+    if (params.all === true) {
+      const events = [];
+      for (const player of queue) for (const id of cardsIn(state, "hand", player)) discardOne(state, id, player, events);
+      if (params.remember) context.remembered = [];
+      return {events};
+    }
     /* "Discard a card at random" (Gamble, batch 80; CR 701.9b): nobody chooses -- each card is picked from the hand by the
        game's random stream, and nobody is asked. */
     if (params.random === true) {

@@ -493,7 +493,15 @@ export function effectUntil(state, params, context) {
     ...(params.rule ? {rule: params.rule} : {layer: params.layer ?? 6, sublayer: params.sublayer}),
     /* `selector`: what it affects, fixed as it resolves (CR 611.2c) -- "each instant and sorcery card in your graveyard
        gains flashback until end of turn" does not reach a card put there later. A choice (`anyOf`) is each of them. */
-    affects: params.targets ? {ids: params.targets} : params.selector ? {ids: fixedAt(state, params.selector, context)} : params.affects ?? {what: "permanent"},
+    affects: params.targets ? {ids: params.targets} : params.selector ? {ids: fixedAt(state, params.selector, context)}
+      /* "Creatures they control can't attack Jaces you control this turn" (Jace, Multiverse Architect): a rule changed,
+         not a characteristic, so it reaches the creatures that player controls as they are -- one that arrives later
+         included (CR 611.2c is about characteristics) -- `who` the player, bound as it resolves ("that player"). */
+      : params.rule === "cant-attack" && Array.isArray(params.who) ? {what: "permanent", controller: params.who[0] ?? -1}
+      : params.affects ?? {what: "permanent"},
+    /* `toward`: which planeswalkers they can't attack ("Jaces you control"), "you" this effect's controller -- attacking a
+       player, or any other planeswalker, they still may (rules/statics.mjs, cantAttack). */
+    ...(params.rule === "cant-attack" && params.toward ? {toward: params.toward} : {}),
     apply: params.apply ?? {},
     /* "Until end of turn" (the default), "until your next turn", or "ever": an effect with no duration -- "up to one other
        target creature loses all abilities" (Abigale) -- lasting as long as what it affects does (CR 611.2a; a permanent
