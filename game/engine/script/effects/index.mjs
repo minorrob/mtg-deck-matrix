@@ -29,7 +29,7 @@ import {bindEffect} from "../bind.mjs";
 import {countEffect} from "../amount.mjs";
 import {conditionHolds} from "../condition.mjs";
 import {controllerOf, typesOf} from "../../rules/layers.mjs";
-import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sacrificeAll, digUntil, peekAndReveal, shuffle, exileUntil} from "./zones.mjs";
+import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sacrificeAll, digUntil, peekAndReveal, shuffle, exileUntil, mayPlay} from "./zones.mjs";
 import {
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
   putCounter, putCounterAll, removeCounter, proliferate, damageAll, fight, poison, winGame,
@@ -158,8 +158,9 @@ export const EFFECTS = Object.freeze({
   shuffle,
   /* X5k: "exile ... until this leaves the battlefield" (CR 610.3). */
   exileUntil,
-  /* Rob's Priority Batch 10.3, its twenty-second slice: investigate, a Clue token (CR 701.16a). */
-  investigate,
+  /* Rob's Priority Batch 10.3, its twenty-second slice: investigate, a Clue token (CR 701.16a). Its twenty-third: "you may
+     play that card" until a time, a permission (rules/actions.mjs reads it). */
+  investigate, mayPlay,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */

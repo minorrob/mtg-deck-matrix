@@ -601,6 +601,13 @@ function playableElsewhere(state, player, kind) {
     const ids = zone === "exile" ? state.zones.exile.filter((id) => state.objects[id].owner === player) : cardsIn(state, zone, player);
     for (const id of ids) if ((state.objects[id].abilities ?? []).some((a) => a.kind === "static" && a.rule === "cast-self-from" && (a.zones ?? []).includes(zone)) && !found.includes(id)) found.push(id);
   }
+  /* "Until the end of your next turn, you may play that card" (script/effects/zones.mjs, mayPlay): the cards an effect let
+     this player play, while each is still the object it named (CR 400.7) -- a land, or a spell ("you may cast" one only). */
+  for (const effect of state.effects ?? []) {
+    if (effect.rule !== "may-play" || effect.player !== player || (kind === "land" && effect.spellsOnly)) continue;
+    for (const id of effect.affects.ids)
+      if (state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone) && isLand(state.objects[id]) === (kind === "land") && !found.includes(id)) found.push(id);
+  }
   return found;
 }
 

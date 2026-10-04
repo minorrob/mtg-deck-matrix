@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Atsushi, the Blazing Sky",
+    "oracleId": "535f405d-94df-4f45-aedc-b331103720b7",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon",
+      "Spirit"
+    ],
+    "manaCost": "{2}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Flying, trample\nWhen Atsushi dies, choose one —\n• Exile the top two cards of your library. Until the end of your next turn, you may play those cards.\n• Create three Treasure tokens.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "triggered",
+      "text": "When Atsushi dies, choose one —\n• Exile the top two cards of your library. Until the end of your next turn, you may play those cards.\n• Create three Treasure tokens.",
+      "trigger": {
+        "on": "dies",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Exile the top two cards of your library. Until the end of your next turn, you may play those cards.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "fromTop": 2,
+                  "to": "exile",
+                  "remember": true
+                },
+                {
+                  "effect": "mayPlay",
+                  "targets": "remembered",
+                  "until": "your-next-end"
+                }
+              ]
+            },
+            {
+              "text": "Create three Treasure tokens.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "createToken",
+                  "count": 3,
+                  "token": {
+                    "predefined": "Treasure"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

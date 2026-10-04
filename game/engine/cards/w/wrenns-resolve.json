@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wrenn's Resolve",
+    "oracleId": "a7d8c99c-cd44-4bad-82e6-7c7cff9bd89f",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Exile the top two cards of your library. Until the end of your next turn, you may play those cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Exile the top two cards of your library. Until the end of your next turn, you may play those cards.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "fromTop": 2,
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "mayPlay",
+          "targets": "remembered",
+          "until": "your-next-end"
+        }
+      ]
+    }
+  ]
+}

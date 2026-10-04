@@ -208,6 +208,10 @@ function cleanup(state, events) {
   for (const effect of (state.effects ?? []).filter((e) => e.rule === "control-returns").reverse())
     for (const id of effect.affects?.ids ?? []) if (state.objects[id]) state.objects[id].controller = effect.apply.controller;
   if ((state.effects ?? []).some((effect) => effect.until === "end-of-turn")) state.effects = state.effects.filter((effect) => effect.until !== "end-of-turn");
+  /* "Until the end of your next turn" (script/effects/zones.mjs, mayPlay): over at the end of the first turn of that player
+     begun after it was made -- this one, if it was made before this turn began. */
+  if ((state.effects ?? []).some((e) => e.until === "your-next-end"))
+    state.effects = state.effects.filter((e) => !(e.until === "your-next-end" && e.sourceController === state.activePlayer && state.turn > e.madeOnTurn));
   /* "Becomes a copy of target artifact until end of turn" ends with them (effects/permanents.mjs). */
   endCopies(state);
   /* And a delayed trigger that lasted "this turn" ("whenever a creature dies this turn", CR 603.7b) ends with them. */
