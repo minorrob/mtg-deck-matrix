@@ -78,13 +78,16 @@ const POD = {seats: [
 ]};
 const HUMANS = ["rob", "maya"];
 const rawState = async (storage, matchId) => JSON.parse(await storage.get(`match/${matchId}/checkpoint/${String(JSON.parse(await storage.get(`match/${matchId}/checkpoint/latest`)).sequence).padStart(10, "0")}`)).state;
-/* Names only another seat's hand, or a library, holds -- and that nothing public shares. */
-function secretsFor(state, seat) {
+/* Names only another seat's hand, or a library, holds -- and that nothing public shares, nor ever did in this game
+   (`seen`): a line written while a card was public stays true after it is gone, as a player who loses takes their
+   permanents out of the game (CR 800.4a) and leaves "Rob played Grove 0" naming lands only that player's library holds. */
+function secretsFor(state, seat, seen = new Set()) {
   const pub = new Set(), secret = new Set();
   for (const o of Object.values(state.objects)) {
     if (o.zone === "library" || (o.zone === "hand" && o.owner !== seat)) secret.add(o.card); else pub.add(o.card);
   }
-  for (const n of pub) secret.delete(n);
+  for (const n of pub) { secret.delete(n); seen.add(n); }
+  for (const n of seen) secret.delete(n);
   return secret;
 }
 function person(seed) {
@@ -100,6 +103,8 @@ for (const seed of Object.keys(TURNS)) {
   const storage = memoryStorage(), matchId = `hist-${seed}`;
   let room = await startRoom({storage, matchId, cards, pod: POD, seed});
   const people = Object.fromEntries(HUMANS.map((h) => [h, person(`${seed}-${h}`)]));
+  /* What each seat has seen public in this game, at any check so far. */
+  const seen = room.seats.map(() => new Set());
   for (let n = 0; room.waitingOn; n += 1) {
     const who = room.waitingOn, view = room.view(who);
     if (view.state.turn > TURNS[seed]) break;
@@ -107,7 +112,7 @@ for (const seed of Object.keys(TURNS)) {
     const shown = room.seats.map((s) => room.view(s.seatId).history);
     longest = Math.max(longest, shown[0].length);
     for (const [i, s] of room.seats.entries()) {
-      const secret = [...secretsFor(state, i)];
+      const secret = [...secretsFor(state, i, seen[i])];
       for (const line of shown[i]) {
         const leaked = secret.find((name) => new RegExp(`${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\w-])`).test(line.text));
         if (leaked) assert.fail(`seat ${s.seatId} was told "${line.text}", naming ${leaked}, which only a hidden zone holds`);

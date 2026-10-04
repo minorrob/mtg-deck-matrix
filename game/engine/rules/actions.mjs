@@ -54,9 +54,9 @@
 
 import {cardsIn, moveObject, usesThisTurn, recordUse, showFace} from "../state/index.mjs";
 import {pushSpell, pushAbility, becameTarget} from "./stack.mjs";
-import {addMana, spend, parseManaCost, automaticPayment, manaValue, poolSize} from "./mana.mjs";
+import {addMana, spend, parseManaCost, automaticPayment, manaValue, poolSize, tapPlans} from "./mana.mjs";
 import {commanderTax, recordCommanderCast, colorIdentity} from "./commander.mjs";
-import {COLORS} from "./mana.mjs";
+import {COLORS, MANA_KEYS} from "./mana.mjs";
 import {summoningSick, hasFlash} from "../keywords/timing.mjs";
 import {targetChoices, targetName, isHostile, modalScript, isChoosing, countOf, targetCandidates, countedChoice, inWords} from "../script/bind.mjs";
 import {moveOne, sacrificeOne} from "../script/effects/zones.mjs";
@@ -175,6 +175,15 @@ export function escapeWays(state, player, id) {
 export function castCostChoice(state, awaiting) {
   const {action, player} = awaiting;
   const name = state.objects[action.objectId]?.card ?? "That card";
+  /* Tapped for it (castTapPlans), with more than one way: which sources. */
+  if (action.autoTap === true) {
+    const options = castTapPlans(state, player, action, TAP_CHOICES).map((plan, index) => ({index, label: tapWords(state, plan)}));
+    for (const option of options) {
+      const alike = options.filter((o) => o.label === option.label);
+      if (alike.length > 1) alike.forEach((o, k) => { o.label = `${o.label} (${k + 1})`; });
+    }
+    return {id: `choose-cost:${action.objectId}`, title: `${name}: what to tap for it`, mode: "one", min: 1, max: 1, cost: "mana", options};
+  }
   const named = (ids) => {
     const options = ids.map((cardId, index) => ({index, label: state.objects[cardId].card, cardId}));
     /* Two that read alike, numbered: "Wastes (1)", "Wastes (2)". */
@@ -201,7 +210,8 @@ export function resolveCastCost(state, awaiting, indices) {
   if (picked.length !== (indices ?? []).length || picked.length !== choice.min || picked.some((i) => !choice.options[i]))
     throw new Error("Invalid selection");
   const ids = picked.map((i) => choice.options[i].cardId);
-  const action = {...structuredClone(awaiting.action), ...(choice.cost === "tap" ? {flashbackTap: ids} : {escapeExile: ids})};
+  const way = choice.cost === "mana" ? castTapPlans(state, awaiting.player, awaiting.action, TAP_CHOICES)[picked[0]] : null;
+  const action = {...structuredClone(awaiting.action), ...(way ? {tapPlan: way.key} : choice.cost === "tap" ? {flashbackTap: ids} : {escapeExile: ids})};
   state.awaiting = null;
   state.priorityPlayer = awaiting.player;
   return applyAction(state, awaiting.player, action);
@@ -558,30 +568,9 @@ function playableElsewhere(state, player, kind) {
  * they cannot pass either. An empty list is the honest answer to "what may you do", and a caller
  * that treats it as "nothing to do" is right.
  */
-export function legalActions(state, player) {
-  /* It only reads: every object it derives, derived once (rules/layers.mjs, deriving). */
-  return deriving(state, () => offers(state, player));
-}
-function offers(state, player) {
-  if (state.priorityPlayer !== player) return [];
-
-  const actions = [{kind: "pass"}];
-
-  /* CR 116.2a and 305.1. All four conditions, each of which is a real way to be wrong. */
-  if (player === state.activePlayer
-      && MAIN_PHASES.includes(state.phase)
-      && state.stack.length === 0
-      && landDropsLeft(state, player) > 0) {
-    for (const id of cardsIn(state, "hand", player)) {
-      if (isLand(state.objects[id])) actions.push({kind: "play-land", objectId: id, label: state.objects[id].card});
-      /* A modal double-faced card with a land on its back (CR 712.12): played with that face up. */
-      if (backLand(state.objects[id])) actions.push({kind: "play-land", objectId: id, label: state.objects[id].mdfc.back.card, face: "back"});
-    }
-    /* From the graveyard, or the top of the library, when a permanent says so: the same land drop (CR 305.2). */
-    for (const id of playableElsewhere(state, player, "land")) actions.push({kind: "play-land", objectId: id, label: state.objects[id].card, from: state.objects[id].zone});
-  }
-
-  /* CR 605.3a: any time you have priority, whatever the step. */
+/** Its mana abilities' activations, each an offer (CR 605.3a): any time the player has priority, whatever the step. */
+function manaOffers(state, player) {
+  const actions = [];
   for (const id of state.zones.battlefield) {
     const object = state.objects[id];
     if (object.controller !== player) continue;
@@ -607,6 +596,81 @@ function offers(state, player) {
       }));
     }
   }
+  return actions;
+}
+
+/**
+ * THE SOURCES A CAST MAY TAP (rules/mana.mjs, tapPlans): each untapped source whose mana ability is offered now and asks
+ * nothing but {T} -- no mana, life, sacrifice or counters, nothing else done (a painland's damage), nor a restriction on
+ * what its mana is spent on -- for one mana. Each `{id, colors, via}`: the colors it can make, and for each the
+ * activation that makes it.
+ */
+export function tapUnits(state, player, offered = manaOffers(state, player)) {
+  const units = new Map();
+  for (const offer of offered) {
+    if (offer.costChoice) continue;
+    const ability = abilitiesOf(state, offer.objectId).find((a) => a.id === offer.abilityId);
+    if (!ability?.tapSelf || ability.cost || ability.payLife || ability.then || ability.sacrifice || ability.sacrificeSelf || ability.counterCost || ability.spendOnly) continue;
+    const made = Object.entries(offer.mana ?? {}).filter(([, n]) => n > 0);
+    if (made.length !== 1 || made[0][1] !== 1) continue;
+    const color = made[0][0];
+    if (!units.has(offer.objectId)) units.set(offer.objectId, {id: offer.objectId, colors: [], via: {}});
+    const unit = units.get(offer.objectId);
+    if (unit.via[color]) continue;
+    unit.colors.push(color);
+    unit.via[color] = {abilityId: offer.abilityId, ...(offer.produce !== undefined ? {produce: offer.produce} : {})};
+  }
+  return [...units.values()];
+}
+
+/* A cast that may tap for itself: from the hand or the command zone, its mana cost (and a commander's tax) paid, with
+   nothing in the pool -- so the mana tapped is exactly the cost, and paying it is no further choice. */
+const tapCastable = (state, player, action) => ["hand", "command"].includes(action.from) && !action.free && !action.flashback
+  && action.escape === undefined && action.alternative === undefined && action.x === undefined
+  && poolSize(poolFor(state, player, {spell: action.objectId})) === 0;
+
+/** How many ways to tap for a cast are asked at most: the least flexible first (tapPlans), so the sensible ones. */
+const TAP_CHOICES = 24;
+/** A way to tap, in words: the sources' names, in the order they are tapped ("Forest, Forest, Island"). */
+export const tapWords = (state, plan) => plan.taps.map((t) => state.objects[t.id]?.card ?? "a source").join(", ");
+
+/** The ways to tap for this cast (`action.autoTap`), up to `limit`, as `tapPlans` says them. */
+export function castTapPlans(state, player, action, limit = 2) {
+  if (!tapCastable(state, player, action)) return [];
+  const tax = action.from === "command" ? commanderTax(state, player, action.objectId) : 0;
+  const {cost, x} = castCost(state, player, action.objectId, tax, false, null);
+  return tapPlans(tapUnits(state, player), {...cost, generic: cost.generic + x}, limit);
+}
+
+export function legalActions(state, player) {
+  /* It only reads: every object it derives, derived once (rules/layers.mjs, deriving). */
+  return deriving(state, () => offers(state, player));
+}
+function offers(state, player) {
+  if (state.priorityPlayer !== player) return [];
+
+  const actions = [{kind: "pass"}];
+
+  /* CR 116.2a and 305.1. All four conditions, each of which is a real way to be wrong. */
+  if (player === state.activePlayer
+      && MAIN_PHASES.includes(state.phase)
+      && state.stack.length === 0
+      && landDropsLeft(state, player) > 0) {
+    for (const id of cardsIn(state, "hand", player)) {
+      if (isLand(state.objects[id])) actions.push({kind: "play-land", objectId: id, label: state.objects[id].card});
+      /* A modal double-faced card with a land on its back (CR 712.12): played with that face up. */
+      if (backLand(state.objects[id])) actions.push({kind: "play-land", objectId: id, label: state.objects[id].mdfc.back.card, face: "back"});
+    }
+    /* From the graveyard, or the top of the library, when a permanent says so: the same land drop (CR 305.2). */
+    for (const id of playableElsewhere(state, player, "land")) actions.push({kind: "play-land", objectId: id, label: state.objects[id].card, from: state.objects[id].zone});
+  }
+
+  /* CR 605.3a: any time you have priority, whatever the step. */
+  const mana = manaOffers(state, player);
+  actions.push(...mana);
+  /* What a cast could tap, read once and only if a cast asks (castTapPlans). */
+  let units = null;
+  const tappable = () => (units ??= tapUnits(state, player, mana));
 
   /* CR 601.2. Offered only when the pool can pay: the engine does not offer what it cannot do.
      A commander is castable from the COMMAND ZONE as well as from hand (CR 903.8), and its tax is
@@ -651,12 +715,23 @@ function offers(state, player) {
     /* The pool, and mana that may be spent only on this spell (rules/restricted-mana.mjs). */
     const pool = poolFor(state, player, {spell: id});
     for (const X of xValues(pool, cost, x)) {
-      const payment = automaticPayment(pool, cost, {life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0), x: x + (X ?? 0) * cost.variable});
+      let payment = automaticPayment(pool, cost, {life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0), x: x + (X ?? 0) * cost.variable});
+      /* Not from the pool, but by tapping for it (castTapPlans): one offer, its sources tapped as it is cast -- with more
+         than one way to tap, the caster is asked which once it is taken (castCostChoice). */
+      let autoTap = false;
+      if (!payment && X === null && !freely && !back && !fled && !way && ["hand", "command"].includes(from) && poolSize(pool) === 0) {
+        const [plan] = tapPlans(tappable(), {...cost, generic: cost.generic + x}, 1);
+        if (plan) {
+          autoTap = true;
+          payment = {mana: Object.fromEntries(MANA_KEYS.map((k) => [k, plan.taps.filter((t) => t.color === k).length])), life: 0};
+        }
+      }
       if (!payment) continue;
       const extra = [...(object.spell?.additionalCost ?? []), ...(way?.extra ?? [])];
       const paysFor = extra.length ? additionalChoices(state, player, id, extra) : [null];
       for (const costChoice of paysFor) {
-        const base = {kind: "cast", objectId: id, label: object.card, payment, from, tax, ...(X !== null ? {x: X} : {}), ...(costChoice ? {costChoice, costNames: Object.values(costChoice).map((c) => state.objects[c].card)} : {}),
+        const base = {kind: "cast", objectId: id, label: object.card, payment, from, tax, ...(X !== null ? {x: X} : {}), ...(autoTap ? {autoTap: true} : {}),
+          ...(costChoice ? {costChoice, costNames: Object.values(costChoice).map((c) => state.objects[c].card)} : {}),
           ...(freely ? {free: true} : {}), ...(back ? {flashback: true} : {}), ...(fled ? {escape: fled.kind} : {}), ...(way ? {alternative: way.index} : {})};
         actions.push(...(object.spell?.modal ? withModes(state, base, object.spell.modal, {controller: player, source: id}) : withTargets(state, base, object.spell, {controller: player, source: id})));
       }
@@ -829,6 +904,9 @@ const sameAction = (a, b) => a.kind === b.kind
   && (a.x ?? null) === (b.x ?? null)
   /* A cast with flashback is another action than the same card cast another way: it is exiled after (CR 702.34a). */
   && (a.flashback === true) === (b.flashback === true)
+  /* And one that taps for itself another than one the pool pays (castTapPlans). Which way it taps is picked after the
+     offer is taken, so it is not part of it. */
+  && (a.autoTap === true) === (b.autoTap === true)
   /* And a double-faced card played with its back face up another than with its front (CR 712.12). */
   && (a.face ?? null) === (b.face ?? null)
   /* And with escape, its own or one given (CR 702.138a): another cost, and what it cast escaped. The cards it exiles are
@@ -970,6 +1048,11 @@ function perform(state, player, action, during = null) {
       state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
       return [];
     }
+    /* A CAST THAT TAPS FOR ITSELF, more than one way (castTapPlans): which sources, asked before anything is tapped. */
+    if (action.kind === "cast" && action.autoTap === true && action.tapPlan === undefined && castTapPlans(state, player, action, 2).length > 1) {
+      state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
+      return [];
+    }
   }
 
   /* Passing is the priority module's business, because what a full round of passes means depends on
@@ -1069,8 +1152,25 @@ function perform(state, player, action, during = null) {
     const exiling = fled && !during ? escapeExiled(state, player, action, fled) : [];
     /* A flashback cost's creatures, as its caster picked them. */
     const tapping = back?.tap && !during ? flashbackTapped(state, player, action, back.tap) : [];
+    /* Tapped for it (castTapPlans): the way picked, or the one there is -- each source's mana ability activated, as its
+       caster would (CR 601.2g), before the cost is paid from the pool. */
+    let tappedFor = null;
+    if (action.autoTap === true && !during) {
+      const ways = castTapPlans(state, player, action, TAP_CHOICES);
+      const tapped = action.tapPlan !== undefined ? ways.find((w) => w.key === action.tapPlan) : ways.length === 1 ? ways[0] : null;
+      if (!tapped) throw new Error(`${object.card} cannot be tapped for that way now`);
+      const units = new Map(tapUnits(state, player).map((u) => [u.id, u]));
+      for (const tap of tapped.taps) events.push(...perform(state, player, {kind: "activate-mana", objectId: tap.id, label: state.objects[tap.id].card, ...units.get(tap.id).via[tap.color]}));
+      tappedFor = {mana: Object.fromEntries(MANA_KEYS.map((k) => [k, tapped.taps.filter((t) => t.color === k).length])), life: 0};
+    }
     const {cost, x} = castCost(state, player, action.objectId, tax, Boolean(free), back ? back.mana : fled ? fled.mana : way ? way.mana : null);
-    const payment = during ? {mana: {}, life: 0} : automaticPayment(poolFor(state, player, {spell: action.objectId}), cost, {life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0), x: x + (action.x ?? 0) * cost.variable});
+    /* Mana added beyond what was tapped for -- a Swamp's extra {B} beside Nirkana Revenant -- can leave the pool more than
+       the cost, and more than one way to spend it: then what the sources were tapped for pays, and the rest stays in the
+       pool (CR 106.4). */
+    const covered = (pool, mana) => MANA_KEYS.every((k) => (pool[k] ?? 0) >= (mana[k] ?? 0));
+    const spending = during ? null : poolFor(state, player, {spell: action.objectId});
+    const fromPool = during ? {mana: {}, life: 0} : automaticPayment(spending, cost, {life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0), x: x + (action.x ?? 0) * cost.variable});
+    const payment = fromPool ?? (tappedFor && covered(spending, tappedFor.mana) ? tappedFor : null);
     if (!payment || (back && back.life > state.players[player].life) || (way && way.life > state.players[player].life)) throw new Error(`${object.card} cannot be paid for from this pool`);
     const card = cardRef(state, action.objectId);
     const paid = spendFor(state, player, {spell: action.objectId}, payment.mana);

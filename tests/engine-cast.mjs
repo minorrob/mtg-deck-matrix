@@ -91,10 +91,12 @@ const find = (state, player, kind) => legalActions(state, player).filter((a) => 
   addObject(s, {...FOREST, owner: 0, controller: 0}, "battlefield");
   addObject(s, {...BEARS, owner: 0, controller: 0}, "hand", 0);
   walkTo(s, "MAIN1");
-  eq(find(s, 0, "cast").length, 0, "with an empty pool the creature is not offered — the engine never offers a cast it cannot pay");
+  /* The engine never offers a cast it cannot pay: from the pool, or by tapping its caster's untapped sources as it is cast
+     (the plan's X8; tests/engine-tap-to-cast.mjs). */
+  eq(find(s, 0, "cast").map((a) => a.autoTap === true), [true], "with an empty pool and two Forests untapped, the creature is offered once, tapping them as it is cast");
   for (const tap of find(s, 0, "activate-mana")) applyAction(s, 0, tap);
   eq(s.players[0].manaPool.G, 2, "two lands, two green");
-  eq(find(s, 0, "cast").length, 1, "now the creature is castable");
+  eq(find(s, 0, "cast").map((a) => a.autoTap === true), [false], "now the creature is castable from the pool");
 
   const events = applyAction(s, 0, find(s, 0, "cast")[0]);
   eq(stackSize(s), 1, "a spell goes on the stack (CR 601.2a)");

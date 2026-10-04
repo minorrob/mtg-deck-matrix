@@ -167,7 +167,12 @@ function playGame(seed, kinds, {onDecision} = {}) {
     run.state.players.forEach((p, seat) => { seats[kinds[seat]] += 1; if (!p.lost) standing[kinds[seat]] += 1; });
   }
   measured.push(`standing at the end: house ${standing.house}/${seats.house}, random ${standing.random}/${seats.random}`);
-  ok(standing.house >= seats.house * 0.9, `house pilots survive: ${standing.house} of ${seats.house} seats standing at the end`);
+  /* The random-legal pilot casts in one action since tap-and-cast (the plan's X8), where before it had to tap the right
+     lands in some order first, so it fights back: on 2026-10-04 house pilots kept 91 of their 120 seats and random ones
+     19, from 110 and 14 the day before. Better than chance is still a wide margin: most of the seats, and several times
+     the random pilots'. */
+  ok(standing.house >= seats.house * 0.7 && standing.house >= standing.random * 3,
+    `house pilots survive: ${standing.house} of ${seats.house} seats standing at the end, against ${standing.random} of ${seats.random}`);
   ok(standing.random <= seats.random * 0.25, `random-legal pilots do not: ${standing.random} of ${seats.random}`);
 }
 

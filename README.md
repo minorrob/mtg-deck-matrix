@@ -495,7 +495,10 @@ where it is when told to enter as an instant. `engine-planeswalkers` holds plane
 however they enter, a loyalty ability once a turn at sorcery speed with its cost paid in counters at once, damage taking
 loyalty (infect's too) and none left putting one into its owner's graveyard; attacked, defended by its controller, its
 loyalty taking the combat damage, nothing dealt when it is gone, and attacking it not attacking its controller -- for
-restrictions, taxes and triggers unless they say "or planeswalkers you control". `engine-mulligan` holds the
+restrictions, taxes and triggers unless they say "or planeswalkers you control". `engine-tap-to-cast` holds a spell
+the pool cannot pay cast in one action by tapping its caster's plain sources: without asking when there is one way, asked
+when there are more, the least flexible first; mana already in the pool, {X} and Phyrexian costs, a painland, a source of
+two mana and a summoning-sick creature left to tapping by hand. `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
 
@@ -613,7 +616,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 249 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 250 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -834,6 +837,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-exile-until` — `tests/engine-exile-until.mjs`
 - `engine-mdfc` — `tests/engine-mdfc.mjs`
 - `engine-planeswalkers` — `tests/engine-planeswalkers.mjs`
+- `engine-tap-to-cast` — `tests/engine-tap-to-cast.mjs`
 
 ## Design and execution record
 

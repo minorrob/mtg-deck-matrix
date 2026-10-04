@@ -95,8 +95,8 @@ function started() {
   let guard = 0;
   while (currentPhase(s) !== "MAIN1" && guard < 30) { advance(s); guard += 1; }
 
-  eq(legalActions(s, 0).filter((a) => a.kind === "cast").length, 0,
-    "with no mana it is not offered, like any other spell");
+  eq(legalActions(s, 0).filter((a) => a.kind === "cast").map((a) => a.autoTap === true), [true],
+    "with no mana in the pool it is offered tapping four Forests as it is cast, like any other spell (the plan's X8)");
   for (const tap of legalActions(s, 0).filter((a) => a.kind === "activate-mana")) applyAction(s, 0, tap);
   const cast = legalActions(s, 0).find((a) => a.kind === "cast" && a.objectId === general);
   ok(cast, "with two green available the commander can be cast from the command zone (CR 903.8)");

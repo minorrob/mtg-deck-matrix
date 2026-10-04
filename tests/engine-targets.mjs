@@ -134,7 +134,8 @@ const names = (s, zone, seat) => cardsIn(s, zone, seat).map((id) => s.objects[id
   on(s, MOUNTAIN, 0);
   on(s, BOLT, 0, "hand");
   main(s);
-  eq(offers(s, "cast", "Lightning Bolt").length, 0, "no mana, no cast");
+  eq(offers(s, "cast", "Lightning Bolt").map((a) => [a.targetNames.join(), a.autoTap === true]).sort(), [["Grizzly Bears", true], ["Maya", true], ["Rob", true]],
+    "no mana in the pool: each aim offered tapping the Mountain as it is cast (the plan's X8)");
   tapAll(s);
   const bolts = offers(s, "cast", "Lightning Bolt");
   eq(bolts.map((a) => a.targetNames.join()).sort(), ["Grizzly Bears", "Maya", "Rob"],

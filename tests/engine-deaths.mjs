@@ -177,8 +177,8 @@ const zoneOf = (s, name) => Object.values(s.objects).filter((o) => o.card === na
   on(control, WASTES, 0);
   on(control, giant, 0, "hand");
   main(control);
-  eq(housePilot({seat: 0, cards: facts}).choose(projectFor(control, 0), legalActions(control, 0)).label, "Wastes",
-    "with a land for the mana, the house pilot taps it for the Giant it could then cast");
+  const picked = housePilot({seat: 0, cards: facts}).choose(projectFor(control, 0), legalActions(control, 0));
+  eq([picked.label, picked.autoTap], ["Giant", true], "with a land for the mana, the house pilot casts the Giant, tapping it as it does (the plan's X8)");
   const s = table();
   on(s, card("Ashnod's Altar"), 0);
   on(s, bear("Grizzly Bears"), 0);
