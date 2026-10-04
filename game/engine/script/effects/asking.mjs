@@ -882,7 +882,13 @@ export const chooseCard = {
     chosen.forEach((id, i) => {
       const where = awaiting.destinations[Math.min(i, awaiting.destinations.length - 1)];
       if (awaiting.reveal) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: player}}));
-      if (where.to === "top") { tops.push(id); return; }
+      /* On top: a card a search found is in the library already; one chosen from a hand ("then put two cards from your
+         hand on top of your library", Brainstorm) is moved there first -- a new object (CR 400.7) -- and then put on top. */
+      if (where.to === "top") {
+        const there = state.objects[id].zone === "library" ? id : moveOne(state, id, "library", events, {owner: state.objects[id].owner});
+        if (there !== null && state.objects[there]) tops.push(there);
+        return;
+      }
       /* "Put a -1/-1 counter on a creature you control" (blight, CR 701.68a): a permanent chosen where it is, and left there --
          remembered for what follows ("the blighted creature", 701.68c). */
       if (where.to === "stay") { found.push(id); return; }

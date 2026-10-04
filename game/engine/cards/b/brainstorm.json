@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Brainstorm",
+    "oracleId": "36cd2364-d113-47d1-b2c4-b088d9eb88dd",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Draw three cards, then put two cards from your hand on top of your library in any order.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Draw three cards, then put two cards from your hand on top of your library in any order.",
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 3
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "hand",
+          "count": 2,
+          "to": "top"
+        }
+      ]
+    }
+  ]
+}
