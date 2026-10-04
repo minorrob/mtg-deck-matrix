@@ -92,10 +92,11 @@ const backLand = (object) => object.mdfc !== undefined && object.face !== "back"
 /* WHAT A SPELL COSTS TO CAST NOW (CR 601.2f): its mana cost plus the commander tax, less what "spells cost {N} less"
    takes off -- generic mana only, the printed generic first and then the tax, never below nothing. The offer and the
    payment read it here, so they cannot disagree. */
-function castCost(state, player, id, tax, free = false, instead = null) {
+function castCost(state, player, id, tax, free = false, instead = null, extra = "") {
   /* Without paying its mana cost (CR 118.9): nothing for the cost itself, and X is 0 (CR 107.3b); the tax still counts.
-     `instead`, an alternative cost's mana (flashback, CR 702.34a): paid rather than the mana cost, reduced like it. */
-  const cost = parseManaCost(free ? "" : instead ?? state.objects[id].manaCost);
+     `instead`, an alternative cost's mana (flashback, CR 702.34a): paid rather than the mana cost, reduced like it. And
+     `extra`, an additional cost's mana ("blight 1 or pay {3}", Bogslither's Embrace): added to it, free or not (CR 601.2f). */
+  const cost = parseManaCost((free ? "" : instead ?? state.objects[id].manaCost ?? "") + (extra ?? ""));
   /* Increases first, then reductions (CR 601.2f): Thalia's {1} more and a Medallion's {1} less cancel out. A cast without
      paying its mana cost still pays an increase (CR 118.9d). */
   cost.generic += costIncrease(state, player, id);
@@ -182,7 +183,7 @@ export const convokers = (state, player) => state.zones.battlefield.filter((id) 
   .map((id) => ({id, colors: colorsOf(state, id)}));
 /* The total cost a convoked spell pays (CR 601.2f), its tax and reductions in, as castCost says it. */
 function convokeCost(state, player, action) {
-  const {cost, x} = castCost(state, player, action.objectId, action.tax ?? 0);
+  const {cost, x} = castCost(state, player, action.objectId, action.tax ?? 0, false, null, action.extraMana ?? "");
   return {...cost, generic: cost.generic + x};
 }
 /* The creatures a convoke picked, and what the pool pays besides: each untapped and the caster's, none twice, and one way
@@ -298,6 +299,21 @@ export function alternativeCosts(state, player, id) {
    "sacrifice a creature". The player chooses what as they cast, so each choice is its own offer, as targets are --
    one per card that could be discarded (never the spell itself) or permanent that could be sacrificed. An additional
    cost nobody could pay leaves the spell unoffered. */
+/* "As an additional cost to cast this spell, blight 1 or pay {3}" (Bogslither's Embrace; `{atom: "oneOf", options}`): each
+   choice between additional costs a variant of the cast of its own -- its mana (`mana`) added to what the cast costs, the
+   rest (`atoms`) picked as any additional cost is (additionalChoices). A spell without a choice has the one variant. */
+function additionalVariants(costs) {
+  let variants = [{atoms: [], mana: ""}];
+  for (const atom of costs ?? []) {
+    const options = atom?.atom === "oneOf" ? atom.options ?? [] : [[atom]];
+    variants = variants.flatMap((v) => options.map((option) => ({atoms: [...v.atoms, ...option.filter((a) => a.atom !== "mana")],
+      mana: v.mana + option.filter((a) => a.atom === "mana").map((a) => a.cost ?? "").join("")})));
+  }
+  return variants;
+}
+/* An additional cost's atom of a kind, a choice's options looked into ("blight 1 or pay {3}": its blight). */
+const additionalAtom = (costs, kind) => (costs ?? []).flatMap((a) => (a?.atom === "oneOf" ? (a.options ?? []).flat() : [a])).find((a) => a?.atom === kind);
+
 function additionalChoices(state, player, spellId, costs) {
   let choices = [{}];
   for (const atom of costs ?? []) {
@@ -725,7 +741,7 @@ export const tapWords = (state, plan) => plan.taps.map((t) => state.objects[t.id
 export function castTapPlans(state, player, action, limit = 2) {
   if (!tapCastable(state, player, action)) return [];
   const tax = action.from === "command" ? commanderTax(state, player, action.objectId) : 0;
-  const {cost, x} = castCost(state, player, action.objectId, tax, false, null);
+  const {cost, x} = castCost(state, player, action.objectId, tax, false, null, action.extraMana ?? "");
   return tapPlans(tapUnits(state, player), {...cost, generic: cost.generic + x}, limit);
 }
 
@@ -796,8 +812,9 @@ function offers(state, player) {
     const fled = escape ? escapeWays(state, player, id).find((w) => w.kind === escape) ?? null : null;
     for (const way of [null, ...alternatives]) {
     if (way && way.life > state.players[player].life) continue;
+    for (const variant of additionalVariants([...(object.spell?.additionalCost ?? []), ...(way?.extra ?? [])])) {
     for (const freely of way ? [false] : free ? (free.limited ? [false, true] : [true]) : [false]) {
-    const {cost, x} = castCost(state, player, id, tax, freely, back ? back.mana : fled ? fled.mana : way ? way.mana : null);
+    const {cost, x} = castCost(state, player, id, tax, freely, back ? back.mana : fled ? fled.mana : way ? way.mana : null, variant.mana);
     /* {X} (CR 107.3, 601.2b): one offer per value the pool can pay, from nothing up; a spell without X, one. */
     /* The pool, and mana that may be spent only on this spell (rules/restricted-mana.mjs). */
     const pool = poolFor(state, player, {spell: id});
@@ -819,16 +836,16 @@ function offers(state, player) {
       const convokes = X === null && !freely && !back && !fled && !way && hasConvoke(state, id)
         && convokeCanPay(pool, {...cost, generic: cost.generic + x}, convokers(state, player));
       if (!payment && !convokes) continue;
-      const extra = [...(object.spell?.additionalCost ?? []), ...(way?.extra ?? [])];
-      const paysFor = extra.length ? additionalChoices(state, player, id, extra) : [null];
+      const paysFor = variant.atoms.length ? additionalChoices(state, player, id, variant.atoms) : [null];
       for (const convoke of [...(payment ? [false] : []), ...(convokes ? [true] : [])])
       for (const costChoice of paysFor) {
         const base = {kind: "cast", objectId: id, label: object.card, payment: convoke ? null : payment, from, tax, ...(X !== null ? {x: X} : {}), ...(autoTap && !convoke ? {autoTap: true} : {}),
-          ...(convoke ? {convoke: true} : {}),
+          ...(convoke ? {convoke: true} : {}), ...(variant.mana ? {extraMana: variant.mana} : {}),
           ...(costChoice ? {costChoice, costNames: Object.values(costChoice).map((c) => state.objects[c].card)} : {}),
           ...(freely ? {free: true} : {}), ...(back ? {flashback: true} : {}), ...(fled ? {escape: fled.kind} : {}), ...(way ? {alternative: way.index} : {})};
         actions.push(...(object.spell?.modal ? withModes(state, base, object.spell.modal, {controller: player, source: id}) : withTargets(state, base, object.spell, {controller: player, source: id})));
       }
+    }
     }
     }
     }
@@ -1021,8 +1038,10 @@ const sameAction = (a, b) => a.kind === b.kind
   /* And with escape, its own or one given (CR 702.138a): another cost, and what it cast escaped. The cards it exiles are
      picked after the offer is taken, so they are not part of it. */
   && (a.escape ?? null) === (b.escape ?? null)
-  /* An alternative cost (CR 118.9) is another action than paying the mana cost. */
+  /* An alternative cost (CR 118.9) is another action than paying the mana cost; and paying an additional cost's mana
+     ("or pay {3}") another than paying its other choice. */
   && (a.alternative ?? null) === (b.alternative ?? null)
+  && (a.extraMana ?? null) === (b.extraMana ?? null)
   /* And the modes chosen as it is cast (CR 700.2): another choice is another action. */
   && JSON.stringify(a.modes ?? null) === JSON.stringify(b.modes ?? null)
   && targetKey(a) === targetKey(b);
@@ -1230,8 +1249,9 @@ function perform(state, player, action, during = null) {
     }
     /* "This land deals 1 damage to you": part of the same mana ability, so it happens now, off the stack too. */
     if ((ability.then ?? []).length) {
-      /* "Put a nest counter on this creature": bound to the source, and counted, as a resolution would (it has none). */
-      const context = {controller: player, source: action.objectId};
+      /* "Put a nest counter on this creature": bound to the source, and counted, as a resolution would (it has none). What it
+         added (`produced`) is there too: "this creature becomes that color until end of turn" (Foraging Wickermaw). */
+      const context = {controller: player, source: action.objectId, produced: {...produced}};
       events.push(...runEffects(state, ability.then.map((e) => countEffect(state, bindEffect(e, context), context)), context));
     }
     /* "{T}, Sacrifice this artifact: Add one mana of any color" (a Treasure, Lotus Petal): the sacrifice is part of the
@@ -1277,7 +1297,7 @@ function perform(state, player, action, during = null) {
       for (const tap of tapped.taps) events.push(...perform(state, player, {kind: "activate-mana", objectId: tap.id, label: state.objects[tap.id].card, ...units.get(tap.id).via[tap.color]}));
       tappedFor = {mana: Object.fromEntries(MANA_KEYS.map((k) => [k, tapped.taps.filter((t) => t.color === k).length])), life: 0};
     }
-    const {cost, x} = castCost(state, player, action.objectId, tax, Boolean(free), back ? back.mana : fled ? fled.mana : way ? way.mana : null);
+    const {cost, x} = castCost(state, player, action.objectId, tax, Boolean(free), back ? back.mana : fled ? fled.mana : way ? way.mana : null, action.extraMana ?? "");
     /* Mana added beyond what was tapped for -- a Swamp's extra {B} beside Nirkana Revenant -- can leave the pool more than
        the cost, and more than one way to spend it: then what the sources were tapped for pays, and the rest stays in the
        pool (CR 106.4). */
@@ -1322,8 +1342,8 @@ function perform(state, player, action, during = null) {
        (Sevinne's Reclamation), and Addendum's "if you cast this spell during your main phase" -- its caster's turn, a main
        phase (Unbreakable Formation). A copy is not cast (CR 707.10) and has none. */
     entry.cast = {from: castFrom, mainPhase: player === state.activePlayer && MAIN_PHASES.includes(state.phase),
-      /* "If this spell's additional cost was paid" (Cinder Strike): an optional one, paid. */
-      ...(extraPaid.length ? {additionalPaid: true} : {})};
+      /* "If this spell's additional cost was paid" (Cinder Strike): an optional one, paid -- its mana too. */
+      ...(extraPaid.length || action.extraMana ? {additionalPaid: true} : {})};
     /* Cast with flashback: exiled, whatever would move it, as it leaves the stack (rules/stack.mjs, effects/zones.mjs). */
     if (back) entry.flashback = true;
     /* Cast with escape, it escaped (CR 702.138b): the permanent it becomes is marked so (rules/stack.mjs). */
@@ -1345,7 +1365,7 @@ function perform(state, player, action, during = null) {
     for (const [kind, id] of extraPaid) {
       /* "Blight 1": its counters on the creature chosen, put as any counters are (CR 701.68a). */
       if (kind === "blight") {
-        const count = (object.spell?.additionalCost ?? []).find((a) => a?.atom === "blight")?.count ?? 1;
+        const count = additionalAtom(object.spell?.additionalCost, "blight")?.count ?? 1;
         events.push(...runEffects(state, [{effect: "putCounter", targets: [id], counter: "-1/-1", count}], {controller: player, source: entry.objectId}));
         continue;
       }

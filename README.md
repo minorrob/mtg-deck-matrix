@@ -577,6 +577,9 @@ a blight and a counter removed.
 `engine-owner-chooses-library` holds a choice the target's owner makes as a spell resolves (Temporal Cleansing): the
 owner asked, its controller aside, and no mode chosen as the spell is cast; and a card put second from the top of a
 library, on top, or on the bottom.
+`engine-blight-or-pay` holds a choice between additional costs and a color a mana ability gives (Bogslither's Embrace,
+Foraging Wickermaw): blight 1 or pay {3}, each its own cast, its mana part of the offer, tapped for and spent, said by
+the table; its compiler; and "becomes that color until end of turn", the color of the mana added.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -695,7 +698,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 281 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 282 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -948,6 +951,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-entered-this-turn` — `tests/engine-entered-this-turn.mjs`
 - `engine-stun-and-tap-three` — `tests/engine-stun-and-tap-three.mjs`
 - `engine-owner-chooses-library` — `tests/engine-owner-chooses-library.mjs`
+- `engine-blight-or-pay` — `tests/engine-blight-or-pay.mjs`
 
 ## Design and execution record
 

@@ -38,6 +38,7 @@ import {costAtomBuilt} from "../rules/actions.mjs";
 import {compileSelector} from "../script/filter.mjs";
 import {LAYER_AFFECTS_KEYS} from "../rules/layers.mjs";
 import {SPEND_ONLY_KEYS} from "../rules/restricted-mana.mjs";
+import {parseManaCost} from "../rules/mana.mjs";
 
 /** The keywords some rules module acts on, in its own spelling. A keyword not here is a word with no behavior. */
 const KEYWORDS_WITH_BEHAVIOR = new Set([...Object.values(KEYWORD_FAMILIES), ...Object.values(TIMING_FAMILIES), ...Object.values(TYPE_FAMILIES), ...Object.values(DESIGNATION_FAMILIES)].flat());
@@ -585,6 +586,22 @@ export function compileScript(script) {
         for (const atom of alt.cost ?? []) if (!["mana", "payLife", "exileFromHand", "sacrifice"].includes(atom?.atom) || (atom.atom === "sacrifice" && !atom.selector))
           problems.push(`${alt.text}: an alternative cost of ${atom?.atom ?? "something"} nothing pays yet`);
       for (const atom of ability.additionalCost ?? []) {
+        /* "Blight 1 or pay {3}" (Bogslither's Embrace): a choice between two or more additional costs, each a list of the atoms
+           below or mana, each choice its own offer (rules/actions.mjs, additionalVariants). */
+        if (atom?.atom === "oneOf") {
+          const options = Array.isArray(atom.options) ? atom.options : [];
+          if (options.length < 2 || !options.every((o) => Array.isArray(o) && o.length > 0)) problems.push("oneOf: a choice of two or more additional costs, each a list of atoms");
+          for (const one of options.filter(Array.isArray).flat()) {
+            if (one?.atom === "mana") {
+              let parsed = null;
+              try { parsed = parseManaCost(one.cost ?? ""); } catch { /* refused below */ }
+              if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`oneOf: ${JSON.stringify(one.cost ?? "")} is no mana to pay`);
+            } else if (!["discard", "sacrifice", "blight"].includes(one?.atom)) problems.push(`${one?.atom ?? "an additional cost"}: an additional cost nothing pays yet`);
+            if (one?.atom === "blight" && !(Number.isInteger(one.count ?? 1) && (one.count ?? 1) >= 1)) problems.push("blight: an additional cost of 1 or more -1/-1 counters");
+            if (one?.optional !== undefined) problems.push("oneOf: one of a choice is never optional");
+          }
+          continue;
+        }
         if (!["discard", "sacrifice", "blight"].includes(atom?.atom)) problems.push(`${atom?.atom ?? "an additional cost"}: an additional cost nothing pays yet`);
         /* "As an additional cost to cast this spell, blight 1" (CR 701.68a): a whole number of -1/-1 counters, 1 or more. */
         if (atom?.atom === "blight" && !(Number.isInteger(atom.count ?? 1) && (atom.count ?? 1) >= 1)) problems.push("blight: an additional cost of 1 or more -1/-1 counters");
