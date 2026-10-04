@@ -1,0 +1,95 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Flow State",
+    "oracleId": "e7194bca-0cf4-4a86-8b84-d2f9219a08b3",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your library in any order. If there is an instant card and a sorcery card in your graveyard, instead put two of them into your hand and the rest on the bottom of your library in any order.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your library in any order. If there is an instant card and a sorcery card in your graveyard, instead put two of them into your hand and the rest on the bottom of your library in any order.",
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "compare": {
+              "count": {
+                "count": {
+                  "what": "card",
+                  "zone": "graveyard",
+                  "controller": "you",
+                  "types": [
+                    "Instant"
+                  ]
+                }
+              },
+              "atLeast": 1
+            }
+          },
+          "then": [
+            {
+              "effect": "branch",
+              "if": {
+                "compare": {
+                  "count": {
+                    "count": {
+                      "what": "card",
+                      "zone": "graveyard",
+                      "controller": "you",
+                      "types": [
+                        "Sorcery"
+                      ]
+                    }
+                  },
+                  "atLeast": 1
+                }
+              },
+              "then": [
+                {
+                  "effect": "dig",
+                  "count": 3,
+                  "take": 2,
+                  "to": "hand",
+                  "rest": "bottom"
+                }
+              ],
+              "otherwise": [
+                {
+                  "effect": "dig",
+                  "count": 3,
+                  "take": 1,
+                  "to": "hand",
+                  "rest": "bottom"
+                }
+              ]
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "dig",
+              "count": 3,
+              "take": 1,
+              "to": "hand",
+              "rest": "bottom"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Guardian of the Halls",
+    "oracleId": "c3fb2829-64f2-4795-b815-edcc5bbbc360",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Soldier"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Trample\n{5}{G}{G}: Put three +1/+1 counters on this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "activated",
+      "text": "{5}{G}{G}: Put three +1/+1 counters on this creature.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{5}{G}{G}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 3
+        }
+      ]
+    }
+  ]
+}
