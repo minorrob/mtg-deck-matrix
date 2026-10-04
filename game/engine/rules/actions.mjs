@@ -506,6 +506,10 @@ export function commanderIdentity(state, player) {
   return COLORS.filter((color) => found.has(color));
 }
 
+/* The colors "as it enters, choose a color" offers (CR 105.1), by the mana each is. */
+export const COLOR_CHOICES = Object.freeze(["White", "Blue", "Black", "Red", "Green"]);
+const CHOSEN_COLOR = Object.freeze({White: "W", Blue: "U", Black: "B", Red: "R", Green: "G"});
+
 /** What a mana ability can add, one entry per alternative (2.4b); a counted amount counted now ("{G} for each creature you control"). */
 export function manaAlternatives(state, player, given, source = null) {
   /* "An amount of mana of that color equal to the number of creatures you control of the chosen type" (Three Tree City):
@@ -516,6 +520,8 @@ export function manaAlternatives(state, player, given, source = null) {
   if (Array.isArray(ability.produces)) return ability.produces.map((m) => countMana(state, {...m}, context));
   if (ability.produces) return [countMana(state, {...ability.produces}, context)];
   if (ability.anyColor === true) return COLORS.map((color) => ({[color]: count}));
+  /* "Add one mana of the chosen color" (Night Market): the color its permanent chose as it entered; none chosen, none. */
+  if (ability.chosenColor === true) { const color = CHOSEN_COLOR[state.objects[source]?.chosen]; return color ? [{[color]: count}] : []; }
   if (ability.anyColor === "identity") return commanderIdentity(state, player).map((color) => ({[color]: count}));
   /* "Two mana in any combination of colors" (Great Hall of the Citadel): each way to make it, an offer each. */
   /* "In any combination of {U} and/or {R}" (Vivi Ornitier): of those colors only. */
@@ -818,7 +824,8 @@ function offers(state, player) {
   for (const id of state.zones.battlefield) {
     const object = state.objects[id];
     if (object.controller !== player) continue;
-    for (const ability of abilitiesOf(state, id)) {
+    /* "Return target card of the chosen type" (Dawn-Blessed Pennant): each ability read with its permanent's own choice. */
+    for (const ability of abilitiesOf(state, id).map((own) => (object.chosen !== undefined ? chosenFor(own, object) : own))) {
       /* An ability of the card in its owner's hand (cycling, ninjutsu) or graveyard (encore) is not the permanent's (CR 602.2,
          702.29a, 702.141a). */
       if (ability.kind !== "activated" || ability.zone === "hand" || ability.zone === "graveyard") continue;
@@ -1008,7 +1015,7 @@ export function offerSpecs(state, player, action) {
   if (!object) return {specs: [], context: {controller: player, source: action.objectId}};
   const context = {controller: player, source: action.objectId};
   if (action.kind === "cast") return {specs: object.spell?.modal && Array.isArray(action.modes) ? modalScript(object.spell.modal, action.modes).targets : object.spell?.targets ?? [], context};
-  const ability = abilitiesOf(state, action.objectId).find((candidate) => candidate.id === action.abilityId);
+  const ability = chosenFor(abilitiesOf(state, action.objectId).find((candidate) => candidate.id === action.abilityId), object);
   return {specs: ability?.targets ?? [], context};
 }
 
@@ -1364,7 +1371,8 @@ function perform(state, player, action, during = null) {
   if (action.kind === "activate") {
     const events = [];
     const object = state.objects[action.objectId];
-    const ability = abilitiesOf(state, action.objectId).find((candidate) => candidate.id === action.abilityId);
+    /* With its permanent's choice, as it was offered: the stack entry's targets are the chosen type's. */
+    const ability = chosenFor(abilitiesOf(state, action.objectId).find((candidate) => candidate.id === action.abilityId), object);
     /* Recomputed, as a cast's payment is: the pool may have moved since the offer. */
     const payment = costPayment(state, player, action.objectId, ability.cost, action.x ?? 0, abilityLess(state, player, action.objectId, ability));
     if (!payment || !withinLimit(state, action.objectId, ability)) throw new Error(`${object.card}'s ability cannot be paid for now`);
