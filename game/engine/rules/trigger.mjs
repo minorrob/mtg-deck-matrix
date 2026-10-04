@@ -49,7 +49,7 @@ import {pushAbility, becameTarget} from "./stack.mjs";
 import {cardsIn, usesThisTurn, recordUse} from "../state/index.mjs";
 import {playerStatics} from "./statics.mjs";
 import {matchesSelector, matchesLastKnown} from "../script/filter.mjs";
-import {abilitiesOf} from "./layers.mjs";
+import {abilitiesOf, characteristicsOf} from "./layers.mjs";
 import {chosenFor} from "../script/chosen.mjs";
 import {targetChoices, targetName, isHostile, isChoosing, targetCandidates, countedChoice, modalScript} from "../script/bind.mjs";
 
@@ -77,6 +77,28 @@ function spellWas(state, spell) {
   if (!object) return {};
   return {was: {cardId: spell, types: [...(object.types ?? [])], subtypes: [...(object.subtypes ?? [])], supertypes: [...(object.supertypes ?? [])],
     controller: object.controller, token: object.token === true}};
+}
+
+/**
+ * WHAT ENTERED THE BATTLEFIELD THIS TURN, AND UNDER WHOSE CONTROL: "the number of creatures that entered the battlefield
+ * under your control this turn" (Kinbinding), "if another creature entered the battlefield under your control this turn"
+ * (Wary Farmer). Each arrival is kept as its events are read for triggers -- once, as "whenever a creature you control
+ * enters" reads it, and as it then is: under the control an effect put it under ("onto the battlefield under your
+ * control"), an arrival still asking what it copies kept once it is told. Kept for its controller as what it was
+ * (`matchesLastKnown` reads it), so one that has since left still counts; cleared as a turn begins (rules/turn.mjs).
+ */
+function recordArrivals(state, events) {
+  for (const event of events ?? []) {
+    const fields = event.data?.fields ?? {};
+    if (event.kind !== "GameEventCardChangeZone" || fields.to?.zoneType !== "Battlefield" || fields.awaitingCopy === true) continue;
+    const id = fields.enteredAs ?? fields.becomes ?? fields.card?.cardId;
+    const object = state.objects[id];
+    if (object?.zone !== "battlefield") continue;
+    const now = characteristicsOf(state, id);
+    if (!state.players[now.controller]) continue;
+    (state.players[now.controller].enteredThisTurn ??= []).push({cardId: id, controller: now.controller, types: [...now.types],
+      subtypes: [...(object.subtypes ?? [])], supertypes: [...(object.supertypes ?? [])], everyCreatureType: now.everyCreatureType === true, token: object.token === true});
+  }
 }
 
 /**
@@ -397,6 +419,7 @@ export function manaTriggered(state, event) {
 
 export function collectTriggers(state, events) {
   if (!state.pendingTriggers) state.pendingTriggers = [];
+  recordArrivals(state, events);
   /* Triggers that trigger again (triggersAgain): copied once this action is read, so a "one or more" trigger is copied
      with everything it came to be about. */
   const again = [];

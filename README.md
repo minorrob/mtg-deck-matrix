@@ -567,6 +567,9 @@ asked for and activated.
 `engine-spell-cast-filters` holds three things a spell cast is asked (Zaffai and the Tempests, Mage Tower Referee, Rehearsed
 Debater): a free cast's own condition, once during each of your turns and none during another's; a multicolored spell,
 two colors or more; and a spell that targets a creature, one of its targets enough, a player or a card in a graveyard not.
+`engine-entered-this-turn` holds what entered the battlefield this turn (Kinbinding, Wary Farmer): kept for the player
+it entered under the control of, as it then was, so one destroyed since still counts; "another"; cleared as a turn
+begins; and the count's schema.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -685,7 +688,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 278 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 279 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -935,6 +938,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-mana-spent-on` — `tests/engine-mana-spent-on.mjs`
 - `engine-chosen-color` — `tests/engine-chosen-color.mjs`
 - `engine-spell-cast-filters` — `tests/engine-spell-cast-filters.mjs`
+- `engine-entered-this-turn` — `tests/engine-entered-this-turn.mjs`
 
 ## Design and execution record
 

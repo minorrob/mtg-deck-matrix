@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kinbinding",
+    "oracleId": "da35de40-6fde-4018-bda8-b0ae91ed872a",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures you control get +X/+X, where X is the number of creatures that entered the battlefield under your control this turn.\nAt the beginning of combat on your turn, create a 1/1 green and white Kithkin creature token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Creatures you control get +X/+X, where X is the number of creatures that entered the battlefield under your control this turn.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "power": {
+          "permanentsEnteredThisTurn": "you",
+          "filter": {
+            "types": [
+              "Creature"
+            ]
+          }
+        },
+        "toughness": {
+          "permanentsEnteredThisTurn": "you",
+          "filter": {
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of combat on your turn, create a 1/1 green and white Kithkin creature token.",
+      "trigger": {
+        "on": "step",
+        "step": "COMBAT_BEGIN"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Kithkin",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Kithkin"
+            ],
+            "colors": [
+              "G",
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  ]
+}
