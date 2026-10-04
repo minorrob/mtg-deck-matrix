@@ -144,6 +144,58 @@ export const scry = {
   },
 };
 
+/* ---- twoPiles (Forge's TwoPiles): "reveal the top five cards of your library. An opponent separates those cards into two
+   piles. Put one pile into your hand and the other into your graveyard" (Fact or Fiction). The cards revealed (CR 701.20a);
+   the opponent who separates them, chosen by this effect's controller when there is more than one (CR 102.3 makes each
+   other player one); that opponent's pile, any of them, none or all (CR 700.3: a pile may be empty); the controller's
+   pick of the two; and the piles moved, `chosen` and `rest` where they go. ---- */
+const pileWords = (state, ids) => (ids.length ? ids.map((id) => state.objects[id].card).join(", ") : "no cards");
+function pilesOf(awaiting) {
+  const first = awaiting.cards.filter((id) => awaiting.pile.includes(id));
+  return [first, awaiting.cards.filter((id) => !awaiting.pile.includes(id))];
+}
+export const twoPiles = {
+  open(state, params, context) {
+    const cards = cardsIn(state, "library", context.controller).slice(0, params.fromTop ?? 5);
+    if (cards.length === 0) return false;
+    const opponents = state.players.filter((p) => p.id !== context.controller && !p.lost).map((p) => p.id);
+    if (opponents.length === 0) return false;
+    const reveal = cards.map((id) => event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: context.controller}}));
+    state.resolving?.events.push(...reveal);
+    state.awaiting = {kind: "effect-choice", effect: "twoPiles", controller: context.controller, cards, chosen: params.chosen ?? "hand", rest: params.rest ?? "graveyard",
+      ...(opponents.length === 1 ? {player: opponents[0], step: "separate"} : {player: context.controller, step: "opponent", opponents})};
+    return true;
+  },
+  choice(state, awaiting) {
+    if (awaiting.step === "opponent") return {id: `piles-opponent:${awaiting.cards.join(",")}`, title: "Choose an opponent to separate the cards into two piles", mode: "one", min: 1, max: 1,
+      options: awaiting.opponents.map((id, index) => ({index, label: state.players[id].name, playerId: id}))};
+    if (awaiting.step === "separate") return {id: `piles-separate:${awaiting.cards.join(",")}`, title: "Separate these cards into two piles: choose the first pile", mode: "many", min: 0, max: awaiting.cards.length,
+      options: cardOptions(state, awaiting.cards)};
+    const [first, second] = pilesOf(awaiting);
+    return {id: `piles-pick:${awaiting.cards.join(",")}`, title: `Choose a pile to put into your ${awaiting.chosen}`, mode: "one", min: 1, max: 1,
+      options: [{index: 0, label: `Pile 1: ${pileWords(state, first)}`}, {index: 1, label: `Pile 2: ${pileWords(state, second)}`}]};
+  },
+  apply(state, awaiting, indices) {
+    const [index] = indices ?? [];
+    if (awaiting.step === "opponent") {
+      const opponent = awaiting.opponents[index];
+      if (opponent === undefined) throw new Error("Invalid selection");
+      state.awaiting = {...awaiting, player: opponent, step: "separate"};
+      return {events: [], again: true};
+    }
+    if (awaiting.step === "separate") {
+      const pile = (indices ?? []).map((i) => awaiting.cards[i]).filter((id) => id !== undefined);
+      state.awaiting = {...awaiting, player: awaiting.controller, step: "pick", pile};
+      return {events: [], again: true};
+    }
+    if (index !== 0 && index !== 1) throw new Error("Invalid selection");
+    const piles = pilesOf(awaiting), events = [];
+    for (const [pile, to] of [[piles[index], awaiting.chosen], [piles[1 - index], awaiting.rest]])
+      for (const id of pile) if (state.objects[id]?.zone === "library") moveOne(state, id, to, events, {owner: state.objects[id].owner});
+    return events;
+  },
+};
+
 /* ---- surveil ---- */
 
 /* SURVEIL N (CR 701.25a): look at the top N cards of your library, put any number of them into your graveyard and the rest
@@ -1161,4 +1213,4 @@ export const orderDamage = {
   },
 };
 
-export const ASKING = Object.freeze({scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage});
+export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage});

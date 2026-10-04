@@ -1,0 +1,453 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Jace, Reality Sculptor",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Jace": {
+      "types": [
+        "Planeswalker"
+      ],
+      "subtypes": [
+        "Jace"
+      ],
+      "colors": [
+        "U"
+      ],
+      "manaCost": null,
+      "token": true,
+      "loyalty": 3,
+      "abilities": [
+        {
+          "id": "jace-surveil",
+          "kind": "activated",
+          "text": "−1: Surveil 1.",
+          "targets": [],
+          "loyalty": -1,
+          "timing": "sorcery",
+          "cost": [
+            {
+              "atom": "removeCounters",
+              "self": true,
+              "counter": "loyalty",
+              "count": 1
+            }
+          ],
+          "effects": [
+            {
+              "effect": "surveil",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "id": "jace-draw",
+          "kind": "activated",
+          "text": "−3: Draw a card.",
+          "targets": [],
+          "loyalty": -3,
+          "timing": "sorcery",
+          "cost": [
+            {
+              "atom": "removeCounters",
+              "self": true,
+              "counter": "loyalty",
+              "count": 3
+            }
+          ],
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    "Walker": {
+      "types": [
+        "Planeswalker"
+      ],
+      "subtypes": [
+        "Ajani"
+      ],
+      "manaCost": "{2}{W}",
+      "colors": [
+        "W"
+      ],
+      "loyalty": 9
+    },
+    "Jace Twenty": {
+      "types": [
+        "Planeswalker"
+      ],
+      "subtypes": [
+        "Jace"
+      ],
+      "colors": [
+        "U"
+      ],
+      "manaCost": null,
+      "token": true,
+      "loyalty": 20,
+      "abilities": [
+        {
+          "id": "jace-surveil",
+          "kind": "activated",
+          "text": "−1: Surveil 1.",
+          "targets": [],
+          "loyalty": -1,
+          "timing": "sorcery",
+          "cost": [
+            {
+              "atom": "removeCounters",
+              "self": true,
+              "counter": "loyalty",
+              "count": 1
+            }
+          ],
+          "effects": [
+            {
+              "effect": "surveil",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "id": "jace-draw",
+          "kind": "activated",
+          "text": "−3: Draw a card.",
+          "targets": [],
+          "loyalty": -3,
+          "timing": "sorcery",
+          "cost": [
+            {
+              "atom": "removeCounters",
+              "self": true,
+              "counter": "loyalty",
+              "count": 3
+            }
+          ],
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Cast for {3}{U}{U}, 5 loyalty; +1 with two Islands: a Jace token with 2, Jace at 6",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Jace, Reality Sculptor"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Jace, Reality Sculptor"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Jace, Reality Sculptor",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Jace",
+            "counter": "loyalty",
+            "count": 2
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Jace, Reality Sculptor",
+            "counter": "loyalty",
+            "count": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "-3, then on Maya's turn Maya's Bear attacks Rob: -5/-0, no damage",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Jace, Reality Sculptor"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Jace, Reality Sculptor",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Bear"
+          ],
+          "at": "Rob"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "stats": {
+                "card": "Bear",
+                "power": -3,
+                "toughness": 2
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Jace, Reality Sculptor",
+            "counter": "loyalty",
+            "count": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "-3: a creature attacking Jace itself is held too",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Jace, Reality Sculptor"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Jace, Reality Sculptor",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Bear"
+          ],
+          "at": "Jace, Reality Sculptor (Rob)"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Jace, Reality Sculptor",
+            "counter": "loyalty",
+            "count": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "0, with 25 loyalty among Rob's Jaces: all but the bottom card of Maya's library exiled",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Jace, Reality Sculptor",
+            "Jace Twenty"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Jace, Reality Sculptor"
+              },
+              "count": 3
+            }
+          ]
+        },
+        {
+          "activate": "Jace, Reality Sculptor",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "library",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 20
+        }
+      ]
+    },
+    {
+      "name": "0 not offered with 24",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Jace, Reality Sculptor",
+            "Jace Twenty"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Jace Twenty",
+          "ability": "jace-surveil"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Jace, Reality Sculptor"
+          },
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

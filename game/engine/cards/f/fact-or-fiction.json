@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fact or Fiction",
+    "oracleId": "437b2dab-15e0-4b9a-a204-58622d37a3b3",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Reveal the top five cards of your library. An opponent separates those cards into two piles. Put one pile into your hand and the other into your graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Reveal the top five cards of your library. An opponent separates those cards into two piles. Put one pile into your hand and the other into your graveyard.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "twoPiles",
+          "fromTop": 5,
+          "chosen": "hand",
+          "rest": "graveyard"
+        }
+      ]
+    }
+  ]
+}

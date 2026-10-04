@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,138 defined and playable today; 2,448 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,140 defined and playable today; 2,452 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,16 +18,16 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 38 | 0 | 17 | 139 |
+| Keyword abilities (CR 702) | 194 | 38 | 0 | 18 | 138 |
 | Keyword actions (CR 701) | 70 | 19 | 3 | 4 | 44 |
-| Effects | 192 | 60 | 1 | 11 | 120 |
-| Triggers | 138 | 16 | 4 | 6 | 112 |
+| Effects | 192 | 61 | 1 | 10 | 120 |
+| Triggers | 138 | 17 | 4 | 5 | 112 |
 | Static abilities | 77 | 11 | 2 | 0 | 64 |
 | Replacement effects | 34 | 0 | 4 | 0 | 30 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
 | Options and conditions | 37 | 23 | 5 | 0 | 9 |
 | Amounts the game counts | 188 | 12 | 1 | 0 | 175 |
-| Choices | 15 | 11 | 0 | 1 | 3 |
+| Choices | 15 | 12 | 0 | 0 | 3 |
 | Other keyword constructs | 16 | 4 | 0 | 1 | 11 |
 
 ## What to build next
@@ -101,7 +101,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.143 | Foretell | — | missing | 4 | 55 | 4 | 2 |
 | 702.90 | Infect | Infect | built | 4 | 45 | 0 | 0 |
 | 702.79 | Persist | — | missing | 4 | 24 | 4 | 3 |
-| 702.100 | Evolve | — | named | 4 | 23 | 4 | 2 |
+| 702.100 | Evolve | — | named | 4 | 23 | 4 | 3 |
 | 702.61 | Split Second | — | missing | 4 | 22 | 4 | 3 |
 | 702.175 | Offspring | — | missing | 4 | 21 | 4 | 4 |
 | 702.75 | Hideaway | — | named | 4 | 15 | 4 | 2 |
@@ -216,7 +216,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.149 | Training | — | missing | 0 | 11 | 0 | 0 |
 | 702.104 | Tribute | — | missing | 0 | 11 | 0 | 0 |
 | 702.55 | Haunt | — | missing | 0 | 10 | 0 | 0 |
-| 702.191 | Increment | — | missing | 0 | 10 | 0 | 0 |
+| 702.191 | Increment | — | named | 0 | 10 | 0 | 0 |
 | 702.155 | Read Ahead | — | missing | 0 | 10 | 0 | 0 |
 | 702.38 | Amplify | — | missing | 0 | 9 | 0 | 0 |
 | 702.115 | Ingest | — | missing | 0 | 9 | 0 | 0 |
@@ -423,7 +423,7 @@ The things that alone hold back the most of the most-played cards.
 | TapAll | — | missing | 2 | 73 | 2 | 2 |
 | SetLife | — | missing | 2 | 45 | 2 | 1 |
 | ReplaceDamage | — | missing | 2 | 38 | 2 | 2 |
-| TwoPiles | twoPiles | named | 2 | 32 | 2 | 2 |
+| TwoPiles | twoPiles | built | 2 | 32 | 0 | 0 |
 | DigMultiple | — | missing | 2 | 12 | 2 | 1 |
 | ExchangeLifeVariant | exchangeLife | named | 2 | 3 | 2 | 2 |
 | NameCard | — | missing | 1 | 87 | 1 | 1 |
@@ -553,7 +553,7 @@ The things that alone hold back the most of the most-played cards.
 | Taps | becomes tapped | built | 3 | 112 | 0 | 0 |
 | Untaps | — | missing | 3 | 30 | 3 | 1 |
 | UnlockDoor | — | missing | 3 | 26 | 3 | 2 |
-| CounterAdded | counter added | named | 3 | 19 | 3 | 2 |
+| CounterAdded | counter added | built | 3 | 19 | 0 | 0 |
 | FullyUnlock | — | missing | 3 | 17 | 3 | 1 |
 | RingTemptsYou | — | missing | 3 | 9 | 3 | 0 |
 | Blocks | blocks | named | 2 | 127 | 2 | 2 |
@@ -1069,7 +1069,7 @@ The things that alone hold back the most of the most-played cards.
 | 701.22 | Scry, the cards to the bottom | scry | built | 0 | 0 | 0 | 0 |
 | 701.23 | Search a library | chooseCard | built | 0 | 0 | 0 | 0 |
 | 115 | Targets | targets, chosen as cast or triggered | built | 0 | 0 | 0 | 0 |
-| 700.2 | Two piles | twoPiles | named | 0 | 0 | 0 | 0 |
+| 700.2 | Two piles | twoPiles | built | 0 | 0 | 0 | 0 |
 | 701.38 | Vote | — | missing | 0 | 0 | 0 | 0 |
 | 603.5 | You may (optional effect) | modal (Yes / No) | built | 0 | 0 | 0 | 0 |
 

@@ -601,6 +601,10 @@ countered" (Theorist's Proxy), its caster's, used up, for the turn; and a spell 
 `engine-counters-doubled` holds "double the number of each kind of counter" (Deepglow Skate), on permanents and a
 player's own; "twice that many +1/+1 counters instead" (Branching Evolution), for its controller's creatures and that kind,
 as they enter too, four times for two; and "whenever you scry or surveil" (Proft), its controller's, once it is done.
+`engine-piles-and-modes` holds two piles (Fact or Fiction), separated by an opponent the controller picks; increment
+(Berta), by the lesser of power and toughness; "whenever counters are put on this"; an activated ability's modes chosen
+as it is activated when they name targets (Aetheric Amplifier); "until your next turn, whenever a creature attacks you or
+a planeswalker you control" (Jace, Reality Sculptor); and "all but the bottom card".
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -719,7 +723,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 289 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 290 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -980,6 +984,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-empower-jace` — `tests/engine-empower-jace.mjs`
 - `engine-excess-and-next-spell` — `tests/engine-excess-and-next-spell.mjs`
 - `engine-counters-doubled` — `tests/engine-counters-doubled.mjs`
+- `engine-piles-and-modes` — `tests/engine-piles-and-modes.mjs`
 
 ## Design and execution record
 

@@ -79,7 +79,7 @@ export const TOP_25 = Object.freeze([
  * `effects/asking.mjs`, driven by `resolution.mjs`. Putting a throwing stub in the registry would
  * have made "is this built" answer yes to something no caller can use.
  */
-export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "surveil", "discard", "modal", "chooseCard", "proliferate", "sacrifice", "populate", "amass", "unlessPays", "copySpell", "chooseType", "play", "changeTargets", "empowerJace"]);
+export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "surveil", "discard", "modal", "chooseCard", "proliferate", "sacrifice", "populate", "amass", "unlessPays", "copySpell", "chooseType", "play", "changeTargets", "empowerJace", "twoPiles"]);
 
 /* What "each" ranges over (`repeatFor`), each with what it binds: a player -- in turn order from the active player
    (CR 101.4) -- as "that player"; a creature as "that card", and its controller as "that player". */

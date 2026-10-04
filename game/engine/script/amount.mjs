@@ -26,6 +26,7 @@
  *   {rememberedCount: true}              how many things the effect before it remembered -- "each player shuffles the cards
  *                                        from their hand into their library, then draws that many cards" (batch 80)
  *   {excessDamage: true}                 the excess damage the damage before it in this resolution dealt (CR 120.4a)
+ *   {lesserOf: [amount, amount]}         the least of them: "greater than this creature's power or toughness" (increment)
  *
  * and any of them may say `atMost` ("{1} less IF you control a creature with flying": the count, at most 1), `times` and
  * `plus`: "twice X", "1 plus the number of ...", and `times: -1` for "-X/-X" and
@@ -49,7 +50,7 @@ import {parseManaCost, manaValue} from "../rules/mana.mjs";
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
 export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "toughnessOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
   "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn", "playersDealtCombatDamage", "cardTypesAmong", "manaSpent",
-  "permanentsEnteredThisTurn", "excessDamage"]);
+  "permanentsEnteredThisTurn", "excessDamage", "lesserOf"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "filter"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -74,6 +75,8 @@ export function amountProblems(value) {
   if ("playersDealtCombatDamage" in value && !["opponent", "any"].includes(value.playersDealtCombatDamage)) problems.push('playersDealtCombatDamage is "opponent" or "any"');
   if ("cardTypesAmong" in value && value.cardTypesAmong !== "remembered") problems.push('cardTypesAmong is "remembered"');
   if ("manaSpent" in value && !["that card", "self"].includes(value.manaSpent)) problems.push('manaSpent is "that card" or "self"');
+  if ("lesserOf" in value && !(Array.isArray(value.lesserOf) && value.lesserOf.length >= 2)) problems.push("lesserOf is two or more amounts");
+  else if ("lesserOf" in value) for (const one of value.lesserOf) problems.push(...amountProblems(one).map((p) => `lesserOf: ${p}`));
   if ("devotion" in value && !(Array.isArray(value.devotion) && value.devotion.length && value.devotion.every((c) => COLORS.includes(c)))) problems.push("Devotion is to one or more colors: {devotion: [\"B\"]}");
   for (const key of ["times", "plus", "atMost"]) if (key in value && !Number.isInteger(value[key])) problems.push(`An amount's ${key} is a whole number`);
   if ("if" in value) {
@@ -140,6 +143,8 @@ export function amountOf(state, value, context = {}) {
   const who = {controller: context.controller, source: context.source, ...(context.about ? {about: context.about} : {})};
   let n = 0;
   if ("x" in value) n = Math.max(0, context.x ?? 0);
+  /* "Greater than this creature's power or toughness" (increment, Berta): the lesser of them. */
+  else if ("lesserOf" in value) n = Math.min(...value.lesserOf.map((one) => amountOf(state, one, context)));
   else if ("count" in value) n = matching(state, value.count, who).length;
   else if ("countersOn" in value) {
     const id = objectOf(value.countersOn, context);
