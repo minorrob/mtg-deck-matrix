@@ -1343,6 +1343,8 @@ function perform(state, player, action, during = null) {
     /* "If you cast a creature spell this way, it gains haste until end of turn" (Thundermane Dragon): remembered on the spell,
        given to the permanent it becomes (rules/stack.mjs). */
     const gains = object.zone === "library" ? castFromTopGains(state, player, action.objectId) : [];
+    /* Cast from suspend (CR 702.62a): a suspended card cast from exile, read before it moves. */
+    const fromSuspend = object.suspended === true && object.zone === "exile";
 
     const permanent = !(object.types ?? []).some((type) => ["Instant", "Sorcery"].includes(type));
     const targets = structuredClone(action.targets ?? []);
@@ -1384,6 +1386,8 @@ function perform(state, player, action, during = null) {
     if (permission?.ability.graveyardToExile) entry.graveyardToExile = true;
     /* On the spell as it now is: moving to the stack made a new object (CR 400.7). */
     if (gains.length && state.objects[entry.objectId]) state.objects[entry.objectId].castGains = gains;
+    /* Cast from suspend (CR 702.62a): a creature so cast has haste as long as its caster controls it (rules/stack.mjs). */
+    if (fromSuspend) entry.fromSuspend = true;
     /* THE MANA SPENT TO CAST IT (CR 601.2h): "if {W}{W} was spent to cast it" (Wistfulness), "if at least three red mana was
        spent to cast this spell" (adamant) -- by color, on the spell as it now is, and on the permanent it becomes (rules/
        stack.mjs). What the pool paid, tax and all: a creature that convoked it paid no mana (CR 702.51a), and a spell cast

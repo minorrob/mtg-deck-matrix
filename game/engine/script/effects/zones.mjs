@@ -537,6 +537,11 @@ export function counterSpell(state, params, context) {
       const to = entry.flashback || entry.graveyardToExile || params.to === "exile" ? "exile"
         : (params.commanderHome ?? []).includes(entry.objectId) ? "command" : params.to === "top" ? "library" : "graveyard";
       const moved = moveOne(state, entry.objectId, to, events, {owner});
+      /* "Exile it with three time counters on it ... it gains suspend" (Delay; CR 702.62): in exile, suspended. */
+      if (to === "exile" && moved !== null && state.objects[moved] && Number.isInteger(params.timeCounters)) {
+        state.objects[moved].counters.time = (state.objects[moved].counters.time ?? 0) + params.timeCounters;
+        if (params.suspend === true) state.objects[moved].suspended = true;
+      }
       if (to === "library" && moved !== null && state.objects[moved]) {
         const library = state.zones.library[owner];
         library.splice(library.indexOf(moved), 1);
