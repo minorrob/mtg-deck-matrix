@@ -16,6 +16,7 @@
  */
 
 import {addMana as addToPool} from "../../rules/mana.mjs";
+import {addRestricted} from "../../rules/restricted-mana.mjs";
 import {applyReplacements, hitKey, damageChoicesPossible} from "../../rules/replacement.mjs";
 import {runFollowUps} from "./index.mjs";
 import {selectMatching} from "../filter.mjs";
@@ -28,7 +29,10 @@ import {cantGainLife} from "../../rules/statics.mjs";
 export function addMana(state, params, context) {
   const mana = params.mana ?? {};
   if (Object.values(mana).every((n) => !n)) return [];
-  addToPool(state.players[context.controller].manaPool, mana);
+  /* "Spend this mana only to cast instant and sorcery spells" (Abstract Paintmage; CR 106.6): beside the pool, what it may
+     pay for read as it is added, as a mana ability's is (rules/restricted-mana.mjs). */
+  if (params.spendOnly) addRestricted(state, context.controller, mana, params.spendOnly, context.source);
+  else addToPool(state.players[context.controller].manaPool, mana);
   return [event("GameEventManaPool", state, {
     player: {playerId: context.controller, name: state.players[context.controller].name},
     produced: {...mana},

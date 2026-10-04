@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1135,
-  "everyRule": 2436
+  "defined": 1136,
+  "everyRule": 2437
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -9234,8 +9234,8 @@
      "forge": "PresentZone",
      "top": 9,
      "all": 160,
-     "blocks": 9,
-     "alone": 5
+     "blocks": 8,
+     "alone": 4
     },
     {
      "kind": "option",

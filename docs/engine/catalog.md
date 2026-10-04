@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,135 defined and playable today; 2,436 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,136 defined and playable today; 2,437 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -49,8 +49,8 @@ The things that alone hold back the most of the most-played cards.
 | option | Imprint (a card exiled with this) | — | missing | 7 | 10 |
 | effect | Phases | phaseOut | named | 6 | 9 |
 | trigger | CounterAddedOnce | counter added once | named | 5 | 10 |
-| option | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 5 | 9 |
 | keyword construct | Class | — | missing | 5 | 9 |
+| effect | ChangeTargets | — | missing | 5 | 8 |
 
 ## Keyword abilities (CR 702)
 
@@ -852,7 +852,7 @@ The things that alone hold back the most of the most-played cards.
 | Imprint (a card exiled with this) | — | missing | 10 | 97 | 10 | 7 |
 | Except it isn't legendary (a copy) | except.nonLegendary | built | 10 | 43 | 0 | 0 |
 | Unless a player reveals a card ("reveal an Island or Swamp card") | unlessReveal, as it enters | built | 10 | 22 | 0 | 0 |
-| Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 9 | 160 | 9 | 5 |
+| Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 9 | 160 | 8 | 4 |
 | Unless a player sacrifices a permanent | — | missing | 7 | 89 | 7 | 4 |
 | Unless a player discards a card | — | missing | 5 | 83 | 5 | 2 |
 | Populate (copy a creature token you control) | populate | built | 5 | 27 | 0 | 0 |
