@@ -1,0 +1,78 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Spiral into Solitude",
+    "oracleId": "d8599f06-f030-4575-8497-307a4d7ec182",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature\nEnchanted creature can't attack or block.\n{1}{W}, Blight 1, Sacrifice this Aura: Exile enchanted creature. (To blight 1, put a -1/-1 counter on a creature you control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Enchant creature",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted creature can't attack or block.",
+      "rule": "cant-attack",
+      "affects": {
+        "attachedBy": "self"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted creature can't attack or block.",
+      "rule": "cant-block",
+      "affects": {
+        "attachedBy": "self"
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{1}{W}, Blight 1, Sacrifice this Aura: Exile enchanted creature.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{W}"
+        },
+        {
+          "atom": "blight",
+          "count": 1
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "enchanted",
+          "to": "exile"
+        }
+      ]
+    }
+  ]
+}

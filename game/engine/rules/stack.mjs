@@ -223,7 +223,9 @@ export function resolveTop(state, effect = null, rng = null) {
   const source = entry.kind === "spell" ? entry.objectId : (entry.cardId !== null && state.objects[entry.cardId] ? entry.cardId : null);
   /* X (CR 107.3a): the spell's or ability's own; a permanent's ability uses the X paid to cast it (CR 107.3m). */
   const x = entry.x ?? (source !== null ? state.objects[source]?.xPaid : undefined) ?? 0;
-  const attached = source !== null ? state.objects[source]?.attachedTo ?? null : null;
+  /* What its source is attached to -- or was, as it last was, when the cost sacrificed it ("{1}{W}, Blight 1, Sacrifice
+     this Aura: Exile enchanted creature", CR 608.2h). */
+  const attached = (source !== null ? state.objects[source]?.attachedTo : null) ?? entry.lastKnown?.attachedTo ?? null;
   const context = {controller: entry.playerId, source, x, ...(entry.about ? {about: entry.about} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {}), ...(attached !== null ? {attached} : {}),
     /* How the spell was cast, for its own conditions ("if this spell was cast from a graveyard"; rules/actions.mjs). */
     ...(entry.cast ? {cast: entry.cast} : {}),

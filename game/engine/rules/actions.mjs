@@ -373,7 +373,10 @@ export const costAtomBuilt = (atom) => (COST_ATOMS_BUILT.includes(atom?.atom) &&
   || (atom?.atom === "exile" && atom.self === true)
   /* "Remove a counter from this creature" (Burdened Stoneback): one counter on it, of whichever kind is chosen as it is
      activated -- one offer for each kind it has. */
-  || (atom?.atom === "removeAnyCounter" && atom.self === true && (atom.count ?? 1) === 1);
+  || (atom?.atom === "removeAnyCounter" && atom.self === true && (atom.count ?? 1) === 1)
+  /* "Blight 1" (Gristle Glutton; CR 701.68a): N -1/-1 counters on a creature its controller controls, chosen as it is
+     activated -- one offer for each. */
+  || (atom?.atom === "blight" && Number.isInteger(atom.count ?? 1) && (atom.count ?? 1) >= 1);
 
 /* CREW (CR 702.122a): the sets of other untapped creatures you control whose power totals at least N -- each smallest
    such set, so no offer taps a creature it does not need; ids ascending, and no more than CREW_OFFERS_MAX of them. A
@@ -440,6 +443,10 @@ function sacrificeChoices(state, player, sourceId, given) {
 const sacrificeAtom = (cost) => (cost ?? []).find((a) => a?.atom === "sacrifice" && a.selector);
 const returnAtom = (cost) => (cost ?? []).find((a) => a?.atom === "returnToHand" && a.selector);
 const discardAtom = (cost) => (cost ?? []).find((a) => a?.atom === "discard" && a.self !== true);
+const blightAtom = (cost) => (cost ?? []).find((a) => a?.atom === "blight");
+/* The creatures a player controls that a blight cost may put its counters on: any of them, the source itself included. */
+const blightChoices = (state, player) => state.zones.battlefield.filter((id) => characteristicsOf(state, id).controller === player
+  && characteristicsOf(state, id).types.includes("Creature"));
 /* "Discard two cards" (Solphim, batch 70's next): each set of `count` cards in the hand, never the source itself, one offer
    each -- a single card as itself, as a one-card discard always was; none, and the ability can't be activated. */
 function discardSets(cards, count) {
@@ -823,7 +830,7 @@ function offers(state, player) {
         const atom = sacrificeAtom(ability.cost), back = returnAtom(ability.cost), toss = discardAtom(ability.cost);
         /* A permanent you control to sacrifice, or to return to its owner's hand, or a card in your hand to discard: one
            offer each (CR 602.2b). No card to discard, and the ability can't be activated. */
-        const crew = crewAtom(ability.cost), tapper = tapAtom(ability.cost), untapper = untapAtom(ability.cost);
+        const crew = crewAtom(ability.cost), tapper = tapAtom(ability.cost), untapper = untapAtom(ability.cost), blighter = blightAtom(ability.cost);
         const anyCounter = (ability.cost ?? []).some((a) => a?.atom === "removeAnyCounter" && a.self === true);
         /* "Sacrifice two other creatures" (Priest of Forgotten Gods): each set of `count` of them, one offer each, as the
            cards of "discard two cards" are; fewer than that there, and it can't be activated. */
@@ -835,6 +842,7 @@ function offers(state, player) {
           : crew ? crewChoices(state, player, id, crew.power).map((set) => ({crew: set}))
           : tapper ? tapChoices(state, player, id, tapper.selector).map((t) => ({tap: t}))
           : untapper ? untapChoices(state, player, untapper.count).map((set) => ({untap: set}))
+          : blighter ? blightChoices(state, player).map((c) => ({blight: c}))
           : anyCounter ? Object.entries(object.counters ?? {}).filter(([, n]) => n > 0).map(([counter]) => ({counter})) : [null];
         for (const costChoice of fodder)
           actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment, ...(X !== null ? {x: X} : {}),
@@ -845,7 +853,7 @@ function offers(state, player) {
               : Array.isArray(costChoice.discard) ? costChoice.discard.map((c) => state.objects[c].card)
               : Array.isArray(costChoice.sacrifice) ? costChoice.sacrifice.map((c) => state.objects[c].card)
               : costChoice.counter !== undefined ? [`a ${costChoice.counter} counter`]
-              : [state.objects[costChoice.sacrifice ?? costChoice.returnToHand ?? costChoice.discard ?? costChoice.tap].card]} : {})}, ability,
+              : [state.objects[costChoice.sacrifice ?? costChoice.returnToHand ?? costChoice.discard ?? costChoice.tap ?? costChoice.blight].card]} : {})}, ability,
             /* "With mana value X": the X of this offer (script/filter.mjs). */
             {controller: player, source: id, ...(X !== null ? {x: X} : {})}));
       }
@@ -1396,6 +1404,11 @@ function perform(state, player, action, during = null) {
       if (atom.atom === "sacrifice" && atom.self === true) sacrificeOne(state, action.objectId, events);
       /* "Exile this creature": it leaves for exile, read afterward as it last was. */
       if (atom.atom === "exile" && atom.self === true) moveOne(state, action.objectId, "exile", events, {owner: object.owner});
+      /* "Blight 1": the counters on the creature chosen with the offer, put as any counters are (CR 701.68a). */
+      if (atom.atom === "blight" && action.costChoice?.blight !== undefined) {
+        if (state.objects[action.costChoice.blight]?.zone !== "battlefield") throw new Error("That creature can no longer be blighted");
+        events.push(...runEffects(state, [{effect: "putCounter", targets: [action.costChoice.blight], counter: "-1/-1", count: atom.count ?? 1}], {controller: player, source: action.objectId}));
+      }
       /* "Remove a counter": one of the kind chosen with the offer. */
       if (atom.atom === "removeAnyCounter" && action.costChoice?.counter !== undefined) payCounters(state, action.objectId, [{counter: action.costChoice.counter, count: 1, put: false}]);
       /* Exiling it from the graveyard is the cost of encore (CR 702.141a), paid after the ability is on the stack: "this card"

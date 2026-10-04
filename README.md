@@ -553,6 +553,9 @@ it, what the discard triggers on the stack with the active player holding priori
 which ends what was made "until end of turn" in between.
 `engine-animate-colors` holds the colors an animation gives (Restless Spire): set in their own layer for as long as it
 lasts, read by selectors, gone with the turn; an animation that names none gives none.
+`engine-blight-cost` holds "blight N" as a cost (Gristle Glutton, Spiral into Solitude): one offer for each creature of
+its controller's, paid as the ability goes on the stack, annihilating with +1/+1 counters; and an Aura's "enchanted
+creature" read as it last was when its own cost sacrificed it.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -671,7 +674,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 273 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 274 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -916,6 +919,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-graveyard-triggers` — `tests/engine-graveyard-triggers.mjs`
 - `engine-cleanup-step` — `tests/engine-cleanup-step.mjs`
 - `engine-animate-colors` — `tests/engine-animate-colors.mjs`
+- `engine-blight-cost` — `tests/engine-blight-cost.mjs`
 
 ## Design and execution record
 
