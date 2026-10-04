@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,130 defined and playable today; 2,429 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,134 defined and playable today; 2,436 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 37 | 0 | 18 | 139 |
+| Keyword abilities (CR 702) | 194 | 38 | 0 | 17 | 139 |
 | Keyword actions (CR 701) | 70 | 18 | 3 | 5 | 44 |
 | Effects | 192 | 59 | 1 | 12 | 120 |
 | Triggers | 138 | 16 | 4 | 6 | 112 |
@@ -28,7 +28,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Options and conditions | 37 | 23 | 5 | 0 | 9 |
 | Amounts the game counts | 188 | 12 | 1 | 0 | 175 |
 | Choices | 15 | 11 | 0 | 1 | 3 |
-| Other keyword constructs | 16 | 3 | 0 | 1 | 12 |
+| Other keyword constructs | 16 | 4 | 0 | 1 | 11 |
 
 ## What to build next
 
@@ -86,7 +86,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.185 | Warp | — | missing | 7 | 37 | 7 | 5 |
 | 702.96 | Overload | — | named | 7 | 28 | 7 | 5 |
 | 702.86 | Annihilator | Annihilator | built | 7 | 14 | 0 | 0 |
-| 702.124 | Partner | — | named | 6 | 78 | 6 | 4 |
+| 702.124 | Partner | Partner | built | 6 | 78 | 0 | 0 |
 | 702.16 | Protection | — | named | 6 | 58 | 6 | 4 |
 | 702.74 | Evoke | Evoke | built | 6 | 36 | 0 | 0 |
 | 702.131 | Ascend | — | named | 6 | 30 | 6 | 4 |
@@ -560,7 +560,7 @@ The things that alone hold back the most of the most-played cards.
 | Always | — | missing | 2 | 62 | 2 | 2 |
 | DamageDealtOnce | — | missing | 2 | 48 | 2 | 1 |
 | DiscardedAll | discarded | built | 2 | 22 | 0 | 0 |
-| DamageAll | — | missing | 2 | 9 | 2 | 1 |
+| DamageAll | — | missing | 2 | 9 | 2 | 2 |
 | CounterPlayerAddedAll | — | missing | 2 | 8 | 2 | 1 |
 | SearchedLibrary | — | missing | 2 | 4 | 2 | 2 |
 | MilledAll | — | missing | 2 | 3 | 2 | 0 |
@@ -573,7 +573,7 @@ The things that alone hold back the most of the most-played cards.
 | Countered | — | missing | 1 | 4 | 1 | 1 |
 | Exiled | exiled | named | 1 | 3 | 1 | 0 |
 | LifeLostAll | — | missing | 1 | 2 | 1 | 1 |
-| MilledOnce | — | missing | 1 | 2 | 1 | 0 |
+| MilledOnce | — | missing | 1 | 2 | 1 | 1 |
 | TapAll | — | missing | 1 | 2 | 1 | 1 |
 | AttackerUnblockedOnce | — | missing | 1 | 1 | 1 | 1 |
 | DamagePreventedOnce | — | missing | 1 | 1 | 1 | 1 |
@@ -1081,7 +1081,7 @@ The things that alone hold back the most of the most-played cards.
 | etbCounter | etbCounter | built | 35 | 475 | 0 | 0 |
 | Chapter | Chapter | built | 19 | 236 | 0 | 0 |
 | Class | — | missing | 9 | 38 | 9 | 5 |
-| Choose a Background | — | missing | 5 | 32 | 5 | 3 |
+| Choose a Background | Choose a Background | built | 5 | 32 | 0 | 0 |
 | MayEffectFromOpeningHand | — | missing | 5 | 30 | 5 | 5 |
 | TypeCycling | TypeCycling | built | 3 | 96 | 0 | 0 |
 | Start your engines | — | missing | 3 | 46 | 3 | 2 |

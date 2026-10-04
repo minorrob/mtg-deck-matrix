@@ -109,6 +109,14 @@ export function partnersIn(text) {
   return found;
 }
 
+/* The partner abilities a card script may name as keywords, each with what partnersIn reads from the card's words: Partner
+   and a named one ("Partner--Character select"), and Choose a Background. Not yet "Partner with [name]", which is also a
+   trigger as the card enters (702.124j), nor Doctor's companion. */
+const DECK_RULES = {
+  partner: {name: "Partner", kinds: ["partner", "text"]},
+  "choose a background": {name: "Choose a Background", kinds: ["background"]},
+};
+
 /* "first strike" in the script's vocabulary is "First Strike" to the rules modules. */
 const titleCase = (word) => String(word).split(" ").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 
@@ -572,6 +580,14 @@ export function compileScript(script) {
           modes: (only.modes ?? []).map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? []}))} : null;
       if (modal && (ability.targets ?? []).length) problems.push("a modal spell chosen as it is cast names its targets in its modes, not beside them");
       spell = {id, text: ability.text, targets: ability.targets ?? [], effects: ability.effects, ...(modal ? {modal} : {}), ...(ability.additionalCost ? {additionalCost: ability.additionalCost} : {})};
+      return;
+    }
+    /* A PARTNER ABILITY (CR 702.124): a deck rule the table holds (room/table.mjs, from `partners` above), nothing for the
+       game to do. The keyword says which; the card's own words must say it too. */
+    const deckRule = ability.kind === "keyword" ? DECK_RULES[String(ability.keyword).toLowerCase()] : undefined;
+    if (deckRule) {
+      if (!partnersIn(script.oracleText).some((p) => deckRule.kinds.includes(p.kind))) problems.push(`${ability.text}: ${deckRule.name}, and the card's words do not say so (CR 702.124)`);
+      keywords.push(deckRule.name);
       return;
     }
     if (ability.kind === "keyword") {

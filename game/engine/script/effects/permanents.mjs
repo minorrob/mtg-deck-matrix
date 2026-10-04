@@ -51,6 +51,11 @@ export const PREDEFINED_TOKENS = Object.freeze({
   Clue: {name: "Clue", types: ["Artifact"], subtypes: ["Clue"],
     abilities: [{id: "clue", kind: "activated", text: "{2}, Sacrifice this artifact: Draw a card.", targets: [],
       cost: [{atom: "mana", cost: "{2}"}, {atom: "sacrifice", self: true}], effects: [{effect: "draw", count: 1}]}]},
+  /* CR 111.10v (Splinter, the Mentor) */
+  Mutagen: {name: "Mutagen", types: ["Artifact"], subtypes: ["Mutagen"],
+    abilities: [{id: "mutagen", kind: "activated", text: "{1}, {T}, Sacrifice this token: Put a +1/+1 counter on target creature. Activate only as a sorcery.",
+      timing: "sorcery", targets: [{what: "permanent", types: ["Creature"]}],
+      cost: [{atom: "mana", cost: "{1}"}, {atom: "{T}"}, {atom: "sacrifice", self: true}], effects: [{effect: "putCounter", targets: {target: 0}, counter: "+1/+1", count: 1}]}]},
 });
 
 /**
