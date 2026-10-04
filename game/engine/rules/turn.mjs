@@ -583,6 +583,8 @@ export function advance(state) {
       if (player.tokensThisTurn) player.tokensThisTurn = 0;
       /* And how many permanents left the battlefield under each one's control (state/index.mjs, revolt). */
       if (player.leftThisTurn) player.leftThisTurn = 0;
+      /* And whether each was dealt combat damage (rules/combat.mjs). */
+      if (player.combatDamagedThisTurn) player.combatDamagedThisTurn = false;
     }
     next = 0;
   }

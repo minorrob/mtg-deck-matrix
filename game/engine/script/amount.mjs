@@ -45,7 +45,7 @@ import {parseManaCost, manaValue} from "../rules/mana.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
 export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "toughnessOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
-  "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn"]);
+  "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn", "playersDealtCombatDamage"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -62,6 +62,7 @@ export function amountProblems(value) {
   for (const key of Object.keys(value)) if (!AMOUNT_KINDS.includes(key) && !AMOUNT_EXTRAS.includes(key)) problems.push(`An amount has no key ${JSON.stringify(key)}`);
   if ("countersOn" in value && typeof value.counter !== "string") problems.push("Counting counters says which kind: {countersOn, counter}");
   for (const key of ["lifeGainedThisTurn", "tokensCreatedThisTurn", "permanentsLeftThisTurn"]) if (key in value && !["you", "that player"].includes(value[key])) problems.push(`${key} is "you" or "that player"`);
+  if ("playersDealtCombatDamage" in value && !["opponent", "any"].includes(value.playersDealtCombatDamage)) problems.push('playersDealtCombatDamage is "opponent" or "any"');
   if ("devotion" in value && !(Array.isArray(value.devotion) && value.devotion.length && value.devotion.every((c) => COLORS.includes(c)))) problems.push("Devotion is to one or more colors: {devotion: [\"B\"]}");
   for (const key of ["times", "plus", "atMost"]) if (key in value && !Number.isInteger(value[key])) problems.push(`An amount's ${key} is a whole number`);
   if ("if" in value) {
@@ -194,6 +195,11 @@ export function amountOf(state, value, context = {}) {
     const player = playerOf(value.permanentsLeftThisTurn, context);
     n = player !== null ? state.players[player]?.leftThisTurn ?? 0 : 0;
   }
+  /* "The number of opponents that were dealt combat damage this turn" (Tymna the Weaver): the players still in the game
+     whom combat damage reached this turn (rules/combat.mjs keeps it, turn.mjs clears it) -- the controller's opponents,
+     or anyone. */
+  else if ("playersDealtCombatDamage" in value) n = state.players.filter((p) => !p.lost && p.combatDamagedThisTurn === true
+    && (value.playersDealtCombatDamage === "any" || p.id !== context.controller)).length;
   /* "If an opponent controls more lands than you" (Weathered Wayfarer): the most of them any one opponent has -- the
      selector counted as each opponent still in the game sees it ("you" being that opponent). */
   else if ("mostAmongOpponents" in value) {
@@ -221,7 +227,9 @@ export function amountOf(state, value, context = {}) {
 
 /** The parameters of an effect that take a number, and so may take a count -- "the top X cards" (`fromTop`, Villainous
  *  Wealth, batch 79) among them. */
-export const AMOUNT_PARAMS = Object.freeze(["amount", "count", "power", "toughness", "fromTop"]);
+export const AMOUNT_PARAMS = Object.freeze(["amount", "count", "power", "toughness", "fromTop",
+  /* "You may pay X life" (Tymna the Weaver; effects/asking.mjs, unlessPays). */
+  "life"]);
 
 /** An effect with its counted amounts read now (bind.mjs calls this as the effect reaches the head of the queue). */
 export function countEffect(state, effect, context) {

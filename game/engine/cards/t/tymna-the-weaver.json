@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tymna the Weaver",
+    "oracleId": "d15642e4-e61c-4d29-af48-de837991245e",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Cleric"
+    ],
+    "manaCost": "{1}{W}{B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Lifelink\nAt the beginning of each of your postcombat main phases, you may pay X life, where X is the number of opponents that were dealt combat damage this turn. If you do, draw X cards.\nPartner (You can have two commanders if both have partner.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Lifelink",
+      "keyword": "lifelink"
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of each of your postcombat main phases, you may pay X life, where X is the number of opponents that were dealt combat damage this turn. If you do, draw X cards.",
+      "trigger": {
+        "on": "step",
+        "step": "MAIN2"
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "you",
+          "life": {
+            "playersDealtCombatDamage": "opponent"
+          },
+          "ifPaid": true,
+          "effects": [
+            {
+              "effect": "draw",
+              "count": {
+                "playersDealtCombatDamage": "opponent"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Partner",
+      "keyword": "partner"
+    }
+  ]
+}

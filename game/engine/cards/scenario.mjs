@@ -320,9 +320,10 @@ export function runScenario(scenario, cards, fixtures = {}) {
       for (let n = 0; n < STEP_LIMIT && state.awaiting?.kind !== "declare-attackers"; n += 1) stepOnce();
       if (state.awaiting?.kind !== "declare-attackers") fail("the game never asked who attacks");
       const choice = awaitingChoice(state), picked = [];
-      for (const name of step.attack) {
-        /* At whom (`at`, a player's name), or its first defender. */
-        const option = choice.options.find((o) => (step.at ? o.label === `${name} → ${step.at}` : o.label.startsWith(`${name} → `)) && !picked.some((i) => choice.options[i].cardId === o.cardId));
+      for (const [k, name] of step.attack.entries()) {
+        /* At whom (`at`, a player's name, or one for each attacker in turn), or its first defender. */
+        const at = Array.isArray(step.at) ? step.at[k] : step.at;
+        const option = choice.options.find((o) => (at ? o.label === `${name} → ${at}` : o.label.startsWith(`${name} → `)) && !picked.some((i) => choice.options[i].cardId === o.cardId));
         if (!option) fail(`${name} cannot attack: ${choice.options.map((o) => o.label).join(", ") || "nothing can"}`);
         picked.push(option.index);
       }
