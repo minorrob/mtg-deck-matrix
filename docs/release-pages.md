@@ -68,7 +68,10 @@ WRANGLER=<wrangler.js> UAT_SHOTS=<shots> node tests/uat/play-e2e.mjs
 ```
 
 It covers the Play tab, a playtest table with an AI seat, the alarm launching the game, the board over the WebSocket
-(through a proxy that adds the Access token, as the edge does), End game and the full record replayed. Production
+(through a proxy that adds the Access token, as the edge does), End game and the full record replayed. Then two people
+and an AI from a library backup: each restores it in Settings, the host invites, a second Access identity joins by
+the link and chooses from the decks the table can play, both play the first turns, a reload mid-game returns to the
+board, and the record of the game replays to the same end. Production
 stays Coming Soon, and binds no table, until Rob's go. Until M4 defines the decks' cards, the engine plays basic
 lands only: a real deck is refused by name, card by card.
 
