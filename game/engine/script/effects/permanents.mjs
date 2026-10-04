@@ -524,6 +524,9 @@ export function effectUntil(state, params, context) {
        rule changed for players (`players`): their protection, their life total that can't change. */
     ...(params.until === "their-next-turn" || ["protection", "life-cant-change"].includes(params.rule) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
     ...(params.rule === "protection" ? {from: params.from ?? "everything"} : {}),
+    /* "Until this card is cast from exile" (Emrakul, the Exigent Doom): `untilCast` the card, as `until: "ever"` otherwise is,
+       until that cast (rules/actions.mjs). */
+    ...(Array.isArray(params.untilCast) && params.untilCast.length ? {untilCast: params.untilCast[0]} : {}),
     sourceController: context.controller,
   });
   return [];

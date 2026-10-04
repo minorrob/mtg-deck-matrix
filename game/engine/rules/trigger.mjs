@@ -134,6 +134,8 @@ function subjects(state, event, condition, sourceId, controller) {
     const spell = state.stack.find((e) => e.stackId === fields.sa?.stackId)?.objectId ?? fields.card?.cardId;
     if (!whoseIs(condition.caster ?? "you", caster, controller)) return [];
     if (condition.castFrom && fields.castFrom !== condition.castFrom) return [];
+    /* "When you cast this spell" (CR 603.2, Emrakul, the Exigent Doom): this spell's own cast, and no other. */
+    if (condition.who === "self" && spell !== sourceId) return [];
     if (condition.filter && !(state.objects[spell] && matchesSelector({...condition.filter, what: "spell"}, state, spell, {controller, source: sourceId}))) return [];
     /* "An instant or sorcery spell that targets a creature" (Rehearsed Debater): one of what it targets, chosen as it was
        cast (CR 601.2c) and so before it became cast (601.2i), fits `targets`. A player it targets fits no such selector. */
@@ -478,8 +480,11 @@ export function collectTriggers(state, events) {
        zone the card went to (CR 702.29c). */
     const cycled = event.kind === "GameEventCardChangeZone" && event.data?.fields?.cycled === true ? event.data.fields.becomes : undefined;
     const wentTo = cycled !== undefined && state.objects[cycled] ? [cycled] : [];
-    for (const zone of [...WATCHING_ZONES, "cycled"]) {
-      for (const id of zone === "cycled" ? wentTo : state.zones[zone]) {
+    /* And a spell just cast, on the stack: its own "when you cast this spell" alone (CR 603.2). */
+    const castSpell = event.kind === "GameEventSpellAbilityCast" && event.data?.fields?.sa?.isSpell ? state.stack.find((e) => e.stackId === event.data.fields.sa.stackId)?.objectId : undefined;
+    const justCast = castSpell !== undefined && state.objects[castSpell] ? [castSpell] : [];
+    for (const zone of [...WATCHING_ZONES, "cycled", "cast"]) {
+      for (const id of zone === "cycled" ? wentTo : zone === "cast" ? justCast : state.zones[zone]) {
         const object = state.objects[id];
         /* A permanent's abilities now, the ones given it included (layers.mjs); a card's elsewhere. */
         for (const own of abilitiesOf(state, id)) {
@@ -488,6 +493,7 @@ export function collectTriggers(state, events) {
           /* A triggered mana ability happened with the mana ability that triggered it (manaTriggered). */
           if (ability.kind !== "triggered" || !ability.trigger || ability.trigger.manaAbility) continue;
           if (zone === "cycled" && !(ability.trigger.cycled && ability.trigger.who === "self")) continue;
+          if (zone === "cast" && !(ability.trigger.on === "GameEventSpellAbilityCast" && ability.trigger.who === "self")) continue;
           for (const about of subjects(state, event, ability.trigger, id, object.controller)) {
           /* "If it isn't that player's turn" asks about the player the event is about. */
           if (!conditionHolds(state, ability.condition, {controller: object.controller, source: id, about})) continue;

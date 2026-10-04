@@ -1345,6 +1345,8 @@ function perform(state, player, action, during = null) {
     const gains = object.zone === "library" ? castFromTopGains(state, player, action.objectId) : [];
     /* Cast from suspend (CR 702.62a): a suspended card cast from exile, read before it moves. */
     const fromSuspend = object.suspended === true && object.zone === "exile";
+    /* "Until this card is cast from exile" (Emrakul, the Exigent Doom; effects/permanents.mjs, effectUntil): over now. */
+    if (object.zone === "exile" && (state.effects ?? []).some((e) => e.untilCast === action.objectId)) state.effects = state.effects.filter((e) => e.untilCast !== action.objectId);
 
     const permanent = !(object.types ?? []).some((type) => ["Instant", "Sorcery"].includes(type));
     const targets = structuredClone(action.targets ?? []);
@@ -1496,7 +1498,11 @@ function perform(state, player, action, during = null) {
          replacements and with its last known information, like any death, so "when this dies" still sees it. */
       if (atom.atom === "sacrifice" && atom.self === true) sacrificeOne(state, action.objectId, events);
       /* "Exile this creature": it leaves for exile, read afterward as it last was. */
-      if (atom.atom === "exile" && atom.self === true) moveOne(state, action.objectId, "exile", events, {owner: object.owner});
+      if (atom.atom === "exile" && atom.self === true) {
+        const fromHand = object.zone === "hand", exiled = moveOne(state, action.objectId, "exile", events, {owner: object.owner});
+        /* "Exile this card from your hand" (Emrakul, the Exigent Doom): "this card" is then that card in exile (CR 400.7). */
+        if (fromHand && exiled !== null) entry.about = {...(entry.about ?? {}), card: exiled};
+      }
       /* "Blight 1": the counters on the creature chosen with the offer, put as any counters are (CR 701.68a). */
       if (atom.atom === "blight" && action.costChoice?.blight !== undefined) {
         if (state.objects[action.costChoice.blight]?.zone !== "battlefield") throw new Error("That creature can no longer be blighted");
