@@ -588,6 +588,9 @@ export const combatDamage = {
           target: {playerId: hit.toPlayer, name: state.players[hit.toPlayer].name},
           amount: hit.amount, combat: true, infect,
         }));
+        /* Dealt combat damage this turn, infect or not ("the number of opponents that were dealt combat damage this turn",
+           Tymna the Weaver; script/amount.mjs). turn.mjs clears it. */
+        state.players[hit.toPlayer].combatDamagedThisTurn = true;
         /* The damage is a loss of life (CR 120.3a), counted as one this turn (batch 78: it was not) -- or, with infect, as
            many poison counters. */
         if (infect) events.push(...givePoison(state, hit.toPlayer, hit.amount));
