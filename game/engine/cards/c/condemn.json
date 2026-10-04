@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Condemn",
+    "oracleId": "377d31b5-0a48-4d5b-91bd-b5a62d4f7899",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Put target attacking creature on the bottom of its owner's library. Its controller gains life equal to its toughness.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Put target attacking creature on the bottom of its owner's library. Its controller gains life equal to its toughness.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "attacking": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "library"
+        },
+        {
+          "effect": "gainLife",
+          "amount": {
+            "toughnessOf": {
+              "target": 0
+            }
+          },
+          "who": {
+            "controllerOf": {
+              "target": 0
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -440,7 +440,10 @@ const named = (s, name) => s.zones.battlefield.filter((id) => s.objects[id].card
   const isLand = (d) => (d.types ?? []).includes("Land");
   const spells = playable.filter((n) => { const d = defs.get(n); return !isLand(d) && d.manaCost && !(d.types ?? []).includes("Planeswalker"); });
   const lands = playable.filter((n) => isLand(defs.get(n)));
-  const commanders = playable.filter((n) => commanderLegal(defs.get(n)));
+  /* Its commanders creatures of mana value 4 or less, cast early and in combat by turn 24, so that commander damage -- one
+     invariant below -- is dealt to be checked. */
+  const cheap = (d) => (String(d.manaCost || "").match(/\{([^}]+)\}/g) || []).reduce((n, sym) => n + (/^\d+$/.test(sym.slice(1, -1)) ? Number(sym.slice(1, -1)) : sym === "{X}" ? 0 : 1), 0) <= 4;
+  const commanders = playable.filter((n) => commanderLegal(defs.get(n)) && (defs.get(n).types ?? []).includes("Creature") && cheap(defs.get(n)));
   const BASICS = ["Plains", "Island", "Swamp", "Mountain", "Forest"];
   const basicLand = (name) => ({types: ["Land"], supertypes: ["Basic"], subtypes: [name], abilities: [{id: "a0", kind: "mana", tapSelf: true, produces: {[{Plains: "W", Island: "U", Swamp: "B", Mountain: "R", Forest: "G"}[name]]: 1}}]});
   const cardOf = (name) => (BASICS.includes(name) ? basicLand(name) : defs.get(name));
@@ -523,9 +526,13 @@ const named = (s, name) => s.zones.battlefield.filter((id) => s.objects[id].card
     const tallied = state.players.reduce((n, p) => n + Object.values(p.commanderDamage).reduce((a, b) => a + b, 0), 0);
     return {steps, turn: state.turn, refused, over: gameOver(state), combat, resolved, deaths, tallied};
   }
-  const runs = [1, 2, 3, 4].map((seed) => invariantGame(seed, 24));
+  /* Games that did nothing would prove nothing: these resolve spells, fight, kill, and hit players with commanders. The decks
+     are dealt from every definition, so each card added deals different games: four are played, and more, up to eight, only
+     until together they have done all of that -- a check that holds only of games where it was exercised says nothing. */
+  const runs = [];
   const sum = (key) => runs.reduce((n, g) => n + g[key], 0);
-  /* Games that did nothing would prove nothing: these resolve spells, fight, kill, and hit players with commanders. */
+  const exercised = () => sum("resolved") > 20 && sum("combat") > 20 && sum("deaths") > 0 && sum("tallied") > 0;
+  for (let seed = 1; seed <= 8 && (runs.length < 4 || !exercised()); seed += 1) runs.push(invariantGame(seed, 24));
   measured = `${runs.length} four-seat games of 24 turns, ${sum("steps")} steps: ${sum("resolved")} resolutions, ${sum("combat")} combat hits on players, ${sum("deaths")} deaths, ${sum("tallied")} commander damage tallied`;
   ok(sum("resolved") > 20 && sum("combat") > 20 && sum("deaths") > 0 && sum("tallied") > 0,
     `the invariants held at every step of ${runs.length} four-seat games of 24 turns: ${sum("steps")} steps, ${sum("resolved")} spells and abilities resolved, ${sum("combat")} combat hits on players, ${sum("deaths")} creatures died, ${sum("tallied")} commander damage tallied${sum("refused") ? `, ${sum("refused")} pilot answers refused and answered least` : ""}`);

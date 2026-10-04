@@ -525,7 +525,8 @@ as many as it says, its controller's or the player the effect names ("its contro
 cracked for {2}. `engine-may-play` holds "you may play that card" until a time: its controller's alone, ending at the
 cleanup step of this turn or of their next turn (made on another player's turn too), a land as the land for the turn and a
 spell at its type's speed, "you may cast" a spell only, and a card that moved away and back no longer named.
-`engine-mulligan` holds the
+`engine-cards-pb25` holds a creature's toughness as an amount (Condemn's "equal to its toughness"): its own, on the
+battlefield and as it last was, and a target's, read as the spell begins to resolve. `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
 
@@ -643,7 +644,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 261 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 262 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -876,6 +877,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-mana-spent` — `tests/engine-mana-spent.mjs`
 - `engine-investigate` — `tests/engine-investigate.mjs`
 - `engine-may-play` — `tests/engine-may-play.mjs`
+- `engine-cards-pb25` — `tests/engine-cards-pb25.mjs`
 
 ## Design and execution record
 

@@ -31,11 +31,11 @@
  * So "deal 3 damage to any target" is `{effect: "dealDamage", amount: 3, targets: {target: 0}, who: {target: 0}}`:
  * whichever kind was chosen, the other binds to nothing.
  *
- * FACTS ABOUT A TARGET (CR 608.2h): `{powerOf: {target: n}}`, `{manaValueOf: {target: n}}` and `{controllerOf: {target: n}}`
- * name what an effect needs to know about its target -- Swords to Plowshares' "its controller gains life equal to its
- * power". They are read once, as the resolution begins (`factsOf`), so an effect after the exile still knows the power
- * of what it exiled: the last known information, as the rule asks. `controllerOf` binds where a player goes: `who`,
- * `toPlayer`, `controller` (whose token, under whose control).
+ * FACTS ABOUT A TARGET (CR 608.2h): `{powerOf: {target: n}}`, `{toughnessOf: {target: n}}`, `{manaValueOf: {target: n}}` and
+ * `{controllerOf: {target: n}}` name what an effect needs to know about its target -- Swords to Plowshares' "its controller
+ * gains life equal to its power", Condemn's "equal to its toughness". They are read once, as the resolution begins
+ * (`factsOf`), so an effect after the exile still knows the power of what it exiled: the last known information, as the
+ * rule asks. `controllerOf` binds where a player goes: `who`, `toPlayer`, `controller` (whose token, under whose control).
  *
  * "UP TO N TARGET ...", "ANY NUMBER OF TARGET ...", "ONE OR TWO TARGET ..." (CR 115.1, 601.2c): one instance of the word
  * "target" with a count -- `count: {min, max}` beside the selector, or beside `anyOf`; no `max` is "any number". It is not
@@ -50,7 +50,7 @@
  */
 
 import {compileSelector, selectMatching} from "./filter.mjs";
-import {powerOf, controllerOf} from "../rules/layers.mjs";
+import {powerOf, toughnessOf, controllerOf} from "../rules/layers.mjs";
 import {namesChosen, withChosen} from "./chosen.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 
@@ -179,10 +179,10 @@ export function recheckTargets(state, specs, chosen, context) {
 }
 
 const isRef = (value) => value && typeof value === "object" && !Array.isArray(value) && Number.isInteger(value.target);
-const FACT_KEYS = ["powerOf", "manaValueOf", "controllerOf"];
+const FACT_KEYS = ["powerOf", "toughnessOf", "manaValueOf", "controllerOf"];
 const factRef = (value) => value && typeof value === "object" && !Array.isArray(value) && FACT_KEYS.find((k) => isRef(value[k])) || null;
 
-/** What effects may need to know about each object target, read now (CR 608.2h): power, mana value, controller. */
+/** What effects may need to know about each object target, read now (CR 608.2h): power, toughness, mana value, controller. */
 export function factsOf(state, targets) {
   return (targets ?? []).map((target) => {
     /* A counted target's facts are not one creature's: none is read -- unless one was chosen ("destroy up to one target
@@ -192,6 +192,8 @@ export function factsOf(state, targets) {
     if (!t || t.kind !== "object" || !state.objects[t.id]) return null;
     const o = state.objects[t.id];
     return {powerOf: o.zone === "battlefield" ? powerOf(state, t.id) : (o.power ?? 0),
+      /* "Its controller gains life equal to its toughness" (Condemn): as it was, before the effect moved it. */
+      toughnessOf: o.zone === "battlefield" ? toughnessOf(state, t.id) : (o.toughness ?? 0),
       manaValueOf: o.manaCost ? manaValue(parseManaCost(o.manaCost)) : 0,
       controllerOf: o.zone === "battlefield" ? controllerOf(state, t.id) : o.controller};
   });

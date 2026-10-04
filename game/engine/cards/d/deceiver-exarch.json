@@ -1,0 +1,82 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Deceiver Exarch",
+    "oracleId": "3c939ea6-68b7-4965-b1d3-af1d3dc79778",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Cleric"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 4
+  },
+  "oracleText": "Flash (You may cast this spell any time you could cast an instant.)\nWhen this creature enters, choose one —\n• Untap target permanent you control.\n• Tap target permanent an opponent controls.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, choose one —\n• Untap target permanent you control.\n• Tap target permanent an opponent controls.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Untap target permanent you control.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "controller": "you"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "untap",
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Tap target permanent an opponent controls.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "controller": "opponent"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "tap",
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
