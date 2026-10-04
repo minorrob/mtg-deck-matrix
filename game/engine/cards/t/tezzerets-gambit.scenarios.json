@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Tezzeret's Gambit",
+  "scenarios": [
+    {
+      "name": "Paid {3} and 2 life: two cards, then proliferate",
+      "library": [
+        "Island",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tezzeret's Gambit"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Tezzeret's Gambit"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 38
+        }
+      ]
+    }
+  ]
+}

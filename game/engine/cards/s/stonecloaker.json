@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Stonecloaker",
+    "oracleId": "b2d597f4-162f-4adc-9dc9-6d44815b7a68",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Gargoyle"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "Flash\nFlying\nWhen this creature enters, return a creature you control to its owner's hand.\nWhen this creature enters, exile target card from a graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, return a creature you control to its owner's hand.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "battlefield",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "to": "hand"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, exile target card from a graveyard.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile"
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Spectral Procession",
+    "oracleId": "376271a6-80f0-47a6-990a-5ec5517aae42",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2/W}{2/W}{2/W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Create three 1/1 white Spirit creature tokens with flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Create three 1/1 white Spirit creature tokens with flying.",
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 3,
+          "token": {
+            "name": "Spirit",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Spirit"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

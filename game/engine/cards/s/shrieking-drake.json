@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shrieking Drake",
+    "oracleId": "2a8e14be-6f93-428d-a204-e2399dc93797",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Drake"
+    ],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Flying\nWhen this creature enters, return a creature you control to its owner's hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, return a creature you control to its owner's hand.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "battlefield",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "to": "hand"
+        }
+      ]
+    }
+  ]
+}

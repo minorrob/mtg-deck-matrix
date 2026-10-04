@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Goblin Ringleader",
+    "oracleId": "4100e486-0d27-436c-8429-76bc2c1a26ab",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Haste (This creature can attack and {T} as soon as it comes under your control.)\nWhen this creature enters, reveal the top four cards of your library. Put all Goblin cards revealed this way into your hand and the rest on the bottom of your library in any order.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Haste",
+      "keyword": "haste"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, reveal the top four cards of your library. Put all Goblin cards revealed this way into your hand and the rest on the bottom of your library in any order.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "dig",
+          "count": 4,
+          "take": 4,
+          "selector": {
+            "subtypes": [
+              "Goblin"
+            ]
+          },
+          "to": "hand",
+          "reveal": true,
+          "rest": "bottom"
+        }
+      ]
+    }
+  ]
+}

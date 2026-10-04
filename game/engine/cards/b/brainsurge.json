@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Brainsurge",
+    "oracleId": "46c727cb-1f47-4775-8af4-0230ef53966b",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Draw four cards, then put two cards from your hand on top of your library in any order.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Draw four cards, then put two cards from your hand on top of your library in any order.",
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 4
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "hand",
+          "count": 2,
+          "to": "top"
+        }
+      ]
+    }
+  ]
+}
