@@ -598,6 +598,10 @@ land of the player's own or an opponent's creature never one; and "unless you co
 `engine-empower-jace` holds "empower Jace N": a blue Jace planeswalker token made when its controller has none, the one
 there is, or the controller's choice of two; a Jace card and another player's token aside; a loyalty ability that adds
 mana, on the stack; and a resolution-time choice by a target's owner in a triggered ability, with "up to one".
+`engine-destroyed-and-walker-damage` holds a board wipe that remembers what it destroyed (Ob Nixilis, the Ascended's
+"1 life for each creature destroyed this way"), the indestructible never among them; and "whenever this creature deals
+combat damage to a player or planeswalker" (Grateful Apparition): combat damage to a planeswalker triggers it, about its
+controller, while damage to a creature and noncombat damage do not.
 `engine-excess-and-next-spell` holds excess damage (Violent Echoes): past lethal to a creature, marked damage and
 deathtouch counted, past loyalty to a planeswalker, the greater for both; "the next spell you cast this turn can't be
 countered" (Theorist's Proxy), its caster's, used up, for the turn; and a spell returned to its owner's hand.
@@ -624,10 +628,6 @@ asks, each player in turn; and each search by the creature's controller as it le
 cast free from exile or put into hand; each opponent dealt 2 for a spell cast from exile; and mana for each card exiled.
 `engine-eminence` holds eminence (The Ur-Sphinx), from the command zone and its owner's other Sphinxes only; "that many"
 for the Sphinxes attacking; and, for each player, a card that player milled, cast free.
-`engine-destroyed-and-walker-damage` holds a board wipe that remembers what it destroyed (Ob Nixilis, the Ascended's
-"1 life for each creature destroyed this way"), the indestructible never among them; and "whenever this creature deals
-combat damage to a player or planeswalker" (Grateful Apparition): combat damage to a planeswalker triggers it, about its
-controller, while damage to a creature and noncombat damage do not.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -1006,6 +1006,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-loyalty-activated` — `tests/engine-loyalty-activated.mjs`
 - `engine-opponents-lands` — `tests/engine-opponents-lands.mjs`
 - `engine-empower-jace` — `tests/engine-empower-jace.mjs`
+- `engine-destroyed-and-walker-damage` — `tests/engine-destroyed-and-walker-damage.mjs`
 - `engine-excess-and-next-spell` — `tests/engine-excess-and-next-spell.mjs`
 - `engine-counters-doubled` — `tests/engine-counters-doubled.mjs`
 - `engine-piles-and-modes` — `tests/engine-piles-and-modes.mjs`
@@ -1016,7 +1017,6 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-overload` — `tests/engine-overload.mjs`
 - `engine-discover` — `tests/engine-discover.mjs`
 - `engine-eminence` — `tests/engine-eminence.mjs`
-- `engine-destroyed-and-walker-damage` — `tests/engine-destroyed-and-walker-damage.mjs`
 
 ## Design and execution record
 
