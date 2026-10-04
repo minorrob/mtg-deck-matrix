@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mirkwood Pathmaker",
+    "oracleId": "f1b36dde-9cde-46c8-8d5a-9ad93feba41f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Ranger"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Mirkwood Pathmaker's power and toughness are each equal to the number of lands you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Mirkwood Pathmaker's power and toughness are each equal to the number of lands you control.",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "count": {
+            "types": [
+              "Land"
+            ],
+            "controller": "you"
+          }
+        },
+        "setToughness": {
+          "count": {
+            "types": [
+              "Land"
+            ],
+            "controller": "you"
+          }
+        }
+      }
+    }
+  ]
+}

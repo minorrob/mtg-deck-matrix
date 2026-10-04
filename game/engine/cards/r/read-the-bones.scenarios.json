@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Read the Bones",
+  "scenarios": [
+    {
+      "name": "Scry 2, the Island bottomed; draw two; lose 2",
+      "library": [
+        "Island",
+        "Forest",
+        "Plains"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Read the Bones"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Read the Bones"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 38
+        }
+      ]
+    }
+  ]
+}

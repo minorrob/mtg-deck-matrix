@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Thirsting Shade",
+  "scenarios": [
+    {
+      "name": "{2}{B}: 2/2",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Thirsting Shade",
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Thirsting Shade"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Thirsting Shade",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Thirsting Shade",
+            "has": [
+              "Lifelink"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

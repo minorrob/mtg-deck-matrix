@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Terror",
+    "oracleId": "b81f041d-98db-4408-9472-c483e4a502bc",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy target nonartifact, nonblack creature. It can't be regenerated.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Destroy target nonartifact, nonblack creature. It can't be regenerated.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "nonTypes": [
+            "Artifact"
+          ],
+          "nonColors": [
+            "B"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          },
+          "noRegenerate": true
+        }
+      ]
+    }
+  ]
+}

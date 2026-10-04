@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thirsting Shade",
+    "oracleId": "cba60174-a4de-41e1-a4d9-8f7bb1387e0e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Shade"
+    ],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Lifelink\n{2}{B}: This creature gets +1/+1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Lifelink",
+      "keyword": "lifelink"
+    },
+    {
+      "kind": "activated",
+      "text": "{2}{B}: This creature gets +1/+1 until end of turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{B}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 1
+        }
+      ]
+    }
+  ]
+}

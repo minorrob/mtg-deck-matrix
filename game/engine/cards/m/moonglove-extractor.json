@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Moonglove Extractor",
+    "oracleId": "980affa7-6308-4acd-af64-f804e574a89b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Warlock"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Whenever this creature attacks, you draw a card and lose 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks, you draw a card and lose 1 life.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "loseLife",
+          "who": "you",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

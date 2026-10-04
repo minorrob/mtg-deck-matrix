@@ -1,0 +1,81 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bolg's Company",
+    "oracleId": "fa602f8f-1d80-4f6d-8b8f-d1a1f36037bd",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Soldier"
+    ],
+    "manaCost": "{B}{R}",
+    "colors": [
+      "B",
+      "R"
+    ],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "This creature has haste as long as you control another Goblin.\n{T}, Sacrifice another Goblin: Add {B}{R}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This creature has haste as long as you control another Goblin.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Haste"
+        ]
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "subtypes": [
+            "Goblin"
+          ],
+          "controller": "you",
+          "another": true
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}, Sacrifice another Goblin: Add {B}{R}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "subtypes": [
+              "Goblin"
+            ],
+            "another": true
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "B": 1,
+            "R": 1
+          }
+        }
+      ]
+    }
+  ]
+}

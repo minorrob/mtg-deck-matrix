@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Moonglove Extractor",
+  "scenarios": [
+    {
+      "name": "It attacks: Rob draws and loses 1",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Moonglove Extractor"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Moonglove Extractor"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 39
+        }
+      ]
+    }
+  ]
+}
