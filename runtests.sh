@@ -15,33 +15,11 @@
 # long enough that a green run here said nothing about whether a game could be played,
 # and the one suite that had the stale-asset drift pinned went unrun while guests were
 # handed dead invitations. A suite nobody runs is a suite that does not exist.
+#
+# SEVERAL AT A TIME, NONE FOREVER. tools/run-suites.mjs runs them: SUITE_JOBS at once (the
+# cores less one, at most four), the browser suites one at a time among themselves, and a
+# suite still running after SUITE_TIMEOUT_MINUTES (20) stopped and failed -- one that
+# waited on a page for good held the whole gate on 2026-10-03. The report is in the
+# suites' order and ends as it always did.
 set -u
-
-quiet=0
-[ "${1:-}" = "-q" ] && quiet=1
-
-failed=""
-count=0
-for f in tests/*.mjs game/tests/*.test.mjs; do
-  count=$((count + 1))
-  if [ "$quiet" -eq 1 ]; then
-    out=$(node "$f" 2>&1)
-    status=$?
-    if [ $status -eq 0 ]; then
-      printf '  ok   %s\n' "$f"
-    else
-      printf '  FAIL %s\n%s\n' "$f" "$out"
-      failed="$failed $f"
-    fi
-  else
-    printf '\n===== %s =====\n' "$f"
-    node "$f" || failed="$failed $f"
-  fi
-done
-
-echo
-if [ -n "$failed" ]; then
-  echo "FAILED:$failed"
-  exit 1
-fi
-echo "$count suites passed."
+exec node tools/run-suites.mjs "$@"

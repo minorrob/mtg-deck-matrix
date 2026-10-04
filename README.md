@@ -560,7 +560,10 @@ pod containing cards the engine has no definition for is refused **before the ga
 cards named** — which is what makes the flag worth flipping today.
 
 `runtests.sh` covers both trees: the website suites in `tests/` and the CrankMagic Online
-suites in `game/tests/`. It exits non-zero when any of them fails.
+suites in `game/tests/`. It exits non-zero when any of them fails. `tools/run-suites.mjs` runs
+them for it, several at a time (`SUITE_JOBS`, the cores less one, at most four), the browser
+suites one at a time among themselves, and stops and fails a suite still running after
+`SUITE_TIMEOUT_MINUTES` (20).
 
 `tools/local-ci.sh [commit] [runs]` is the Tests workflow on this machine, for when GitHub
 Actions cannot run it (the repository is private on the free plan, and a spent month of

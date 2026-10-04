@@ -65,6 +65,14 @@ goes on the PR as a comment before the merge, and the merge report says the merg
 on the local gate. Rob set this on 2026-09-28, choosing not to wait out a spent allowance;
 the Actions run is still the rule whenever Actions can run.
 
+**The suites run several at a time, and none forever.** `runtests.sh` hands them to
+`tools/run-suites.mjs`: `SUITE_JOBS` at once (the cores less one, at most four), the browser
+suites one at a time among themselves, and a suite still running after 20 minutes stopped and
+failed. On the cloud container's four cores a run of the suites takes about 11 minutes, from
+about 20 one at a time; the browser suites, one at a time, are most of it. Leave the machine
+to the gate while it runs: on 2026-10-03 a gate whose machine was also running suites in
+parallel lost its second run to a browser suite that waited on a page for good.
+
 **No run twice what another run already proved.** Rob, 2026-10-01: "decrease the # of scans
 avoiding those that are redundant, especially between local vs. Github actions. Prefer to leave
 with github, and minimize to minimum required before pushes." So while Actions can run, the
