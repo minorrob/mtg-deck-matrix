@@ -184,9 +184,12 @@ const factRef = (value) => value && typeof value === "object" && !Array.isArray(
 
 /** What effects may need to know about each object target, read now (CR 608.2h): power, mana value, controller. */
 export function factsOf(state, targets) {
-  return (targets ?? []).map((t) => {
-    /* A counted target's facts are not one creature's: none is read. */
-    if (!t || Array.isArray(t) || t.kind !== "object" || !state.objects[t.id]) return null;
+  return (targets ?? []).map((target) => {
+    /* A counted target's facts are not one creature's: none is read -- unless one was chosen ("destroy up to one target
+       nonbasic land. Its controller may search ...", White Orchid Phantom): that one's. */
+    const chosen = Array.isArray(target) ? target.filter((x) => x?.kind === "object") : null;
+    const t = chosen ? (chosen.length === 1 ? chosen[0] : null) : target;
+    if (!t || t.kind !== "object" || !state.objects[t.id]) return null;
     const o = state.objects[t.id];
     return {powerOf: o.zone === "battlefield" ? powerOf(state, t.id) : (o.power ?? 0),
       manaValueOf: o.manaCost ? manaValue(parseManaCost(o.manaCost)) : 0,
@@ -265,8 +268,9 @@ export function bindEffect(effect, context, state = null) {
      Aid, "it" the Equipment that entered). Gone, it is nothing -- never the source in its place. */
   if (typeof bound.source === "string") { const [id] = objectsOf(bound.source, context); bound.source = id ?? -1; }
   if ("who" in bound) bound.who = playersOf(bound.who, context, state);
-  /* "Target opponent creates a 1/1 Spirit" (Forbidden Orchard): a token's controller, a target player -- or no one. */
-  if (isRef(bound.controller)) { const [player] = playersOf(bound.controller, context); bound.controller = player ?? -1; }
+  /* "Target opponent creates a 1/1 Spirit" (Forbidden Orchard): a token's controller, a target player -- or no one. "That
+     creature's controller creates a 1/1 Myr" (Genesis Chamber): the controller of what the trigger is about. */
+  if (isRef(bound.controller) || bound.controller === "that card's controller") { const [player] = playersOf(bound.controller, context, state); bound.controller = player ?? -1; }
   /* "That attacking player creates a ... token" (Combat Calligrapher): the player whose attack the trigger is about. */
   if (bound.controller === "attacking player") bound.controller = Number.isInteger(context.about?.attacker) ? context.about.attacker : -1;
   if (isRef(bound.toPlayer)) {

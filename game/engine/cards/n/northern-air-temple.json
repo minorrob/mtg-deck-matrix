@@ -1,0 +1,89 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Northern Air Temple",
+    "oracleId": "28a2ad5b-d637-4634-8d4b-889e1fc88319",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Shrine"
+    ],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When Northern Air Temple enters, each opponent loses X life and you gain X life, where X is the number of Shrines you control.\nWhenever another Shrine you control enters, each opponent loses 1 life and you gain 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Northern Air Temple enters, each opponent loses X life and you gain X life, where X is the number of Shrines you control.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "who": "opponent",
+          "amount": {
+            "count": {
+              "what": "permanent",
+              "subtypes": [
+                "Shrine"
+              ],
+              "controller": "you"
+            }
+          }
+        },
+        {
+          "effect": "gainLife",
+          "amount": {
+            "count": {
+              "what": "permanent",
+              "subtypes": [
+                "Shrine"
+              ],
+              "controller": "you"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another Shrine you control enters, each opponent loses 1 life and you gain 1 life.",
+      "trigger": {
+        "on": "enters",
+        "who": "another",
+        "filter": {
+          "subtypes": [
+            "Shrine"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "who": "opponent",
+          "amount": 1
+        },
+        {
+          "effect": "gainLife",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}
