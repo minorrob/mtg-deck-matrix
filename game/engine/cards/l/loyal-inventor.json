@@ -1,0 +1,87 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Loyal Inventor",
+    "oracleId": "eff22b28-88b8-4251-937f-4c06b6ca7bd2",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Artificer"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Vigilance\nWhen this creature enters, you may search your library for an artifact card, reveal it, then shuffle. Put that card into your hand if you control an Assassin. Otherwise, put that card on top of your library.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, you may search your library for an artifact card, reveal it, then shuffle. Put that card into your hand if you control an Assassin. Otherwise, put that card on top of your library.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "present": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Assassin"
+              ],
+              "controller": "you"
+            }
+          },
+          "then": [
+            {
+              "effect": "chooseCard",
+              "zone": "library",
+              "selector": {
+                "types": [
+                  "Artifact"
+                ]
+              },
+              "upTo": true,
+              "reveal": true,
+              "shuffle": true,
+              "to": "hand"
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "chooseCard",
+              "zone": "library",
+              "selector": {
+                "types": [
+                  "Artifact"
+                ]
+              },
+              "upTo": true,
+              "reveal": true,
+              "shuffle": true,
+              "to": "top"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -109,7 +109,9 @@ export function conditionHolds(state, condition, {controller, source = null, abo
      a token this turn" (Idol of Oblivion), "only if an opponent controls more lands than you" (Weathered Wayfarer). */
   if (condition.compare !== undefined) {
     /* "If X is 5 or more" (Martial Coup): the X its spell was cast with, as the resolution knows it (CR 107.3a). */
-    const counted = {controller, source, ...(about ? {about} : {}), ...(x !== undefined ? {x} : {})};
+    /* And "if you do" counted ("you may discard two cards. If you do", Thrilling Discovery): what the effect before it
+       remembered (`rememberedCount`). */
+    const counted = {controller, source, ...(about ? {about} : {}), ...(x !== undefined ? {x} : {}), ...(remembered ? {remembered} : {})};
     const n = amountOf(state, condition.compare.count, counted), than = (v) => amountOf(state, v, counted);
     if (condition.compare.atLeast !== undefined && n < than(condition.compare.atLeast)) return false;
     if (condition.compare.atMost !== undefined && n > than(condition.compare.atMost)) return false;
