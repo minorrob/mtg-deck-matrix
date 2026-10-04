@@ -280,8 +280,8 @@ function escapeExiled(state, player, action, way) {
 
 /**
  * ALTERNATIVE COSTS (CR 118.9): the card's own "rather than pay this spell's mana cost" statics whose condition holds now
- * for this player -- each as `{index, mana, life, extra}`: the mana paid instead ("" for none), the life, and the atoms
- * chosen as it is cast (a card exiled from the hand, a permanent sacrificed).
+ * for this player -- each as `{index, mana, life, extra, evoke}`: the mana paid instead ("" for none), the life, the atoms
+ * chosen as it is cast (a card exiled from the hand, a permanent sacrificed), and whether it is an evoke cost (CR 702.74a).
  */
 export function alternativeCosts(state, player, id) {
   const object = state.objects[id];
@@ -290,7 +290,7 @@ export function alternativeCosts(state, player, id) {
     if (!conditionHolds(state, ability.condition, {controller: player, source: id})) return [];
     const cost = ability.cost ?? [];
     return [{index, mana: cost.find((a) => a.atom === "mana")?.cost ?? "", life: cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0),
-      extra: cost.filter((a) => a.atom === "exileFromHand" || a.atom === "sacrifice")}];
+      extra: cost.filter((a) => a.atom === "exileFromHand" || a.atom === "sacrifice"), evoke: ability.evoke === true}];
   });
 }
 
@@ -1272,6 +1272,8 @@ function perform(state, player, action, during = null) {
     if (back) entry.flashback = true;
     /* Cast with escape, it escaped (CR 702.138b): the permanent it becomes is marked so (rules/stack.mjs). */
     if (fled) entry.escaped = true;
+    /* Cast for its evoke cost (CR 702.74a): the permanent it becomes is marked so, for "if its evoke cost was paid". */
+    if (way?.evoke) entry.evoked = true;
     /* "And that spell can't be countered" (Cavern of Souls): paid with mana that said so. */
     if (paid.uncounterable) entry.uncounterable = true;
     /* "If a spell cast this way would be put into your graveyard, exile it instead" (Kess): to exile, if to a graveyard. */

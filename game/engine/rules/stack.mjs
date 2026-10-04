@@ -297,6 +297,8 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     /* Cast with escape, the permanent it became escaped (CR 702.138b): "sacrifice it unless it escaped" reads this
        (script/condition.mjs). A new object after it moves again (CR 400.7), so the mark does not follow it. */
     if (to === "battlefield" && entry.escaped) state.objects[arrived].escaped = true;
+    /* Cast for its evoke cost, the permanent it became was evoked (CR 702.74a): its own sacrifice trigger reads this. */
+    if (to === "battlefield" && entry.evoked) state.objects[arrived].evoked = true;
     /* "If you cast a creature spell this way, it gains haste until end of turn" (rules/actions.mjs, castGains). */
     if (to === "battlefield" && (object.castGains ?? []).length)
       (state.effects ??= []).push({id: `cast-gains:${arrived}`, layer: 6, affects: {ids: [arrived]}, apply: {addKeywords: [...object.castGains]}, until: "end-of-turn", sourceController: entry.playerId});

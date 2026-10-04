@@ -9,15 +9,15 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1114,
-  "everyRule": 2406
+  "defined": 1117,
+  "everyRule": 2412
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 36,
+    "built": 37,
     "partial": 0,
-    "named": 19,
+    "named": 18,
     "missing": 139
    },
    "entries": [
@@ -409,13 +409,13 @@
      "kind": "keyword ability",
      "rule": "702.74",
      "name": "Evoke",
-     "engine": null,
-     "status": "named",
+     "engine": "Evoke",
+     "status": "built",
      "forge": "Evoke",
      "top": 6,
      "all": 36,
-     "blocks": 6,
-     "alone": 6
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",

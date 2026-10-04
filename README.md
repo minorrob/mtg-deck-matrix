@@ -514,7 +514,10 @@ too), a commander's tax among what they pay, and a pick that cannot pay or leave
 rest refused before anything moves. `engine-storied` holds storied (CR 702.195): an enduring story for three artifacts,
 Sagas or legendaries, its controller's alone and for the rest of the game; the condition a static, an attack tax and
 "doesn't untap" read; and a layer's either-or ("artifacts and creatures you control") giving an artifact creature ward once.
-`engine-mulligan` holds the
+`engine-evoke` holds evoke (CR 702.74): the keyword compiled to an alternative cost and "when it enters, if its evoke cost
+was paid, its controller sacrifices it"; offered beside the mana cost, paid with mana or a card exiled from the hand (never
+itself); the spell and its permanent marked evoked, a new object not; and the house pilot casting for the mana cost when
+it can. `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
 
@@ -632,7 +635,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 257 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 258 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -861,6 +864,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-amass` — `tests/engine-amass.mjs`
 - `engine-convoke` — `tests/engine-convoke.mjs`
 - `engine-storied` — `tests/engine-storied.mjs`
+- `engine-evoke` — `tests/engine-evoke.mjs`
 
 ## Design and execution record
 

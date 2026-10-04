@@ -158,7 +158,10 @@ const BEYOND_TIER0 = ["shroud", "ward",
   /* Batch 79: commander ninjutsu (CR 702.49d), ninjutsu that also works from the command zone. */
   "commander ninjutsu",
   /* Rob's Priority Batch 10.3, its seventeenth slice: storied (CR 702.195), an enduring story (keywords/designations.mjs). */
-  "storied"];
+  "storied",
+  /* Its twentieth: fear (CR 702.36), printed (Shriekmaw). The blocking rule has been keywords/combat.mjs's since batch 59,
+     reached only by a static granting it ("has fear"); a card printed with it could not say so. */
+  "fear"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

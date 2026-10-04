@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,114 defined and playable today; 2,406 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,117 defined and playable today; 2,412 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 36 | 0 | 19 | 139 |
+| Keyword abilities (CR 702) | 194 | 37 | 0 | 18 | 139 |
 | Keyword actions (CR 701) | 70 | 18 | 3 | 5 | 44 |
 | Effects | 192 | 58 | 1 | 13 | 120 |
 | Triggers | 138 | 15 | 4 | 6 | 113 |
@@ -48,9 +48,9 @@ The things that alone hold back the most of the most-played cards.
 | count | Spells cast this turn | — | missing | 7 | 12 |
 | option | Imprint (a card exiled with this) | — | missing | 7 | 10 |
 | effect | Phases | phaseOut | named | 6 | 9 |
-| keyword ability | Evoke | — | named | 6 | 6 |
 | trigger | CounterAddedOnce | counter added once | named | 5 | 10 |
 | option | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 5 | 9 |
+| keyword construct | Class | — | missing | 5 | 9 |
 
 ## Keyword abilities (CR 702)
 
@@ -88,7 +88,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.86 | Annihilator | Annihilator | built | 7 | 14 | 0 | 0 |
 | 702.124 | Partner | — | named | 6 | 78 | 6 | 4 |
 | 702.16 | Protection | — | named | 6 | 58 | 6 | 4 |
-| 702.74 | Evoke | — | named | 6 | 36 | 6 | 6 |
+| 702.74 | Evoke | Evoke | built | 6 | 36 | 0 | 0 |
 | 702.131 | Ascend | — | named | 6 | 30 | 6 | 4 |
 | 702.174 | Gift | — | missing | 6 | 27 | 6 | 1 |
 | 702.172 | Spree | — | missing | 6 | 21 | 6 | 4 |

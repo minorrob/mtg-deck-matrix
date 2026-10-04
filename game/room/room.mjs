@@ -162,11 +162,14 @@ export function offerDetails(state, seat, actions) {
        said with what it does to them. */
     const DOING = {discard: "discarding", returnToHand: "returning", exile: "exiling", crew: "crewing with", tap: "tapping", untap: "untapping"};
     for (const [kind, id] of Object.entries(a.costChoice ?? {})) parts.push(`${DOING[kind] ?? "sacrificing"} ${[].concat(id).map((x) => object(x, plain)).join(" and ")}`);
-    /* An alternative cost (CR 118.9): what is paid instead of the mana cost. */
+    /* An alternative cost (CR 118.9): what is paid instead of the mana cost -- an evoke cost by its name (CR 702.74a), as
+       the permanent will be sacrificed as it enters. */
     if (a.alternative !== undefined) {
-      const cost = state.objects[a.objectId]?.abilities?.[a.alternative]?.cost ?? [];
+      const ability = state.objects[a.objectId]?.abilities?.[a.alternative];
+      const cost = ability?.cost ?? [];
       const mana = cost.find((c) => c.atom === "mana")?.cost, life = cost.filter((c) => c.atom === "payLife").reduce((n, c) => n + (c.amount ?? 0), 0);
-      parts.push([mana ? `for ${mana} instead` : (life || cost.length ? "instead of its mana cost" : "without paying its mana cost"), life ? `paying ${life} life` : null].filter(Boolean).join(", "));
+      parts.push([ability?.evoke ? (mana ? `evoke for ${mana}` : "evoke") : mana ? `for ${mana} instead` : (life || cost.length ? "instead of its mana cost" : "without paying its mana cost"),
+        life ? `paying ${life} life` : null].filter(Boolean).join(", "));
     }
     /* "Without paying its mana cost", beside the paid cast of the same card (rules/actions.mjs). */
     if (a.free) parts.push("without paying its mana cost");
