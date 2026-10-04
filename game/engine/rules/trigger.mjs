@@ -189,6 +189,12 @@ function subjects(state, event, condition, sourceId, controller) {
   }
   /* Ward (CR 702.21a): this permanent became the target of a spell or ability an opponent controls -- about that player
      and the stack entry, which "counter it" counters (script/bind.mjs, `stack: "that"`). */
+  /* "Whenever this creature becomes tapped" (CR 701.26a): each permanent tapped, what it is about -- the tap events the rules
+     emit as an attacker, a {T} cost, a creature tapped to pay or crew, and an effect turn a permanent sideways. */
+  if (condition.on === "GameEventCardTapped") {
+    const id = fields.card?.cardId;
+    return fields.tapped === true && fits(state, id, condition, sourceId, controller) ? [{card: id}] : [];
+  }
   if (condition.on === "GameEventBecomesTarget") {
     /* "Whenever this creature becomes the target", and (batch 76) "whenever a Dragon you control becomes the target"
        (`who` another or any, `filter` what was targeted); "of a spell" (`spell`), not an ability. */

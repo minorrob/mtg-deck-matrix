@@ -10,7 +10,7 @@
  "top": {
   "cards": 3238,
   "defined": 1114,
-  "everyRule": 2403
+  "everyRule": 2406
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -5519,10 +5519,10 @@
   },
   "Triggers": {
    "tally": {
-    "built": 14,
+    "built": 15,
     "partial": 4,
     "named": 6,
-    "missing": 114
+    "missing": 113
    },
    "entries": [
     {
@@ -5805,13 +5805,13 @@
      "kind": "trigger",
      "rule": null,
      "name": "Taps",
-     "engine": null,
-     "status": "missing",
+     "engine": "becomes tapped",
+     "status": "built",
      "forge": "Taps",
      "top": 3,
      "all": 112,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
