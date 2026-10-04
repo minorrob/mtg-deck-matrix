@@ -25,6 +25,7 @@
  *                                        Spirit for each card type among cards discarded this way" (Occult Epiphany)
  *   {rememberedCount: true}              how many things the effect before it remembered -- "each player shuffles the cards
  *                                        from their hand into their library, then draws that many cards" (batch 80)
+ *   {excessDamage: true}                 the excess damage the damage before it in this resolution dealt (CR 120.4a)
  *
  * and any of them may say `atMost` ("{1} less IF you control a creature with flying": the count, at most 1), `times` and
  * `plus`: "twice X", "1 plus the number of ...", and `times: -1` for "-X/-X" and
@@ -48,7 +49,7 @@ import {parseManaCost, manaValue} from "../rules/mana.mjs";
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
 export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "toughnessOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
   "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn", "playersDealtCombatDamage", "cardTypesAmong", "manaSpent",
-  "permanentsEnteredThisTurn"]);
+  "permanentsEnteredThisTurn", "excessDamage"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "filter"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -164,6 +165,8 @@ export function amountOf(state, value, context = {}) {
   else if ("lifeLostThisWay" in value) n = context.lifeLost ?? 0;
   /* "Then draws that many cards" (Winds of Change): what the effect before it moved, and remembered, counted. */
   else if ("rememberedCount" in value) n = (context.remembered ?? []).length;
+  /* "Empower Jace X, where X is that excess damage" (Violent Echoes): the excess the damage before it dealt (effects/resources.mjs). */
+  else if ("excessDamage" in value) n = context.excessDamage ?? 0;
   /* "For each card type among cards discarded this way" (Occult Epiphany): the card types (CR 205.2a) the remembered
      cards have between them, as they are now -- an artifact creature is two. */
   else if ("cardTypesAmong" in value) n = new Set((context.remembered ?? []).flatMap((id) => state.objects[id]?.types ?? [])).size;

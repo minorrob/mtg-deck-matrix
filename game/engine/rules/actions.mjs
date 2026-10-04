@@ -1352,6 +1352,10 @@ function perform(state, player, action, during = null) {
     if (way?.evoke) entry.evoked = true;
     /* "And that spell can't be countered" (Cavern of Souls): paid with mana that said so. */
     if (paid.uncounterable) entry.uncounterable = true;
+    /* "The next spell you cast this turn can't be countered" (Theorist's Proxy): an effect of its caster's, used up by the
+       first spell they cast after it (effectUntil's `rule: "next-spell-uncounterable"`). */
+    const next = (state.effects ?? []).findIndex((e) => e.rule === "next-spell-uncounterable" && e.sourceController === player);
+    if (next >= 0) { entry.uncounterable = true; state.effects.splice(next, 1); }
     /* "If a spell cast this way would be put into your graveyard, exile it instead" (Kess): to exile, if to a graveyard. */
     if (permission?.ability.graveyardToExile) entry.graveyardToExile = true;
     /* On the spell as it now is: moving to the stack made a new object (CR 400.7). */

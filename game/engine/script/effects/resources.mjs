@@ -22,7 +22,7 @@ import {runFollowUps} from "./index.mjs";
 import {selectMatching} from "../filter.mjs";
 import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
-import {typesOf, powerOf, keywordsOf, isKeywordCounter} from "../../rules/layers.mjs";
+import {typesOf, powerOf, toughnessOf, keywordsOf, isKeywordCounter} from "../../rules/layers.mjs";
 import {cantGainLife} from "../../rules/statics.mjs";
 
 /** `addMana` — into the controller's pool, which empties at the end of the step (CR 500.4). */
@@ -192,6 +192,10 @@ export function dealDamage(state, params, context) {
         amount: proposal.amount, combat: false, infect,
       }));
     } else if (state.objects[toCard]) {
+      /* EXCESS DAMAGE (CR 120.4a): "if excess damage was dealt to that permanent this way" (Violent Echoes) -- past lethal
+         to a creature (its damage marked counted; from deathtouch, anything past 1, 702.2c), past its loyalty to a
+         planeswalker, the greater for one that is both -- read before it is dealt, and kept for the effects after it. */
+      context.excessDamage = (context.excessDamage ?? 0) + excessOf(state, toCard, proposal.amount, source);
       damagePermanent(state, toCard, proposal.amount, events, {infect});
       events.push(event("GameEventCardDamaged", state, {
         card: cardRef(state, toCard),
@@ -206,6 +210,19 @@ export function dealDamage(state, params, context) {
     if (linked > 0 && state.objects[source]) changeLife(state, state.objects[source].controller, linked, events);
   }
   return events;
+}
+
+/* How much of `amount` dealt to this permanent now would be excess damage (CR 120.4a). */
+function excessOf(state, id, amount, source) {
+  const types = typesOf(state, id), object = state.objects[id];
+  let excess = 0;
+  if (types.includes("Creature")) {
+    const deathtouch = source !== null && state.objects[source] && keywordsOf(state, source).includes("Deathtouch");
+    const lethal = Math.max(0, toughnessOf(state, id) - (object.damage ?? 0));
+    excess = Math.max(excess, amount - (deathtouch ? Math.min(lethal, 1) : lethal));
+  }
+  if (types.includes("Planeswalker")) excess = Math.max(excess, amount - (object.counters?.loyalty ?? 0));
+  return Math.max(0, excess);
 }
 
 /**

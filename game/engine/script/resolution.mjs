@@ -79,7 +79,9 @@ export function runResolution(state, rng = null) {
     /* AN EFFECT'S OWN CONDITION (Forge's Condition): "Metalcraft -- If you control three or more artifacts, exile that
        creature". Asked now, as it reaches the head (CR 608.2c, the instructions in order); false, and it does nothing. */
     if (effect?.condition && !conditionHolds(state, effect.condition, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about,
-      remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast, x: resolving.context.x})) {
+      remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast, x: resolving.context.x,
+      /* "If excess damage was dealt to that permanent this way" (Violent Echoes; effects/resources.mjs). */
+      excessDamage: resolving.context.excessDamage})) {
       resolving.queue.shift();
       continue;
     }

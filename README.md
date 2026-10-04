@@ -595,6 +595,9 @@ player for the turn; and "discard your hand", nobody asked.
 `engine-empower-jace` holds "empower Jace N": a blue Jace planeswalker token made when its controller has none, the one
 there is, or the controller's choice of two; a Jace card and another player's token aside; a loyalty ability that adds
 mana, on the stack; and a resolution-time choice by a target's owner in a triggered ability, with "up to one".
+`engine-excess-and-next-spell` holds excess damage (Violent Echoes): past lethal to a creature, marked damage and
+deathtouch counted, past loyalty to a planeswalker, the greater for both; "the next spell you cast this turn can't be
+countered" (Theorist's Proxy), its caster's, used up, for the turn; and a spell returned to its owner's hand.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -713,7 +716,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 287 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 288 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -972,6 +975,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-granted-loyalty` — `tests/engine-granted-loyalty.mjs`
 - `engine-loyalty-activated` — `tests/engine-loyalty-activated.mjs`
 - `engine-empower-jace` — `tests/engine-empower-jace.mjs`
+- `engine-excess-and-next-spell` — `tests/engine-excess-and-next-spell.mjs`
 
 ## Design and execution record
 
