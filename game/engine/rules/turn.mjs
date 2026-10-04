@@ -292,8 +292,12 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
     const outcome = answerResolution(state, indices, extra, rng);
     /* A spell that stopped to ask leaves the stack once its last effect has run (stack.mjs), and only then does
        anyone receive priority -- after state-based actions and triggers, as after any resolution (CR 117.5). */
-    const events = outcome.status === "done" ? [...outcome.events, ...finishResolving(state)] : outcome.events;
-    grantStepPriority(state, events);
+    const finished = outcome.status === "done" ? finishResolving(state) : [];
+    const events = [...outcome.events, ...finished];
+    /* Each event is handed back once, as it happened; what triggers reads the whole resolution once it is done, the
+       events before its questions too -- they triggered then, and wait for a player to receive priority (CR 603.2,
+       603.3): the life Uro gained before asking for a land still triggers "whenever you gain life". */
+    grantStepPriority(state, events, outcome.status === "done" ? [...(outcome.all ?? outcome.events), ...finished] : events);
     return events;
   }
 
@@ -455,11 +459,11 @@ function arrive(state, events) {
  * CR 704.3: state-based actions are checked WHENEVER A PLAYER WOULD RECEIVE PRIORITY, which makes
  * this the right and only place for it in the turn structure. Combat damage is dealt as this step
  * begins, so the creatures it killed are already gone by the time anybody could respond. */
-function grantStepPriority(state, events = []) {
+function grantStepPriority(state, events = [], triggering = events) {
   if (hasPriority(state) && !state.awaiting) {
     /* What just happened triggers now (CR 603.2). A permanent that entered asking is then answered before anything
        else happens (rules/entering.mjs). */
-    collectTriggers(state, events);
+    collectTriggers(state, triggering);
     if (!askEntering(state)) {
       const sba = checkStateBasedActions(state);
       events.push(...sba);

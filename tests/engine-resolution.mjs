@@ -29,6 +29,7 @@ import {beginGame, awaitingChoice, resolveAwaiting} from "../game/engine/rules/t
 import {beginResolution, resolutionPending} from "../game/engine/script/resolution.mjs";
 import {isBuilt, TOP_25} from "../game/engine/script/effects/index.mjs";
 import {createController, CHOICE_MODES} from "../game/engine/controller.mjs";
+import {runScenario} from "../game/engine/cards/scenario.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -82,6 +83,59 @@ const asked = (s) => { const c = awaitingChoice(s); return {mode: c.mode, min: c
   eq(handNames(s, 0).length, 6, "both of them having happened");
   eq(s.players[0].life, 43, "in order");
   eq(resolutionPending(s), false, "and nothing is left waiting");
+}
+
+/* ---- each event handed back once, though the resolution stops to ask ---- */
+const lifeIn = (events) => events.filter((e) => e.kind === "GameEventPlayerLivesChanged").map((e) => [e.data.fields.oldLives, e.data.fields.newLives]);
+const drawsIn = (events) => events.filter((e) => e.kind === "GameEventCardChangeZone" && e.data.fields.to?.zoneType === "Hand").length;
+{
+  /* "You gain 3 life, then scry 1, then draw a card": the gain is handed back as the resolution stops at the scry, and not
+     again when it finishes. A log or an invariant reading the events sees one gain, from 40 to 43 -- not a second one
+     "from 40" after the total is already 43 (the conformance suite's "a life change begins where the last ended", CR 119;
+     Uro's "you gain 3 life and draw a card, then you may put a land card from your hand onto the battlefield"). */
+  const {s, ctx} = board();
+  const first = beginResolution(s, [{effect: "gainLife", amount: 3, who: "you"}, {effect: "scry", count: 1}, {effect: "draw", count: 1, who: "you"}], ctx);
+  eq(lifeIn(first.events), [[40, 43]], "the gain, handed back as the resolution stops to ask");
+  const rest = asTheBoard(s, []);
+  eq([lifeIn(rest), drawsIn(rest)], [[], 1], "when it finishes: the draw that followed the answer, and not the gain again");
+}
+{
+  /* In a game: a spell that gains 3 life, scries 1 and draws, with "whenever you gain life, put a +1/+1 counter on this
+     creature" (Aerith Gainsborough's) on the battlefield. The gain came before the question; it is logged once, and it
+     still triggers -- once -- when the spell is done and Rob would receive priority (CR 603.2, 603.3). */
+  const FIXTURES = {
+    Gift: {types: ["Sorcery"], manaCost: "{W}", colors: ["W"], spell: {id: "a0", text: "You gain 3 life. Scry 1. Draw a card.", targets: [],
+      effects: [{effect: "gainLife", amount: 3}, {effect: "scry", count: 1}, {effect: "draw", count: 1}]}},
+    Gainer: {types: ["Creature"], manaCost: "{1}{W}", colors: ["W"], power: 1, toughness: 1, abilities: [{id: "a0", kind: "triggered",
+      text: "Whenever you gain life, put a +1/+1 counter on this creature.", trigger: {on: "GameEventPlayerLivesChanged", gainer: "you"},
+      effects: [{effect: "putCounter", targets: "self", counter: "+1/+1", count: 1}]}]},
+  };
+  const {state, events} = runScenario({name: "gift", library: ["Island"], setup: [{seat: 0, zone: "battlefield", cards: ["Plains", "Gainer"]}, {seat: 0, zone: "hand", cards: ["Gift"]}],
+    steps: [{tap: "Plains"}, {cast: "Gift"}, {resolve: true}, {answer: []}, {resolve: true}], expect: [{seat: 0, life: 43}, {seat: 0, zone: "hand", cards: ["Island"]}]},
+  () => null, FIXTURES);
+  eq(lifeIn(events), [[40, 43]], "the game's events hold the gain once");
+  const gainer = Object.values(state.objects).find((o) => o.card === "Gainer");
+  eq(gainer.counters["+1/+1"], 1, "and it triggered once: one +1/+1 counter");
+}
+{
+  /* Two questions: what the first answer led to is handed back once, as the second is asked. */
+  const {s, ctx} = board();
+  const first = beginResolution(s, [{effect: "scry", count: 1}, {effect: "gainLife", amount: 3, who: "you"}, {effect: "scry", count: 1}], ctx);
+  eq(lifeIn(first.events), [], "nothing gained before the first question");
+  eq(lifeIn(asTheBoard(s, [])), [[40, 43]], "the first answer: the gain, as the second question is asked");
+  eq(lifeIn(asTheBoard(s, [])), [], "the second: not the gain again");
+  eq(s.players[0].life, 43, "and one gain it was");
+}
+
+{
+  /* Asked again within one effect (surveil: "the rest on top in any order"): what the first answer did is handed back
+     with it, and not again when the effect is done. */
+  const toGraveyard = (events) => events.filter((e) => e.kind === "GameEventCardChangeZone" && e.data.fields.to?.zoneType === "Graveyard").length;
+  const {s, ctx} = board();
+  beginResolution(s, [{effect: "surveil", count: 3}], ctx);
+  eq(toGraveyard(resolveAwaiting(s, [0])), 1, "one card into the graveyard, as the order of the other two is asked");
+  eq(toGraveyard(resolveAwaiting(s, [0, 1])), 0, "and not again once they are ordered");
+  eq(cardsIn(s, "graveyard", 0).length, 1, "one card it was");
 }
 
 /* ---- scry stops, asks, and the rest of the resolution still happens ---- */

@@ -51,6 +51,16 @@ export function beginResolution(state, effects, context = {}, rng = null) {
   return runResolution(state, rng);
 }
 
+/* The events this resolution has not handed back yet. A resolution that stops to ask hands back what happened before the
+   question, and on carrying on only what happened after: each event once, whatever reads them -- a log, the conformance
+   suite's "a life change begins where the last ended" (Uro: the 3 life gained, then "you may put a land card"). The whole
+   list stays with the resolution. */
+function unreported(resolving) {
+  const fresh = resolving.events.slice(resolving.reported ?? 0);
+  resolving.reported = resolving.events.length;
+  return fresh;
+}
+
 /**
  * Work through the queue until it is empty or something asks a question.
  *
@@ -102,7 +112,7 @@ export function runResolution(state, rng = null) {
       const opened = asking.open(state, head, resolving.context, rng);
       if (opened === true) {
         state.awaiting.resolution = true;
-        return {status: "waiting", events: resolving.events};
+        return {status: "waiting", events: unreported(resolving)};
       }
       if (opened && Array.isArray(opened.events)) resolving.events.push(...opened.events);
       resolving.queue.shift();
@@ -113,9 +123,10 @@ export function runResolution(state, rng = null) {
     resolving.events.push(...runEffect(state, effect, resolving.context, rng));
   }
 
-  const events = resolving.events;
+  const events = unreported(resolving);
   state.resolving = null;
-  return {status: "done", events};
+  /* And all of them, for what triggers on them as a player would next receive priority (rules/turn.mjs). */
+  return {status: "done", events, all: resolving.events};
 }
 
 /**
@@ -142,7 +153,7 @@ export function answerResolution(state, indices, extra = {}, rng = null) {
      called again, because `apply` has already set up the next question. */
   if (!Array.isArray(outcome) && outcome.again === true) {
     state.awaiting.resolution = true;
-    return {status: "waiting", events};
+    return {status: "waiting", events: state.resolving ? unreported(state.resolving) : events};
   }
 
   state.awaiting = null;
