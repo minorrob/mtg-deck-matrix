@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,114 defined and playable today; 2,403 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,114 defined and playable today; 2,406 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -21,7 +21,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Keyword abilities (CR 702) | 194 | 36 | 0 | 19 | 139 |
 | Keyword actions (CR 701) | 70 | 18 | 3 | 5 | 44 |
 | Effects | 192 | 58 | 1 | 13 | 120 |
-| Triggers | 138 | 14 | 4 | 6 | 114 |
+| Triggers | 138 | 15 | 4 | 6 | 113 |
 | Static abilities | 77 | 10 | 2 | 0 | 65 |
 | Replacement effects | 34 | 0 | 4 | 0 | 30 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
@@ -550,7 +550,7 @@ The things that alone hold back the most of the most-played cards.
 | LandPlayed | land played | named | 4 | 40 | 4 | 3 |
 | CommitCrime | — | missing | 4 | 21 | 4 | 4 |
 | AttackerBlocked | — | missing | 3 | 126 | 3 | 3 |
-| Taps | — | missing | 3 | 112 | 3 | 3 |
+| Taps | becomes tapped | built | 3 | 112 | 0 | 0 |
 | Untaps | — | missing | 3 | 30 | 3 | 1 |
 | UnlockDoor | — | missing | 3 | 26 | 3 | 2 |
 | CounterAdded | counter added | named | 3 | 19 | 3 | 2 |
