@@ -580,6 +580,24 @@ library, on top, or on the bottom.
 `engine-blight-or-pay` holds a choice between additional costs and a color a mana ability gives (Bogslither's Embrace,
 Foraging Wickermaw): blight 1 or pay {3}, each its own cast, its mana part of the offer, tapped for and spent, said by
 the table; its compiler; and "becomes that color until end of turn", the color of the mana added.
+`engine-reveal-until-creature` holds "reveal cards until you reveal a creature or planeswalker card" (Jace, Multiverse
+Architect's -3): the card found onto the battlefield, a planeswalker with its loyalty, the rest under what was not
+revealed in a random order, a library with neither put back whole, and nothing revealed once the target is gone.
+`engine-cant-attack-jaces` holds "they may pay {2}; if they don't, creatures they control can't attack Jaces you control
+this turn" (Jace, Multiverse Architect), at a table of four: the player whose turn it is asked, their creatures held as
+they are, toward its controller's Jaces only, for the turn.
+`engine-granted-loyalty` holds "planeswalkers you control have '[-8]: ...'" (Kiora of Salt and Sand): a loyalty ability
+granted in layer 6 to its controller's planeswalkers only, paid in loyalty, once a turn among their own, gone with its
+source; and Kiora's attack trigger, an attacking creature untapped and unblockable.
+`engine-loyalty-activated` holds "whenever you activate a loyalty ability" (Ajani Unrelenting), any permanent's, yours
+only, and "if you removed two or more loyalty counters"; "if you've activated a loyalty ability this turn", kept by the
+player for the turn; and "discard your hand", nobody asked.
+`engine-opponents-lands` holds "this land enters tapped unless your opponents control eight or more lands" (the
+Turbulent lands): what every opponent of the player who plays it controls, counted together, at least and at most, a
+land of the player's own or an opponent's creature never one; and "unless you control a planeswalker", the player's own.
+`engine-empower-jace` holds "empower Jace N": a blue Jace planeswalker token made when its controller has none, the one
+there is, or the controller's choice of two; a Jace card and another player's token aside; a loyalty ability that adds
+mana, on the stack; and a resolution-time choice by a target's owner in a triggered ability, with "up to one".
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -698,7 +716,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 282 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 288 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -952,6 +970,12 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-stun-and-tap-three` — `tests/engine-stun-and-tap-three.mjs`
 - `engine-owner-chooses-library` — `tests/engine-owner-chooses-library.mjs`
 - `engine-blight-or-pay` — `tests/engine-blight-or-pay.mjs`
+- `engine-reveal-until-creature` — `tests/engine-reveal-until-creature.mjs`
+- `engine-cant-attack-jaces` — `tests/engine-cant-attack-jaces.mjs`
+- `engine-granted-loyalty` — `tests/engine-granted-loyalty.mjs`
+- `engine-loyalty-activated` — `tests/engine-loyalty-activated.mjs`
+- `engine-opponents-lands` — `tests/engine-opponents-lands.mjs`
+- `engine-empower-jace` — `tests/engine-empower-jace.mjs`
 
 ## Design and execution record
 

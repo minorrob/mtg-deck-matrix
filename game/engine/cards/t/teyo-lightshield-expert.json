@@ -1,0 +1,104 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Teyo, Lightshield Expert",
+    "oracleId": "77a9fac6-3c26-4456-9e0b-f5839a3dcae2",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Cleric"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Flash\nWhen Teyo enters, target permanent you control gains hexproof until end of turn. Put a +1/+1 counter on it if it's a creature. Put a loyalty counter on it if it's a planeswalker. (It can't be the target of spells or abilities your opponents control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "triggered",
+      "text": "When Teyo enters, target permanent you control gains hexproof until end of turn. Put a +1/+1 counter on it if it's a creature. Put a loyalty counter on it if it's a planeswalker. (It can't be the target of spells or abilities your opponents control.)",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Hexproof"
+          ]
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "about": "target",
+            "is": {
+              "types": [
+                "Creature"
+              ]
+            }
+          },
+          "then": [
+            {
+              "effect": "putCounter",
+              "targets": {
+                "target": 0
+              },
+              "counter": "+1/+1",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "about": "target",
+            "is": {
+              "types": [
+                "Planeswalker"
+              ]
+            }
+          },
+          "then": [
+            {
+              "effect": "putCounter",
+              "targets": {
+                "target": 0
+              },
+              "counter": "loyalty",
+              "count": 1
+            }
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "controller": "you"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,483 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Jace, Multiverse Architect",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Cast for {1}{W}{U}{B}{R}, 4 loyalty; +1: two cards drawn, one of them put on the bottom, 5 loyalty",
+      "library": [
+        "Island",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Island",
+            "Swamp",
+            "Mountain",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Jace, Multiverse Architect"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Jace, Multiverse Architect"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Jace, Multiverse Architect",
+                "counter": "loyalty",
+                "count": 4
+              }
+            }
+          ]
+        },
+        {
+          "activate": "Jace, Multiverse Architect"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Island",
+                  "Forest"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Island"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Jace, Multiverse Architect",
+            "counter": "loyalty",
+            "count": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "-3: Rob's Bear exiled; Island and Forest revealed and put under, the Big Bear onto the battlefield; 1 loyalty",
+      "library": [
+        "Island",
+        "Forest",
+        "Big Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Jace, Multiverse Architect",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Jace, Multiverse Architect",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Jace, Multiverse Architect",
+            "Big Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": []
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Jace, Multiverse Architect",
+            "counter": "loyalty",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "-3 on another planeswalker of Rob's: a planeswalker card found enters with its loyalty",
+      "library": [
+        "Island",
+        "Kiora, Behemoth Beckoner"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Jace, Multiverse Architect",
+            "Kiora, Behemoth Beckoner"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Jace, Multiverse Architect"
+              },
+              "count": 2
+            }
+          ]
+        },
+        {
+          "activate": "Jace, Multiverse Architect",
+          "targets": [
+            {
+              "card": "Kiora, Behemoth Beckoner"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Kiora, Behemoth Beckoner"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Kiora, Behemoth Beckoner",
+            "counter": "loyalty",
+            "count": 7
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        }
+      ]
+    },
+    {
+      "name": "-3 can't target Jace itself or Maya's Bear: with neither of Rob's own, not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Jace, Multiverse Architect"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Jace, Multiverse Architect"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "Maya's turn, beginning of combat: Maya doesn't pay {2}; the Bear attacks Rob instead",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Jace, Multiverse Architect"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "COMBAT_BEGIN"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1,
+                "options": [
+                  "Pay {2}",
+                  "Don't pay"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        },
+        {
+          "attack": [
+            "Bear"
+          ],
+          "at": "Rob"
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Jace, Multiverse Architect",
+            "counter": "loyalty",
+            "count": 4
+          }
+        },
+        {
+          "seat": 1,
+          "tapped": "Wastes",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "Maya's turn: Maya pays {2}, and the Bear attacks Jace: 2 loyalty",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Jace, Multiverse Architect"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "COMBAT_BEGIN"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Pay {2}"
+          ]
+        },
+        {
+          "attack": [
+            "Bear"
+          ],
+          "at": "Jace, Multiverse Architect (Rob)"
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Jace, Multiverse Architect",
+            "counter": "loyalty",
+            "count": 2
+          }
+        },
+        {
+          "seat": 1,
+          "tapped": "Wastes",
+          "is": true
+        }
+      ]
+    },
+    {
+      "name": "Rob's own turn: no {2} asked at the beginning of combat",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Jace, Multiverse Architect"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_BEGIN"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

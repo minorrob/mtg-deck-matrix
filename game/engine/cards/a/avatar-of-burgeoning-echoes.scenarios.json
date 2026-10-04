@@ -1,0 +1,270 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Avatar of Burgeoning Echoes",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Jace": {
+      "types": [
+        "Planeswalker"
+      ],
+      "subtypes": [
+        "Jace"
+      ],
+      "colors": [
+        "U"
+      ],
+      "manaCost": null,
+      "token": true,
+      "loyalty": 3,
+      "abilities": [
+        {
+          "id": "jace-surveil",
+          "kind": "activated",
+          "text": "−1: Surveil 1.",
+          "targets": [],
+          "loyalty": -1,
+          "timing": "sorcery",
+          "cost": [
+            {
+              "atom": "removeCounters",
+              "self": true,
+              "counter": "loyalty",
+              "count": 1
+            }
+          ],
+          "effects": [
+            {
+              "effect": "surveil",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "id": "jace-draw",
+          "kind": "activated",
+          "text": "−3: Draw a card.",
+          "targets": [],
+          "loyalty": -3,
+          "timing": "sorcery",
+          "cost": [
+            {
+              "atom": "removeCounters",
+              "self": true,
+              "counter": "loyalty",
+              "count": 3
+            }
+          ],
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    "Walker": {
+      "types": [
+        "Planeswalker"
+      ],
+      "subtypes": [
+        "Ajani"
+      ],
+      "manaCost": "{2}{W}",
+      "colors": [
+        "W"
+      ],
+      "loyalty": 9
+    },
+    "Big Walker": {
+      "types": [
+        "Planeswalker"
+      ],
+      "subtypes": [
+        "Ajani"
+      ],
+      "manaCost": "{2}{W}",
+      "colors": [
+        "W"
+      ],
+      "loyalty": 12
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Landfall: Rob plays a Forest, a Jace token with 2 loyalty",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Avatar of Burgeoning Echoes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Forest"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Jace",
+            "counter": "loyalty",
+            "count": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "A 12-loyalty planeswalker's granted -10: a +1/+1 counter on the Bear for each of Rob's three lands; Maya's land does not enter it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Avatar of Burgeoning Echoes",
+            "Big Walker",
+            "Bear",
+            "Forest",
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Jace"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "activate": "Big Walker",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 5,
+            "toughness": 5
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Big Walker",
+            "counter": "loyalty",
+            "count": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Maya plays a land: no empower for Rob",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Avatar of Burgeoning Echoes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "play": "Forest",
+          "seat": 1
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Avatar of Burgeoning Echoes"
+          ]
+        }
+      ]
+    }
+  ]
+}

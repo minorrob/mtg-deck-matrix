@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Arcane Amphisbaena",
+    "oracleId": "5c151e3b-fcf2-4adb-a60b-9eff0c360705",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Snake"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Deathtouch\nWhen this creature enters, empower Jace 2. (Put two loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Deathtouch",
+      "keyword": "deathtouch"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, empower Jace 2. (Put two loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "empowerJace",
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

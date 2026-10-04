@@ -178,6 +178,11 @@ const TRIGGERS = {
     ...(t.countBefore ? {countBefore: true} : {}),
     /* "An instant or sorcery spell that targets a creature" (Rehearsed Debater): what one of its targets is (rules/trigger.mjs). */
     ...(t.targets ? {targets: t.targets} : {})}),
+  /* "Whenever you activate a loyalty ability" (Ajani Unrelenting; CR 606, 602.2): a loyalty ability put on the stack by
+     you (`activator`), any permanent's; "if you removed two or more loyalty counters to activate it" (`removedAtLeast`,
+     its cost, CR 606.4). About the permanent and the player. */
+  "loyalty activated": (t) => ({on: "GameEventSpellAbilityCast", loyaltyActivated: true, activator: t.activator ?? "you",
+    ...(Number.isInteger(t.removedAtLeast) && t.removedAtLeast >= 1 ? {removedAtLeast: t.removedAtLeast} : {})}),
   /* "Whenever you attack" (CR 508.1): the attack as a whole, once, about the attacking player; "whenever you attack a player"
      (`each: "defender"`): once for each player attacked; "with two or more creatures" (`atLeast`); "if none of those
      creatures attacked you" (`notAttacking: "you"`); "with one or more non-Gnome creatures", "whenever one or more Goblins
@@ -276,6 +281,8 @@ function manaAbility(ability, id) {
      the mana is added as it resolves ("Any number of target players each lose 2 life ... You add {B}{B}", Priest of
      Forgotten Gods). */
   if ((ability.targets ?? []).length) return null;
+  /* Nor is a loyalty ability (CR 605.1a): "[+1]: Add {R}" (Way of the Pyromancer) goes on the stack, at sorcery speed. */
+  if ((ability.cost ?? []).some((a) => a?.atom === "loyalty")) return null;
   const [first, ...then] = ability.effects ?? [];
   if (first?.effect !== "addMana") return (ability.effects ?? []).some((e) => e?.effect === "addMana") ? "unbuilt" : null;
   const cost = ability.cost ?? [];
@@ -708,9 +715,11 @@ export function compileScript(script) {
       /* MODES CHOSEN AS IT IS PUT ON THE STACK (CR 603.3c, 700.2b): a triggered ability whose one effect is a modal -- its
          modes and their targets are chosen then (rules/trigger.mjs), never as it resolves, whether its modes name targets or
          not (Tireless Provisioner). "You may choose two" (`mayChooseNone`): that many, or none, and it is removed from the
-         stack. "Each mode must target a different player" (`differentPlayers`, Shadrix Silverquill). */
+         stack. "Each mode must target a different player" (`differentPlayers`, Shadrix Silverquill). A choice another player
+         makes as it resolves ("the owner of up to one other target nonland permanent puts it on their choice of the top or
+         bottom of their library", Plan for All Outcomes: `chooser`) is no mode of the ability's, and waits for it to resolve. */
       const lone = (ability.effects ?? []).length === 1 ? ability.effects[0] : null;
-      const modal = lone?.effect === "modal"
+      const modal = lone?.effect === "modal" && lone.chooser === undefined
         ? {choose: lone.choose ?? 1, ...(lone.mayChooseNone ? {mayChooseNone: true} : {}), ...(lone.differentPlayers ? {differentPlayers: true} : {}),
           modes: (lone.modes ?? []).map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? []}))} : null;
       if (modal && (ability.optional || (ability.targets ?? []).length)) problems.push(`${ability.text}: a modal triggered ability names its targets in its modes, and "you may" as mayChooseNone`);

@@ -51,6 +51,16 @@ export const PREDEFINED_TOKENS = Object.freeze({
   Clue: {name: "Clue", types: ["Artifact"], subtypes: ["Clue"],
     abilities: [{id: "clue", kind: "activated", text: "{2}, Sacrifice this artifact: Draw a card.", targets: [],
       cost: [{atom: "mana", cost: "{2}"}, {atom: "sacrifice", self: true}], effects: [{effect: "draw", count: 1}]}]},
+  /* EMPOWER JACE's token (the live-game plan of 2026-10-04): "a blue Jace planeswalker token with '[-1]: Surveil 1' and
+     '[-3]: Draw a card.'" -- no printed loyalty, so it enters with none and the empower puts its counters on (CR 306.5b is a
+     printed loyalty's; script/resolution.mjs). Its abilities as a card's are compiled (cards/index.mjs, a loyalty cost). */
+  Jace: {name: "Jace", types: ["Planeswalker"], subtypes: ["Jace"], colors: ["U"],
+    abilities: [
+      {id: "jace-surveil", kind: "activated", text: "\u22121: Surveil 1.", targets: [], loyalty: -1, timing: "sorcery",
+        cost: [{atom: "removeCounters", self: true, counter: "loyalty", count: 1}], effects: [{effect: "surveil", count: 1}]},
+      {id: "jace-draw", kind: "activated", text: "\u22123: Draw a card.", targets: [], loyalty: -3, timing: "sorcery",
+        cost: [{atom: "removeCounters", self: true, counter: "loyalty", count: 3}], effects: [{effect: "draw", count: 1}]},
+    ]},
   /* CR 111.10v (Splinter, the Mentor) */
   Mutagen: {name: "Mutagen", types: ["Artifact"], subtypes: ["Mutagen"],
     abilities: [{id: "mutagen", kind: "activated", text: "{1}, {T}, Sacrifice this token: Put a +1/+1 counter on target creature. Activate only as a sorcery.",
@@ -493,7 +503,15 @@ export function effectUntil(state, params, context) {
     ...(params.rule ? {rule: params.rule} : {layer: params.layer ?? 6, sublayer: params.sublayer}),
     /* `selector`: what it affects, fixed as it resolves (CR 611.2c) -- "each instant and sorcery card in your graveyard
        gains flashback until end of turn" does not reach a card put there later. A choice (`anyOf`) is each of them. */
-    affects: params.targets ? {ids: params.targets} : params.selector ? {ids: fixedAt(state, params.selector, context)} : params.affects ?? {what: "permanent"},
+    affects: params.targets ? {ids: params.targets} : params.selector ? {ids: fixedAt(state, params.selector, context)}
+      /* "Creatures they control can't attack Jaces you control this turn" (Jace, Multiverse Architect): a rule changed,
+         not a characteristic, so it reaches the creatures that player controls as they are -- one that arrives later
+         included (CR 611.2c is about characteristics) -- `who` the player, bound as it resolves ("that player"). */
+      : params.rule === "cant-attack" && Array.isArray(params.who) ? {what: "permanent", controller: params.who[0] ?? -1}
+      : params.affects ?? {what: "permanent"},
+    /* `toward`: which planeswalkers they can't attack ("Jaces you control"), "you" this effect's controller -- attacking a
+       player, or any other planeswalker, they still may (rules/statics.mjs, cantAttack). */
+    ...(params.rule === "cant-attack" && params.toward ? {toward: params.toward} : {}),
     apply: params.apply ?? {},
     /* "Until end of turn" (the default), "until your next turn", or "ever": an effect with no duration -- "up to one other
        target creature loses all abilities" (Abigale) -- lasting as long as what it affects does (CR 611.2a; a permanent

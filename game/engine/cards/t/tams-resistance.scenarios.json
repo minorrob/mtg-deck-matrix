@@ -1,0 +1,226 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Tam's Resistance",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Jace": {
+      "types": [
+        "Planeswalker"
+      ],
+      "subtypes": [
+        "Jace"
+      ],
+      "colors": [
+        "U"
+      ],
+      "manaCost": null,
+      "token": true,
+      "loyalty": 3,
+      "abilities": [
+        {
+          "id": "jace-surveil",
+          "kind": "activated",
+          "text": "−1: Surveil 1.",
+          "targets": [],
+          "loyalty": -1,
+          "timing": "sorcery",
+          "cost": [
+            {
+              "atom": "removeCounters",
+              "self": true,
+              "counter": "loyalty",
+              "count": 1
+            }
+          ],
+          "effects": [
+            {
+              "effect": "surveil",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "id": "jace-draw",
+          "kind": "activated",
+          "text": "−3: Draw a card.",
+          "targets": [],
+          "loyalty": -3,
+          "timing": "sorcery",
+          "cost": [
+            {
+              "atom": "removeCounters",
+              "self": true,
+              "counter": "loyalty",
+              "count": 3
+            }
+          ],
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    "Walker": {
+      "types": [
+        "Planeswalker"
+      ],
+      "subtypes": [
+        "Ajani"
+      ],
+      "manaCost": "{2}{W}",
+      "colors": [
+        "W"
+      ],
+      "loyalty": 9
+    }
+  },
+  "scenarios": [
+    {
+      "name": "On Rob's Bear: a +1/+1 counter and vigilance, and a Jace token with 4 loyalty",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tam's Resistance"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Tam's Resistance",
+          "targets": [
+            [
+              {
+                "card": "Bear"
+              }
+            ]
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Jace",
+            "counter": "loyalty",
+            "count": 4
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bear",
+            "has": [
+              "Vigilance"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "With no target at all: Jace empowered still",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Jace"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tam's Resistance"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Tam's Resistance",
+          "targets": [
+            []
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Jace",
+            "counter": "loyalty",
+            "count": 7
+          }
+        }
+      ]
+    }
+  ]
+}

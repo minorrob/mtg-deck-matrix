@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Saheeli, Jewel of Avishkar",
+    "oracleId": "83705258-1f42-41db-a32e-de99ffd759eb",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Artificer"
+    ],
+    "manaCost": "{2}{U}{R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Thopters you control have haste.\nWhenever you cast a noncreature spell, create a 1/1 colorless Thopter artifact creature token with flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Thopters you control have haste.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "subtypes": [
+          "Thopter"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Haste"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a noncreature spell, create a 1/1 colorless Thopter artifact creature token with flying.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "nonTypes": [
+            "Creature"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Thopter",
+            "types": [
+              "Artifact",
+              "Creature"
+            ],
+            "subtypes": [
+              "Thopter"
+            ],
+            "colors": [],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

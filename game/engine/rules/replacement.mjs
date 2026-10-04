@@ -60,6 +60,13 @@ function unlessHolds(state, unless, player) {
     const opponents = state.players.filter((p) => p.id !== player && !p.lost).length;
     return opponents >= (unless.opponents.min ?? 1) && (unless.opponents.max === undefined || opponents <= unless.opponents.max);
   }
+  /* "Unless your opponents control eight or more lands" (the Turbulent lands): what this player's opponents control, all
+     of them together, at least `min`. */
+  if (unless.opponentsControl) {
+    const theirs = compileSelector({...unless.opponentsControl, controller: "opponent"});
+    const count = state.zones.battlefield.filter((id) => theirs(state, id, {controller: player})).length;
+    return count >= (unless.min ?? 1) && (unless.max === undefined || count <= unless.max);
+  }
   const alternatives = Array.isArray(unless.controls?.anyOf) ? unless.controls.anyOf : [unless.controls ?? {}];
   const matchers = alternatives.map((selector) => compileSelector({...selector, controller: "you"}));
   const count = state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player}))).length;

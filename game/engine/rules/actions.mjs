@@ -1432,7 +1432,9 @@ function perform(state, player, action, during = null) {
       ...(action.x !== undefined ? {x: action.x} : {}), ...(leavesSelf && object.zone === "battlefield" ? {lastKnown: lastKnown(state, action.objectId)} : {})});
     events.push(event("GameEventSpellAbilityCast", state, {
       card,
-      sa: {isSpell: false, abilityId: entry.abilityId, stackId: entry.stackId, description: ability.text},
+      sa: {isSpell: false, abilityId: entry.abilityId, stackId: entry.stackId, description: ability.text,
+        /* A loyalty ability says its cost (CR 606.4): "whenever you activate a loyalty ability" (rules/trigger.mjs). */
+        ...(ability.loyalty !== undefined ? {loyalty: ability.loyalty} : {})},
       si: {isTrigger: false, actor: {playerId: player, name: state.players[player].name}},
       targetDescription,
     }));
@@ -1509,6 +1511,9 @@ function perform(state, player, action, during = null) {
     if (ability.exhaust) (object.exhausted ??= []).push(ability.id);
     /* A loyalty ability activated: none other of this permanent's this turn (CR 606.3). */
     if (ability.loyalty !== undefined) recordUse(state, action.objectId, "loyalty");
+    /* And by its player, whatever becomes of the permanent (CR 400.7): "if you've activated a loyalty ability this turn"
+       (Kiora of Salt and Sand; script/condition.mjs, `loyaltyThisTurn`). */
+    if (ability.loyalty !== undefined) state.players[player].loyaltyThisTurn = (state.players[player].loyaltyThisTurn ?? 0) + 1;
     return events;
   }
 

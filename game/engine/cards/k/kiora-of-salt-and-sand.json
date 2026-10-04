@@ -1,0 +1,116 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kiora of Salt and Sand",
+    "oracleId": "e70bb7f8-8098-49c5-929c-68f63cd821c5",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Merfolk",
+      "Noble"
+    ],
+    "manaCost": "{1}{G}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Whenever you attack, if you've activated a loyalty ability this turn, untap target attacking creature. It can't be blocked this turn.\nPlaneswalkers you control have \"[−8]: Create an 8/8 blue Leviathan creature token with hexproof.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you attack, if you've activated a loyalty ability this turn, untap target attacking creature. It can't be blocked this turn.",
+      "trigger": {
+        "on": "attackers declared"
+      },
+      "effects": [
+        {
+          "effect": "untap",
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "effectUntil",
+          "targets": {
+            "target": 0
+          },
+          "rule": "cant-be-blocked",
+          "until": "end-of-turn"
+        }
+      ],
+      "condition": {
+        "loyaltyThisTurn": true
+      },
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "attacking": true
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Planeswalkers you control have \"[−8]: Create an 8/8 blue Leviathan creature token with hexproof.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "types": [
+          "Planeswalker"
+        ]
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "activated",
+            "text": "[−8]: Create an 8/8 blue Leviathan creature token with hexproof.",
+            "cost": [
+              {
+                "atom": "loyalty",
+                "amount": -8
+              }
+            ],
+            "effects": [
+              {
+                "effect": "createToken",
+                "count": 1,
+                "token": {
+                  "name": "Leviathan",
+                  "types": [
+                    "Creature"
+                  ],
+                  "subtypes": [
+                    "Leviathan"
+                  ],
+                  "colors": [
+                    "U"
+                  ],
+                  "power": 8,
+                  "toughness": 8,
+                  "keywords": [
+                    "Hexproof"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

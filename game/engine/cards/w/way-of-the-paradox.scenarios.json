@@ -1,0 +1,285 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Way of the Paradox",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Jace": {
+      "types": [
+        "Planeswalker"
+      ],
+      "subtypes": [
+        "Jace"
+      ],
+      "colors": [
+        "U"
+      ],
+      "manaCost": null,
+      "token": true,
+      "loyalty": 3,
+      "abilities": [
+        {
+          "id": "jace-surveil",
+          "kind": "activated",
+          "text": "−1: Surveil 1.",
+          "targets": [],
+          "loyalty": -1,
+          "timing": "sorcery",
+          "cost": [
+            {
+              "atom": "removeCounters",
+              "self": true,
+              "counter": "loyalty",
+              "count": 1
+            }
+          ],
+          "effects": [
+            {
+              "effect": "surveil",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "id": "jace-draw",
+          "kind": "activated",
+          "text": "−3: Draw a card.",
+          "targets": [],
+          "loyalty": -3,
+          "timing": "sorcery",
+          "cost": [
+            {
+              "atom": "removeCounters",
+              "self": true,
+              "counter": "loyalty",
+              "count": 3
+            }
+          ],
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    "Walker": {
+      "types": [
+        "Planeswalker"
+      ],
+      "subtypes": [
+        "Ajani"
+      ],
+      "manaCost": "{2}{W}",
+      "colors": [
+        "W"
+      ],
+      "loyalty": 9
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Cast for {2}{G}: no Jace token, so a blue one is made, with 5 loyalty",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Way of the Paradox"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Way of the Paradox"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Jace",
+            "counter": "loyalty",
+            "count": 5
+          }
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Way of the Paradox",
+            "Jace"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Rob has a Jace token at 3: 5 more on it, and no second one made",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Jace"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Way of the Paradox"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Way of the Paradox"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Jace",
+            "counter": "loyalty",
+            "count": 8
+          }
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Way of the Paradox",
+            "Jace"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Jace token's -1: 1 life, and a second land this turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Way of the Paradox",
+            "Jace"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest",
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Forest"
+        },
+        {
+          "activate": "Jace",
+          "ability": "jace-surveil"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        },
+        {
+          "play": "Island"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 41
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": []
+        }
+      ]
+    }
+  ]
+}

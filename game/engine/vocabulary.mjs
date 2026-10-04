@@ -72,7 +72,7 @@ export const PRIMITIVES = Object.freeze({
   ]),
   counters: Object.freeze([
     "putCounter", "putCounterAll", "removeCounter", "proliferate", "multiplyCounters",
-    "moveCounters", "replaceCounters", "amass", "poison", "winGame", "goad",
+    "moveCounters", "replaceCounters", "amass", "poison", "winGame", "goad", "empowerJace",
   ]),
   permanents: Object.freeze([
     "createToken", "copyPermanent", "becomeCopy", "earthbend", "populate", "unlessPays", "animate", "animateAll", "attach", "gainControl", "setState",
@@ -107,6 +107,8 @@ export const TRIGGER_EVENTS = Object.freeze([
   "put into graveyard", "left graveyard",
   "counter added", "counter added once", "life gained", "life lost", "token created",
   "becomes monstrous", "chapter",
+  /* "Whenever you activate a loyalty ability" (CR 606; the live-game plan of 2026-10-04, P4). */
+  "loyalty activated",
 ]);
 
 /** The cost atoms of §12.2. The two symbolic ones are named; the rest are structural. */

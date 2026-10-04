@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Turbulent Crater",
+    "oracleId": "e86a0b64-fe4a-4ea8-99e8-35860dbac765",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Swamp",
+      "Mountain"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "({T}: Add {B} or {R}.)\nThis land enters tapped unless your opponents control eight or more lands.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {B} or {R}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "B": 1
+            },
+            {
+              "R": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "replacement",
+      "text": "This land enters tapped unless your opponents control eight or more lands.",
+      "watches": {
+        "event": "enters",
+        "who": "self",
+        "unless": {
+          "opponentsControl": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ]
+          },
+          "min": 8
+        }
+      },
+      "change": {
+        "entersTapped": true
+      }
+    }
+  ]
+}

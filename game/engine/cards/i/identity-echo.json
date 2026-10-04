@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Identity Echo",
+    "oracleId": "4dbf8c43-d7c5-4037-875e-6accd87aaf6f",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{3}{R}: Exile target creature or planeswalker you control. Reveal cards from the top of your library until you reveal a creature or planeswalker card. Put that card onto the battlefield and the rest on the bottom of your library in a random order. Activate only as a sorcery.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{3}{R}: Exile target creature or planeswalker you control. Reveal cards from the top of your library until you reveal a creature or planeswalker card. Put that card onto the battlefield and the rest on the bottom of your library in a random order. Activate only as a sorcery.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{R}"
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "controller": "you",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "controller": "you",
+              "types": [
+                "Planeswalker"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile"
+        },
+        {
+          "effect": "digUntil",
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "types": [
+                  "Planeswalker"
+                ]
+              }
+            ]
+          },
+          "count": 1,
+          "found": {
+            "to": "battlefield"
+          },
+          "rest": "bottom"
+        }
+      ]
+    }
+  ]
+}

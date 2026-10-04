@@ -1,0 +1,196 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Budding Insurgent",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Idol": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    },
+    "Shrine": {
+      "types": [
+        "Enchantment"
+      ],
+      "supertypes": [
+        "Legendary"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    },
+    "Ward Charm": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    },
+    "Jolt": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{1}{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Jolt deals 2 damage to target player.",
+        "targets": [
+          {
+            "what": "player"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 2,
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Sacrificed: Maya's legendary Shrine destroyed, and Rob draws",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Budding Insurgent"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Shrine"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Budding Insurgent",
+          "targets": [
+            {
+              "card": "Shrine",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Shrine"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Budding Insurgent"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maya's Idol, an artifact: destroyed, and no card",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Budding Insurgent"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Idol"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Budding Insurgent",
+          "targets": [
+            {
+              "card": "Idol",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Idol"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": []
+        }
+      ]
+    }
+  ]
+}

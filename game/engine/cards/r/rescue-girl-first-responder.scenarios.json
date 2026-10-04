@@ -1,0 +1,159 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Rescue Girl, First Responder",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Idol": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    },
+    "Shrine": {
+      "types": [
+        "Enchantment"
+      ],
+      "supertypes": [
+        "Legendary"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    },
+    "Ward Charm": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    },
+    "Jolt": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{1}{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Jolt deals 2 damage to target player.",
+        "targets": [
+          {
+            "what": "player"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 2,
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{T}: Rob's Bear back to Rob's hand",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Rescue Girl, First Responder",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Rescue Girl, First Responder",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Rescue Girl, First Responder",
+          "is": true
+        }
+      ]
+    },
+    {
+      "name": "Only during Rob's turn: not on Maya's",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Rescue Girl, First Responder",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Rescue Girl, First Responder",
+            "seat": 0
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

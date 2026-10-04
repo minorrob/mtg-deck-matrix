@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Turbulent Shore",
+    "oracleId": "c13c5f07-dac5-47d0-a088-e24b9fbec3c5",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Plains",
+      "Island"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "({T}: Add {W} or {U}.)\nThis land enters tapped unless your opponents control eight or more lands.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {W} or {U}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "W": 1
+            },
+            {
+              "U": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "replacement",
+      "text": "This land enters tapped unless your opponents control eight or more lands.",
+      "watches": {
+        "event": "enters",
+        "who": "self",
+        "unless": {
+          "opponentsControl": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ]
+          },
+          "min": 8
+        }
+      },
+      "change": {
+        "entersTapped": true
+      }
+    }
+  ]
+}
