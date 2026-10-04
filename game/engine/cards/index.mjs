@@ -287,8 +287,8 @@ function manaAbility(ability, id) {
     : null;
   if (!adds) return "unbuilt";
   /* "Spend this mana only to cast a creature spell of the chosen type" (CR 106.6; rules/restricted-mana.mjs): a spell or
-     an ability's source it may pay for, each a selector, and "that spell can't be countered". */
-  if (first.spendOnly !== undefined && !spendOnlyValid(first.spendOnly)) return "unbuilt";
+     an ability's source it may pay for, each a selector, and "that spell can't be countered" -- read as every addMana's
+     is, where the compiler walks an ability's effects. */
   const mana = cost.find((a) => a.atom === "mana");
   const life = cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0);
   return {id, kind: "mana", tapSelf: cost.some((a) => a.atom === "{T}"), ...adds, text: ability.text,
@@ -560,6 +560,10 @@ export function compileScript(script) {
       if (effect.effect === "addPhase" && !(effect.phases ?? ["combat"]).every((kind) => ADDED_PHASES.includes(kind))) problems.push(`addPhase: a phase of ${ADDED_PHASES.join(", ")}`);
       /* "You may play that card" until a time (effects/zones.mjs): this turn, or the end of its controller's next turn. */
       if (effect.effect === "mayPlay" && !MAY_PLAY_UNTIL.includes(effect.until ?? "end-of-turn")) problems.push(`mayPlay: until ${MAY_PLAY_UNTIL.join(" or ")}`);
+      /* "Spend this mana only to cast instant and sorcery spells" (effects/resources.mjs), "only to cast a creature spell of
+         the chosen type" (a mana ability's, cards/index.mjs manaAbility): what the mana may pay for, read here for both. */
+      if (effect.effect === "addMana" && effect.spendOnly !== undefined && !spendOnlyValid(effect.spendOnly))
+        problems.push(`addMana: a spending restriction says what it pays for -- a spell, an ability's source, or both, each a selector (${SPEND_ONLY_KEYS.join(", ")})`);
     }
 
     if (ability.kind === "spell") {
@@ -598,7 +602,7 @@ export function compileScript(script) {
     }
     if (ability.kind === "activated") {
       const mana = manaAbility(ability, id);
-      if (mana === "unbuilt") { problems.push(`${ability.text}: a mana ability the engine cannot run yet (a sacrifice, a target, or a question in it, or a spending restriction it cannot read)`); return; }
+      if (mana === "unbuilt") { problems.push(`${ability.text}: a mana ability the engine cannot run yet (a sacrifice, a target, or a question in it)`); return; }
       if (mana) { abilities.push(mana); return; }
       /* A LOYALTY ABILITY (CR 606): "+1:", "−2:", "0:" -- `{atom: "loyalty", amount}`, paid by putting on or removing that
          many loyalty counters (606.4), activated at sorcery speed and only if no loyalty ability of the permanent has been
@@ -652,7 +656,12 @@ export function compileScript(script) {
          mana of any type that land produced" -- with no target. It is not put on the stack (rules/trigger.mjs, manaTriggered). */
       const [adds] = effects ?? [];
       if (trigger?.on === "GameEventManaPool" && effects.length === 1 && adds?.effect === "addMana" && !(ability.targets ?? []).length && !ability.optional
-        && (MANA(adds.mana) || adds.produced === true)) trigger.manaAbility = adds.produced === true ? {produced: true} : {mana: {...adds.mana}};
+        && (MANA(adds.mana) || adds.produced === true)) {
+        /* What a triggered mana ability adds goes straight to the pool: one that says what its mana may pay for is refused
+           until it is carried there. */
+        if (adds.spendOnly !== undefined) problems.push(`${ability.text}: a triggered mana ability whose mana may pay for only some things is not built`);
+        trigger.manaAbility = adds.produced === true ? {produced: true} : {mana: {...adds.mana}};
+      }
       /* MODES CHOSEN AS IT IS PUT ON THE STACK (CR 603.3c, 700.2b): a triggered ability whose one effect is a modal -- its
          modes and their targets are chosen then (rules/trigger.mjs), never as it resolves, whether its modes name targets or
          not (Tireless Provisioner). "You may choose two" (`mayChooseNone`): that many, or none, and it is removed from the

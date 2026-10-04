@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Abstract Paintmage",
+    "oracleId": "bc899d5c-0a91-4f19-a3e4-3078ae966110",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Djinn",
+      "Sorcerer"
+    ],
+    "manaCost": "{U}{U/R}{R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "At the beginning of your first main phase, add {U}{R}. Spend this mana only to cast instant and sorcery spells.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your first main phase, add {U}{R}. Spend this mana only to cast instant and sorcery spells.",
+      "trigger": {
+        "on": "step",
+        "step": "MAIN1"
+      },
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "U": 1,
+            "R": 1
+          },
+          "spendOnly": {
+            "spell": {
+              "anyOf": [
+                {
+                  "types": [
+                    "Instant"
+                  ]
+                },
+                {
+                  "types": [
+                    "Sorcery"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
