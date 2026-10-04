@@ -368,7 +368,12 @@ export const costAtomBuilt = (atom) => (COST_ATOMS_BUILT.includes(atom?.atom) &&
   /* "Untap a tapped creature you control", "untap two" (Halo Fountain, batch 75): which, chosen as it is activated (untapChoices). */
   || (atom?.atom === "untapCreature" && Number.isInteger(atom.count) && atom.count >= 1)
   /* "Exile this card from your graveyard" (encore, CR 702.141a): an ability of the card in its owner's graveyard. */
-  || (atom?.atom === "exileFromGraveyard" && atom.self === true);
+  || (atom?.atom === "exileFromGraveyard" && atom.self === true)
+  /* "Exile this creature" (Hanged Executioner): the permanent itself, from the battlefield. */
+  || (atom?.atom === "exile" && atom.self === true)
+  /* "Remove a counter from this creature" (Burdened Stoneback): one counter on it, of whichever kind is chosen as it is
+     activated -- one offer for each kind it has. */
+  || (atom?.atom === "removeAnyCounter" && atom.self === true && (atom.count ?? 1) === 1);
 
 /* CREW (CR 702.122a): the sets of other untapped creatures you control whose power totals at least N -- each smallest
    such set, so no offer taps a creature it does not need; ids ascending, and no more than CREW_OFFERS_MAX of them. A
@@ -819,6 +824,7 @@ function offers(state, player) {
         /* A permanent you control to sacrifice, or to return to its owner's hand, or a card in your hand to discard: one
            offer each (CR 602.2b). No card to discard, and the ability can't be activated. */
         const crew = crewAtom(ability.cost), tapper = tapAtom(ability.cost), untapper = untapAtom(ability.cost);
+        const anyCounter = (ability.cost ?? []).some((a) => a?.atom === "removeAnyCounter" && a.self === true);
         /* "Sacrifice two other creatures" (Priest of Forgotten Gods): each set of `count` of them, one offer each, as the
            cards of "discard two cards" are; fewer than that there, and it can't be activated. */
         const fodder = atom ? discardSets(sacrificeChoices(state, player, id, atom.selector), atom.count ?? 1).map((s) => ({sacrifice: s}))
@@ -828,7 +834,8 @@ function offers(state, player) {
             toss.count ?? 1).map((d) => ({discard: d}))
           : crew ? crewChoices(state, player, id, crew.power).map((set) => ({crew: set}))
           : tapper ? tapChoices(state, player, id, tapper.selector).map((t) => ({tap: t}))
-          : untapper ? untapChoices(state, player, untapper.count).map((set) => ({untap: set})) : [null];
+          : untapper ? untapChoices(state, player, untapper.count).map((set) => ({untap: set}))
+          : anyCounter ? Object.entries(object.counters ?? {}).filter(([, n]) => n > 0).map(([counter]) => ({counter})) : [null];
         for (const costChoice of fodder)
           actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment, ...(X !== null ? {x: X} : {}),
             /* A loyalty ability says its loyalty cost (CR 606.4), for a pilot to weigh. */
@@ -837,6 +844,7 @@ function offers(state, player) {
               : costChoice.untap ? costChoice.untap.map((c) => state.objects[c].card)
               : Array.isArray(costChoice.discard) ? costChoice.discard.map((c) => state.objects[c].card)
               : Array.isArray(costChoice.sacrifice) ? costChoice.sacrifice.map((c) => state.objects[c].card)
+              : costChoice.counter !== undefined ? [`a ${costChoice.counter} counter`]
               : [state.objects[costChoice.sacrifice ?? costChoice.returnToHand ?? costChoice.discard ?? costChoice.tap].card]} : {})}, ability,
             /* "With mana value X": the X of this offer (script/filter.mjs). */
             {controller: player, source: id, ...(X !== null ? {x: X} : {})}));
@@ -1341,8 +1349,8 @@ function perform(state, player, action, during = null) {
     /* Recomputed, as a cast's payment is: the pool may have moved since the offer. */
     const payment = costPayment(state, player, action.objectId, ability.cost, action.x ?? 0, abilityLess(state, player, action.objectId, ability));
     if (!payment || !withinLimit(state, action.objectId, ability)) throw new Error(`${object.card}'s ability cannot be paid for now`);
-    /* A source the cost sacrifices is read as it last was ("a 2/2 Spider for each counter on this creature"). */
-    const sacrificesSelf = (ability.cost ?? []).some((a) => a.atom === "sacrifice" && a.self === true);
+    /* A source the cost sacrifices or exiles is read as it last was ("a 2/2 Spider for each counter on this creature"). */
+    const leavesSelf = (ability.cost ?? []).some((a) => ["sacrifice", "exile"].includes(a.atom) && a.self === true);
     const card = cardRef(state, action.objectId);
     const targets = structuredClone(action.targets ?? []);
     const targetDescription = targets.map((t) => targetName(state, t)).join(", ");
@@ -1356,7 +1364,7 @@ function perform(state, player, action, during = null) {
       ...(attacked !== undefined ? {about: {player: attacked, ...(was.planeswalker !== undefined ? {planeswalker: was.planeswalker} : {})}} : {}),
       /* Station: "charge counters equal to the tapped creature's power" -- the creature it tapped is what it is about. */
       ...(action.costChoice?.tap !== undefined ? {about: {card: action.costChoice.tap}} : {}),
-      ...(action.x !== undefined ? {x: action.x} : {}), ...(sacrificesSelf && object.zone === "battlefield" ? {lastKnown: lastKnown(state, action.objectId)} : {})});
+      ...(action.x !== undefined ? {x: action.x} : {}), ...(leavesSelf && object.zone === "battlefield" ? {lastKnown: lastKnown(state, action.objectId)} : {})});
     events.push(event("GameEventSpellAbilityCast", state, {
       card,
       sa: {isSpell: false, abilityId: entry.abilityId, stackId: entry.stackId, description: ability.text},
@@ -1386,6 +1394,10 @@ function perform(state, player, action, during = null) {
       /* CR 701.21a: to sacrifice is to move a permanent you control to its owner's graveyard -- through the
          replacements and with its last known information, like any death, so "when this dies" still sees it. */
       if (atom.atom === "sacrifice" && atom.self === true) sacrificeOne(state, action.objectId, events);
+      /* "Exile this creature": it leaves for exile, read afterward as it last was. */
+      if (atom.atom === "exile" && atom.self === true) moveOne(state, action.objectId, "exile", events, {owner: object.owner});
+      /* "Remove a counter": one of the kind chosen with the offer. */
+      if (atom.atom === "removeAnyCounter" && action.costChoice?.counter !== undefined) payCounters(state, action.objectId, [{counter: action.costChoice.counter, count: 1, put: false}]);
       /* Exiling it from the graveyard is the cost of encore (CR 702.141a), paid after the ability is on the stack: "this card"
          is then that card in exile (CR 400.7), what the ability is about. */
       if (atom.atom === "exileFromGraveyard" && atom.self === true) {

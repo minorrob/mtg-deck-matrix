@@ -178,6 +178,8 @@ export function runScenario(scenario, cards, fixtures = {}) {
     for (const key of ["sacrifice", "discard", "untap"]) if (step[key] !== undefined) found = found.filter((a) => [].concat(step[key]).every((n) => (a.costNames ?? []).includes(n)));
     /* Which creature a "tap another untapped creature you control" cost taps (station): the offer that names it. */
     if (step.tapping !== undefined) found = found.filter((a) => a.costChoice?.tap !== undefined && state.objects[a.costChoice.tap]?.card === step.tapping);
+    /* Which kind of counter a "remove a counter from this creature" cost removes: the offer for that kind. */
+    if (step.counter !== undefined) found = found.filter((a) => a.costChoice?.counter === step.counter);
     if (!found.length && step.optional) return;
     if (!found.length) fail(`${names[seat]} is not offered ${kind} ${card}${step.targets ? ` at ${JSON.stringify(step.targets)}` : ""}`);
     record(applyAction(state, seat, found[0]));
