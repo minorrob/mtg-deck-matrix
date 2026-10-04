@@ -36,7 +36,7 @@ import {
 } from "./resources.mjs";
 import {
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
-  becomeCopy, earthbend, goad, immediateTrigger,
+  becomeCopy, earthbend, goad, immediateTrigger, investigate,
 } from "./permanents.mjs";
 
 /**
@@ -158,6 +158,8 @@ export const EFFECTS = Object.freeze({
   shuffle,
   /* X5k: "exile ... until this leaves the battlefield" (CR 610.3). */
   exileUntil,
+  /* Rob's Priority Batch 10.3, its twenty-second slice: investigate, a Clue token (CR 701.16a). */
+  investigate,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */

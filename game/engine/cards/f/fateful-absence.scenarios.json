@@ -1,0 +1,226 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Fateful Absence",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Clue": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [
+        "Clue"
+      ],
+      "manaCost": "",
+      "colors": [],
+      "token": true,
+      "abilities": [
+        {
+          "id": "clue",
+          "kind": "activated",
+          "text": "{2}, Sacrifice this artifact: Draw a card.",
+          "targets": [],
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{2}"
+            },
+            {
+              "atom": "sacrifice",
+              "self": true
+            }
+          ],
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    "Tap Spell": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Tap target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "tap",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's Big Bear destroyed, and Maya investigates: the Clue is Maya's",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Fateful Absence"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Big Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Fateful Absence",
+          "targets": [
+            {
+              "card": "Big Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Big Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Clue"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Rob's own Bear destroyed: the Clue is Rob's",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Fateful Absence"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Fateful Absence",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Fateful Absence"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Wastes",
+            "Clue"
+          ]
+        }
+      ]
+    }
+  ]
+}

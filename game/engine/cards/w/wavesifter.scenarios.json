@@ -1,0 +1,279 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Wavesifter",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Clue": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [
+        "Clue"
+      ],
+      "manaCost": "",
+      "colors": [],
+      "token": true,
+      "abilities": [
+        {
+          "id": "clue",
+          "kind": "activated",
+          "text": "{2}, Sacrifice this artifact: Draw a card.",
+          "targets": [],
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{2}"
+            },
+            {
+              "atom": "sacrifice",
+              "self": true
+            }
+          ],
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    "Tap Spell": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Tap target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "tap",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Evoked for {G}{U}: two Clue tokens, and it is sacrificed; a Clue cracked for {2}: a card",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wavesifter"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Wavesifter",
+          "evoke": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0,
+            1
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Forest",
+                "Island",
+                "Wastes",
+                "Wastes",
+                "Clue",
+                "Clue"
+              ]
+            },
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Wavesifter"
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Clue"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Forest",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Clue"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cast for {3}{G}{U}: two Clues, and the 3/2 flier stays",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wavesifter"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Wavesifter",
+          "evoke": false
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Forest",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wavesifter",
+            "Clue",
+            "Clue"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Wavesifter",
+            "has": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
