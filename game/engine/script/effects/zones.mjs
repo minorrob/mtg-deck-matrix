@@ -492,14 +492,18 @@ export function digUntil(state, params, context, rng = null) {
 export function mill(state, params, context) {
   const events = [];
   const count = params.count ?? 1;
+  const milled = [];
   for (const player of playersFor(state, params.who, context.controller)) {
     for (let i = 0; i < count; i += 1) {
       const library = cardsIn(state, "library", player);
       if (library.length === 0) break;
       /* "Exile the top card of your library" is the same motion to another zone. */
-      moveOne(state, library[0], params.to ?? "graveyard", events, {owner: player});
+      const moved = moveOne(state, library[0], params.to ?? "graveyard", events, {owner: player});
+      if (moved !== null) milled.push(moved);
     }
   }
+  /* "A card that player milled this way" (The Ur-Sphinx): what this milled, for the effects after it. */
+  if (params.remember) context.remembered = milled.filter((id) => state.objects[id]);
   return events;
 }
 

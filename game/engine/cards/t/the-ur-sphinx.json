@@ -1,0 +1,88 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "The Ur-Sphinx",
+    "oracleId": "4a3fdb8e-4699-4bd9-84e6-3cc7fea0e1ef",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Sphinx",
+      "Avatar"
+    ],
+    "manaCost": "{6}{W}{U}{B}",
+    "colors": [
+      "B",
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "U",
+      "W"
+    ],
+    "power": 10,
+    "toughness": 10
+  },
+  "oracleText": "Eminence — As long as The Ur-Sphinx is in the command zone or on the battlefield, other Sphinx spells you cast cost {1} less to cast.\nFlying\nWhenever one or more Sphinxes you control attack, each player mills that many cards. For each player, you may cast a card that player milled this way without paying its mana cost.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Eminence — As long as The Ur-Sphinx is in the command zone or on the battlefield, other Sphinx spells you cast cost {1} less to cast.",
+      "rule": "spells-cost-less",
+      "eminence": true,
+      "affects": {
+        "subtypes": [
+          "Sphinx"
+        ],
+        "another": true
+      },
+      "amount": 1
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever one or more Sphinxes you control attack, each player mills that many cards. For each player, you may cast a card that player milled this way without paying its mana cost.",
+      "trigger": {
+        "on": "attackers declared",
+        "filter": {
+          "subtypes": [
+            "Sphinx"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "mill",
+          "who": "each",
+          "count": {
+            "thoseCards": true
+          },
+          "remember": true
+        },
+        {
+          "effect": "repeatFor",
+          "each": "player",
+          "effects": [
+            {
+              "effect": "play",
+              "from": "targets",
+              "targets": "remembered",
+              "ownedBy": "that player",
+              "free": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

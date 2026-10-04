@@ -1088,7 +1088,9 @@ export const play = {
     const from = params.from ?? "hand";
     const pool = from === "hand" ? cardsIn(state, "hand", player)
       : from === "command" ? cardsIn(state, "command", player).filter((id) => state.objects[id].commander === true)
-      : (params.targets ?? []).filter((id) => state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone));
+      : (params.targets ?? []).filter((id) => state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone)
+        /* "For each player, you may cast a card that player milled this way" (The Ur-Sphinx): `ownedBy` "that player". */
+        && (params.ownedBy !== "that player" || state.objects[id].owner === context.about?.player));
     const terms = {most, free: params.free === true, anyMana: params.anyMana === true};
     const choices = playable(state, player, pool, terms);
     if (!choices.length) return false;

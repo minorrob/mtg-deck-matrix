@@ -397,10 +397,15 @@ export function costReduction(state, player, cardId) {
   const object = state.objects[cardId];
   if (!object) return 0;
   let total = 0;
-  for (const holderId of state.zones.battlefield) {
+  /* EMINENCE (The Ur-Sphinx): "as long as this is in the command zone or on the battlefield" -- an ability that works from
+     its owner's command zone too (`eminence`, CR 113.6), its controller there its owner. */
+  const commanding = (state.zones.command ?? []).flat().filter((id) => (state.objects[id]?.abilities ?? []).some((a) => a.eminence === true));
+  for (const holderId of [...state.zones.battlefield, ...commanding]) {
     const holder = state.objects[holderId];
+    const fromCommand = holder.zone === "command";
     for (const own of holder.abilities ?? []) {
       if (own.kind !== "static" || own.rule !== "spells-cost-less") continue;
+      if (fromCommand && own.eminence !== true) continue;
       /* "Creature spells of the chosen type cost {2} less" (Urza's Incubator): its own choice. */
       const ability = chosenFor(own, holder);
       const caster = ability.caster ?? "you";
