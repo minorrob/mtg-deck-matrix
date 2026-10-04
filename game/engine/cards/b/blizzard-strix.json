@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blizzard Strix",
+    "oracleId": "c687af9b-2159-4965-a068-ce4db1ce801c",
+    "supertypes": [
+      "Snow"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bird"
+    ],
+    "manaCost": "{4}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "Flash\nFlying\nWhen this creature enters, if you control another snow permanent, exile target permanent other than this creature. Return that card to the battlefield under its owner's control at the beginning of the next end step.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, if you control another snow permanent, exile target permanent other than this creature. Return that card to the battlefield under its owner's control at the beginning of the next end step.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "andReturn": "end step"
+        }
+      ],
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "supertypes": [
+            "Snow"
+          ],
+          "controller": "you",
+          "another": true
+        }
+      },
+      "targets": [
+        {
+          "what": "permanent",
+          "another": true
+        }
+      ]
+    }
+  ]
+}
