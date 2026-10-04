@@ -1,0 +1,33 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mirkwood Pathmaker",
+  "scenarios": [
+    {
+      "name": "Four lands: 4/4",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mirkwood Pathmaker",
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Mirkwood Pathmaker",
+            "power": 4,
+            "toughness": 4
+          }
+        }
+      ]
+    }
+  ]
+}

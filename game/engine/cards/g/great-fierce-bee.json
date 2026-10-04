@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Great Fierce Bee",
+    "oracleId": "37f82ad8-4f0b-4b17-abcc-03f43d4fdf1c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Insect"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying\nWhenever one or more other creatures die, scry 1. (Look at the top card of your library. You may put that card on the bottom.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever one or more other creatures die, scry 1. (Look at the top card of your library. You may put that card on the bottom.)",
+      "trigger": {
+        "on": "dies",
+        "who": "another",
+        "filter": {
+          "types": [
+            "Creature"
+          ]
+        },
+        "batch": true
+      },
+      "effects": [
+        {
+          "effect": "scry",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Old Thrush",
+    "oracleId": "c8259b0e-131f-44f0-86d4-7c4d711b328d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bird"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "Flying\nWhen this creature enters, you gain 2 life. You may search your library for a basic land card, reveal it, then shuffle and put that card on top.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, you gain 2 life. You may search your library for a basic land card, reveal it, then shuffle and put that card on top.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 2
+        },
+        {
+          "effect": "modal",
+          "title": "You may search your library for a basic land card, reveal it, then shuffle and put that card on top.",
+          "modes": [
+            {
+              "text": "Yes",
+              "effects": [
+                {
+                  "effect": "chooseCard",
+                  "zone": "library",
+                  "selector": {
+                    "types": [
+                      "Land"
+                    ],
+                    "supertypes": [
+                      "Basic"
+                    ]
+                  },
+                  "to": "top",
+                  "reveal": true,
+                  "shuffle": true
+                }
+              ]
+            },
+            {
+              "text": "No",
+              "effects": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

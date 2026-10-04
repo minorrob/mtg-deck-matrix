@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Nighthowl Pursuer",
+    "oracleId": "89aa97d0-1aef-4ed8-b29c-7943bb3d0e60",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Wolf"
+    ],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Menace (This creature can't be blocked except by two or more creatures.)\nFerocious — Whenever this creature attacks while you control a creature with power 4 or greater, this creature gets +2/+2 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Menace (This creature can't be blocked except by two or more creatures.)",
+      "keyword": "menace"
+    },
+    {
+      "kind": "triggered",
+      "text": "Ferocious — Whenever this creature attacks while you control a creature with power 4 or greater, this creature gets +2/+2 until end of turn.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 2,
+          "toughness": 2
+        }
+      ],
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "power": {
+            "min": 4
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Undercity's Embrace",
+    "oracleId": "5b7b1839-2b44-4446-80b4-ddb59e4e835e",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target opponent sacrifices a creature of their choice. If you control a creature with power 4 or greater, you gain 4 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Target opponent sacrifices a creature of their choice. If you control a creature with power 4 or greater, you gain 4 life.",
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "who": {
+            "target": 0
+          },
+          "count": 1,
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        },
+        {
+          "effect": "gainLife",
+          "amount": 4,
+          "condition": {
+            "present": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you",
+              "power": {
+                "min": 4
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
