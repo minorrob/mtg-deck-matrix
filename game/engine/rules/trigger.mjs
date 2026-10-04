@@ -213,8 +213,13 @@ function subjects(state, event, condition, sourceId, controller) {
   /* A step's beginning is about the player whose turn it is: "that player draws an additional card" (Howling Mine). */
   if (event.kind === "GameEventTurnPhase" && fields.playerTurn?.playerId !== undefined) return [{player: fields.playerTurn.playerId}];
   /* A zone change is about what the card became, when it went somewhere public (CR 400.7e): "whenever another creature
-     you control dies, return that card to its owner's hand" returns the card in the graveyard. */
-  if (event.kind === "GameEventCardChangeZone" && fields.becomes !== undefined) return [{card: fields.becomes}];
+     you control dies, return that card to its owner's hand" returns the card in the graveyard. Onto the battlefield, it is
+     about the player who controls it too: "whenever a creature an opponent controls enters, you may have that player lose
+     1 life" (Suture Priest). */
+  if (event.kind === "GameEventCardChangeZone" && fields.becomes !== undefined) {
+    const player = fields.to?.zoneType === "Battlefield" ? state.objects[fields.becomes]?.controller : undefined;
+    return [{card: fields.becomes, ...(Number.isInteger(player) ? {player} : {})}];
+  }
   return [{}];
 }
 
