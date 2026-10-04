@@ -1,0 +1,71 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Yavimaya Elder",
+  "scenarios": [
+    {
+      "name": "{2}, sacrificed: its death finds two basic lands first, then a card is drawn",
+      "library": [
+        "Forest",
+        "Plains"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Yavimaya Elder",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Yavimaya Elder"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        },
+        {
+          "choose": [
+            "Forest",
+            "Plains"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest",
+            "Plains",
+            "Wastes"
+          ]
+        }
+      ]
+    }
+  ]
+}

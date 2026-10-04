@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Naya Panorama",
+  "scenarios": [
+    {
+      "name": "{1}, {T}, sacrificed: a basic Mountain onto the battlefield tapped",
+      "library": [
+        "Mountain"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Naya Panorama",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Naya Panorama",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Mountain"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Mountain",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Mountain"
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Naya Panorama"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Goblin Matron",
+    "oracleId": "145737a7-c597-4dec-b752-207c2d0501e3",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters, you may search your library for a Goblin card, reveal that card, put it into your hand, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, you may search your library for a Goblin card, reveal that card, put it into your hand, then shuffle.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "subtypes": [
+              "Goblin"
+            ]
+          },
+          "to": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

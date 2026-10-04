@@ -1,0 +1,92 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bant Panorama",
+    "oracleId": "0a1d817d-dce8-4e83-a380-909f7c9eee46",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {C}.\n{1}, {T}, Sacrifice this land: Search your library for a basic Forest, Plains, or Island card, put it onto the battlefield tapped, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{1}, {T}, Sacrifice this land: Search your library for a basic Forest, Plains, or Island card, put it onto the battlefield tapped, then shuffle.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "anyOf": [
+              {
+                "supertypes": [
+                  "Basic"
+                ],
+                "subtypes": [
+                  "Forest"
+                ]
+              },
+              {
+                "supertypes": [
+                  "Basic"
+                ],
+                "subtypes": [
+                  "Plains"
+                ]
+              },
+              {
+                "supertypes": [
+                  "Basic"
+                ],
+                "subtypes": [
+                  "Island"
+                ]
+              }
+            ]
+          },
+          "to": "battlefield",
+          "tapped": true,
+          "shuffle": true
+        }
+      ]
+    }
+  ]
+}

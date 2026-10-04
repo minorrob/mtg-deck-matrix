@@ -1,0 +1,30 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Gangly Stompling",
+  "scenarios": [
+    {
+      "name": "It has trample",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gangly Stompling"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Gangly Stompling",
+            "has": [
+              "Trample"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

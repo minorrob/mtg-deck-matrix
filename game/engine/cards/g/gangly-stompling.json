@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gangly Stompling",
+    "oracleId": "60206d4e-4301-4d7a-a68e-46a2ad9fc407",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Shapeshifter"
+    ],
+    "manaCost": "{2}{R/G}",
+    "colors": [
+      "G",
+      "R"
+    ],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": 4,
+    "toughness": 2
+  },
+  "oracleText": "Changeling (This card is every creature type.)\nTrample",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Changeling (This card is every creature type.)",
+      "keyword": "changeling"
+    },
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Akoum Hellhound",
+  "scenarios": [
+    {
+      "name": "A land enters: 2/3",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Akoum Hellhound"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Mountain"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Akoum Hellhound",
+            "power": 2,
+            "toughness": 3
+          }
+        }
+      ]
+    }
+  ]
+}

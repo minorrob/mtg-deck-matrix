@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Fanatical Firebrand",
+  "scenarios": [
+    {
+      "name": "Just cast, it taps and is sacrificed: 1 to Maya",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Fanatical Firebrand"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Fanatical Firebrand"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Fanatical Firebrand",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Dori, Bearer of Friends",
+  "scenarios": [
+    {
+      "name": "It enters: a Treasure",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Dori, Bearer of Friends"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Dori, Bearer of Friends"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Dori, Bearer of Friends",
+            "Treasure"
+          ]
+        }
+      ]
+    }
+  ]
+}

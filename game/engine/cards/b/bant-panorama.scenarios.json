@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Bant Panorama",
+  "scenarios": [
+    {
+      "name": "{1}, {T}, sacrificed: a basic Forest onto the battlefield tapped",
+      "library": [
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bant Panorama",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Bant Panorama",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Forest"
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bant Panorama"
+          ]
+        }
+      ]
+    }
+  ]
+}
