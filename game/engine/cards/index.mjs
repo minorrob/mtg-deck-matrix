@@ -661,8 +661,9 @@ export function compileScript(script) {
     types: [...types],
     subtypes: [...(identity.subtypes ?? [])],
     ...((identity.supertypes ?? []).length ? {supertypes: [...identity.supertypes]} : {}),
-    /* "<Name> can be your commander" (CR 903.3): the card's own word, for a table holding a deck to the rule. */
-    ...(/can be your commander/i.test(script.oracleText ?? "") ? {canBeCommander: true} : {}),
+    /* "<Name> can be your commander" (CR 903.3a): the card's own word, its static `can-be-commander`, for a table holding
+       a deck to the rule. */
+    ...((script.abilities ?? []).some((a) => a?.kind === "static" && a.rule === "can-be-commander") ? {canBeCommander: true} : {}),
     /* And whether it may share the command zone, and with what (CR 702.124; partnersIn above). */
     ...(partners.length ? {partners} : {}),
     manaCost: identity.manaCost ?? null,

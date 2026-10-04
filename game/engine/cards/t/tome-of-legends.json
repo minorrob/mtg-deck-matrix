@@ -1,0 +1,101 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tome of Legends",
+    "oracleId": "cada2a1c-5db2-4702-9a57-cbe7da1bf208",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Book"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This artifact enters with a page counter on it.\nWhenever your commander enters or attacks, put a page counter on this artifact.\n{1}, {T}, Remove a page counter from this artifact: Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This artifact enters with a page counter on it.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "page",
+          "count": 1
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever your commander enters or attacks, put a page counter on this artifact.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "commander": true,
+          "owner": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "page",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever your commander enters or attacks, put a page counter on this artifact.",
+      "trigger": {
+        "on": "attacks",
+        "who": "any",
+        "filter": {
+          "commander": true,
+          "owner": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "page",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{1}, {T}, Remove a page counter from this artifact: Draw a card.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "removeCounters",
+          "self": true,
+          "counter": "page",
+          "count": 1
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Endbringer",
+    "oracleId": "db1ea6e0-4076-49dd-92f7-7e6d7eb65a27",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Eldrazi"
+    ],
+    "manaCost": "{5}{C}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Untap this creature during each other player's untap step.\n{T}: This creature deals 1 damage to any target.\n{C}, {T}: Target creature can't attack or block this turn.\n{C}{C}, {T}: Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Untap this creature during each other player's untap step.",
+      "rule": "untap-during-others",
+      "affects": {
+        "self": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: This creature deals 1 damage to any target.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Battle"
+              ]
+            },
+            {
+              "what": "player"
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "targets": {
+            "target": 0
+          },
+          "who": {
+            "target": 0
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{C}, {T}: Target creature can't attack or block this turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{C}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "targets": {
+            "target": 0
+          },
+          "rule": "cant-attack",
+          "until": "end-of-turn"
+        },
+        {
+          "effect": "effectUntil",
+          "targets": {
+            "target": 0
+          },
+          "rule": "cant-block",
+          "until": "end-of-turn"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{C}{C}, {T}: Draw a card.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{C}{C}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}
