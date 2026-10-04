@@ -93,6 +93,23 @@ export function runResolution(state, rng = null) {
       resolving.queue.unshift(...structuredClone((holds ? effect.then : effect.otherwise) ?? []));
       continue;
     }
+    /* EMPOWER JACE N (the live-game plan of 2026-10-04): "put N loyalty counters on a Jace token you control. If you don't
+       control one, first create a blue Jace planeswalker token" -- a token of yours with the subtype Jace. With two or
+       more, which one is its controller's choice (chooseCard, kept where it is); with one, that one; with none, the
+       predefined token made first (effects/permanents.mjs). Put in front of what follows, as a branch is. */
+    if (effect?.effect === "empowerJace") {
+      const jace = {what: "permanent", token: true, subtypes: ["Jace"], controller: "you"};
+      const count = Math.max(0, effect.count ?? 0);
+      resolving.queue.shift();
+      resolving.queue.unshift({effect: "branch", if: {present: jace, atLeast: 2},
+        then: [{effect: "chooseCard", zone: "battlefield", selector: jace, count: 1, to: "stay", remember: true},
+          {effect: "putCounter", targets: "remembered", counter: "loyalty", count}],
+        otherwise: [{effect: "branch", if: {present: jace},
+          then: [{effect: "putCounterAll", selector: jace, counter: "loyalty", count}],
+          otherwise: [{effect: "createToken", count: 1, token: {predefined: "Jace"}, remember: true},
+            {effect: "putCounter", targets: "remembered", counter: "loyalty", count}]}]});
+      continue;
+    }
     /* CR 903.9b: a commander this sends to its owner's hand or library may go to the command zone instead -- a
        replacement, so the owners are asked before anything moves (effects/asking.mjs, commanderHome). */
     const home = effect?.effect === "moveZone" || effect?.effect === "counterSpell" ? commandersGoingHome(state, effect) : [];

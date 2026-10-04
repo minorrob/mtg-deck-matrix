@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Way of the Paradox",
+    "oracleId": "76771cd1-6b74-49bb-9421-8845fe344567",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When Way of the Paradox enters, empower Jace 5. (Put five loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")\nWhenever you activate a loyalty ability, you gain 1 life. You may play an additional land this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Way of the Paradox enters, empower Jace 5. (Put five loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "empowerJace",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you activate a loyalty ability, you gain 1 life. You may play an additional land this turn.",
+      "trigger": {
+        "on": "loyalty activated"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 1
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "extra-land-drop",
+          "affects": {
+            "what": "player",
+            "who": "you"
+          }
+        }
+      ]
+    }
+  ]
+}

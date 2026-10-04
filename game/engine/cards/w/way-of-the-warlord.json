@@ -1,0 +1,107 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Way of the Warlord",
+    "oracleId": "10721d62-dc68-43b4-bfa2-dcb8cf8ea980",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When Way of the Warlord enters, empower Jace 5. (Put five loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")\nPlaneswalkers you control have \"[−4]: This planeswalker deals 2 damage to up to one target creature or planeswalker and 2 damage to target player.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Way of the Warlord enters, empower Jace 5. (Put five loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "empowerJace",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Planeswalkers you control have \"[−4]: This planeswalker deals 2 damage to up to one target creature or planeswalker and 2 damage to target player.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "types": [
+          "Planeswalker"
+        ]
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "activated",
+            "text": "[−4]: This planeswalker deals 2 damage to up to one target creature or planeswalker and 2 damage to target player.",
+            "cost": [
+              {
+                "atom": "loyalty",
+                "amount": -4
+              }
+            ],
+            "targets": [
+              {
+                "anyOf": [
+                  {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ]
+                  },
+                  {
+                    "what": "permanent",
+                    "types": [
+                      "Planeswalker"
+                    ]
+                  }
+                ],
+                "count": {
+                  "min": 0,
+                  "max": 1
+                }
+              },
+              {
+                "what": "player"
+              }
+            ],
+            "effects": [
+              {
+                "effect": "dealDamage",
+                "amount": 2,
+                "targets": {
+                  "target": 0
+                }
+              },
+              {
+                "effect": "dealDamage",
+                "amount": 2,
+                "who": {
+                  "target": 1
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
