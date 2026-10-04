@@ -1,0 +1,112 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vigorbloom Charm",
+    "oracleId": "826f17d1-3806-4579-8b1b-2082b7b03d69",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{G}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Target permanent you control gains hexproof and indestructible until end of turn.\n• You draw a card and gain 3 life.\n• Put a +1/+1 counter on target creature you control. Then it fights target creature an opponent controls. (Each deals damage equal to its power to the other.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Target permanent you control gains hexproof and indestructible until end of turn.\n• You draw a card and gain 3 life.\n• Put a +1/+1 counter on target creature you control. Then it fights target creature an opponent controls. (Each deals damage equal to its power to the other.)",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Target permanent you control gains hexproof and indestructible until end of turn.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "controller": "you"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "pump",
+                  "targets": {
+                    "target": 0
+                  },
+                  "power": 0,
+                  "toughness": 0,
+                  "keywords": [
+                    "Hexproof",
+                    "Indestructible"
+                  ]
+                }
+              ]
+            },
+            {
+              "text": "You draw a card and gain 3 life.",
+              "effects": [
+                {
+                  "effect": "draw",
+                  "count": 1
+                },
+                {
+                  "effect": "gainLife",
+                  "amount": 3
+                }
+              ]
+            },
+            {
+              "text": "Put a +1/+1 counter on target creature you control. Then it fights target creature an opponent controls.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "controller": "you",
+                  "types": [
+                    "Creature"
+                  ]
+                },
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ],
+                  "controller": "opponent"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "putCounter",
+                  "targets": {
+                    "target": 0
+                  },
+                  "counter": "+1/+1",
+                  "count": 1
+                },
+                {
+                  "effect": "fight",
+                  "from": {
+                    "target": 0
+                  },
+                  "targets": {
+                    "target": 1
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

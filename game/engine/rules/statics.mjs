@@ -26,6 +26,17 @@ import {parseManaCost, manaValue} from "./mana.mjs";
 
 /** Every rule a static ability may change, with the module that reads it. */
 export const STATIC_RULES = Object.freeze({
+  /** CR 702.16: "you and creatures you control have protection from the chosen card type" (Serra's Emissary): `affects`,
+      `players`, `from`. rules/protection.mjs. */
+  "protection": "rules/protection.mjs",
+  /** CR 614.1a, 122.6: "If one or more +1/+1 counters would be put on a creature you control, twice that many +1/+1
+      counters are put on that creature instead" (Branching Evolution): `affects` the permanent, `counter` the kind, `times`.
+      Read wherever counters are put on a permanent, as it enters too (countersPlaced, below). */
+  "more-counters": "rules/statics.mjs",
+  /** CR 104.3: "You can't lose the game" (Darksteel Angel): its controller loses to no state-based action. rules/sba.mjs. */
+  "cant-lose": "rules/sba.mjs",
+  /** CR 104.2b: "Your opponents can't win the game" (Darksteel Angel): an effect that says they win does not. effects/resources.mjs, winGame. */
+  "opponents-cant-win": "script/effects/resources.mjs",
   /** CR 903.3a: "Freyalise, Llanowar's Fury can be your commander" -- a rule of the deck, not of the game: the card's
       definition says `canBeCommander` (cards/index.mjs), and the table holds a deck's commander to it (room/table.mjs,
       commanderLegal). */
@@ -217,6 +228,26 @@ export function cantGainLife(state, player) {
   return false;
 }
 
+/**
+ * HOW MANY COUNTERS ARE PUT ON, after "twice that many ... instead" (`more-counters`; CR 614.1a): each such static over
+ * this permanent and this kind multiplies them. Only multiplying is built, so their order does not change the result
+ * and nobody need be asked (CR 616.1 asks when it would). A permanent entering with counters is read as it has entered.
+ */
+export function countersPlaced(state, id, kind, count) {
+  if (!(count > 0) || !state.objects[id]) return count;
+  let n = count;
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static" || ability.rule !== "more-counters" || (ability.counter && ability.counter !== kind)) continue;
+      if (!matchesSelector({what: "permanent", ...ability.affects}, state, id, {controller: holder.controller, source: holderId})) continue;
+      /* "Can't have -1/-1 counters put on them" (Darksteel Angel): `times` 0, none at all. */
+      n *= Number.isInteger(ability.times) && ability.times >= 0 ? ability.times : 2;
+    }
+  }
+  return n;
+}
+
 /** Who has goaded this creature (CR 701.15; effects/permanents.mjs goad), each until their next turn. */
 /**
  * A RESTRICTION ON ATTACKING (CR 508.1c; Forge's CantAttack): "Inklings can't attack you or planeswalkers you control"
@@ -246,7 +277,13 @@ export function cantAttack(state, attacker, defender, planeswalker = null) {
   }
   /* "Target creature can't attack or block this turn" (Endbringer): a restriction an effect left until it ends
      (effectUntil's `rule: "cant-attack"`), on the creatures fixed as it resolved -- attacking anyone. */
-  for (const effect of state.effects ?? []) if (effect.rule === "cant-attack" && staticAffects(state, effect, attacker, effect.sourceController)) return true;
+  for (const effect of state.effects ?? []) {
+    if (effect.rule !== "cant-attack" || !staticAffects(state, effect, attacker, effect.sourceController)) continue;
+    /* "Can't attack Jaces you control" (`toward`): only a planeswalker it describes, "you" the effect's controller -- never
+       a player (no planeswalker, and no match). */
+    if (effect.toward && !(matchesSelector({what: "permanent", ...effect.toward}, state, planeswalker, {controller: effect.sourceController}))) continue;
+    return true;
+  }
   return false;
 }
 /** The words `defender` may say on a `cant-attack` static. */
@@ -360,10 +397,15 @@ export function costReduction(state, player, cardId) {
   const object = state.objects[cardId];
   if (!object) return 0;
   let total = 0;
-  for (const holderId of state.zones.battlefield) {
+  /* EMINENCE (The Ur-Sphinx): "as long as this is in the command zone or on the battlefield" -- an ability that works from
+     its owner's command zone too (`eminence`, CR 113.6), its controller there its owner. */
+  const commanding = (state.zones.command ?? []).flat().filter((id) => (state.objects[id]?.abilities ?? []).some((a) => a.eminence === true));
+  for (const holderId of [...state.zones.battlefield, ...commanding]) {
     const holder = state.objects[holderId];
+    const fromCommand = holder.zone === "command";
     for (const own of holder.abilities ?? []) {
       if (own.kind !== "static" || own.rule !== "spells-cost-less") continue;
+      if (fromCommand && own.eminence !== true) continue;
       /* "Creature spells of the chosen type cost {2} less" (Urza's Incubator): its own choice. */
       const ability = chosenFor(own, holder);
       const caster = ability.caster ?? "you";

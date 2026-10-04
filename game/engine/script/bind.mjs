@@ -263,6 +263,8 @@ export function bindEffect(effect, context, state = null) {
     bound.selector = {...bound.selector, controller: player ?? -1};
   }
   if ("spells" in bound) bound.spells = objectsOf(bound.spells, context);
+  /* "Until this card is cast from exile" (Emrakul, the Exigent Doom): which card's cast ends it. */
+  if ("untilCast" in bound) bound.untilCast = objectsOf(bound.untilCast, context);
   /* "Counter that spell or ability" (ward): the stack entry the trigger is about, by its stack id (rules/trigger.mjs). */
   if (bound.stack === "that") bound.stack = context.about?.stackId !== undefined && context.about.stackId !== null ? [context.about.stackId] : [];
   /* Where the damage comes from, when it is not the spell: "target creature you control deals damage ..." (damageAll). */

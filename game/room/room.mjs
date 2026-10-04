@@ -152,7 +152,9 @@ export function offerDetails(state, seat, actions) {
     /* Which ability: one of several, or one a card has in a graveyard (encore), which its name alone does not say. */
     if (a.kind === "activate" && a.text && ((abilities.get(a.objectId)?.size ?? 0) > 1 || state.objects[a.objectId]?.zone === "graveyard")) parts.push(`“${a.text}”`);
     /* The modes chosen as it is cast (CR 700.2), in the card's words. */
-    if (Array.isArray(a.modes)) parts.push(a.modes.map((i) => state.objects[a.objectId]?.spell?.modal?.modes?.[i]?.text ?? `mode ${i + 1}`).join(" + "));
+    /* And an activated ability's, chosen as it is activated (Aetheric Amplifier): its own modes' words. */
+    const modal = a.kind === "activate" ? (state.objects[a.objectId]?.abilities ?? []).find((b) => b.id === a.abilityId)?.modal : state.objects[a.objectId]?.spell?.modal;
+    if (Array.isArray(a.modes)) parts.push(a.modes.map((i) => modal?.modes?.[i]?.text ?? `mode ${i + 1}`).join(" + "));
     if (a.x !== undefined) parts.push(`X = ${a.x}`);
     /* A counted target (script/bind.mjs): what is still to be picked ("up to two targets"), or the ones picked. */
     const aimed = (t) => (!t ? "" : Array.isArray(t) ? (t.length ? t.map(aimed).join(" and ") : "no target") : t.kind === "choose" ? countWords(t)

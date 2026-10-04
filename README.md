@@ -580,6 +580,69 @@ library, on top, or on the bottom.
 `engine-blight-or-pay` holds a choice between additional costs and a color a mana ability gives (Bogslither's Embrace,
 Foraging Wickermaw): blight 1 or pay {3}, each its own cast, its mana part of the offer, tapped for and spent, said by
 the table; its compiler; and "becomes that color until end of turn", the color of the mana added.
+`engine-reveal-until-creature` holds "reveal cards until you reveal a creature or planeswalker card" (Jace, Multiverse
+Architect's -3): the card found onto the battlefield, a planeswalker with its loyalty, the rest under what was not
+revealed in a random order, a library with neither put back whole, and nothing revealed once the target is gone.
+`engine-cant-attack-jaces` holds "they may pay {2}; if they don't, creatures they control can't attack Jaces you control
+this turn" (Jace, Multiverse Architect), at a table of four: the player whose turn it is asked, their creatures held as
+they are, toward its controller's Jaces only, for the turn.
+`engine-granted-loyalty` holds "planeswalkers you control have '[-8]: ...'" (Kiora of Salt and Sand): a loyalty ability
+granted in layer 6 to its controller's planeswalkers only, paid in loyalty, once a turn among their own, gone with its
+source; and Kiora's attack trigger, an attacking creature untapped and unblockable.
+`engine-loyalty-activated` holds "whenever you activate a loyalty ability" (Ajani Unrelenting), any permanent's, yours
+only, and "if you removed two or more loyalty counters"; "if you've activated a loyalty ability this turn", kept by the
+player for the turn; and "discard your hand", nobody asked.
+`engine-opponents-lands` holds "this land enters tapped unless your opponents control eight or more lands" (the
+Turbulent lands): what every opponent of the player who plays it controls, counted together, at least and at most, a
+land of the player's own or an opponent's creature never one; and "unless you control a planeswalker", the player's own.
+`engine-empower-jace` holds "empower Jace N": a blue Jace planeswalker token made when its controller has none, the one
+there is, or the controller's choice of two; a Jace card and another player's token aside; a loyalty ability that adds
+mana, on the stack; and a resolution-time choice by a target's owner in a triggered ability, with "up to one".
+`engine-destroyed-and-walker-damage` holds a board wipe that remembers what it destroyed (Ob Nixilis, the Ascended's
+"1 life for each creature destroyed this way"), the indestructible never among them; and "whenever this creature deals
+combat damage to a player or planeswalker" (Grateful Apparition): combat damage to a planeswalker triggers it, about its
+controller, while damage to a creature and noncombat damage do not.
+`engine-excess-and-next-spell` holds excess damage (Violent Echoes): past lethal to a creature, marked damage and
+deathtouch counted, past loyalty to a planeswalker, the greater for both; "the next spell you cast this turn can't be
+countered" (Theorist's Proxy), its caster's, used up, for the turn; and a spell returned to its owner's hand.
+`engine-counters-doubled` holds "double the number of each kind of counter" (Deepglow Skate), on permanents and a
+player's own; "twice that many +1/+1 counters instead" (Branching Evolution), for its controller's creatures and that kind,
+as they enter too, four times for two; and "whenever you scry or surveil" (Proft), its controller's, once it is done.
+`engine-piles-and-modes` holds two piles (Fact or Fiction), separated by an opponent the controller picks; increment
+(Berta), by the lesser of power and toughness; "whenever counters are put on this"; an activated ability's modes chosen
+as it is activated when they name targets (Aetheric Amplifier); "until your next turn, whenever a creature attacks you or
+a planeswalker you control" (Jace, Reality Sculptor); and "all but the bottom card".
+`engine-linked-exile` holds Oblivion Ring's two linked triggers: the card it exiled returned by its leaves trigger, under
+its owner, once, each Ring its own; nothing once that card has left exile.
+`engine-protection` holds protection from a card type (Serra's Emissary): damage prevented, not enchanted or equipped,
+not blocked, not targeted, for permanents and their controller; nothing before the choice.
+`engine-cant-lose` holds "you can't lose the game and your opponents can't win the game" (Darksteel Angel): no loss to
+life, poison or an empty library, conceding aside, and no win by an effect; no -1/-1 counters on its controller's
+creatures; and an emblem (Ajani Resolute), an effect with no source and no end, and its Pridemate token.
+`engine-impending` holds impending (Overlord of the Mistmoors): time counters, not a creature while it has one and was
+cast so, one removed at its controller's end step, and none of it when cast for its mana cost; and "cards with
+different names" (Gifts Ungiven), one of each name offered.
+`engine-overload` holds overload (Winds of Abandon): offered beside the mana cost, with no target; a repetition that
+asks, each player in turn; and each search by the creature's controller as it left the battlefield.
+`engine-discover` holds discover (Quintorius Kand), written with what was built: past what doesn't fit, the rest under,
+cast free from exile or put into hand; each opponent dealt 2 for a spell cast from exile; and mana for each card exiled.
+`engine-eminence` holds eminence (The Ur-Sphinx), from the command zone and its owner's other Sphinxes only; "that many"
+for the Sphinxes attacking; and, for each player, a card that player milled, cast free.
+`engine-no-legend-rule` holds "the legend rule doesn't apply to permanents you control this turn" (Hall of Echoes): for
+that player, for the turn; another player's legends still under it.
+`engine-loyalty-x` holds a loyalty cost of -X (Kasmina, Enigma Sage): from none to its loyalty, each its own offer,
+and said as -X; and a card that shares a color with its source.
+`engine-multikicker` holds multikicker (Everflowing Chalice): kicked any number of times it can be paid, each its own
+cast, and the permanent entering with what it was kicked.
+`engine-set-subtypes` holds subtypes through the layers: set in layer 4 and read as they now are, by selectors, statics
+and last known information; Song of the Dryads's colorless Forest land.
+`engine-suspend` holds suspend (Delay): a countered card exiled with time counters and suspended; one removed at its
+owner's upkeep only; cast free with haste when the last goes, or left in exile.
+`engine-phasing` holds phasing (Teferi's Reproach): permanents phase out with what is attached, out of combat and of
+every selector, and back in, the same objects, at their controller's untap; a player's protection from everything and a
+life total that can't change, until that player's next turn.
+`engine-exigent` holds Emrakul, the Exigent Doom's pieces: a spell's own cast trigger; a card exiled from hand as a cost,
+cast from exile for as long as it remains there, and an effect that lasts until that cast; ward of three sacrifices.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -698,7 +761,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 282 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 306 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -952,6 +1015,30 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-stun-and-tap-three` — `tests/engine-stun-and-tap-three.mjs`
 - `engine-owner-chooses-library` — `tests/engine-owner-chooses-library.mjs`
 - `engine-blight-or-pay` — `tests/engine-blight-or-pay.mjs`
+- `engine-reveal-until-creature` — `tests/engine-reveal-until-creature.mjs`
+- `engine-cant-attack-jaces` — `tests/engine-cant-attack-jaces.mjs`
+- `engine-granted-loyalty` — `tests/engine-granted-loyalty.mjs`
+- `engine-loyalty-activated` — `tests/engine-loyalty-activated.mjs`
+- `engine-opponents-lands` — `tests/engine-opponents-lands.mjs`
+- `engine-empower-jace` — `tests/engine-empower-jace.mjs`
+- `engine-destroyed-and-walker-damage` — `tests/engine-destroyed-and-walker-damage.mjs`
+- `engine-excess-and-next-spell` — `tests/engine-excess-and-next-spell.mjs`
+- `engine-counters-doubled` — `tests/engine-counters-doubled.mjs`
+- `engine-piles-and-modes` — `tests/engine-piles-and-modes.mjs`
+- `engine-linked-exile` — `tests/engine-linked-exile.mjs`
+- `engine-protection` — `tests/engine-protection.mjs`
+- `engine-cant-lose` — `tests/engine-cant-lose.mjs`
+- `engine-impending` — `tests/engine-impending.mjs`
+- `engine-overload` — `tests/engine-overload.mjs`
+- `engine-discover` — `tests/engine-discover.mjs`
+- `engine-eminence` — `tests/engine-eminence.mjs`
+- `engine-no-legend-rule` — `tests/engine-no-legend-rule.mjs`
+- `engine-loyalty-x` — `tests/engine-loyalty-x.mjs`
+- `engine-multikicker` — `tests/engine-multikicker.mjs`
+- `engine-set-subtypes` — `tests/engine-set-subtypes.mjs`
+- `engine-suspend` — `tests/engine-suspend.mjs`
+- `engine-phasing` — `tests/engine-phasing.mjs`
+- `engine-exigent` — `tests/engine-exigent.mjs`
 
 ## Design and execution record
 

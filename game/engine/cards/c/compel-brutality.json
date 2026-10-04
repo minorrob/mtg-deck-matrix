@@ -1,0 +1,129 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Compel Brutality",
+    "oracleId": "3a9059ac-c595-4e71-b704-b04d2d47db70",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Target creature you control deals damage equal to its power to target creature or planeswalker an opponent controls.\n• Target planeswalker you control deals damage equal to its loyalty to target creature or planeswalker an opponent controls.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Target creature you control deals damage equal to its power to target creature or planeswalker an opponent controls.\n• Target planeswalker you control deals damage equal to its loyalty to target creature or planeswalker an opponent controls.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Target creature you control deals damage equal to its power to target creature or planeswalker an opponent controls.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ],
+                  "controller": "you"
+                },
+                {
+                  "anyOf": [
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Creature"
+                      ],
+                      "controller": "opponent"
+                    },
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Planeswalker"
+                      ],
+                      "controller": "opponent"
+                    }
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "dealDamage",
+                  "from": {
+                    "target": 0
+                  },
+                  "targets": {
+                    "target": 1
+                  },
+                  "amount": {
+                    "powerOf": {
+                      "target": 0
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Target planeswalker you control deals damage equal to its loyalty to target creature or planeswalker an opponent controls.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Planeswalker"
+                  ],
+                  "controller": "you"
+                },
+                {
+                  "anyOf": [
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Creature"
+                      ],
+                      "controller": "opponent"
+                    },
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Planeswalker"
+                      ],
+                      "controller": "opponent"
+                    }
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "dealDamage",
+                  "from": {
+                    "target": 0
+                  },
+                  "targets": {
+                    "target": 1
+                  },
+                  "amount": {
+                    "countersOn": {
+                      "target": 0
+                    },
+                    "counter": "loyalty"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

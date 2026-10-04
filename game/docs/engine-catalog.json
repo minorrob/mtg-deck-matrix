@@ -9,16 +9,16 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1136,
-  "everyRule": 2437
+  "defined": 1144,
+  "everyRule": 2460
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
     "built": 38,
     "partial": 0,
-    "named": 17,
-    "missing": 139
+    "named": 19,
+    "missing": 137
    },
    "entries": [
     {
@@ -367,7 +367,7 @@
      "top": 7,
      "all": 28,
      "blocks": 7,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "keyword ability",
@@ -571,7 +571,7 @@
      "top": 4,
      "all": 23,
      "blocks": 4,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -1382,7 +1382,7 @@
      "rule": "702.176",
      "name": "Impending",
      "engine": null,
-     "status": "missing",
+     "status": "named",
      "forge": "Impending",
      "top": 1,
      "all": 6,
@@ -1946,7 +1946,7 @@
      "rule": "702.191",
      "name": "Increment",
      "engine": null,
-     "status": "missing",
+     "status": "named",
      "forge": "Increment",
      "top": 0,
      "all": 10,
@@ -2353,9 +2353,9 @@
   },
   "Keyword actions (CR 701)": {
    "tally": {
-    "built": 18,
+    "built": 19,
     "partial": 3,
-    "named": 5,
+    "named": 4,
     "missing": 44
    },
    "entries": [
@@ -2569,12 +2569,12 @@
      "rule": "701.10",
      "name": "Double",
      "engine": "multiplyCounters",
-     "status": "named",
+     "status": "built",
      "forge": "MultiplyCounter",
      "top": 12,
      "all": 53,
-     "blocks": 12,
-     "alone": 10
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword action",
@@ -3205,9 +3205,9 @@
   },
   "Effects": {
    "tally": {
-    "built": 59,
+    "built": 62,
     "partial": 1,
-    "named": 12,
+    "named": 9,
     "missing": 120
    },
    "entries": [
@@ -3796,7 +3796,7 @@
      "forge": "ReplaceCounter",
      "top": 16,
      "all": 33,
-     "blocks": 16,
+     "blocks": 15,
      "alone": 0
     },
     {
@@ -3876,12 +3876,12 @@
      "rule": null,
      "name": "MultiplyCounter",
      "engine": "multiplyCounters",
-     "status": "named",
+     "status": "built",
      "forge": "MultiplyCounter",
      "top": 12,
      "all": 53,
-     "blocks": 12,
-     "alone": 10
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -3953,7 +3953,7 @@
      "top": 10,
      "all": 65,
      "blocks": 10,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -3996,12 +3996,12 @@
      "rule": null,
      "name": "Phases",
      "engine": "phaseOut",
-     "status": "named",
+     "status": "built",
      "forge": "Phases",
      "top": 9,
      "all": 56,
-     "blocks": 9,
-     "alone": 6
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4332,12 +4332,12 @@
      "rule": null,
      "name": "TwoPiles",
      "engine": "twoPiles",
-     "status": "named",
+     "status": "built",
      "forge": "TwoPiles",
      "top": 2,
      "all": 32,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -5519,9 +5519,9 @@
   },
   "Triggers": {
    "tally": {
-    "built": 16,
+    "built": 17,
     "partial": 4,
-    "named": 6,
+    "named": 5,
     "missing": 112
    },
    "entries": [
@@ -5842,12 +5842,12 @@
      "rule": null,
      "name": "CounterAdded",
      "engine": "counter added",
-     "status": "named",
+     "status": "built",
      "forge": "CounterAdded",
      "top": 3,
      "all": 19,
-     "blocks": 3,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -7297,7 +7297,7 @@
      "top": 10,
      "all": 91,
      "blocks": 6,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "static",
@@ -8182,7 +8182,7 @@
      "forge": "AddCounter",
      "top": 15,
      "all": 30,
-     "blocks": 15,
+     "blocks": 14,
      "alone": 0
     },
     {
@@ -9424,7 +9424,7 @@
      "forge": "CounterNum",
      "top": 16,
      "all": 32,
-     "blocks": 16,
+     "blocks": 15,
      "alone": 0
     },
     {
@@ -9652,7 +9652,7 @@
      "forge": "TimesKicked",
      "top": 3,
      "all": 30,
-     "blocks": 3,
+     "blocks": 2,
      "alone": 0
     },
     {
@@ -11579,9 +11579,9 @@
   },
   "Choices": {
    "tally": {
-    "built": 11,
+    "built": 12,
     "partial": 0,
-    "named": 1,
+    "named": 0,
     "missing": 3
    },
    "entries": [
@@ -11735,7 +11735,7 @@
      "name": "Two piles",
      "rule": "700.2",
      "engine": "twoPiles",
-     "status": "named",
+     "status": "built",
      "top": 0,
      "all": 0,
      "blocks": 0,
@@ -11784,8 +11784,8 @@
      "forge": "ETBReplacement",
      "top": 68,
      "all": 408,
-     "blocks": 33,
-     "alone": 10
+     "blocks": 32,
+     "alone": 9
     },
     {
      "kind": "keyword construct",
@@ -11928,7 +11928,7 @@
      "forge": "Multikicker",
      "top": 2,
      "all": 19,
-     "blocks": 2,
+     "blocks": 1,
      "alone": 0
     },
     {

@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sphinx of False Conclusions",
+    "oracleId": "9f004382-c57b-4fde-af97-0c85516c3cf4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Sphinx",
+      "Illusion"
+    ],
+    "manaCost": "{2}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 4,
+    "toughness": 2
+  },
+  "oracleText": "Flash\nFlying\nWhenever this creature attacks, draw a card, then discard a card.\nWhen this creature dies, if it isn't a token, create a token that's a copy of it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks, draw a card, then discard a card.",
+      "trigger": {
+        "on": "attacks"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "discard",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature dies, if it isn't a token, create a token that's a copy of it.",
+      "trigger": {
+        "on": "dies",
+        "filter": {
+          "token": false
+        }
+      },
+      "effects": [
+        {
+          "effect": "copyPermanent",
+          "targets": "that card"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vraska, Soul of Stone",
+    "oracleId": "cad63b31-667b-4518-bc49-be4ffb82bc63",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Gorgon",
+      "Wizard"
+    ],
+    "manaCost": "{U}{R}{W}",
+    "colors": [
+      "R",
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "U",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Artifact creatures you control have vigilance.\nWhenever you cast a noncreature spell, create a 1/1 colorless Sculpture Treasure artifact creature token with \"{T}, Sacrifice this token: Add one mana of any color.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Artifact creatures you control have vigilance.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Vigilance"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a noncreature spell, create a 1/1 colorless Sculpture Treasure artifact creature token with \"{T}, Sacrifice this token: Add one mana of any color.\"",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "nonTypes": [
+            "Creature"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Sculpture Treasure",
+            "types": [
+              "Artifact",
+              "Creature"
+            ],
+            "subtypes": [
+              "Sculpture",
+              "Treasure"
+            ],
+            "colors": [],
+            "power": 1,
+            "toughness": 1,
+            "abilities": [
+              {
+                "id": "sculpture",
+                "kind": "mana",
+                "tapSelf": true,
+                "anyColor": true,
+                "sacrificeSelf": true,
+                "text": "{T}, Sacrifice this token: Add one mana of any color."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

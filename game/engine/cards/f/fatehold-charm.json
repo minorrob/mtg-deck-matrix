@@ -1,0 +1,98 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fatehold Charm",
+    "oracleId": "313aee0e-4090-4589-b323-a4edbda21c68",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{W}{U}",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Draw a card. Empower Jace 2.\n• Return target spell or creature to its owner's hand.\n• Creatures you control get +1/+2 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Draw a card. Empower Jace 2.\n• Return target spell or creature to its owner's hand.\n• Creatures you control get +1/+2 until end of turn.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Draw a card. Empower Jace 2.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "draw",
+                  "count": 1
+                },
+                {
+                  "effect": "empowerJace",
+                  "count": 2
+                }
+              ]
+            },
+            {
+              "text": "Return target spell or creature to its owner's hand.",
+              "targets": [
+                {
+                  "anyOf": [
+                    {
+                      "what": "spell"
+                    },
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Creature"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": {
+                    "target": 0
+                  },
+                  "to": "hand"
+                }
+              ]
+            },
+            {
+              "text": "Creatures you control get +1/+2 until end of turn.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "pumpAll",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ],
+                    "controller": "you"
+                  },
+                  "power": 1,
+                  "toughness": 2,
+                  "until": "end-of-turn"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -19,7 +19,7 @@
  * would have made §3.2.4 true of everything except the part players spend the most time in.
  */
 
-import {runEffect} from "./effects/index.mjs";
+import {runEffect, eachOf} from "./effects/index.mjs";
 import {ASKING, commandersGoingHome} from "./effects/asking.mjs";
 import {damageQuestion} from "./effects/resources.mjs";
 import {bindEffect} from "./bind.mjs";
@@ -79,7 +79,9 @@ export function runResolution(state, rng = null) {
     /* AN EFFECT'S OWN CONDITION (Forge's Condition): "Metalcraft -- If you control three or more artifacts, exile that
        creature". Asked now, as it reaches the head (CR 608.2c, the instructions in order); false, and it does nothing. */
     if (effect?.condition && !conditionHolds(state, effect.condition, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about,
-      remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast, x: resolving.context.x})) {
+      remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast, x: resolving.context.x,
+      /* "If excess damage was dealt to that permanent this way" (Violent Echoes; effects/resources.mjs). */
+      excessDamage: resolving.context.excessDamage, rememberedControllers: resolving.context.rememberedControllers})) {
       resolving.queue.shift();
       continue;
     }
@@ -91,6 +93,39 @@ export function runResolution(state, rng = null) {
         remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast});
       resolving.queue.shift();
       resolving.queue.unshift(...structuredClone((holds ? effect.then : effect.otherwise) ?? []));
+      continue;
+    }
+    /* EMPOWER JACE N (the live-game plan of 2026-10-04): "put N loyalty counters on a Jace token you control. If you don't
+       control one, first create a blue Jace planeswalker token" -- a token of yours with the subtype Jace. With two or
+       more, which one is its controller's choice (chooseCard, kept where it is); with one, that one; with none, the
+       predefined token made first (effects/permanents.mjs). Put in front of what follows, as a branch is. */
+    /* "FOR EACH ..., THAT PLAYER SEARCHES" (Winds of Abandon, overloaded): a repetition whose effects ask, spliced in for each
+       of what it ranges over (script/effects/index.mjs, eachOf: players in turn order, CR 101.4) -- each one's effects after
+       a mark that makes it what "that player" and "that card" are while they run, so each is bound and counted as it reaches
+       the head, as it would be repeated directly; and the resolution's own subject back after the last. */
+    if (effect?.effect === "repeatFor" && (effect.effects ?? []).some((inner) => ASKING[inner?.effect])) {
+      resolving.queue.shift();
+      const before = resolving.context.about;
+      const spliced = eachOf(state, effect.each, resolving.context).flatMap((about) => [{effect: "__about", about: {...(before ?? {}), ...about}}, ...structuredClone(effect.effects ?? [])]);
+      resolving.queue.unshift(...spliced, {effect: "__about", about: before});
+      continue;
+    }
+    if (effect?.effect === "__about") {
+      resolving.queue.shift();
+      if (effect.about === undefined) delete resolving.context.about; else resolving.context.about = effect.about;
+      continue;
+    }
+    if (effect?.effect === "empowerJace") {
+      const jace = {what: "permanent", token: true, subtypes: ["Jace"], controller: "you"};
+      const count = Math.max(0, effect.count ?? 0);
+      resolving.queue.shift();
+      resolving.queue.unshift({effect: "branch", if: {present: jace, atLeast: 2},
+        then: [{effect: "chooseCard", zone: "battlefield", selector: jace, count: 1, to: "stay", remember: true},
+          {effect: "putCounter", targets: "remembered", counter: "loyalty", count}],
+        otherwise: [{effect: "branch", if: {present: jace},
+          then: [{effect: "putCounterAll", selector: jace, counter: "loyalty", count}],
+          otherwise: [{effect: "createToken", count: 1, token: {predefined: "Jace"}, remember: true},
+            {effect: "putCounter", targets: "remembered", counter: "loyalty", count}]}]});
       continue;
     }
     /* CR 903.9b: a commander this sends to its owner's hand or library may go to the command zone instead -- a

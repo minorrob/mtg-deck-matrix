@@ -22,10 +22,10 @@ import {afterwards, delayedTrigger, enchantable, enchantOnArrival} from "./perma
 import {typesOf} from "../../rules/layers.mjs";
 import {moveObject, cardsIn, PUBLIC_ZONES, removeObject} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
-import {keywordsOf} from "../../rules/layers.mjs";
+import {keywordsOf, controllerOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector} from "../filter.mjs";
 import {applyReplacements, enteringModifications, regenerated} from "../../rules/replacement.mjs";
-import {cantBeCountered, entersUntapped} from "../../rules/statics.mjs";
+import {cantBeCountered, entersUntapped, countersPlaced} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
 
@@ -102,8 +102,9 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false} = 
     if ((entering.tapped || tapped) && !entersUntapped(state, moved)) state.objects[moved].tapped = true;
     /* A question it asks as it enters waits for the next priority (rules/entering.mjs). */
     for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: moved, ...ask});
+    /* Counters it enters with are put on it (CR 122.6): "twice that many instead" sees them. */
     for (const [counter, count] of Object.entries(entering.counters)) {
-      state.objects[moved].counters[counter] = (state.objects[moved].counters[counter] ?? 0) + count;
+      state.objects[moved].counters[counter] = (state.objects[moved].counters[counter] ?? 0) + countersPlaced(state, moved, counter, count);
     }
   }
   events.push(event("GameEventCardChangeZone", state, {
@@ -251,14 +252,25 @@ export function peekAndReveal(state, params, context) {
 }
 
 /** `moveZone` — put the named objects somewhere. */
+/* The source a link is kept against: this ability's, or -- one that left the battlefield to trigger it -- as it last was. */
+const linkOf = (context) => context.source ?? context.lastKnown?.cardId ?? null;
+
 export function moveZone(state, params, context, rng = null) {
   const events = [];
   const arrived = [], became = [];
+  /* Who controlled each as it left the battlefield, for `remember` (moveZoneAll says why). */
+  const leftBy = new Map(), was = {};
   /* "The top card of your library", "the top seven cards of that player's library" (`fromTop`, `who`), revealed first if
      it says so (Dark Confidant) -- or simply moved, face up, to exile (Lord of the Void). "The top card of each player's
      library" (Etali, batch 79): of every library `who` names; "the top X cards" (Villainous Wealth): an amount. */
-  const moving = params.fromTop !== undefined
-    ? playersFor(state, params.who, context.controller).flatMap((whose) => cardsIn(state, "library", whose).slice(0, params.fromTop))
+  /* "Exile all but the bottom card of each opponent's library" (Jace, Reality Sculptor): `allButBottom`. */
+  const moving = params.fromTop !== undefined || params.allButBottom === true
+    ? playersFor(state, params.who, context.controller).flatMap((whose) => { const library = cardsIn(state, "library", whose);
+      return params.allButBottom === true ? library.slice(0, Math.max(0, library.length - 1)) : library.slice(0, params.fromTop); })
+    /* LINKED ABILITIES (CR 607.2a): "return the exiled card to the battlefield" (Oblivion Ring) -- what this permanent's
+       other ability exiled (`link`, below), while it is still that card in exile (CR 400.7: gone from there, it is a new
+       object, and nothing returns). */
+    : params.linked === true ? [...(state.links?.[linkOf(context)] ?? [])]
     : params.targets ?? [];
   if (params.reveal) for (const id of moving) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: state.objects[id].owner}}));
   /* "Put the rest on the bottom of your library in a random order" (Sunbird's Invocation; batch 80, `random`). */
@@ -266,6 +278,7 @@ export function moveZone(state, params, context, rng = null) {
     /* "Sacrifice it" (`sacrifice: true`): to its owner's graveyard, as a sacrifice. */
     /* A commander whose owner chose the command zone instead (CR 903.9b; effects/asking.mjs, commanderHome). */
     const to = (params.commanderHome ?? []).includes(id) ? "command" : params.to ?? "graveyard";
+    if (state.objects[id]?.zone === "battlefield") leftBy.set(id, controllerOf(state, id));
     const moved = params.sacrifice === true ? sacrificeOne(state, id, events) : moveOne(state, id, to, events, {tapped: params.tapped === true});
     /* What it is now, for `remember`: what it became -- or, exiled and returned at once, the permanent that came back
        ("if that creature is a Bird", Splash Portal, batch 79), set below. */
@@ -295,13 +308,17 @@ export function moveZone(state, params, context, rng = null) {
         landed = returning.remembered?.[0] ?? null;
       }
     }
-    if (landed !== null) became.push(landed);
+    if (landed !== null) { became.push(landed); if (leftBy.has(id)) was[landed] = leftBy.get(id); }
   }
   /* "Shuffle it into its owner's library" (`shuffle`, batch 80): each library a card was put into, shuffled after. */
   if (params.shuffle === true) for (const owner of new Set(became.filter((id) => state.objects[id]?.zone === "library").map((id) => state.objects[id].owner))) shuffleLibrary(state, owner, rng, events);
   /* "Exile target creature card from a graveyard. Create a token that's a copy of it": what this moved, as the new
      objects it became (CR 400.7), for the effects after it to name as "remembered" (script/bind.mjs). */
-  if (params.remember) context.remembered = became.filter((id) => state.objects[id]);
+  if (params.remember) { context.remembered = became.filter((id) => state.objects[id]); context.rememberedControllers = was; }
+  /* "Exile another target nonland permanent" (Oblivion Ring, `link`): what it exiled, kept against this source for the
+     ability linked to it (CR 607.2a); used, the link is spent. */
+  if (params.link === true && context.source !== null && context.source !== undefined) (state.links ??= {})[context.source] = became.filter((id) => state.objects[id]);
+  if (params.linked === true && state.links) delete state.links[linkOf(context)];
   /* Teferi's Time Twist: "if it enters as a creature, it enters with an additional +1/+1 counter on it". */
   if (params.withCounter) for (const id of arrived) if (typesOf(state, id).includes("Creature")) state.objects[id].counters[params.withCounter] = (state.objects[id].counters[params.withCounter] ?? 0) + 1;
   afterwards(state, arrived, params, context);
@@ -331,9 +348,11 @@ export function moveZoneAll(state, params, context, rng = null) {
   const arrivedAll = [];
   const matched = selectMatching(state, params.selector ?? {what: "permanent"}, context);
   /* A copy, because each move rewrites the zone list underneath the iteration. */
+  const was = {};
   for (const id of [...matched]) {
+    const controller = state.objects[id]?.zone === "battlefield" ? controllerOf(state, id) : null;
     const moved = moveOne(state, id, params.to ?? "graveyard", events, {tapped: params.tapped === true});
-    if (moved !== null) arrivedAll.push(moved);
+    if (moved !== null) { arrivedAll.push(moved); if (controller !== null) was[moved] = controller; }
   }
   /* "Each player shuffles the cards from their hand into their library" (Winds of Change, batch 80, `shuffle`): each library
      a card was put into, shuffled after. */
@@ -341,6 +360,9 @@ export function moveZoneAll(state, params, context, rng = null) {
   /* "Then puts all cards they exiled this way onto the battlefield" (Living Death, batch 79): what this moved, as the new
      objects it became (CR 400.7), for the effects after it to name as "remembered" -- every player's at once. */
   if (params.remember) context.remembered = arrivedAll.filter((id) => state.objects[id]);
+  /* And who controlled each as it left the battlefield: "for each creature exiled this way, its controller searches"
+     (Winds of Abandon; script/amount.mjs, rememberedCount's `controlledBy`). */
+  if (params.remember) context.rememberedControllers = was;
   /* "They gain haste until end of turn" (Wake the Past). */
   afterwards(state, arrivedAll, params, context);
   return events;
@@ -396,10 +418,15 @@ export function destroyAll(state, params, context) {
   const matched = [...selectMatching(state, params.selector ?? {what: "permanent"}, context)].filter((id) => !spared?.has(id));
   const doomed = matched.filter((id) => state.objects[id]?.zone === "battlefield" && !keywordsOf(state, id).includes("Indestructible"));
   /* Each regenerated one stays (CR 701.19a), unless the card says "they can't be regenerated" (`noRegenerate`). */
+  const destroyed = [];
   for (const id of doomed) {
     if (params.noRegenerate !== true && regenerated(state, id, events)) continue;
-    moveOne(state, id, "graveyard", events);
+    const moved = moveOne(state, id, "graveyard", events);
+    if (moved !== null) destroyed.push(moved);
   }
+  /* "You gain 1 life for each creature destroyed this way" (Ob Nixilis, the Ascended): `remember`, what it destroyed --
+     neither the indestructible nor the regenerated -- for the effects after it ({rememberedCount: true}). */
+  if (params.remember) context.remembered = destroyed;
   return events;
 }
 
@@ -465,14 +492,18 @@ export function digUntil(state, params, context, rng = null) {
 export function mill(state, params, context) {
   const events = [];
   const count = params.count ?? 1;
+  const milled = [];
   for (const player of playersFor(state, params.who, context.controller)) {
     for (let i = 0; i < count; i += 1) {
       const library = cardsIn(state, "library", player);
       if (library.length === 0) break;
       /* "Exile the top card of your library" is the same motion to another zone. */
-      moveOne(state, library[0], params.to ?? "graveyard", events, {owner: player});
+      const moved = moveOne(state, library[0], params.to ?? "graveyard", events, {owner: player});
+      if (moved !== null) milled.push(moved);
     }
   }
+  /* "A card that player milled this way" (The Ur-Sphinx): what this milled, for the effects after it. */
+  if (params.remember) context.remembered = milled.filter((id) => state.objects[id]);
   return events;
 }
 
@@ -506,6 +537,11 @@ export function counterSpell(state, params, context) {
       const to = entry.flashback || entry.graveyardToExile || params.to === "exile" ? "exile"
         : (params.commanderHome ?? []).includes(entry.objectId) ? "command" : params.to === "top" ? "library" : "graveyard";
       const moved = moveOne(state, entry.objectId, to, events, {owner});
+      /* "Exile it with three time counters on it ... it gains suspend" (Delay; CR 702.62): in exile, suspended. */
+      if (to === "exile" && moved !== null && state.objects[moved] && Number.isInteger(params.timeCounters)) {
+        state.objects[moved].counters.time = (state.objects[moved].counters.time ?? 0) + params.timeCounters;
+        if (params.suspend === true) state.objects[moved].suspended = true;
+      }
       if (to === "library" && moved !== null && state.objects[moved]) {
         const library = state.zones.library[owner];
         library.splice(library.indexOf(moved), 1);

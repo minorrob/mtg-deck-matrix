@@ -23,6 +23,7 @@ import {bindEffect, rememberNow} from "../bind.mjs";
 import {amountOf} from "../amount.mjs";
 import {event, cardRef} from "./zones.mjs";
 import {typesOf} from "../../rules/layers.mjs";
+import {protectedFrom} from "../../rules/protection.mjs";
 
 /* A continuous effect needs a timestamp to be ordered by (CR 613.7), and it has to be part of the
    state so a checkpoint carries it. The state's own counter is the right source: it is monotonic
@@ -51,6 +52,16 @@ export const PREDEFINED_TOKENS = Object.freeze({
   Clue: {name: "Clue", types: ["Artifact"], subtypes: ["Clue"],
     abilities: [{id: "clue", kind: "activated", text: "{2}, Sacrifice this artifact: Draw a card.", targets: [],
       cost: [{atom: "mana", cost: "{2}"}, {atom: "sacrifice", self: true}], effects: [{effect: "draw", count: 1}]}]},
+  /* EMPOWER JACE's token (the live-game plan of 2026-10-04): "a blue Jace planeswalker token with '[-1]: Surveil 1' and
+     '[-3]: Draw a card.'" -- no printed loyalty, so it enters with none and the empower puts its counters on (CR 306.5b is a
+     printed loyalty's; script/resolution.mjs). Its abilities as a card's are compiled (cards/index.mjs, a loyalty cost). */
+  Jace: {name: "Jace", types: ["Planeswalker"], subtypes: ["Jace"], colors: ["U"],
+    abilities: [
+      {id: "jace-surveil", kind: "activated", text: "\u22121: Surveil 1.", targets: [], loyalty: -1, timing: "sorcery",
+        cost: [{atom: "removeCounters", self: true, counter: "loyalty", count: 1}], effects: [{effect: "surveil", count: 1}]},
+      {id: "jace-draw", kind: "activated", text: "\u22123: Draw a card.", targets: [], loyalty: -3, timing: "sorcery",
+        cost: [{atom: "removeCounters", self: true, counter: "loyalty", count: 3}], effects: [{effect: "draw", count: 1}]},
+    ]},
   /* CR 111.10v (Splinter, the Mentor) */
   Mutagen: {name: "Mutagen", types: ["Artifact"], subtypes: ["Mutagen"],
     abilities: [{id: "mutagen", kind: "activated", text: "{1}, {T}, Sacrifice this token: Put a +1/+1 counter on target creature. Activate only as a sorcery.",
@@ -71,6 +82,8 @@ export function attach(state, params, context) {
   if (!source || !host || source.zone !== "battlefield" || host.zone !== "battlefield" || sourceId === hostId) return events;
   /* CR 701.3b: attaching it to what it is already attached to does nothing. */
   if (source.attachedTo === hostId) return events;
+  /* Protection (CR 702.16c-d): not equipped or enchanted by a permanent with the quality -- it does not move. */
+  if (protectedFrom(state, {card: hostId}, sourceId)) return events;
   const before = source.attachedTo !== null && source.attachedTo !== undefined ? state.objects[source.attachedTo] : null;
   if (before) before.attachments = (before.attachments ?? []).filter((id) => id !== sourceId);
   source.attachedTo = hostId;
@@ -493,12 +506,27 @@ export function effectUntil(state, params, context) {
     ...(params.rule ? {rule: params.rule} : {layer: params.layer ?? 6, sublayer: params.sublayer}),
     /* `selector`: what it affects, fixed as it resolves (CR 611.2c) -- "each instant and sorcery card in your graveyard
        gains flashback until end of turn" does not reach a card put there later. A choice (`anyOf`) is each of them. */
-    affects: params.targets ? {ids: params.targets} : params.selector ? {ids: fixedAt(state, params.selector, context)} : params.affects ?? {what: "permanent"},
+    affects: params.targets ? {ids: params.targets} : params.selector ? {ids: fixedAt(state, params.selector, context)}
+      /* "Creatures they control can't attack Jaces you control this turn" (Jace, Multiverse Architect): a rule changed,
+         not a characteristic, so it reaches the creatures that player controls as they are -- one that arrives later
+         included (CR 611.2c is about characteristics) -- `who` the player, bound as it resolves ("that player"). */
+      : params.rule === "cant-attack" && Array.isArray(params.who) ? {what: "permanent", controller: params.who[0] ?? -1}
+      : params.affects ?? {what: "permanent"},
+    /* `toward`: which planeswalkers they can't attack ("Jaces you control"), "you" this effect's controller -- attacking a
+       player, or any other planeswalker, they still may (rules/statics.mjs, cantAttack). */
+    ...(params.rule === "cant-attack" && params.toward ? {toward: params.toward} : {}),
     apply: params.apply ?? {},
     /* "Until end of turn" (the default), "until your next turn", or "ever": an effect with no duration -- "up to one other
        target creature loses all abilities" (Abigale) -- lasting as long as what it affects does (CR 611.2a; a permanent
        that leaves is a new object, CR 400.7). */
     until: params.until === "ever" ? null : params.until ?? "end-of-turn",
+    /* "Until that player's next turn" (Teferi's Reproach): `their-next-turn`, the player `who` names (rules/turn.mjs). And a
+       rule changed for players (`players`): their protection, their life total that can't change. */
+    ...(params.until === "their-next-turn" || ["protection", "life-cant-change"].includes(params.rule) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
+    ...(params.rule === "protection" ? {from: params.from ?? "everything"} : {}),
+    /* "Until this card is cast from exile" (Emrakul, the Exigent Doom): `untilCast` the card, as `until: "ever"` otherwise is,
+       until that cast (rules/actions.mjs). */
+    ...(Array.isArray(params.untilCast) && params.untilCast.length ? {untilCast: params.untilCast[0]} : {}),
     sourceController: context.controller,
   });
   return [];
@@ -523,6 +551,41 @@ export function gainControl(state, params, context) {
     object.controller = to;
   }
   return [];
+}
+
+/**
+ * `phaseOut` -- "all nonland permanents they control phase out" (Teferi's Reproach; CR 702.26): each permanent the selector
+ * describes is treated as though it does not exist -- out of the battlefield's list, out of combat (CR 506.4), its zone
+ * "phased" -- with no zone change at all (CR 702.26e: nothing leaves or enters, nothing triggers), and phases back in, the
+ * same object, before its controller untaps during their next untap step (rules/turn.mjs, CR 702.26b).
+ */
+export function phaseOut(state, params, context) {
+  const ids = (params.selector ? selectMatching(state, params.selector, context) : params.targets ?? []).filter((id) => state.objects[id]?.zone === "battlefield");
+  /* Anything attached to one phases out with it, indirectly (CR 702.26h), and back in with it, whoever controls it. */
+  for (const id of [...ids]) for (const other of state.zones.battlefield) if (state.objects[other].attachedTo === id && !ids.includes(other)) ids.push(other);
+  for (const id of ids) {
+    const object = state.objects[id];
+    state.zones.battlefield.splice(state.zones.battlefield.indexOf(id), 1);
+    object.zone = "phased";
+    object.phasedOut = {player: ids.includes(object.attachedTo) ? state.objects[object.attachedTo].controller : object.controller};
+    (state.phasedOut ??= []).push(id);
+    if (state.combat) {
+      state.combat.attacks = (state.combat.attacks ?? []).filter((a) => a.attacker !== id);
+      for (const attack of state.combat.attacks ?? []) attack.blockers = (attack.blockers ?? []).filter((b) => b !== id);
+    }
+  }
+  return [];
+}
+/** Phase in every permanent of `player`'s that phased out (CR 702.26b), as their untap step begins. */
+export function phaseIn(state, player) {
+  const back = (state.phasedOut ?? []).filter((id) => state.objects[id]?.phasedOut?.player === player);
+  for (const id of back) {
+    const object = state.objects[id];
+    delete object.phasedOut;
+    object.zone = "battlefield";
+    state.zones.battlefield.push(id);
+  }
+  state.phasedOut = (state.phasedOut ?? []).filter((id) => !back.includes(id));
 }
 
 /**
@@ -612,7 +675,10 @@ export function delayedTrigger(state, params, context) {
   /* "That creature": the object, now; gone already, and the trigger waits on nothing (CR 603.7a's example). */
   const watch = waits && params.watch !== undefined ? ((bindEffect({targets: params.watch}, context).targets ?? [])[0] ?? null) : undefined;
   state.delayedTriggers.push({
-    ...(waits ? {on: structuredClone(params.on), ...(watch !== undefined ? {watch} : {}), ...(params.thisTurn ? {thisTurn: true} : {}), ...(params.once ? {once: true} : {}), fresh: true}
+    ...(waits ? {on: structuredClone(params.on), ...(watch !== undefined ? {watch} : {}), ...(params.thisTurn ? {thisTurn: true} : {}), ...(params.once ? {once: true} : {}),
+      /* "Until your next turn, whenever a creature attacks you ..." (Jace, Reality Sculptor): every time, until its controller's
+         next turn begins (rules/turn.mjs). */
+      ...(params.untilYourNextTurn ? {untilYourNextTurn: true} : {}), fresh: true}
       : {at: params.at ?? "end step"}),
     controller: context.controller,
     source: context.source ?? null,

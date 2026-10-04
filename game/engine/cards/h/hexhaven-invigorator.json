@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hexhaven Invigorator",
+    "oracleId": "12d617b1-c95b-4b1c-a586-ccfdf5898b03",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Chimera",
+      "Horror"
+    ],
+    "manaCost": "{G}{G}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Vigilance\nWhenever this creature is dealt damage, you may search your library for up to that many land cards, put them onto the battlefield tapped, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature is dealt damage, you may search your library for up to that many land cards, put them onto the battlefield tapped, then shuffle.",
+      "trigger": {
+        "on": "damage dealt once",
+        "to": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          },
+          "count": {
+            "damageDealt": true
+          },
+          "upTo": true,
+          "destinations": [
+            {
+              "to": "battlefield",
+              "tapped": true
+            }
+          ],
+          "shuffle": true
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

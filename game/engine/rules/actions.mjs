@@ -291,7 +291,11 @@ export function alternativeCosts(state, player, id) {
     if (!conditionHolds(state, ability.condition, {controller: player, source: id})) return [];
     const cost = ability.cost ?? [];
     return [{index, mana: cost.find((a) => a.atom === "mana")?.cost ?? "", life: cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0),
-      extra: cost.filter((a) => a.atom === "exileFromHand" || a.atom === "sacrifice"), evoke: ability.evoke === true}];
+      extra: cost.filter((a) => a.atom === "exileFromHand" || a.atom === "sacrifice"), evoke: ability.evoke === true,
+      /* Impending (CR 702.176a): how many time counters it enters with. */
+      ...(Number.isInteger(ability.impending) ? {impending: ability.impending} : {}),
+      /* Overload (CR 702.96b): what the spell does cast this way, "each" in place of "target". */
+      ...(ability.overload ? {overload: ability.overload} : {})}];
   });
 }
 
@@ -302,11 +306,18 @@ export function alternativeCosts(state, player, id) {
 /* "As an additional cost to cast this spell, blight 1 or pay {3}" (Bogslither's Embrace; `{atom: "oneOf", options}`): each
    choice between additional costs a variant of the cast of its own -- its mana (`mana`) added to what the cast costs, the
    rest (`atoms`) picked as any additional cost is (additionalChoices). A spell without a choice has the one variant. */
+/* MULTIKICKER (CR 702.33c): "you may pay an additional [cost] any number of times" -- each number of times its own cast, from
+   none up to `MULTIKICK_MOST` (a cast that cannot be paid is not offered), that many times its mana added. */
+const MULTIKICK_MOST = 10;
 function additionalVariants(costs) {
   let variants = [{atoms: [], mana: ""}];
   for (const atom of costs ?? []) {
+    if (atom?.atom === "multikicker") {
+      variants = variants.flatMap((v) => Array.from({length: MULTIKICK_MOST + 1}, (_, k) => ({...v, mana: v.mana + (atom.cost ?? "").repeat(k), kicked: k})));
+      continue;
+    }
     const options = atom?.atom === "oneOf" ? atom.options ?? [] : [[atom]];
-    variants = variants.flatMap((v) => options.map((option) => ({atoms: [...v.atoms, ...option.filter((a) => a.atom !== "mana")],
+    variants = variants.flatMap((v) => options.map((option) => ({...v, atoms: [...v.atoms, ...option.filter((a) => a.atom !== "mana")],
       mana: v.mana + option.filter((a) => a.atom === "mana").map((a) => a.cost ?? "").join("")})));
   }
   return variants;
@@ -356,6 +367,10 @@ function withModes(state, base, modal, context) {
     return targetChoices(state, specs, context).map((targets) => ({...base, modes, targets, targetNames: targets.map((t) => targetName(state, t)), hostile}));
   });
 }
+
+/* An activated ability's offers: one per choice of modes and their targets when its modes are chosen as it is activated
+   (cards/index.mjs, `modal`; CR 700.2), or per way to choose its targets. */
+const withModesOrTargets = (state, base, ability, context) => (ability.modal ? withModes(state, base, ability.modal, context) : withTargets(state, base, ability, context));
 
 /* One offer per way to choose the targets (script/bind.mjs); a single offer, unchanged, when there are none. */
 function withTargets(state, base, ability, context) {
@@ -518,7 +533,8 @@ function costPayment(state, player, id, cost, x = 0, less = 0) {
     }
     /* CR 119.4: a player can pay life only if their life total is at least the amount. */
     if (atom.atom === "payLife") life += atom.amount ?? 0;
-    if (atom.atom === "removeCounters" && (object.counters?.[atom.counter] ?? 0) < (atom.count ?? 1)) return null;
+    /* A −X loyalty cost is offered only for the X it can pay (abilityXValues). */
+    if (atom.atom === "removeCounters" && atom.count !== "X" && (object.counters?.[atom.counter] ?? 0) < (atom.count ?? 1)) return null;
   }
   if (life + (mana?.life ?? 0) > state.players[player].life) return null;
   return {mana, life};
@@ -601,6 +617,8 @@ function xValues(pool, cost, extra = 0) {
 }
 const abilityLess = (state, player, id, ability) => (ability.costLess === undefined ? 0 : amountOf(state, ability.costLess, {controller: player, source: id}));
 function abilityXValues(state, player, ability, id) {
+  /* "−X:" (CR 606.4): any X from none to the loyalty it has. */
+  if (ability.loyalty === "-X") return Array.from({length: (state.objects[id]?.counters?.loyalty ?? 0) + 1}, (_, n) => n);
   const atom = (ability.cost ?? []).find((a) => a?.atom === "mana");
   return atom ? xValues(poolFor(state, player, {ability: id}), parseManaCost(atom.cost)) : [null];
 }
@@ -840,10 +858,10 @@ function offers(state, player) {
       for (const convoke of [...(payment ? [false] : []), ...(convokes ? [true] : [])])
       for (const costChoice of paysFor) {
         const base = {kind: "cast", objectId: id, label: object.card, payment: convoke ? null : payment, from, tax, ...(X !== null ? {x: X} : {}), ...(autoTap && !convoke ? {autoTap: true} : {}),
-          ...(convoke ? {convoke: true} : {}), ...(variant.mana ? {extraMana: variant.mana} : {}),
+          ...(convoke ? {convoke: true} : {}), ...(variant.mana ? {extraMana: variant.mana} : {}), ...(variant.kicked ? {kicked: variant.kicked} : {}),
           ...(costChoice ? {costChoice, costNames: Object.values(costChoice).map((c) => state.objects[c].card)} : {}),
           ...(freely ? {free: true} : {}), ...(back ? {flashback: true} : {}), ...(fled ? {escape: fled.kind} : {}), ...(way ? {alternative: way.index} : {})};
-        actions.push(...(object.spell?.modal ? withModes(state, base, object.spell.modal, {controller: player, source: id}) : withTargets(state, base, object.spell, {controller: player, source: id})));
+        actions.push(...(object.spell?.modal && !way?.overload ? withModes(state, base, object.spell.modal, {controller: player, source: id}) : withTargets(state, base, way?.overload ?? object.spell, {controller: player, source: id})));
       }
     }
     }
@@ -889,9 +907,9 @@ function offers(state, player) {
           : blighter ? blightChoices(state, player).map((c) => ({blight: c}))
           : anyCounter ? Object.entries(object.counters ?? {}).filter(([, n]) => n > 0).map(([counter]) => ({counter})) : [null];
         for (const costChoice of fodder)
-          actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment, ...(X !== null ? {x: X} : {}),
+          actions.push(...withModesOrTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment, ...(X !== null ? {x: X} : {}),
             /* A loyalty ability says its loyalty cost (CR 606.4), for a pilot to weigh. */
-            ...(ability.loyalty !== undefined ? {loyalty: ability.loyalty} : {}),
+            ...(ability.loyalty !== undefined ? {loyalty: ability.loyalty === "-X" ? -(X ?? 0) : ability.loyalty} : {}),
             ...(costChoice ? {costChoice, costNames: costChoice.crew ? costChoice.crew.map((c) => state.objects[c].card)
               : costChoice.untap ? costChoice.untap.map((c) => state.objects[c].card)
               : costChoice.tapAll ? costChoice.tapAll.map((c) => state.objects[c].card)
@@ -1053,7 +1071,7 @@ export function offerSpecs(state, player, action) {
   const context = {controller: player, source: action.objectId};
   if (action.kind === "cast") return {specs: object.spell?.modal && Array.isArray(action.modes) ? modalScript(object.spell.modal, action.modes).targets : object.spell?.targets ?? [], context};
   const ability = chosenFor(abilitiesOf(state, action.objectId).find((candidate) => candidate.id === action.abilityId), object);
-  return {specs: ability?.targets ?? [], context};
+  return {specs: ability?.modal && Array.isArray(action.modes) ? modalScript(ability.modal, action.modes).targets : ability?.targets ?? [], context};
 }
 
 /* The next counted target of an offer still to be picked, or -1. One with nothing it could choose is no question: it is
@@ -1325,6 +1343,10 @@ function perform(state, player, action, during = null) {
     /* "If you cast a creature spell this way, it gains haste until end of turn" (Thundermane Dragon): remembered on the spell,
        given to the permanent it becomes (rules/stack.mjs). */
     const gains = object.zone === "library" ? castFromTopGains(state, player, action.objectId) : [];
+    /* Cast from suspend (CR 702.62a): a suspended card cast from exile, read before it moves. */
+    const fromSuspend = object.suspended === true && object.zone === "exile";
+    /* "Until this card is cast from exile" (Emrakul, the Exigent Doom; effects/permanents.mjs, effectUntil): over now. */
+    if (object.zone === "exile" && (state.effects ?? []).some((e) => e.untilCast === action.objectId)) state.effects = state.effects.filter((e) => e.untilCast !== action.objectId);
 
     const permanent = !(object.types ?? []).some((type) => ["Instant", "Sorcery"].includes(type));
     const targets = structuredClone(action.targets ?? []);
@@ -1344,18 +1366,30 @@ function perform(state, player, action, during = null) {
     entry.cast = {from: castFrom, mainPhase: player === state.activePlayer && MAIN_PHASES.includes(state.phase),
       /* "If this spell's additional cost was paid" (Cinder Strike): an optional one, paid -- its mana too. */
       ...(extraPaid.length || action.extraMana ? {additionalPaid: true} : {})};
+    /* Kicked that many times (multikicker, CR 702.33c): the permanent it becomes knows it as it enters (rules/stack.mjs). */
+    if (action.kicked) entry.kicked = action.kicked;
     /* Cast with flashback: exiled, whatever would move it, as it leaves the stack (rules/stack.mjs, effects/zones.mjs). */
     if (back) entry.flashback = true;
     /* Cast with escape, it escaped (CR 702.138b): the permanent it becomes is marked so (rules/stack.mjs). */
     if (fled) entry.escaped = true;
     /* Cast for its evoke cost (CR 702.74a): the permanent it becomes is marked so, for the evoke trigger's condition. */
     if (way?.evoke) entry.evoked = true;
+    /* Cast for its impending cost (CR 702.176a): the permanent it becomes is marked so, and enters with that many time counters. */
+    if (way?.impending) entry.impending = way.impending;
+    /* Overloaded (CR 702.96b): the spell's effects as they then are, carried on the stack. */
+    if (way?.overload) entry.overload = structuredClone(way.overload);
     /* "And that spell can't be countered" (Cavern of Souls): paid with mana that said so. */
     if (paid.uncounterable) entry.uncounterable = true;
+    /* "The next spell you cast this turn can't be countered" (Theorist's Proxy): an effect of its caster's, used up by the
+       first spell they cast after it (effectUntil's `rule: "next-spell-uncounterable"`). */
+    const next = (state.effects ?? []).findIndex((e) => e.rule === "next-spell-uncounterable" && e.sourceController === player);
+    if (next >= 0) { entry.uncounterable = true; state.effects.splice(next, 1); }
     /* "If a spell cast this way would be put into your graveyard, exile it instead" (Kess): to exile, if to a graveyard. */
     if (permission?.ability.graveyardToExile) entry.graveyardToExile = true;
     /* On the spell as it now is: moving to the stack made a new object (CR 400.7). */
     if (gains.length && state.objects[entry.objectId]) state.objects[entry.objectId].castGains = gains;
+    /* Cast from suspend (CR 702.62a): a creature so cast has haste as long as its caster controls it (rules/stack.mjs). */
+    if (fromSuspend) entry.fromSuspend = true;
     /* THE MANA SPENT TO CAST IT (CR 601.2h): "if {W}{W} was spent to cast it" (Wistfulness), "if at least three red mana was
        spent to cast this spell" (adamant) -- by color, on the spell as it now is, and on the permanent it becomes (rules/
        stack.mjs). What the pool paid, tax and all: a creature that convoked it paid no mana (CR 702.51a), and a spell cast
@@ -1425,14 +1459,18 @@ function perform(state, player, action, during = null) {
     const was = returning !== undefined ? (state.combat?.attacks ?? []).find((attack) => attack.attacker === returning) : undefined;
     const attacked = was?.defender;
     /* CR 602.2a, then 602.2b and 601.2h: on the stack first, then the costs. */
-    const entry = pushAbility(state, {sourceId: action.objectId, controller: player, abilityId: ability.id, kind: "ability", targets, script: ability,
+    /* Its modes, chosen as it was activated: their targets in order, their effects aimed at them (CR 700.2). */
+    const script = ability.modal && Array.isArray(action.modes) ? {...ability, ...modalScript(ability.modal, action.modes)} : ability;
+    const entry = pushAbility(state, {sourceId: action.objectId, controller: player, abilityId: ability.id, kind: "ability", targets, script,
       ...(attacked !== undefined ? {about: {player: attacked, ...(was.planeswalker !== undefined ? {planeswalker: was.planeswalker} : {})}} : {}),
       /* Station: "charge counters equal to the tapped creature's power" -- the creature it tapped is what it is about. */
       ...(action.costChoice?.tap !== undefined ? {about: {card: action.costChoice.tap}} : {}),
       ...(action.x !== undefined ? {x: action.x} : {}), ...(leavesSelf && object.zone === "battlefield" ? {lastKnown: lastKnown(state, action.objectId)} : {})});
     events.push(event("GameEventSpellAbilityCast", state, {
       card,
-      sa: {isSpell: false, abilityId: entry.abilityId, stackId: entry.stackId, description: ability.text},
+      sa: {isSpell: false, abilityId: entry.abilityId, stackId: entry.stackId, description: ability.text,
+        /* A loyalty ability says its cost (CR 606.4): "whenever you activate a loyalty ability" (rules/trigger.mjs). */
+        ...(ability.loyalty !== undefined ? {loyalty: ability.loyalty === "-X" ? -(action.x ?? 0) : ability.loyalty} : {})},
       si: {isTrigger: false, actor: {playerId: player, name: state.players[player].name}},
       targetDescription,
     }));
@@ -1448,7 +1486,7 @@ function perform(state, player, action, during = null) {
       }
       if (atom.atom === "payLife") changeLife(state, player, -(atom.amount ?? 0), events);
       if (atom.atom === "addCounters" || atom.atom === "removeCounters")
-        payCounters(state, action.objectId, [{counter: atom.counter, count: atom.count ?? 1, put: atom.atom === "addCounters"}]);
+        payCounters(state, action.objectId, [{counter: atom.counter, count: atom.count === "X" ? action.x ?? 0 : atom.count ?? 1, put: atom.atom === "addCounters"}]);
       /* "Return a Forest you control to its owner's hand": the one chosen with the offer. */
       if (atom.atom === "returnToHand" && action.costChoice?.returnToHand !== undefined) moveOne(state, action.costChoice.returnToHand, "hand", events);
       /* "Discard a card": the one chosen with the offer, a discard -- "whenever you discard a card" sees it. */
@@ -1460,7 +1498,11 @@ function perform(state, player, action, during = null) {
          replacements and with its last known information, like any death, so "when this dies" still sees it. */
       if (atom.atom === "sacrifice" && atom.self === true) sacrificeOne(state, action.objectId, events);
       /* "Exile this creature": it leaves for exile, read afterward as it last was. */
-      if (atom.atom === "exile" && atom.self === true) moveOne(state, action.objectId, "exile", events, {owner: object.owner});
+      if (atom.atom === "exile" && atom.self === true) {
+        const fromHand = object.zone === "hand", exiled = moveOne(state, action.objectId, "exile", events, {owner: object.owner});
+        /* "Exile this card from your hand" (Emrakul, the Exigent Doom): "this card" is then that card in exile (CR 400.7). */
+        if (fromHand && exiled !== null) entry.about = {...(entry.about ?? {}), card: exiled};
+      }
       /* "Blight 1": the counters on the creature chosen with the offer, put as any counters are (CR 701.68a). */
       if (atom.atom === "blight" && action.costChoice?.blight !== undefined) {
         if (state.objects[action.costChoice.blight]?.zone !== "battlefield") throw new Error("That creature can no longer be blighted");
@@ -1509,6 +1551,9 @@ function perform(state, player, action, during = null) {
     if (ability.exhaust) (object.exhausted ??= []).push(ability.id);
     /* A loyalty ability activated: none other of this permanent's this turn (CR 606.3). */
     if (ability.loyalty !== undefined) recordUse(state, action.objectId, "loyalty");
+    /* And by its player, whatever becomes of the permanent (CR 400.7): "if you've activated a loyalty ability this turn"
+       (Kiora of Salt and Sand; script/condition.mjs, `loyaltyThisTurn`). */
+    if (ability.loyalty !== undefined) state.players[player].loyaltyThisTurn = (state.players[player].loyaltyThisTurn ?? 0) + 1;
     return events;
   }
 

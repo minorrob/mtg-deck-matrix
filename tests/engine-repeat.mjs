@@ -94,10 +94,14 @@ const lives = (s) => s.players.map((p) => p.life);
   eq([playerRuleChanged(s, "no-maximum-hand-size", 0), playerRuleChanged(s, "no-maximum-hand-size", 1)], [true, true], "Rob's Folio: Rob and Maya alike");
 }
 {
-  /* What may repeat: players, opponents or creatures, and nothing that stops to ask. */
+  /* What may repeat: players, opponents or creatures, and what is built -- one that stops to ask too, since 2026-10-04 (a
+     resolution splices it in for each, script/resolution.mjs; tests/engine-overload.mjs). */
   const script = structuredClone(loadCardScripts().find(({script: one}) => one.identity.name === "Price of Progress").script);
   script.abilities[0].effects[0].effects = [{effect: "discard", count: 1, who: "that player"}];
-  eq(compileScript(script).problems.some((p) => /repeatFor: discard asks a question/.test(p)), true, "a discard -- a question -- inside it is refused");
+  eq(compileScript(script).problems.some((p) => /repeatFor/.test(p)), false, "a discard -- a question -- inside it is taken");
+  script.abilities[0].effects[0].effects = [{effect: "exchangeLife"}];
+  eq(compileScript(script).problems.some((p) => /repeatFor: exchangeLife is not something that repeats/.test(p)), true, "something not built inside it is refused");
+  script.abilities[0].effects[0].effects = [{effect: "discard", count: 1, who: "that player"}];
   script.abilities[0].effects[0].each = "land";
   eq(compileScript(script).problems.some((p) => /repeatFor: each of player, opponent, creature/.test(p)), true, "and each land is not (yet) a thing it ranges over");
 }

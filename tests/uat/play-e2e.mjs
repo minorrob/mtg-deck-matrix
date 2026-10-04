@@ -140,7 +140,9 @@ try {
   await page.locator(".cm-cloud-table .cm-lobby-seat").nth(1).waitFor({timeout: 30000});
   eq([await page.locator(".cm-cloud-table .cm-lobby-seat").count(), await page.locator("#cm-table-refused").count(), await page.locator(".cm-cloud-table .cm-seat-pill").count()], [2, 0, 2], "the lobby opens and draws both seats, each with its status");
   /* THE BASIC LANDS TEST DECK (Rob, 2026-09-29), chosen in the table's own dialog, for Rob's seat and the AI's. */
-  for (const [seat, button] of [[0, "Choose a deck"], [1, "Choose its deck"]]) {
+  /* Seat 1 already holds the Goblins deck taken above, so its button says Change deck (crankmagic-table.js); seat 2's
+     says Choose its deck. */
+  for (const [seat, button] of [[0, /^(Choose a deck|Change deck)$/], [1, /^(Choose its deck|Change deck)$/]]) {
     await page.locator(`.cm-lobby-seat[data-seat="${seat}"]`).getByRole("button", {name: button}).click();
     await page.locator("#cm-dialog [data-action=table-use-test-deck]").waitFor({timeout: 15000});
     if (!seat) await shot(page, "test-deck-1400");

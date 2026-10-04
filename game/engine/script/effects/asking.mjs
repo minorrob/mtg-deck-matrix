@@ -78,8 +78,12 @@ function finishScry(state, awaiting, top, bottom) {
       player: {playerId: player, name: state.players[player].name}, scryedToBottom: under.length,
     }));
   }
+  events.push(scried(state, awaiting, "scry"));
   return events;
 }
+/* That a player scried or surveilled, once it is done (CR 701.22a, 701.25a): "whenever you scry or surveil" (Proft,
+   Consulting Detective; rules/trigger.mjs). */
+const scried = (state, awaiting, kind) => event("GameEventScried", state, {player: {playerId: awaiting.player, name: state.players[awaiting.player].name}, kind, count: awaiting.count ?? awaiting.cards.length});
 
 export const scry = {
   open(state, params, context) {
@@ -140,6 +144,58 @@ export const scry = {
   },
 };
 
+/* ---- twoPiles (Forge's TwoPiles): "reveal the top five cards of your library. An opponent separates those cards into two
+   piles. Put one pile into your hand and the other into your graveyard" (Fact or Fiction). The cards revealed (CR 701.20a);
+   the opponent who separates them, chosen by this effect's controller when there is more than one (CR 102.3 makes each
+   other player one); that opponent's pile, any of them, none or all (CR 700.3: a pile may be empty); the controller's
+   pick of the two; and the piles moved, `chosen` and `rest` where they go. ---- */
+const pileWords = (state, ids) => (ids.length ? ids.map((id) => state.objects[id].card).join(", ") : "no cards");
+function pilesOf(awaiting) {
+  const first = awaiting.cards.filter((id) => awaiting.pile.includes(id));
+  return [first, awaiting.cards.filter((id) => !awaiting.pile.includes(id))];
+}
+export const twoPiles = {
+  open(state, params, context) {
+    const cards = cardsIn(state, "library", context.controller).slice(0, params.fromTop ?? 5);
+    if (cards.length === 0) return false;
+    const opponents = state.players.filter((p) => p.id !== context.controller && !p.lost).map((p) => p.id);
+    if (opponents.length === 0) return false;
+    const reveal = cards.map((id) => event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: context.controller}}));
+    state.resolving?.events.push(...reveal);
+    state.awaiting = {kind: "effect-choice", effect: "twoPiles", controller: context.controller, cards, chosen: params.chosen ?? "hand", rest: params.rest ?? "graveyard",
+      ...(opponents.length === 1 ? {player: opponents[0], step: "separate"} : {player: context.controller, step: "opponent", opponents})};
+    return true;
+  },
+  choice(state, awaiting) {
+    if (awaiting.step === "opponent") return {id: `piles-opponent:${awaiting.cards.join(",")}`, title: "Choose an opponent to separate the cards into two piles", mode: "one", min: 1, max: 1,
+      options: awaiting.opponents.map((id, index) => ({index, label: state.players[id].name, playerId: id}))};
+    if (awaiting.step === "separate") return {id: `piles-separate:${awaiting.cards.join(",")}`, title: "Separate these cards into two piles: choose the first pile", mode: "many", min: 0, max: awaiting.cards.length,
+      options: cardOptions(state, awaiting.cards)};
+    const [first, second] = pilesOf(awaiting);
+    return {id: `piles-pick:${awaiting.cards.join(",")}`, title: `Choose a pile to put into your ${awaiting.chosen}`, mode: "one", min: 1, max: 1,
+      options: [{index: 0, label: `Pile 1: ${pileWords(state, first)}`}, {index: 1, label: `Pile 2: ${pileWords(state, second)}`}]};
+  },
+  apply(state, awaiting, indices) {
+    const [index] = indices ?? [];
+    if (awaiting.step === "opponent") {
+      const opponent = awaiting.opponents[index];
+      if (opponent === undefined) throw new Error("Invalid selection");
+      state.awaiting = {...awaiting, player: opponent, step: "separate"};
+      return {events: [], again: true};
+    }
+    if (awaiting.step === "separate") {
+      const pile = (indices ?? []).map((i) => awaiting.cards[i]).filter((id) => id !== undefined);
+      state.awaiting = {...awaiting, player: awaiting.controller, step: "pick", pile};
+      return {events: [], again: true};
+    }
+    if (index !== 0 && index !== 1) throw new Error("Invalid selection");
+    const piles = pilesOf(awaiting), events = [];
+    for (const [pile, to] of [[piles[index], awaiting.chosen], [piles[1 - index], awaiting.rest]])
+      for (const id of pile) if (state.objects[id]?.zone === "library") moveOne(state, id, to, events, {owner: state.objects[id].owner});
+    return events;
+  },
+};
+
 /* ---- surveil ---- */
 
 /* SURVEIL N (CR 701.25a): look at the top N cards of your library, put any number of them into your graveyard and the rest
@@ -179,6 +235,7 @@ export const surveil = {
       const library = state.zones.library[player];
       for (const id of awaiting.cards) { const at = library.indexOf(id); if (at >= 0) library.splice(at, 1); }
       library.unshift(...chosen);
+      events.push(scried(state, awaiting, "surveil"));
       return events;
     }
     for (const id of chosen) moveOne(state, id, "graveyard", events, {owner: state.objects[id].owner});
@@ -187,6 +244,7 @@ export const surveil = {
       state.awaiting = {...awaiting, step: "order", cards: rest};
       return {events, again: true};
     }
+    events.push(scried(state, awaiting, "surveil"));
     return events;
   },
 };
@@ -291,6 +349,13 @@ export const discard = {
        effects after it -- nothing, until they do. */
     if (params.remember) context.remembered = [];
     if (queue.length === 0) return false;
+    /* "Discard your hand" (Ajani Unrelenting): every card in it, so there is nothing to choose and nobody is asked. */
+    if (params.all === true) {
+      const events = [];
+      for (const player of queue) for (const id of cardsIn(state, "hand", player)) discardOne(state, id, player, events);
+      if (params.remember) context.remembered = [];
+      return {events};
+    }
     /* "Discard a card at random" (Gamble, batch 80; CR 701.9b): nobody chooses -- each card is picked from the hand by the
        game's random stream, and nobody is asked. */
     if (params.random === true) {
@@ -605,7 +670,7 @@ const lifeAsked = (awaiting) => awaiting.life > 0 || (awaiting.life === 0 && !(a
 const noun = (selector) => (selector?.subtypes?.length ? `a ${selector.subtypes[0]}` : selector?.types?.length ? `a ${selector.types[0].toLowerCase()}` : "a permanent");
 function costWords(awaiting) {
   const paid = [awaiting.amount > 0 ? `{${awaiting.amount}}` : null, lifeAsked(awaiting) ? `${awaiting.life} life` : null].filter(Boolean);
-  const other = awaiting.discard ? "discard a card" : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}` : null;
+  const other = awaiting.discard ? "discard a card" : awaiting.sacrificeCount ? `sacrifice ${awaiting.sacrificeCount} permanents` : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}` : null;
   return [other, paid.length ? `pay ${paid.join(" and ")}` : null].filter(Boolean).join(" and ") || `pay {${awaiting.amount}}`;
 }
 function payOptions(state, awaiting) {
@@ -617,6 +682,12 @@ function payOptions(state, awaiting) {
   if (awaiting.sacrifice) {
     const alternatives = Array.isArray(awaiting.sacrifice.anyOf) ? awaiting.sacrifice.anyOf : [awaiting.sacrifice];
     const matchers = alternatives.map((one) => compileSelector({...one, what: "permanent", controller: "you"}));
+    /* "Sacrifice three permanents": one option, to pay it, if they have that many; which ones is asked next (`sacrificing`). */
+    if (awaiting.sacrificeCount) {
+      const mine = state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player})));
+      return awaiting.sacrificing ? mine.map((id) => ({label: state.objects[id].card, cardId: id}))
+        : mine.length >= awaiting.sacrificeCount ? [{label: `Sacrifice ${awaiting.sacrificeCount} permanents${also}`, pay: true, sacrificeMany: true}] : [];
+    }
     return state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player})))
       .map((id) => ({label: `Sacrifice ${state.objects[id].card}${also}`, pay: true, sacrifice: id, cardId: id}));
   }
@@ -632,6 +703,7 @@ export const unlessPays = {
     if (params.ifPaid && !params.life && !params.discard && !params.sacrifice && !canPayGeneric(state, payer, Math.max(0, params.amount ?? 0))) return false;
     state.awaiting = {kind: "effect-choice", effect: "unlessPays", player: payer, amount: Math.max(0, params.amount ?? 0),
       ...(params.life !== undefined ? {life: params.life} : {}), ...(params.discard ? {discard: params.discard} : {}), ...(params.sacrifice ? {sacrifice: structuredClone(params.sacrifice)} : {}),
+      ...(params.sacrificeCount ? {sacrificeCount: params.sacrificeCount} : {}),
       effects: structuredClone(params.effects ?? []), source: context.source ?? null,
       /* "You may pay {1}. If you do, ...": the effects when it is paid, not when it is not. */
       ...(params.ifPaid ? {ifPaid: true} : {})};
@@ -640,6 +712,9 @@ export const unlessPays = {
   choice(state, awaiting) {
     /* Having said they pay: which mana pays, when that is a choice (rules/mana.mjs, paymentUnits). */
     if (awaiting.paying) return paymentChoice(`unless-mana:${awaiting.player}:${state.turn}:${awaiting.amount}`, awaiting.amount, paymentUnits(state, awaiting.player));
+    /* Having said they sacrifice that many: which ones. */
+    if (awaiting.sacrificing) return {id: `unless-sacrifice:${awaiting.player}:${state.turn}`, title: `Choose ${awaiting.sacrificeCount} permanents to sacrifice`, mode: "many",
+      min: awaiting.sacrificeCount, max: awaiting.sacrificeCount, options: payOptions(state, awaiting).map((option, index) => ({index, ...option}))};
     const source = awaiting.source !== null ? state.objects[awaiting.source]?.card : null;
     const pays = payOptions(state, awaiting).map((option, index) => ({index, ...option}));
     return {id: `unless:${awaiting.player}:${state.turn}:${awaiting.amount}`, title: `${source ? `${source}: ` : ""}${costWords(awaiting)}?`, mode: "one", min: 1, max: 1,
@@ -651,9 +726,24 @@ export const unlessPays = {
       const events = payWithUnits(state, awaiting.player, paymentUnits(state, awaiting.player), indices, awaiting.amount);
       return unlessPaid(state, awaiting, awaiting.paying.option, events);
     }
+    if (awaiting.sacrificing) {
+      const ids = payOptions(state, awaiting).map((o) => o.cardId);
+      const chosen = [...new Set(indices ?? [])].map((i) => ids[i]);
+      if (chosen.length !== awaiting.sacrificeCount || chosen.some((id) => id === undefined)) throw new Error("Invalid selection");
+      const {sacrificing, ...rest} = awaiting;
+      return unlessPays.paid(state, rest, {...sacrificing.option, sacrifice: chosen});
+    }
     const option = unlessPays.choice(state, awaiting).options[(indices ?? [])[0]];
     if (!option) throw new Error("Invalid selection");
+    if (option.sacrificeMany) {
+      state.awaiting = {...awaiting, sacrificing: {option}};
+      return {events: [], again: true};
+    }
     if (!option.pay) return awaiting.ifPaid ? [] : {events: [], splice: structuredClone(awaiting.effects)};
+    return unlessPays.paid(state, awaiting, option);
+  },
+  /* Paying, with the option chosen: its mana, then the rest. */
+  paid(state, awaiting, option) {
     /* Which mana pays is the payer's: asked next when the ways to pay differ, paid at once when they do not. */
     if ((awaiting.amount ?? 0) > 0 && paymentIsAChoice(paymentUnits(state, awaiting.player), awaiting.amount)) {
       state.awaiting = {...awaiting, paying: {option}};
@@ -674,7 +764,7 @@ function unlessPaid(state, awaiting, option, events) {
   if (option.discard !== undefined && state.objects[option.discard]) {
     if (moveOne(state, option.discard, "graveyard", events, {owner: awaiting.player}) !== null) events[events.length - 1].data.fields.discarded = true;
   }
-  if (option.sacrifice !== undefined && state.objects[option.sacrifice]) sacrificeOne(state, option.sacrifice, events);
+  for (const id of option.sacrifice === undefined ? [] : [].concat(option.sacrifice)) if (state.objects[id]) sacrificeOne(state, id, events);
   return awaiting.ifPaid ? {events, splice: structuredClone(awaiting.effects)} : events;
 }
 
@@ -890,7 +980,10 @@ export const chooseCard = {
     const except = params.except === "remembered" ? new Set(context.remembered ?? []) : null;
     const pool = (among ? (context.remembered ?? []).filter((id) => state.objects[id]?.zone === zone) : onField ? [...state.zones.battlefield] : cardsIn(state, zone, player))
       .filter((id) => !except?.has(id));
-    const cards = pool.filter((id) => matchers.some((m) => m(state, id, {controller: player, source: context.source})));
+    const fitting = pool.filter((id) => matchers.some((m) => m(state, id, {controller: player, source: context.source})));
+    /* "Up to four cards with different names" (Gifts Ungiven): one of each name offered -- which of two identical cards in a
+       library is found changes nothing, and no answer can then name two of a name. */
+    const cards = params.differentNames === true ? fitting.filter((id, i) => fitting.findIndex((other) => state.objects[other].card === state.objects[id].card) === i) : fitting;
     /* From among what was looked at or moved (Risen Reef's "if it's a land card"), with nothing that fits: nothing to choose,
        and nobody is asked -- the cards are face up to the chooser, so there is no failing to find (CR 701.23b is a search's). */
     if ((among || onField) && cards.length === 0) return false;
@@ -1020,7 +1113,9 @@ export const play = {
     const from = params.from ?? "hand";
     const pool = from === "hand" ? cardsIn(state, "hand", player)
       : from === "command" ? cardsIn(state, "command", player).filter((id) => state.objects[id].commander === true)
-      : (params.targets ?? []).filter((id) => state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone));
+      : (params.targets ?? []).filter((id) => state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone)
+        /* "For each player, you may cast a card that player milled this way" (The Ur-Sphinx): `ownedBy` "that player". */
+        && (params.ownedBy !== "that player" || state.objects[id].owner === context.about?.player));
     const terms = {most, free: params.free === true, anyMana: params.anyMana === true};
     const choices = playable(state, player, pool, terms);
     if (!choices.length) return false;
@@ -1148,4 +1243,4 @@ export const orderDamage = {
   },
 };
 
-export const ASKING = Object.freeze({scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage});
+export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage});

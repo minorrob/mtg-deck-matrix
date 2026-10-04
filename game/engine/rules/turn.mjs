@@ -45,7 +45,7 @@ import {answerResolution, resolutionChoice} from "../script/resolution.mjs";
 import {finishResolving} from "./stack.mjs";
 import {playerRuleChanged, untapsDuringOthers, ruleChanged} from "./statics.mjs";
 import {emptyRestricted} from "./restricted-mana.mjs";
-import {endCopies} from "../script/effects/permanents.mjs";
+import {endCopies, phaseIn} from "../script/effects/permanents.mjs";
 import {untapOne} from "../script/effects/resources.mjs";
 import {runEffect} from "../script/effects/index.mjs";
 import {askEntering, enteringChoice, resolveEnteringChoice} from "./entering.mjs";
@@ -133,6 +133,8 @@ const cardRef = (state, id) => {
 /* CR 502.1. The ACTIVE PLAYER's permanents untap, and nobody else's. This is not a board-wide
    effect, and writing it as one is the kind of bug that only shows when a game is close. */
 function untap(state, events) {
+  /* Phasing (CR 502.1, 702.26b): the active player's phased-out permanents phase in first, and then untap with the rest. */
+  if ((state.phasedOut ?? []).length) phaseIn(state, state.activePlayer);
   for (const id of state.zones.battlefield) {
     const o = state.objects[id];
     /* The active player's permanents (CR 502.3), and another player's that a static of theirs untaps now (Seedborn Muse). */
@@ -598,6 +600,10 @@ export function advance(state) {
     state.players[state.activePlayer].turnBegan = state.turn;   /* CR 302.6, keywords/timing.mjs */
     /* "Until your next turn" (goad, CR 701.15a): over as that player's turn begins. */
     state.effects = (state.effects ?? []).filter((e) => !(e.until === "your-next-turn" && e.sourceController === state.activePlayer));
+    /* And "until that player's next turn" (Teferi's Reproach): over as that player's turn begins. */
+    state.effects = state.effects.filter((e) => !(e.until === "their-next-turn" && (e.players ?? []).includes(state.activePlayer)));
+    /* And a delayed trigger that lasted until then (effects/permanents.mjs, `untilYourNextTurn`). */
+    if ((state.delayedTriggers ?? []).some((d) => d.untilYourNextTurn)) state.delayedTriggers = state.delayedTriggers.filter((d) => !(d.untilYourNextTurn && d.controller === state.activePlayer));
     /* CR 305.2 says "already played a land THIS TURN", so the count is per turn and resets for
        everyone, not only for whoever is about to take it. The difference shows the moment an
        effect lets somebody play a land on another player's turn: resetting only the active
@@ -612,6 +618,8 @@ export function advance(state) {
     state.combatsThisTurn = 0;
     for (const player of state.players) {
       if (player.lostThisTurn) player.lostThisTurn = 0;
+      /* And the loyalty abilities each activated (rules/actions.mjs). */
+      if (player.loyaltyThisTurn) player.loyaltyThisTurn = 0;
       /* And what each gained and made this turn (script/amount.mjs, lifeGainedThisTurn, tokensCreatedThisTurn). */
       if (player.gainedThisTurn) player.gainedThisTurn = 0;
       if (player.tokensThisTurn) player.tokensThisTurn = 0;

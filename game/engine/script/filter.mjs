@@ -33,9 +33,10 @@
  */
 
 import {usesThisTurn} from "../state/index.mjs";
-import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf} from "../rules/layers.mjs";
+import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf, subtypesOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {hasSubtype, isCreatureType} from "../keywords/types.mjs";
+import {protectedFrom} from "../rules/protection.mjs";
 
 /* The steps after blockers are declared, in which an attacker is blocked or unblocked (CR 509.1h). */
 const BLOCKERS_DECLARED = ["COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAGE", "COMBAT_DAMAGE", "COMBAT_END"];
@@ -44,7 +45,7 @@ const BLOCKERS_DECLARED = ["COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAG
 export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
   "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander", "nonColors", "owner", "enteredThisTurn", "toughnessOverPower",
-  "unblocked", "singleTarget", "goaded", "uniqueName", "sharesCreatureType", "multicolored",
+  "unblocked", "singleTarget", "goaded", "uniqueName", "sharesCreatureType", "multicolored", "sharesColor",
 ]);
 
 /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
@@ -110,6 +111,7 @@ function assertGrammar(selector) {
   /* What it shares a creature type with: a selector of permanents, held to the same grammar. */
   if (selector.sharesCreatureType !== undefined) compileSelector({...selector.sharesCreatureType, what: "permanent"});
   if (selector.multicolored !== undefined && selector.multicolored !== true) throw new Error("A selector's multicolored is true: two or more colors");
+  if (selector.sharesColor !== undefined && selector.sharesColor !== "self") throw new Error("A selector's sharesColor is \"self\": a color of its source's");
 }
 
 /* A player with hexproof (CR 702.11c): a permanent of theirs with the static "you have hexproof" (rules/statics.mjs). */
@@ -118,13 +120,12 @@ const playerHasHexproof = (state, player) => state.zones.battlefield.some((id) =
 
 /* CR 115.2, and the difference between the two keywords is the part worth getting right:
    hexproof stops opponents only (CR 702.11b); shroud stops everybody, its controller included. */
-function canBeTargetedBy(state, id, chooser) {
+function canBeTargetedBy(state, id, chooser, source = null) {
   const keywords = keywordsOf(state, id);
   if (keywords.includes("Shroud")) return false;
   if (keywords.includes("Hexproof") && controllerOf(state, id) !== chooser) return false;
-  /* Protection is deferred and named: "protection from" carries a quality the card script has to
-     express, and there is nothing yet to express it with. When phase 2 gives it one, it goes
-     here and every targeting selector gains it at once. */
+  /* Protection (CR 702.16b; rules/protection.mjs): no target of a spell or ability from a source with the quality. */
+  if (protectedFrom(state, {card: id}, source)) return false;
   return true;
 }
 
@@ -166,6 +167,8 @@ export function compileSelector(selector) {
       if (!player || player.lost) return false;
       /* "You have hexproof" (Crystal Barricade, batch 71; CR 702.11c): no target of a spell or ability an opponent controls. */
       if (selector.target === true && id !== chooser && playerHasHexproof(state, id)) return false;
+      /* "You ... have protection from" (CR 702.16j): no target of a spell or ability from a source with the quality. */
+      if (selector.target === true && protectedFrom(state, {player: id}, context.source ?? null)) return false;
       const who = selector.who ?? "any";
       if (who === "you") return id === chooser;
       if (who === "opponent") return id !== chooser;
@@ -185,6 +188,12 @@ export function compileSelector(selector) {
     if (selector.colorless === false && colorsOf(state, id).length === 0) return false;
     /* "A multicolored spell" (CR 105.2b, Mage Tower Referee): two or more colors, through the layers. */
     if (selector.multicolored === true && colorsOf(state, id).length < 2) return false;
+    /* "An instant or sorcery card that shares a color with this planeswalker" (Kasmina): a color of its source's, now. */
+    if (selector.sharesColor === "self") {
+      const source = context.source !== null && context.source !== undefined && state.objects[context.source] ? colorsOf(state, context.source) : [];
+      const own = state.objects[id]?.zone === "battlefield" ? colorsOf(state, id) : (state.objects[id]?.colors ?? []);
+      if (!own.some((color) => source.includes(color))) return false;
+    }
     if (selector.colors) {
       const current = colorsOf(state, id);
       if (!selector.colors.every((color) => current.includes(color))) return false;
@@ -203,7 +212,7 @@ export function compileSelector(selector) {
        with its types. "A Forest" is a land with the subtype Forest, basic or not (CR 305.6). */
     /* A changeling is every creature type (CR 702.73a; keywords/types.mjs), in every zone. */
     if (selector.subtypes) {
-      const current = [...typesOf(state, id), ...(object.subtypes ?? [])], every = everyCreatureTypeOf(state, id);
+      const current = [...typesOf(state, id), ...(object.zone === "battlefield" ? subtypesOf(state, id) : object.subtypes ?? [])], every = everyCreatureTypeOf(state, id);
       if (!selector.subtypes.every((subtype) => hasSubtype(current, every, subtype))) return false;
     }
 
@@ -215,7 +224,7 @@ export function compileSelector(selector) {
     /* "Nonartifact creature", "non-Elf creature", "noncreature spell": none of these -- and an artifact creature is an
        artifact (CR 205.2b), so "nonartifact" excludes it. */
     if (selector.nonTypes || selector.nonSubtypes) {
-      const current = [...typesOf(state, id), ...(object.subtypes ?? [])], every = everyCreatureTypeOf(state, id);
+      const current = [...typesOf(state, id), ...(object.zone === "battlefield" ? subtypesOf(state, id) : object.subtypes ?? [])], every = everyCreatureTypeOf(state, id);
       if ((selector.nonTypes ?? []).some((type) => current.includes(type))) return false;
       /* "Non-Elf": a changeling is an Elf. */
       if ((selector.nonSubtypes ?? []).some((subtype) => hasSubtype(current, every, subtype))) return false;
@@ -313,7 +322,7 @@ export function compileSelector(selector) {
     if (selector.self === true && id !== context.source) return false;
     /* "A creature with flying": its keywords now, through the layers (CR 702). */
     if (selector.keywords && !selector.keywords.every((word) => keywordsOf(state, id).includes(word))) return false;
-    if (selector.target === true && !canBeTargetedBy(state, id, chooser)) return false;
+    if (selector.target === true && !canBeTargetedBy(state, id, chooser, context.source ?? null)) return false;
 
     return true;
   };

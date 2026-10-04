@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Silence the Echo",
+    "oracleId": "43654381-c55c-4d6d-abfd-12932ceb5a4a",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As an additional cost to cast this spell, sacrifice a creature or planeswalker or pay {3}.\nDestroy target creature or planeswalker.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "As an additional cost to cast this spell, sacrifice a creature or planeswalker or pay {3}.\nDestroy target creature or planeswalker.",
+      "additionalCost": [
+        {
+          "atom": "oneOf",
+          "options": [
+            [
+              {
+                "atom": "sacrifice",
+                "selector": {
+                  "anyOf": [
+                    {
+                      "types": [
+                        "Creature"
+                      ]
+                    },
+                    {
+                      "types": [
+                        "Planeswalker"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ],
+            [
+              {
+                "atom": "mana",
+                "cost": "{3}"
+              }
+            ]
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

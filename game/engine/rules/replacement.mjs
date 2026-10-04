@@ -48,6 +48,7 @@
 import {compileSelector, matchesSelector} from "../script/filter.mjs";
 import {amountOf, isCounted} from "../script/amount.mjs";
 import {chosenFor} from "../script/chosen.mjs";
+import {protectedFrom} from "./protection.mjs";
 
 /* "This land enters tapped unless you control a Forest or a Plains" (a check land), "... unless you control two or
    fewer other lands" (a fast land): the arrival's `unless`, read as the land is about to enter -- so the land itself,
@@ -59,6 +60,13 @@ function unlessHolds(state, unless, player) {
   if (unless.opponents) {
     const opponents = state.players.filter((p) => p.id !== player && !p.lost).length;
     return opponents >= (unless.opponents.min ?? 1) && (unless.opponents.max === undefined || opponents <= unless.opponents.max);
+  }
+  /* "Unless your opponents control eight or more lands" (the Turbulent lands): what this player's opponents control, all
+     of them together, at least `min`. */
+  if (unless.opponentsControl) {
+    const theirs = compileSelector({...unless.opponentsControl, controller: "opponent"});
+    const count = state.zones.battlefield.filter((id) => theirs(state, id, {controller: player})).length;
+    return count >= (unless.min ?? 1) && (unless.max === undefined || count <= unless.max);
   }
   const alternatives = Array.isArray(unless.controls?.anyOf) ? unless.controls.anyOf : [unless.controls ?? {}];
   const matchers = alternatives.map((selector) => compileSelector({...selector, controller: "you"}));
@@ -285,7 +293,7 @@ function applyOne(state, {holderId, ability}, proposal, dry = false) {
     /* "With X +1/+1 counters on it" (CR 107.3m: the X paid to cast it), "a +1/+1 counter for each Zombie card in your
        graveyard", "X, where X is the greatest power among other creatures you control": counted as it is about to enter,
        "you" its controller. */
-    const n = isCounted(count) ? amountOf(state, count, {controller: proposal.player, source: proposal.objectId, x: proposal.x ?? 0}) : count;
+    const n = isCounted(count) ? amountOf(state, count, {controller: proposal.player, source: proposal.objectId, x: proposal.x ?? 0, kicked: proposal.kicked ?? 0}) : count;
     next.counters = {...(next.counters ?? {})};
     if (n > 0) next.counters[counter] = (next.counters[counter] ?? 0) + n;
   }
@@ -354,6 +362,9 @@ export function applyReplacements(state, proposal, {orders = [], askable = false
      the damage, so nothing is left for another effect to apply to, and there is no order to ask (CR 616.1). */
   if (proposal.event === "damage" && preventedForAWhile(state, current))
     return {proposal: {...current, amount: 0, prevented: true}, applied: current.applied, awaiting: false};
+  /* PROTECTION (CR 702.16e, 702.16j; rules/protection.mjs): damage from a source with the quality is prevented, all of it. */
+  if (proposal.event === "damage" && protectedFrom(state, {card: current.toCard ?? null, player: current.toPlayer ?? null}, current.sourceId))
+    return {proposal: {...current, amount: 0, prevented: true}, applied: current.applied, awaiting: false};
 
   /* Each round finds what still applies to the event AS IT NOW IS, which is what makes an effect
      that rewrites the destination able to bring a different effect into play. Bounded by CR 614.5:
@@ -399,9 +410,9 @@ export function applyReplacements(state, proposal, {orders = [], askable = false
  *
  * @returns {{tapped: boolean, counters: object}}
  */
-export function enteringModifications(state, {objectId, player, types, abilities, x = 0, escaped = false}) {
+export function enteringModifications(state, {objectId, player, types, abilities, x = 0, escaped = false, kicked = 0}) {
   const {proposal} = applyReplacements(state, {
-    event: "enters", objectId, player, types: types ?? [], x, escaped,
+    event: "enters", objectId, player, types: types ?? [], x, escaped, kicked,
     entering: {abilities: abilities ?? []},
     tapped: false, counters: {},
   });

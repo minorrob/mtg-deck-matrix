@@ -207,14 +207,16 @@ export function smokeScenario(script) {
     : wants((o) => (o.types ?? []).includes("Instant") || (o.colors ?? []).length > 0) ? "Smoke Instant" : "Smoke Sorcery";
   const instantSpeed = !ownSpell && !isLand && Boolean(script.identity.manaCost)
     && ((script.identity.types ?? []).includes("Instant") || (script.abilities ?? []).some((a) => a?.kind === "keyword" && a.keyword === "flash"));
-  /* A spell's additional cost (CR 601.2b): a card to discard, and a creature and an artifact to sacrifice. */
-  const extra = (script.abilities ?? []).find((a) => a?.kind === "spell")?.additionalCost ?? [];
+  /* A spell's additional cost (CR 601.2b): a card to discard, and a creature and an artifact to sacrifice or blight -- for
+     each choice of a choice of costs too ("sacrifice a creature or planeswalker or pay {3}", Silence the Echo: `oneOf`). */
+  const extra = ((script.abilities ?? []).find((a) => a?.kind === "spell")?.additionalCost ?? [])
+    .flatMap((a) => (a?.atom === "oneOf" && Array.isArray(a.options) ? a.options.flat() : [a]));
   const fodderHand = extra.some((a) => a?.atom === "discard") ? ["Smoke Charm"] : [];
   /* A card aimed at its caster's own things ("target creature you control") gets something of the caster's to aim at. */
   const ownTargets = (script.abilities ?? []).some((a) => aims(a).some((t) => JSON.stringify(t).includes('"controller":"you"'))
     /* An Aura's target is its Enchant's: "Enchant creature you control" (Super State). */
     || (a?.kind === "keyword" && String(a.keyword).toLowerCase() === "enchant" && JSON.stringify(a.target ?? {}).includes('"controller":"you"')));
-  const fodderField = extra.some((a) => a?.atom === "sacrifice") || ownTargets ? ["Smoke Bear", "Smoke Relic"] : [];
+  const fodderField = extra.some((a) => ["sacrifice", "blight"].includes(a?.atom)) || ownTargets ? ["Smoke Bear", "Smoke Relic"] : [];
   /* A card aimed at a card in a graveyard ("return target permanent card ... from your graveyard", Sevinne's Reclamation;
      Reanimate) gets a creature card in its player's graveyard to aim at (batch 70), and a sorcery card ("target instant or
      sorcery card in your graveyard gains flashback", Flashback). */
@@ -269,6 +271,8 @@ export function zoneProblems(state) {
       void seat;
     }));
   }
+  /* A phased-out permanent is in no zone's list, by design (CR 702.26d): it is in `state.phasedOut` instead. */
+  for (const id of state.phasedOut ?? []) { note(id, "phased"); if (state.objects[id]?.zone !== "phased") problems.push(`object ${id} is phased out and says it is in ${state.objects[id]?.zone}`); }
   for (const id of Object.keys(state.objects)) if (!seen.has(Number(id))) problems.push(`${state.objects[id].card} is in no zone`);
   return problems;
 }
