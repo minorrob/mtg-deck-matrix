@@ -188,22 +188,27 @@ export function smokeScenario(script) {
   const front = script.back !== undefined ? String(name).split(" // ")[0] : name;
   const isLand = (script.identity.types ?? []).includes("Land");
   const lands = isLand ? ["Wastes", "Wastes"] : landsFor(script.identity.manaCost);
-  /* A card aimed at its controller's own spell ("copy target creature spell you control", Double Major) answers a free
-     creature spell its player casts on their own turn, not the opponent's sorcery. */
-  const ownSpell = (script.abilities ?? []).some((a) => (a?.targets ?? []).some((t) => JSON.stringify(t).includes('"what":"spell"') && JSON.stringify(t).includes('"controller":"you"')));
+  /* What an ability aims at: its own targets, and its modes' (Warg Tactics: "destroy target creature with flying" or "put
+     a +1/+1 counter on target creature you control"). */
+  const aims = (a) => [...(a?.targets ?? []), ...(a?.effects ?? []).flatMap((e) => (e?.effect === "modal" ? (e.modes ?? []).flatMap((m) => m?.targets ?? []) : []))];
+  /* A spell aimed at its controller's own spell ("copy target creature spell you control", Double Major) answers a free
+     creature spell its player casts on their own turn, not the opponent's sorcery. Only the spell's own aim: a creature
+     whose activated ability copies its controller's spells (Kitsa) is cast as any creature is, with nothing on the stack. */
+  const ownSpell = (script.abilities ?? []).some((a) => a?.kind === "spell" && aims(a).some((t) => JSON.stringify(t).includes('"what":"spell"') && JSON.stringify(t).includes('"controller":"you"')));
   const instantSpeed = !ownSpell && !isLand && Boolean(script.identity.manaCost)
     && ((script.identity.types ?? []).includes("Instant") || (script.abilities ?? []).some((a) => a?.kind === "keyword" && a.keyword === "flash"));
   /* A spell's additional cost (CR 601.2b): a card to discard, and a creature and an artifact to sacrifice. */
   const extra = (script.abilities ?? []).find((a) => a?.kind === "spell")?.additionalCost ?? [];
   const fodderHand = extra.some((a) => a?.atom === "discard") ? ["Smoke Charm"] : [];
   /* A card aimed at its caster's own things ("target creature you control") gets something of the caster's to aim at. */
-  const ownTargets = (script.abilities ?? []).some((a) => (a?.targets ?? []).some((t) => JSON.stringify(t).includes('"controller":"you"'))
+  const ownTargets = (script.abilities ?? []).some((a) => aims(a).some((t) => JSON.stringify(t).includes('"controller":"you"'))
     /* An Aura's target is its Enchant's: "Enchant creature you control" (Super State). */
     || (a?.kind === "keyword" && String(a.keyword).toLowerCase() === "enchant" && JSON.stringify(a.target ?? {}).includes('"controller":"you"')));
   const fodderField = extra.some((a) => a?.atom === "sacrifice") || ownTargets ? ["Smoke Bear", "Smoke Relic"] : [];
   /* A card aimed at a card in a graveyard ("return target permanent card ... from your graveyard", Sevinne's Reclamation;
-     Reanimate) gets a creature card in its player's graveyard to aim at (batch 70). */
-  const graveTargets = (script.abilities ?? []).some((a) => (a?.targets ?? []).some((t) => JSON.stringify(t).includes('"zone":"graveyard"')));
+     Reanimate) gets a creature card in its player's graveyard to aim at (batch 70), and a sorcery card ("target instant or
+     sorcery card in your graveyard gains flashback", Flashback). */
+  const graveTargets = (script.abilities ?? []).some((a) => aims(a).some((t) => JSON.stringify(t).includes('"zone":"graveyard"')));
   const steps = [];
   /* A land that asks as it enters, or triggers (a scry land), is answered and resolved before the game moves on. */
   /* A double-faced card is played, as it is cast, by its front face's name (Brightclimb Pathway // Grimclimb Pathway). */
@@ -228,7 +233,7 @@ export function smokeScenario(script) {
       setup: [
         {seat: 0, zone: "command", cards: ["Smoke Commander"]},
         {seat: 0, zone: "battlefield", cards: [...lands, ...fodderField]},
-        ...(graveTargets ? [{seat: 0, zone: "graveyard", cards: ["Smoke Bear"]}] : []),
+        ...(graveTargets ? [{seat: 0, zone: "graveyard", cards: ["Smoke Bear", "Smoke Sorcery"]}] : []),
         ...(isLand || script.identity.manaCost ? [{seat: 0, zone: "hand", cards: [name, ...fodderHand, ...(ownSpell ? ["Smoke Whelp"] : [])]}] : [{seat: 0, zone: "battlefield", cards: [name]}]),
         {seat: 1, zone: "battlefield", cards: ["Smoke Bear", "Smoke Giant", "Smoke Relic", "Smoke Charm", "Wastes"]},
         {seat: 1, zone: "hand", cards: ["Smoke Sorcery"]},

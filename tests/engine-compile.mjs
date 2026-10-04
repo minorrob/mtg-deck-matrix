@@ -51,6 +51,22 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
   ok(played >= scripts.length - 2, `and ${played} of ${scripts.length} were actually played or cast in it (a counterspell for creatures has only a sorcery to answer)`);
   /* Batch 30: a card aimed at its controller's own creature spell answers the Smoke Whelp its player casts first. */
   ok(smoked.find((r) => r.name === "Double Major")?.played === true, "Double Major (\"copy target creature spell you control\") is cast in its smoke game, at its player's own creature spell");
+  /* A creature whose ACTIVATED ability copies its controller's spells is cast as any creature is: no spell of its own put on
+     the stack first, which would keep a creature from being cast at all. */
+  ok(smoked.find((r) => r.name === "Kitsa, Otterball Elite")?.played === true, "Kitsa, Otterball Elite is cast in its smoke game: only a spell's own aim at its controller's spell waits for one");
+  /* What a smoke game gives a card to aim at is read from its modes too, and a graveyard target finds a sorcery card as
+     well as a creature card: two cards written for these games, not in the directory. */
+  const smokeCard = (name, cost, color, text, ability) => ({schema: "CrankCardScript@1",
+    identity: {name, oracleId: "00000000-0000-4000-8000-00000000000" + (name.length % 10), types: ["Instant"], manaCost: cost, colors: [color], colorIdentity: [color]},
+    oracleText: text, source: "hand", abilities: [{kind: "spell", text, ...ability}]});
+  const modal = smokeCard("Smoke Tactics", "{1}{G}", "G", "Choose one \u2014\n\u2022 Destroy target creature with flying.\n\u2022 Put a +1/+1 counter on target creature you control.", {effects: [{effect: "modal", choose: 1, modes: [
+    {text: "Destroy target creature with flying.", targets: [{what: "permanent", types: ["Creature"], keywords: ["Flying"]}], effects: [{effect: "destroy", targets: {target: 0}}]},
+    {text: "Put a +1/+1 counter on target creature you control.", targets: [{what: "permanent", types: ["Creature"], controller: "you"}], effects: [{effect: "putCounter", targets: {target: 0}, counter: "+1/+1", count: 1}]}]}]});
+  ok(smokeTest(modal, index.definition).played === true, "a modal spell whose one castable mode aims at its caster's creature is cast: the modes' targets are read (Warg Tactics)");
+  const rewind = smokeCard("Smoke Rewind", "{R}", "R", "Return target instant or sorcery card from your graveyard to your hand.", {
+    targets: [{anyOf: [{what: "card", zone: "graveyard", controller: "you", types: ["Instant"]}, {what: "card", zone: "graveyard", controller: "you", types: ["Sorcery"]}]}],
+    effects: [{effect: "moveZone", targets: {target: 0}, to: "hand"}]});
+  ok(smokeTest(rewind, index.definition).played === true, "a spell aimed at an instant or sorcery card in its caster's graveyard is cast: one is there (Flashback)");
 
   const bolt = handOf("Lightning Bolt");
   const four = checkFidelity({...bolt, abilities: [{...bolt.abilities[0], text: "Lightning Bolt deals 4 damage to any target."}]});
