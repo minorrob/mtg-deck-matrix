@@ -1,0 +1,30 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Chitinous Graspling",
+  "scenarios": [
+    {
+      "name": "It has reach",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Chitinous Graspling"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Chitinous Graspling",
+            "has": [
+              "Reach"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

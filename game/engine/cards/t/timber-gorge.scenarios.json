@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Timber Gorge",
+  "scenarios": [
+    {
+      "name": "Played, it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Timber Gorge"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Timber Gorge"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Timber Gorge"
+        }
+      ]
+    },
+    {
+      "name": "{T}: {G}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Timber Gorge"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Timber Gorge",
+          "mana": {
+            "G": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Prideful Feastling",
+  "scenarios": [
+    {
+      "name": "It has lifelink",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Prideful Feastling"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Prideful Feastling",
+            "has": [
+              "Lifelink"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
