@@ -9,8 +9,9 @@
  * loaded, and the gate's second run never ended. Here:
  *
  *   - SUITE_JOBS suites run at a time (default: the cores less one, at most four);
- *   - a suite that drives a browser (it names tests/uat/browser-runner.mjs or Playwright) runs one at a time, as all of
- *     them always did: two browsers and their servers at once is a contention none of them was written for;
+ *   - a suite that drives a browser (it names tests/uat/browser-runner.mjs or Playwright) runs alone, after the others,
+ *     as every suite once did: its waits were written for a quiet machine. Beside two engine suites, tests/table-board.mjs
+ *     waited thirty seconds for its Focus button to hold still and failed (the gate on 03b9223b, 2026-10-04);
  *   - a suite still running after SUITE_TIMEOUT_MINUTES (default 20; the slowest, engine-gate's thousand games, takes a
  *     few) is stopped with every process it started, and fails, saying so;
  *   - the report is in the suites' order however they finish, and ends as runtests.sh's always did: the failures named
@@ -66,13 +67,21 @@ function stop(child) {
   try { process.kill(-child.pid, "SIGKILL"); } catch { try { child.kill("SIGKILL"); } catch { /* gone */ } }
 }
 
-/* The next suite that may start, in order: any, but a browser suite only while no other is running. */
+/* The order they start in: every other suite first, several at a time; then the browser suites, each alone. */
+const order = [...suites.keys()].sort((a, b) => Number(browser.has(suites[a])) - Number(browser.has(suites[b])) || a - b);
+let next = 0;
 function schedule() {
-  while (running.size < jobs) {
-    const busy = [...running.keys()].some((i) => browser.has(suites[i]));
-    const next = suites.findIndex((file, i) => !results[i] && !running.has(i) && !(busy && browser.has(file)));
-    if (next < 0) break;
-    run(next);
+  while (next < order.length) {
+    const index = order[next];
+    if (browser.has(suites[index])) {
+      if (running.size > 0) break;
+      run(index);
+      next += 1;
+      break;
+    }
+    if (running.size >= jobs) break;
+    run(index);
+    next += 1;
   }
   if (printed === suites.length) finish();
 }

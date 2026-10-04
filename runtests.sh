@@ -17,9 +17,9 @@
 # handed dead invitations. A suite nobody runs is a suite that does not exist.
 #
 # SEVERAL AT A TIME, NONE FOREVER. tools/run-suites.mjs runs them: SUITE_JOBS at once (the
-# cores less one, at most four), the browser suites one at a time among themselves, and a
-# suite still running after SUITE_TIMEOUT_MINUTES (20) stopped and failed -- one that
-# waited on a page for good held the whole gate on 2026-10-03. The report is in the
-# suites' order and ends as it always did.
+# cores less one, at most four), then the browser suites each alone, and a suite still
+# running after SUITE_TIMEOUT_MINUTES (20) stopped and failed -- one that waited on a page
+# for good held the whole gate on 2026-10-03. The report is in the suites' order and ends
+# as it always did.
 set -u
 exec node tools/run-suites.mjs "$@"
