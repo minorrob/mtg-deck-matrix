@@ -574,6 +574,9 @@ begins; and the count's schema.
 a stun counter removed instead of an untap, by the untap step or an effect, one at a time; each set of three untapped
 creatures, the source among them, at most sixty-four, each tapped as it is paid; and the room's words for a set tapped,
 a blight and a counter removed.
+`engine-owner-chooses-library` holds a choice the target's owner makes as a spell resolves (Temporal Cleansing): the
+owner asked, its controller aside, and no mode chosen as the spell is cast; and a card put second from the top of a
+library, on top, or on the bottom.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -692,7 +695,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 280 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 281 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -944,6 +947,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-spell-cast-filters` — `tests/engine-spell-cast-filters.mjs`
 - `engine-entered-this-turn` — `tests/engine-entered-this-turn.mjs`
 - `engine-stun-and-tap-three` — `tests/engine-stun-and-tap-three.mjs`
+- `engine-owner-chooses-library` — `tests/engine-owner-chooses-library.mjs`
 
 ## Design and execution record
 

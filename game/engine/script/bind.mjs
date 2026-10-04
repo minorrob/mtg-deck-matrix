@@ -285,6 +285,13 @@ export function bindEffect(effect, context, state = null) {
     const [player] = playersOf(bound.chooser, context);
     if (player === undefined) delete bound.chooser; else bound.chooser = player;
   }
+  /* "The owner of target nonland permanent puts it into their library second from the top or on the bottom" (Temporal
+     Cleansing): the owner of a target object (`ownerOf`), as it now is. */
+  if (bound.chooser && typeof bound.chooser === "object" && isRef(bound.chooser.ownerOf)) {
+    const [id] = objectsOf(bound.chooser.ownerOf, context);
+    const owner = id !== undefined ? state?.objects[id]?.owner : undefined;
+    if (owner === undefined) delete bound.chooser; else bound.chooser = owner;
+  }
   return bound;
 }
 
