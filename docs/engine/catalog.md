@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,144 defined and playable today; 2,454 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,144 defined and playable today; 2,460 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -20,7 +20,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 38 | 0 | 19 | 137 |
 | Keyword actions (CR 701) | 70 | 19 | 3 | 4 | 44 |
-| Effects | 192 | 61 | 1 | 10 | 120 |
+| Effects | 192 | 62 | 1 | 9 | 120 |
 | Triggers | 138 | 17 | 4 | 5 | 112 |
 | Static abilities | 77 | 11 | 2 | 0 | 64 |
 | Replacement effects | 34 | 0 | 4 | 0 | 30 |
@@ -46,8 +46,8 @@ The things that alone hold back the most of the most-played cards.
 | effect | RingTemptsYou | — | missing | 8 | 11 |
 | count | Spells cast this turn | — | missing | 7 | 12 |
 | option | Imprint (a card exiled with this) | — | missing | 7 | 10 |
-| effect | Phases | phaseOut | named | 6 | 9 |
 | keyword ability | Overload | — | named | 6 | 7 |
+| effect | AddTurn | addTurn | named | 5 | 10 |
 | trigger | CounterAddedOnce | counter added once | named | 5 | 10 |
 | keyword construct | Class | — | missing | 5 | 9 |
 | effect | ChangeTargets | — | missing | 5 | 8 |
@@ -391,11 +391,11 @@ The things that alone hold back the most of the most-played cards.
 | Goad | goad | built | 11 | 67 | 0 | 0 |
 | RingTemptsYou | — | missing | 11 | 49 | 11 | 8 |
 | Poison | poison | built | 11 | 36 | 0 | 0 |
-| AddTurn | addTurn | named | 10 | 65 | 10 | 4 |
+| AddTurn | addTurn | named | 10 | 65 | 10 | 5 |
 | BecomeMonarch | — | missing | 10 | 62 | 10 | 3 |
 | ChangeTargets | — | missing | 10 | 43 | 8 | 5 |
 | Earthbend | earthbend | built | 10 | 36 | 0 | 0 |
-| Phases | phaseOut | named | 9 | 56 | 9 | 6 |
+| Phases | phaseOut | built | 9 | 56 | 0 | 0 |
 | RemoveCounter | removeCounter | built | 8 | 198 | 0 | 0 |
 | ChoosePlayer | — | missing | 8 | 120 | 8 | 3 |
 | Repeat | — | missing | 8 | 58 | 8 | 0 |
@@ -678,7 +678,7 @@ The things that alone hold back the most of the most-played cards.
 | CantBeCast | rules/actions | built | 14 | 97 | 0 | 0 |
 | CastWithFlash | rules/actions | built | 12 | 56 | 0 | 0 |
 | CantAttack | rules/combat | built | 10 | 204 | 0 | 0 |
-| RaiseCost | — | missing | 10 | 91 | 6 | 4 |
+| RaiseCost | — | missing | 10 | 91 | 6 | 5 |
 | CantBlock | rules/combat | built | 8 | 139 | 0 | 0 |
 | CantAttackUnless | rules/combat | built | 7 | 26 | 0 | 0 |
 | UntapOtherPlayer | rules/turn | built | 7 | 15 | 0 | 0 |

@@ -48,6 +48,8 @@ function hasQuality(state, from, sourceId) {
  */
 export function protectedFrom(state, {card = null, player = null}, sourceId) {
   if (sourceId === null || sourceId === undefined) return false;
+  /* "They gain protection from everything" (Teferi's Reproach): an effect over players (effectUntil's `rule: "protection"`). */
+  if (player !== null && player !== undefined && (state.effects ?? []).some((e) => e.rule === "protection" && (e.players ?? []).includes(player) && hasQuality(state, e.from, sourceId))) return true;
   for (const {ability, holderId, controller} of protections(state)) {
     if (!hasQuality(state, ability.from, sourceId)) continue;
     if (card !== null && card !== undefined && ability.affects && state.objects[card]?.zone === "battlefield"

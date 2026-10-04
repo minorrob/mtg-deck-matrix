@@ -638,6 +638,11 @@ cast, and the permanent entering with what it was kicked.
 and last known information; Song of the Dryads's colorless Forest land.
 `engine-suspend` holds suspend (Delay): a countered card exiled with time counters and suspended; one removed at its
 owner's upkeep only; cast free with haste when the last goes, or left in exile.
+`engine-phasing` holds phasing (Teferi's Reproach): permanents phase out with what is attached, out of combat and of
+every selector, and back in, the same objects, at their controller's untap; a player's protection from everything and a
+life total that can't change, until that player's next turn.
+`engine-exigent` holds Emrakul, the Exigent Doom's pieces: a spell's own cast trigger; a card exiled from hand as a cost,
+cast from exile for as long as it remains there, and an effect that lasts until that cast; ward of three sacrifices.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -756,7 +761,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 304 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 306 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1032,6 +1037,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-multikicker` — `tests/engine-multikicker.mjs`
 - `engine-set-subtypes` — `tests/engine-set-subtypes.mjs`
 - `engine-suspend` — `tests/engine-suspend.mjs`
+- `engine-phasing` — `tests/engine-phasing.mjs`
+- `engine-exigent` — `tests/engine-exigent.mjs`
 
 ## Design and execution record
 

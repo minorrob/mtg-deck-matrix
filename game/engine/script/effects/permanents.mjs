@@ -520,6 +520,13 @@ export function effectUntil(state, params, context) {
        target creature loses all abilities" (Abigale) -- lasting as long as what it affects does (CR 611.2a; a permanent
        that leaves is a new object, CR 400.7). */
     until: params.until === "ever" ? null : params.until ?? "end-of-turn",
+    /* "Until that player's next turn" (Teferi's Reproach): `their-next-turn`, the player `who` names (rules/turn.mjs). And a
+       rule changed for players (`players`): their protection, their life total that can't change. */
+    ...(params.until === "their-next-turn" || ["protection", "life-cant-change"].includes(params.rule) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
+    ...(params.rule === "protection" ? {from: params.from ?? "everything"} : {}),
+    /* "Until this card is cast from exile" (Emrakul, the Exigent Doom): `untilCast` the card, as `until: "ever"` otherwise is,
+       until that cast (rules/actions.mjs). */
+    ...(Array.isArray(params.untilCast) && params.untilCast.length ? {untilCast: params.untilCast[0]} : {}),
     sourceController: context.controller,
   });
   return [];
@@ -544,6 +551,41 @@ export function gainControl(state, params, context) {
     object.controller = to;
   }
   return [];
+}
+
+/**
+ * `phaseOut` -- "all nonland permanents they control phase out" (Teferi's Reproach; CR 702.26): each permanent the selector
+ * describes is treated as though it does not exist -- out of the battlefield's list, out of combat (CR 506.4), its zone
+ * "phased" -- with no zone change at all (CR 702.26e: nothing leaves or enters, nothing triggers), and phases back in, the
+ * same object, before its controller untaps during their next untap step (rules/turn.mjs, CR 702.26b).
+ */
+export function phaseOut(state, params, context) {
+  const ids = (params.selector ? selectMatching(state, params.selector, context) : params.targets ?? []).filter((id) => state.objects[id]?.zone === "battlefield");
+  /* Anything attached to one phases out with it, indirectly (CR 702.26h), and back in with it, whoever controls it. */
+  for (const id of [...ids]) for (const other of state.zones.battlefield) if (state.objects[other].attachedTo === id && !ids.includes(other)) ids.push(other);
+  for (const id of ids) {
+    const object = state.objects[id];
+    state.zones.battlefield.splice(state.zones.battlefield.indexOf(id), 1);
+    object.zone = "phased";
+    object.phasedOut = {player: ids.includes(object.attachedTo) ? state.objects[object.attachedTo].controller : object.controller};
+    (state.phasedOut ??= []).push(id);
+    if (state.combat) {
+      state.combat.attacks = (state.combat.attacks ?? []).filter((a) => a.attacker !== id);
+      for (const attack of state.combat.attacks ?? []) attack.blockers = (attack.blockers ?? []).filter((b) => b !== id);
+    }
+  }
+  return [];
+}
+/** Phase in every permanent of `player`'s that phased out (CR 702.26b), as their untap step begins. */
+export function phaseIn(state, player) {
+  const back = (state.phasedOut ?? []).filter((id) => state.objects[id]?.phasedOut?.player === player);
+  for (const id of back) {
+    const object = state.objects[id];
+    delete object.phasedOut;
+    object.zone = "battlefield";
+    state.zones.battlefield.push(id);
+  }
+  state.phasedOut = (state.phasedOut ?? []).filter((id) => !back.includes(id));
 }
 
 /**

@@ -1,0 +1,122 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Emrakul, the Exigent Doom",
+    "oracleId": "4421ab7d-6d9b-4edd-b5a0-53a8ed84da6f",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Eldrazi"
+    ],
+    "manaCost": "{10}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 12,
+    "toughness": 12
+  },
+  "oracleText": "When you cast this spell, untap all lands you control.\nFlying, trample\nWard—Sacrifice three permanents.\n{3}, Exile this card from your hand: Target land gains \"{T}: Add {C}{C}\" until this card is cast from exile. You may cast this card for as long as it remains exiled.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When you cast this spell, untap all lands you control.",
+      "trigger": {
+        "on": "spell cast",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "untapAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ],
+            "controller": "you"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "keyword",
+      "text": "Ward—Sacrifice three permanents.",
+      "keyword": "ward",
+      "cost": [
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "what": "permanent"
+          },
+          "count": 3
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{3}, Exile this card from your hand: Target land gains \"{T}: Add {C}{C}\" until this card is cast from exile. You may cast this card for as long as it remains exiled.",
+      "zone": "hand",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}"
+        },
+        {
+          "atom": "exile",
+          "self": true
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Land"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "layer": 6,
+          "targets": {
+            "target": 0
+          },
+          "apply": {
+            "addAbilities": [
+              {
+                "id": "exigent-cc",
+                "kind": "mana",
+                "tapSelf": true,
+                "produces": {
+                  "C": 2
+                },
+                "text": "{T}: Add {C}{C}."
+              }
+            ]
+          },
+          "until": "ever",
+          "untilCast": "that card"
+        },
+        {
+          "effect": "mayPlay",
+          "targets": "that card",
+          "spellsOnly": true,
+          "until": "ever"
+        }
+      ]
+    }
+  ]
+}
