@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Abrade",
+    "oracleId": "f9db72dc-9a5b-48a4-a86e-7464d9a2166a",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Abrade deals 3 damage to target creature.\n• Destroy target artifact.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Abrade deals 3 damage to target creature.\n• Destroy target artifact.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Abrade deals 3 damage to target creature.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "dealDamage",
+                  "amount": 3,
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Destroy target artifact.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Artifact"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "destroy",
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

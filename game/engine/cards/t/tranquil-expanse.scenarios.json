@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Tranquil Expanse",
+  "scenarios": [
+    {
+      "name": "Played: tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tranquil Expanse"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Tranquil Expanse"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Tranquil Expanse"
+        }
+      ]
+    },
+    {
+      "name": "{T}: {G}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tranquil Expanse"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Tranquil Expanse",
+          "mana": {
+            "G": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lorehold Charm",
+    "oracleId": "a5729f11-6cde-4830-b882-ab4c5251c1a9",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Each opponent sacrifices a nontoken artifact of their choice.\n• Return target artifact or creature card with mana value 2 or less from your graveyard to the battlefield.\n• Creatures you control get +1/+1 and gain trample until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Each opponent sacrifices a nontoken artifact of their choice.\n• Return target artifact or creature card with mana value 2 or less from your graveyard to the battlefield.\n• Creatures you control get +1/+1 and gain trample until end of turn.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Each opponent sacrifices a nontoken artifact of their choice.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "sacrifice",
+                  "who": "opponent",
+                  "count": 1,
+                  "selector": {
+                    "types": [
+                      "Artifact"
+                    ],
+                    "token": false
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Return target artifact or creature card with mana value 2 or less from your graveyard to the battlefield.",
+              "targets": [
+                {
+                  "anyOf": [
+                    {
+                      "what": "card",
+                      "zone": "graveyard",
+                      "controller": "you",
+                      "types": [
+                        "Artifact"
+                      ],
+                      "manaValue": {
+                        "max": 2
+                      }
+                    },
+                    {
+                      "what": "card",
+                      "zone": "graveyard",
+                      "controller": "you",
+                      "types": [
+                        "Creature"
+                      ],
+                      "manaValue": {
+                        "max": 2
+                      }
+                    }
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": {
+                    "target": 0
+                  },
+                  "to": "battlefield"
+                }
+              ]
+            },
+            {
+              "text": "Creatures you control get +1/+1 and gain trample until end of turn.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "pumpAll",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ],
+                    "controller": "you"
+                  },
+                  "power": 1,
+                  "toughness": 1,
+                  "keywords": [
+                    "Trample"
+                  ],
+                  "until": "end-of-turn"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

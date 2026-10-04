@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Old Fat Spider",
+    "oracleId": "8790f842-e842-4bed-adf4-5b3cc5fd68a9",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spider"
+    ],
+    "manaCost": "{4}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 6,
+    "toughness": 7
+  },
+  "oracleText": "Reach\nThis creature can't be blocked by creatures with power 2 or less.\nWhenever this creature becomes the target of a spell or ability an opponent controls, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Reach",
+      "keyword": "reach"
+    },
+    {
+      "kind": "static",
+      "text": "This creature can't be blocked by creatures with power 2 or less.",
+      "rule": "cant-be-blocked-by",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "by": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "power": {
+          "max": 2
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature becomes the target of a spell or ability an opponent controls, draw a card.",
+      "trigger": {
+        "on": "becomes target",
+        "who": "self",
+        "by": "opponent"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

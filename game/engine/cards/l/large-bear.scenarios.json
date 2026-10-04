@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Large Bear",
+  "scenarios": [
+    {
+      "name": "Cast and attacking at once: 5 to Maya",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Large Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Large Bear"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Large Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 35
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Large Bear",
+            "has": [
+              "Reach",
+              "Trample",
+              "Haste"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Carven Caryatid",
+  "scenarios": [
+    {
+      "name": "It enters: a card",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Carven Caryatid"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Carven Caryatid"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Wilderness Reclamation",
+  "scenarios": [
+    {
+      "name": "Rob's end step: the Forest untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wilderness Reclamation",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Forest",
+          "is": false
+        }
+      ]
+    }
+  ]
+}

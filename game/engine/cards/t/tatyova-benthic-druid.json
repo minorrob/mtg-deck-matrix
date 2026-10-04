@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tatyova, Benthic Druid",
+    "oracleId": "0715e860-3b3b-4331-9718-207973e94fee",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Merfolk",
+      "Druid"
+    ],
+    "manaCost": "{3}{G}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Landfall — Whenever a land you control enters, you gain 1 life and draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Landfall — Whenever a land you control enters, you gain 1 life and draw a card.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 1
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

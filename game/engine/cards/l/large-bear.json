@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Large Bear",
+    "oracleId": "73346137-3117-4dc3-b5a4-1aca1da54548",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bear"
+    ],
+    "manaCost": "{3}{B/G}{B/G}",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Reach, trample, haste",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Reach",
+      "keyword": "reach"
+    },
+    {
+      "kind": "keyword",
+      "text": "trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "keyword",
+      "text": "haste",
+      "keyword": "haste"
+    }
+  ]
+}

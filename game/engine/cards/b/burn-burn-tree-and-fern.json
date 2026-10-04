@@ -1,0 +1,114 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Burn, Burn, Tree and Fern",
+    "oracleId": "a97d6c5c-1cff-442d-b535-fc8389160b0b",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Saga"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after IV.)\nI — This Saga deals 6 damage to target creature an opponent controls.\nII — Destroy target artifact an opponent controls.\nIII, IV — Add {R}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "As this Saga enters and after your draw step, add a lore counter. Sacrifice after IV.",
+      "keyword": "saga"
+    },
+    {
+      "kind": "triggered",
+      "text": "I — This Saga deals 6 damage to target creature an opponent controls.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 1
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 6,
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "opponent"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "II — Destroy target artifact an opponent controls.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 2
+      },
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Artifact"
+          ],
+          "controller": "opponent"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "III, IV — Add {R}.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 3
+      },
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "R": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "III, IV — Add {R}.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 4
+      },
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "R": 1
+          }
+        }
+      ]
+    }
+  ]
+}

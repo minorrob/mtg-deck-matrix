@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wilderness Reclamation",
+    "oracleId": "6f856f99-4cb4-479d-958d-964220965ed6",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "At the beginning of your end step, untap all lands you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, untap all lands you control.",
+      "trigger": {
+        "on": "end step",
+        "yours": true
+      },
+      "effects": [
+        {
+          "effect": "untapAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ],
+            "controller": "you"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Reclamation Sage",
+    "oracleId": "032ec6e2-6cc3-4a97-9cc7-3233f5e11904",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Shaman"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters, you may destroy target artifact or enchantment.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, you may destroy target artifact or enchantment.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Enchantment"
+              ]
+            }
+          ]
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

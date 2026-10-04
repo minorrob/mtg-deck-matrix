@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Jaddi Offshoot",
+  "scenarios": [
+    {
+      "name": "A land: 1 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Jaddi Offshoot"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Forest"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 41
+        }
+      ]
+    }
+  ]
+}

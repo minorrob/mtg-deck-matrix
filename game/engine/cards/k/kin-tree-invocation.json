@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kin-Tree Invocation",
+    "oracleId": "fbb74ff8-7381-4de9-bf62-e5d181a187bc",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{B}{G}",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Create an X/X black and green Spirit Warrior creature token, where X is the greatest toughness among creatures you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Create an X/X black and green Spirit Warrior creature token, where X is the greatest toughness among creatures you control.",
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Spirit Warrior",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Spirit",
+              "Warrior"
+            ],
+            "colors": [
+              "B",
+              "G"
+            ],
+            "power": {
+              "greatestToughness": {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              }
+            },
+            "toughness": {
+              "greatestToughness": {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

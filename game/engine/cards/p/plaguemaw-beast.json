@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Plaguemaw Beast",
+    "oracleId": "22252186-15d0-468f-8cab-c74db9b71439",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Beast"
+    ],
+    "manaCost": "{3}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "{T}, Sacrifice a creature: Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}, Sacrifice a creature: Proliferate.",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "proliferate"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,174 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Barrage of Expendables",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Wall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 4,
+      "keywords": [
+        "Defender"
+      ]
+    },
+    "Tank": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 4
+    },
+    "Merfolk Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Merfolk"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Goblin Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "White Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Soldier"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Charm Ward": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ]
+    },
+    "Shrine Pal": {
+      "types": [
+        "Enchantment"
+      ],
+      "subtypes": [
+        "Shrine"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{R}, the Goblin sacrificed: 1 to Maya",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Barrage of Expendables",
+            "Goblin Pal",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "activate": "Barrage of Expendables",
+          "sacrifice": "Goblin Pal",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        }
+      ]
+    }
+  ]
+}

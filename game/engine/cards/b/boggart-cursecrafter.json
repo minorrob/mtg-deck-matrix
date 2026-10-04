@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Boggart Cursecrafter",
+    "oracleId": "5d58aefe-a3df-4e0a-b679-b967cd5fd2c6",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Warlock"
+    ],
+    "manaCost": "{B}{R}",
+    "colors": [
+      "B",
+      "R"
+    ],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Deathtouch\nWhenever another Goblin you control dies, this creature deals 1 damage to each opponent.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Deathtouch",
+      "keyword": "deathtouch"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another Goblin you control dies, this creature deals 1 damage to each opponent.",
+      "trigger": {
+        "on": "dies",
+        "who": "another",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "subtypes": [
+            "Goblin"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "who": "opponent"
+        }
+      ]
+    }
+  ]
+}

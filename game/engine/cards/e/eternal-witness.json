@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Eternal Witness",
+    "oracleId": "30b24e8e-3b0e-4d8e-90f3-f66eb7c1858c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Shaman"
+    ],
+    "manaCost": "{1}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters, you may return target card from your graveyard to your hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, you may return target card from your graveyard to your hand.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you"
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cloudblazer",
+    "oracleId": "f84d1291-1f82-4b67-a26e-b79624b4ce1d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Scout"
+    ],
+    "manaCost": "{3}{W}{U}",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying\nWhen this creature enters, you gain 2 life and draw two cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, you gain 2 life and draw two cards.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 2
+        },
+        {
+          "effect": "draw",
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,253 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Rip Apart",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Wall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 4,
+      "keywords": [
+        "Defender"
+      ]
+    },
+    "Tank": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 4
+    },
+    "Merfolk Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Merfolk"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Goblin Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "White Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Soldier"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Charm Ward": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ]
+    },
+    "Shrine Pal": {
+      "types": [
+        "Enchantment"
+      ],
+      "subtypes": [
+        "Shrine"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "3 damage: Maya's Bear dies",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rip Apart"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Rip Apart",
+          "modes": [
+            0
+          ],
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maya's enchantment destroyed",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rip Apart"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Charm Ward"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Rip Apart",
+          "modes": [
+            1
+          ],
+          "targets": [
+            {
+              "card": "Charm Ward"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Charm Ward"
+          ]
+        }
+      ]
+    }
+  ]
+}

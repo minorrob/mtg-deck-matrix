@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Belligerent Brontodon",
+    "oracleId": "fa2d8440-a44a-44fe-8624-0e8b4be53f44",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dinosaur"
+    ],
+    "manaCost": "{5}{G}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": 4,
+    "toughness": 6
+  },
+  "oracleText": "Each creature you control assigns combat damage equal to its toughness rather than its power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Each creature you control assigns combat damage equal to its toughness rather than its power.",
+      "rule": "combat-damage-by-toughness",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      }
+    }
+  ]
+}

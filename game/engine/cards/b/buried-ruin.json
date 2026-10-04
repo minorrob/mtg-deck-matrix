@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Buried Ruin",
+    "oracleId": "3644f316-f9a3-46c9-9b1e-747f86cf4ead",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {C}.\n{2}, {T}, Sacrifice this land: Return target artifact card from your graveyard to your hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{2}, {T}, Sacrifice this land: Return target artifact card from your graveyard to your hand.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "types": [
+            "Artifact"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        }
+      ]
+    }
+  ]
+}

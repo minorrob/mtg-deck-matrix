@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Carven Caryatid",
+    "oracleId": "bddf5e9a-7c41-45a8-8fa1-18093c408e15",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit"
+    ],
+    "manaCost": "{1}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 5
+  },
+  "oracleText": "Defender (This creature can't attack.)\nWhen this creature enters, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender",
+      "keyword": "defender"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, draw a card.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

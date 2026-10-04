@@ -1,0 +1,81 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Barrage of Expendables",
+    "oracleId": "da7600f6-5d4c-46bf-936a-9e0f0d508e19",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{R}, Sacrifice a creature: This enchantment deals 1 damage to any target.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{R}, Sacrifice a creature: This enchantment deals 1 damage to any target.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{R}"
+        },
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Battle"
+              ]
+            },
+            {
+              "what": "player"
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "targets": {
+            "target": 0
+          },
+          "who": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

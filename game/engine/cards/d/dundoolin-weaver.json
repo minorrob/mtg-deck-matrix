@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dundoolin Weaver",
+    "oracleId": "28564d10-bfc5-4beb-b0e2-b9aa5c03f740",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Kithkin",
+      "Druid"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters, if you control three or more creatures, return target permanent card from your graveyard to your hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, if you control three or more creatures, return target permanent card from your graveyard to your hand.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "nonTypes": [
+            "Instant",
+            "Sorcery"
+          ]
+        }
+      ],
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        },
+        "atLeast": 3
+      }
+    }
+  ]
+}
