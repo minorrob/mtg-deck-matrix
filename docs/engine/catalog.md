@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,136 defined and playable today; 2,437 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,138 defined and playable today; 2,448 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -19,8 +19,8 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 38 | 0 | 17 | 139 |
-| Keyword actions (CR 701) | 70 | 18 | 3 | 5 | 44 |
-| Effects | 192 | 59 | 1 | 12 | 120 |
+| Keyword actions (CR 701) | 70 | 19 | 3 | 4 | 44 |
+| Effects | 192 | 60 | 1 | 11 | 120 |
 | Triggers | 138 | 16 | 4 | 6 | 112 |
 | Static abilities | 77 | 11 | 2 | 0 | 64 |
 | Replacement effects | 34 | 0 | 4 | 0 | 30 |
@@ -40,7 +40,6 @@ The things that alone hold back the most of the most-played cards.
 | option | Remembering what an effect moved | — | missing | 23 | 95 |
 | option | You may play or cast a card from another zone | — | missing | 18 | 73 |
 | keyword construct | ETBReplacement | — | missing | 10 | 33 |
-| effect | MultiplyCounter | multiplyCounters | named | 10 | 12 |
 | effect | SetState | setState | named | 9 | 19 |
 | count | Cards in a library | — | missing | 9 | 13 |
 | count | What entered or died this turn | — | missing | 9 | 10 |
@@ -48,6 +47,7 @@ The things that alone hold back the most of the most-played cards.
 | count | Spells cast this turn | — | missing | 7 | 12 |
 | option | Imprint (a card exiled with this) | — | missing | 7 | 10 |
 | effect | Phases | phaseOut | named | 6 | 9 |
+| keyword ability | Overload | — | named | 6 | 7 |
 | trigger | CounterAddedOnce | counter added once | named | 5 | 10 |
 | keyword construct | Class | — | missing | 5 | 9 |
 | effect | ChangeTargets | — | missing | 5 | 8 |
@@ -84,7 +84,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.164 | Toxic | Toxic | built | 7 | 44 | 0 | 0 |
 | 702.40 | Storm | Storm | built | 7 | 37 | 0 | 0 |
 | 702.185 | Warp | — | missing | 7 | 37 | 7 | 5 |
-| 702.96 | Overload | — | named | 7 | 28 | 7 | 5 |
+| 702.96 | Overload | — | named | 7 | 28 | 7 | 6 |
 | 702.86 | Annihilator | Annihilator | built | 7 | 14 | 0 | 0 |
 | 702.124 | Partner | Partner | built | 6 | 78 | 0 | 0 |
 | 702.16 | Protection | — | named | 6 | 58 | 6 | 4 |
@@ -272,7 +272,7 @@ The things that alone hold back the most of the most-played cards.
 | 701.14 | Fight | fight | built | 15 | 148 | 0 | 0 |
 | 701.20 | Reveal | chooseCard | partial | 13 | 242 | 0 | 0 |
 | 701.19 | Regenerate | — | missing | 12 | 269 | 0 | 0 |
-| 701.10 | Double | multiplyCounters | named | 12 | 53 | 12 | 10 |
+| 701.10 | Double | multiplyCounters | built | 12 | 53 | 0 | 0 |
 | 701.15 | Goad | — | missing | 11 | 67 | 0 | 0 |
 | 701.66 | Earthbend | — | missing | 10 | 36 | 0 | 0 |
 | 701.47 | Amass | amass | built | 7 | 72 | 0 | 0 |
@@ -378,14 +378,14 @@ The things that alone hold back the most of the most-played cards.
 | ImmediateTrigger | immediateTrigger | built | 18 | 313 | 0 | 0 |
 | DigUntil | digUntil | built | 18 | 167 | 0 | 0 |
 | ReplaceToken | — | missing | 17 | 35 | 17 | 0 |
-| ReplaceCounter | replaceCounters | named | 16 | 33 | 16 | 0 |
+| ReplaceCounter | replaceCounters | named | 16 | 33 | 15 | 0 |
 | Fight | fight | built | 15 | 148 | 0 | 0 |
 | WinsGame | winGame | built | 15 | 43 | 0 | 0 |
 | ChooseColor | — | missing | 14 | 132 | 14 | 2 |
 | Branch | branch | built | 14 | 113 | 0 | 0 |
 | Regenerate | regenerate | built | 12 | 269 | 0 | 0 |
 | AnimateAll | animateAll | built | 12 | 133 | 0 | 0 |
-| MultiplyCounter | multiplyCounters | named | 12 | 53 | 12 | 10 |
+| MultiplyCounter | multiplyCounters | built | 12 | 53 | 0 | 0 |
 | ManaReflected | addMana | built | 12 | 47 | 0 | 0 |
 | PeekAndReveal | peekAndReveal | built | 11 | 158 | 0 | 0 |
 | Goad | goad | built | 11 | 67 | 0 | 0 |
@@ -756,7 +756,7 @@ The things that alone hold back the most of the most-played cards.
 | DamageDone | rules/replacement | partial | 22 | 209 | 0 | 0 |
 | Counter | rules/statics | partial | 21 | 110 | 0 | 0 |
 | CreateToken | — | missing | 17 | 32 | 17 | 0 |
-| AddCounter | — | missing | 15 | 30 | 15 | 0 |
+| AddCounter | — | missing | 15 | 30 | 14 | 0 |
 | Draw | — | missing | 7 | 37 | 7 | 4 |
 | GainLife | — | missing | 6 | 21 | 6 | 1 |
 | Untap | rules/turn | partial | 5 | 157 | 0 | 0 |
@@ -872,7 +872,7 @@ The things that alone hold back the most of the most-played cards.
 | — | Cards in a hand | {count: {what: "card", zone: "hand"}} | built | 26 | 242 | 0 | 0 |
 | — | This card's power | {powerOf: "self"} | built | 25 | 251 | 0 | 0 |
 | — | A comparison ("if you control ...") | {if: condition, then, else}; a modal's chooseMore, as it is cast | built | 17 | 146 | 0 | 0 |
-| — | CounterNum | — | missing | 16 | 32 | 16 | 0 |
+| — | CounterNum | — | missing | 16 | 32 | 15 | 0 |
 | — | Cards in a library | — | missing | 13 | 63 | 13 | 9 |
 | — | Spells cast this turn | — | missing | 12 | 139 | 12 | 7 |
 | — | Life you gained this turn | amount {lifeGainedThisTurn} (effects/resources.mjs and rules/combat.mjs keep it) | built | 12 | 84 | 0 | 0 |

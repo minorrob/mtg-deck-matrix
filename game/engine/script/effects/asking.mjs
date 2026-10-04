@@ -78,8 +78,12 @@ function finishScry(state, awaiting, top, bottom) {
       player: {playerId: player, name: state.players[player].name}, scryedToBottom: under.length,
     }));
   }
+  events.push(scried(state, awaiting, "scry"));
   return events;
 }
+/* That a player scried or surveilled, once it is done (CR 701.22a, 701.25a): "whenever you scry or surveil" (Proft,
+   Consulting Detective; rules/trigger.mjs). */
+const scried = (state, awaiting, kind) => event("GameEventScried", state, {player: {playerId: awaiting.player, name: state.players[awaiting.player].name}, kind, count: awaiting.count ?? awaiting.cards.length});
 
 export const scry = {
   open(state, params, context) {
@@ -179,6 +183,7 @@ export const surveil = {
       const library = state.zones.library[player];
       for (const id of awaiting.cards) { const at = library.indexOf(id); if (at >= 0) library.splice(at, 1); }
       library.unshift(...chosen);
+      events.push(scried(state, awaiting, "surveil"));
       return events;
     }
     for (const id of chosen) moveOne(state, id, "graveyard", events, {owner: state.objects[id].owner});
@@ -187,6 +192,7 @@ export const surveil = {
       state.awaiting = {...awaiting, step: "order", cards: rest};
       return {events, again: true};
     }
+    events.push(scried(state, awaiting, "surveil"));
     return events;
   },
 };

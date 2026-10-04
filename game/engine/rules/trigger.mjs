@@ -111,6 +111,11 @@ function subjects(state, event, condition, sourceId, controller) {
   if (event.kind !== condition.on) return [];
   const fields = event.data?.fields ?? {};
   /* "Whenever you cast a noncreature spell" (CR 601.2i): the spell on the stack, and who cast it. */
+  /* "Whenever you scry or surveil" (CR 701.22a, 701.25a): who did it. */
+  if (condition.on === "GameEventScried") {
+    const scrier = fields.player?.playerId;
+    return whoseIs(condition.scrier ?? "you", scrier, controller) ? [{player: scrier}] : [];
+  }
   /* "Whenever you activate a loyalty ability" (CR 606): an ability, not a spell, with a loyalty cost, by `activator`; the
      counters its cost removed at least `removedAtLeast`. */
   if (condition.on === "GameEventSpellAbilityCast" && condition.loyaltyActivated) {

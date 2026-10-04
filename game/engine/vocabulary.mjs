@@ -109,6 +109,8 @@ export const TRIGGER_EVENTS = Object.freeze([
   "becomes monstrous", "chapter",
   /* "Whenever you activate a loyalty ability" (CR 606; the live-game plan of 2026-10-04, P4). */
   "loyalty activated",
+  /* "Whenever you scry or surveil" (CR 701.22a, 701.25a). */
+  "scried",
 ]);
 
 /** The cost atoms of §12.2. The two symbolic ones are named; the rest are structural. */

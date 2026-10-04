@@ -23,7 +23,7 @@ import {selectMatching} from "../filter.mjs";
 import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
 import {typesOf, powerOf, toughnessOf, keywordsOf, isKeywordCounter} from "../../rules/layers.mjs";
-import {cantGainLife} from "../../rules/statics.mjs";
+import {cantGainLife, countersPlaced} from "../../rules/statics.mjs";
 
 /** `addMana` — into the controller's pool, which empties at the end of the step (CR 500.4). */
 export function addMana(state, params, context) {
@@ -266,6 +266,8 @@ export function addCounters(state, id, kind, count, events) {
   if (count === 0) return;
   const object = state.objects[id];
   if (!object) return;
+  /* "Twice that many instead" (Branching Evolution; rules/statics.mjs). */
+  if (object.zone === "battlefield") count = countersPlaced(state, id, kind, count);
   const before = object.counters[kind] ?? 0;
   object.counters[kind] = before + count;
   /* A keyword counter's ability has the timestamp of the counter's placing (CR 122.1b, 613.7): a "loses all abilities"
@@ -369,6 +371,24 @@ export function putCounterAll(state, params, context) {
   const events = [];
   for (const id of selectMatching(state, params.selector ?? {what: "permanent"}, context))
     addCounters(state, id, params.counter ?? "+1/+1", params.count ?? 1, events);
+  return events;
+}
+
+/**
+ * `multiplyCounters` -- "double the number of each kind of counter on any number of target permanents" (Deepglow Skate;
+ * Forge's MultiplyCounter): on each target, as many more of each kind as it has now, put on as counters are (CR 122.1 --
+ * doubling is putting that many on, which "if counters would be put on" sees); `who`, the players whose own counters
+ * double ("each kind of counter you have": poison, CR 122.1c). `times` 2 unless it says.
+ */
+export function multiplyCounters(state, params, context) {
+  const events = [], more = Math.max(1, params.times ?? 2) - 1;
+  for (const id of params.targets ?? []) {
+    const object = state.objects[id];
+    if (!object || object.zone !== "battlefield") continue;
+    for (const [kind, n] of Object.entries({...object.counters})) if (n > 0) addCounters(state, id, kind, n * more, events);
+  }
+  for (const player of params.who !== undefined ? playersFor(state, params.who, context.controller) : [])
+    if ((state.players[player].poison ?? 0) > 0) events.push(...givePoison(state, player, state.players[player].poison * more));
   return events;
 }
 
