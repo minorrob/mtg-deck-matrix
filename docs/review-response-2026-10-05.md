@@ -14,7 +14,7 @@ until the first live game in the cloud is played. That plan's steps resume after
 | **Where things stand** | The live game of 2026-10-04 was not played: staging never received the freeze. The Cloudflare API shows `crankmagic-staging` last deployed 2026-10-03 04:57 UTC (version `99f23f29`, from `main` 8107df4), which predates M5: the Worker that carries the engine and its 1,558 definitions has never run on Cloudflare. |
 | **The review, evaluated** | Its verdict stands. F-1 is right and was worse in our own suite than in its fuzz script. F-2 is right, and is a code regression rather than the machine: bisected to #600, fixed, the same games event for event. The unmodified gate on the freeze, run here on the supported toolchain, passes all 342 suites. |
 | **Found while evaluating** | A risk the review did not reach because it never ran on Cloudflare: once every person is out of a game, the AI seats played the rest inside one Durable Object request, and a request has 30 s of CPU. Built: the room plays the AI seats in slices on the object's alarm. |
-| **Next** | Merge this branch on the gate; build and walk the staging release; **Rob deploys it** (the container cannot, section 6, A1); Rob and a friend play the first live game at staging. |
+| **Next** | Done: this branch merged on the gate (#665, `main` 2fd4b1bd), the staging release walked and pushed (`release/cloud-staging` 4f2c85df). **Staging runs it**: version `88cd1fae`, deployed 18:20:29 UTC, its Worker byte-identical to the release's bundle. Next, L2 (a signed-in person sees "Version 2fd4b1b · 2026-10-05" in Settings, a friend joins) and the first live game. |
 
 ## 1. The review, claim by claim
 
