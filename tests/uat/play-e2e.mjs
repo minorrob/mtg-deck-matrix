@@ -13,6 +13,7 @@
  *   4. End game for everyone; the game-over panel offers Download the full record, and the file is the whole
  *      game, which the M8a replayer plays again to the same end
  *   5. a real deck's cards are refused by name, as the engine cannot play them yet
+ *   6. at a second table the host concedes and the two AI seats play on, slice by slice, on the object's alarm
  *
  *   node tests/uat/play-e2e.mjs      (WRANGLER=<wrangler.js>, UAT_PLAYWRIGHT, UAT_CHROME, UAT_SHOTS as for the other walks)
  */
@@ -26,6 +27,7 @@ import os from "node:os";
 import path from "node:path";
 import {build, worktreeSource} from "../../tools/release-pages.mjs";
 import {replayTape} from "../../game/room/replay.mjs";
+import {tableCards} from "../../cloud/game-room.mjs";
 
 const require = createRequire(import.meta.url);
 const playwright = require(process.env.UAT_PLAYWRIGHT || "playwright");
@@ -190,6 +192,24 @@ try {
   eq([replayed.status, replayed.view("s0").result], ["finished", rec.result], "and the replayer plays it again to the same end");
   ok(!JSON.stringify(rec).includes(EMAIL), "no one's address is in it");
   await shot(page, "record-1400");
+
+  /* 5. THE AI SEATS PLAY ON IN SLICES, ON THE OBJECT'S ALARM (the review of 2026-10-05; cloud/game-room.mjs
+     SLICE_STEPS). In the cloud a request has 30 s of CPU, so a room never plays more than a slice in one: Rob and two
+     AI seats, he concedes as the game begins, and the concede comes back with the two still playing; the object's own
+     alarm plays the rest, slice by slice, to its end. */
+  const goblins = {name: "Goblins", commander: ["Krenko, Mob Boss"], cards: [...Array(40).fill("Mountain"), "Lightning Bolt", "Blasphemous Act", "Sol Ring"]};
+  const second = await api("POST", "/api/tables", {hostName: "Rob", seats: [{kind: "ai", name: "Bot"}, {kind: "ai", name: "Bot 2"}]});
+  const url2 = `/api/tables/${second.json.table.tableId}`;
+  for (const seatId of [0, 1, 2]) await api("POST", `${url2}/deck`, {seatId, deck: goblins});
+  await api("POST", `${url2}/ready`, {ready: true});
+  await api("POST", `${url2}/start`);
+  const match = (await until("the second table's countdown to end", async () => {const t = (await api("GET", url2)).json.table; return t.phase === "playing" && t;}, 45000)).matchId;
+  eq((await api("POST", `${url2}/concede`)).status, 200, "at a second table, Rob and two AI seats, Rob concedes as the game begins");
+  eq((await api("GET", `${url2}/record?match=${match}`)).status, 409, "and the concede comes back with the two AI seats still playing: one request plays one slice");
+  const done = await until("the object's alarm to play the AI seats to the end", async () => {const r = await api("GET", `${url2}/record?match=${match}`); return r.status === 200 && r.json.record;}, 60000);
+  eq([done.result.reason, done.departures.s0, done.refusals.since], ["last player standing", "conceded", 0], `the object's alarm played them on to the end (${done.result.winner} won), the record counting refusals from the start (${done.refusals.total})`);
+  const replayedOn = await replayTape({matchId: done.matchId, pod: done.pod, seed: done.seed, tape: done.tape, cards: tableCards});
+  eq(replayedOn.view("s0").result, done.result, "and the game played in slices replays, in one go, to the same end");
   eq(errors, [], "and no page error on the way");
 } finally {
   await browser.close();
