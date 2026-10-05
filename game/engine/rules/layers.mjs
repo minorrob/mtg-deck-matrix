@@ -273,33 +273,48 @@ const canonical = (current) => JSON.stringify({
 });
 
 /* CR 613.8a: A depends on B when applying B first would change what A applies to, or what A does.
-   The test is done by applying B and asking whether A's outcome moves. */
+   The test is done by applying B and asking whether A's outcome moves, each on a trial copy of the derivation so far.
+   `applyEffect` sets top-level fields and pushes onto the top-level lists, and changes nothing inside them (a granted
+   ability is pushed as a new object), so a trial is the derivation with its own lists: a deep copy of every granted
+   ability's script, four per pair (by structuredClone, then a plain copy), was most of a whole game's CPU
+   (engine-room-games seed 11, 2026-10-05: the review's F-2). */
+const trial = (c) => ({...c, types: [...c.types], subtypes: [...c.subtypes], colors: [...c.colors], keywords: [...c.keywords], granted: [...c.granted]});
 function dependsOn(state, a, b, base, sourceOf) {
-  const withoutB = applyEffect(structuredClone(base), a);
-  const afterB = applyEffect(structuredClone(base), b);
+  trials += 1;
+  const withoutB = applyEffect(trial(base), a);
+  const afterB = applyEffect(trial(base), b);
   const appliesAfterB = affects(state, a, afterB, sourceOf(a));
   const appliedBefore = affects(state, a, base, sourceOf(a));
   /* Whether A applies at all has changed. */
   if (appliesAfterB !== appliedBefore) return true;
   if (!appliesAfterB) return false;
   /* Or what it produces has changed by more than B's own contribution. */
-  const both = applyEffect(structuredClone(afterB), a);
-  const reverse = applyEffect(structuredClone(withoutB), b);
+  const both = applyEffect(trial(afterB), a);
+  const reverse = applyEffect(trial(withoutB), b);
   return canonical(both) !== canonical(reverse);
 }
 
 /* Order one layer's effects: timestamp order (CR 613.7), then move any effect that depends on a
-   later one behind it (CR 613.8). A dependency loop falls back to timestamps, as the rule says. */
+   later one behind it (CR 613.8). A dependency loop falls back to timestamps, as the rule says.
+   Whether A depends on B is asked against the same `base` for the whole ordering, so each pair is asked once: asked
+   afresh on every pass, an ordering of n effects made about n^3 trials, and a board with a dozen effects in one layer
+   spent seconds there (the review's F-2). */
 function orderWithin(state, effects, base, sourceOf) {
   const byTime = [...effects].sort((x, y) => (x.timestamp ?? 0) - (y.timestamp ?? 0));
   const out = [];
   const remaining = [...byTime];
+  const index = new Map(byTime.map((effect, i) => [effect, i])), asked = new Map();
+  const depends = (x, y) => {
+    const key = index.get(x) * byTime.length + index.get(y);
+    if (!asked.has(key)) asked.set(key, dependsOn(state, x, y, base, sourceOf));
+    return asked.get(key);
+  };
   let guard = 0;
   while (remaining.length > 0 && guard < 64) {
     guard += 1;
     /* The first effect that does not depend on anything still waiting. */
     const at = remaining.findIndex((candidate) =>
-      !remaining.some((other) => other !== candidate && dependsOn(state, candidate, other, base, sourceOf)));
+      !remaining.some((other) => other !== candidate && depends(candidate, other)));
     /* Every remaining effect depends on another: a loop, so CR 613.8b says use timestamps. */
     out.push(...(at < 0 ? remaining.splice(0) : remaining.splice(at, 1)));
   }
@@ -315,15 +330,16 @@ function orderWithin(state, effects, base, sourceOf) {
    asked, a count being made: each leaves something out, holdsNow and counted) and the effects in play are gathered once
    per level; every answer handed out is a copy. The memo lives no longer than the call that opened it, so nothing that
    changes the game meets an answer from before the change. `memoOff` is for the suite that compares the two. */
-let memo = null, memoOff = false, derivations = 0;
+let memo = null, memoOff = false, derivations = 0, trials = 0;
 /** Run `fn`, a question that reads the game and changes nothing, with one memo for every derivation it makes. */
 export function deriving(state, fn) {
   if (memo !== null || memoOff) return fn();
   memo = {state, characteristics: new Map(), effects: new Map()};
   try { return fn(); } finally { memo = null; }
 }
-/** For the suites: turn the memo off (to compare), and how many derivations were made since `reset`. */
-export const deriveMemo = {off(value = true) { memoOff = value; }, count() { return derivations; }, reset() { derivations = 0; }};
+/** For the suites: turn the memo off (to compare), and how many derivations -- and dependency trials (CR 613.8a,
+    `dependsOn`) -- were made since `reset`. */
+export const deriveMemo = {off(value = true) { memoOff = value; }, count() { return derivations; }, trials() { return trials; }, reset() { derivations = 0; trials = 0; }};
 const copy = (v) => (Array.isArray(v) ? v.map(copy) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, copy(x)])) : v);
 
 /**

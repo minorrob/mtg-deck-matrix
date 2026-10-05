@@ -207,4 +207,25 @@ const parts = (s, id) => ({types: typesOf(s, id), controller: controllerOf(s, id
   ok(compared > 1000, `${compared} questions asked across two games of 14 turns, every fourth checked: it changed nothing, and was the same without the memo`);
 }
 
+
+/* EACH PAIR OF A LAYER'S EFFECTS IS ASKED ONCE WHETHER ONE DEPENDS ON THE OTHER (CR 613.8a; the review of 2026-10-05,
+   F-2). Ordering a layer asks it of every pair still waiting, pass after pass, against the same derivation so far:
+   asked afresh each pass that was about n^3 trials, each four copies of the object, and engine-room-games seed 11 went
+   from 4 to 21 seconds once the house pilot cast in one action (X8a) and boards carried more effects. Here five
+   type-changing effects each depend on the one stamped after it (a Creature is a Land, a Land an Enchantment, ...), so
+   the order is the reverse of the timestamps and every pass finds the waiting ones still waiting. */
+{
+  const T = ["Creature", "Land", "Enchantment", "Artifact", "Planeswalker", "Battle"];
+  const state = createState({matchId: "chain", seed: "chain", players: [{name: "Rob"}, {name: "Maya"}]});
+  const bear = addObject(state, {card: "Bear", types: ["Creature"], power: 2, toughness: 2, owner: 0, controller: 0}, "battlefield", 0);
+  for (let i = 0; i < T.length - 1; i += 1) {
+    const from = T[T.length - 2 - i], to = T[T.length - 1 - i];
+    addObject(state, {card: `Turner ${i}`, types: ["Artifact"], owner: 1, controller: 1, abilities: [{id: "a0", kind: "static", text: `Each ${from} is a ${to} in addition.`, layer: 4, affects: {types: [from]}, apply: {addTypes: [to]}}]}, "battlefield", 1);
+  }
+  deriveMemo.reset();
+  eq(characteristicsOf(state, bear).types, T, "the five effects applied in the order their dependencies give, the reverse of their timestamps: the Bear is every type of the chain");
+  const n = T.length - 1;
+  ok(deriveMemo.trials() <= n * (n - 1), `and each pair was asked once at most: ${deriveMemo.trials()} trials for ${n} effects, never more than the ${n * (n - 1)} ordered pairs`);
+}
+
 console.log(`engine-derive-once: ${checks} checks passed -- each object derived once per question and guard level, the same answers as without the memo, questions that only read change nothing, answers handed out as copies, and the state-based actions reading the board once before acting.`);
