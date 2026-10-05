@@ -32,11 +32,18 @@ export const KEYWORD_FAMILIES = Object.freeze({
   /** When a spell may be cast, and when a permanent may act. */
   timing: Object.freeze(["Flash", "Haste"]),
   /** Where a spell may be cast from: Flashback (CR 702.34a), from its owner's graveyard for its flashback cost, then
-      exiled. rules/actions.mjs offers the cast, rules/stack.mjs and effects/zones.mjs exile it. */
-  zones: Object.freeze(["Flashback"]),
+      exiled. rules/actions.mjs offers the cast, rules/stack.mjs and effects/zones.mjs exile it. Escape (CR 702.138a), from
+      its owner's graveyard for its escape cost, mana and "exile N other cards from your graveyard" picked as the cast is
+      taken; what escaped is marked so (702.138b) and enters with what it "escapes with" (702.138c, rules/replacement.mjs). */
+  zones: Object.freeze(["Flashback", "Escape"]),
   /** What happens as a spell is cast: Storm (CR 702.40a), "when you cast this spell, copy it for each spell cast before
       it this turn" -- a triggered ability of the spell (rules/actions.mjs). */
   cast: Object.freeze(["Storm"]),
+  /** How a spell may be paid for: Convoke (CR 702.51a), each creature its caster taps paying {1} or one mana of its color --
+      offered beside the cast the pool pays, the creatures picked once it is taken (rules/actions.mjs, rules/mana.mjs).
+      Evoke (CR 702.74a), its evoke cost rather than its mana cost -- an alternative cost (rules/actions.mjs) -- and, if it
+      was paid, the permanent sacrificed as it enters (cards/index.mjs compiles both abilities). */
+  pay: Object.freeze(["Convoke", "Evoke"]),
 });
 
 /**

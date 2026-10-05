@@ -34,12 +34,13 @@
  */
 import {createState, addObject} from "../engine/state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../engine/rules/turn.mjs";
-import {legalActions, applyAction, nothingToDo} from "../engine/rules/actions.mjs";
+import {legalActions, applyAction, nothingToDo, escapeWays, flashbackCost, tappersInWords, castTapPlans, tapWords} from "../engine/rules/actions.mjs";
 import {passPriority} from "../engine/rules/priority.mjs";
 import {gameOver, concede} from "../engine/rules/sba.mjs";
 import {beginMulligans} from "../engine/rules/mulligan.mjs";
 import {projectFor} from "../engine/projection.mjs";
 import {controllerOf, characteristicsOf} from "../engine/rules/layers.mjs";
+import {countWords, inWords} from "../engine/script/bind.mjs";
 import {createRng} from "../engine/rng.mjs";
 import {createJournal, hashState} from "../engine/journal.mjs";
 import {createController} from "../engine/controller.mjs";
@@ -55,6 +56,7 @@ const MAX_CARDS = 250;           // a Commander deck is 100; this is only a boun
 const DRIVE_LIMIT = 100000;      // engine steps between two human decisions before the room calls it a hang
 const HISTORY_KEEP = 300;         // lines of the table's history kept with the room
 const HISTORY_VIEW = 120;         // the newest of them, in every view
+const REFUSALS_SAID = 20;         // refused pilot answers kept in full with the match's tally; the count itself is never trimmed
 /* The steps as the history names them when one passes by itself (the untap and cleanup steps give no priority). */
 const QUIET_STEP = {UPKEEP: "Upkeep", DRAW: "Draw step", MAIN1: "Main 1", COMBAT_BEGIN: "Beginning of combat", COMBAT_DECLARE_ATTACKERS: "Declare attackers",
   COMBAT_DECLARE_BLOCKERS: "Declare blockers", COMBAT_FIRST_STRIKE_DAMAGE: "First-strike damage", COMBAT_DAMAGE: "Combat damage", COMBAT_END: "End of combat",
@@ -110,6 +112,25 @@ function readPod(pod, cards) {
    the first. Everything named is the deciding seat's to see: what is on the battlefield or the stack, the players,
    and the seat's own hand for a discard. Two things that would read the same are told apart by power and toughness
    and whether they are tapped, then numbered. */
+/** The least legal answer to a question (room drive, answerForPilot): the minimum of options, in the order offered; an
+    amount or a division filled lethal-first, then the rest on the last; a number at its minimum. */
+export function leastAnswer(choice) {
+  const options = choice.options ?? [];
+  if (choice.mode === "damage" || choice.mode === "amount") {
+    const amounts = options.map(() => choice.minEach ?? 0);
+    let left = (choice.total ?? 0) - amounts.reduce((a, b) => a + b, 0);
+    for (let i = 0; i < options.length && left > 0; i += 1) {
+      const room = choice.mode === "damage" ? Math.max(0, options[i].lethal ?? 0) : Math.max(0, (options[i].max ?? left) - amounts[i]);
+      const take = Math.min(left, room);
+      amounts[i] += take; left -= take;
+    }
+    if (left > 0 && amounts.length) amounts[amounts.length - 1] += left;
+    return {indices: [], amounts};
+  }
+  if (choice.mode === "integer") return {indices: [], value: choice.min ?? 0};
+  return {indices: options.slice(0, Math.max(choice.min ?? 0, choice.mode === "one" || choice.mode === "boolean" ? 1 : 0)).map((o) => o.index)};
+}
+
 export function offerDetails(state, seat, actions) {
   const player = (id) => (id === seat ? `${state.players[id]?.name ?? "you"} (you)` : state.players[id]?.name ?? `Seat ${id + 1}`);
   const object = (id, plain) => {
@@ -129,22 +150,56 @@ export function offerDetails(state, seat, actions) {
   for (const a of actions) if (a.kind === "activate") abilities.set(a.objectId, new Set([...(abilities.get(a.objectId) ?? []), a.abilityId]));
   const say = (a, plain) => {
     const parts = [];
-    if (a.kind === "activate" && (abilities.get(a.objectId)?.size ?? 0) > 1 && a.text) parts.push(`“${a.text}”`);
+    /* Which ability: one of several, or one a card has in a graveyard (encore), which its name alone does not say. */
+    if (a.kind === "activate" && a.text && ((abilities.get(a.objectId)?.size ?? 0) > 1 || state.objects[a.objectId]?.zone === "graveyard")) parts.push(`“${a.text}”`);
     /* The modes chosen as it is cast (CR 700.2), in the card's words. */
-    if (Array.isArray(a.modes)) parts.push(a.modes.map((i) => state.objects[a.objectId]?.spell?.modal?.modes?.[i]?.text ?? `mode ${i + 1}`).join(" + "));
+    /* And an activated ability's, chosen as it is activated (Aetheric Amplifier): its own modes' words. */
+    const modal = a.kind === "activate" ? (state.objects[a.objectId]?.abilities ?? []).find((b) => b.id === a.abilityId)?.modal : state.objects[a.objectId]?.spell?.modal;
+    if (Array.isArray(a.modes)) parts.push(a.modes.map((i) => modal?.modes?.[i]?.text ?? `mode ${i + 1}`).join(" + "));
     if (a.x !== undefined) parts.push(`X = ${a.x}`);
-    if ((a.targets ?? []).length) parts.push(`→ ${a.targets.map((t) => (!t ? "" : t.kind === "player" ? player(t.id) : object(t.id, plain))).join(", ")}`);
-    for (const [kind, id] of Object.entries(a.costChoice ?? {})) parts.push(`${kind === "discard" ? "discarding" : kind === "returnToHand" ? "returning" : kind === "exile" ? "exiling" : "sacrificing"} ${object(id, plain)}`);
-    /* An alternative cost (CR 118.9): what is paid instead of the mana cost. */
+    /* A counted target (script/bind.mjs): what is still to be picked ("up to two targets"), or the ones picked. */
+    const aimed = (t) => (!t ? "" : Array.isArray(t) ? (t.length ? t.map(aimed).join(" and ") : "no target") : t.kind === "choose" ? countWords(t)
+      : t.kind === "player" ? player(t.id) : object(t.id, plain));
+    if ((a.targets ?? []).length) parts.push(`→ ${a.targets.map(aimed).join(", ")}`);
+    /* What the cost takes: one card, or a set of them ("sacrificing Bear and Wolf", "discarding Ponder and Opt"), each
+       said with what it does to them. */
+    /* "Blight 1" puts its counters on the creature (CR 701.68a); "tap three untapped creatures you control", a set tapped; and
+       "remove a counter from this creature" names the kind of counter, not a card. */
+    const DOING = {discard: "discarding", returnToHand: "returning", exile: "exiling", crew: "crewing with", tap: "tapping", tapAll: "tapping", untap: "untapping",
+      blight: "blighting"};
+    for (const [kind, id] of Object.entries(a.costChoice ?? {}))
+      parts.push(kind === "counter" ? `removing a ${id} counter` : `${DOING[kind] ?? "sacrificing"} ${[].concat(id).map((x) => object(x, plain)).join(" and ")}`);
+    /* An alternative cost (CR 118.9): what is paid instead of the mana cost -- an evoke cost by its name (CR 702.74a), as
+       the permanent will be sacrificed as it enters. */
     if (a.alternative !== undefined) {
-      const cost = state.objects[a.objectId]?.abilities?.[a.alternative]?.cost ?? [];
+      const ability = state.objects[a.objectId]?.abilities?.[a.alternative];
+      const cost = ability?.cost ?? [];
       const mana = cost.find((c) => c.atom === "mana")?.cost, life = cost.filter((c) => c.atom === "payLife").reduce((n, c) => n + (c.amount ?? 0), 0);
-      parts.push([mana ? `for ${mana} instead` : (life || cost.length ? "instead of its mana cost" : "without paying its mana cost"), life ? `paying ${life} life` : null].filter(Boolean).join(", "));
+      parts.push([ability?.evoke ? (mana ? `evoke for ${mana}` : "evoke") : mana ? `for ${mana} instead` : (life || cost.length ? "instead of its mana cost" : "without paying its mana cost"),
+        life ? `paying ${life} life` : null].filter(Boolean).join(", "));
     }
     /* "Without paying its mana cost", beside the paid cast of the same card (rules/actions.mjs). */
     if (a.free) parts.push("without paying its mana cost");
-    /* Flashback (CR 702.34a): from the graveyard for its flashback cost, exiled after. */
-    if (a.flashback) parts.push("flashback");
+    /* An additional cost's mana, beside its other choice ("blight 1 or pay {3}"). */
+    if (a.extraMana) parts.push(`paying ${a.extraMana} more`);
+    /* Tapped for as it is cast (the board's one click): the sources, or that the caster picks them. */
+    if (a.autoTap) {
+      const ways = castTapPlans(state, seat, a, 2);
+      parts.push(ways.length === 1 ? `tapping ${tapWords(state, ways[0])}` : "tapping what you choose");
+    }
+    /* Convoke (CR 702.51a): creatures help pay, picked once it is taken. */
+    if (a.convoke) parts.push("convoking, tapping creatures you choose");
+    /* Flashback (CR 702.34a): from the graveyard for its flashback cost, exiled after -- and the creatures it taps, picked
+       once it is taken. */
+    if (a.flashback) {
+      const tap = flashbackCost(state, seat, a.objectId)?.tap;
+      parts.push(tap ? `flashback, tapping ${tappersInWords(tap)}` : "flashback");
+    }
+    /* Escape (CR 702.138a): from the graveyard for its escape cost -- its mana, and the other cards it will take. */
+    if (a.escape !== undefined) {
+      const way = escapeWays(state, seat, a.objectId).find((w) => w.kind === a.escape);
+      parts.push(way ? `escape for ${way.mana}, exiling ${inWords(way.exile)} other card${way.exile === 1 ? "" : "s"}` : "escape");
+    }
     if (a.kind === "activate-mana" && a.produce !== undefined) parts.push(manaText(a.mana));
     return parts.join(" · ");
   };
@@ -176,8 +231,12 @@ function priorityChoice(id, actions, state = null, seat = null) {
  * @param {object} storage  the M4 storage contract (get/put/delete/list); a Durable Object's own, in the cloud
  * @param {(name: string) => ?object} cards  a card's definition for `addObject`, or null when the engine
  *   cannot play it
+ * @param {Function} makePilot  what answers for an AI seat: the house pilot. A suite may pass its own (one that answers
+ *   wrongly on purpose, to prove the refusal tally); the table never does
+ * @param {number} slice  engine steps one call may take before it stops, saved, for `resume` (the Durable Object's
+ *   alarm) to play on from; unbounded unless given
  */
-function roomOn(storage, matchId, cards) {
+function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinity) {
   const store = createMatchStore(storage, matchId);
   const ROOM_KEY = `room/${matchId}`;
   const facts = factsFrom(cards);
@@ -194,6 +253,26 @@ function roomOn(storage, matchId, cards) {
   let leaving = [], departures = {}, ended = null;
   /* THE TABLE'S HISTORY (game/room/history.mjs): public lines only, the same for every seat, kept with the room. */
   let history = [];
+  /* EVERY REFUSED PILOT ANSWER, COUNTED FOR THE WHOLE MATCH (the independent review of 2026-10-05, F-1). The history keeps
+     its newest HISTORY_KEEP lines, so a refusal said there early in a long game is gone by its end, and a count read off
+     the history is a count of the lines that survived -- a game of four house pilots runs from its first turn to its last
+     inside one call, far past 300 lines. This is the match's own tally, saved with the room and never trimmed: `total`,
+     and the first REFUSALS_SAID of them in full. `since` is the journal sequence the tally began at: 0 for a match counted
+     from its first event. A room saved before the tally existed counts from where it is reopened and says so, rather
+     than claiming a zero it never measured. */
+  let refusals = {total: 0, since: 0, first: []};
+  /* PLAYED IN SLICES WHERE A REQUEST'S TIME IS CAPPED (the review of 2026-10-05; Cloudflare gives a Durable Object 30 s of
+     CPU per request or alarm). Between two people's decisions the AI seats play inside one call, and once every person
+     is out of the game the rest of it is AI seats alone: four house pilots ran 3 to 100 s to a game's end in the review.
+     So a room given a `slice` stops after that many engine steps with nobody asked (`continuing`), saved like any other
+     point of the game, and `resume` plays on from there. The engine and its pilots are deterministic and the house pilot
+     keeps nothing between calls, so a game played in slices is the game played in one go -- its replay, which never
+     stops, reaches the same journal. `driven` is the steps since a person was last asked, across slices, so a game that
+     never asks anyone still stops at DRIVE_LIMIT. While the AI seats play on, a person can neither leave nor end the
+     game: the tape would place that where a replay cannot (after the AI seats, not among them), so it is refused, with
+     when to try again. Time is counted in steps, not milliseconds, because a Worker's clock does not move while it
+     computes. */
+  let continuing = false, driven = 0;
   /* ITEM 11: whether a person with nothing to do passes by itself, and what the step in progress has seen -- a pass
      the room made for someone, and anything anyone chose to do (a person's pass counts: they could have acted). */
   let passEmpty = false, step = {key: null, quiet: false, acted: false};
@@ -213,7 +292,7 @@ function roomOn(storage, matchId, cards) {
   const tape = (entry) => {unsaved.push({n: tapeN, turn: state ? state.turn : 0, ...entry}); tapeN += 1;};
   const note = (text) => {history.push({turn: state ? state.turn : 0, text}); if (history.length > HISTORY_KEEP) history.splice(0, history.length - HISTORY_KEEP);};
   const finished = () => Boolean(ended) || Boolean(gameOver(state));
-  const pilotFor = (seat) => pilots[seat] || (pilots[seat] = housePilot({seat, cards: facts}));
+  const pilotFor = (seat) => pilots[seat] || (pilots[seat] = makePilot({seat, cards: facts}));
 
   const write = (events) => {
     const names = seats.map((s) => s.name);
@@ -222,9 +301,30 @@ function roomOn(storage, matchId, cards) {
   const seatIndex = (seatId) => seats.findIndex((s) => s.seatId === seatId);
 
   /* Run the game until a person has to decide, or it is over. AI seats are answered on the way. */
+  /* A PILOT'S ANSWER THE RULES REFUSE IS THE PILOT'S MISTAKE, NEVER THE GAME'S END (the plan review's C2; probe R's seed
+     11 stopped a table this way). The rules check an answer before they change anything, so a refused one leaves the game
+     as it was: the refusal is said in the history, and the least legal answer is given instead -- nothing chosen where
+     nothing need be, the first options up to the minimum, damage lethal-first. Were that refused too, the game really
+     could not go on, and that is thrown as before. */
+  function answerForPilot(seat, choice, a) {
+    try {
+      return resolveAwaiting(state, a.indices, a.amounts, rng, a);
+    } catch (error) {
+      note(`${seats[seat].name}'s answer to "${choice.title}" was refused: ${error.message}. The least answer was given instead.`);
+      refusals.total += 1;
+      if (refusals.first.length < REFUSALS_SAID) refusals.first.push({turn: state.turn, seatId: seats[seat].seatId, question: choice.title, reason: error.message});
+      const least = leastAnswer(choice);
+      return resolveAwaiting(state, least.indices, least.amounts, rng, least);
+    }
+  }
+
   function drive() {
-    for (let steps = 0; steps < DRIVE_LIMIT; steps += 1) {
-      if (finished()) {pendingSeat = null; pendingActions = null; return;}
+    continuing = false;
+    for (let steps = 0; ; steps += 1) {
+      if (finished()) {pendingSeat = null; pendingActions = null; driven = 0; return;}
+      if (driven >= DRIVE_LIMIT) throw new RoomError(500, "The game stopped moving: the engine took too many steps without a decision. Nothing further was applied.");
+      if (steps >= slice) {continuing = true; pendingSeat = null; pendingActions = null; return;}
+      driven += 1;
       if (state.stepIndex !== undefined && leaving.length) {
         for (const seat of leaving) if (!state.players[seat].lost) write(concede(state, seat));
         leaving = [];
@@ -236,10 +336,10 @@ function roomOn(storage, matchId, cards) {
         if (seats[seat].pilot === "house" || leaving.includes(seat)) {
           const a = pilotFor(seat).answer(projectFor(state, seat), choice);
           step.acted = true;
-          write(resolveAwaiting(state, a.indices, a.amounts, rng, a));
+          write(answerForPilot(seat, choice, a));
           continue;
         }
-        controller.offer(choice); pendingSeat = seat; pendingActions = null; return;
+        controller.offer(choice); pendingSeat = seat; pendingActions = null; driven = 0; return;
       }
       if (state.stepIndex === undefined) {write(beginGame(state)); continue;}
       if (state.priorityPlayer === null) {write(advance(state)); continue;}
@@ -247,10 +347,13 @@ function roomOn(storage, matchId, cards) {
       if (seats[seat].pilot === "house") {apply(seat, pilots[seat].choose(projectFor(state, seat), actions), "pilot"); continue;}
       if (passEmpty && nothingToDo(state, seat, actions)) {apply(seat, actions.find((a) => a.kind === "pass"), "room"); continue;}
       controller.offer(priorityChoice(`priority:${state.turn}:${state.stepIndex}:${controller.revision}`, actions, state, seat));
-      pendingSeat = seat; pendingActions = actions; return;
+      pendingSeat = seat; pendingActions = actions; driven = 0; return;
     }
-    throw new RoomError(500, "The game stopped moving: the engine took too many steps without a decision. Nothing further was applied.");
   }
+  /* Leaving or ending while the AI seats play on is refused, with when to try again (see `continuing`). */
+  const notWhileContinuing = (what) => {
+    if (continuing) throw new RoomError(409, `The AI players are still taking their turns (turn ${state.turn}). ${what} once they stop, in a few seconds.`, {continuing: true});
+  };
   /* The open question, withdrawn: the controller keeps its receipts and moves its revision on, so an answer
      already in flight to the withdrawn question is refused as stale rather than applied to a changed board. */
   /* A taped answer stands in for the controller's: the question is closed and the revision moves on, but what was
@@ -279,7 +382,9 @@ function roomOn(storage, matchId, cards) {
   function apply(seat, action, by = "person") {
     if (action.kind === "pass") {
       if (by === "room") step.quiet = true; else if (by === "person") step.acted = true;
-      const result = passPriority(state);
+      /* The game's random stream, for what resolves ("then shuffle", "in a random order"): the room's own, so a replay
+         of the tape draws the same (game/room/replay.mjs). */
+      const result = passPriority(state, null, rng);
       write(result.events);
       if (result.outcome === "step-ends") {
         if (step.quiet && !step.acted) quietly(state.phase);
@@ -298,7 +403,7 @@ function roomOn(storage, matchId, cards) {
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
-    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history, ...(passEmpty ? {passEmpty, step} : {})}));
+    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history, refusals, ...(continuing ? {continuing, driven} : {}), ...(passEmpty ? {passEmpty, step} : {})}));
   }
 
   const api = {
@@ -309,6 +414,10 @@ function roomOn(storage, matchId, cards) {
     get waitingOn() {return pendingSeat === null ? null : seats[pendingSeat].seatId;},
     /** Every line of the table's history the room keeps (a view shows the newest): public, the same for every seat. */
     get history() {return history.map(({turn, text, mark}) => ({turn, text, ...(mark ? {mark} : {})}));},
+    /** The match's tally of refused pilot answers, whatever the history still holds: `{total, since, first}`. */
+    get refusals() {return structuredClone(refusals);},
+    /** True when a slice ran out with nobody asked: `resume` plays on. */
+    get continuing() {return continuing && !finished();},
 
     async start(pod, seed) {
       seats = readPod(pod, cards);
@@ -327,7 +436,7 @@ function roomOn(storage, matchId, cards) {
       rng = createRng(seed);
       journal = createJournal({matchId, seed});
       controller = createController();
-      pilots = seats.map((s, seat) => (s.pilot === "house" ? housePilot({seat, cards: facts}) : null));
+      pilots = seats.map((s, seat) => (s.pilot === "house" ? makePilot({seat, cards: facts}) : null));
       await store.saveMatch({pod: {seats, ...(startingLife !== undefined ? {startingLife} : {}), ...beats}, seed});
       write(beginMulligans(state, rng));
       drive();
@@ -342,11 +451,13 @@ function roomOn(storage, matchId, cards) {
       if (!point || point.sequence !== record.sequence) throw new RoomError(500, "This table's saved game does not match its record, so it was not resumed.");
       passEmpty = record.passEmpty === true; step = record.step || {key: null, quiet: false, acted: false};
       seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; history = record.history || [];
+      refusals = record.refusals || {total: 0, since: point.sequence, first: []};
+      continuing = record.continuing === true; driven = record.driven || 0;
       state = structuredClone(point.state);
       rng = createRng(point.seed, point.rng);
       journal = createJournal({matchId, seed: point.seed}, point);
       controller = createController(record.controller);
-      pilots = seats.map((s, seat) => (s.pilot === "house" ? housePilot({seat, cards: facts}) : null));
+      pilots = seats.map((s, seat) => (s.pilot === "house" ? makePilot({seat, cards: facts}) : null));
       saved = 0;
       tapeN = (await store.readTape()).length;
       return api;
@@ -369,16 +480,26 @@ function roomOn(storage, matchId, cards) {
         decision: mine ? structuredClone(controller.pending) : null,
         state: projectFor(state, seat),
         history: history.slice(-HISTORY_VIEW).map(({turn, text, mark}) => ({turn, text, ...(mark ? {mark} : {})})),
+        ...(api.continuing ? {continuing: true} : {}),
       };
     },
 
+    /** Play on from where a slice stopped, to the next person's decision, the end, or the next slice. */
+    async resume() {
+      if (!api.continuing) return api;
+      drive();
+      await persist();
+      return api;
+    },
+
     /**
-     * A FINGERPRINT OF THE GAME, never the game: the state's hash, how many events the journal holds, and the
-     * tape's length (the stored journal itself is compared by game/room/replay.mjs). Two rooms with the same fingerprint are the same game, which is how a replay is proved; nothing about
+     * A FINGERPRINT OF THE GAME, never the game: the state's hash, how many events the journal holds, the
+     * tape's length (the stored journal itself is compared by game/room/replay.mjs), and how many pilot answers the rules
+     * refused (F-1: a replay that reaches the same state by another road is not the same game). Two rooms with the same fingerprint are the same game, which is how a replay is proved; nothing about
      * a hidden card can be read back out of it.
      */
     fingerprint() {
-      return {hash: hashState(state), events: journal.checkpoint(state, rng.checkpoint()).sequence, tape: tapeN, status: finished() ? "finished" : "playing"};
+      return {hash: hashState(state), events: journal.checkpoint(state, rng.checkpoint()).sequence, tape: tapeN, refused: refusals.total, status: finished() ? "finished" : "playing"};
     },
 
     /**
@@ -410,6 +531,7 @@ function roomOn(storage, matchId, cards) {
       if (!["conceded", "timed-out"].includes(why)) throw new RoomError(400, "A seat leaves by conceding or by timing out.");
       if (finished()) throw new RoomError(409, "This game is over.");
       if (departures[seatId]) throw new RoomError(409, "That seat has already left the game.");
+      notWhileContinuing(why === "timed-out" ? "Their time runs out" : "You can leave the game");
       withdraw();
       departures[seatId] = why;
       tape({kind: "leave", seat: seatId, why});
@@ -425,6 +547,7 @@ function roomOn(storage, matchId, cards) {
       const seat = seatIndex(seatId);
       if (seat < 0) throw new RoomError(403, "That seat is not at this table.");
       if (finished()) throw new RoomError(409, "This game is over.");
+      notWhileContinuing("You can end the game");
       withdraw();
       ended = {by: seatId};
       tape({kind: "end", seat: seatId});
@@ -467,5 +590,5 @@ function roomOn(storage, matchId, cards) {
   return api;
 }
 
-export const startRoom = ({storage, matchId, cards = basicCards, pod, seed}) => roomOn(storage, matchId, cards).start(pod, seed);
-export const openRoom = ({storage, matchId, cards = basicCards}) => roomOn(storage, matchId, cards).open();
+export const startRoom = ({storage, matchId, cards = basicCards, pod, seed, pilot, slice}) => roomOn(storage, matchId, cards, pilot, slice).start(pod, seed);
+export const openRoom = ({storage, matchId, cards = basicCards, pilot, slice}) => roomOn(storage, matchId, cards, pilot, slice).open();

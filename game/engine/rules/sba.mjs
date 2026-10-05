@@ -26,20 +26,33 @@
  * AN EMPTY LIBRARY IS NOT A LOSS (CR 704.5b). ATTEMPTING TO DRAW from one is. A player can sit at
  * zero cards for the rest of the game and be fine until their next draw step.
  *
- * WHAT IS DEFERRED AND NAMED: the legend rule (CR 704.5j) and planeswalker loyalty (CR 704.5i) need
- * card types and supertypes that arrive with the card directory in phase 2; "can't lose" effects,
- * which the Java probe also pinned, need continuous effects (1.8). Each is a rule this file will
- * grow, not one it silently ignores — an unimplemented rule that looks implemented is worse than a
- * missing one.
+ * A COMMANDER IN A GRAVEYARD OR IN EXILE MAY GO HOME (CR 903.9a, 704.6d), and its owner is asked here, once everything
+ * else has settled: it died, or was exiled, like any card, and what watches for that saw it. Asked once each time it
+ * arrives (rules/commander.mjs), never while the game is over.
+ *
+ * THE LEGEND RULE IS A CHOICE (CR 704.5j). A player with two or more legendary permanents of one name
+ * keeps the one they choose, and each of the others GOES TO its owner's graveyard -- not destroyed,
+ * so indestructible does not save them, and a death all the same, so "dies" sees
+ * it. Asked here like the commander's question, once everything else has settled.
+ *
+ * +1/+1 AND -1/-1 COUNTERS ANNIHILATE (CR 704.5q): N of each go, N the smaller count.
+ *
+ * WHAT IS DEFERRED AND NAMED: planeswalker loyalty (CR 704.5i) waits for planeswalkers, which no
+ * definition plays yet; "can't lose" effects, which the Java probe also pinned, need continuous
+ * effects (1.8); a permanent that turns the legend rule off (Mirror Gallery) has no script. Each is
+ * a rule this file will grow, not one it silently ignores — an unimplemented rule that looks
+ * implemented is worse than a missing one.
  */
 
 import {moveObject, PER_PLAYER, PUBLIC_ZONES} from "../state/index.mjs";
 import {applyReplacements, regenerated} from "./replacement.mjs";
-import {lastKnown, toughnessOf, typesOf, keywordsOf} from "./layers.mjs";
+import {lastKnown, toughnessOf, typesOf, keywordsOf, controllerOf, deriving} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
-import {offersCommandZone, resolveCommanderChoice} from "./commander.mjs";
-import {sacrificeOne} from "../script/effects/zones.mjs";
+import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./commander.mjs";
+import {sacrificeOne, moveOne, returnExiledUntil} from "../script/effects/zones.mjs";
 import {changeLife} from "../script/effects/resources.mjs";
+import {enduringStories} from "../keywords/designations.mjs";
+import {protectedFrom} from "./protection.mjs";
 
 /* The capitalized zone names the projection and the telemetry use. */
 const ZONE_LABEL = {
@@ -70,10 +83,7 @@ const isCreature = (object) => (object.types ?? []).includes("Creature");
 export function dealCommanderDamage(state, player, sourceId, amount, {combat = true} = {}) {
   const events = [];
   changeLife(state, player, -amount, events);
-  if (combat && state.objects[sourceId]?.commander === true) {
-    const tally = state.players[player].commanderDamage;
-    tally[sourceId] = (tally[sourceId] ?? 0) + amount;
-  }
+  if (combat) recordCommanderDamage(state, player, sourceId, amount);
   return events;
 }
 
@@ -97,7 +107,7 @@ function lossReason(state, player) {
    counts permanents would count theirs. */
 function removePlayerFromBoard(state, playerId, events) {
   for (const id of [...state.zones.battlefield]) {
-    if (state.objects[id].owner !== playerId) continue;
+    if (state.objects[id]?.owner !== playerId) continue;
     const card = cardRef(state, id);
     const at = state.zones.battlefield.indexOf(id);
     state.zones.battlefield.splice(at, 1);
@@ -108,6 +118,8 @@ function removePlayerFromBoard(state, playerId, events) {
       to: {zoneType: null, player: {playerId}},
       leftTheGame: true,
     }));
+    /* It left the battlefield: what it exiled "until this leaves the battlefield" comes back (CR 610.3). */
+    returnExiledUntil(state, id, events);
   }
 }
 
@@ -117,7 +129,9 @@ function removePlayerFromBoard(state, playerId, events) {
  * @returns {Array} events for the caller to journal
  */
 export function checkStateBasedActions(state) {
-  const events = [];
+  /* Storied (CR 702.195a): "any time" its controller has three artifacts, Sagas or legendaries -- read as the game is
+     checked, before the actions, which never add a permanent (keywords/designations.mjs). */
+  const events = enduringStories(state);
   /* A creature dying can put a player to zero, and that player leaving can empty a zone. Ten passes
      is far more than any real position needs; reaching it would mean two actions were undoing each
      other, which is a bug worth an exception rather than an infinite loop. */
@@ -144,6 +158,19 @@ export function checkStateBasedActions(state) {
       }
     }
 
+    /* CR 704.5q: a permanent with both +1/+1 and -1/-1 counters loses N of each, N the smaller. */
+    for (const id of state.zones.battlefield) {
+      const counters = state.objects[id].counters ?? {};
+      const n = Math.min(counters["+1/+1"] ?? 0, counters["-1/-1"] ?? 0);
+      if (n <= 0) continue;
+      for (const kind of ["+1/+1", "-1/-1"]) {
+        const before = counters[kind];
+        counters[kind] = before - n;
+        events.push(event("GameEventCardCounters", state, {card: cardRef(state, id), type: kind, oldValue: before, newValue: counters[kind]}));
+      }
+      acted = true;
+    }
+
     /* CR 704.5m: an Aura attached to nothing, or to a permanent its Enchant could not enchant, is put into its owner's
        graveyard -- through the replacements and with its last known information, so "when this Aura is put into a
        graveyard" still sees it. Unlike an Equipment, it does not stay. */
@@ -164,6 +191,8 @@ export function checkStateBasedActions(state) {
         from: {zoneType: "Battlefield", player: {playerId: object.controller}},
         to: {zoneType: ZONE_LABEL[proposal.to] ?? proposal.to, player: {playerId: object.owner}},
       }));
+      /* What it exiled "until this Aura leaves the battlefield", back (CR 610.3; Ossification). */
+      returnExiledUntil(state, id, events);
       acted = true;
     }
 
@@ -174,13 +203,31 @@ export function checkStateBasedActions(state) {
       if (object.attachedTo === null || object.attachedTo === undefined) continue;
       const host = state.objects[object.attachedTo];
       const equipment = (object.subtypes ?? []).includes("Equipment");
-      if (host && host.zone === "battlefield" && (!equipment || typesOf(state, object.attachedTo).includes("Creature"))) continue;
+      if (host && host.zone === "battlefield" && (!equipment || typesOf(state, object.attachedTo).includes("Creature"))
+        /* Nor enchanted or equipped by one it has protection from (CR 702.16c-d): unattached here, an Aura then put into
+           its owner's graveyard by the check above, as an Aura attached to nothing (CR 704.5m). */
+        && !protectedFrom(state, {card: object.attachedTo}, id)) continue;
       if (host) host.attachments = (host.attachments ?? []).filter((a) => a !== id);
       object.attachedTo = null;
       acted = true;
     }
 
+    /* THE CHECK, THEN THE ACTIONS (CR 704.3): which creatures are at zero toughness or have lethal damage or deathtouch
+       damage is read once for the whole board, every object derived once (rules/layers.mjs, deriving) -- asking it again
+       for each creature derived the board once per creature. Each one found is asked again below as it is acted on; one
+       that only a death in this pass brings down dies in the next check. */
+    const {lethal, spent} = deriving(state, () => ({
+      lethal: new Set(state.zones.battlefield.filter((id) => {
+        const object = state.objects[id];
+        if (!typesOf(state, id).includes("Creature")) return false;
+        const toughness = toughnessOf(state, id);
+        return toughness <= 0 || (object.deathtouched === true && toughness > 0) || (object.damage > 0 && object.damage >= toughness);
+      })),
+      /* And the planeswalkers with no loyalty left (CR 704.5i), acted on below. */
+      spent: state.zones.battlefield.filter((id) => typesOf(state, id).includes("Planeswalker") && (state.objects[id].counters?.loyalty ?? 0) <= 0),
+    }));
     for (const id of [...state.zones.battlefield]) {
+      if (!lethal.has(id) || !state.objects[id]) continue;
       const object = state.objects[id];
       /* Through the layers: a land animated this turn is a creature and dies like one, and a
          creature set to 0 toughness by an effect dies whatever its printed toughness says. */
@@ -215,16 +262,8 @@ export function checkStateBasedActions(state) {
         const {proposal} = applyReplacements(state, {
           event: "zone-change", objectId: id, from: "battlefield", to: "graveyard", player: object.controller,
         });
-        /* CR 903.9a is a MAY, so the engine asks its OWNER — not its controller, which is why a
-           borrowed commander goes home. Asked before the move, like any replacement, so the
-           commander never reaches a graveyard at all. */
-        if (offersCommandZone(state, id, proposal.to)) {
-          state.awaiting = {
-            kind: "commander-replacement", player: object.owner, objectId: id,
-            name: object.card, to: proposal.to, damage: object.damage,
-          };
-          return events;
-        }
+        /* A commander dies like any creature (CR 903.9a is a state-based action, not a replacement): its owner is
+           asked below, once it is in the graveyard and everything else has settled. */
         const destination = proposal.to;
         const died = moveObject(state, id, destination, destination === "graveyard" || destination === "hand" || destination === "library"
           ? object.owner : null);
@@ -236,8 +275,29 @@ export function checkStateBasedActions(state) {
           from: {zoneType: "Battlefield", player: {playerId: object.controller}},
           to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: object.owner}},
         }));
+        /* What it exiled "until this leaves the battlefield", back (CR 610.3). */
+        returnExiledUntil(state, id, events);
         acted = true;
       }
+    }
+
+    /* CR 704.5i: a planeswalker with loyalty 0 is put into its owner's graveyard -- put, not destroyed, so indestructible
+       does not keep it; through the replacements and with its last known information. Read with the lethal creatures
+       above, so one that was a creature too and died is gone. */
+    for (const id of spent) {
+      const object = state.objects[id];
+      if (!object || object.zone !== "battlefield") continue;
+      const card = cardRef(state, id);
+      const leftBehind = lastKnown(state, id);
+      const {proposal} = applyReplacements(state, {event: "zone-change", objectId: id, from: "battlefield", to: "graveyard", player: object.controller});
+      const went = moveObject(state, id, proposal.to, PER_PLAYER.includes(proposal.to) ? object.owner : null);
+      events.push(event("GameEventCardChangeZone", state, {
+        card, leftBehind, ...(PUBLIC_ZONES.includes(proposal.to) ? {becomes: went} : {}),
+        from: {zoneType: "Battlefield", player: {playerId: object.controller}},
+        to: {zoneType: ZONE_LABEL[proposal.to] ?? proposal.to, player: {playerId: object.owner}},
+      }));
+      returnExiledUntil(state, id, events);
+      acted = true;
     }
 
     /* CR 714.4: a Saga whose lore counters have reached its final chapter, and that is the source of no chapter ability
@@ -254,6 +314,9 @@ export function checkStateBasedActions(state) {
     for (const player of state.players) {
       const reason = lossReason(state, player);
       if (!reason) continue;
+      /* "You can't lose the game" (Darksteel Angel; CR 104.3, 104.2b): no state-based action takes the game from its
+         controller -- conceding still does (CR 104.3a). */
+      if (reason !== "conceded" && playerRuled(state, "cant-lose", player.id)) continue;
       player.lost = true;
       player.lostTo = reason;
       events.push(event("GameEventPlayerLivesChanged", state, {
@@ -264,7 +327,17 @@ export function checkStateBasedActions(state) {
       acted = true;
     }
 
-    if (!acted) break;
+    if (!acted) {
+      /* CR 903.9a: a commander put into a graveyard or exile since the last check -- its OWNER may put it into the
+         command zone, so the engine stops and asks (rules/commander.mjs). Last, once the rest has settled: a player
+         who lost is not asked, and a game that is over asks nobody anything. */
+      if (!state.awaiting && !gameOver(state)) {
+        /* Only read: every object derived once (rules/layers.mjs, deriving). */
+        const ask = deriving(state, () => legendToAsk(state) ?? commanderToAsk(state));
+        if (ask) state.awaiting = ask;
+      }
+      break;
+    }
     if (pass === 9) throw new Error("State-based actions did not settle; two of them are undoing each other");
   }
 
@@ -308,12 +381,73 @@ export function concede(state, playerId) {
   return events;
 }
 
+/* ---- CR 704.5j, the legend rule ---- */
+
+/* The first player, in turn order from the active player (CR 101.4), with two or more legendary permanents of one name:
+   the question for them, or null. A face-down permanent has no name (CR 708.2), so it is in no group. */
+function legendToAsk(state) {
+  const count = state.players.length;
+  for (let step = 0; step < count; step += 1) {
+    const player = ((state.activePlayer ?? 0) + step) % count;
+    /* "The 'legend rule' doesn't apply to permanents you control this turn" (Hall of Echoes): an effect of that player's
+       (effectUntil's `rule: "no-legend-rule"`), for the turn. */
+    if ((state.effects ?? []).some((e) => e.rule === "no-legend-rule" && e.sourceController === player)) continue;
+    const byName = new Map();
+    for (const id of state.zones.battlefield) {
+      const object = state.objects[id];
+      if (object.faceDown === true || !(object.supertypes ?? []).includes("Legendary") || controllerOf(state, id) !== player) continue;
+      byName.set(object.card, [...(byName.get(object.card) ?? []), id]);
+    }
+    for (const [name, objectIds] of byName) if (objectIds.length > 1) return {kind: "legend-rule", player, name, objectIds};
+  }
+  return null;
+}
+
+/** The legend rule's question (§12.1): which one to keep. Each is told apart in words -- tapped, counters, damage, the
+    turn it arrived -- and numbered only where those are the same. */
+export function legendChoice(state, awaiting) {
+  const ids = awaiting.objectIds.filter((id) => state.objects[id]?.zone === "battlefield");
+  const describe = (id) => {
+    const o = state.objects[id];
+    const counters = Object.entries(o.counters ?? {}).filter(([, n]) => n > 0).map(([kind, n]) => `${n} ${kind}`);
+    return [o.tapped ? "tapped" : "untapped", ...counters, ...(o.damage > 0 ? [`${o.damage} damage`] : []), `arrived turn ${o.arrivedTurn ?? 0}`].join(", ");
+  };
+  const words = ids.map(describe);
+  return {
+    id: `legend-rule:${state.turn}:${ids.join("-")}`,
+    title: `The legend rule: keep which ${awaiting.name}?`,
+    mode: "one",
+    min: 1,
+    max: 1,
+    options: ids.map((id, index) => ({index, cardId: id,
+      label: `Keep ${awaiting.name} (${words[index]}${words.filter((w) => w === words[index]).length > 1 ? `, #${index + 1}` : ""})`})),
+  };
+}
+
 /**
- * Finish a commander's zone change once its owner has answered CR 903.9a.
+ * Finish the legend rule: the one chosen stays, and each other is put into its owner's graveyard -- through the
+ * replacements, with its last known information, as a death (effects/zones.mjs, moveOne). Then the whole check again.
+ *
+ * @returns {Array} events for the caller to journal
+ */
+export function finishLegendRule(state, awaiting, indices) {
+  const ids = awaiting.objectIds.filter((id) => state.objects[id]?.zone === "battlefield");
+  if (!Array.isArray(indices) || indices.length !== 1 || ids[indices[0]] === undefined) throw new Error("Choose the one to keep");
+  const keep = ids[indices[0]];
+  state.awaiting = null;
+  const events = [];
+  for (const id of ids) if (id !== keep) moveOne(state, id, "graveyard", events, {owner: state.objects[id].owner});
+  events.push(...checkStateBasedActions(state));
+  return events;
+}
+
+/**
+ * Finish CR 903.9a once a commander's owner has answered: yes moves it from the graveyard or exile to the command
+ * zone, no leaves it where it is.
  *
  * The move happens here rather than in `commander.mjs` because this is the module that knows what
- * event to report; that one decides only where the card goes. Afterwards the whole check runs
- * again, because a commander leaving can be the thing that settles something else.
+ * event to report; that one decides only whether. Afterwards the whole check runs again: another
+ * commander may be waiting to be asked about.
  *
  * @returns {Array} events for the caller to journal
  */
@@ -321,18 +455,19 @@ export function finishCommanderReplacement(state, awaiting, indices) {
   const id = awaiting.objectId;
   const object = state.objects[id];
   if (!object) throw new Error("That commander is no longer there to move");
-  const destination = resolveCommanderChoice(state, awaiting, indices);
+  const home = resolveCommanderChoice(state, awaiting, indices);
   const events = [];
-  const card = cardRef(state, id);
-  const leftBehind = lastKnown(state, id);
-  const moved = moveObject(state, id, destination, destination === "battlefield" || destination === "exile" ? null : object.owner);
-  events.push(event("GameEventCardChangeZone", state, {
-    card,
-    leftBehind,
-    ...(PUBLIC_ZONES.includes(destination) ? {becomes: moved} : {}),
-    from: {zoneType: "Battlefield", player: {playerId: object.controller}},
-    to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: object.owner}},
-  }));
+  if (home) {
+    const card = cardRef(state, id);
+    const from = object.zone;
+    const moved = moveObject(state, id, "command", object.owner);
+    events.push(event("GameEventCardChangeZone", state, {
+      card,
+      becomes: moved,
+      from: {zoneType: ZONE_LABEL[from] ?? from, player: {playerId: object.owner}},
+      to: {zoneType: "Command", player: {playerId: object.owner}},
+    }));
+  }
   events.push(...checkStateBasedActions(state));
   return events;
 }
@@ -344,6 +479,16 @@ export function finishCommanderReplacement(state, awaiting, indices) {
  * player leaves at once, the game is a draw — which is a real outcome with a real report, not a
  * crash and not an arbitrary winner.
  */
+/* Whether a static ability of a permanent `player` controls changes this rule for them ("you can't lose the game"), or --
+   `opponents` -- one of an opponent of theirs does ("your opponents can't win the game"). */
+export function playerRuled(state, rule, player, {opponents = false} = {}) {
+  return state.zones.battlefield.some((id) => {
+    const controller = controllerOf(state, id);
+    if (opponents ? controller === player : controller !== player) return false;
+    return (state.objects[id].abilities ?? []).some((a) => a.kind === "static" && a.rule === rule);
+  });
+}
+
 export function gameOver(state) {
   /* "You win the game" (CR 104.2b, effects/resources.mjs winGame): over at once, that player the winner -- before any
      state-based action could take it from them (CR 104.1). */

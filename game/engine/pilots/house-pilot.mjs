@@ -59,6 +59,10 @@ export function housePilot({seat, cards = () => null} = {}) {
   };
   /* How many of an offer's targets are on the side its effect is meant for. */
   const aim = (view, action) => (action.targets ?? []).reduce((n, t) => {
+    /* A counted target is picked later, by `answer` below ("choose-targets"): worth taking the offer for -- unless there is
+       nothing to pick ("up to two target creatures you control", with none). */
+    if (Array.isArray(t)) return n + 1;
+    if (t?.kind === "choose") return n + ((t.of ?? 1) > 0 ? 1 : 0);
     const theirs = t.kind === "player" ? t.id !== seat : (controllerIn(view, t.id) ?? seat) !== seat;
     return n + (theirs === (action.hostile === true) ? 1 : 0);
   }, 0);
@@ -85,10 +89,16 @@ export function housePilot({seat, cards = () => null} = {}) {
     choose(view, actions) {
       const self = me(view);
       if (!Array.isArray(actions) || actions.length === 0) throw new Error("There are no legal actions to choose from");
-      const land = actions.find((a) => a.kind === "play-land");
+      /* A real land before a double-faced card's land face: the spell on its front is worth keeping. */
+      const land = actions.find((a) => a.kind === "play-land" && !a.face) ?? actions.find((a) => a.kind === "play-land");
       if (land) return land;
+      /* A planeswalker's loyalty ability, once a turn (CR 606.3): the one that costs the least loyalty, aimed where its
+         targets should go. */
+      const loyal = actions.filter((a) => a.kind === "activate" && a.loyalty !== undefined && (!(a.targets ?? []).length || aim(view, a) > 0));
+      if (loyal.length) return loyal.reduce((best, a) => (a.loyalty > best.loyalty ? a : best));
       /* An X spell at X = 0 does next to nothing; at its largest it does the most (CR 107.3). */
-      const casts = actions.filter((a) => a.kind === "cast" && a.x !== 0 && (!(a.targets ?? []).length || aim(view, a) > 0));
+      /* Never convoked (CR 702.51a): which creatures to tap is a plan of its own, and the pool or the lands pay instead. */
+      const casts = actions.filter((a) => a.kind === "cast" && a.x !== 0 && !a.convoke && (!(a.targets ?? []).length || aim(view, a) > 0));
       const worth = (a) => manaValue(a.label) + (a.x ?? 0);
       const best = casts.length ? casts.reduce((top, a) => (worth(a) > worth(top) || (worth(a) === worth(top) && aim(view, a) > aim(view, top)) ? a : top)) : null;
       /* An X spell waits for every source to be tapped first, so X is as large as the mana allows. */
@@ -161,7 +171,8 @@ export function housePilot({seat, cards = () => null} = {}) {
           return life < bestLife || (life === bestLife && o.defenderId < best.defenderId) ? o : best;
         });
         const byCreature = new Map();
-        for (const o of options) { if (!opponents.some((p) => p.playerId === o.defenderId)) continue; (byCreature.get(o.cardId) ?? byCreature.set(o.cardId, []).get(o.cardId)).push(o); }
+        /* Players only: the house pilot does not attack a planeswalker (an attack on one is not on its controller). */
+        for (const o of options) { if (!opponents.some((p) => p.playerId === o.defenderId) || o.planeswalkerId !== undefined) continue; (byCreature.get(o.cardId) ?? byCreature.set(o.cardId, []).get(o.cardId)).push(o); }
         /* One defender for the whole attack: the one it can hurt most, a lethal attack first, then the lowest
            life. Against a defender with fewer untapped creatures than it has attackers, everything goes in,
            because the excess gets through however they block; otherwise only the creatures no untapped blocker
@@ -186,13 +197,17 @@ export function housePilot({seat, cards = () => null} = {}) {
       if (id.startsWith("declare-blockers:")) {
         const attacks = view.combat?.attacks.filter((a) => a.defender === seat) ?? [];
         const onBoard = new Map(view.players.flatMap((p) => creaturesOf(p)).map((c) => [c.cardId, c]));
-        const incoming = attacks.reduce((n, a) => n + (onBoard.get(a.attacker)?.power ?? 0), 0);
+        /* What would come at its life: an attack on one of its planeswalkers would not. */
+        const incoming = attacks.filter((a) => a.planeswalker === undefined).reduce((n, a) => n + (onBoard.get(a.attacker)?.power ?? 0), 0);
         const lethal = incoming >= self.life;
         const used = new Set(), blocked = new Set(), picks = [];
         const good = (o) => { const b = onBoard.get(o.cardId), a = onBoard.get(o.attackerId); return (b?.power ?? 0) >= (a?.toughness ?? 0) && (b?.toughness ?? 0) > (a?.power ?? 0); };
-        for (const o of options) if (good(o) && !used.has(o.cardId) && !blocked.has(o.attackerId)) { picks.push(o.index); used.add(o.cardId); blocked.add(o.attackerId); }
+        /* One blocker each, so never on a creature with menace, which only two or more may block (CR 702.111b): the
+           rules would refuse the whole declaration. Read from what it sees of the attacker. */
+        const single = options.filter((o) => !(onBoard.get(o.attackerId)?.keywords ?? []).includes("Menace"));
+        for (const o of single) if (good(o) && !used.has(o.cardId) && !blocked.has(o.attackerId)) { picks.push(o.index); used.add(o.cardId); blocked.add(o.attackerId); }
         if (lethal) {
-          const biggest = [...options].sort((x, y) => (onBoard.get(y.attackerId)?.power ?? 0) - (onBoard.get(x.attackerId)?.power ?? 0) || x.index - y.index);
+          const biggest = [...single].sort((x, y) => (onBoard.get(y.attackerId)?.power ?? 0) - (onBoard.get(x.attackerId)?.power ?? 0) || x.index - y.index);
           for (const o of biggest) if (!used.has(o.cardId) && !blocked.has(o.attackerId)) { picks.push(o.index); used.add(o.cardId); blocked.add(o.attackerId); }
         }
         return {indices: picks.slice(0, Math.max(min, Math.min(max, picks.length)))};
@@ -200,6 +215,34 @@ export function housePilot({seat, cards = () => null} = {}) {
       /* A trigger's targets (engine 2.4c): aimed as a cast is -- a hostile one at an opponent's things. */
       if (id.startsWith("trigger-targets:") && options.length) {
         const best = options.reduce((b, o) => (aim(view, o) > aim(view, b) ? o : b));
+        return {indices: [best.index]};
+      }
+      /* A counted target ("up to two target creatures"): every one on the side its effect is meant for, as many as it may,
+         at least as many as it must. */
+      if (id.startsWith("choose-targets:")) {
+        const aimed = options.filter((o) => aim(view, o) > 0).map((o) => o.index);
+        const rest = options.map((o) => o.index).filter((i) => !aimed.includes(i));
+        return {indices: [...aimed.slice(0, max), ...rest].slice(0, Math.max(min, Math.min(max, aimed.length)))};
+      }
+      /* A flashback cost's creatures to tap (Battle Screech): the weakest first -- what it would least miss in combat. */
+      if (id.startsWith("choose-cost:") && choice.cost === "tap") {
+        const mine = new Map(creaturesOf(self).map((c) => [c.cardId, c]));
+        const order = options.map((o, i) => i).sort((a, b) => (mine.get(options[a].cardId)?.power ?? 0) - (mine.get(options[b].cardId)?.power ?? 0) || a - b);
+        return {indices: firstOf(choice, order, min)};
+      }
+      /* What a cast taps for itself (rules/actions.mjs, castTapPlans): the first way, the least flexible sources tapped,
+         keeping the most colors for later. */
+      if (id.startsWith("choose-cost:") && choice.cost === "mana") return {indices: [0]};
+      /* Escape's other cards (CR 702.138a): the lands first, then the cheapest -- what it is least likely to want back. */
+      if (id.startsWith("choose-cost:")) {
+        const yard = new Map(zone(self, "Graveyard").map((c) => [c.cardId, c]));
+        const rank = (o) => (isLand(yard.get(o.cardId)) ? -1 : manaValue(o.label.replace(/ \(\d+\)$/, "")));
+        const order = options.map((o, i) => i).sort((a, b) => rank(options[a]) - rank(options[b]) || a - b);
+        return {indices: firstOf(choice, order, min)};
+      }
+      /* CR 616.1: which effect changes damage dealt to it or its own first -- the one that leaves the least. */
+      if (id.startsWith("order-damage:") && options.length) {
+        const best = options.reduce((b, o) => ((o.leaves ?? Infinity) < (b.leaves ?? Infinity) ? o : b));
         return {indices: [best.index]};
       }
       /* Anything else (trigger order, the commander's zone, an effect's choice): the first legal answer,

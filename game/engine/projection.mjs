@@ -27,7 +27,8 @@
  * render. It is pinned in §12.1 and reproduced here, not designed.
  */
 
-import {characteristicsOf} from "./rules/layers.mjs";
+import {characteristicsOf, deriving} from "./rules/layers.mjs";
+import {commanderKeyOf} from "./state/index.mjs";
 
 export const PROJECTION_SCHEMA = "CommanderProbeProjection@1";
 
@@ -78,6 +79,9 @@ function cardFor(state, id, canSeeFace) {
     toughness: named ? current.toughness : null,
     keywords: named ? [...current.keywords] : [],
     commander: object.commander === true,
+    /* Which commander (state/index.mjs, commanderKeyOf): the key its damage is kept under in every player's
+       `health.commanderDamage`, the same in every zone, so the board can say whose commander dealt it. */
+    ...(object.commander === true ? {commanderKey: commanderKeyOf(object)} : {}),
   };
 }
 
@@ -162,6 +166,10 @@ function playerFor(state, player, viewer) {
  *                          the safe default for anyone not in a seat
  */
 export function projectFor(state, viewer) {
+  /* It only reads: every object it derives, derived once (rules/layers.mjs, deriving). */
+  return deriving(state, () => project(state, viewer));
+}
+function project(state, viewer) {
   if (viewer !== null && !state.players[viewer])
     throw new Error(`There is no seat ${viewer} at this table to project for`);
 
@@ -178,7 +186,7 @@ export function projectFor(state, viewer) {
         attackingPlayerId: state.combat.attackingPlayerId,
         defenders: [...state.combat.defenders],
         attacks: state.combat.attacks.map((a) => ({
-          attacker: a.attacker, defender: a.defender, blocked: a.blocked, blockers: [...a.blockers],
+          attacker: a.attacker, defender: a.defender, ...(a.planeswalker !== undefined ? {planeswalker: a.planeswalker} : {}), blocked: a.blocked, blockers: [...a.blockers],
         })),
       }
       : null,

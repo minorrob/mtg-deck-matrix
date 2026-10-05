@@ -16,18 +16,26 @@
  */
 
 import {addMana as addToPool} from "../../rules/mana.mjs";
-import {applyReplacements} from "../../rules/replacement.mjs";
+import {addRestricted} from "../../rules/restricted-mana.mjs";
+import {applyReplacements, hitKey, damageChoicesPossible} from "../../rules/replacement.mjs";
 import {runFollowUps} from "./index.mjs";
 import {selectMatching} from "../filter.mjs";
 import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
-import {typesOf, powerOf, keywordsOf} from "../../rules/layers.mjs";
+import {typesOf, powerOf, toughnessOf, keywordsOf, isKeywordCounter} from "../../rules/layers.mjs";
+import {cantGainLife, countersPlaced} from "../../rules/statics.mjs";
+import {playerRuled} from "../../rules/sba.mjs";
 
 /** `addMana` — into the controller's pool, which empties at the end of the step (CR 500.4). */
 export function addMana(state, params, context) {
-  const mana = params.mana ?? {};
+  /* "Add {R} for each card exiled this way" (Quintorius Kand): `count` times, counted as it resolves. */
+  const times = params.count === undefined ? 1 : Math.max(0, params.count);
+  const mana = Object.fromEntries(Object.entries(params.mana ?? {}).map(([color, n]) => [color, n * times]));
   if (Object.values(mana).every((n) => !n)) return [];
-  addToPool(state.players[context.controller].manaPool, mana);
+  /* "Spend this mana only to cast instant and sorcery spells" (Abstract Paintmage; CR 106.6): beside the pool, what it may
+     pay for read as it is added, as a mana ability's is (rules/restricted-mana.mjs). */
+  if (params.spendOnly) addRestricted(state, context.controller, mana, params.spendOnly, context.source);
+  else addToPool(state.players[context.controller].manaPool, mana);
   return [event("GameEventManaPool", state, {
     player: {playerId: context.controller, name: state.players[context.controller].name},
     produced: {...mana},
@@ -53,11 +61,25 @@ export function untap(state, params, context) {
   for (const id of params.targets ?? []) {
     const object = state.objects[id];
     if (!object || !object.tapped) continue;
-    object.tapped = false;
-    events.push(event("GameEventCardTapped", state, {card: cardRef(state, id), tapped: false}));
+    untapOne(state, id, events);
   }
   void context;
   return events;
+}
+
+/**
+ * A STUN COUNTER (CR 122.1d): a permanent with one that would become untapped has one removed instead, and stays tapped --
+ * in its controller's untap step (rules/turn.mjs) and by an untap effect alike. Whether it untapped.
+ */
+export function untapOne(state, id, events) {
+  const object = state.objects[id];
+  if ((object.counters?.stun ?? 0) > 0) {
+    events.push(...removeCounter(state, {targets: [id], counter: "stun", count: 1}, {}));
+    return false;
+  }
+  object.tapped = false;
+  events.push(event("GameEventCardTapped", state, {card: cardRef(state, id), tapped: false}));
+  return true;
 }
 
 /** `untapAll` — everything a selector matches. */
@@ -75,10 +97,16 @@ export const infects = (state, id) => Boolean(state.objects[id]) && keywordsOf(s
  */
 export function changeLife(state, player, delta, events) {
   if (delta === 0) return;
+  /* "Your opponents can't gain life" (CR 119.7): a gain that does not happen, and is not said to. */
+  if (delta > 0 && cantGainLife(state, player)) return;
+  /* "Their life total can't change" (Teferi's Reproach; CR 119.7-8): no gain, no loss. */
+  if ((state.effects ?? []).some((e) => e.rule === "life-cant-change" && (e.players ?? []).includes(player))) return;
   const before = state.players[player].life;
   state.players[player].life += delta;
   /* The life each player has lost this turn (Wound Reflection; script/amount.mjs), cleared as a turn begins (turn.mjs). */
   if (delta < 0) state.players[player].lostThisTurn = (state.players[player].lostThisTurn ?? 0) - delta;
+  /* And gained ("if you gained 3 or more life this turn", Indulging Patrician). */
+  if (delta > 0) state.players[player].gainedThisTurn = (state.players[player].gainedThisTurn ?? 0) + delta;
   events.push(event("GameEventPlayerLivesChanged", state, {
     player: {playerId: player, name: state.players[player].name},
     oldLives: before, newLives: state.players[player].life,
@@ -116,20 +144,14 @@ export function loseLife(state, params, context) {
  * A hit prevented in full does not happen at all (CR 615.4), so it is skipped rather than reported
  * as zero damage — the board should not announce something that did not occur.
  */
-export function dealDamage(state, params, context) {
-  const events = [];
+/* What a damage effect deals, and to whom: the source, the amount, and each hit. */
+function damageHits(state, params, context) {
   const amount = params.amount ?? 0;
-  /* "If a Dinosaur is dealt damage this way" (Marauding Raptor, batch 70): the permanents it was dealt to, after prevention,
-     remembered for the effects after it -- none, when there was no damage to deal. */
-  const dealt = [];
-  if (params.remember) context.remembered = dealt;
-  if (amount <= 0) return events;
   /* The spell or ability, or a creature the trigger is about: "it deals that much damage to each other opponent". One that
      has left the battlefield since (a Dragon dealt lethal damage) still deals it, as a departed ability source does
      (rules/stack.mjs): with no object left to read for lifelink or deathtouch. */
   const named = Array.isArray(params.from) ? params.from[0] ?? null : context.source ?? null;
   const source = named !== null && state.objects[named] ? named : null;
-
   const hits = [
     ...(params.targets ?? []).map((id) => ({toCard: id})),
     ...(params.toPlayer === undefined ? [] : [{toPlayer: params.toPlayer}]),
@@ -139,11 +161,24 @@ export function dealDamage(state, params, context) {
       .filter((player) => !(params.exceptThatPlayer === true && player === context.about?.player))
       .map((player) => ({toPlayer: player})),
   ];
+  return {source, amount, hits};
+}
+
+export function dealDamage(state, params, context) {
+  const events = [];
+  /* "If a Dinosaur is dealt damage this way" (Marauding Raptor, batch 70): the permanents it was dealt to, after prevention,
+     remembered for the effects after it -- none, when there was no damage to deal. */
+  const dealt = [];
+  if (params.remember) context.remembered = dealt;
+  const {source, amount, hits} = damageHits(state, params, context);
+  if (amount <= 0) return events;
 
   for (const hit of hits) {
+    /* CR 616.1: the order of the effects that change it, as the player dealt it chose (effects/asking.mjs, orderDamage);
+       the order that leaves the least where nobody was asked (rules/replacement.mjs). */
     const {proposal} = applyReplacements(state, {
       event: "damage", toPlayer: hit.toPlayer, toCard: hit.toCard, amount, sourceId: source, combat: false,
-    });
+    }, {orders: params.damageOrders?.[hitKey(source, hit.toPlayer, hit.toCard)] ?? []});
     /* What follows a prevention -- "each opponent mills that many cards" -- immediately afterward (CR 615.5). */
     if (proposal.prevented === true || proposal.amount <= 0) { events.push(...runFollowUps(state, proposal)); continue; }
     /* Dealt where the replacements left it: a redirection (CR 614.9) moves it from a player to a permanent. */
@@ -162,12 +197,15 @@ export function dealDamage(state, params, context) {
         amount: proposal.amount, combat: false, infect,
       }));
     } else if (state.objects[toCard]) {
-      if (infect) addCounters(state, toCard, "-1/-1", proposal.amount, events);
-      else state.objects[toCard].damage += proposal.amount;
+      /* EXCESS DAMAGE (CR 120.4a): "if excess damage was dealt to that permanent this way" (Violent Echoes) -- past lethal
+         to a creature (its damage marked counted; from deathtouch, anything past 1, 702.2c), past its loyalty to a
+         planeswalker, the greater for one that is both -- read before it is dealt, and kept for the effects after it. */
+      context.excessDamage = (context.excessDamage ?? 0) + excessOf(state, toCard, proposal.amount, source);
+      damagePermanent(state, toCard, proposal.amount, events, {infect});
       events.push(event("GameEventCardDamaged", state, {
         card: cardRef(state, toCard),
         source: source === null ? null : cardRef(state, source),
-        amount: proposal.amount,
+        amount: proposal.amount, combat: false,
       }));
       /* CR 702.2b: deathtouch is any damage from the source, not only combat damage. */
       markDeathtouch(state, source, toCard);
@@ -179,6 +217,19 @@ export function dealDamage(state, params, context) {
   return events;
 }
 
+/* How much of `amount` dealt to this permanent now would be excess damage (CR 120.4a). */
+function excessOf(state, id, amount, source) {
+  const types = typesOf(state, id), object = state.objects[id];
+  let excess = 0;
+  if (types.includes("Creature")) {
+    const deathtouch = source !== null && state.objects[source] && keywordsOf(state, source).includes("Deathtouch");
+    const lethal = Math.max(0, toughnessOf(state, id) - (object.damage ?? 0));
+    excess = Math.max(excess, amount - (deathtouch ? Math.min(lethal, 1) : lethal));
+  }
+  if (types.includes("Planeswalker")) excess = Math.max(excess, amount - (object.counters?.loyalty ?? 0));
+  return Math.max(0, excess);
+}
+
 /**
  * `damageAll` -- "deals 13 damage to each creature" (Blasphemous Act), "1 damage to each opponent and each creature they
  * control" (Tectonic Hazard): `selector` the permanents (each creature, unless it says), `who` the players, `amount`
@@ -186,21 +237,51 @@ export function dealDamage(state, params, context) {
  * power to each other creature" (Chandra's Ignition), which `exceptSource` leaves out of "each other creature". One
  * damage event for all of it; the dying is state-based, afterwards (CR 704.5g).
  */
-export function damageAll(state, params, context) {
+function damageAllCall(state, params, context) {
   const from = Array.isArray(params.from) ? params.from[0] ?? null : context.source ?? null;
   /* "Each creature and planeswalker they control": a choice of descriptions (`anyOf`), each one counted once. */
   const {anyOf, ...shared} = params.selector ?? {what: "permanent", types: ["Creature"]};
   const matched = Array.isArray(anyOf) ? [...new Set(anyOf.flatMap((one) => selectMatching(state, {...shared, ...one}, context)))] : selectMatching(state, shared, context);
   const ids = matched.filter((id) => !(params.exceptSource === true && id === from));
-  return dealDamage(state, {amount: params.amount, targets: ids, ...(params.who !== undefined ? {who: params.who} : {})}, {...context, source: from});
+  return [{amount: params.amount, targets: ids, ...(params.who !== undefined ? {who: params.who} : {}), ...(params.damageOrders ? {damageOrders: params.damageOrders} : {})}, {...context, source: from}];
+}
+export function damageAll(state, params, context) {
+  const [deal, from] = damageAllCall(state, params, context);
+  return dealDamage(state, deal, from);
+}
+
+/**
+ * DAMAGE TO A PERMANENT (CR 120.3): to a planeswalker, that many loyalty counters removed (120.3c, 306.8); to a creature,
+ * marked -- or, from a source with infect, that many -1/-1 counters (120.3d); to one that is both, both (120.3).
+ */
+export function damagePermanent(state, id, amount, events, {infect = false} = {}) {
+  const types = typesOf(state, id);
+  const object = state.objects[id];
+  if (types.includes("Planeswalker")) {
+    const before = object.counters.loyalty ?? 0;
+    object.counters.loyalty = Math.max(0, before - amount);
+    events.push(event("GameEventCardCounters", state, {card: cardRef(state, id), type: "loyalty", oldValue: before, newValue: object.counters.loyalty}));
+    if (!types.includes("Creature")) return;
+  }
+  if (infect) addCounters(state, id, "-1/-1", amount, events);
+  else object.damage += amount;
 }
 
 export function addCounters(state, id, kind, count, events) {
   if (count === 0) return;
   const object = state.objects[id];
   if (!object) return;
+  /* "Twice that many instead" (Branching Evolution; rules/statics.mjs). */
+  if (object.zone === "battlefield") count = countersPlaced(state, id, kind, count);
+  if (count === 0) return;
   const before = object.counters[kind] ?? 0;
   object.counters[kind] = before + count;
+  /* A keyword counter's ability has the timestamp of the counter's placing (CR 122.1b, 613.7): a "loses all abilities"
+     from before it does not take it away (rules/layers.mjs). */
+  if (before <= 0 && object.counters[kind] > 0 && isKeywordCounter(kind)) {
+    (object.counterStamps ??= {})[kind] = state.nextTimestamp;
+    state.nextTimestamp += 1;
+  }
   events.push(event("GameEventCardCounters", state, {
     card: cardRef(state, id), type: kind, oldValue: before, newValue: object.counters[kind],
   }));
@@ -211,12 +292,48 @@ export function addCounters(state, id, kind, count, events) {
  * ("this creature", "target creature you control"), `targets` the other. Both powers are read before either deals any.
  * If either is no longer a creature on the battlefield, neither deals damage (701.14b).
  */
-export function fight(state, params, context) {
+function fightCalls(state, params, context) {
   const [a] = params.from ?? [], [b] = params.targets ?? [];
   const fighting = (id) => id !== undefined && state.objects[id]?.zone === "battlefield" && typesOf(state, id).includes("Creature");
   if (!fighting(a) || !fighting(b)) return [];
   const powerA = Math.max(0, powerOf(state, a)), powerB = Math.max(0, powerOf(state, b));
-  return [...dealDamage(state, {amount: powerA, targets: [b], from: [a]}, context), ...dealDamage(state, {amount: powerB, targets: [a], from: [b]}, context)];
+  const orders = params.damageOrders ? {damageOrders: params.damageOrders} : {};
+  return [[{amount: powerA, targets: [b], from: [a], ...orders}, context], [{amount: powerB, targets: [a], from: [b], ...orders}, context]];
+}
+export function fight(state, params, context) {
+  return fightCalls(state, params, context).flatMap(([deal, ctx]) => dealDamage(state, deal, ctx));
+}
+
+/* ---- CR 616.1, before damage is dealt ----
+
+   The damage effects a resolution can stop to ask about (script/resolution.mjs; effects/asking.mjs, orderDamage), each
+   as the dealDamage calls it makes -- so the question and the dealing see the same hits. */
+export const DAMAGING = Object.freeze({dealDamage, damageAll, fight});
+function damageCalls(state, effect, context) {
+  if (effect.effect === "dealDamage") return [[effect, context]];
+  if (effect.effect === "damageAll") return [damageAllCall(state, effect, context)];
+  if (effect.effect === "fight") return fightCalls(state, effect, context);
+  return [];
+}
+
+/**
+ * The first hit of this damage effect whose replacement effects' order is the affected player's to choose and not yet
+ * chosen (CR 616.1), given `answers` (by hit, `hitKey`): `{player, proposal, options, key}`, or null when there is none.
+ * Tried dry: it changes nothing.
+ */
+export function damageQuestion(state, effect, context, answers = {}) {
+  if (!DAMAGING[effect?.effect] || !damageChoicesPossible(state)) return null;
+  for (const [params, ctx] of damageCalls(state, effect, context)) {
+    const {source, amount, hits} = damageHits(state, params, ctx);
+    if (amount <= 0) continue;
+    for (const hit of hits) {
+      const key = hitKey(source, hit.toPlayer, hit.toCard);
+      const {question} = applyReplacements(state, {event: "damage", toPlayer: hit.toPlayer, toCard: hit.toCard, amount, sourceId: source, combat: false},
+        {orders: answers[key] ?? [], askable: true, dry: true});
+      if (question) return {...question, key};
+    }
+  }
+  return null;
 }
 
 /**
@@ -243,7 +360,8 @@ export function givePoison(state, id, count) {
  * actions report it (rules/sba.mjs, gameOver). A player no longer in the game wins nothing (playersFor names none).
  */
 export function winGame(state, params, context) {
-  for (const id of playersFor(state, params.who ?? "you", context.controller)) state.players[id].won = true;
+  /* "Your opponents can't win the game" (Darksteel Angel; CR 104.2b): a player one of whose opponents has it does not. */
+  for (const id of playersFor(state, params.who ?? "you", context.controller)) if (!playerRuled(state, "opponents-cant-win", id, {opponents: true})) state.players[id].won = true;
   return [];
 }
 
@@ -263,20 +381,41 @@ export function putCounterAll(state, params, context) {
   return events;
 }
 
-/** `removeCounter` — the other direction, and never below zero. */
+/**
+ * `multiplyCounters` -- "double the number of each kind of counter on any number of target permanents" (Deepglow Skate;
+ * Forge's MultiplyCounter): on each target, as many more of each kind as it has now, put on as counters are (CR 122.1 --
+ * doubling is putting that many on, which "if counters would be put on" sees); `who`, the players whose own counters
+ * double ("each kind of counter you have": poison, CR 122.1c). `times` 2 unless it says.
+ */
+export function multiplyCounters(state, params, context) {
+  const events = [], more = Math.max(1, params.times ?? 2) - 1;
+  for (const id of params.targets ?? []) {
+    const object = state.objects[id];
+    if (!object || object.zone !== "battlefield") continue;
+    for (const [kind, n] of Object.entries({...object.counters})) if (n > 0) addCounters(state, id, kind, n * more, events);
+  }
+  for (const player of params.who !== undefined ? playersFor(state, params.who, context.controller) : [])
+    if ((state.players[player].poison ?? 0) > 0) events.push(...givePoison(state, player, state.players[player].poison * more));
+  return events;
+}
+
+/** `removeCounter` — the other direction, and never below zero. "Remove all counters from target creature" (Perfect
+    Intimidation): `counter: "all"`, every kind it has, all of each. */
 export function removeCounter(state, params, context) {
   const events = [];
-  const kind = params.counter ?? "+1/+1";
   for (const id of params.targets ?? []) {
     const object = state.objects[id];
     if (!object) continue;
-    const before = object.counters[kind] ?? 0;
-    const after = Math.max(0, before - (params.count ?? 1));
-    if (after === before) continue;
-    object.counters[kind] = after;
-    events.push(event("GameEventCardCounters", state, {
-      card: cardRef(state, id), type: kind, oldValue: before, newValue: after,
-    }));
+    const kinds = params.counter === "all" ? Object.keys(object.counters ?? {}) : [params.counter ?? "+1/+1"];
+    for (const kind of kinds) {
+      const before = object.counters[kind] ?? 0;
+      const after = params.counter === "all" ? 0 : Math.max(0, before - (params.count ?? 1));
+      if (after === before) continue;
+      object.counters[kind] = after;
+      events.push(event("GameEventCardCounters", state, {
+        card: cardRef(state, id), type: kind, oldValue: before, newValue: after,
+      }));
+    }
   }
   void context;
   return events;

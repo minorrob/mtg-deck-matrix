@@ -77,8 +77,9 @@ export function createState(pod) {
       name: seat.name ?? `Seat ${id + 1}`,
       life,
       poison: 0,
-      /* Commander damage is per source, so it is a map keyed by the commander's object id and
-         summed per player by whatever reads it — a seat with partners has two rows. */
+      /* Commander damage is per commander, so it is a map keyed by the commander's key (`commanderKeyOf`), which
+         a zone change keeps -- not by its object id, which a zone change replaces (CR 400.7) -- and read per
+         commander by whatever reads it: a seat with partners has two rows. */
       commanderDamage: {},
       /* CR 106.4: a mana pool empties at the end of each step and phase. One counter per color
          plus colorless; kept as a flat object so the state stays plain. */
@@ -124,10 +125,30 @@ const listFor = (state, zone, player) => (PER_PLAYER.includes(zone) ? state.zone
  * `card` is the definition's name or id; the engine never stores card TEXT in the state, only a
  * reference, so a state stays small and the card directory stays the one place text lives.
  */
+/* A modal double-faced card's face (CR 712.8): its characteristics, from the card's own two. */
+const FACE_KEYS = ["card", "types", "subtypes", "supertypes", "manaCost", "colors", "power", "toughness", "loyalty", "keywords", "abilities", "spell", "enchant"];
+function faceOf(mdfc, face) {
+  const side = face === "back" ? mdfc.back : mdfc.front;
+  return Object.fromEntries(FACE_KEYS.map((key) => [key, side[key]]));
+}
+
+/** Turn a modal double-faced card in a player's hand to the face it is played with (CR 712.12): before it moves, so how
+    it enters is that face's own "as this land enters". */
+export function showFace(state, id, face) {
+  const object = state.objects[id];
+  if (!object?.mdfc) return;
+  Object.assign(object, faceOf(object.mdfc, face));
+  if (face === "back") object.face = "back"; else delete object.face;
+}
+
 export function addObject(state, object, zone, player = null) {
   assertZone(state, zone, player);
+  /* A MODAL DOUBLE-FACED CARD (CR 712.8): the characteristics of the face that is up -- its front, unless it was played
+     with its back face up (`face`), which only a permanent can be (rules/actions.mjs). */
+  if (object.mdfc) object = {...object, ...faceOf(object.mdfc, object.face), mdfc: object.mdfc, face: object.face === "back" ? "back" : undefined};
   const id = state.nextObjectId;
   state.nextObjectId += 1;
+  const owner = Number.isInteger(object.owner) ? object.owner : player;
   state.objects[id] = {
     id,
     card: object.card ?? null,
@@ -144,6 +165,8 @@ export function addObject(state, object, zone, player = null) {
        is not a creature; the layer system (CR 613, 1.8) decides what they currently are. */
     power: Number.isInteger(object.power) ? object.power : null,
     toughness: Number.isInteger(object.toughness) ? object.toughness : null,
+    /* A planeswalker's printed loyalty (CR 306.5a); on the battlefield its loyalty is its loyalty counters (306.5c). */
+    ...(Number.isInteger(object.loyalty) ? {loyalty: object.loyalty} : {}),
     keywords: Array.isArray(object.keywords) ? [...object.keywords] : [],
     /* CR 302.6, summoning sickness: the turn this object came under its controller's control. A
        zone change makes a new object, so an entering permanent gets the current turn and a creature
@@ -152,7 +175,7 @@ export function addObject(state, object, zone, player = null) {
     /* The turn it arrived in this zone: "destroy all creatures that entered this turn" (Force of Despair). A change of
        control does not touch it (effects/permanents.mjs gainControl). */
     arrivedTurn: state.turn,
-    owner: Number.isInteger(object.owner) ? object.owner : player,
+    owner,
     controller: Number.isInteger(object.controller) ? object.controller : (object.owner ?? player),
     zone,
     zonePlayer: PER_PLAYER.includes(zone) ? player : null,
@@ -172,6 +195,12 @@ export function addObject(state, object, zone, player = null) {
        command-zone replacement and the 21-damage tally — and for a while none of them could,
        because it was read everywhere and written nowhere. */
     commander: object.commander === true,
+    /* WHICH commander, for as long as the game lasts. The tax (CR 903.8) counts the times a player cast it from the
+       command zone "that game", and the damage (CR 903.10a) is dealt by the same commander "over the course of the
+       game" -- across every zone change, each of which makes a new object (CR 400.7). Keyed by the object id they
+       were the tally of the object, and the second cast was the first again. Given once, when the card is first made
+       a commander; every move carries it. */
+    ...(object.commander === true ? {commanderKey: object.commanderKey ?? `${owner}:${id}`} : {}),
     /* From the card script (cards/index.mjs, phase 2.4): what the card does as a spell, which stack.mjs resolves,
        and its printed subtypes, which a selector may ask about. Present only on a card that has them, so an object
        made from a bare kernel definition is the shape it always was. */
@@ -186,10 +215,16 @@ export function addObject(state, object, zone, player = null) {
     /* The card's printed colors (CR 105.2), the base the layers start from: "a red spell", "white creatures you
        control" and a token's own color read them. Present only on a card that has one, as with subtypes. */
     ...(Array.isArray(object.colors) && object.colors.length ? {colors: [...object.colors]} : {}),
+    ...(object.mdfc ? {mdfc: structuredClone(object.mdfc), ...(object.face === "back" ? {face: "back"} : {})} : {}),
   };
   state.nextTimestamp += 1;
   listFor(state, zone, player).push(id);
   return id;
+}
+
+/** Which commander an object is (CR 903.3): the key its tax and its damage are kept under, the same in every zone. */
+export function commanderKeyOf(object) {
+  return object.commanderKey ?? `${object.owner}:${object.id}`;
 }
 
 /** An object that ceases to exist (CR 704.5d, 704.5e): out of its zone and out of the game, with no zone change. */
@@ -245,14 +280,22 @@ export function moveObject(state, id, zone, player = null) {
   const at = fromList.indexOf(id);
   if (at >= 0) fromList.splice(at, 1);
   delete state.objects[id];
+  /* Revolt's "if a permanent left the battlefield under your control this turn" (Hidden Stockpile): counted for its
+     controller as it left -- every departure moves through here (script/amount.mjs, permanentsLeftThisTurn; cleared as a
+     turn begins, rules/turn.mjs). */
+  if (from.zone === "battlefield" && state.players[from.controller]) state.players[from.controller].leftThisTurn = (state.players[from.controller].leftThisTurn ?? 0) + 1;
 
   /* Only what the CARD says survives the move: its identity, its printed types and its owner. The
      owner does (CR 108.3): a card goes to its OWNER's graveyard however long someone else
      controlled it. Counters, damage, attachments and control do not — that is CR 400.7. */
   return addObject(state, {
+    /* A double-faced card keeps the face that was up only onto the battlefield, where it was put that way; anywhere else
+       it is its front (CR 712.8a). */
+    ...(from.mdfc ? {mdfc: from.mdfc, face: zone === "battlefield" && from.face === "back" ? "back" : undefined} : {}),
     card: from.card, types: from.types, manaCost: from.manaCost, abilities: from.abilities,
-    power: from.power, toughness: from.toughness, keywords: from.keywords,
+    power: from.power, toughness: from.toughness, loyalty: from.loyalty, keywords: from.keywords,
     owner: from.owner, controller: from.owner, token: from.token, copy: from.copy, commander: from.commander,
+    commanderKey: from.commander === true ? commanderKeyOf(from) : undefined,
     spell: from.spell, subtypes: from.subtypes, supertypes: from.supertypes, colorIdentity: from.colorIdentity, colors: from.colors,
     enchant: from.enchant,
   }, zone, player);

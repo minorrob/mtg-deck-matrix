@@ -284,11 +284,16 @@ globalThis.CrankBoard = Object.freeze({
   const departed = (i) => (view.departures || {})[`s${i}`] || null;
   const visibleCards = (p) => Object.values(p.zones).flatMap((z) => z.cards);
   const commanderOf = (p) => visibleCards(p).find((c) => c.commander && c.name) || null;
-  /* A commander's damage is kept by the commander's object; which seat that is, the owner of the card says. */
-  function commanderSeat(objectId) {
+  /* A commander's damage is kept under its commander key, "<owner seat>:<id>", the same in every zone (CR 903.10a is
+     "over the course of the game"), so the seat is the key's own first part -- even while the card is out of sight. A
+     key that is a bare object id (a view from before the key) is the visible card's. */
+  const keyOf = (c) => c.commanderKey || String(c.cardId);
+  function commanderSeat(key) {
+    const m = /^(\d+):/.exec(String(key));
+    if (m) return Number(m[1]);
     for (const p of players()) for (const zone of Object.values(p.zones)) {
-      const card = zone.cards.find((c) => c.cardId === Number(objectId));
-      if (card && card.commander) return card.owner;
+      const card = zone.cards.find((c) => c.commander && keyOf(c) === String(key));
+      if (card) return card.owner;
     }
     return null;
   }
@@ -372,6 +377,8 @@ globalThis.CrankBoard = Object.freeze({
       return s.stack.length ? "You may respond" : "";
     }
     if (d) return d.kind === "draw" ? "" : d.title;
+    /* The room plays the AI seats in slices (game/room/room.mjs, `continuing`): nobody is asked until they stop. */
+    if (view.continuing) return "The AI players are taking their turns…";
     return view.waitingOn ? `Waiting on ${view.waitingOn === view.seatId ? "you" : seatName(view.waitingOn)}` : "";
   };
   const canPass = () => {const d = view.decision; return !!d && d.kind === "priority" && !sending && view.status !== "finished";};
@@ -600,20 +607,27 @@ globalThis.CrankBoard = Object.freeze({
     /* a heart for life, a skull and crossbones for poison, nothing for commander damage (item 9) */
     const row = (label, cells, name = "") => `<div role="row"><span role="rowheader"${name ? ` class="cm-vitals-icon" aria-label="${e(name)}" title="${e(name)}"` : ""}>${e(label)}</span>${cells.map((c) => `<span role="cell">${c}</span>`).join("")}</div>`;
     const rows = [row("♥", ps.map((p) => `<b>${p.health.life}</b>`), "Life"), row("☠", ps.map((p) => `${p.health.poison} / 10`), "Poison")];
+    /* A row for each commander, not each seat: partners are two commanders, and 21 is from ONE of them (CR 903.10a). */
     const known = new Set();
+    const cells = (key, seat) => ps.map((t) => {
+      if (t.playerId === seat) return "—";
+      const n = (t.health.commanderDamage || {})[key] || 0;
+      return `${n} / 21<i class="cm-vitals-meter" style="--fill:${Math.min(1, n / 21)};--seat:${seat === null ? SEAT_COLORS[0] : seatColor(seat)}"></i>`;
+    });
     for (const src of ps) {
-      const ids = visibleCards(src).filter((c) => c.commander).map((c) => c.cardId);
-      if (!ids.length) continue;
-      ids.forEach((id) => known.add(String(id)));
-      const name = (commanderOf(src) || {}).name || `${src.name}'s commander`;
-      rows.push(row(`From ${name}`, ps.map((t) => {
-        if (t.playerId === src.playerId) return "—";
-        const n = ids.reduce((sum, id) => sum + ((t.health.commanderDamage || {})[id] || 0), 0);
-        return `${n} / 21<i class="cm-vitals-meter" style="--fill:${Math.min(1, n / 21)};--seat:${seatColor(src.playerId)}"></i>`;
-      })));
+      for (const c of visibleCards(src).filter((x) => x.commander)) {
+        const key = keyOf(c);
+        if (known.has(key)) continue;
+        known.add(key);
+        rows.push(row(`From ${c.name || `${src.name}'s commander`}`, cells(key, src.playerId)));
+      }
     }
-    const unknown = [...new Set(ps.flatMap((t) => Object.keys(t.health.commanderDamage || {})))].filter((id) => !known.has(id));
-    for (const id of unknown) rows.push(row("From a commander out of sight", ps.map((t) => `${(t.health.commanderDamage || {})[id] || 0} / 21`)));
+    /* A commander out of sight (in a hand or a library) still has its tally, and its key still says whose it is. */
+    const unknown = [...new Set(ps.flatMap((t) => Object.keys(t.health.commanderDamage || {})))].filter((key) => !known.has(key));
+    for (const key of unknown) {
+      const seat = commanderSeat(key), owner = ps.find((p) => p.playerId === seat);
+      rows.push(row(owner ? `From ${owner.name}'s commander, out of sight` : "From a commander out of sight", cells(key, seat)));
+    }
     C.modal("Table vitals", `<div class="cm-table-vitals" role="table" aria-label="Table vitals" style="--cols:${ps.length}">${head}${rows.join("")}</div>
       <p class="cm-muted">A player loses at 0 life, at 10 poison, or at 21 combat damage from one commander.</p><div class="cm-form-footer">${b("Close", "close", {}, true)}</div>`);
   }
@@ -848,13 +862,17 @@ globalThis.CrankBoard = Object.freeze({
     panelEl.classList.toggle("is-docked", mode === "full" && !phone());
     if (!coach.open) {panelEl.innerHTML = ""; return;}
     dock();
-    const keep = panelEl.querySelector(".cm-coach-input");
-    const typed = keep ? keep.value : "", focused = keep && document.activeElement === keep;
+    /* A redraw keeps what the reader has in hand: the draft, its focus, and ⋯ if it is open (a rebuilt <details> is
+       shut, and the Coach's reply lands on its own timer, so it would snap the menu shut under a pointer). Focus in ⋯
+       stays on ⋯ or on Clear chat; once ⋯ has closed (Clear chat closes it), it goes back to ⋯. */
+    const keep = panelEl.querySelector(".cm-coach-input"), more = panelEl.querySelector(".cm-coach-more"), active = document.activeElement;
+    const typed = keep ? keep.value : "", focused = keep && active === keep, moreOpen = !!(more && more.open);
+    const moreFocus = more && more.contains(active) ? (moreOpen && active.matches("[data-action=board-coach-clear]") ? "[data-action=board-coach-clear]" : "summary") : null;
     const bubble = (m) => m.divider ? `<li class="cm-coach-divider"><span>${e(m.divider)}</span></li>`
       : `<li class="cm-coach-msg is-${m.from}">${m.from === "coach" ? `<span class="cm-coach-avatar">${COACH}</span>` : ""}<p>${e(m.text)}</p></li>`;
     panelEl.innerHTML = `<header class="cm-coach-head"><span class="cm-coach-logo">${COACH}</span>
         <div><h2><span class="cm-coach-brand">CrankMagic </span>Coach</h2><p class="cm-muted" id="cm-coach-context">${e(coachContext())}</p></div>
-        <details class="cm-coach-more"><summary aria-label="More">⋯</summary><div>${b("Clear chat", "board-coach-clear")}</div></details>
+        <details class="cm-coach-more"${moreOpen ? " open" : ""}><summary aria-label="More">⋯</summary><div>${b("Clear chat", "board-coach-clear")}</div></details>
         <button type="button" class="v-button compact" data-action="board-coach" aria-label="Close the Coach">✕</button></header>
       <ol class="cm-coach-thread" aria-live="polite">${coach.thread.map(bubble).join("") || `<li class="cm-coach-empty cm-muted">Ask about your board, your hand, or the table.</li>`}
         ${coach.typing ? `<li class="cm-coach-msg is-coach is-typing" aria-label="The Coach is typing"><span class="cm-coach-avatar">${COACH}</span><p><i></i><i></i><i></i></p></li>` : ""}</ol>
@@ -864,6 +882,7 @@ globalThis.CrankBoard = Object.freeze({
     const input = panelEl.querySelector(".cm-coach-input");
     input.value = typed;
     if (focused) input.focus();
+    else if (moreFocus) panelEl.querySelector(`.cm-coach-more ${moreFocus}`).focus();
     const thread = panelEl.querySelector(".cm-coach-thread");
     thread.scrollTop = thread.scrollHeight;
   }
@@ -1347,7 +1366,8 @@ globalThis.CrankBoard = Object.freeze({
   actions["board-tools"] = () => {tools = !tools; confirmEnd = false; historyOpen = false; menuOpen = false; stepsOpen = false; draw();};
   actions["board-coach"] = () => {coach.open = !coach.open; tools = false; historyOpen = false; if (coach.open) panelOpen = false; draw(); drawCoach(); if (coach.open) document.querySelector("#cm-board-coach .cm-coach-input")?.focus();};
   actions["board-coach-ask"] = (el) => ask_(el.dataset.q);
-  actions["board-coach-clear"] = () => {coach.thread = []; coach.typing = false; clearTimeout(coach.timer); drawCoach();};
+  /* Clear chat is ⋯'s command, so doing it closes ⋯ (the redraw keeps the menu as it finds it). */
+  actions["board-coach-clear"] = (el) => {coach.thread = []; coach.typing = false; clearTimeout(coach.timer); const more = el.closest(".cm-coach-more"); if (more) more.open = false; drawCoach();};
   document.addEventListener("submit", (event) => {
     if (!event.target.matches || !event.target.matches("[data-coach-form]")) return;
     event.preventDefault();

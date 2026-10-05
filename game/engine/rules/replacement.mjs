@@ -21,10 +21,20 @@
  * WHEN SEVERAL APPLY, THE AFFECTED OBJECT'S CONTROLLER CHOOSES (CR 616.1) — not the effects'
  * controllers, and not the engine. The player whose creature is about to be replaced out of
  * existence picks which replacement happens first, and the order decides the outcome whenever the
- * first removes the second's opportunity. ONE EXCEPTION, NAMED: damage. A damage event cannot yet wait mid-resolution for
- * an answer, so when several effects apply to one (a doubler and Torbran's "plus 2"), the order that leaves the least
- * damage is applied -- the order the affected player chooses for damage dealt to them or their permanents (leastFirst).
- * Asking them is deferred, with the pause that needs.
+ * first removes the second's opportunity -- and ONLY then: when every order ends the same way (two players' "exile it
+ * instead") the first applies and nobody is asked, because there is nothing to choose (sameEnd).
+ *
+ * DAMAGE IS ASKED BEFORE ANY OF IT IS DEALT. When several effects apply to one damage event and the orders end
+ * differently -- Torbran's "plus 2" and a doubler, a prevention that counts what it stopped (The Mindskinner) and a doubler
+ * -- the player dealt it, or the controller of the permanent dealt it, chooses which applies first (CR 616.1). The two
+ * places damage is dealt ask first and deal afterwards: a damage effect in a resolution (script/effects/asking.mjs,
+ * orderDamage) and the combat damage step (rules/combat.mjs, "order-damage"), each answer kept by the hit it belongs to
+ * (`hitKey`) and replayed through `applyReplacements`'s `orders`. Each option says what it leads to ("11 damage", "8 to 12
+ * damage"). Damage dealt where nothing can stop to ask -- an effect run directly (what repeats for each player, what
+ * follows a prevention, a mana ability's) -- keeps the order that leaves the least (leastFirst): the order the player
+ * dealt it chooses on all but rare boards. NAMED: a zone change whose orders end differently is asked, but the move does
+ * not yet pause for the answer: no two such effects are among the definitions (one card, Liesa, replaces a zone change),
+ * so nothing reaches it today.
  *
  * PREVENTION IS A SHIELD THAT WEARS OUT (CR 615.1), so applying it writes back what is left.
  *
@@ -38,6 +48,7 @@
 import {compileSelector, matchesSelector} from "../script/filter.mjs";
 import {amountOf, isCounted} from "../script/amount.mjs";
 import {chosenFor} from "../script/chosen.mjs";
+import {protectedFrom} from "./protection.mjs";
 
 /* "This land enters tapped unless you control a Forest or a Plains" (a check land), "... unless you control two or
    fewer other lands" (a fast land): the arrival's `unless`, read as the land is about to enter -- so the land itself,
@@ -49,6 +60,13 @@ function unlessHolds(state, unless, player) {
   if (unless.opponents) {
     const opponents = state.players.filter((p) => p.id !== player && !p.lost).length;
     return opponents >= (unless.opponents.min ?? 1) && (unless.opponents.max === undefined || opponents <= unless.opponents.max);
+  }
+  /* "Unless your opponents control eight or more lands" (the Turbulent lands): what this player's opponents control, all
+     of them together, at least `min`. */
+  if (unless.opponentsControl) {
+    const theirs = compileSelector({...unless.opponentsControl, controller: "opponent"});
+    const count = state.zones.battlefield.filter((id) => theirs(state, id, {controller: player})).length;
+    return count >= (unless.min ?? 1) && (unless.max === undefined || count <= unless.max);
   }
   const alternatives = Array.isArray(unless.controls?.anyOf) ? unless.controls.anyOf : [unless.controls ?? {}];
   const matchers = alternatives.map((selector) => compileSelector({...selector, controller: "you"}));
@@ -74,7 +92,9 @@ function applies(state, ability, holder, proposal) {
   if (proposal.event === "enters") {
     /* `who: "self"` is the permanent's own arrival ability. `holder` is null for it, because at
        this moment the permanent is NOT on the battlefield to be a holder — see `applicable`. */
-    if (watches.who === "self") return holder === null && !unlessHolds(state, watches.unless, proposal.player);
+    /* "This creature escapes with two +1/+1 counters on it" (CR 702.138c): "if it escaped, it enters with them" --
+       `escaped`, only when the spell it was cast with escape (rules/stack.mjs). */
+    if (watches.who === "self") return holder === null && !unlessHolds(state, watches.unless, proposal.player) && (watches.escaped !== true || proposal.escaped === true);
     if (holder === null) return false;
     if (watches.types && !watches.types.every((type) => (proposal.types ?? []).includes(type))) return false;
     if (watches.controller === "controller" && proposal.player !== holder.controller) return false;
@@ -244,7 +264,9 @@ function affectedPlayer(state, proposal) {
   return proposal.player ?? null;
 }
 
-function applyOne(state, {holderId, ability}, proposal) {
+/* `dry` tries the effect without spending anything: a shield is worn out only when the damage is dealt (CR 615.1), not when
+   an order is tried or a question is built. */
+function applyOne(state, {holderId, ability}, proposal, dry = false) {
   const next = {...proposal, applied: [...(proposal.applied ?? []), ability.id], appliedBy: [...(proposal.appliedBy ?? []), appliedKey(holderId, ability)]};
 
   if (ability.change?.to) next.to = ability.change.to;
@@ -271,7 +293,7 @@ function applyOne(state, {holderId, ability}, proposal) {
     /* "With X +1/+1 counters on it" (CR 107.3m: the X paid to cast it), "a +1/+1 counter for each Zombie card in your
        graveyard", "X, where X is the greatest power among other creatures you control": counted as it is about to enter,
        "you" its controller. */
-    const n = isCounted(count) ? amountOf(state, count, {controller: proposal.player, source: proposal.objectId, x: proposal.x ?? 0}) : count;
+    const n = isCounted(count) ? amountOf(state, count, {controller: proposal.player, source: proposal.objectId, x: proposal.x ?? 0, kicked: proposal.kicked ?? 0}) : count;
     next.counters = {...(next.counters ?? {})};
     if (n > 0) next.counters[counter] = (next.counters[counter] ?? 0) + n;
   }
@@ -307,7 +329,7 @@ function applyOne(state, {holderId, ability}, proposal) {
     /* The shield wears out on the object itself, so what is left is part of the game state and
        survives a checkpoint like everything else. */
     const live = state.objects[holderId].abilities.find((a) => a.id === ability.id);
-    live.prevent -= stopped;
+    if (!dry) live.prevent -= stopped;
     /* CR 615.4: an event whose whole effect is prevented does not happen. Saying so on the
        proposal keeps a caller from reporting zero damage as damage. */
     if (next.amount === 0) next.prevented = true;
@@ -320,19 +342,28 @@ function applyOne(state, {holderId, ability}, proposal) {
  * Run a proposal through every replacement and prevention effect that applies.
  *
  * @param {object} proposal  `{event: "zone-change"|"damage", …}` — what is about to happen
- * @returns {{proposal: object, applied: Array<string>, awaiting: boolean}}
+ * @param {{orders?: string[], askable?: boolean, dry?: boolean}} [how]  for damage (CR 616.1): `orders` the affected
+ *   player's answers so far, in the order asked, each the effect they chose to apply first (`candidateKey`); `askable`
+ *   when the caller can stop to ask, so the next unanswered choice comes back as `question` with nothing applied past it;
+ *   `dry` to try it without spending a shield
+ * @returns {{proposal: object, applied: Array<string>, awaiting: boolean, question?: object}}
  *   `awaiting` is true when more than one effect applied at once and the affected player has been
  *   asked which goes first (CR 616.1). The caller stops, the driver answers, and
- *   `resolveReplacementOrder` finishes the job.
+ *   `resolveReplacementOrder` finishes the job. `question` is damage's: `{player, proposal, options}`, the options
+ *   candidate keys, for the caller to ask and replay with the answer added to `orders`.
  */
-export function applyReplacements(state, proposal) {
+export function applyReplacements(state, proposal, {orders = [], askable = false, dry = false} = {}) {
   let current = {...proposal, applied: proposal.applied ?? []};
+  let used = 0;
 
   /* PREVENTION FOR A WHILE (CR 615): "prevent all combat damage that would be dealt to and dealt by that creature this
      turn" (Maze of Ith), "prevent all damage that would be dealt to those permanents this turn" (Mutational Advantage)
      -- an effect with a duration (`rule: "prevent-damage"`, effects/permanents.mjs's effectUntil). It prevents all of
      the damage, so nothing is left for another effect to apply to, and there is no order to ask (CR 616.1). */
   if (proposal.event === "damage" && preventedForAWhile(state, current))
+    return {proposal: {...current, amount: 0, prevented: true}, applied: current.applied, awaiting: false};
+  /* PROTECTION (CR 702.16e, 702.16j; rules/protection.mjs): damage from a source with the quality is prevented, all of it. */
+  if (proposal.event === "damage" && protectedFrom(state, {card: current.toCard ?? null, player: current.toPlayer ?? null}, current.sourceId))
     return {proposal: {...current, amount: 0, prevented: true}, applied: current.applied, awaiting: false};
 
   /* Each round finds what still applies to the event AS IT NOW IS, which is what makes an effect
@@ -341,17 +372,29 @@ export function applyReplacements(state, proposal) {
   for (let guard = 0; guard < 64; guard += 1) {
     const candidates = applicable(state, current);
     if (candidates.length === 0) break;
-    /* Damage: the order that leaves the least, not a question (above). */
-    if (candidates.length > 1 && current.event === "damage") { current = applyOne(state, leastFirst(candidates, current.amount), current); continue; }
+    /* Damage (CR 616.1): no question when every order ends the same (two doublers); the answer given, when there is one;
+       asked, when the caller can stop; the order that leaves the least, when it cannot (above). */
+    if (candidates.length > 1 && current.event === "damage") {
+      if (sameEnd(state, current)) { current = applyOne(state, candidates[0], current, dry); continue; }
+      const answered = orders[used] === undefined ? undefined : candidates.find((c) => candidateKey(c) === orders[used]);
+      if (answered) { used += 1; current = applyOne(state, answered, current, dry); continue; }
+      if (askable) return {proposal: current, applied: current.applied, awaiting: false, question: {player: affectedPlayer(state, current), proposal: current, options: candidates.map(candidateKey)}};
+      current = applyOne(state, leastFirst(candidates, current.amount), current, dry);
+      continue;
+    }
     /* Entering: each adds its own part -- tapped, counters, a question asked once it is there -- and in any order the
        permanent enters the same way, so nobody is asked (CR 616.1; a Clone entering beside "each creature you control
        enters with an additional +1/+1 counter"). */
-    if (candidates.length > 1 && current.event === "enters") { current = applyOne(state, candidates[0], current); continue; }
+    if (candidates.length > 1 && current.event === "enters") { current = applyOne(state, candidates[0], current, dry); continue; }
+    /* CR 616.1 gives the affected player the order, and the order matters only when the orders end differently: two
+       players' "exile it instead" (Liesa) exile it either way, so the first applies and nobody is asked. Asking there had
+       left a question nothing could answer, and the game stopped. */
+    if (candidates.length > 1 && sameEnd(state, current)) { current = applyOne(state, candidates[0], current, dry); continue; }
     if (candidates.length > 1) {
       state.awaiting = {kind: "order-replacements", player: affectedPlayer(state, current), proposal: current};
       return {proposal: current, applied: current.applied, awaiting: true};
     }
-    current = applyOne(state, candidates[0], current);
+    current = applyOne(state, candidates[0], current, dry);
   }
 
   return {proposal: current, applied: current.applied, awaiting: false};
@@ -367,13 +410,17 @@ export function applyReplacements(state, proposal) {
  *
  * @returns {{tapped: boolean, counters: object}}
  */
-export function enteringModifications(state, {objectId, player, types, abilities, x = 0}) {
+export function enteringModifications(state, {objectId, player, types, abilities, x = 0, escaped = false, kicked = 0}) {
   const {proposal} = applyReplacements(state, {
-    event: "enters", objectId, player, types: types ?? [], x,
+    event: "enters", objectId, player, types: types ?? [], x, escaped, kicked,
     entering: {abilities: abilities ?? []},
     tapped: false, counters: {},
   });
-  return {tapped: proposal.tapped === true, counters: proposal.counters ?? {}, asks: proposal.asks ?? []};
+  /* A planeswalker enters with as many loyalty counters as its printed loyalty (CR 306.5b): a replacement every
+     planeswalker has. */
+  const counters = {...(proposal.counters ?? {})}, loyalty = state.objects[objectId]?.loyalty;
+  if ((types ?? []).includes("Planeswalker") && Number.isInteger(loyalty)) counters.loyalty = (counters.loyalty ?? 0) + loyalty;
+  return {tapped: proposal.tapped === true, counters, asks: proposal.asks ?? []};
 }
 
 /**
@@ -387,6 +434,74 @@ export function ownEntering(state, {objectId, player, types, abilities}) {
   const own = (abilities ?? []).filter((ability) => !ability.change?.copyOf);
   const {proposal} = applyReplacements(state, {event: "enters", objectId, player, types: types ?? [], x: 0, entering: {abilities: own}, tapped: false, counters: {}, ownOnly: true});
   return {tapped: proposal.tapped === true, counters: proposal.counters ?? {}, asks: proposal.asks ?? []};
+}
+
+/* How an event ends under every order of the effects that apply to it (CR 616.1f: each applied, then what still applies),
+   and whether that is one way. Tried dry, so trying each order spends nothing. A damage event ends in how much, to whom,
+   and how much a prevention that counts it stopped ("mills that many"). */
+const endOf = (p) => JSON.stringify({to: p.to ?? null, tapped: p.tapped === true, counters: p.counters ?? {}, asks: p.asks ?? [],
+  amount: p.amount ?? null, toPlayer: p.toPlayer ?? null, toCard: p.toCard ?? null, counted: (p.followUps ?? []).map((f) => f.context.about?.amount ?? null)});
+function ends(state, proposal, out = new Set(), depth = 0) {
+  const candidates = depth < 8 ? applicable(state, proposal) : [];
+  if (!candidates.length) { out.add(endOf(proposal)); return out; }
+  for (const candidate of candidates) ends(state, applyOne(state, candidate, proposal, true), out, depth + 1);
+  return out;
+}
+const sameEnd = (state, proposal) => ends(state, proposal).size === 1;
+
+/** Whether two or more effects that change damage are where they act: with fewer, no order of them is anyone's to choose. */
+export function damageChoicesPossible(state) {
+  let n = 0;
+  for (const id of state.zones.battlefield)
+    for (const ability of state.objects[id]?.abilities ?? [])
+      if (ability.kind === "replacement" && ability.watches?.event === "damage" && (n += 1) >= 2) return true;
+  return false;
+}
+
+/** Which effect a candidate is, as an answer names it: its holder and ability (CR 614.5 is per effect). */
+export const candidateKey = ({holderId, ability}) => appliedKey(holderId, ability);
+
+/** Which hit of a damage effect or a combat damage step an answer belongs to: what deals it, to whom. */
+export const hitKey = (sourceId, toPlayer, toCard) =>
+  `${sourceId ?? "-"}>${toPlayer !== undefined && toPlayer !== null ? `p${toPlayer}` : `c${toCard}`}`;
+
+/* The range of a list of numbers, said: "11", "8 to 12". */
+const range = (list) => { const lo = Math.min(...list), hi = Math.max(...list); return lo === hi ? `${lo}` : `${lo} to ${hi}`; };
+
+/**
+ * The choice for CR 616.1 over damage: which of the effects that would change it applies first, asked of the player dealt
+ * it or the controller of the permanent dealt it. `awaiting` carries the damage as it now is (`proposal`) and the
+ * candidates (`options`, candidate keys). Each option is said by where it leads -- "Fiery Emancipation first: 11
+ * damage", "The Mindskinner first: 0 damage, 3 prevented", "Pariah first: 3 damage to Bear" -- the effect's own words
+ * being on its card; `leaves` is the least damage it can end in, for a pilot.
+ */
+export function damageOrderChoice(state, awaiting) {
+  const {proposal} = awaiting;
+  const byKey = new Map(applicable(state, proposal).map((c) => [candidateKey(c), c]));
+  const nameOf = (e) => (e.toPlayer !== null ? state.players[e.toPlayer]?.name : state.objects[e.toCard]?.card) ?? "it";
+  const target = nameOf({toPlayer: proposal.toPlayer ?? null, toCard: proposal.toCard ?? null});
+  const from = state.objects[proposal.sourceId]?.card;
+  /* Index for index with `awaiting.options`, which the answer is read against. */
+  const options = awaiting.options.map((key, index) => {
+    const candidate = byKey.get(key);
+    if (!candidate) return {index, label: "An effect no longer there", leaves: proposal.amount, key};
+    const endings = [...ends(state, applyOne(state, candidate, proposal, true))].map((e) => JSON.parse(e));
+    const amounts = endings.map((e) => e.amount ?? 0), counted = endings.flatMap((e) => e.counted).filter((n) => n !== null);
+    const where = [...new Set(endings.map(nameOf))];
+    const said = `${range(amounts)} damage${where.length === 1 && where[0] === target ? "" : ` to ${where.join(" or ")}`}${counted.length ? `, ${range(counted)} prevented` : ""}`;
+    return {index, label: `${state.objects[candidate.holderId]?.card ?? "An effect"} first: ${said}`, cardId: candidate.holderId, leaves: Math.min(...amounts), key: candidateKey(candidate)};
+  });
+  /* Two that would read alike (two permanents of one name) are numbered, so no two options read the same. */
+  for (const option of options) {
+    const alike = options.filter((o) => o.label === option.label);
+    if (alike.length > 1) alike.forEach((o, n) => { o.label = `${o.label} (${n + 1})`; });
+  }
+  return {
+    id: `order-damage:${state.turn}:${awaiting.key}:${(proposal.appliedBy ?? []).length}`,
+    title: `${proposal.amount} damage${from ? ` from ${from}` : ""} to ${target}: which applies first?`,
+    mode: "one", min: 1, max: 1,
+    options: options.map(({key, ...option}) => option),
+  };
 }
 
 /** The choice (§12.1) for CR 616.1: which applicable effect happens first. */

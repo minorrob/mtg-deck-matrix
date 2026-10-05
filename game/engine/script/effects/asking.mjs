@@ -29,14 +29,16 @@
 import {cardsIn, moveObject} from "../../state/index.mjs";
 import {compileSelector} from "../filter.mjs";
 import {event, cardRef, moveOne, playersFor, sacrificeOne} from "./zones.mjs";
-import {proliferate as giveEachAnother} from "./resources.mjs";
-import {makeCopies, afterwards, joinAttack, defendingPlayers, attachTo} from "./permanents.mjs";
-import {payGeneric, canPayGeneric, parseManaCost, manaValue} from "../../rules/mana.mjs";
-import {typesOf, characteristicsOf} from "../../rules/layers.mjs";
+import {proliferate as giveEachAnother, addCounters} from "./resources.mjs";
+import {makeCopies, afterwards, joinAttack, defendingPlayers, attachTo, createToken, effectUntil} from "./permanents.mjs";
+import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits} from "../../rules/mana.mjs";
+import {typesOf, characteristicsOf, everyCreatureTypeOf} from "../../rules/layers.mjs";
 import {pushCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
-import {loseLife} from "./resources.mjs";
+import {loseLife, DAMAGING, damageQuestion} from "./resources.mjs";
+import {damageOrderChoice} from "../../rules/replacement.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
 import {commanderTax} from "../../rules/commander.mjs";
+import {cantBeCountered} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
 import {castNow, castChoicesNow} from "../../rules/actions.mjs";
 
@@ -76,8 +78,12 @@ function finishScry(state, awaiting, top, bottom) {
       player: {playerId: player, name: state.players[player].name}, scryedToBottom: under.length,
     }));
   }
+  events.push(scried(state, awaiting, "scry"));
   return events;
 }
+/* That a player scried or surveilled, once it is done (CR 701.22a, 701.25a): "whenever you scry or surveil" (Proft,
+   Consulting Detective; rules/trigger.mjs). */
+const scried = (state, awaiting, kind) => event("GameEventScried", state, {player: {playerId: awaiting.player, name: state.players[awaiting.player].name}, kind, count: awaiting.count ?? awaiting.cards.length});
 
 export const scry = {
   open(state, params, context) {
@@ -138,6 +144,58 @@ export const scry = {
   },
 };
 
+/* ---- twoPiles (Forge's TwoPiles): "reveal the top five cards of your library. An opponent separates those cards into two
+   piles. Put one pile into your hand and the other into your graveyard" (Fact or Fiction). The cards revealed (CR 701.20a);
+   the opponent who separates them, chosen by this effect's controller when there is more than one (CR 102.3 makes each
+   other player one); that opponent's pile, any of them, none or all (CR 700.3: a pile may be empty); the controller's
+   pick of the two; and the piles moved, `chosen` and `rest` where they go. ---- */
+const pileWords = (state, ids) => (ids.length ? ids.map((id) => state.objects[id].card).join(", ") : "no cards");
+function pilesOf(awaiting) {
+  const first = awaiting.cards.filter((id) => awaiting.pile.includes(id));
+  return [first, awaiting.cards.filter((id) => !awaiting.pile.includes(id))];
+}
+export const twoPiles = {
+  open(state, params, context) {
+    const cards = cardsIn(state, "library", context.controller).slice(0, params.fromTop ?? 5);
+    if (cards.length === 0) return false;
+    const opponents = state.players.filter((p) => p.id !== context.controller && !p.lost).map((p) => p.id);
+    if (opponents.length === 0) return false;
+    const reveal = cards.map((id) => event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: context.controller}}));
+    state.resolving?.events.push(...reveal);
+    state.awaiting = {kind: "effect-choice", effect: "twoPiles", controller: context.controller, cards, chosen: params.chosen ?? "hand", rest: params.rest ?? "graveyard",
+      ...(opponents.length === 1 ? {player: opponents[0], step: "separate"} : {player: context.controller, step: "opponent", opponents})};
+    return true;
+  },
+  choice(state, awaiting) {
+    if (awaiting.step === "opponent") return {id: `piles-opponent:${awaiting.cards.join(",")}`, title: "Choose an opponent to separate the cards into two piles", mode: "one", min: 1, max: 1,
+      options: awaiting.opponents.map((id, index) => ({index, label: state.players[id].name, playerId: id}))};
+    if (awaiting.step === "separate") return {id: `piles-separate:${awaiting.cards.join(",")}`, title: "Separate these cards into two piles: choose the first pile", mode: "many", min: 0, max: awaiting.cards.length,
+      options: cardOptions(state, awaiting.cards)};
+    const [first, second] = pilesOf(awaiting);
+    return {id: `piles-pick:${awaiting.cards.join(",")}`, title: `Choose a pile to put into your ${awaiting.chosen}`, mode: "one", min: 1, max: 1,
+      options: [{index: 0, label: `Pile 1: ${pileWords(state, first)}`}, {index: 1, label: `Pile 2: ${pileWords(state, second)}`}]};
+  },
+  apply(state, awaiting, indices) {
+    const [index] = indices ?? [];
+    if (awaiting.step === "opponent") {
+      const opponent = awaiting.opponents[index];
+      if (opponent === undefined) throw new Error("Invalid selection");
+      state.awaiting = {...awaiting, player: opponent, step: "separate"};
+      return {events: [], again: true};
+    }
+    if (awaiting.step === "separate") {
+      const pile = (indices ?? []).map((i) => awaiting.cards[i]).filter((id) => id !== undefined);
+      state.awaiting = {...awaiting, player: awaiting.controller, step: "pick", pile};
+      return {events: [], again: true};
+    }
+    if (index !== 0 && index !== 1) throw new Error("Invalid selection");
+    const piles = pilesOf(awaiting), events = [];
+    for (const [pile, to] of [[piles[index], awaiting.chosen], [piles[1 - index], awaiting.rest]])
+      for (const id of pile) if (state.objects[id]?.zone === "library") moveOne(state, id, to, events, {owner: state.objects[id].owner});
+    return events;
+  },
+};
+
 /* ---- surveil ---- */
 
 /* SURVEIL N (CR 701.25a): look at the top N cards of your library, put any number of them into your graveyard and the rest
@@ -177,6 +235,7 @@ export const surveil = {
       const library = state.zones.library[player];
       for (const id of awaiting.cards) { const at = library.indexOf(id); if (at >= 0) library.splice(at, 1); }
       library.unshift(...chosen);
+      events.push(scried(state, awaiting, "surveil"));
       return events;
     }
     for (const id of chosen) moveOne(state, id, "graveyard", events, {owner: state.objects[id].owner});
@@ -185,63 +244,104 @@ export const surveil = {
       state.awaiting = {...awaiting, step: "order", cards: rest};
       return {events, again: true};
     }
+    events.push(scried(state, awaiting, "surveil"));
     return events;
   },
 };
 
-/* ---- dig ---- */
+/* ---- dig ----
 
+   "Look at the top N cards of your library, put one into your hand and the rest on the bottom": the top `count` cards
+   of the controller's library, `take` of them chosen to go `to` a zone. Batch 80, for "look at that many cards from the
+   top of your library. You may exile a nonland card from among them. Put the rest on the bottom of your library in a
+   random order. You may cast the exiled card" (The Key to the Vault): `selector`, what may be taken (the others are
+   shown, not offered); `upTo`, "you may" -- none is a choice; `remember`, what was taken, for the effects after it;
+   `random`, the rest in a random order from the game's stream. The cards are looked at, by their controller only. */
+/* What dig does with the cards not taken: "the bottom" is a library move -- in a random order when the card says so, else
+   in the order they were looked at; anywhere else is an ordinary zone change. */
+function digRest(state, player, cards, {rest, random}, rng, events) {
+  const left = cards.filter((id) => state.objects[id]);
+  if (random && !rng) throw new Error("A random order needs the game's random stream");
+  const order = random ? rng.shuffle(left) : left;
+  if (rest !== "bottom") { for (const id of order) moveOne(state, id, rest, events, {owner: player}); return; }
+  const library = state.zones.library[player];
+  for (const id of order) {
+    const at = library.indexOf(id);
+    if (at >= 0) library.splice(at, 1);
+    library.push(id);
+  }
+}
 export const dig = {
-  open(state, params, context) {
+  open(state, params, context, rng = null) {
     const looked = cardsIn(state, "library", context.controller).slice(0, params.count ?? 1);
+    if (params.remember) context.remembered = [];
     if (looked.length === 0) return false;
+    const fits = params.selector ? compileSelector({...params.selector, what: "card", zone: "library"}) : null;
+    const offered = fits ? looked.filter((id) => fits(state, id, {controller: context.controller, source: context.source ?? null})) : looked;
+    /* Nothing among them that may be taken: nobody is asked, and the rest go where they go. */
+    if (offered.length === 0) {
+      const events = [];
+      digRest(state, context.controller, looked, {rest: params.rest ?? "bottom", random: params.random === true}, rng, events);
+      return {events};
+    }
+    const take = Math.min(params.take ?? 1, offered.length);
     state.awaiting = {
-      kind: "effect-choice", effect: "dig", player: context.controller, cards: looked,
-      take: Math.min(params.take ?? 1, looked.length),
+      kind: "effect-choice", effect: "dig", player: context.controller, cards: looked, offered,
+      take, min: params.upTo === true ? 0 : take,
       to: params.to ?? "hand", rest: params.rest ?? "bottom",
+      ...(params.random === true ? {random: true} : {}), ...(params.remember ? {remember: true} : {}),
     };
     return true;
   },
 
   choice(state, awaiting) {
+    const offered = awaiting.offered ?? awaiting.cards;
     return {
       id: `dig:${awaiting.cards.join(",")}`,
-      title: `Choose ${awaiting.take} to put into your ${awaiting.to}`,
-      mode: awaiting.take === 1 ? "one" : "many",
-      min: awaiting.take,
+      title: `Choose ${awaiting.min === 0 ? "up to " : ""}${awaiting.take} to put into your ${awaiting.to}`,
+      mode: awaiting.take === 1 && awaiting.min === 1 ? "one" : "many",
+      min: awaiting.min ?? awaiting.take,
       max: awaiting.take,
-      options: cardOptions(state, awaiting.cards),
+      options: cardOptions(state, offered),
     };
   },
 
-  apply(state, awaiting, indices) {
+  apply(state, awaiting, indices, extra = {}, rng = null) {
     const events = [];
-    const taken = new Set((indices ?? []).map((index) => awaiting.cards[index]));
+    const offered = awaiting.offered ?? awaiting.cards;
+    const chosen = (indices ?? []).map((index) => offered[index]);
+    if (chosen.some((id) => id === undefined) || new Set(chosen).size !== chosen.length || chosen.length < (awaiting.min ?? awaiting.take) || chosen.length > awaiting.take)
+      throw new Error("Invalid selection");
+    const taken = new Set(chosen), found = [];
     for (const id of awaiting.cards) {
       if (!taken.has(id)) continue;
-      moveOne(state, id, awaiting.to, events, {owner: awaiting.player});
+      const moved = moveOne(state, id, awaiting.to, events, {owner: awaiting.player});
+      if (moved !== null && state.objects[moved]) found.push(moved);
     }
-    /* The rest, in the order they were looked at. "The bottom" is a library move that keeps their
-       order; anywhere else is an ordinary zone change. */
-    const rest = awaiting.cards.filter((id) => !taken.has(id) && state.objects[id]);
-    if (awaiting.rest === "bottom") {
-      const library = state.zones.library[awaiting.player];
-      for (const id of rest) {
-        const at = library.indexOf(id);
-        if (at >= 0) library.splice(at, 1);
-        library.push(id);
-      }
-    } else {
-      for (const id of rest) moveOne(state, id, awaiting.rest, events, {owner: awaiting.player});
-    }
-    return events;
+    digRest(state, awaiting.player, awaiting.cards.filter((id) => !taken.has(id)), awaiting, rng, events);
+    return awaiting.remember ? {events, remembered: found} : events;
   },
 };
 
 /* ---- discard ---- */
 
+/* One card from a hand to its owner's graveyard, said as a discard (CR 701.9a) -- what "whenever you discard" reads. */
+function discardOne(state, id, player, events) {
+  const card = cardRef(state, id);
+  const owner = state.objects[id].owner;
+  const discarded = moveObject(state, id, "graveyard", owner);
+  events.push(event("GameEventCardChangeZone", state, {
+    card,
+    becomes: discarded,
+    from: {zoneType: "Hand", player: {playerId: player}},
+    to: {zoneType: "Graveyard", player: {playerId: owner}},
+    discarded: true,
+  }));
+  return discarded;
+}
+
 export const discard = {
-  open(state, params, context) {
+  open(state, params, context, rng = null) {
     /* Each player who has to discard is asked separately, in turn order, about their own hand. */
     const queue = playersFor(state, params.who, context.controller)
       .filter((player) => cardsIn(state, "hand", player).length > 0);
@@ -249,8 +349,29 @@ export const discard = {
        effects after it -- nothing, until they do. */
     if (params.remember) context.remembered = [];
     if (queue.length === 0) return false;
+    /* "Discard your hand" (Ajani Unrelenting): every card in it, so there is nothing to choose and nobody is asked. */
+    if (params.all === true) {
+      const events = [];
+      for (const player of queue) for (const id of cardsIn(state, "hand", player)) discardOne(state, id, player, events);
+      if (params.remember) context.remembered = [];
+      return {events};
+    }
+    /* "Discard a card at random" (Gamble, batch 80; CR 701.9b): nobody chooses -- each card is picked from the hand by the
+       game's random stream, and nobody is asked. */
+    if (params.random === true) {
+      if (!rng) throw new Error("A discard at random needs the game's random stream");
+      const events = [];
+      for (const player of queue)
+        for (let n = 0; n < (params.count ?? 1) && cardsIn(state, "hand", player).length > 0; n += 1)
+          discardOne(state, rng.pick(cardsIn(state, "hand", player)), player, events);
+      return {events};
+    }
+    /* CR 101.4: the active player chooses first, then each other player in turn order -- and nobody's card moves until
+       the last has chosen (apply). */
+    const seats = state.players.length, apnap = (p) => (p - state.activePlayer + seats) % seats;
+    const asked = [...queue].sort((a, b) => apnap(a) - apnap(b));
     state.awaiting = {
-      kind: "effect-choice", effect: "discard", player: queue[0], remaining: queue.slice(1),
+      kind: "effect-choice", effect: "discard", player: asked[0], remaining: asked.slice(1),
       count: params.count ?? 1, who: params.who, controller: context.controller,
       ...(params.remember ? {remembering: []} : {}),
     };
@@ -276,28 +397,18 @@ export const discard = {
     /* Resolved to ids before anything moves, because each move makes a new object and rewrites the
        hand underneath the positions the player answered with. */
     const chosen = (indices ?? []).map((index) => hand[index]).filter((id) => id !== undefined);
-    const gone = [];
-    for (const id of chosen) {
-      const card = cardRef(state, id);
-      const owner = state.objects[id].owner;
-      const discarded = moveObject(state, id, "graveyard", owner);
-      gone.push(discarded);
-      events.push(event("GameEventCardChangeZone", state, {
-        card,
-        becomes: discarded,
-        from: {zoneType: "Hand", player: {playerId: awaiting.player}},
-        to: {zoneType: "Graveyard", player: {playerId: owner}},
-        discarded: true,
-      }));
-    }
-    /* What the effect's controller discarded, as the cards it became. */
-    const remembering = awaiting.remembering && awaiting.player === awaiting.controller ? [...awaiting.remembering, ...gone] : awaiting.remembering;
-
-    /* The next player who still has to discard, if there is one. */
+    /* CR 101.4: chosen now, discarded when the last player has chosen -- every player's at the same time. */
+    const decided = [...(awaiting.decided ?? []), {player: awaiting.player, ids: chosen}];
     const next = (awaiting.remaining ?? []).filter((player) => cardsIn(state, "hand", player).length > 0);
     if (next.length > 0) {
-      state.awaiting = {...awaiting, player: next[0], remaining: next.slice(1), ...(remembering ? {remembering} : {})};
+      state.awaiting = {...awaiting, player: next[0], remaining: next.slice(1), decided};
       return {events, again: true};
+    }
+    /* What the effect's controller discarded, as the cards it became. */
+    let remembering = awaiting.remembering;
+    for (const {player, ids} of decided) {
+      const gone = ids.map((id) => discardOne(state, id, player, events));
+      if (remembering && player === awaiting.controller) remembering = [...remembering, ...gone];
     }
     return remembering ? {events, remembered: remembering} : events;
   },
@@ -452,18 +563,24 @@ export const sacrifice = {
     const mine = offeredToSacrifice(state, awaiting.player, awaiting);
     const chosen = (indices ?? []).map((i) => mine[i]).filter((id) => id !== undefined);
     if (awaiting.keep !== undefined && chosen.length > awaiting.keep) throw new Error("Invalid selection");
-    /* Kept: the rest go. Otherwise: the ones chosen. */
-    const gone = [];
-    for (const id of awaiting.keep !== undefined ? mine.filter((id) => !chosen.includes(id)) : chosen) {
-      const moved = sacrificeOne(state, id, events);
-      if (moved !== null) gone.push(moved);
-    }
-    /* What the effect's controller sacrificed, as the objects it became (a token's until it ceases to exist, CR 704.5d). */
-    const remembering = awaiting.remember === awaiting.player ? [...awaiting.remembering, ...gone] : awaiting.remembering;
+    /* Kept: the rest go. Otherwise: the ones chosen. CR 101.4: chosen now, sacrificed when the last player has chosen --
+       every player's at the same time, so nothing the first gave up is gone while the next decides. */
+    const going = awaiting.keep !== undefined ? mine.filter((id) => !chosen.includes(id)) : chosen;
+    const decided = [...(awaiting.decided ?? []), {player: awaiting.player, ids: going}];
     const next = (awaiting.remaining ?? []).filter((p) => mustSacrifice(state, p, awaiting));
     if (next.length > 0) {
-      state.awaiting = {...awaiting, player: next[0], remaining: next.slice(1), ...(remembering ? {remembering} : {})};
+      state.awaiting = {...awaiting, player: next[0], remaining: next.slice(1), decided};
       return {events, again: true};
+    }
+    /* What the effect's controller sacrificed, as the objects it became (a token's until it ceases to exist, CR 704.5d). */
+    let remembering = awaiting.remembering;
+    for (const {player, ids} of decided) {
+      const gone = [];
+      for (const id of ids) {
+        const moved = sacrificeOne(state, id, events);
+        if (moved !== null) gone.push(moved);
+      }
+      if (awaiting.remember === player) remembering = [...remembering, ...gone];
     }
     return remembering ? {events, remembered: remembering} : events;
   },
@@ -494,6 +611,52 @@ export const populate = {
   },
 };
 
+/* ---- amass (CR 701.47a): "amass Goblins 2" -- with no Army creature, a 0/0 black Goblin Army creature token is made
+   first; then an Army creature its controller controls is chosen, gets the +1/+1 counters, and is a Goblin as well as what
+   it was, for as long as it stays (CR 611.2a). Which Army is the player's choice when there are two or more (a changeling
+   is one, CR 702.73a); with one, it is that one. "The amassed Army" (CR 701.47c) is the creature chosen, counters or not:
+   remembered (`remember`) for the effects after it ("attach this Equipment to the amassed Army"). `count` may be counted. ---- */
+const ARMY = compileSelector({what: "permanent", types: ["Creature"], subtypes: ["Army"], controller: "you"});
+const armiesOf = (state, player) => state.zones.battlefield.filter((id) => ARMY(state, id, {controller: player}));
+function amassOnto(state, army, params, player, source, events) {
+  const count = Number.isInteger(params.count) ? params.count : 1;
+  addCounters(state, army, "+1/+1", count, events);
+  const current = [...typesOf(state, army), ...(state.objects[army].subtypes ?? [])];
+  if (!current.includes(params.subtype) && !everyCreatureTypeOf(state, army))
+    effectUntil(state, {id: `amass:${params.subtype}:${army}`, layer: 4, targets: [army], apply: {addTypes: [params.subtype]}, until: "ever"}, {controller: player, source});
+}
+export const amass = {
+  open(state, params, context) {
+    const player = context.controller;
+    if (!state.players[player]) return false;
+    const armies = armiesOf(state, player);
+    if (armies.length > 1) {
+      state.awaiting = {kind: "effect-choice", effect: "amass", player, armies, params: {subtype: params.subtype, count: params.count, remember: params.remember === true},
+        source: context.source ?? null};
+      return true;
+    }
+    /* None: the token is made first, and is then the one Army there is. */
+    const events = armies.length === 0
+      ? createToken(state, {token: {name: `${params.subtype} Army`, types: ["Creature"], subtypes: [params.subtype, "Army"], colors: ["B"], power: 0, toughness: 0}}, {controller: player, source: context.source})
+      : [];
+    const [army] = armiesOf(state, player);
+    if (army !== undefined) amassOnto(state, army, params, player, context.source, events);
+    if (params.remember) context.remembered = army === undefined ? [] : [army];
+    return {events};
+  },
+  choice(state, awaiting) {
+    return {id: `amass:${awaiting.player}:${state.turn}:${awaiting.armies.join(",")}`, title: `Amass ${awaiting.params.subtype}s ${awaiting.params.count ?? 1}: put the counters on which Army?`,
+      mode: "one", min: 1, max: 1, options: awaiting.armies.map((id, index) => ({index, label: state.objects[id]?.card ?? "Army", cardId: id}))};
+  },
+  apply(state, awaiting, indices) {
+    const chosen = awaiting.armies[(indices ?? [])[0]];
+    if (chosen === undefined || !Array.isArray(indices) || indices.length !== 1) throw new Error("Invalid selection");
+    const events = [];
+    if (state.objects[chosen]?.zone === "battlefield") amassOnto(state, chosen, awaiting.params, awaiting.player, awaiting.source, events);
+    return awaiting.params.remember ? {events, remembered: [chosen]} : {events};
+  },
+};
+
 /* ---- unlessPays (CR 118.12): "counter target spell unless its controller pays {3}", "you may draw a card unless that
    player pays {1}". The player named is asked; paying is offered only to a player who can (pool and untapped mana
    sources together) and taps for them; not paying, the effects that follow `unless` happen, in order, with the same
@@ -501,21 +664,30 @@ export const populate = {
 /* Ward's other costs (CR 702.21a): `life`, which a player can pay only if their total is at least that much (CR 119.4);
    `discard` a card, each in their hand its own option; `sacrifice` a permanent of theirs the selector describes, each its
    own option. With mana, all of it is paid or none. */
+/* Life is part of the payment when there is some to pay, or when life is all it asks: "pay X life" with X of 0 is still
+   paying 0 life (CR 119.4b), not {0}. */
+const lifeAsked = (awaiting) => awaiting.life > 0 || (awaiting.life === 0 && !(awaiting.amount > 0));
 const noun = (selector) => (selector?.subtypes?.length ? `a ${selector.subtypes[0]}` : selector?.types?.length ? `a ${selector.types[0].toLowerCase()}` : "a permanent");
 function costWords(awaiting) {
-  const paid = [awaiting.amount > 0 ? `{${awaiting.amount}}` : null, awaiting.life > 0 ? `${awaiting.life} life` : null].filter(Boolean);
-  const other = awaiting.discard ? "discard a card" : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}` : null;
+  const paid = [awaiting.amount > 0 ? `{${awaiting.amount}}` : null, lifeAsked(awaiting) ? `${awaiting.life} life` : null].filter(Boolean);
+  const other = awaiting.discard ? "discard a card" : awaiting.sacrificeCount ? `sacrifice ${awaiting.sacrificeCount} permanents` : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}` : null;
   return [other, paid.length ? `pay ${paid.join(" and ")}` : null].filter(Boolean).join(" and ") || `pay {${awaiting.amount}}`;
 }
 function payOptions(state, awaiting) {
   const {player} = awaiting, amount = awaiting.amount ?? 0, life = awaiting.life ?? 0;
   if (amount > 0 && !canPayGeneric(state, player, amount)) return [];
   if (life > state.players[player].life) return [];
-  const paid = [amount > 0 ? `{${amount}}` : null, life > 0 ? `${life} life` : null].filter(Boolean).join(" and ");
+  const paid = [amount > 0 ? `{${amount}}` : null, lifeAsked(awaiting) ? `${life} life` : null].filter(Boolean).join(" and ");
   const also = paid ? ` and pay ${paid}` : "";
   if (awaiting.sacrifice) {
     const alternatives = Array.isArray(awaiting.sacrifice.anyOf) ? awaiting.sacrifice.anyOf : [awaiting.sacrifice];
     const matchers = alternatives.map((one) => compileSelector({...one, what: "permanent", controller: "you"}));
+    /* "Sacrifice three permanents": one option, to pay it, if they have that many; which ones is asked next (`sacrificing`). */
+    if (awaiting.sacrificeCount) {
+      const mine = state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player})));
+      return awaiting.sacrificing ? mine.map((id) => ({label: state.objects[id].card, cardId: id}))
+        : mine.length >= awaiting.sacrificeCount ? [{label: `Sacrifice ${awaiting.sacrificeCount} permanents${also}`, pay: true, sacrificeMany: true}] : [];
+    }
     return state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player})))
       .map((id) => ({label: `Sacrifice ${state.objects[id].card}${also}`, pay: true, sacrifice: id, cardId: id}));
   }
@@ -530,36 +702,71 @@ export const unlessPays = {
        nothing happens. */
     if (params.ifPaid && !params.life && !params.discard && !params.sacrifice && !canPayGeneric(state, payer, Math.max(0, params.amount ?? 0))) return false;
     state.awaiting = {kind: "effect-choice", effect: "unlessPays", player: payer, amount: Math.max(0, params.amount ?? 0),
-      ...(params.life ? {life: params.life} : {}), ...(params.discard ? {discard: params.discard} : {}), ...(params.sacrifice ? {sacrifice: structuredClone(params.sacrifice)} : {}),
+      ...(params.life !== undefined ? {life: params.life} : {}), ...(params.discard ? {discard: params.discard} : {}), ...(params.sacrifice ? {sacrifice: structuredClone(params.sacrifice)} : {}),
+      ...(params.sacrificeCount ? {sacrificeCount: params.sacrificeCount} : {}),
       effects: structuredClone(params.effects ?? []), source: context.source ?? null,
       /* "You may pay {1}. If you do, ...": the effects when it is paid, not when it is not. */
       ...(params.ifPaid ? {ifPaid: true} : {})};
     return true;
   },
   choice(state, awaiting) {
+    /* Having said they pay: which mana pays, when that is a choice (rules/mana.mjs, paymentUnits). */
+    if (awaiting.paying) return paymentChoice(`unless-mana:${awaiting.player}:${state.turn}:${awaiting.amount}`, awaiting.amount, paymentUnits(state, awaiting.player));
+    /* Having said they sacrifice that many: which ones. */
+    if (awaiting.sacrificing) return {id: `unless-sacrifice:${awaiting.player}:${state.turn}`, title: `Choose ${awaiting.sacrificeCount} permanents to sacrifice`, mode: "many",
+      min: awaiting.sacrificeCount, max: awaiting.sacrificeCount, options: payOptions(state, awaiting).map((option, index) => ({index, ...option}))};
     const source = awaiting.source !== null ? state.objects[awaiting.source]?.card : null;
     const pays = payOptions(state, awaiting).map((option, index) => ({index, ...option}));
     return {id: `unless:${awaiting.player}:${state.turn}:${awaiting.amount}`, title: `${source ? `${source}: ` : ""}${costWords(awaiting)}?`, mode: "one", min: 1, max: 1,
       options: [...pays, {index: pays.length, label: "Don't pay", pay: false}]};
   },
   apply(state, awaiting, indices) {
+    /* The mana chosen (CR 605.3a), then the rest of what paying is. */
+    if (awaiting.paying) {
+      const events = payWithUnits(state, awaiting.player, paymentUnits(state, awaiting.player), indices, awaiting.amount);
+      return unlessPaid(state, awaiting, awaiting.paying.option, events);
+    }
+    if (awaiting.sacrificing) {
+      const ids = payOptions(state, awaiting).map((o) => o.cardId);
+      const chosen = [...new Set(indices ?? [])].map((i) => ids[i]);
+      if (chosen.length !== awaiting.sacrificeCount || chosen.some((id) => id === undefined)) throw new Error("Invalid selection");
+      const {sacrificing, ...rest} = awaiting;
+      return unlessPays.paid(state, rest, {...sacrificing.option, sacrifice: chosen});
+    }
     const option = unlessPays.choice(state, awaiting).options[(indices ?? [])[0]];
     if (!option) throw new Error("Invalid selection");
+    if (option.sacrificeMany) {
+      state.awaiting = {...awaiting, sacrificing: {option}};
+      return {events: [], again: true};
+    }
     if (!option.pay) return awaiting.ifPaid ? [] : {events: [], splice: structuredClone(awaiting.effects)};
+    return unlessPays.paid(state, awaiting, option);
+  },
+  /* Paying, with the option chosen: its mana, then the rest. */
+  paid(state, awaiting, option) {
+    /* Which mana pays is the payer's: asked next when the ways to pay differ, paid at once when they do not. */
+    if ((awaiting.amount ?? 0) > 0 && paymentIsAChoice(paymentUnits(state, awaiting.player), awaiting.amount)) {
+      state.awaiting = {...awaiting, paying: {option}};
+      return {events: [], again: true};
+    }
     const events = [];
     if ((awaiting.amount ?? 0) > 0) {
       const paid = payGeneric(state, awaiting.player, awaiting.amount);
       events.push(...(Array.isArray(paid) ? paid : paid?.events ?? []));
     }
-    /* Paying life is losing it (CR 119.4, 119.3). */
-    if ((awaiting.life ?? 0) > 0) events.push(...loseLife(state, {amount: awaiting.life, who: [awaiting.player]}, {controller: awaiting.player, source: awaiting.source}));
-    if (option.discard !== undefined && state.objects[option.discard]) {
-      if (moveOne(state, option.discard, "graveyard", events, {owner: awaiting.player}) !== null) events[events.length - 1].data.fields.discarded = true;
-    }
-    if (option.sacrifice !== undefined && state.objects[option.sacrifice]) sacrificeOne(state, option.sacrifice, events);
-    return awaiting.ifPaid ? {events, splice: structuredClone(awaiting.effects)} : events;
+    return unlessPaid(state, awaiting, option, events);
   },
 };
+/* What paying an "unless" cost is besides its mana -- life, a discard, a sacrifice -- and what follows it. */
+function unlessPaid(state, awaiting, option, events) {
+  /* Paying life is losing it (CR 119.4, 119.3). */
+  if ((awaiting.life ?? 0) > 0) events.push(...loseLife(state, {amount: awaiting.life, who: [awaiting.player]}, {controller: awaiting.player, source: awaiting.source}));
+  if (option.discard !== undefined && state.objects[option.discard]) {
+    if (moveOne(state, option.discard, "graveyard", events, {owner: awaiting.player}) !== null) events[events.length - 1].data.fields.discarded = true;
+  }
+  for (const id of option.sacrifice === undefined ? [] : [].concat(option.sacrifice)) if (state.objects[id]) sacrificeOne(state, id, events);
+  return awaiting.ifPaid ? {events, splice: structuredClone(awaiting.effects)} : events;
+}
 
 /* ---- chooseType (CR 205.3m): "choose a creature type" -- one of the creature types among the cards in the game, which is
    every one that could matter; what is chosen, the effects after it name as "$chosen" (resolution.mjs, script/bind.mjs). ---- */
@@ -596,7 +803,9 @@ function retargetOptions(state, question) {
   const entry = state.stack.find((e) => e.stackId === question.stackId);
   const spec = entry ? specsOf(state, entry)[question.index] : null;
   if (!entry || !spec) return null;
-  const current = entry.targets[question.index] ?? null;
+  /* A counted target's list holding its one target (changeTargets): that one. */
+  const was = entry.targets[question.index];
+  const current = (Array.isArray(was) ? was[0] : was) ?? null;
   const others = targetCandidates(state, spec, {controller: entry.playerId, source: entry.objectId})
     .filter((c) => !(c.kind === "object" && c.id === entry.objectId))
     .filter((c) => !(current && c.kind === current.kind && c.id === current.id));
@@ -611,7 +820,9 @@ export const copySpell = {
       const copy = pushCopy(state, original, {controller: context.controller, nonLegendary: params.except?.nonLegendary === true});
       events.push(event("GameEventSpellCopied", state, {card: cardRef(state, copy.objectId), original: cardRef(state, original.objectId),
         playerId: context.controller, stackId: copy.stackId}));
-      if (params.newTargets === true) copy.targets.forEach((_, index) => questions.push({stackId: copy.stackId, index}));
+      /* NAMED: a counted target ("up to two target creatures") keeps the original's list on the copy; choosing a new list
+         for it is not asked yet. */
+      if (params.newTargets === true) copy.targets.forEach((t, index) => { if (!Array.isArray(t)) questions.push({stackId: copy.stackId, index}); });
     }
     state.resolving?.events.push(...events);
     const asked = questions.filter((q) => (retargetOptions(state, q)?.others ?? []).length > 0);
@@ -659,7 +870,11 @@ export const changeTargets = {
   open(state, params, context) {
     const entry = state.stack.find((e) => e.objectId !== null && (params.spells ?? []).includes(e.objectId));
     if (!entry) return false;
-    const question = {stackId: entry.stackId, index: 0};
+    /* "With a single target" (its own targeting asked that): the one there is -- a counted target's list holding one
+       included, the others empty. */
+    const index = entry.targets.findIndex((t) => (Array.isArray(t) ? t.length > 0 : Boolean(t)));
+    if (index < 0) return false;
+    const question = {stackId: entry.stackId, index};
     if (!(retargetOptions(state, question)?.others ?? []).length) return false;
     state.awaiting = {kind: "effect-choice", effect: "changeTargets", player: context.controller, question};
     return true;
@@ -675,7 +890,8 @@ export const changeTargets = {
     const entry = state.stack.find((e) => e.stackId === awaiting.question.stackId);
     const events = [];
     if (entry) {
-      entry.targets[0] = {kind: option.target.kind, id: option.target.id};
+      const index = awaiting.question.index ?? 0, chosen = {kind: option.target.kind, id: option.target.id};
+      entry.targets[index] = Array.isArray(entry.targets[index]) ? [chosen] : chosen;
       /* It becomes the spell's target (ward, CR 702.21a). */
       if (option.target.kind === "object") events.push(...becameTarget(state, entry, option.target.id));
     }
@@ -751,6 +967,10 @@ export const chooseCard = {
     if (player === undefined) return false;
     /* A description, or a choice of them (`anyOf`): "a Plains, Island, Swamp, or Mountain card". */
     const alternatives = Array.isArray(params.selector?.anyOf) ? params.selector.anyOf : [params.selector ?? {}];
+    /* "You may return another creature you control to its owner's hand" (Temur Sabertooth, batch 79): a permanent chosen
+       as the effect resolves, untargeted -- no search (CR 701.23 is of a zone's cards), so one that fits must be chosen
+       unless the card says "may" (`upTo`), and none, and nobody is asked. */
+    const onField = zone === "battlefield";
     const matchers = alternatives.map((one) => compileSelector({...one, what: "card", zone}));
     /* "A creature card from among them" (Lord of the Void): from what an earlier effect of this resolution moved there,
        face up -- so a card that fits must be chosen; only a search of a hidden zone may fail to find (CR 701.23b). */
@@ -758,13 +978,17 @@ export const chooseCard = {
     /* "Return ANOTHER permanent card" (Rise of the Witch-king, batch 70): not the one an earlier effect of this resolution
        remembered -- the creature sacrificed this way. */
     const except = params.except === "remembered" ? new Set(context.remembered ?? []) : null;
-    const pool = (among ? (context.remembered ?? []).filter((id) => state.objects[id]?.zone === zone) : cardsIn(state, zone, player)).filter((id) => !except?.has(id));
-    const cards = pool.filter((id) => matchers.some((m) => m(state, id, {controller: player, source: context.source})));
+    const pool = (among ? (context.remembered ?? []).filter((id) => state.objects[id]?.zone === zone) : onField ? [...state.zones.battlefield] : cardsIn(state, zone, player))
+      .filter((id) => !except?.has(id));
+    const fitting = pool.filter((id) => matchers.some((m) => m(state, id, {controller: player, source: context.source})));
+    /* "Up to four cards with different names" (Gifts Ungiven): one of each name offered -- which of two identical cards in a
+       library is found changes nothing, and no answer can then name two of a name. */
+    const cards = params.differentNames === true ? fitting.filter((id, i) => fitting.findIndex((other) => state.objects[other].card === state.objects[id].card) === i) : fitting;
     /* From among what was looked at or moved (Risen Reef's "if it's a land card"), with nothing that fits: nothing to choose,
        and nobody is asked -- the cards are face up to the chooser, so there is no failing to find (CR 701.23b is a search's). */
-    if (among && cards.length === 0) return false;
+    if ((among || onField) && cards.length === 0) return false;
     const count = params.count ?? 1;
-    const min = params.upTo || (!among && hasQuality(params.selector)) ? 0 : Math.min(count, cards.length);
+    const min = params.upTo || (!among && !onField && hasQuality(params.selector)) ? 0 : Math.min(count, cards.length);
     state.awaiting = {
       kind: "effect-choice", effect: "chooseCard", player, zone, cards, min, max: Math.min(count, cards.length),
       destinations: params.destinations ?? [{to: params.to ?? "hand", ...(params.tapped ? {tapped: true} : {})}],
@@ -781,7 +1005,9 @@ export const chooseCard = {
   choice(state, awaiting) {
     return {
       id: `chooseCard:${awaiting.player}:${state.turn}:${awaiting.cards.length}`,
-      title: awaiting.max === 0 ? `Search your ${ZONE_WORD[awaiting.zone]}: nothing to find` : `Search your ${ZONE_WORD[awaiting.zone]}`,
+      /* A permanent is chosen, not searched for. */
+      title: awaiting.zone === "battlefield" ? (awaiting.max > 1 ? "Choose permanents" : "Choose a permanent")
+        : awaiting.max === 0 ? `Search your ${ZONE_WORD[awaiting.zone]}: nothing to find` : `Search your ${ZONE_WORD[awaiting.zone]}`,
       mode: awaiting.max <= 1 ? (awaiting.min === 0 ? "many" : "one") : "many",
       min: awaiting.min,
       max: awaiting.max,
@@ -796,10 +1022,33 @@ export const chooseCard = {
       throw new Error("Invalid selection");
     const player = awaiting.player;
     const tops = [], arrivedHere = [], found = [];
+    /* A commander chosen for its owner's hand or library may go to the command zone instead (CR 903.9b): Dream Stalker's
+       "return a permanent you control to its owner's hand", Brainstorm's put-back. Its move is left to moveZone, after this
+       answer, and its owner is asked first (script/resolution.mjs). One bound for the top takes every card chosen for the
+       top with it, so the order chosen holds. */
+    const whereOf = (i) => awaiting.destinations[Math.min(i, awaiting.destinations.length - 1)];
+    const goingHome = (id, i) => {
+      const to = whereOf(i).to, object = state.objects[id];
+      if (object?.commander !== true) return false;
+      return to === "hand" ? object.zone !== "hand" : (to === "top" || to === "library") && object.zone !== "library";
+    };
+    const homeTop = chosen.some((id, i) => whereOf(i).to === "top" && goingHome(id, i));
+    const home = {hand: [], library: []};
     chosen.forEach((id, i) => {
-      const where = awaiting.destinations[Math.min(i, awaiting.destinations.length - 1)];
+      const where = whereOf(i);
       if (awaiting.reveal) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: player}}));
-      if (where.to === "top") { tops.push(id); return; }
+      if (where.to === "top" && homeTop) return;
+      if (goingHome(id, i)) { home[where.to === "hand" ? "hand" : "library"].push(id); return; }
+      /* On top: a card a search found is in the library already; one chosen from a hand ("then put two cards from your
+         hand on top of your library", Brainstorm) is moved there first -- a new object (CR 400.7) -- and then put on top. */
+      if (where.to === "top") {
+        const there = state.objects[id].zone === "library" ? id : moveOne(state, id, "library", events, {owner: state.objects[id].owner});
+        if (there !== null && state.objects[there]) tops.push(there);
+        return;
+      }
+      /* "Put a -1/-1 counter on a creature you control" (blight, CR 701.68a): a permanent chosen where it is, and left there --
+         remembered for what follows ("the blighted creature", 701.68c). */
+      if (where.to === "stay") { found.push(id); return; }
       const moved = moveOne(state, id, where.to, events, {owner: state.objects[id].owner, tapped: where.tapped === true});
       if (moved !== null && state.objects[moved]) found.push(moved);
       if (moved !== null && state.objects[moved] && where.to === "battlefield") {
@@ -820,6 +1069,14 @@ export const chooseCard = {
       const library = state.zones.library[player].filter((id) => !tops.includes(id));
       state.zones.library[player] = [...tops, ...library];
     }
+    /* The moves a commander's owner is asked about first: each card put on top in turn, the last chosen first, so the first
+       chosen ends on top. */
+    const splice = [
+      ...(homeTop ? [{effect: "moveZone", targets: chosen.filter((id, i) => whereOf(i).to === "top").reverse(), to: "library", top: true}] : []),
+      ...(home.hand.length ? [{effect: "moveZone", targets: home.hand, to: "hand"}] : []),
+      ...(home.library.length ? [{effect: "moveZone", targets: home.library, to: "library"}] : []),
+    ];
+    if (splice.length) return {events, splice, ...(awaiting.remember ? {remembered: [...found, ...tops]} : {})};
     return awaiting.remember ? {events, remembered: [...found, ...tops]} : events;
   },
 };
@@ -834,42 +1091,156 @@ export const chooseCard = {
    so as much generic mana as its mana value. What is owed is paid as an "unless" cost is, from the pool and the player's
    plain mana sources (rules/mana.mjs, payGeneric); a card they could not pay for is not offered. Nothing to cast, and
    nobody is asked. The spell is cast (rules/actions.mjs, castNow) -- what watches casts sees it -- and goes on the stack
-   above the resolving object. */
+   above the resolving object.
+   "You may cast ANY NUMBER of spells from among those cards" (Etali, Villainous Wealth; batch 79, `anyNumber`): asked
+   again after each one, of what is left that can still be cast, until the player says "Don't cast" or nothing is left --
+   each a choice of theirs, in the order they choose (CR 608.2g). Cast this way, each goes on the stack above the last. */
+const playable = (state, player, pool, {most, free, anyMana}) => {
+  const valueOf = (id) => (state.objects[id].manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0);
+  const owed = (id) => (free ? (state.objects[id].zone === "command" ? commanderTax(state, player, id) : 0) : anyMana ? valueOf(id) : null);
+  /* A card cast a moment ago is on the stack as a new object (CR 400.7): its id here no longer names anything. */
+  return pool.filter((id) => state.objects[id] && valueOf(id) <= most)
+    .flatMap((id) => {
+      const pay = owed(id);
+      return pay === null || !canPayGeneric(state, player, pay) ? [] : castChoicesNow(state, player, id).map((action) => ({...action, owed: pay}));
+    });
+};
 export const play = {
   open(state, params, context) {
     const player = context.controller;
     if (!state.players[player]) return false;
-    const valueOf = (id) => (state.objects[id].manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0);
-    const owed = (id) => (params.free ? (state.objects[id].zone === "command" ? commanderTax(state, player, id) : 0) : params.anyMana ? valueOf(id) : null);
     const most = params.manaValueAtMost === undefined ? Infinity : amountOf(state, params.manaValueAtMost, context);
     const from = params.from ?? "hand";
     const pool = from === "hand" ? cardsIn(state, "hand", player)
       : from === "command" ? cardsIn(state, "command", player).filter((id) => state.objects[id].commander === true)
-      : (params.targets ?? []).filter((id) => state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone));
-    const choices = pool.filter((id) => valueOf(id) <= most)
-      .flatMap((id) => {
-        const pay = owed(id);
-        return pay === null || !canPayGeneric(state, player, pay) ? [] : castChoicesNow(state, player, id).map((action) => ({...action, owed: pay}));
-      });
+      : (params.targets ?? []).filter((id) => state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone)
+        /* "For each player, you may cast a card that player milled this way" (The Ur-Sphinx): `ownedBy` "that player". */
+        && (params.ownedBy !== "that player" || state.objects[id].owner === context.about?.player));
+    const terms = {most, free: params.free === true, anyMana: params.anyMana === true};
+    const choices = playable(state, player, pool, terms);
     if (!choices.length) return false;
-    state.awaiting = {kind: "effect-choice", effect: "play", player, choices};
+    /* For `anyNumber`, what may still be cast and on what terms, to ask again (a number, not Infinity: state is JSON). */
+    state.awaiting = {kind: "effect-choice", effect: "play", player, choices,
+      ...(params.anyNumber === true ? {again: {pool, ...terms, most: Number.isFinite(most) ? most : null}, cast: 0} : {})};
     return true;
   },
   choice(state, awaiting) {
-    return {id: `play:${awaiting.player}:${state.turn}`, title: "Cast a spell?", mode: "one", min: 1, max: 1,
+    /* What it still costs (a commander's tax, "for its mana value in any mana"): which mana pays, when that is a choice. */
+    if (awaiting.paying) return paymentChoice(`play-mana:${awaiting.player}:${state.turn}:${awaiting.cast ?? 0}`, awaiting.paying.owed, paymentUnits(state, awaiting.player));
+    return {id: `play:${awaiting.player}:${state.turn}${awaiting.again ? `:${awaiting.cast}` : ""}`, title: awaiting.cast ? "Cast another spell?" : "Cast a spell?", mode: "one", min: 1, max: 1,
       options: [...awaiting.choices.map((c, index) => ({index, label: c.targetNames?.length ? `${c.label} → ${c.targetNames.join(", ")}` : c.label, cardId: c.objectId})),
         {index: awaiting.choices.length, label: "Don't cast"}]};
   },
   apply(state, awaiting, indices) {
-    const index = (indices ?? [])[0];
-    if (index === awaiting.choices.length) return {events: []};
-    const chosen = awaiting.choices[index];
-    if (!chosen) throw new Error("Invalid selection");
-    const {owed, ...action} = chosen;
-    const events = owed ? payGeneric(state, awaiting.player, owed) : [];
+    let chosen, events;
+    if (awaiting.paying) {
+      chosen = awaiting.choices[awaiting.paying.index];
+      events = payWithUnits(state, awaiting.player, paymentUnits(state, awaiting.player), indices, awaiting.paying.owed);
+    } else {
+      const index = (indices ?? [])[0];
+      if (index === awaiting.choices.length) return {events: []};
+      chosen = awaiting.choices[index];
+      if (!chosen) throw new Error("Invalid selection");
+      /* Which mana pays what it still costs is the player's when the ways differ (rules/mana.mjs, paymentUnits). */
+      if (chosen.owed && paymentIsAChoice(paymentUnits(state, awaiting.player), chosen.owed)) {
+        state.awaiting = {...awaiting, paying: {index, owed: chosen.owed}};
+        return {events: [], again: true};
+      }
+      events = chosen.owed ? payGeneric(state, awaiting.player, chosen.owed) : [];
+    }
+    const action = {...chosen};
+    delete action.owed;
     events.push(...castNow(state, awaiting.player, action));
+    /* Any number: asked again, of what is still there to cast. */
+    if (awaiting.again) {
+      const {pool, most, free, anyMana} = awaiting.again;
+      const choices = playable(state, awaiting.player, pool, {most: most ?? Infinity, free, anyMana});
+      if (choices.length) {
+        const next = {...awaiting, choices, cast: awaiting.cast + 1};
+        delete next.paying;
+        state.awaiting = next;
+        return {events, again: true};
+      }
+    }
     return {events};
   },
 };
 
-export const ASKING = Object.freeze({scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat});
+/* ---- a commander going to its owner's hand or library (CR 903.9b) ----
+
+   A commander on its way to its owner's hand or library from anywhere may go to the command zone instead, if its owner
+   chooses. A replacement, so it is asked BEFORE the move -- the card is never seen in the hand -- and of the OWNER. The
+   resolution puts this question in front of a moveZone that would move a commander there (script/resolution.mjs): each
+   owner in turn order from the active player (CR 101.4), and then the move happens, with the commanders whose owners said
+   yes going to the command zone instead (effects/zones.mjs, `commanderHome`). Moved as a whole, so nothing moves before
+   every owner has answered. A move other than moveZone (a cost that returns a permanent to its owner's hand) is named,
+   not built. */
+export function commandersGoingHome(state, params) {
+  if (params.commandersAsked) return [];
+  /* "Counter target spell. If that spell is countered this way, put it on top of its owner's library instead" (Memory
+     Lapse): a commander spell, unless it can't be countered or would be exiled instead (CR 702.34a). */
+  if (params.effect === "counterSpell") {
+    if (params.to !== "top") return [];
+    return (params.spells ?? []).filter((id) => {
+      const entry = state.stack.find((e) => e.objectId === id);
+      return state.objects[id]?.commander === true && entry && !entry.flashback && !entry.graveyardToExile && !cantBeCountered(state, id);
+    });
+  }
+  if (!["hand", "library"].includes(params.to) || params.sacrifice === true || params.fromTop !== undefined) return [];
+  return (params.targets ?? []).filter((id) => state.objects[id]?.commander === true && state.objects[id].zone !== params.to);
+}
+export const commanderHome = {
+  open(state, params) {
+    const seats = state.players.length, apnap = (id) => (state.objects[id].owner - (state.activePlayer ?? 0) + seats) % seats;
+    const queue = [...params.commanders].sort((a, b) => apnap(a) - apnap(b));
+    state.awaiting = {kind: "effect-choice", effect: "commanderHome", player: state.objects[queue[0]].owner, objectId: queue[0], remaining: queue.slice(1),
+      home: [], move: params.move};
+    return true;
+  },
+  choice(state, awaiting) {
+    return {id: `commander-home:${state.turn}:${awaiting.objectId}`, title: `Put ${state.objects[awaiting.objectId]?.card ?? "your commander"} into the command zone instead?`,
+      mode: "boolean", min: 1, max: 1,
+      options: [{index: 0, label: "Put it into the command zone"}, {index: 1, label: `Let it go to your ${awaiting.move.to === "top" ? "library" : awaiting.move.to}`}]};
+  },
+  apply(state, awaiting, indices) {
+    if (!Array.isArray(indices) || indices.length !== 1 || ![0, 1].includes(indices[0])) throw new Error("Answer yes or no");
+    const home = indices[0] === 0 ? [...awaiting.home, awaiting.objectId] : awaiting.home;
+    const [next, ...rest] = (awaiting.remaining ?? []).filter((id) => state.objects[id]);
+    if (next !== undefined) {
+      state.awaiting = {...awaiting, player: state.objects[next].owner, objectId: next, remaining: rest, home};
+      return {events: [], again: true};
+    }
+    return {events: [], splice: [{...awaiting.move, commandersAsked: true, ...(home.length ? {commanderHome: home} : {})}]};
+  },
+};
+
+/* ---- the order of the effects that change damage (CR 616.1) ----
+
+   Two or more replacement effects would change one damage event, and the order changes how it ends: Torbran's "plus 2"
+   and Fiery Emancipation's tripling, 3 to Maya -- 15 or 11. The player dealt it, or the controller of the permanent dealt
+   it, chooses which applies first; asked BEFORE any of the effect's damage is dealt, a hit at a time, and then the effect
+   is done with every answer (`damageOrders`, by hit), its hits dealt at once as before. The resolution puts this question
+   in front of a damage effect that has one (script/resolution.mjs), and again with each answer given while another hit
+   is still to be ordered; an order that ends the same either way is never asked (rules/replacement.mjs). */
+export const orderDamage = {
+  open(state, params, context, rng) {
+    const question = damageQuestion(state, params.damage, context, params.answers);
+    if (!question) return {events: DAMAGING[params.damage.effect](state, {...params.damage, damageOrders: params.answers}, context, rng)};
+    state.awaiting = {kind: "effect-choice", effect: "orderDamage", player: question.player, key: question.key, proposal: question.proposal,
+      options: question.options, answers: params.answers, damage: params.damage};
+    return true;
+  },
+  choice(state, awaiting) {
+    return damageOrderChoice(state, awaiting);
+  },
+  /* The effect itself again, with this answer added, where it stood in the resolution: asked once more while another of
+     its hits is still to be ordered, and dealt once none is. */
+  apply(state, awaiting, indices) {
+    const chosen = Array.isArray(indices) && indices.length === 1 ? awaiting.options[indices[0]] : undefined;
+    if (chosen === undefined) throw new Error("Invalid selection");
+    const answers = {...awaiting.answers, [awaiting.key]: [...(awaiting.answers[awaiting.key] ?? []), chosen]};
+    return {events: [], splice: [{...awaiting.damage, damageOrders: answers}]};
+  },
+};
+
+export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage});

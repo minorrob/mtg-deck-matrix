@@ -31,28 +31,59 @@
  * So "deal 3 damage to any target" is `{effect: "dealDamage", amount: 3, targets: {target: 0}, who: {target: 0}}`:
  * whichever kind was chosen, the other binds to nothing.
  *
- * FACTS ABOUT A TARGET (CR 608.2h): `{powerOf: {target: n}}`, `{manaValueOf: {target: n}}` and `{controllerOf: {target: n}}`
- * name what an effect needs to know about its target -- Swords to Plowshares' "its controller gains life equal to its
- * power". They are read once, as the resolution begins (`factsOf`), so an effect after the exile still knows the power
- * of what it exiled: the last known information, as the rule asks. `controllerOf` binds where a player goes: `who`,
- * `toPlayer`, `controller` (whose token, under whose control).
+ * FACTS ABOUT A TARGET (CR 608.2h): `{powerOf: {target: n}}`, `{toughnessOf: {target: n}}`, `{manaValueOf: {target: n}}` and
+ * `{controllerOf: {target: n}}` name what an effect needs to know about its target -- Swords to Plowshares' "its controller
+ * gains life equal to its power", Condemn's "equal to its toughness". They are read once, as the resolution begins
+ * (`factsOf`), so an effect after the exile still knows the power of what it exiled: the last known information, as the
+ * rule asks. `controllerOf` binds where a player goes: `who`, `toPlayer`, `controller` (whose token, under whose control).
+ *
+ * "UP TO N TARGET ...", "ANY NUMBER OF TARGET ...", "ONE OR TWO TARGET ..." (CR 115.1, 601.2c): one instance of the word
+ * "target" with a count -- `count: {min, max}` beside the selector, or beside `anyOf`; no `max` is "any number". It is not
+ * enumerated as offers (a board of twenty creatures has 1,351 ways to choose up to three): an offer holds a placeholder for
+ * it (`choosing`), and once the offer is taken its controller picks them as a pick-several, nothing moved or paid before
+ * the answer (rules/actions.mjs and rules/trigger.mjs; the question is rules/turn.mjs's "choose-targets"). The same object
+ * is chosen at most once for one instance (CR 115.3). What it chose is a list, `[{kind, id}, ...]` -- possibly empty --
+ * where a single target's is one `{kind, id}`; an effect naming it gets all of them that are still legal.
  *
  * A CHOSEN TARGET IS PLAIN DATA, `{kind: "object"|"player", id}`, so a game saved with a spell on the stack resumes
  * with the same targets, and an action survives a round trip through JSON to a pilot across a network.
  */
 
 import {compileSelector, selectMatching} from "./filter.mjs";
-import {powerOf, controllerOf} from "../rules/layers.mjs";
+import {powerOf, toughnessOf, controllerOf} from "../rules/layers.mjs";
 import {namesChosen, withChosen} from "./chosen.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
+import {amountOf, AMOUNT_PARAMS} from "./amount.mjs";
 
 /** More than this many ways to choose a spell's targets, and the card is refused at prepare rather than offered. */
 export const TARGET_CHOICES_MAX = 4096;
 
-/** A target spec's alternatives, each a targeting selector (CR 115.2). */
+/** A target spec's alternatives, each a targeting selector (CR 115.2); its count, if it has one, is not part of them. */
 export function targetAlternatives(spec) {
-  const list = spec && typeof spec === "object" && Array.isArray(spec.anyOf) ? spec.anyOf : [spec];
+  const {count, ...plain} = spec && typeof spec === "object" ? spec : {};
+  const list = Array.isArray(plain.anyOf) ? plain.anyOf : [plain];
   return list.map((selector) => ({...selector, target: true}));
+}
+
+/** A counted target's bounds, `{min, max}` (`max` null for "any number"), or null for a single target. */
+export function countOf(spec) {
+  const count = spec && typeof spec === "object" ? spec.count : undefined;
+  return count && typeof count === "object" ? {min: count.min ?? 0, max: count.max ?? null} : null;
+}
+/** The placeholder a counted target holds in an offer until its controller picks (rules/turn.mjs, "choose-targets"), and
+    how many there are to pick from (`of`): "up to two" with none to pick does nothing, for a pilot weighing the offer. */
+export const choosing = (spec, of) => ({kind: "choose", ...countOf(spec), ...(of !== undefined ? {of} : {})});
+export const isChoosing = (t) => Boolean(t) && !Array.isArray(t) && t.kind === "choose";
+
+const COUNT_WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
+/** A small number in words, as a card says it: "four other cards". */
+export const inWords = (n) => COUNT_WORDS[n] ?? String(n);
+/** A count in words, as a card says it: "up to two targets", "any number of targets", "one or two targets". */
+export function countWords({min = 0, max = null} = {}) {
+  if (max === null) return min > 0 ? `${inWords(min)} or more targets` : "any number of targets";
+  if (min === 0) return `up to ${inWords(max)} target${max === 1 ? "" : "s"}`;
+  if (min === max) return `${inWords(max)} target${max === 1 ? "" : "s"}`;
+  return `${inWords(min)} ${max === min + 1 ? "or" : "to"} ${inWords(max)} targets`;
 }
 
 const kindOf = (selector) => ((selector.what ?? "permanent") === "player" ? "player" : "object");
@@ -80,6 +111,14 @@ export function targetChoices(state, specs, context) {
   let choices = [[]];
   for (const spec of specs ?? []) {
     const candidates = targetCandidates(state, spec, context);
+    /* A counted target is one placeholder in each way, picked once the offer is taken -- or no way at all, when fewer than
+       its least are there to choose (CR 601.2c). */
+    const count = countOf(spec);
+    if (count) {
+      if (candidates.length < count.min) return [];
+      choices = choices.map((chosen) => [...chosen, choosing(spec, candidates.length)]);
+      continue;
+    }
     const next = [];
     for (const chosen of choices) for (const candidate of candidates) next.push([...chosen, candidate]);
     choices = next;
@@ -87,6 +126,26 @@ export function targetChoices(state, specs, context) {
       throw new Error(`More than ${TARGET_CHOICES_MAX} ways to choose these targets; a card that needs this many is refused at prepare`);
   }
   return choices;
+}
+
+/**
+ * The question for a counted target (CR 601.2c): its legal choices as a pick-several, as few as its count allows and as many
+ * as it allows or there are. Each option is one candidate (`targets: [it]`, `hostile` for a pilot's aim), a permanent said
+ * with whose it is when it is not the chooser's, and two that would read alike numbered.
+ */
+export function countedChoice(state, spec, context, {id, name, hostile = false}) {
+  const count = countOf(spec) ?? {min: 1, max: 1};
+  const candidates = targetCandidates(state, spec, context);
+  const options = candidates.map((c, index) => {
+    const whose = c.kind === "object" && state.objects[c.id] && controllerOf(state, c.id) !== context.controller ? ` (${state.players[controllerOf(state, c.id)]?.name}'s)` : "";
+    return {index, label: `${targetName(state, c)}${whose}`, ...(c.kind === "object" ? {cardId: c.id} : {playerId: c.id}), targets: [c], hostile};
+  });
+  for (const option of options) {
+    const alike = options.filter((o) => o.label === option.label);
+    if (alike.length > 1) alike.forEach((o, n) => { o.label = `${o.label} (${n + 1})`; });
+  }
+  return {id, title: `${name}: choose ${countWords(count)}`, mode: "many", min: Math.min(count.min, options.length),
+    max: count.max === null ? options.length : Math.min(count.max, options.length), options};
 }
 
 /** Whether a chosen target is still legal (CR 608.2b): still there, and still what its spec asks for. */
@@ -97,25 +156,45 @@ export function stillLegal(state, spec, chosen, context) {
 }
 
 /**
- * The targets as the resolution sees them: each still-legal one, and null where one has become illegal.
+ * The targets as the resolution sees them: each still-legal one, and null where one has become illegal; for a counted
+ * target, the list of those of its chosen that are still legal.
  *
- * @returns {{targets: Array<?{kind, id}>, fizzles: boolean}} `fizzles` when there were targets and none is legal
+ * @returns {{targets: Array<?{kind, id}|Array>, fizzles: boolean}} `fizzles` when there were targets and none is legal --
+ *   a counted target with none chosen is no target, so "up to one" with none chosen still resolves (CR 608.2b)
  */
 export function recheckTargets(state, specs, chosen, context) {
-  const targets = (specs ?? []).map((spec, index) => (stillLegal(state, spec, (chosen ?? [])[index], context) ? chosen[index] : null));
-  return {targets, fizzles: targets.length > 0 && targets.every((t) => t === null)};
+  let had = 0, legal = 0;
+  const targets = (specs ?? []).map((spec, index) => {
+    const was = (chosen ?? [])[index];
+    if (Array.isArray(was)) {
+      const kept = was.filter((t) => stillLegal(state, spec, t, context));
+      had += was.length; legal += kept.length;
+      return kept;
+    }
+    had += 1;
+    if (!stillLegal(state, spec, was, context)) return null;
+    legal += 1;
+    return was;
+  });
+  return {targets, fizzles: had > 0 && legal === 0};
 }
 
 const isRef = (value) => value && typeof value === "object" && !Array.isArray(value) && Number.isInteger(value.target);
-const FACT_KEYS = ["powerOf", "manaValueOf", "controllerOf"];
+const FACT_KEYS = ["powerOf", "toughnessOf", "manaValueOf", "controllerOf"];
 const factRef = (value) => value && typeof value === "object" && !Array.isArray(value) && FACT_KEYS.find((k) => isRef(value[k])) || null;
 
-/** What effects may need to know about each object target, read now (CR 608.2h): power, mana value, controller. */
+/** What effects may need to know about each object target, read now (CR 608.2h): power, toughness, mana value, controller. */
 export function factsOf(state, targets) {
-  return (targets ?? []).map((t) => {
+  return (targets ?? []).map((target) => {
+    /* A counted target's facts are not one creature's: none is read -- unless one was chosen ("destroy up to one target
+       nonbasic land. Its controller may search ...", White Orchid Phantom): that one's. */
+    const chosen = Array.isArray(target) ? target.filter((x) => x?.kind === "object") : null;
+    const t = chosen ? (chosen.length === 1 ? chosen[0] : null) : target;
     if (!t || t.kind !== "object" || !state.objects[t.id]) return null;
     const o = state.objects[t.id];
     return {powerOf: o.zone === "battlefield" ? powerOf(state, t.id) : (o.power ?? 0),
+      /* "Its controller gains life equal to its toughness" (Condemn): as it was, before the effect moved it. */
+      toughnessOf: o.zone === "battlefield" ? toughnessOf(state, t.id) : (o.toughness ?? 0),
       manaValueOf: o.manaCost ? manaValue(parseManaCost(o.manaCost)) : 0,
       controllerOf: o.zone === "battlefield" ? controllerOf(state, t.id) : o.controller};
   });
@@ -139,6 +218,8 @@ function objectsOf(value, context) {
   if (value === "those cards") return (context.about?.cards ?? []).slice();
   if (!isRef(value)) return value;
   const chosen = (context.targets ?? [])[value.target];
+  /* A counted target: every one of its chosen that is an object. */
+  if (Array.isArray(chosen)) return chosen.filter((t) => t?.kind === "object").map((t) => t.id);
   return chosen && chosen.kind === "object" ? [chosen.id] : [];
 }
 
@@ -154,6 +235,7 @@ function playersOf(value, context, state = null) {
   }
   if (!isRef(value)) return value;
   const chosen = (context.targets ?? [])[value.target];
+  if (Array.isArray(chosen)) return chosen.filter((t) => t?.kind === "player").map((t) => t.id);
   return chosen && chosen.kind === "player" ? [chosen.id] : [];
 }
 
@@ -181,6 +263,8 @@ export function bindEffect(effect, context, state = null) {
     bound.selector = {...bound.selector, controller: player ?? -1};
   }
   if ("spells" in bound) bound.spells = objectsOf(bound.spells, context);
+  /* "Until this card is cast from exile" (Emrakul, the Exigent Doom): which card's cast ends it. */
+  if ("untilCast" in bound) bound.untilCast = objectsOf(bound.untilCast, context);
   /* "Counter that spell or ability" (ward): the stack entry the trigger is about, by its stack id (rules/trigger.mjs). */
   if (bound.stack === "that") bound.stack = context.about?.stackId !== undefined && context.about.stackId !== null ? [context.about.stackId] : [];
   /* Where the damage comes from, when it is not the spell: "target creature you control deals damage ..." (damageAll). */
@@ -189,8 +273,11 @@ export function bindEffect(effect, context, state = null) {
      Aid, "it" the Equipment that entered). Gone, it is nothing -- never the source in its place. */
   if (typeof bound.source === "string") { const [id] = objectsOf(bound.source, context); bound.source = id ?? -1; }
   if ("who" in bound) bound.who = playersOf(bound.who, context, state);
-  /* "Target opponent creates a 1/1 Spirit" (Forbidden Orchard): a token's controller, a target player -- or no one. */
-  if (isRef(bound.controller)) { const [player] = playersOf(bound.controller, context); bound.controller = player ?? -1; }
+  /* "Target opponent creates a 1/1 Spirit" (Forbidden Orchard): a token's controller, a target player -- or no one. "That
+     creature's controller creates a 1/1 Myr" (Genesis Chamber): the controller of what the trigger is about. */
+  if (isRef(bound.controller) || bound.controller === "that card's controller") { const [player] = playersOf(bound.controller, context, state); bound.controller = player ?? -1; }
+  /* "That attacking player creates a ... token" (Combat Calligrapher): the player whose attack the trigger is about. */
+  if (bound.controller === "attacking player") bound.controller = Number.isInteger(context.about?.attacker) ? context.about.attacker : -1;
   if (isRef(bound.toPlayer)) {
     const [player] = playersOf(bound.toPlayer, context);
     if (player === undefined) delete bound.toPlayer; else bound.toPlayer = player;
@@ -199,6 +286,13 @@ export function bindEffect(effect, context, state = null) {
   if (isRef(bound.chooser) || bound.chooser === "that player") {
     const [player] = playersOf(bound.chooser, context);
     if (player === undefined) delete bound.chooser; else bound.chooser = player;
+  }
+  /* "The owner of target nonland permanent puts it into their library second from the top or on the bottom" (Temporal
+     Cleansing): the owner of a target object (`ownerOf`), as it now is. */
+  if (bound.chooser && typeof bound.chooser === "object" && isRef(bound.chooser.ownerOf)) {
+    const [id] = objectsOf(bound.chooser.ownerOf, context);
+    const owner = id !== undefined ? state?.objects[id]?.owner : undefined;
+    if (owner === undefined) delete bound.chooser; else bound.chooser = owner;
   }
   return bound;
 }
@@ -212,14 +306,21 @@ export function bindEffect(effect, context, state = null) {
  * itself. An object that has since changed zones is a new object (CR 400.7) and the old one is simply not there, which
  * is the rule's "it won't affect it". For a delayed trigger that waits for an event (`keepThat`), "that card" and "that
  * player" mean what THAT event is about, and are left for it.
+ *
+ * And a count of this resolution -- "that many" of what the effect before it moved, the life lost this way -- is counted
+ * now, while there is a resolution to count: "exile all creatures you control. At the beginning of the next end step,
+ * reveal cards ... until you reveal that many creature cards" (Synthetic Destiny).
  */
-export function rememberNow(effects, context, {keepThat = false} = {}) {
+const THIS_WAY = ["rememberedCount", "lifeLostThisWay", "cardTypesAmong"];
+export function rememberNow(effects, context, {keepThat = false, state = null} = {}) {
   const walk = (effect) => {
     if (!effect || typeof effect !== "object") return effect;
     const kept = {};
     if (keepThat) for (const key of ["targets", "spells", "who", "toPlayer", "chooser"])
       if (["that card", "that player", "that card's controller"].includes(effect[key])) kept[key] = effect[key];
     const bound = {...bindEffect(effect, context), ...kept};
+    for (const key of AMOUNT_PARAMS)
+      if (bound[key] && typeof bound[key] === "object" && THIS_WAY.some((kind) => kind in bound[key])) bound[key] = amountOf(state, bound[key], context);
     for (const key of ["effects", "then", "otherwise"]) if (Array.isArray(bound[key])) bound[key] = bound[key].map(walk);
     if (Array.isArray(bound.modes)) bound.modes = bound.modes.map((mode) => ({...mode, effects: (mode.effects ?? []).map(walk)}));
     return bound;
@@ -288,6 +389,9 @@ export function isHostile(effects) {
 /** How a chosen target reads in a label and a log: the card's name, or the player's. */
 export function targetName(state, chosen) {
   if (!chosen) return "";
+  /* A counted target: its chosen, said together; a placeholder, what is still to be chosen. */
+  if (Array.isArray(chosen)) return chosen.length ? chosen.map((t) => targetName(state, t)).join(" and ") : "no target";
+  if (chosen.kind === "choose") return countWords(chosen);
   if (chosen.kind === "player") return state.players[chosen.id]?.name ?? `Seat ${chosen.id + 1}`;
   return state.objects[chosen.id]?.card ?? "";
 }

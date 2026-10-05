@@ -62,7 +62,7 @@ export const PRIMITIVES = Object.freeze({
   zones: Object.freeze([
     "moveZone", "moveZoneAll", "draw", "discard", "mill", "shuffle", "dig", "surveil", "scry",
     "peekAndReveal", "sacrifice", "sacrificeAll", "destroy", "destroyAll", "exileUntil",
-    "returnToHand", "play", "discover", "digUntil",
+    "returnToHand", "play", "mayPlay", "discover", "digUntil",
   ]),
   mana: Object.freeze([
     "addMana", "addManaReflected", "tap", "untap", "untapAll", "costReduction", "alternativeCost",
@@ -72,7 +72,7 @@ export const PRIMITIVES = Object.freeze({
   ]),
   counters: Object.freeze([
     "putCounter", "putCounterAll", "removeCounter", "proliferate", "multiplyCounters",
-    "moveCounters", "replaceCounters", "amass", "poison", "winGame", "goad",
+    "moveCounters", "replaceCounters", "amass", "poison", "winGame", "goad", "empowerJace",
   ]),
   permanents: Object.freeze([
     "createToken", "copyPermanent", "becomeCopy", "earthbend", "populate", "unlessPays", "animate", "animateAll", "attach", "gainControl", "setState",
@@ -103,9 +103,14 @@ export const TRIGGER_EVENTS = Object.freeze([
   "phase", "step", "upkeep", "end step",
   "attacks", "attackers declared", "blocks",
   "spell cast", "damage dealt", "damage dealt once",
-  "discarded", "drawn", "land played", "becomes target", "sacrificed", "tapped for mana",
+  "discarded", "drawn", "land played", "becomes target", "sacrificed", "tapped for mana", "becomes tapped", "cycled",
+  "put into graveyard", "left graveyard",
   "counter added", "counter added once", "life gained", "life lost", "token created",
   "becomes monstrous", "chapter",
+  /* "Whenever you activate a loyalty ability" (CR 606; the live-game plan of 2026-10-04, P4). */
+  "loyalty activated",
+  /* "Whenever you scry or surveil" (CR 701.22a, 701.25a). */
+  "scried",
 ]);
 
 /** The cost atoms of §12.2. The two symbolic ones are named; the rest are structural. */
@@ -154,7 +159,20 @@ const BEYOND_TIER0 = ["shroud", "ward",
   /* Batch 77: toxic (CR 702.164), prowess (CR 702.108), devoid (CR 702.114). */
   "toxic", "prowess", "devoid",
   /* Batch 78: annihilator (CR 702.86). */
-  "annihilator"];
+  "annihilator",
+  /* The live-game plan of 2026-10-04: increment (Berta, Wise Extrapolator; cards/index.mjs, a triggered ability). */
+  "increment",
+  /* And impending (CR 702.176; Overlord of the Mistmoors): an alternative cost, time counters, not a creature meanwhile. */
+  "impending",
+  /* Batch 79: commander ninjutsu (CR 702.49d), ninjutsu that also works from the command zone. */
+  "commander ninjutsu",
+  /* Rob's Priority Batch 10.3, its seventeenth slice: storied (CR 702.195), an enduring story (keywords/designations.mjs). */
+  "storied",
+  /* Its twentieth: fear (CR 702.36), printed (Shriekmaw). The blocking rule has been keywords/combat.mjs's since batch 59,
+     reached only by a static granting it ("has fear"); a card printed with it could not say so. */
+  "fear",
+  /* Its twenty-eighth: Choose a Background (CR 702.124k), a partner ability -- a deck rule, as Partner is (cards/index.mjs). */
+  "choose a background"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

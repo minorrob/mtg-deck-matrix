@@ -203,7 +203,7 @@ function payments(pool, cost, {x = 0, life = 0} = {}, limit = 2) {
     }
   };
 
-  const spendGeneric = (left, spentMana, spentLife, need, out, cap) => {
+  const spendGeneric = (left, spentMana, spentLife, need, out, cap, from = 0) => {
     if (need === 0) {
       const mana = {...emptyColored()};
       for (const [key, amount] of Object.entries(spentMana)) mana[key] = amount;
@@ -213,11 +213,13 @@ function payments(pool, cost, {x = 0, life = 0} = {}, limit = 2) {
     }
     if (out.size >= cap) return;
     /* Choose which color pays the next generic. Only colors with mana left, and only in a
-       non-decreasing key order, so the same multiset is not enumerated many times over. */
-    for (const key of KEY_ORDER) {
+       non-decreasing key order (`from`), so the same multiset is not enumerated many times over: every ordering of
+       twelve mana paying {12} was walked, seconds each time a pool held exactly the cost (the plan's X8). */
+    for (let i = from; i < KEY_ORDER.length; i += 1) {
+      const key = KEY_ORDER[i];
       if (left[key] <= 0) continue;
       left[key] -= 1;
-      spendGeneric(left, {...spentMana, [key]: (spentMana[key] ?? 0) + 1}, spentLife, need - 1, out, cap);
+      spendGeneric(left, {...spentMana, [key]: (spentMana[key] ?? 0) + 1}, spentLife, need - 1, out, cap, i);
       left[key] += 1;
       if (out.size >= cap) return;
     }
@@ -251,6 +253,135 @@ export function paymentOptions(pool, cost, options = {}, limit = 12) {
   return payments(pool, cost, options, limit);
 }
 
+/* ---- tapping to cast (the plan's X8: a spell cast in one click) ----
+ *
+ * A spell the pool cannot pay may still be cast in one action when tapping its caster's untapped sources can pay it: each
+ * source one mana of its own, for nothing but {T} (rules/actions.mjs, tapUnits). Sources that make the same mana are
+ * interchangeable -- which of two Islands taps changes nothing -- and the mana is all spent at once, so the ways to pay are
+ * told apart by the KINDS of source tapped, not by the colors they make. One way, and it is tapped without asking; more,
+ * and the caster chooses (CR 601.2g-h: they activate the mana abilities, then pay). A cost with {X}, Phyrexian, snow or
+ * monohybrid symbols is left to tapping by hand: its choices are not only which source.
+ */
+
+/**
+ * The ways to pay `cost` by tapping these units, up to `limit`, each `{taps: [{id, color}], key}`: the units to tap and the
+ * color each makes, and the kinds tapped. The least flexible first -- a colorless source before a basic, a basic before a
+ * dual, a dual before a source of any color -- so the first way leaves the most choices untapped.
+ *
+ * @param {Array<{id: number, colors: string[]}>} units  untapped sources, one mana each, in the order they sit
+ */
+export function tapPlans(units, cost, limit = 2) {
+  if (cost.variable > 0 || cost.symbols.some((s) => !["generic", "colored", "hybrid"].includes(s.kind))) return [];
+  /* Kinds: the colors a source can make. Fewer colors first (colorless alone, fewest of all: it pays only generic and
+     {C}), then the order they sit. */
+  const kinds = new Map();
+  for (const unit of units) {
+    const key = [...unit.colors].sort().join("");
+    if (!kinds.has(key)) kinds.set(key, {colors: [...unit.colors], ids: []});
+    kinds.get(key).ids.push(unit.id);
+  }
+  const flexibility = (k) => (kinds.get(k).colors.every((c) => c === "C") ? 0 : kinds.get(k).colors.length);
+  const order = [...kinds.keys()].sort((a, b) => flexibility(a) - flexibility(b));
+  const left = new Map(order.map((k) => [k, kinds.get(k).ids.length]));
+  const needs = cost.symbols.filter((s) => s.kind !== "generic").map((s) => (s.kind === "colored" ? [s.color] : s.either));
+  const found = new Map();
+  const take = (k) => left.set(k, left.get(k) - 1), give = (k) => left.set(k, left.get(k) + 1);
+  /* Generic mana: which kinds pay it, as a multiset -- the kinds in order, never back, so each multiset is met once. */
+  const generic = (from, n, used) => {
+    if (found.size >= limit) return;
+    if (n === 0) {
+      const key = used.map(([k]) => k).sort().join(",");
+      if (!found.has(key)) found.set(key, used);
+      return;
+    }
+    for (let j = from; j < order.length; j += 1) {
+      const k = order[j];
+      if (left.get(k) <= 0) continue;
+      take(k); generic(j, n - 1, [...used, [k, null]]); give(k);
+      if (found.size >= limit) return;
+    }
+  };
+  /* Each colored or hybrid symbol a kind that makes its color. */
+  const colored = (i, used) => {
+    if (found.size >= limit) return;
+    if (i === needs.length) { generic(0, cost.generic, used); return; }
+    for (const k of order) for (const color of needs[i]) {
+      if (left.get(k) <= 0 || !kinds.get(k).colors.includes(color)) continue;
+      take(k); colored(i + 1, [...used, [k, color]]); give(k);
+      if (found.size >= limit) return;
+    }
+  };
+  colored(0, []);
+  /* Each way's units: of each kind, the first that sit there. */
+  return [...found.entries()].map(([key, used]) => {
+    const at = new Map();
+    const taps = used.map(([k, color]) => {
+      const n = at.get(k) ?? 0;
+      at.set(k, n + 1);
+      return {id: kinds.get(k).ids[n], color: color ?? kinds.get(k).colors[0]};
+    });
+    return {taps, key};
+  });
+}
+
+/* ---- convoke (CR 702.51a): creatures help cast a spell ----
+ *
+ * Each untapped creature its caster taps pays one mana of the spell's total cost instead: a colored one of a color the
+ * creature is, or a generic one. Not an additional or alternative cost: it pays part of the total cost, once that is known
+ * (702.51b). Each creature pays one symbol: generic, or a colored or hybrid one of a color it is; a colorless creature
+ * pays only generic, never {C}. The rest is paid with mana from the pool. Phyrexian, snow and {2/W} symbols are left to the
+ * pool, and a cost with {X} is not convoked here (rules/actions.mjs does not offer it).
+ */
+const convokable = (symbol) => symbol.kind === "colored" && symbol.color !== "C" || symbol.kind === "hybrid";
+const paysSymbol = (colors, symbol) => (symbol.kind === "colored" ? colors.includes(symbol.color) : symbol.either.some((c) => colors.includes(c)));
+/* What is left of `cost` once these of its symbols (indices into cost.symbols) and this much generic are paid. */
+function leftOf(cost, paid, generic) {
+  const symbols = cost.symbols.filter((s, i) => s.kind !== "generic" && !paid.includes(i));
+  const left = Math.max(0, cost.generic - generic);
+  const colored = emptyColored();
+  for (const s of symbols) if (s.kind === "colored") colored[s.color] += 1;
+  return {symbols: [...symbols, ...(left > 0 ? [{kind: "generic", amount: left}] : [])], generic: left, colored, variable: cost.variable};
+}
+
+/**
+ * Whether the pool and these untapped creatures, each paying one symbol, can pay `cost` at all -- the creatures as units of
+ * their colors beside the pool's mana (tapPlans): a colorless one pays only generic.
+ *
+ * @param {Array<{id: number, colors: string[]}>} creatures
+ */
+export function convokeCanPay(pool, cost, creatures) {
+  /* tapPlans leaves {X}, Phyrexian, snow and {2/W} costs alone, so none of them is convoked here. */
+  const units = [...creatures.map((c) => ({id: `creature:${c.id}`, colors: c.colors.filter((k) => k !== "C")})),
+    ...MANA_KEYS.flatMap((k) => Array.from({length: pool[k] ?? 0}, (_, n) => ({id: `pool:${k}:${n}`, colors: [k]})))];
+  return tapPlans(units, cost, 1).length > 0;
+}
+
+/**
+ * What the pool pays once exactly these creatures have each paid one symbol of `cost`: every way they could have been
+ * assigned, and every way the pool could then pay the rest, told apart by the mana it spends. One answer is the payment;
+ * none, and they cannot pay; more than one, and which mana stays in the pool is the caster's to decide -- the payment
+ * question (the plan's X8b), not built, so it is refused rather than decided for them.
+ *
+ * @returns {Array<{mana: object, life: number}>}
+ */
+export function convokePayments(pool, cost, creatures, options = {}) {
+  const needs = cost.symbols.map((s, i) => [s, i]).filter(([s]) => convokable(s));
+  const found = new Map();
+  /* Each creature pays one of the symbols left that it can, or generic. */
+  const assign = (k, paid, generic) => {
+    if (found.size > 1) return;
+    if (k === creatures.length) {
+      for (const way of payments(pool, leftOf(cost, paid, generic), options, 2)) found.set(JSON.stringify(way.mana) + `|${way.life}`, way);
+      return;
+    }
+    const colors = creatures[k].colors.filter((c) => c !== "C");
+    for (const [symbol, i] of needs) if (!paid.includes(i) && paysSymbol(colors, symbol)) assign(k + 1, [...paid, i], generic);
+    if (generic < cost.generic) assign(k + 1, paid, generic + 1);
+  };
+  assign(0, [], 0);
+  return [...found.values()];
+}
+
 /* ---- paying "unless" (CR 118.12) for a player who does not hold priority ----
  *
  * The payer answers a question in the middle of a resolution and has no priority in which to tap, so paying taps for
@@ -275,6 +406,43 @@ function plainSources(state, player) {
 export function canPayGeneric(state, player, amount) {
   return poolSize(state.players[player].manaPool) + plainSources(state, player).length >= amount;
 }
+/* ---- which mana pays (CR 605.3a, 118.12, 508.1h) ----
+ *
+ * A generic amount paid without priority is still the payer's to pay: which land they tap decides what they can cast
+ * afterwards. The units it can come from are each mana in their pool and each untapped plain source; two units are the
+ * same KIND when they give the same mana (a {U} in the pool and an Island are one kind; an Island and a land that taps
+ * for {U} or {B} are two). With one kind, or exactly as many units as the amount, every way to pay is the same and it is
+ * paid without asking -- the pool first, then the sources in the order they sit; otherwise the payer chooses. */
+const kindOf = (ability) => (ability.anyColor === true ? "WUBRG"
+  : [...new Set((Array.isArray(ability.produces) ? ability.produces : [ability.produces]).flatMap((p) => Object.keys(p ?? {})))].sort().join(""));
+/** The units a generic payment can come from, in the order an unasked payment uses them. */
+export function paymentUnits(state, player) {
+  const pool = state.players[player].manaPool;
+  const units = [];
+  for (const key of PAY_ORDER) for (let n = 0; n < (pool[key] ?? 0); n += 1) units.push({from: "pool", color: key, kind: key, label: `{${key}} from your mana pool`});
+  for (const {id, ability} of plainSources(state, player)) units.push({from: "tap", id, kind: kindOf(ability), label: `Tap ${state.objects[id].card}`});
+  return units;
+}
+/** Whether paying `amount` from these units is a choice: more than one kind, and more units than the amount. */
+export const paymentIsAChoice = (units, amount) => new Set(units.map((u) => u.kind)).size > 1 && units.length > amount;
+/** The question: which `amount` of the units pay. */
+export function paymentChoice(id, amount, units) {
+  return {id, title: `Pay {${amount}}: choose the mana`, mode: "many", min: amount, max: amount,
+    options: units.map((u, index) => ({index, label: u.label, ...(u.from === "tap" ? {cardId: u.id} : {})}))};
+}
+/** Pay with exactly the units at these positions. @returns {Array} events */
+export function payWithUnits(state, player, units, indices, amount) {
+  const picked = [...new Set(indices ?? [])].map((i) => units[i]);
+  if (picked.length !== amount || picked.some((u) => !u)) throw new Error(`Choose exactly ${amount} to pay with`);
+  const events = [];
+  for (const unit of picked) {
+    if (unit.from === "pool") { state.players[player].manaPool[unit.color] -= 1; continue; }
+    state.objects[unit.id].tapped = true;
+    events.push({kind: "GameEventCardTapped", data: {turn: state.turn, phase: state.phase, fields: {card: {cardId: unit.id, name: state.objects[unit.id].card, owner: state.objects[unit.id].owner, controller: player, faceDown: false}, tapped: true}}});
+  }
+  return events;
+}
+
 /** Pay it: the pool first, then tap sources as needed. @returns {Array} events */
 export function payGeneric(state, player, amount) {
   const events = [];

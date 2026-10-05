@@ -295,22 +295,39 @@
   actions["table-uninvite"] = async (el) => {await api("POST", `${tableUrl(current.tableId)}/uninvite`, {seatId: Number(el.dataset.seat)}); await refresh(current.tableId);};
 
   /* ---- decks ---- */
-  /* THE BASIC LANDS TEST DECK (Rob, 2026-09-29: "add the basic lands test deck on staging"). Until M4 defines the
-     decks' cards the engine plays basic lands only, so no library deck can be brought and a game cannot be played
-     through. On a playtest table (every staging table) the chooser offers this one: Wastes, with 99 basic lands.
-     It is not a library deck, so its result is filed nowhere. */
+  /* THE BASIC LANDS TEST DECK (Rob, 2026-09-29: "add the basic lands test deck on staging"). Made while the engine
+     played basic lands only, so that a game could be played through at all; the table now plays every definition in the
+     engine's directory (M5), and the test deck stays on playtest tables as the quickest game to try. It is not a library
+     deck, so its result is filed nowhere. */
   const TEST_DECK = Object.freeze({name: "Basic lands test deck", commander: ["Wastes"],
     cards: [["Plains", 20], ["Island", 20], ["Swamp", 20], ["Mountain", 20], ["Forest", 19]].flatMap(([land, n]) => Array(n).fill(land))});
   actions["table-deck"] = (el) => {
     const seatId = Number(el.dataset.seat), decks = libraryDecks();
     const test = current && current.playtest
-      ? `<li><button type="button" class="cm-table-deck" data-action="table-use-test-deck" data-seat="${seatId}"><strong>${e(TEST_DECK.name)}</strong><span class="cm-muted">Wastes and 99 basic lands · for trying a game through on this playtest table, while the engine plays basic lands only</span></button></li>`
+      ? `<li><button type="button" class="cm-table-deck" data-action="table-use-test-deck" data-seat="${seatId}"><strong>${e(TEST_DECK.name)}</strong><span class="cm-muted">Wastes and 99 basic lands · for trying a game through quickly on this playtest table</span></button></li>`
       : "";
     const list = decks.length || test
-      ? `<ul class="cm-table-decks">${test}${decks.map((d) => `<li><button type="button" class="cm-table-deck" data-action="table-use-deck" data-seat="${seatId}" data-deck="${e(d.id)}"><strong>${e(d.name)}</strong><span class="cm-muted">${e((d.commanders || []).map((c) => (C.card(c) || {}).name).filter(Boolean).join(" + "))}</span></button></li>`).join("")}</ul>`
+      ? `<ul class="cm-table-decks">${test}${decks.map((d) => `<li><button type="button" class="cm-table-deck" data-action="table-use-deck" data-seat="${seatId}" data-deck="${e(d.id)}"><strong>${e(d.name)}</strong><span class="cm-muted">${e((d.commanders || []).map((c) => (C.card(c) || {}).name).filter(Boolean).join(" + "))}</span><span class="cm-muted cm-table-deck-known" data-known-for="${e(d.id)}"></span></button></li>`).join("")}</ul>`
       : `<p class="cm-muted">Your library has no deck with a commander yet.</p>`;
     C.modal(`Choose a deck · Seat ${seatId + 1}`, `${list}<div id="cm-table-deck-error" class="cm-note cm-warning" hidden></div><div class="cm-form-footer">${b("Cancel", "close")}</div>`);
+    knownCounts(decks);
   };
+  /* HOW MUCH OF EACH DECK THE TABLE CAN PLAY (M5; the plan review's A2): the table is asked which of the decks' card
+     names it does not know yet, and each deck says "87 of 100 known · 13 to learn", or that every card is known -- so
+     a deck that is not whole is said to be so before it is chosen, and refused by name if it is. */
+  async function knownCounts(decks) {
+    const read = decks.map((d) => ({id: d.id, deck: deckForTable(d)}));
+    const names = [...new Set(read.flatMap((r) => [...r.deck.commander, ...r.deck.cards]))];
+    let unknown;
+    try {unknown = new Set((await api("POST", `${tableUrl(current.tableId)}/known`, {names})).unknown || []);} catch {return;}
+    for (const r of read) {
+      const el = document.querySelector(`[data-known-for="${CSS.escape(r.id)}"]`);
+      if (!el) continue;
+      const all = [...r.deck.commander, ...r.deck.cards], missing = all.filter((n) => unknown.has(n)).length;
+      el.textContent = missing ? `${all.length - missing} of ${all.length} known · ${missing} to learn` : `All ${all.length} cards known`;
+      el.closest(".cm-table-deck")?.classList.toggle("is-unknown", missing > 0);
+    }
+  }
   actions["table-use-test-deck"] = async (el) => {
     try {
       await api("POST", `${tableUrl(current.tableId)}/deck`, {seatId: Number(el.dataset.seat), deck: {name: TEST_DECK.name, commander: [...TEST_DECK.commander], cards: [...TEST_DECK.cards]}});

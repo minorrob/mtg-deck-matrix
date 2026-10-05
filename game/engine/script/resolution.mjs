@@ -19,8 +19,9 @@
  * would have made §3.2.4 true of everything except the part players spend the most time in.
  */
 
-import {runEffect} from "./effects/index.mjs";
-import {ASKING} from "./effects/asking.mjs";
+import {runEffect, eachOf} from "./effects/index.mjs";
+import {ASKING, commandersGoingHome} from "./effects/asking.mjs";
+import {damageQuestion} from "./effects/resources.mjs";
 import {bindEffect} from "./bind.mjs";
 import {countEffect} from "./amount.mjs";
 import {conditionHolds} from "./condition.mjs";
@@ -29,11 +30,12 @@ import {conditionHolds} from "./condition.mjs";
 export const resolutionPending = (state) => Boolean(state.resolving);
 
 /**
- * Start resolving a list of effects.
+ * Start resolving a list of effects. `rng`, the game's random stream, reaches every effect of it (batch 80): it is handed
+ * in at each step rather than kept, since a generator is not state and the resolution must stay plain data.
  *
  * @returns {{status: "done"|"waiting", events: Array}}
  */
-export function beginResolution(state, effects, context = {}) {
+export function beginResolution(state, effects, context = {}, rng = null) {
   if (state.resolving) throw new Error("A resolution is already under way; finish it before starting another");
   state.resolving = {
     queue: structuredClone(effects ?? []),
@@ -46,7 +48,17 @@ export function beginResolution(state, effects, context = {}) {
       ...(context.cast ? {cast: context.cast} : {})},
     events: [],
   };
-  return runResolution(state);
+  return runResolution(state, rng);
+}
+
+/* The events this resolution has not handed back yet. A resolution that stops to ask hands back what happened before the
+   question, and on carrying on only what happened after: each event once, whatever reads them -- a log, the conformance
+   suite's "a life change begins where the last ended" (Uro: the 3 life gained, then "you may put a land card"). The whole
+   list stays with the resolution. */
+function unreported(resolving) {
+  const fresh = resolving.events.slice(resolving.reported ?? 0);
+  resolving.reported = resolving.events.length;
+  return fresh;
 }
 
 /**
@@ -54,7 +66,7 @@ export function beginResolution(state, effects, context = {}) {
  *
  * @returns {{status: "done"|"waiting", events: Array}}
  */
-export function runResolution(state) {
+export function runResolution(state, rng = null) {
   const resolving = state.resolving;
   if (!resolving) return {status: "done", events: []};
 
@@ -67,7 +79,9 @@ export function runResolution(state) {
     /* AN EFFECT'S OWN CONDITION (Forge's Condition): "Metalcraft -- If you control three or more artifacts, exile that
        creature". Asked now, as it reaches the head (CR 608.2c, the instructions in order); false, and it does nothing. */
     if (effect?.condition && !conditionHolds(state, effect.condition, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about,
-      remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast})) {
+      remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast, x: resolving.context.x,
+      /* "If excess damage was dealt to that permanent this way" (Violent Echoes; effects/resources.mjs). */
+      excessDamage: resolving.context.excessDamage, rememberedControllers: resolving.context.rememberedControllers})) {
       resolving.queue.shift();
       continue;
     }
@@ -81,27 +95,73 @@ export function runResolution(state) {
       resolving.queue.unshift(...structuredClone((holds ? effect.then : effect.otherwise) ?? []));
       continue;
     }
-    const asking = ASKING[effect?.effect];
+    /* EMPOWER JACE N (the live-game plan of 2026-10-04): "put N loyalty counters on a Jace token you control. If you don't
+       control one, first create a blue Jace planeswalker token" -- a token of yours with the subtype Jace. With two or
+       more, which one is its controller's choice (chooseCard, kept where it is); with one, that one; with none, the
+       predefined token made first (effects/permanents.mjs). Put in front of what follows, as a branch is. */
+    /* "FOR EACH ..., THAT PLAYER SEARCHES" (Winds of Abandon, overloaded): a repetition whose effects ask, spliced in for each
+       of what it ranges over (script/effects/index.mjs, eachOf: players in turn order, CR 101.4) -- each one's effects after
+       a mark that makes it what "that player" and "that card" are while they run, so each is bound and counted as it reaches
+       the head, as it would be repeated directly; and the resolution's own subject back after the last. */
+    if (effect?.effect === "repeatFor" && (effect.effects ?? []).some((inner) => ASKING[inner?.effect])) {
+      resolving.queue.shift();
+      const before = resolving.context.about;
+      const spliced = eachOf(state, effect.each, resolving.context).flatMap((about) => [{effect: "__about", about: {...(before ?? {}), ...about}}, ...structuredClone(effect.effects ?? [])]);
+      resolving.queue.unshift(...spliced, {effect: "__about", about: before});
+      continue;
+    }
+    if (effect?.effect === "__about") {
+      resolving.queue.shift();
+      if (effect.about === undefined) delete resolving.context.about; else resolving.context.about = effect.about;
+      continue;
+    }
+    if (effect?.effect === "empowerJace") {
+      const jace = {what: "permanent", token: true, subtypes: ["Jace"], controller: "you"};
+      const count = Math.max(0, effect.count ?? 0);
+      resolving.queue.shift();
+      resolving.queue.unshift({effect: "branch", if: {present: jace, atLeast: 2},
+        then: [{effect: "chooseCard", zone: "battlefield", selector: jace, count: 1, to: "stay", remember: true},
+          {effect: "putCounter", targets: "remembered", counter: "loyalty", count}],
+        otherwise: [{effect: "branch", if: {present: jace},
+          then: [{effect: "putCounterAll", selector: jace, counter: "loyalty", count}],
+          otherwise: [{effect: "createToken", count: 1, token: {predefined: "Jace"}, remember: true},
+            {effect: "putCounter", targets: "remembered", counter: "loyalty", count}]}]});
+      continue;
+    }
+    /* CR 903.9b: a commander this sends to its owner's hand or library may go to the command zone instead -- a
+       replacement, so the owners are asked before anything moves (effects/asking.mjs, commanderHome). */
+    const home = effect?.effect === "moveZone" || effect?.effect === "counterSpell" ? commandersGoingHome(state, effect) : [];
+    if (home.length) resolving.queue[0] = {effect: "commanderHome", commanders: home, move: effect};
+    /* CR 616.1: damage that two or more effects would change, where the order changes how it ends -- the player dealt it
+       chooses which applies first, before any of it is dealt (effects/asking.mjs, orderDamage). */
+    else if (damageQuestion(state, effect, resolving.context, effect?.damageOrders ?? {}))
+      resolving.queue[0] = {effect: "orderDamage", damage: effect, answers: effect.damageOrders ?? {}};
+    const head = resolving.queue[0];
+    const asking = ASKING[head?.effect];
 
     if (asking) {
       /* `open` returns false when there is nothing to ask about — an empty library to scry, a hand
          with nothing in it to discard. The effect is then simply done, rather than the game
-         stopping on a question with no answers. */
-      if (asking.open(state, effect, resolving.context)) {
+         stopping on a question with no answers. It returns {events} when it was done without asking
+         anybody (batch 80): a discard at random, nothing among the cards a dig may take. */
+      const opened = asking.open(state, head, resolving.context, rng);
+      if (opened === true) {
         state.awaiting.resolution = true;
-        return {status: "waiting", events: resolving.events};
+        return {status: "waiting", events: unreported(resolving)};
       }
+      if (opened && Array.isArray(opened.events)) resolving.events.push(...opened.events);
       resolving.queue.shift();
       continue;
     }
 
     resolving.queue.shift();
-    resolving.events.push(...runEffect(state, effect, resolving.context));
+    resolving.events.push(...runEffect(state, effect, resolving.context, rng));
   }
 
-  const events = resolving.events;
+  const events = unreported(resolving);
   state.resolving = null;
-  return {status: "done", events};
+  /* And all of them, for what triggers on them as a player would next receive priority (rules/turn.mjs). */
+  return {status: "done", events, all: resolving.events};
 }
 
 /**
@@ -128,7 +188,7 @@ export function answerResolution(state, indices, extra = {}, rng = null) {
      called again, because `apply` has already set up the next question. */
   if (!Array.isArray(outcome) && outcome.again === true) {
     state.awaiting.resolution = true;
-    return {status: "waiting", events};
+    return {status: "waiting", events: state.resolving ? unreported(state.resolving) : events};
   }
 
   state.awaiting = null;
@@ -144,7 +204,8 @@ export function answerResolution(state, indices, extra = {}, rng = null) {
   if (!Array.isArray(outcome) && Array.isArray(outcome.splice) && outcome.splice.length > 0) {
     state.resolving.queue.unshift(...outcome.splice);
   }
-  return runResolution(state);
+  /* What follows the answer has the same random stream the answer had. */
+  return runResolution(state, rng);
 }
 
 /** The choice record for whatever the resolution is asking (§12.1). */

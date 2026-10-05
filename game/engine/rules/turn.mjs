@@ -37,17 +37,21 @@
 
 import {cardsIn, moveObject} from "../state/index.mjs";
 import {attackers, blockers, combatDamage, endCombat} from "./combat.mjs";
-import {checkStateBasedActions, gameOver, finishCommanderReplacement} from "./sba.mjs";
+import {checkStateBasedActions, gameOver, finishCommanderReplacement, legendChoice, finishLegendRule} from "./sba.mjs";
 import {commanderChoice} from "./commander.mjs";
+import {damageOrderChoice} from "./replacement.mjs";
 import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
 import {answerResolution, resolutionChoice} from "../script/resolution.mjs";
 import {finishResolving} from "./stack.mjs";
 import {playerRuleChanged, untapsDuringOthers, ruleChanged} from "./statics.mjs";
 import {emptyRestricted} from "./restricted-mana.mjs";
-import {endCopies} from "../script/effects/permanents.mjs";
+import {endCopies, phaseIn} from "../script/effects/permanents.mjs";
+import {untapOne} from "../script/effects/resources.mjs";
 import {runEffect} from "../script/effects/index.mjs";
 import {askEntering, enteringChoice, resolveEnteringChoice} from "./entering.mjs";
-import {collectTriggers, openTriggers, triggerChoice, resolveTriggerOrder, triggerTargetsChoice, resolveTriggerTargets} from "./trigger.mjs";
+import {collectTriggers, openTriggers, triggerChoice, resolveTriggerOrder, triggerTargetsChoice, resolveTriggerTargets, triggerCountedChoice, resolveTriggerCounted} from "./trigger.mjs";
+import {chooseTargetsChoice, resolveChooseTargets, castCostChoice, resolveCastCost} from "./actions.mjs";
+import {deriving} from "./layers.mjs";
 
 /* The steps of a turn, CR 500.1, in order.
  *
@@ -129,14 +133,16 @@ const cardRef = (state, id) => {
 /* CR 502.1. The ACTIVE PLAYER's permanents untap, and nobody else's. This is not a board-wide
    effect, and writing it as one is the kind of bug that only shows when a game is close. */
 function untap(state, events) {
+  /* Phasing (CR 502.1, 702.26b): the active player's phased-out permanents phase in first, and then untap with the rest. */
+  if ((state.phasedOut ?? []).length) phaseIn(state, state.activePlayer);
   for (const id of state.zones.battlefield) {
     const o = state.objects[id];
     /* The active player's permanents (CR 502.3), and another player's that a static of theirs untaps now (Seedborn Muse). */
     if (!o.tapped || (o.controller !== state.activePlayer && !untapsDuringOthers(state, id))) continue;
     /* "Doesn't untap during your untap step" (Mana Vault, Meekstone). */
     if (ruleChanged(state, "doesnt-untap", id)) continue;
-    o.tapped = false;
-    events.push(event("GameEventCardTapped", state, {card: cardRef(state, id), tapped: false}));
+    /* A stun counter removed instead (CR 122.1d). */
+    untapOne(state, id, events);
   }
 }
 
@@ -180,21 +186,33 @@ function emptyManaPools(state, events) {
   }
 }
 
-/* CR 514.1 and 514.2, which happen simultaneously: the active player discards down to their
-   maximum hand size, and all damage wears off. Without the second, damage accumulates across turns
-   and every creature eventually dies to a scratch it took ten turns ago.
+/* THE CLEANUP STEP (CR 514), in its order. First the active player discards down to their maximum hand size (514.1);
+   then, at once, all damage wears off and every "until end of turn" and "this turn" effect ends (514.2) -- without that,
+   damage accumulates across turns and every creature eventually dies to a scratch it took ten turns ago.
  *
  * THE DISCARD IS A DECISION, SO THE ENGINE STOPS HERE AND ASKS. It does not pick cards. `awaiting`
  * is how a turn-based action that needs an answer reaches the driver: the engine runs until it
  * needs one, records what it needs, and returns. Declaring attackers and blockers (CR 508.1, 509.1)
- * are the same shape and arrive in 1.4 through the same field.
+ * are the same shape and arrive in 1.4 through the same field. The rest of the step waits for the answer
+ * (resolveAwaiting), so what lasts "this turn" -- "whenever you discard a card this turn" -- still sees the discard.
  *
- * What is NOT here: CR 514.3a's second cleanup step, which happens when something triggers during
- * cleanup or a state-based action is performed. There are no triggers until 1.6, so there is
- * nothing that could cause one; it is named so the omission is visible rather than forgotten. */
+ * Then CR 514.3a: no player receives priority in this step, unless a state-based action is performed or an ability
+ * triggered -- a discard trigger, a death -- and then the active player does, and once the stack is empty and all pass,
+ * another cleanup step begins (grantStepPriority, advance). */
 function cleanup(state, events) {
-  /* CR 514.2, as one event: all damage is removed from permanents AND every "until end of turn" effect ends. Without
-     the second half, a Giant Growth's +3/+3, Heroic Intervention's indestructible and Craterhoof's +X/+X lasted the
+  const player = state.players[state.activePlayer];
+  /* CR 800.4: a turn whose active player has left the game runs to its end without them, so nobody discards. */
+  /* CR 402.2: seven, unless a static ability says the player has no maximum hand size. */
+  const limit = playerRuleChanged(state, "no-maximum-hand-size", state.activePlayer) ? Infinity : (player.maxHandSize ?? 7);
+  const over = player.lost ? 0 : cardsIn(state, "hand", state.activePlayer).length - limit;
+  if (over > 0) { state.awaiting = {kind: "discard-to-hand-size", player: state.activePlayer, count: over}; return; }
+  endOfTurn(state);
+  void events;
+}
+
+/* CR 514.2, as one event: all damage is removed from permanents AND every "until end of turn" effect ends. */
+function endOfTurn(state) {
+  /* Without the second half, a Giant Growth's +3/+3, Heroic Intervention's indestructible and Craterhoof's +X/+X lasted the
      rest of the game -- and the scenarios, which look within a turn, never saw it. */
   for (const id of state.zones.battlefield) {
     if (state.objects[id].damage !== 0) state.objects[id].damage = 0;
@@ -205,17 +223,14 @@ function cleanup(state, events) {
   for (const effect of (state.effects ?? []).filter((e) => e.rule === "control-returns").reverse())
     for (const id of effect.affects?.ids ?? []) if (state.objects[id]) state.objects[id].controller = effect.apply.controller;
   if ((state.effects ?? []).some((effect) => effect.until === "end-of-turn")) state.effects = state.effects.filter((effect) => effect.until !== "end-of-turn");
+  /* "Until the end of your next turn" (script/effects/zones.mjs, mayPlay): over at the end of the first turn of that player
+     begun after it was made -- this one, if it was made before this turn began. */
+  if ((state.effects ?? []).some((e) => e.until === "your-next-end"))
+    state.effects = state.effects.filter((e) => !(e.until === "your-next-end" && e.sourceController === state.activePlayer && state.turn > e.madeOnTurn));
   /* "Becomes a copy of target artifact until end of turn" ends with them (effects/permanents.mjs). */
   endCopies(state);
   /* And a delayed trigger that lasted "this turn" ("whenever a creature dies this turn", CR 603.7b) ends with them. */
   if ((state.delayedTriggers ?? []).some((d) => d.thisTurn)) state.delayedTriggers = state.delayedTriggers.filter((d) => !d.thisTurn);
-  const player = state.players[state.activePlayer];
-  /* CR 800.4: a turn whose active player has left the game runs to its end without them, so nobody discards. */
-  /* CR 402.2: seven, unless a static ability says the player has no maximum hand size. */
-  const limit = playerRuleChanged(state, "no-maximum-hand-size", state.activePlayer) ? Infinity : (player.maxHandSize ?? 7);
-  const over = player.lost ? 0 : cardsIn(state, "hand", state.activePlayer).length - limit;
-  if (over > 0) state.awaiting = {kind: "discard-to-hand-size", player: state.activePlayer, count: over};
-  void events;
 }
 
 /**
@@ -225,18 +240,31 @@ function cleanup(state, events) {
  * and hands it to `resolveAwaiting`.
  */
 export function awaitingChoice(state) {
+  /* It only reads: every object it derives, derived once (rules/layers.mjs, deriving). */
+  return deriving(state, () => choiceFor(state));
+}
+function choiceFor(state) {
   const awaiting = state.awaiting;
   if (!awaiting) return null;
   if (awaiting.kind === "mulligan-decision" || awaiting.kind === "mulligan-bottom")
     return mulliganChoice(state, awaiting);
   if (awaiting.kind === "effect-choice") return resolutionChoice(state, awaiting);
   if (awaiting.kind === "commander-replacement") return commanderChoice(state, awaiting);
+  if (awaiting.kind === "legend-rule") return legendChoice(state, awaiting);
   if (awaiting.kind === "order-triggers") return triggerChoice(state, awaiting);
   if (awaiting.kind === "trigger-targets") return triggerTargetsChoice(state, awaiting);
+  /* A counted target ("up to two target creatures"), a trigger's or an offer's (CR 601.2c; script/bind.mjs). */
+  if (awaiting.kind === "choose-targets") return awaiting.stackId !== undefined ? triggerCountedChoice(state, awaiting) : chooseTargetsChoice(state, awaiting);
+  /* Escape's other cards (CR 702.138a), or a flashback cost's creatures (702.34a): which, asked once its cast is taken
+     (rules/actions.mjs). */
+  if (awaiting.kind === "choose-cost") return castCostChoice(state, awaiting);
   if (awaiting.kind === "entering-choice") return enteringChoice(state, awaiting);
   if (awaiting.kind === "declare-attackers") return attackers.choice(state, awaiting);
+  if (awaiting.kind === "attack-tax") return attackers.taxChoice(state, awaiting);
   if (awaiting.kind === "declare-blockers") return blockers.choice(state, awaiting);
   if (awaiting.kind === "assign-combat-damage") return combatDamage.choice(state, awaiting);
+  /* CR 616.1: which effect changes a hit of combat damage first, asked before any of it is dealt (rules/combat.mjs). */
+  if (awaiting.kind === "order-damage") return damageOrderChoice(state, awaiting);
   /* The held draw (item 13): one thing to do, and nothing else happens until it is done. */
   if (awaiting.kind === "draw-card")
     return {id: `draw:${state.turn}`, title: "Draw a card", kind: "draw", mode: "one", min: 1, max: 1, options: [{index: 0, label: "Draw a card"}]};
@@ -276,13 +304,22 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
     const outcome = answerResolution(state, indices, extra, rng);
     /* A spell that stopped to ask leaves the stack once its last effect has run (stack.mjs), and only then does
        anyone receive priority -- after state-based actions and triggers, as after any resolution (CR 117.5). */
-    const events = outcome.status === "done" ? [...outcome.events, ...finishResolving(state)] : outcome.events;
-    grantStepPriority(state, events);
+    const finished = outcome.status === "done" ? finishResolving(state) : [];
+    const events = [...outcome.events, ...finished];
+    /* Each event is handed back once, as it happened; what triggers reads the whole resolution once it is done, the
+       events before its questions too -- they triggered then, and wait for a player to receive priority (CR 603.2,
+       603.3): the life Uro gained before asking for a land still triggers "whenever you gain life". */
+    grantStepPriority(state, events, outcome.status === "done" ? [...(outcome.all ?? outcome.events), ...finished] : events);
     return events;
   }
 
   if (awaiting.kind === "commander-replacement") {
     const events = finishCommanderReplacement(state, awaiting, indices);
+    grantStepPriority(state, events);
+    return events;
+  }
+  if (awaiting.kind === "legend-rule") {
+    const events = finishLegendRule(state, awaiting, indices);
     grantStepPriority(state, events);
     return events;
   }
@@ -300,6 +337,19 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
     grantStepPriority(state, after);
     return [...events, ...after];
   }
+  /* A counted target picked: a trigger's, then the next trigger's targets, as trigger-targets goes on; an offer's, then the
+     offer taken -- cast or activated, its player holding priority after it (CR 117.3c, rules/actions.mjs applyAction). */
+  /* Escape's other cards, or a flashback cost's creatures, picked: the cast taken, its player holding priority after it
+     (CR 117.3c). */
+  if (awaiting.kind === "choose-cost") return resolveCastCost(state, awaiting, indices);
+  if (awaiting.kind === "choose-targets") {
+    if (awaiting.stackId === undefined) return resolveChooseTargets(state, awaiting, indices);
+    const events = resolveTriggerCounted(state, awaiting, indices);
+    collectTriggers(state, events);
+    const after = [];
+    grantStepPriority(state, after);
+    return [...events, ...after];
+  }
   if (awaiting.kind === "entering-choice") {
     const events = resolveEnteringChoice(state, awaiting, indices);
     grantStepPriority(state, events);
@@ -307,6 +357,12 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
   }
   if (awaiting.kind === "declare-attackers") {
     const events = attackers.resolve(state, awaiting, indices);
+    grantStepPriority(state, events);
+    return events;
+  }
+  /* What attacking costs, paid with the mana the attacker chose (CR 508.1i-j); then the attack is declared. */
+  if (awaiting.kind === "attack-tax") {
+    const events = attackers.payTax(state, awaiting, indices);
     grantStepPriority(state, events);
     return events;
   }
@@ -328,8 +384,17 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
   if (awaiting.kind === "assign-combat-damage") {
     const events = combatDamage.resolve(state, awaiting, amounts ?? indices);
     /* Another attacker may also face several blockers; each gets its own question, and only once
-       the last is answered is any damage dealt — CR 510.2, all of it at the same time. */
-    if (!combatDamage.open(state)) events.push(...combatDamage.deal(state));
+       the last is answered is any damage dealt — CR 510.2, all of it at the same time, and as the
+       damage of the step it was asked in (CR 510.4): a division in the first-strike step is
+       first-strike damage. */
+    const step = awaiting.step ?? "regular";
+    if (!combatDamage.open(state, step)) events.push(...combatDamage.deal(state, {step}));
+    grantStepPriority(state, events);
+    return events;
+  }
+  /* The order of the effects changing one hit (CR 616.1); then the step's damage is dealt, or the next such hit asked. */
+  if (awaiting.kind === "order-damage") {
+    const events = combatDamage.orderDamage(state, awaiting, indices);
     grantStepPriority(state, events);
     return events;
   }
@@ -351,16 +416,23 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
   for (const id of chosen) {
     const card = cardRef(state, id);
     const owner = state.objects[id].owner;
-    moveObject(state, id, "graveyard", owner);
+    const discarded = moveObject(state, id, "graveyard", owner);
     events.push(event("GameEventCardChangeZone", state, {
       card,
       from: {zoneType: ZONE_LABEL.hand, player: {playerId: awaiting.player}},
       to: {zoneType: ZONE_LABEL.graveyard, player: {playerId: owner}},
       discarded: true,
+      /* The card it became in the graveyard (CR 400.7e), as every discard says: what "whenever you discard a creature card"
+         and "put into your graveyard" read. */
+      becomes: discarded,
     }));
   }
   state.awaiting = null;
-  grantStepPriority(state, events);
+  /* What the discard triggered, as it happened (CR 603.2) -- a "this turn" ability among them, before CR 514.2 ends it;
+     then CR 514.2; then CR 514.3a, those triggers on the stack and the active player with priority. */
+  collectTriggers(state, events);
+  endOfTurn(state);
+  grantStepPriority(state, events, []);
   return events;
 }
 
@@ -406,11 +478,25 @@ function arrive(state, events) {
  * CR 704.3: state-based actions are checked WHENEVER A PLAYER WOULD RECEIVE PRIORITY, which makes
  * this the right and only place for it in the turn structure. Combat damage is dealt as this step
  * begins, so the creatures it killed are already gone by the time anybody could respond. */
-function grantStepPriority(state, events = []) {
-  if (hasPriority(state) && !state.awaiting) {
+function grantStepPriority(state, events = [], triggering = events) {
+  /* CR 514.3a: in the cleanup step, what happened in it -- a discard that triggered, a state-based action -- gives the
+     active player priority, the triggers on the stack first; and `cleanupAgain` makes the step happen again once the
+     stack is empty and everyone has passed (advance). */
+  if (state.phase === "CLEANUP" && !state.awaiting) {
+    collectTriggers(state, triggering);
+    const sba = checkStateBasedActions(state);
+    events.push(...sba);
+    collectTriggers(state, sba);
+    /* A trigger whose controller has left the game never goes on the stack (CR 800.4a; rules/trigger.mjs, openTriggers): it
+       is no reason for another step, or the step would repeat for ever. */
+    if (sba.length || (state.pendingTriggers ?? []).some((t) => !state.players[t.controller]?.lost)) {
+      state.cleanupAgain = true;
+      openTriggers(state);
+    }
+  } else if (hasPriority(state) && !state.awaiting) {
     /* What just happened triggers now (CR 603.2). A permanent that entered asking is then answered before anything
        else happens (rules/entering.mjs). */
-    collectTriggers(state, events);
+    collectTriggers(state, triggering);
     if (!askEntering(state)) {
       const sba = checkStateBasedActions(state);
       events.push(...sba);
@@ -419,13 +505,15 @@ function grantStepPriority(state, events = []) {
          already gone. `openTriggers` returns true when a player has more than one and has to be
          asked for the order, and that question holds priority off until it is answered. */
       collectTriggers(state, sba);
-      openTriggers(state);
+      /* Unless a state-based action is asking something (a commander's owner, CR 903.9a): the triggers wait for the
+         answer, as they do after a resolution (priority.mjs, afterResolving). */
+      if (!state.awaiting) openTriggers(state);
     }
   }
   /* Re-read after the above: a player can lose during their own turn, and ordering triggers can
      have set a new wait. Either way priority goes to nobody. */
   const active = state.players[state.activePlayer];
-  state.priorityPlayer = hasPriority(state) && !state.awaiting && active && !active.lost
+  state.priorityPlayer = (hasPriority(state) || (state.phase === "CLEANUP" && state.cleanupAgain === true)) && !state.awaiting && active && !active.lost
     ? state.activePlayer : null;
   return events;
 }
@@ -478,6 +566,13 @@ export function advance(state) {
   /* CR 500.4, on the way out of the step that is ending. */
   emptyManaPools(state, events);
 
+  /* CR 514.3a: a cleanup step that gave priority is followed by another. */
+  if (state.phase === "CLEANUP" && state.cleanupAgain === true) {
+    state.cleanupAgain = false;
+    arrive(state, events);
+    return events;
+  }
+
   /* CR 500.8: phases added after the one now ending go directly after it -- the most recently added first -- and then the
      turn goes on from where it was (`resumeAfter`). A conditional step among them happens only if it would. */
   const due = (state.extraPhases ?? []).filter((added) => added.turn === state.turn && added.after === state.phase);
@@ -505,6 +600,10 @@ export function advance(state) {
     state.players[state.activePlayer].turnBegan = state.turn;   /* CR 302.6, keywords/timing.mjs */
     /* "Until your next turn" (goad, CR 701.15a): over as that player's turn begins. */
     state.effects = (state.effects ?? []).filter((e) => !(e.until === "your-next-turn" && e.sourceController === state.activePlayer));
+    /* And "until that player's next turn" (Teferi's Reproach): over as that player's turn begins. */
+    state.effects = state.effects.filter((e) => !(e.until === "their-next-turn" && (e.players ?? []).includes(state.activePlayer)));
+    /* And a delayed trigger that lasted until then (effects/permanents.mjs, `untilYourNextTurn`). */
+    if ((state.delayedTriggers ?? []).some((d) => d.untilYourNextTurn)) state.delayedTriggers = state.delayedTriggers.filter((d) => !(d.untilYourNextTurn && d.controller === state.activePlayer));
     /* CR 305.2 says "already played a land THIS TURN", so the count is per turn and resets for
        everyone, not only for whoever is about to take it. The difference shows the moment an
        effect lets somebody play a land on another player's turn: resetting only the active
@@ -517,7 +616,20 @@ export function advance(state) {
     state.stepQueue = [];
     state.resumeAfter = null;
     state.combatsThisTurn = 0;
-    for (const player of state.players) if (player.lostThisTurn) player.lostThisTurn = 0;
+    for (const player of state.players) {
+      if (player.lostThisTurn) player.lostThisTurn = 0;
+      /* And the loyalty abilities each activated (rules/actions.mjs). */
+      if (player.loyaltyThisTurn) player.loyaltyThisTurn = 0;
+      /* And what each gained and made this turn (script/amount.mjs, lifeGainedThisTurn, tokensCreatedThisTurn). */
+      if (player.gainedThisTurn) player.gainedThisTurn = 0;
+      if (player.tokensThisTurn) player.tokensThisTurn = 0;
+      /* And how many permanents left the battlefield under each one's control (state/index.mjs, revolt), and what entered
+         under it (rules/trigger.mjs, recordArrivals). */
+      if (player.leftThisTurn) player.leftThisTurn = 0;
+      if (player.enteredThisTurn) player.enteredThisTurn = [];
+      /* And whether each was dealt combat damage (rules/combat.mjs). */
+      if (player.combatDamagedThisTurn) player.combatDamagedThisTurn = false;
+    }
     next = 0;
   }
 
