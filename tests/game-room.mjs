@@ -262,6 +262,8 @@ try {
   const room = await startRoom({storage: memoryStorage(), matchId: "refused1", cards: refusalCards, pod, seed: "refused"});
   const said = room.history.filter((h) => /was refused/.test(h.text));
   ok(said.length > 0 && /cost \{\d+\} to attack with/.test(said[0].text), `the refused attack is said in the history (${said[0]?.text})`);
+  ok(room.refusals.total >= said.length && room.refusals.since === 0 && /cost \{\d+\} to attack with/.test(room.refusals.first[0].reason),
+    `and counted in the match's own tally, which the history's window cannot shorten (${room.refusals.total} refused, ${said.length} still in the history)`);
   ok(room.status === "finished" || room.history.length > 0, "and the game went on past it rather than stopping the table");
 }
 

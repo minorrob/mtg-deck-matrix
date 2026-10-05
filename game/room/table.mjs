@@ -121,9 +121,10 @@ function readSource(source) {
  * The table over its storage (a Durable Object's own, in the cloud).
  *
  * @param {object} storage  the M4 storage contract
- * @param {{cards?: Function, random?: (n: number) => Uint8Array}} options
+ * @param {{cards?: Function, random?: (n: number) => Uint8Array, slice?: number}} options  `slice`: the engine steps a
+ *   room plays in one call before it stops for the object's alarm to play on (game/room/room.mjs, `continuing`)
  */
-export function tableOn(storage, {cards = basicCards, random = (n) => crypto.getRandomValues(new Uint8Array(n))} = {}) {
+export function tableOn(storage, {cards = basicCards, random = (n) => crypto.getRandomValues(new Uint8Array(n)), slice} = {}) {
   let record = null, room = null;
   const load = async () => {
     if (!record) record = JSON.parse((await storage.get(KEY)) || "null");
@@ -299,8 +300,10 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
     /** When the countdown has run out: launch the room with each seat's deck. Nothing happens early. */
     async tick(now, {storageForRoom = storage} = {}) {
       await load();
+      /* While the AI seats play on (the room's `continuing`), a leave waits: the alarm that plays on comes back for it. */
+      const playingOn = record.lifecycle.phase === "playing" && (await api.currentRoom())?.continuing;
       for (const [seat, until] of Object.entries(record.away || {})) {
-        if (until <= now && record.lifecycle.phase === "playing") await leaveSeat(Number(seat), "timed-out", now);
+        if (until <= now && record.lifecycle.phase === "playing" && !playingOn) await leaveSeat(Number(seat), "timed-out", now);
       }
       const t = record.lifecycle;
       if (t.phase !== "countdown" || now < t.countdownAt) return null;
@@ -313,7 +316,7 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       /* The table's two beats (items 11 and 13): the draw waits for its click; a step with nothing to do passes itself. */
       drawBeat: true, passEmpty: true};
       try {
-        room = await startRoom({storage: storageForRoom, matchId, cards, pod, seed: `${matchId}:${now}`});
+        room = await startRoom({storage: storageForRoom, matchId, cards, pod, seed: `${matchId}:${now}`, slice});
         step({type: "engine-started", launchId: matchId, matchId}, now);
         record.matches.push(matchId);
       } catch (error) {
@@ -364,11 +367,13 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       await save();
     },
 
-    /** When the object should next wake: the countdown's end, or the first dropped player's time running out. */
-    async nextAlarm() {
+    /** When the object should next wake: the countdown's end, the first dropped player's time running out, or now, while
+        the AI seats play on in slices. */
+    async nextAlarm(now = Date.now()) {
       await load();
       const times = Object.values(record.away || {});
       if (record.lifecycle.phase === "countdown") times.push(record.lifecycle.countdownAt);
+      if (record.lifecycle.phase === "playing" && (await api.currentRoom())?.continuing) times.push(now);
       return times.length ? Math.min(...times) : null;
     },
 
@@ -376,7 +381,7 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
     async currentRoom() {
       await load();
       if (record.lifecycle.phase !== "playing") return null;
-      if (!room || room.matchId !== record.lifecycle.matchId) room = await openRoom({storage, matchId: record.lifecycle.matchId, cards});
+      if (!room || room.matchId !== record.lifecycle.matchId) room = await openRoom({storage, matchId: record.lifecycle.matchId, cards, slice});
       return room;
     },
 
@@ -385,7 +390,7 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       await load();
       const seat = needSeat(email);
       if (record.lifecycle.phase !== "playing") throw new TableError(409, "No game is being played at this table.");
-      if (!room || room.matchId !== record.lifecycle.matchId) room = await openRoom({storage, matchId: record.lifecycle.matchId, cards});
+      if (!room || room.matchId !== record.lifecycle.matchId) room = await openRoom({storage, matchId: record.lifecycle.matchId, cards, slice});
       return {room, seatId: seatName(seat)};
     },
 
@@ -395,6 +400,8 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
      * it is the whole game -- its seed, pod, decision tape and journal, which game/room/replay.mjs plays again --
      * so a finding can be seen happen twice. On any other table it is the asking seat's own: its last view and
      * the public history, never the seed (which with the pod would deal every hand again) or the tape.
+     * Both carry the match's tally of refused AI answers (`refusals`), counted over the whole game, not read off the
+     * history, which keeps only its newest lines.
      * Nobody's address is in either: the room only ever knew "s0".."s3".
      */
     async record(email, matchId) {
@@ -405,7 +412,7 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       if (game.status !== "finished") throw new TableError(409, "A game's record is ready once the game is over.");
       const seatId = seatName(seat);
       if (!game.seats.some((s) => s.seatId === seatId)) throw new TableError(403, "You did not have a seat in that game.");
-      const mine = game.view(seatId), base = {schema: RECORD_SCHEMA, tableId: record.tableId, matchId: id, playtest: !!record.playtest, result: mine.result, departures: mine.departures, seats: game.seats, history: game.history};
+      const mine = game.view(seatId), base = {schema: RECORD_SCHEMA, tableId: record.tableId, matchId: id, playtest: !!record.playtest, result: mine.result, departures: mine.departures, seats: game.seats, history: game.history, refusals: game.refusals};
       if (!record.playtest) return {...base, kind: "seat", seatId, view: mine};
       const store = createMatchStore(storage, id), meta = await store.loadMatch();
       return {...base, kind: "full", seed: meta.seed, pod: meta.pod, tape: await store.readTape(), journal: await store.readJournal()};

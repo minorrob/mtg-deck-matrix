@@ -42,10 +42,16 @@ const JSON_HEADERS = {"content-type": "application/json; charset=utf-8", "cache-
 const reply = (status, value) => new Response(JSON.stringify(value), {status, headers: JSON_HEADERS});
 const MAX_FRAME = 16 * 1024;
 const MATCH_KEY = "room-match";
+/* The engine steps a room plays in one request or alarm before it stops and the alarm plays on (game/room/room.mjs,
+   `continuing`): a Durable Object has 30 s of CPU for each. A whole game of four house pilots is 1,500 to 4,500 steps,
+   and a step late in a big game costs up to about 20 ms: at 250 the longest slice of engine-room-games' ten pinned games
+   took 5.0 s on the cloud container (Node 22, 2026-10-05), and the slowest machine measured runs these games about 2.6
+   times slower (docs/review-response-2026-10-05.md, "Slices"). A person's decision ends a slice sooner. */
+export const SLICE_STEPS = 250;
 
 export class GameRoom {
-  constructor(ctx, env, {cards = tableCards} = {}) {
-    this.ctx = ctx; this.env = env; this.cards = cards; this.room = null;
+  constructor(ctx, env, {cards = tableCards, slice = SLICE_STEPS} = {}) {
+    this.ctx = ctx; this.env = env; this.cards = cards; this.slice = slice; this.room = null;
     this.storage = objectStorage(ctx.storage);
   }
 
@@ -53,7 +59,7 @@ export class GameRoom {
     if (this.room) return this.room;
     const matchId = await this.ctx.storage.get(MATCH_KEY);
     if (!matchId) return null;
-    this.room = await openRoom({storage: this.storage, matchId, cards: this.cards});
+    this.room = await openRoom({storage: this.storage, matchId, cards: this.cards, slice: this.slice});
     return this.room;
   }
 
@@ -63,8 +69,9 @@ export class GameRoom {
       if (request.method === "POST" && url.pathname === "/start") {
         if (await this.load()) return reply(409, {error: "This table already has a game."});
         const {matchId, seed, pod} = await request.json();
-        this.room = await startRoom({storage: this.storage, matchId: String(matchId || ""), cards: this.cards, pod, seed});
+        this.room = await startRoom({storage: this.storage, matchId: String(matchId || ""), cards: this.cards, pod, seed, slice: this.slice});
         await this.ctx.storage.put(MATCH_KEY, this.room.matchId);
+        await this.schedule();
         return reply(201, {matchId: this.room.matchId, seats: this.room.seats});
       }
       const room = await this.load();
@@ -108,7 +115,7 @@ export class GameRoom {
     try {
       const {receipt, changed} = await room.act(seatId, request);
       send({type: "receipt", receipt});
-      if (changed) this.broadcast();
+      if (changed) {this.broadcast(); await this.schedule();}
     } catch (error) {
       if (!(error instanceof RoomError)) throw error;
       send({type: "refused", actionId: request.actionId ?? null, error: error.message, view: room.view(seatId)});
@@ -116,6 +123,16 @@ export class GameRoom {
   }
 
   async webSocketClose(socket, code) {try {socket.close(code, "closing");} catch {}}
+
+  /** While the AI seats play on in slices, the alarm comes straight back for the next one. */
+  async schedule() {
+    if (this.room && this.room.continuing) await this.ctx.storage.setAlarm(Date.now());
+  }
+  async alarm() {
+    const room = await this.load();
+    if (room && room.continuing) {await room.resume(); this.broadcast();}
+    await this.schedule();
+  }
 
   /** Every connected seat gets its own view: never another seat's, whatever sockets are open. */
   broadcast() {
@@ -150,7 +167,7 @@ export class GameTable extends GameRoom {
   constructor(ctx, env, options = {}) {
     super(ctx, env, options);
     this.now = options.now || (() => Date.now());
-    this.table = tableOn(this.storage, {cards: this.cards, ...(options.random ? {random: options.random} : {})});
+    this.table = tableOn(this.storage, {cards: this.cards, slice: this.slice, ...(options.random ? {random: options.random} : {})});
   }
 
   async load() {
@@ -199,13 +216,15 @@ export class GameTable extends GameRoom {
 
   /** Set the one alarm to whichever clock runs out first, or clear it. */
   async schedule() {
-    const next = await this.table.nextAlarm();
+    const next = await this.table.nextAlarm(this.now());
     if (next === null) await this.ctx.storage.deleteAlarm(); else await this.ctx.storage.setAlarm(next);
   }
 
-  /** The countdown's end, or a dropped player's time running out. Whatever has not run out waits for the next alarm. */
+  /** The countdown's end, a dropped player's time running out, or the AI seats' next slice. Whatever has not run out
+      waits for the next alarm. */
   async alarm() {
     const room = await this.load();
+    if (room && room.continuing) await room.resume();
     await this.table.tick(this.now());
     await this.schedule();
     await this.share(room);

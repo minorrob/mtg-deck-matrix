@@ -28,7 +28,14 @@ let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
 
 const SEEDS = [1, 2, 4, 6, 7, 8, 9, 10, 11, 12];
-/* Seconds a game may take here: the slowest held seed (10) takes about eleven on this suite's machines, alone. */
+/* Seconds a game may take here. THE BUDGET IS A MACHINE'S, AND SAYS WHICH (the independent review of 2026-10-05, F-2).
+   Measured alone on the cloud container (Node 22.22, 4 cores, 2026-10-05; docs/review-response-2026-10-05.md): the
+   slowest held seed is 1, about 18 s; the rest 1.5-6 s. Seed 11 took 4 s when this budget was set (5022e161), 21 s by
+   the code freeze -- the house pilot casting in one action (X8a) put more effects on the board, and ordering a layer's
+   effects asked each pair again on every pass, four deep copies a trial -- and 5 s since that was fixed, the same game
+   event for event. Node 24 runs it no slower than 22. The review's Windows machine ran these games 2 to 2.6 times
+   slower than the container, and slower again beside other jobs: there seed 1 is near the budget. A game over it on a
+   machine like the container's is a regression to find; on a slower one, say which machine before moving the number. */
 const BUDGET_MS = 45000;
 
 const all = JSON.parse(readFileSync(new URL("./fixtures/room-games-pool.json", import.meta.url), "utf8")).names;
@@ -59,7 +66,8 @@ for (const seed of SEEDS) {
     assert.fail(`seed ${seed}: the game threw -- ${error.message}`);
   }
   const ms = Date.now() - started, turns = Math.max(...room.history.map((h) => h.turn));
-  const refused = room.history.filter((h) => /was refused/.test(h.text)).length;
+  /* The room's own tally (F-1 of the review of 2026-10-05): the history keeps only its newest 300 lines. */
+  const refused = room.refusals.total;
   ok(room.status === "finished", `seed ${seed}: four house pilots played their decks of the engine's own cards to the end (${turns} turns)`);
   ok(ms <= BUDGET_MS, `seed ${seed}: inside the budget of ${BUDGET_MS / 1000} s (${(ms / 1000).toFixed(1)} s)`);
   played.push(`${seed}: ${turns} turns, ${(ms / 1000).toFixed(1)} s${refused ? `, ${refused} refused answer${refused === 1 ? "" : "s"} survived` : ""}`);

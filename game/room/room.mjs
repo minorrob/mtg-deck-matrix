@@ -56,6 +56,7 @@ const MAX_CARDS = 250;           // a Commander deck is 100; this is only a boun
 const DRIVE_LIMIT = 100000;      // engine steps between two human decisions before the room calls it a hang
 const HISTORY_KEEP = 300;         // lines of the table's history kept with the room
 const HISTORY_VIEW = 120;         // the newest of them, in every view
+const REFUSALS_SAID = 20;         // refused pilot answers kept in full with the match's tally; the count itself is never trimmed
 /* The steps as the history names them when one passes by itself (the untap and cleanup steps give no priority). */
 const QUIET_STEP = {UPKEEP: "Upkeep", DRAW: "Draw step", MAIN1: "Main 1", COMBAT_BEGIN: "Beginning of combat", COMBAT_DECLARE_ATTACKERS: "Declare attackers",
   COMBAT_DECLARE_BLOCKERS: "Declare blockers", COMBAT_FIRST_STRIKE_DAMAGE: "First-strike damage", COMBAT_DAMAGE: "Combat damage", COMBAT_END: "End of combat",
@@ -230,8 +231,12 @@ function priorityChoice(id, actions, state = null, seat = null) {
  * @param {object} storage  the M4 storage contract (get/put/delete/list); a Durable Object's own, in the cloud
  * @param {(name: string) => ?object} cards  a card's definition for `addObject`, or null when the engine
  *   cannot play it
+ * @param {Function} makePilot  what answers for an AI seat: the house pilot. A suite may pass its own (one that answers
+ *   wrongly on purpose, to prove the refusal tally); the table never does
+ * @param {number} slice  engine steps one call may take before it stops, saved, for `resume` (the Durable Object's
+ *   alarm) to play on from; unbounded unless given
  */
-function roomOn(storage, matchId, cards) {
+function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinity) {
   const store = createMatchStore(storage, matchId);
   const ROOM_KEY = `room/${matchId}`;
   const facts = factsFrom(cards);
@@ -248,6 +253,26 @@ function roomOn(storage, matchId, cards) {
   let leaving = [], departures = {}, ended = null;
   /* THE TABLE'S HISTORY (game/room/history.mjs): public lines only, the same for every seat, kept with the room. */
   let history = [];
+  /* EVERY REFUSED PILOT ANSWER, COUNTED FOR THE WHOLE MATCH (the independent review of 2026-10-05, F-1). The history keeps
+     its newest HISTORY_KEEP lines, so a refusal said there early in a long game is gone by its end, and a count read off
+     the history is a count of the lines that survived -- a game of four house pilots runs from its first turn to its last
+     inside one call, far past 300 lines. This is the match's own tally, saved with the room and never trimmed: `total`,
+     and the first REFUSALS_SAID of them in full. `since` is the journal sequence the tally began at: 0 for a match counted
+     from its first event. A room saved before the tally existed counts from where it is reopened and says so, rather
+     than claiming a zero it never measured. */
+  let refusals = {total: 0, since: 0, first: []};
+  /* PLAYED IN SLICES WHERE A REQUEST'S TIME IS CAPPED (the review of 2026-10-05; Cloudflare gives a Durable Object 30 s of
+     CPU per request or alarm). Between two people's decisions the AI seats play inside one call, and once every person
+     is out of the game the rest of it is AI seats alone: four house pilots ran 3 to 100 s to a game's end in the review.
+     So a room given a `slice` stops after that many engine steps with nobody asked (`continuing`), saved like any other
+     point of the game, and `resume` plays on from there. The engine and its pilots are deterministic and the house pilot
+     keeps nothing between calls, so a game played in slices is the game played in one go -- its replay, which never
+     stops, reaches the same journal. `driven` is the steps since a person was last asked, across slices, so a game that
+     never asks anyone still stops at DRIVE_LIMIT. While the AI seats play on, a person can neither leave nor end the
+     game: the tape would place that where a replay cannot (after the AI seats, not among them), so it is refused, with
+     when to try again. Time is counted in steps, not milliseconds, because a Worker's clock does not move while it
+     computes. */
+  let continuing = false, driven = 0;
   /* ITEM 11: whether a person with nothing to do passes by itself, and what the step in progress has seen -- a pass
      the room made for someone, and anything anyone chose to do (a person's pass counts: they could have acted). */
   let passEmpty = false, step = {key: null, quiet: false, acted: false};
@@ -267,7 +292,7 @@ function roomOn(storage, matchId, cards) {
   const tape = (entry) => {unsaved.push({n: tapeN, turn: state ? state.turn : 0, ...entry}); tapeN += 1;};
   const note = (text) => {history.push({turn: state ? state.turn : 0, text}); if (history.length > HISTORY_KEEP) history.splice(0, history.length - HISTORY_KEEP);};
   const finished = () => Boolean(ended) || Boolean(gameOver(state));
-  const pilotFor = (seat) => pilots[seat] || (pilots[seat] = housePilot({seat, cards: facts}));
+  const pilotFor = (seat) => pilots[seat] || (pilots[seat] = makePilot({seat, cards: facts}));
 
   const write = (events) => {
     const names = seats.map((s) => s.name);
@@ -286,14 +311,20 @@ function roomOn(storage, matchId, cards) {
       return resolveAwaiting(state, a.indices, a.amounts, rng, a);
     } catch (error) {
       note(`${seats[seat].name}'s answer to "${choice.title}" was refused: ${error.message}. The least answer was given instead.`);
+      refusals.total += 1;
+      if (refusals.first.length < REFUSALS_SAID) refusals.first.push({turn: state.turn, seatId: seats[seat].seatId, question: choice.title, reason: error.message});
       const least = leastAnswer(choice);
       return resolveAwaiting(state, least.indices, least.amounts, rng, least);
     }
   }
 
   function drive() {
-    for (let steps = 0; steps < DRIVE_LIMIT; steps += 1) {
-      if (finished()) {pendingSeat = null; pendingActions = null; return;}
+    continuing = false;
+    for (let steps = 0; ; steps += 1) {
+      if (finished()) {pendingSeat = null; pendingActions = null; driven = 0; return;}
+      if (driven >= DRIVE_LIMIT) throw new RoomError(500, "The game stopped moving: the engine took too many steps without a decision. Nothing further was applied.");
+      if (steps >= slice) {continuing = true; pendingSeat = null; pendingActions = null; return;}
+      driven += 1;
       if (state.stepIndex !== undefined && leaving.length) {
         for (const seat of leaving) if (!state.players[seat].lost) write(concede(state, seat));
         leaving = [];
@@ -308,7 +339,7 @@ function roomOn(storage, matchId, cards) {
           write(answerForPilot(seat, choice, a));
           continue;
         }
-        controller.offer(choice); pendingSeat = seat; pendingActions = null; return;
+        controller.offer(choice); pendingSeat = seat; pendingActions = null; driven = 0; return;
       }
       if (state.stepIndex === undefined) {write(beginGame(state)); continue;}
       if (state.priorityPlayer === null) {write(advance(state)); continue;}
@@ -316,10 +347,13 @@ function roomOn(storage, matchId, cards) {
       if (seats[seat].pilot === "house") {apply(seat, pilots[seat].choose(projectFor(state, seat), actions), "pilot"); continue;}
       if (passEmpty && nothingToDo(state, seat, actions)) {apply(seat, actions.find((a) => a.kind === "pass"), "room"); continue;}
       controller.offer(priorityChoice(`priority:${state.turn}:${state.stepIndex}:${controller.revision}`, actions, state, seat));
-      pendingSeat = seat; pendingActions = actions; return;
+      pendingSeat = seat; pendingActions = actions; driven = 0; return;
     }
-    throw new RoomError(500, "The game stopped moving: the engine took too many steps without a decision. Nothing further was applied.");
   }
+  /* Leaving or ending while the AI seats play on is refused, with when to try again (see `continuing`). */
+  const notWhileContinuing = (what) => {
+    if (continuing) throw new RoomError(409, `The AI players are still taking their turns (turn ${state.turn}). ${what} once they stop, in a few seconds.`, {continuing: true});
+  };
   /* The open question, withdrawn: the controller keeps its receipts and moves its revision on, so an answer
      already in flight to the withdrawn question is refused as stale rather than applied to a changed board. */
   /* A taped answer stands in for the controller's: the question is closed and the revision moves on, but what was
@@ -369,7 +403,7 @@ function roomOn(storage, matchId, cards) {
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
-    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history, ...(passEmpty ? {passEmpty, step} : {})}));
+    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history, refusals, ...(continuing ? {continuing, driven} : {}), ...(passEmpty ? {passEmpty, step} : {})}));
   }
 
   const api = {
@@ -380,6 +414,10 @@ function roomOn(storage, matchId, cards) {
     get waitingOn() {return pendingSeat === null ? null : seats[pendingSeat].seatId;},
     /** Every line of the table's history the room keeps (a view shows the newest): public, the same for every seat. */
     get history() {return history.map(({turn, text, mark}) => ({turn, text, ...(mark ? {mark} : {})}));},
+    /** The match's tally of refused pilot answers, whatever the history still holds: `{total, since, first}`. */
+    get refusals() {return structuredClone(refusals);},
+    /** True when a slice ran out with nobody asked: `resume` plays on. */
+    get continuing() {return continuing && !finished();},
 
     async start(pod, seed) {
       seats = readPod(pod, cards);
@@ -398,7 +436,7 @@ function roomOn(storage, matchId, cards) {
       rng = createRng(seed);
       journal = createJournal({matchId, seed});
       controller = createController();
-      pilots = seats.map((s, seat) => (s.pilot === "house" ? housePilot({seat, cards: facts}) : null));
+      pilots = seats.map((s, seat) => (s.pilot === "house" ? makePilot({seat, cards: facts}) : null));
       await store.saveMatch({pod: {seats, ...(startingLife !== undefined ? {startingLife} : {}), ...beats}, seed});
       write(beginMulligans(state, rng));
       drive();
@@ -413,11 +451,13 @@ function roomOn(storage, matchId, cards) {
       if (!point || point.sequence !== record.sequence) throw new RoomError(500, "This table's saved game does not match its record, so it was not resumed.");
       passEmpty = record.passEmpty === true; step = record.step || {key: null, quiet: false, acted: false};
       seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; history = record.history || [];
+      refusals = record.refusals || {total: 0, since: point.sequence, first: []};
+      continuing = record.continuing === true; driven = record.driven || 0;
       state = structuredClone(point.state);
       rng = createRng(point.seed, point.rng);
       journal = createJournal({matchId, seed: point.seed}, point);
       controller = createController(record.controller);
-      pilots = seats.map((s, seat) => (s.pilot === "house" ? housePilot({seat, cards: facts}) : null));
+      pilots = seats.map((s, seat) => (s.pilot === "house" ? makePilot({seat, cards: facts}) : null));
       saved = 0;
       tapeN = (await store.readTape()).length;
       return api;
@@ -440,16 +480,26 @@ function roomOn(storage, matchId, cards) {
         decision: mine ? structuredClone(controller.pending) : null,
         state: projectFor(state, seat),
         history: history.slice(-HISTORY_VIEW).map(({turn, text, mark}) => ({turn, text, ...(mark ? {mark} : {})})),
+        ...(api.continuing ? {continuing: true} : {}),
       };
     },
 
+    /** Play on from where a slice stopped, to the next person's decision, the end, or the next slice. */
+    async resume() {
+      if (!api.continuing) return api;
+      drive();
+      await persist();
+      return api;
+    },
+
     /**
-     * A FINGERPRINT OF THE GAME, never the game: the state's hash, how many events the journal holds, and the
-     * tape's length (the stored journal itself is compared by game/room/replay.mjs). Two rooms with the same fingerprint are the same game, which is how a replay is proved; nothing about
+     * A FINGERPRINT OF THE GAME, never the game: the state's hash, how many events the journal holds, the
+     * tape's length (the stored journal itself is compared by game/room/replay.mjs), and how many pilot answers the rules
+     * refused (F-1: a replay that reaches the same state by another road is not the same game). Two rooms with the same fingerprint are the same game, which is how a replay is proved; nothing about
      * a hidden card can be read back out of it.
      */
     fingerprint() {
-      return {hash: hashState(state), events: journal.checkpoint(state, rng.checkpoint()).sequence, tape: tapeN, status: finished() ? "finished" : "playing"};
+      return {hash: hashState(state), events: journal.checkpoint(state, rng.checkpoint()).sequence, tape: tapeN, refused: refusals.total, status: finished() ? "finished" : "playing"};
     },
 
     /**
@@ -481,6 +531,7 @@ function roomOn(storage, matchId, cards) {
       if (!["conceded", "timed-out"].includes(why)) throw new RoomError(400, "A seat leaves by conceding or by timing out.");
       if (finished()) throw new RoomError(409, "This game is over.");
       if (departures[seatId]) throw new RoomError(409, "That seat has already left the game.");
+      notWhileContinuing(why === "timed-out" ? "Their time runs out" : "You can leave the game");
       withdraw();
       departures[seatId] = why;
       tape({kind: "leave", seat: seatId, why});
@@ -496,6 +547,7 @@ function roomOn(storage, matchId, cards) {
       const seat = seatIndex(seatId);
       if (seat < 0) throw new RoomError(403, "That seat is not at this table.");
       if (finished()) throw new RoomError(409, "This game is over.");
+      notWhileContinuing("You can end the game");
       withdraw();
       ended = {by: seatId};
       tape({kind: "end", seat: seatId});
@@ -538,5 +590,5 @@ function roomOn(storage, matchId, cards) {
   return api;
 }
 
-export const startRoom = ({storage, matchId, cards = basicCards, pod, seed}) => roomOn(storage, matchId, cards).start(pod, seed);
-export const openRoom = ({storage, matchId, cards = basicCards}) => roomOn(storage, matchId, cards).open();
+export const startRoom = ({storage, matchId, cards = basicCards, pod, seed, pilot, slice}) => roomOn(storage, matchId, cards, pilot, slice).start(pod, seed);
+export const openRoom = ({storage, matchId, cards = basicCards, pilot, slice}) => roomOn(storage, matchId, cards, pilot, slice).open();
