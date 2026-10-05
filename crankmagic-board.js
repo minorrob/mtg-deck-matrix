@@ -377,6 +377,8 @@ globalThis.CrankBoard = Object.freeze({
       return s.stack.length ? "You may respond" : "";
     }
     if (d) return d.kind === "draw" ? "" : d.title;
+    /* The room plays the AI seats in slices (game/room/room.mjs, `continuing`): nobody is asked until they stop. */
+    if (view.continuing) return "The AI players are taking their turns…";
     return view.waitingOn ? `Waiting on ${view.waitingOn === view.seatId ? "you" : seatName(view.waitingOn)}` : "";
   };
   const canPass = () => {const d = view.decision; return !!d && d.kind === "priority" && !sending && view.status !== "finished";};

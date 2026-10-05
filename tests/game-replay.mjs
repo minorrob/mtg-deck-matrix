@@ -102,6 +102,6 @@ const short = tape.slice(0, 50), part = await replayTape({matchId, pod: meta.pod
 ok(part.fingerprint().hash !== proof.original.hash && part.fingerprint().tape === 50, "a truncated tape is a different, earlier game, not the stored one");
 
 /* PRIVATE */
-eq(Object.keys(proof.original).sort(), ["events", "hash", "journal", "status", "tape"], "a fingerprint is hashes and counts");
+eq(Object.keys(proof.original).sort(), ["events", "hash", "journal", "refused", "status", "tape"], "a fingerprint is hashes and counts (the refused AI answers among them, F-1)");
 ok(!/Bear|Wolf|Wurm|Elf|Grove|General/.test(JSON.stringify(proof)), "and names no card");
 console.log(`game-replay: ${checks} checks passed — ${decisions} decisions and ${tape.length} tape entries replay to the same game from the seed, and a tampered tape is refused where it parts.`);

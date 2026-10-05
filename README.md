@@ -469,6 +469,12 @@ logged events, the commander tally equal to the combat damage dealt). `engine-ro
 seeded four-seat games of the engine's own definitions through the cloud table's card source and
 the real room, house pilots in every seat, each to its end with no exception inside a time budget, dealt from a pinned
 pool of cards (`tests/fixtures/room-games-pool.json`) so a batch of new definitions does not change every seed's decks.
+`room-refusals` holds the room's tally of refused AI answers to the whole match (the review of 2026-10-05, F-1): a
+refusal at the opening hand of a game that outruns the history's 300-line window is still counted at its end, after
+every reopening and in its replay, and `tools/fuzz-live.mjs`, the seeded-games harness for a library's decks, fails
+any game with one. `room-slices` holds the room played in slices where a request's CPU is capped (a Durable Object's
+30 s): the AI seats stop after a step budget with nobody asked and the object's alarm plays on, the sliced game the
+same game as one played in one go and as its replay, leaving and ending refused with instructions until they stop.
 `engine-derive-once` holds the layers' memo: each object derived once per question and guard level, the same answers as
 without it on a board where the guard levels differ, a question that only reads changing nothing, and the work linear in
 the board. `engine-targets-up-to`
@@ -761,7 +767,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 306 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 308 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -943,6 +949,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `mobile-r3` — `tests/mobile-r3.mjs`
 - `ai-door` — `tests/ai-door.mjs`
 - `game-room` — `tests/game-room.mjs`
+- `room-refusals` — `tests/room-refusals.mjs`
+- `room-slices` — `tests/room-slices.mjs`
 - `game-table` — `tests/game-table.mjs`
 - `game-leave` — `tests/game-leave.mjs`
 - `table-lobby` — `tests/table-lobby.mjs`

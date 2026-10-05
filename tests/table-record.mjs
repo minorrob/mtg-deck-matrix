@@ -67,6 +67,8 @@ async function playedTable(tableId, {playtest = false} = {}) {
   eq(rec.tape.at(-1).kind, "end", "the tape ends where Maya ended the game");
   eq(rec.result, {winner: null, reason: "ended early", endedBy: "s1"}, "and it says how it ended");
   ok(rec.history.length > 0 && rec.history.every((l) => typeof l.text === "string"), "the public history comes with it");
+  eq(rec.refusals, room.refusals, "and the match's tally of refused AI answers, counted over the whole game, not read off the history");
+  ok(rec.refusals.since === 0 && Number.isInteger(rec.refusals.total), `counted from the match's start (${rec.refusals.total} refused)`);
   const replayed = await replayTape({matchId: rec.matchId, pod: rec.pod, seed: rec.seed, tape: rec.tape, cards});
   eq(replayed.fingerprint(), room.fingerprint(), "a fresh room fed the downloaded seed, pod and tape reaches the same game: a finding can be seen again");
   eq((await t.record(MAYA)).matchId, matchId, "a guest downloads it too, and with no match named it is the table's last game");
