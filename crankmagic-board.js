@@ -26,7 +26,9 @@
  *                 card under the pointer large with what it can do, the log, and the Coach in its lower half. Full
  *                 screen asks the browser for the whole document, so the Coach and the dialogs are seen in it
  *   Skip to end   passes priority for you through the rest of this turn, and stops the moment anything is on the
- *                 stack or the room asks you something else
+ *                 stack or the room asks you something else; on another player's turn the same switch is Yield this turn
+ *                 (the plan's X8c: a player holding an instant with mana open is otherwise asked at every step), and Tools
+ *                 says what it does
  *   vitals        a pill per seat (life, poison, a bar per commander toward 21); any pill opens Table vitals
  *   Show hand     ✋ or Space: the hand fanned over a dimmed board to contemplate; a card chosen (a click, or its
  *                 number) is held up with what it can do; Enter does it, Escape puts it back
@@ -213,6 +215,12 @@ globalThis.CrankBoard = Object.freeze({
   /* SKIP TO END: your priority is passed for you through the rest of this turn. It stops by itself when the turn
      ends, when anything is on the stack (a spell you may want to answer), or when the room asks you something
      that is not priority -- a decision is never made for you (AGENTS.md). */
+  /* Its words follow whose turn it is: your own you skip to its end; another player's you yield (X8c). */
+  const skipWords = (short = false) => {
+    const yours = !view || view.state.turnPlayerId === view.seat;
+    if (skipping === null) return yours ? "Skip to end" : "Yield this turn";
+    return short ? (yours ? "Stop skipping" : "Stop yielding") : (yours ? "Skipping · stop" : "Yielding · stop");
+  };
   function skip() {
     if (skipping === null) return;
     const d = view.decision;
@@ -409,7 +417,7 @@ globalThis.CrankBoard = Object.freeze({
       <span class="cm-board-tools">${at < 0 ? "" : `<button type="button" class="cm-board-count" data-action="board-steps" aria-expanded="${stepsOpen}" aria-label="Step ${at + 1} of ${STEPS.length}; show the steps">${at + 1} / ${STEPS.length} ▾</button>`}${stepsOpen ? stepsMenu() : ""}</span>
       <span class="cm-board-prompt">${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}<span class="cm-board-waiting" role="status" aria-live="polite">${e(waitingText())}</span>${conn}</span>
       ${passButton()}
-      ${b(skipping === null ? "Skip to end" : "Skipping · stop", "board-skip", {}, false, {cls: `compact${skipping === null ? "" : " is-on"}`, disabled: view.status === "finished"})}
+      ${b(skipWords(), "board-skip", {}, false, {cls: `compact${skipping === null ? "" : " is-on"}`, disabled: view.status === "finished"})}
       ${alsoButton()}
       <span class="cm-board-divider" aria-hidden="true"></span>
       ${switcher()}
@@ -438,8 +446,15 @@ globalThis.CrankBoard = Object.freeze({
       ? `${b("End for everyone · keep the record", "board-end", {confirm: "1"}, true)}${b("Keep playing", "board-end-cancel")}`
       : b("End game", "board-end", {}, false, {disabled: over});
     const [lo, hi] = C.cardScaleRange();
+    /* HOLD PRIORITY / YIELD (the r3 Tools wireframe; X8c). Holding is the default: with a card you could use, you are asked
+       at every step, the stack empty or not. Yield passes for you through the rest of this turn, until anything is on the
+       stack or you are asked anything else, and puts itself away when the turn ends. */
+    const yours = view.state.turnPlayerId === view.seat;
+    const priority = `<div class="cm-actions">${b(skipWords(), "board-skip", {}, false, {cls: skipping === null ? "" : "is-on", disabled: over})}</div>
+      <p class="cm-muted cm-board-yield-help">${yours ? "Skip to end passes your priority for you through the rest of your turn" : `Yield this turn passes your priority for you through the rest of ${e(nameOf(view.state.turnPlayerId))}'s turn`}. It stops the moment anything is on the stack or you are asked anything else, so you can still answer a spell. Until then you hold priority: with a card you could use, you are asked at every step.</p>`;
     return `<div class="cm-board-menu" role="menu" id="cm-board-tools">
       <div class="cm-actions cm-board-menu-row">${gb(COACH, "Recommended actions", "board-coach", {}, {cls: ""})}${b("Table vitals", "board-vitals", {})}</div>
+      ${priority}
       <div class="cm-board-size">${C.cardScaleSlider()}<p class="cm-muted">${lo}% – ${hi}% · the table's size: it sets Board cards and Hand cards too · remembered on this device · ⌘/Ctrl + / − also work</p></div>
       ${soundMenu()}
       <p class="cm-muted">End game stops it for everyone and keeps its record. Concede leaves it to the others.</p>
@@ -586,7 +601,7 @@ globalThis.CrankBoard = Object.freeze({
       <span class="cm-board-spacer"></span>${ib("⎋", "board-view", "Leave full screen", {view: "focus"})}</nav>`;
     const pill = `<div class="cm-full-pill"><span class="cm-board-step">${e(step)}</span>${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}
       <span class="cm-board-waiting" role="status" aria-live="polite">${e(waitingText())}</span>
-      ${passButton()}${b(skipping === null ? "Skip to end" : "Stop skipping", "board-skip", {}, false, {cls: "compact"})}</div>`;
+      ${passButton()}${b(skipWords(true), "board-skip", {}, false, {cls: "compact"})}</div>`;
     /* The big board's corner: whose it is and their vitals; when it is not yours, ⟳ and My board are there too. */
     const viewing = big.playerId !== view.seat;
     const corner = `<div class="cm-full-corner${viewing ? " cm-full-viewing" : ""}">${vitals(big, {big: true})}<span class="cm-full-corner-name">${viewing ? `Viewing ${e(big.name)}` : e(seatLabel(big))}</span>

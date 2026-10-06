@@ -690,7 +690,15 @@ try {
   const askedIn = new Set([...views(ROB), ...views(MAYA)].filter((v) => v.decision && v.state.turn >= 1 && v.state.turn <= 2).map((v) => v.state.phase));
   ok(["MAIN1", "MAIN2", "DRAW"].every((p) => askedIn.has(p)) && [...askedIn].every((p) => ["MAIN1", "MAIN2", "DRAW"].includes(p)),
     `Next step walks the steps into turn 2, on both boards, and the room asked someone only where there was something to do (${[...askedIn].join(", ")}); the rest passed by themselves`);
-  ok((await text(active.page, "[data-action=board-skip]")).trim() === "Skip to end", "at the turn's end Skip to end puts itself away");
+  /* X8c, HOLD PRIORITY / YIELD: at the turn's end the switch puts itself away, and on the next player's turn the same
+     switch is Yield this turn; Tools says what it does, and that until then you hold priority. */
+  ok((await text(active.page, "[data-action=board-skip]")).trim() === "Yield this turn", "at the turn's end Skip to end puts itself away, and on the next player's turn it is Yield this turn");
+  ok((await text(other.page, "[data-action=board-skip]")).trim() === "Skip to end", "while on that player's own board it is still Skip to end");
+  await active.page.click("[data-action=board-tools]");
+  const yieldHelp = await text(active.page, "#cm-board-tools .cm-board-yield-help");
+  ok(new RegExp(`Yield this turn passes your priority for you through the rest of ${active === rob ? "Maya" : "Rob"}'s turn`).test(yieldHelp) && /you hold priority/.test(yieldHelp),
+    `Tools says what yielding does, and that until then you hold priority ("${yieldHelp.trim().slice(0, 90)}…")`);
+  await active.page.click("[data-action=board-tools]");
   eq(await rob.page.locator(".cm-board-mat .cm-board-ribbon li.is-now").count() + await maya.page.locator(".cm-board-mat .cm-board-ribbon li.is-now").count(), 1, "the step ribbon lights the current step on the active player's own board");
 
   /* CARD SIZE: the app's slider, in Tools; ⌘/Ctrl − steps it. */
