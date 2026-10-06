@@ -106,7 +106,10 @@ export const FORGE_REPLACEMENT = {Moved: "replacement",
   Counter: "rules/statics",
   /* Damage replaced (batch 71): doubled, plus N, prevented -- for a while, a shield, or with what follows "that many"
      (CR 615.5) -- and redirected to what the holder enchants (CR 614.9); by its source, to whom, combat or not. */
-  DamageDone: "rules/replacement"};
+  DamageDone: "rules/replacement",
+  /* "If you would proliferate, proliferate twice instead" (Tekuthal, Inquiry Dominus): the static `proliferate-twice`, each
+     one doubling its controller's proliferates as one reaches the head of a resolution (script/resolution.mjs). */
+  Proliferate: "script/resolution"};
 
 /* Keywords the engine implements BEHAVIORALLY, as opposed to merely declaring the word. Declaring
    `Flying` in the vocabulary is what lets a card script say it; `keywords/combat.mjs` is what makes

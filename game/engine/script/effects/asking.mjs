@@ -271,13 +271,31 @@ function digRest(state, player, cards, {rest, random}, rng, events) {
     library.push(id);
   }
 }
+/* "PUT ANY NUMBER OF NONLAND PERMANENT CARDS WITH TOTAL MANA VALUE 4 OR LESS FROM AMONG THEM ONTO THE BATTLEFIELD" (Ao, the Dawn
+   Sky; `totalManaValueAtMost`): which cards is the looker's choice, made one card at a time -- each question offers only the
+   cards that still fit what is left of the total (CR 202.3; an {X} card's mana value is its printed one with X as 0, 202.3e),
+   and "No more" -- so no answer can break the total. The cards chosen move together once the last is chosen. */
+const cardManaValue = (state, id) => (state.objects[id]?.manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0);
+const budgetLeft = (state, awaiting) => awaiting.offered.filter((id) => !awaiting.picked.includes(id) && cardManaValue(state, id) <= awaiting.budget);
+function digTaken(state, awaiting, chosen, rng) {
+  const events = [], taken = new Set(chosen), found = [];
+  for (const id of awaiting.cards) {
+    if (!taken.has(id)) continue;
+    const moved = moveOne(state, id, awaiting.to, events, {owner: awaiting.player});
+    if (moved !== null && state.objects[moved]) found.push(moved);
+  }
+  digRest(state, awaiting.player, awaiting.cards.filter((id) => !taken.has(id)), awaiting, rng, events);
+  return awaiting.remember ? {events, remembered: found} : events;
+}
 export const dig = {
   open(state, params, context, rng = null) {
     const looked = cardsIn(state, "library", context.controller).slice(0, params.count ?? 1);
     if (params.remember) context.remembered = [];
     if (looked.length === 0) return false;
     const fits = params.selector ? compileSelector({...params.selector, what: "card", zone: "library"}) : null;
-    const offered = fits ? looked.filter((id) => fits(state, id, {controller: context.controller, source: context.source ?? null})) : looked;
+    const fitting = fits ? looked.filter((id) => fits(state, id, {controller: context.controller, source: context.source ?? null})) : looked;
+    const budget = params.totalManaValueAtMost;
+    const offered = budget === undefined ? fitting : fitting.filter((id) => cardManaValue(state, id) <= budget);
     /* Nothing among them that may be taken: nobody is asked, and the rest go where they go. */
     if (offered.length === 0) {
       const events = [];
@@ -287,6 +305,7 @@ export const dig = {
     const take = Math.min(params.take ?? 1, offered.length);
     state.awaiting = {
       kind: "effect-choice", effect: "dig", player: context.controller, cards: looked, offered,
+      ...(budget !== undefined ? {budget, picked: []} : {}),
       take, min: params.upTo === true ? 0 : take,
       to: params.to ?? "hand", rest: params.rest ?? "bottom",
       ...(params.random === true ? {random: true} : {}), ...(params.remember ? {remember: true} : {}),
@@ -296,6 +315,12 @@ export const dig = {
 
   choice(state, awaiting) {
     const offered = awaiting.offered ?? awaiting.cards;
+    if (awaiting.budget !== undefined) {
+      const left = budgetLeft(state, awaiting);
+      return {id: `dig:${awaiting.cards.join(",")}:${awaiting.picked.join(",")}`,
+        title: `Choose a card to put onto the ${awaiting.to}: total mana value ${awaiting.budget} or less left${awaiting.picked.length ? `, ${awaiting.picked.map((id) => state.objects[id].card).join(", ")} chosen` : ""}`,
+        mode: "one", min: 1, max: 1, options: [...cardOptions(state, left), {index: left.length, label: "No more"}]};
+    }
     return {
       id: `dig:${awaiting.cards.join(",")}`,
       title: `Choose ${awaiting.min === 0 ? "up to " : ""}${awaiting.take} to put into your ${awaiting.to}`,
@@ -307,6 +332,17 @@ export const dig = {
   },
 
   apply(state, awaiting, indices, extra = {}, rng = null) {
+    if (awaiting.budget !== undefined) {
+      const left = budgetLeft(state, awaiting);
+      if ((indices ?? []).length !== 1 || !(indices[0] >= 0 && indices[0] <= left.length)) throw new Error("Invalid selection");
+      if (indices[0] === left.length) return digTaken(state, awaiting, awaiting.picked, rng);
+      const picked = [...awaiting.picked, left[indices[0]]];
+      const next = {...awaiting, picked, budget: awaiting.budget - cardManaValue(state, left[indices[0]])};
+      /* Nothing else fits what is left: the cards chosen go now, nobody asked again. */
+      if (!budgetLeft(state, next).length) return digTaken(state, next, picked, rng);
+      state.awaiting = next;
+      return {events: [], again: true};
+    }
     const events = [];
     const offered = awaiting.offered ?? awaiting.cards;
     const chosen = (indices ?? []).map((index) => offered[index]);
@@ -524,16 +560,44 @@ const offeredToSacrifice = (state, player, awaiting) => {
 /* "Chooses up to two creatures they control, then sacrifices the rest" (Archfiend of Depravity, `keep`): asked only of a
    player with more than that many. */
 const mustSacrifice = (state, player, awaiting) => offeredToSacrifice(state, player, awaiting).length > (awaiting.keep ?? 0);
+/* "EACH PLAYER PUTS A VOW COUNTER ON A CREATURE THEY CONTROL AND SACRIFICES THE REST" (Promise of Loyalty): `keep` with
+   `keepExactly` -- a creature, not "up to" one, so one must be chosen by a player who has any -- `keptCounter`, a counter put
+   on each kept one, and `rememberKept`, every player's kept ones for the effects after it ("each of those creatures"). A
+   player with no more than that many keeps them all and is not asked; the counters go on first, then every sacrifice at
+   once (CR 101.4, 608.2c). */
+const keeping = (params) => params.keepExactly === true || params.keptCounter !== undefined || params.rememberKept === true;
+function finishKeeping(state, awaiting, decided, events) {
+  const kept = [];
+  for (const player of awaiting.everyone) {
+    const mine = offeredToSacrifice(state, player, awaiting);
+    const chosen = decided.find((d) => d.player === player);
+    for (const id of chosen ? chosen.kept : mine) kept.push(id);
+  }
+  if (awaiting.keptCounter) for (const id of kept) if (state.objects[id]) addCounters(state, id, awaiting.keptCounter, 1, events);
+  for (const {ids} of decided) for (const id of ids) sacrificeOne(state, id, events);
+  return awaiting.rememberKept ? {events, remembered: kept.filter((id) => state.objects[id])} : events;
+}
 export const sacrifice = {
   open(state, params, context) {
     /* CR 101.4: the active player chooses first, then each other player in turn order. */
     const seats = state.players.length, apnap = (p) => (p - state.activePlayer + seats) % seats;
-    const asked = {selector: params.selector ?? {}, source: context.source ?? null, ...(params.keep !== undefined ? {keep: params.keep} : {}), ...(params.greatest ? {greatest: params.greatest} : {})};
+    const asked = {selector: params.selector ?? {}, source: context.source ?? null, ...(params.keep !== undefined ? {keep: params.keep} : {}), ...(params.greatest ? {greatest: params.greatest} : {}),
+      ...(params.keepExactly === true ? {keepExactly: true} : {}), ...(params.keptCounter !== undefined ? {keptCounter: params.keptCounter} : {}),
+      ...(params.rememberKept === true ? {rememberKept: true} : {})};
     /* "If you sacrificed a creature this way" (Rise of the Witch-king, batch 70): what this effect's controller sacrificed,
        remembered for the effects after it -- nothing, until they do. */
-    if (params.remember) context.remembered = [];
-    const queue = playersFor(state, params.who, context.controller).filter((p) => mustSacrifice(state, p, asked)).sort((a, b) => apnap(a) - apnap(b));
-    if (queue.length === 0) return false;
+    if (params.remember || params.rememberKept) context.remembered = [];
+    const everyone = playersFor(state, params.who, context.controller).sort((a, b) => apnap(a) - apnap(b));
+    const queue = everyone.filter((p) => mustSacrifice(state, p, asked));
+    if (keeping(params) && params.keep !== undefined) asked.everyone = everyone;
+    if (queue.length === 0) {
+      /* Nobody has a choice to make, and what the keeping does is still done: each keeps all they have. */
+      if (!asked.everyone) return false;
+      const events = [];
+      const outcome = finishKeeping(state, asked, [], events);
+      if (asked.rememberKept) context.remembered = outcome.remembered;
+      return {events};
+    }
     state.awaiting = {kind: "effect-choice", effect: "sacrifice", player: queue[0], remaining: queue.slice(1), count: params.count ?? 1, ...asked,
       ...(params.remember ? {remember: context.controller, remembering: []} : {})};
     return true;
@@ -544,6 +608,9 @@ export const sacrifice = {
     const option = (id, index) => ({index, label: state.objects[id].card, cardId: id, ...(state.objects[id].token ? {token: true} : {})});
     if (awaiting.keep !== undefined) {
       const keep = Math.min(awaiting.keep, mine.length);
+      if (awaiting.keepExactly) return {id: `sacrifice-keep:${awaiting.player}:${state.turn}`,
+        title: `Choose ${keep === 1 ? "a creature" : `${keep}`} to keep${awaiting.keptCounter ? ` with a ${awaiting.keptCounter} counter` : ""}; the rest are sacrificed`,
+        mode: keep === 1 ? "one" : "many", min: keep, max: keep, options: mine.map(option)};
       return {id: `sacrifice-keep:${awaiting.player}:${state.turn}`, title: `Choose up to ${keep} to keep; the rest are sacrificed`, mode: "many", min: 0, max: keep, options: mine.map(option)};
     }
     const count = Math.min(awaiting.count, mine.length);
@@ -563,15 +630,18 @@ export const sacrifice = {
     const mine = offeredToSacrifice(state, awaiting.player, awaiting);
     const chosen = (indices ?? []).map((i) => mine[i]).filter((id) => id !== undefined);
     if (awaiting.keep !== undefined && chosen.length > awaiting.keep) throw new Error("Invalid selection");
+    /* "A creature": exactly that many kept (Promise of Loyalty), however many a player has above it. */
+    if ((awaiting.keepExactly && chosen.length !== Math.min(awaiting.keep, mine.length)) || new Set(chosen).size !== chosen.length) throw new Error("Invalid selection");
     /* Kept: the rest go. Otherwise: the ones chosen. CR 101.4: chosen now, sacrificed when the last player has chosen --
        every player's at the same time, so nothing the first gave up is gone while the next decides. */
     const going = awaiting.keep !== undefined ? mine.filter((id) => !chosen.includes(id)) : chosen;
-    const decided = [...(awaiting.decided ?? []), {player: awaiting.player, ids: going}];
+    const decided = [...(awaiting.decided ?? []), {player: awaiting.player, ids: going, kept: chosen}];
     const next = (awaiting.remaining ?? []).filter((p) => mustSacrifice(state, p, awaiting));
     if (next.length > 0) {
       state.awaiting = {...awaiting, player: next[0], remaining: next.slice(1), decided};
       return {events, again: true};
     }
+    if (awaiting.everyone) return finishKeeping(state, awaiting, decided, events);
     /* What the effect's controller sacrificed, as the objects it became (a token's until it ceases to exist, CR 704.5d). */
     let remembering = awaiting.remembering;
     for (const {player, ids} of decided) {

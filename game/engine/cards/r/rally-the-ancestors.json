@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rally the Ancestors",
+    "oracleId": "9d612686-2d7f-49a3-b9c4-1e99a30134f6",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{X}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Return each creature card with mana value X or less from your graveyard to the battlefield. Exile those creatures at the beginning of your next upkeep. Exile Rally the Ancestors.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Return each creature card with mana value X or less from your graveyard to the battlefield. Exile those creatures at the beginning of your next upkeep. Exile Rally the Ancestors.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "card",
+            "zone": "graveyard",
+            "types": [
+              "Creature"
+            ],
+            "owner": "you",
+            "manaValue": {
+              "max": "X"
+            }
+          },
+          "to": "battlefield",
+          "remember": true
+        },
+        {
+          "effect": "delayedTrigger",
+          "at": "your upkeep",
+          "text": "Exile those creatures at the beginning of your next upkeep.",
+          "effects": [
+            {
+              "effect": "moveZone",
+              "targets": "remembered",
+              "to": "exile"
+            }
+          ]
+        },
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "exile"
+        }
+      ]
+    }
+  ]
+}

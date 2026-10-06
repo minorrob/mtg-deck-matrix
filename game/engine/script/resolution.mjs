@@ -25,6 +25,7 @@ import {damageQuestion} from "./effects/resources.mjs";
 import {bindEffect} from "./bind.mjs";
 import {countEffect} from "./amount.mjs";
 import {conditionHolds} from "./condition.mjs";
+import {proliferateTimes} from "../rules/statics.mjs";
 
 /** Whether a resolution is paused, waiting for somebody. */
 export const resolutionPending = (state) => Boolean(state.resolving);
@@ -114,6 +115,17 @@ export function runResolution(state, rng = null) {
       resolving.queue.shift();
       if (effect.about === undefined) delete resolving.context.about; else resolving.context.about = effect.about;
       continue;
+    }
+    /* "IF YOU WOULD PROLIFERATE, PROLIFERATE TWICE INSTEAD" (Tekuthal, Inquiry Dominus; CR 614.1a, 701.34): replaced as it
+       reaches the head, before anything is chosen, by as many proliferates as the replacements make (rules/statics.mjs,
+       proliferateTimes) -- each its own choice of permanents and players, one after another (CR 701.34a). */
+    if (effect?.effect === "proliferate" && effect.replaced !== true) {
+      const times = proliferateTimes(state, resolving.context.controller);
+      if (times > 1) {
+        resolving.queue.shift();
+        resolving.queue.unshift(...Array.from({length: times}, () => ({...structuredClone(effect), replaced: true})));
+        continue;
+      }
     }
     if (effect?.effect === "empowerJace") {
       const jace = {what: "permanent", token: true, subtypes: ["Jace"], controller: "you"};

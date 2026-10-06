@@ -553,7 +553,10 @@ export function collectTriggers(state, events) {
           {effect: "play", from: "targets", targets: "that card", free: true, condition: {compare: {count: {countersOn: "that card", counter: "time"}, atMost: 0}}}]}});
     }
     if (moment && (state.delayedTriggers ?? []).length) {
-      const due = state.delayedTriggers.filter((d) => d.at === moment);
+      /* "At the beginning of your next upkeep" (Rally the Ancestors): the next upkeep of a turn that is its controller's --
+         another player's upkeep passes it by (CR 603.7). */
+      const yours = event.data?.fields?.playerTurn?.playerId ?? state.activePlayer;
+      const due = state.delayedTriggers.filter((d) => d.at === moment || (moment === "upkeep" && d.at === "your upkeep" && d.controller === yours));
       state.delayedTriggers = state.delayedTriggers.filter((d) => !due.includes(d));
       for (const d of due) state.pendingTriggers.push({
         abilityId: "delayed", text: d.text ?? (moment === "upkeep" ? "At the beginning of the next upkeep" : "At the beginning of the next end step"), controller: d.controller,

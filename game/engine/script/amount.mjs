@@ -46,11 +46,12 @@ import {conditionHolds, conditionProblems} from "./condition.mjs";
 import {selectMatching, compileSelector, matchesLastKnown} from "./filter.mjs";
 import {powerOf, toughnessOf, characteristicsOf, controllerOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
+import {commanderKeyOf} from "../state/index.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
 export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "toughnessOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
   "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn", "playersDealtCombatDamage", "cardTypesAmong", "manaSpent",
-  "permanentsEnteredThisTurn", "excessDamage", "lesserOf", "kicked"]);
+  "permanentsEnteredThisTurn", "excessDamage", "lesserOf", "kicked", "commanderCasts"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "filter", "controlledBy"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -75,6 +76,7 @@ export function amountProblems(value) {
   if ("playersDealtCombatDamage" in value && !["opponent", "any"].includes(value.playersDealtCombatDamage)) problems.push('playersDealtCombatDamage is "opponent" or "any"');
   if ("cardTypesAmong" in value && value.cardTypesAmong !== "remembered") problems.push('cardTypesAmong is "remembered"');
   if ("manaSpent" in value && !["that card", "self"].includes(value.manaSpent)) problems.push('manaSpent is "that card" or "self"');
+  if ("commanderCasts" in value && value.commanderCasts !== "that card") problems.push('commanderCasts is "that card"');
   if ("controlledBy" in value && !("rememberedCount" in value && value.controlledBy === "that player")) problems.push('controlledBy is "that player", of a rememberedCount');
   if ("lesserOf" in value && !(Array.isArray(value.lesserOf) && value.lesserOf.length >= 2)) problems.push("lesserOf is two or more amounts");
   else if ("lesserOf" in value) for (const one of value.lesserOf) problems.push(...amountProblems(one).map((p) => `lesserOf: ${p}`));
@@ -246,6 +248,16 @@ export function amountOf(state, value, context = {}) {
   else if ("manaValueOf" in value) {
     const id = objectOf(value.manaValueOf, context);
     n = id !== null && state.objects[id]?.manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0;
+  }
+  /* "Scry X, where X is the number of times it's been cast from the command zone this game" (Study Hall; CR 903.8): the
+     commander a trigger is about, by the key its casts are kept under (rules/commander.mjs) -- taken as it triggered, so
+     a commander that has since left the stack is still counted -- this cast included. */
+  else if ("commanderCasts" in value) {
+    const id = objectOf(value.commanderCasts, context);
+    const object = id !== null ? state.objects[id] : null;
+    const key = context.about?.commanderKey ?? (object?.commander === true ? commanderKeyOf(object) : null);
+    const owner = object?.owner ?? context.about?.player ?? context.controller;
+    n = key === null ? 0 : state.players[owner]?.commanderCasts?.[key] ?? 0;
   }
   /* "If five or more mana was spent to cast that spell" (Expressive Firedancer; CR 601.2h): every mana spent on it, of
      whatever kind, as rules/actions.mjs recorded it on the spell. */

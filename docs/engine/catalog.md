@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,144 defined and playable today; 2,460 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,150 defined and playable today; 2,463 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -23,7 +23,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Effects | 192 | 62 | 1 | 9 | 120 |
 | Triggers | 138 | 17 | 4 | 5 | 112 |
 | Static abilities | 77 | 11 | 2 | 0 | 64 |
-| Replacement effects | 34 | 0 | 4 | 0 | 30 |
+| Replacement effects | 34 | 0 | 5 | 0 | 29 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
 | Options and conditions | 37 | 23 | 5 | 0 | 9 |
 | Amounts the game counts | 188 | 12 | 1 | 0 | 175 |
@@ -36,9 +36,9 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 26 | 99 |
+| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 25 | 98 |
 | option | Remembering what an effect moved | — | missing | 23 | 95 |
-| option | You may play or cast a card from another zone | — | missing | 18 | 73 |
+| option | You may play or cast a card from another zone | — | missing | 17 | 72 |
 | keyword construct | ETBReplacement | — | missing | 9 | 32 |
 | effect | SetState | setState | named | 9 | 19 |
 | count | Cards in a library | — | missing | 9 | 13 |
@@ -773,7 +773,7 @@ The things that alone hold back the most of the most-played cards.
 | Transform | — | missing | 1 | 4 | 1 | 0 |
 | RemoveCounter | — | missing | 1 | 2 | 1 | 0 |
 | CopySpell | — | missing | 1 | 1 | 1 | 0 |
-| Proliferate | — | missing | 1 | 1 | 1 | 0 |
+| Proliferate | script/resolution | partial | 1 | 1 | 0 | 0 |
 | Destroy | — | missing | 0 | 5 | 0 | 0 |
 | Attached | — | missing | 0 | 3 | 0 | 0 |
 | DrawCards | — | missing | 0 | 2 | 0 | 0 |
@@ -828,12 +828,12 @@ The things that alone hold back the most of the most-played cards.
 | Fewer targets than the most ("up to", "any number of") | a target's count {min, max} (script/bind.mjs), picked as a pick-several | built | 126 | 1672 | 0 | 0 |
 | Remembering what an effect moved | — | missing | 124 | 1168 | 95 | 23 |
 | More than one target of a kind ("up to N") | a target's count {min, max} (script/bind.mjs); a count that is X is not built | partial | 123 | 1664 | 0 | 0 |
-| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 99 | 26 |
+| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 98 | 25 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost} | built | 104 | 684 | 0 | 0 |
 | You may (an optional effect, CR 603.5) | modal (Yes / No) | built | 101 | 1094 | 0 | 0 |
-| You may play or cast a card from another zone | — | missing | 99 | 625 | 73 | 18 |
+| You may play or cast a card from another zone | — | missing | 99 | 625 | 72 | 17 |
 | An intervening "if" or "activate only if": a counted value | condition {compare} | built | 79 | 974 | 0 | 0 |
 | An effect's condition: a counted value | condition {compare: {count, atLeast / atMost / moreThan / fewerThan}} | built | 75 | 603 | 0 | 0 |
 | Unless a player pays | unlessPays, by kind | partial | 66 | 677 | 0 | 0 |
@@ -922,7 +922,7 @@ The things that alone hold back the most of the most-played cards.
 | — | ValidAll | — | missing | 1 | 6 | 1 | 1 |
 | — | Ignore | — | missing | 1 | 4 | 1 | 0 |
 | — | ManaPool | — | missing | 1 | 3 | 1 | 0 |
-| — | Num | — | missing | 1 | 3 | 1 | 0 |
+| — | Num | — | missing | 1 | 3 | 0 | 0 |
 | — | Times your commander was cast from the command zone | — | missing | 1 | 3 | 1 | 1 |
 | — | ValidCommand | — | missing | 1 | 3 | 1 | 0 |
 | — | CardBasePower | — | missing | 1 | 2 | 1 | 1 |

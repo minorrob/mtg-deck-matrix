@@ -26,6 +26,9 @@
  *   {spent: {G: 2}}                    at least that much mana of each color was spent to cast its own object (CR
  *                                      601.2h): "if {G}{G} was spent to cast it" (Wistfulness); adamant's "if at least
  *                                      three red mana was spent to cast this spell" is {R: 3}, colorless {C: 3}
+ *   {opponentPoisonAtLeast: 3}         an opponent of its controller, still in the game, has at least that many poison
+ *                                      counters (CR 122.1f): Corrupted's "as long as an opponent has three or more poison
+ *                                      counters" (Skrelv's Hive; an ability word, CR 207.2c, with no rules meaning of its own)
  *
  * The keys are closed, like every other grammar here: an unknown one is refused at the schema rather than read as true.
  */
@@ -34,7 +37,8 @@ import {cardsIn} from "../state/index.mjs";
 import {matchesSelector, compileSelector, matchesLastKnown} from "./filter.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
 
-const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "spent", "enduringStory", "loyaltyThisTurn", "impending"];
+const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "spent", "enduringStory", "loyaltyThisTurn", "impending",
+  "opponentPoisonAtLeast"];
 /* The mana a condition may ask was spent to cast its object: the five colors and colorless (CR 106.1). */
 const SPENT_KEYS = ["W", "U", "B", "R", "G", "C"];
 /* A counted comparison's keys: what is counted, and against what. */
@@ -149,6 +153,10 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   if (condition.loyaltyThisTurn === true && !((state.players[controller]?.loyaltyThisTurn ?? 0) > 0)) return false;
   /* "Activate only during your turn" (Humble Defector). */
   if (condition.yourTurn === true && state.activePlayer !== controller) return false;
+  /* Corrupted (Skrelv's Hive): "as long as an opponent has three or more poison counters" -- a player who has left the game
+     is no opponent (CR 800.4a). */
+  if (condition.opponentPoisonAtLeast !== undefined
+    && !state.players.some((p) => p.id !== controller && !p.lost && (p.poison ?? 0) >= condition.opponentPoisonAtLeast)) return false;
   /* "If you have 40 or more life" (Felidar Sovereign). */
   if (condition.lifeAtLeast !== undefined && state.players[controller].life < condition.lifeAtLeast) return false;
   /* "If it's not your turn, you may exile a blue card from your hand rather than pay this spell's mana cost". */
@@ -181,6 +189,8 @@ export function conditionProblems(condition) {
   if ("enduringStory" in condition && typeof condition.enduringStory !== "boolean") problems.push("enduringStory is true or false");
   if ("notYourTurn" in condition && condition.notYourTurn !== true) problems.push("notYourTurn is true");
   if ("loyaltyThisTurn" in condition && condition.loyaltyThisTurn !== true) problems.push("loyaltyThisTurn is true");
+  if ("opponentPoisonAtLeast" in condition && !(Number.isInteger(condition.opponentPoisonAtLeast) && condition.opponentPoisonAtLeast >= 1))
+    problems.push("opponentPoisonAtLeast is a whole number of poison counters, 1 or more");
   if ("graveyardTypes" in condition && !(Number.isInteger(condition.graveyardTypes) && condition.graveyardTypes >= 1)) problems.push("graveyardTypes is a whole number of card types, 1 or more");
   if ("chosen" in condition && typeof condition.chosen !== "string") problems.push("chosen names what was chosen");
   if ("escaped" in condition && typeof condition.escaped !== "boolean") problems.push("escaped is true or false");

@@ -1,0 +1,102 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ao, the Dawn Sky",
+    "oracleId": "697ac261-263b-4879-bf45-6d10d23312ae",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon",
+      "Spirit"
+    ],
+    "manaCost": "{3}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 5,
+    "toughness": 4
+  },
+  "oracleText": "Flying, vigilance\nWhen Ao dies, choose one —\n• Look at the top seven cards of your library. Put any number of nonland permanent cards with total mana value 4 or less from among them onto the battlefield. Put the rest on the bottom of your library in a random order.\n• Put two +1/+1 counters on each permanent you control that's a creature or Vehicle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "triggered",
+      "text": "When Ao dies, choose one —\n• Look at the top seven cards of your library. Put any number of nonland permanent cards with total mana value 4 or less from among them onto the battlefield. Put the rest on the bottom of your library in a random order.\n• Put two +1/+1 counters on each permanent you control that's a creature or Vehicle.",
+      "trigger": {
+        "on": "dies"
+      },
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Look at the top seven cards of your library. Put any number of nonland permanent cards with total mana value 4 or less from among them onto the battlefield. Put the rest on the bottom of your library in a random order.",
+              "effects": [
+                {
+                  "effect": "dig",
+                  "count": 7,
+                  "selector": {
+                    "nonTypes": [
+                      "Land",
+                      "Instant",
+                      "Sorcery"
+                    ]
+                  },
+                  "totalManaValueAtMost": 4,
+                  "upTo": true,
+                  "to": "battlefield",
+                  "rest": "bottom",
+                  "random": true
+                }
+              ]
+            },
+            {
+              "text": "Put two +1/+1 counters on each permanent you control that's a creature or Vehicle.",
+              "effects": [
+                {
+                  "effect": "putCounterAll",
+                  "selector": {
+                    "what": "permanent",
+                    "controller": "you",
+                    "anyOf": [
+                      {
+                        "types": [
+                          "Creature"
+                        ]
+                      },
+                      {
+                        "subtypes": [
+                          "Vehicle"
+                        ]
+                      }
+                    ]
+                  },
+                  "counter": "+1/+1",
+                  "count": 2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

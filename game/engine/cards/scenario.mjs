@@ -185,6 +185,10 @@ export function runScenario(scenario, cards, fixtures = {}) {
     /* "Blight 1 or pay {3}": the cast that pays the additional cost's mana (`extraMana: "{3}"`), or the one that does not
        (`extraMana: ""`). */
     if (step.extraMana !== undefined) found = found.filter((a) => (a.extraMana ?? "") === step.extraMana);
+    /* Paid with the mana that does something when spent (`riders: true`), or without it (`false`; Path of Ancestry). */
+    if (step.riders !== undefined) found = found.filter((a) => ((a.riders ?? []).length > 0) === step.riders);
+    /* Through which permanent's permission ("via": its name), when two would let it be played and do different things. */
+    if (step.via !== undefined) found = found.filter((a) => (a.viaName ?? null) === step.via);
     if (!found.length && step.optional) return;
     if (!found.length) fail(`${names[seat]} is not offered ${kind} ${card}${step.targets ? ` at ${JSON.stringify(step.targets)}` : ""}`);
     record(applyAction(state, seat, found[0]));

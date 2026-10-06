@@ -323,6 +323,10 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     /* "If you cast a creature spell this way, it gains haste until end of turn" (rules/actions.mjs, castGains). */
     if (to === "battlefield" && (object.castGains ?? []).length)
       (state.effects ??= []).push({id: `cast-gains:${arrived}`, layer: 6, affects: {ids: [arrived]}, apply: {addKeywords: [...object.castGains]}, until: "end-of-turn", sourceController: entry.playerId});
+    /* "It gains 'When this permanent is put into a graveyard from the battlefield, ...'" (Serra Paragon; rules/actions.mjs,
+       castGrants): for as long as it is this permanent (CR 611.2a, 400.7), in layer 6 (CR 613.1f). */
+    if (to === "battlefield" && (object.castGrants ?? []).length)
+      (state.effects ??= []).push({id: `cast-grants:${arrived}`, layer: 6, affects: {ids: [arrived]}, apply: {addAbilities: structuredClone(object.castGrants)}, until: null, sourceController: entry.playerId});
     if (entering) {
       if (entering.tapped) state.objects[arrived].tapped = true;
       for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: arrived, ...ask});
