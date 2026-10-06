@@ -87,6 +87,20 @@ eq((await call("GET", "/api/me", {jwt: await token({aud: ["another-app"]})})).st
 eq((await call("GET", "/api/me", {jwt: await token({iss: "https://elsewhere.cloudflareaccess.com"})})).status, 401, "a token from another team: 401");
 eq((await call("GET", "/api/me", {jwt: await token({exp: NOW / 1000 - 120})})).status, 401, "an expired token: 401");
 eq((await call("GET", "/api/me", {jwt: await token({email: undefined, common_name: "service-token-id"})})).status, 401, "a service token, which names no person: 401");
+/* WHERE A RELEASE SEATS A SERVICE TOKEN (SERVICE_SEATS, staging only; the review response's L6): the session's checks,
+   one identity no person can be -- and still only a token Access signed for this application. */
+{
+  const seated = async (jwt) => {
+    const response = await handle(new Request("https://crankmagic.test/api/me", {headers: {"cf-access-jwt-assertion": jwt}}), {...env, SERVICE_SEATS: "on"}, {fetchImpl, now: clock});
+    const text = await response.text();
+    return {status: response.status, json: text ? JSON.parse(text) : null};
+  };
+  const me = await seated(await token({email: undefined, common_name: "service-token-id"}));
+  eq([me.status, me.json?.email], [200, "service:session-checks"], "seated: a service token Access admitted is the session's checks, named as no person's address");
+  eq((await seated(await token({email: undefined}))).status, 401, "a token naming neither a person nor a service token: still 401");
+  eq((await seated(await token({email: undefined, common_name: "service-token-id", aud: ["another-app"]}))).status, 401, "a service token for another Access application: still 401");
+  eq((await seated(await token({}))).json?.email, "rob@example.com", "and a person is still themself");
+}
 eq((await call("GET", "/api/me", {jwt: await token({}, {header: {alg: "HS256"}})})).status, 401, "a token claiming another algorithm: 401");
 keyFetches = 0;
 eq((await call("GET", "/api/me", {jwt: await token({}, {key: rotated})})).status, 401, "a key the team never published: 401");

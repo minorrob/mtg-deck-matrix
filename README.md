@@ -506,7 +506,9 @@ the pool cannot pay cast in one action by tapping its caster's plain sources: wi
 when there are more, the least flexible first; mana already in the pool, {X} and Phyrexian costs, a painland, a source of
 two mana and a summoning-sick creature left to tapping by hand. `engine-pay-choice` holds a cast or an ability the pool
 pays more than one way offered and asking which way (X8b): two colors for generic, a Phyrexian symbol's mana or life, a
-hybrid; one way asks nothing, a way gone from the pool is refused, and the house pilot pays with mana. `engine-cards-pb1` holds what the scenarios of Rob's
+hybrid; one way asks nothing, a way gone from the pool is refused, and the house pilot pays with mana. `staging-check`
+holds `tools/staging-check.mjs`, a session reading staging back through its Access service token: the release, both
+pages' version and the seated identity, and what is wrong when Access refuses or the release is not the one expected. `engine-cards-pb1` holds what the scenarios of Rob's
 priority list's first cards cannot reach: a creature that can't block never offered as a blocker (on itself, on a
 selector, for a turn), "destroy all other creatures" sparing only what the spell made, every counter removed, and "choose
 one or both"; `engine-cards-pb2`, the next slice's: exhaust once per object (a new object may again), an ability of a
@@ -826,7 +828,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 336 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 337 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1052,6 +1054,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-planeswalkers` — `tests/engine-planeswalkers.mjs`
 - `engine-tap-to-cast` — `tests/engine-tap-to-cast.mjs`
 - `engine-pay-choice` — `tests/engine-pay-choice.mjs`
+- `staging-check` — `tests/staging-check.mjs`
 - `engine-cards-pb1` — `tests/engine-cards-pb1.mjs`
 - `engine-cards-pb2` — `tests/engine-cards-pb2.mjs`
 - `engine-modes-up-front` — `tests/engine-modes-up-front.mjs`
