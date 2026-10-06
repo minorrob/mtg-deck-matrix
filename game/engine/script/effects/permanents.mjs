@@ -24,6 +24,7 @@ import {amountOf} from "../amount.mjs";
 import {event, cardRef} from "./zones.mjs";
 import {typesOf} from "../../rules/layers.mjs";
 import {protectedFrom} from "../../rules/protection.mjs";
+import {manaValue, parseManaCost} from "../../rules/mana.mjs";
 
 /* A continuous effect needs a timestamp to be ordered by (CR 613.7), and it has to be part of the
    state so a checkpoint carries it. The state's own counter is the right source: it is monotonic
@@ -314,8 +315,27 @@ export function investigate(state, params, context) {
   return createToken(state, {...(params.controller !== undefined ? {controller: params.controller} : {}), count: params.count ?? 1, token: {predefined: "Clue"}}, context);
 }
 
+/**
+ * "THE EXILED CARD'S OWNER CREATES AN X/X BLUE ILLUSION CREATURE TOKEN, WHERE X IS THE MANA VALUE OF THE EXILED CARD"
+ * (Skyclave Apparition; CR 607.2a): createToken's `linked`. What this permanent's linked ability exiled (effects/zones.mjs,
+ * `link`), while each is still that card in exile (CR 400.7) -- read against the source as it last was, since its leaving
+ * is what triggered this. Each player who owns one of them creates the token, X the mana values of all of them together
+ * (the card's ruling of 2020-09-25; an {X} in a mana cost is 0 there, CR 202.3e) -- "X" in the token's power and
+ * toughness. None there, and nobody does. Used, the link is spent.
+ */
+function linkedTokens(state, params, context) {
+  const key = context.source ?? context.lastKnown?.cardId ?? null;
+  /* A linked card that has left exile is a new object, and its id here names nothing (CR 400.7). */
+  const exiled = (state.links?.[key] ?? []).filter((id) => state.objects[id]);
+  if (key !== null && state.links) delete state.links[key];
+  const x = exiled.reduce((n, id) => n + (state.objects[id].manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0), 0);
+  const {linked: _linked, ...rest} = params;
+  return [...new Set(exiled.map((id) => state.objects[id].owner))].flatMap((owner) => createToken(state, {...rest, controller: owner}, {...context, x}));
+}
+
 /** `createToken` — CR 111. */
 export function createToken(state, params, context) {
+  if (params.linked === true) return linkedTokens(state, params, context);
   const events = [];
   const spec = params.token?.predefined ? PREDEFINED_TOKENS[params.token.predefined] : params.token ?? {};
   if (!spec) throw new Error(`No predefined token named ${params.token.predefined}`);
@@ -326,7 +346,8 @@ export function createToken(state, params, context) {
   const made = [];
   /* "An X/X green Dinosaur Beast ... where X is the amount of damage those creatures dealt" (Quartzwood Crasher): its size
      counted as it is made. */
-  const sized = (value) => (value !== null && typeof value === "object" ? amountOf(state, value, context) : value ?? null);
+  /* "X/X ... where X is the mana value of the exiled card" (linkedTokens): "X", the X this effect was given. */
+  const sized = (value) => (value === "X" || (value !== null && typeof value === "object") ? amountOf(state, value, context) : value ?? null);
   for (let i = 0; i < count; i += 1) {
     const id = addObject(state, {
       card: spec.name ?? "Token",
@@ -500,6 +521,17 @@ function fixedAt(state, selector, context) {
 }
 
 export function effectUntil(state, params, context) {
+  /* "That creature's owner can't cast spells with the same name as that creature until your next turn" (Reflector Mage):
+     a rule changed for players, not objects -- `who`, bound as it resolves ({ownerOf: {target: 0}}, script/bind.mjs) -- and
+     the spells it forbids by `named`, that creature's name as it resolves ({nameOf: {target: 0}}; CR 201.2a). Read where a
+     cast is offered (rules/statics.mjs, castForbidden). Lands are played, not cast, and stay playable (the card's ruling). A
+     name that could not be read (the creature gone) forbids nothing. */
+  if (params.rule === "cant-cast") {
+    if (typeof params.named !== "string" || !Array.isArray(params.who) || !params.who.length) return [];
+    pushEffect(state, {id: params.id ?? `effect:${context.source ?? "effect"}`, rule: "cant-cast", players: [...params.who], spells: {named: params.named},
+      affects: {what: "player"}, apply: {}, until: params.until ?? "end-of-turn", sourceController: context.controller});
+    return [];
+  }
   pushEffect(state, {
     id: params.id ?? `effect:${context.source ?? "effect"}`,
     /* A rule changed for a while ("can't be blocked this turn", rules/statics.mjs), or a characteristic, in a layer. */
@@ -679,7 +711,8 @@ export function delayedTrigger(state, params, context) {
       /* "Until your next turn, whenever a creature attacks you ..." (Jace, Reality Sculptor): every time, until its controller's
          next turn begins (rules/turn.mjs). */
       ...(params.untilYourNextTurn ? {untilYourNextTurn: true} : {}), fresh: true}
-      : {at: params.at ?? "end step"}),
+      /* "At the beginning of YOUR next upkeep" (rebound, CR 702.88a; rules/stack.mjs): its controller's, not the next one's. */
+      : {at: params.at ?? "end step", ...(params.yours === true ? {yours: true} : {})}),
     controller: context.controller,
     source: context.source ?? null,
     effects: rememberNow(params.effects ?? [], context, {keepThat: waits, state}),

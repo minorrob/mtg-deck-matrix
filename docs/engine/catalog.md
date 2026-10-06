@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,144 defined and playable today; 2,460 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,148 defined and playable today; 2,469 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,17 +18,17 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 38 | 0 | 19 | 137 |
+| Keyword abilities (CR 702) | 194 | 40 | 0 | 17 | 137 |
 | Keyword actions (CR 701) | 70 | 19 | 3 | 4 | 44 |
 | Effects | 192 | 62 | 1 | 9 | 120 |
-| Triggers | 138 | 17 | 4 | 5 | 112 |
+| Triggers | 138 | 18 | 4 | 4 | 112 |
 | Static abilities | 77 | 11 | 2 | 0 | 64 |
 | Replacement effects | 34 | 0 | 4 | 0 | 30 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
 | Options and conditions | 37 | 23 | 5 | 0 | 9 |
-| Amounts the game counts | 188 | 12 | 1 | 0 | 175 |
+| Amounts the game counts | 188 | 13 | 1 | 0 | 174 |
 | Choices | 15 | 12 | 0 | 0 | 3 |
-| Other keyword constructs | 16 | 4 | 0 | 1 | 11 |
+| Other keyword constructs | 16 | 6 | 0 | 1 | 9 |
 
 ## What to build next
 
@@ -37,7 +37,7 @@ The things that alone hold back the most of the most-played cards.
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 26 | 99 |
-| option | Remembering what an effect moved | — | missing | 23 | 95 |
+| option | Remembering what an effect moved | — | missing | 22 | 93 |
 | option | You may play or cast a card from another zone | — | missing | 18 | 73 |
 | keyword construct | ETBReplacement | — | missing | 9 | 32 |
 | effect | SetState | setState | named | 9 | 19 |
@@ -108,7 +108,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.62 | Suspend | — | missing | 3 | 72 | 3 | 3 |
 | 702.35 | Madness | — | missing | 3 | 62 | 3 | 2 |
 | 702.84 | Unearth | — | named | 3 | 58 | 3 | 3 |
-| 702.88 | Rebound | — | named | 3 | 35 | 3 | 3 |
+| 702.88 | Rebound | Rebound | built | 3 | 35 | 0 | 0 |
 | 702.189 | Firebending | — | missing | 3 | 26 | 3 | 2 |
 | 702.126 | Improvise | — | missing | 3 | 24 | 3 | 2 |
 | 702.151 | Reconfigure | — | missing | 3 | 21 | 3 | 1 |
@@ -118,7 +118,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.89 | Umbra Armor | — | named | 3 | 15 | 3 | 3 |
 | 702.52 | Dredge | — | missing | 3 | 14 | 3 | 3 |
 | 702.37 | Morph | — | missing | 2 | 153 | 2 | 1 |
-| 702.30 | Echo | — | named | 2 | 52 | 2 | 1 |
+| 702.30 | Echo | Echo | built | 2 | 52 | 0 | 0 |
 | 702.103 | Bestow | — | missing | 2 | 43 | 2 | 2 |
 | 702.28 | Shadow | — | missing | 2 | 39 | 2 | 1 |
 | 702.83 | Exalted | — | missing | 2 | 35 | 2 | 2 |
@@ -571,7 +571,7 @@ The things that alone hold back the most of the most-played cards.
 | SpellAbilityCast | — | missing | 1 | 6 | 1 | 0 |
 | AbilityTriggered | — | missing | 1 | 4 | 1 | 1 |
 | Countered | — | missing | 1 | 4 | 1 | 1 |
-| Exiled | exiled | named | 1 | 3 | 1 | 0 |
+| Exiled | exiled | built | 1 | 3 | 0 | 0 |
 | LifeLostAll | — | missing | 1 | 2 | 1 | 1 |
 | MilledOnce | — | missing | 1 | 2 | 1 | 1 |
 | TapAll | — | missing | 1 | 2 | 1 | 1 |
@@ -826,7 +826,7 @@ The things that alone hold back the most of the most-played cards.
 | You may, decided by a named player | modal (Yes / No) | partial | 176 | 1499 | 0 | 0 |
 | An effect's condition: if a permanent is present | an effect's condition {present ...} | built | 142 | 1292 | 0 | 0 |
 | Fewer targets than the most ("up to", "any number of") | a target's count {min, max} (script/bind.mjs), picked as a pick-several | built | 126 | 1672 | 0 | 0 |
-| Remembering what an effect moved | — | missing | 124 | 1168 | 95 | 23 |
+| Remembering what an effect moved | — | missing | 124 | 1168 | 93 | 22 |
 | More than one target of a kind ("up to N") | a target's count {min, max} (script/bind.mjs); a count that is X is not built | partial | 123 | 1664 | 0 | 0 |
 | Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 99 | 26 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
@@ -1019,6 +1019,7 @@ The things that alone hold back the most of the most-played cards.
 | — | Initiative | — | missing | 0 | 1 | 0 | 0 |
 | — | InOwnMainPhase | — | missing | 0 | 1 | 0 | 0 |
 | — | IsPrime | — | missing | 0 | 1 | 0 | 0 |
+| — | It entered from, or was cast from, your library | condition {cameFrom: "library"} (script/condition.mjs) | built | 0 | 1 | 0 | 0 |
 | — | LastStateGraveyard | — | missing | 0 | 1 | 0 | 0 |
 | — | LastTurnEntered | — | missing | 0 | 1 | 0 | 0 |
 | — | LifeYourTeamGainedThisTurn | — | missing | 0 | 1 | 0 | 0 |
@@ -1044,7 +1045,6 @@ The things that alone hold back the most of the most-played cards.
 | — | TriggeredPayingMana | — | missing | 0 | 1 | 0 | 0 |
 | — | TypesSharedWith | — | missing | 0 | 1 | 0 | 0 |
 | — | wasCastFromYourHand | — | missing | 0 | 1 | 0 | 0 |
-| — | wasCastFromYourLibrary | — | missing | 0 | 1 | 0 | 0 |
 | — | xColorPaid | — | missing | 0 | 1 | 0 | 0 |
 | — | YouDrewLastTurn | — | missing | 0 | 1 | 0 | 0 |
 | — | YouFlipThisTurn | — | missing | 0 | 1 | 0 | 0 |
@@ -1086,8 +1086,8 @@ The things that alone hold back the most of the most-played cards.
 | TypeCycling | TypeCycling | built | 3 | 96 | 0 | 0 |
 | Start your engines | — | missing | 3 | 46 | 3 | 2 |
 | AlternateAdditionalCost | — | missing | 3 | 44 | 3 | 2 |
-| Protection from black | — | missing | 2 | 48 | 2 | 0 |
-| Protection from white | — | missing | 2 | 32 | 2 | 1 |
+| Protection from black | Protection from black | built | 2 | 48 | 0 | 0 |
+| Protection from white | Protection from white | built | 2 | 32 | 0 | 0 |
 | Strive | — | missing | 2 | 20 | 2 | 2 |
 | Multikicker | — | named | 2 | 19 | 1 | 0 |
 | Partner with | — | missing | 1 | 52 | 1 | 0 |

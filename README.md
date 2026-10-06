@@ -649,6 +649,19 @@ every selector, and back in, the same objects, at their controller's untap; a pl
 life total that can't change, until that player's next turn.
 `engine-exigent` holds Emrakul, the Exigent Doom's pieces: a spell's own cast trigger; a card exiled from hand as a cost,
 cast from exile for as long as it remains there, and an effect that lasts until that cast; ward of three sacrifices.
+AI 1's exile and flicker cards (Chulane, after the live game of 2026-10-04) have nine:
+`engine-name-lock` holds Reflector Mage's lock: its owner can't cast spells of that creature's name until your next turn,
+from any zone and as an effect casts, and it ends as that turn begins or would have (CR 800.4m).
+`engine-linked-token` holds Skyclave Apparition's token: each owner of the exiled cards creates an X/X of all their mana
+values together, none once nothing is in exile; a linked exile done twice has exiled both.
+`engine-same-name-exile` holds Deputy of Detention's exile of every nonland permanent of the target's name that player
+controls, hexproof or not, until it leaves; nothing when the target is illegal.
+`engine-exiled-trigger` holds "whenever a creature is exiled from the battlefield" (Soulherder), looking back at each one.
+`engine-came-from` holds Fblthp, the Lost: entered from, or cast from, your library, kept with its trigger; any spell's target.
+`engine-rebound` holds rebound (Ephemerate): cast from hand and resolved, exiled and cast free at its caster's next upkeep.
+`engine-echo` holds echo (Karmic Guide) and "unless" a mana cost with colors, paid the way the payer chooses.
+`engine-protection-color` holds protection from a color, as the source now is: no damage, block, target or Aura.
+`engine-unless-either-way` holds Divert Disaster's "unless its controller pays; if they do, you ...", an outcome either way.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -767,7 +780,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 308 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 317 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1047,6 +1060,15 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-suspend` — `tests/engine-suspend.mjs`
 - `engine-phasing` — `tests/engine-phasing.mjs`
 - `engine-exigent` — `tests/engine-exigent.mjs`
+- `engine-name-lock` — `tests/engine-name-lock.mjs`
+- `engine-linked-token` — `tests/engine-linked-token.mjs`
+- `engine-same-name-exile` — `tests/engine-same-name-exile.mjs`
+- `engine-exiled-trigger` — `tests/engine-exiled-trigger.mjs`
+- `engine-came-from` — `tests/engine-came-from.mjs`
+- `engine-rebound` — `tests/engine-rebound.mjs`
+- `engine-echo` — `tests/engine-echo.mjs`
+- `engine-protection-color` — `tests/engine-protection-color.mjs`
+- `engine-unless-either-way` — `tests/engine-unless-either-way.mjs`
 
 ## Design and execution record
 

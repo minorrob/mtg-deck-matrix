@@ -111,6 +111,18 @@ export function nextLivingPlayer(state, from) {
   throw new Error("Every player has lost; there is no next turn");
 }
 
+/* The seats passed over between one turn and the next, in seat order: each a player who has left the game and whose turn
+   would have begun there (CR 800.4k, 800.4m). */
+function skippedSeats(state, from, to) {
+  const count = state.players.length, skipped = [];
+  for (let step = 1; step < count; step += 1) {
+    const at = (from + step) % count;
+    if (at === to) break;
+    if (state.players[at].lost) skipped.push(at);
+  }
+  return skipped;
+}
+
 /* ---- events, in the envelope the existing readers expect ---- */
 
 /* `ForgeProbe.java` nests everything under `data.fields` and puts the turn on `data`, and
@@ -595,11 +607,18 @@ export function advance(state) {
   if (next >= STEPS.length) {
     /* CR 500.7 extra turns and CR 500.8 extra phases arrive in 1.6 with the triggers that grant
        them; until then a turn is followed by the next living player's. */
+    const previous = state.activePlayer;
     state.activePlayer = nextLivingPlayer(state, state.activePlayer);
     state.turn += 1;
+    /* "Since the beginning of your last upkeep" (echo, CR 702.30a; script/condition.mjs): the turn of theirs before this one. */
+    if (state.players[state.activePlayer].turnBegan > 0) state.players[state.activePlayer].previousTurnBegan = state.players[state.activePlayer].turnBegan;
     state.players[state.activePlayer].turnBegan = state.turn;   /* CR 302.6, keywords/timing.mjs */
+    /* Whose next turn has now begun: this player's -- and each player who has left the game and whose turn it would have been
+       on the way here, since an effect lasting until that player's next turn lasts until that turn would have begun (CR
+       800.4m: Reflector Mage's controller conceding does not lock a name for the rest of the game). */
+    const reached = [...skippedSeats(state, previous, state.activePlayer), state.activePlayer];
     /* "Until your next turn" (goad, CR 701.15a): over as that player's turn begins. */
-    state.effects = (state.effects ?? []).filter((e) => !(e.until === "your-next-turn" && e.sourceController === state.activePlayer));
+    state.effects = (state.effects ?? []).filter((e) => !(e.until === "your-next-turn" && reached.includes(e.sourceController)));
     /* And "until that player's next turn" (Teferi's Reproach): over as that player's turn begins. */
     state.effects = state.effects.filter((e) => !(e.until === "their-next-turn" && (e.players ?? []).includes(state.activePlayer)));
     /* And a delayed trigger that lasted until then (effects/permanents.mjs, `untilYourNextTurn`). */

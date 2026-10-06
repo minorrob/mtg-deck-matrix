@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Karmic Guide",
+    "oracleId": "8c31fec9-e4b3-4761-990e-7be38eb05604",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel",
+      "Spirit"
+    ],
+    "manaCost": "{3}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying, protection from black\nEcho {3}{W}{W} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)\nWhen this creature enters, return target creature card from your graveyard to the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "protection from black",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "B"
+        ]
+      }
+    },
+    {
+      "kind": "keyword",
+      "text": "Echo {3}{W}{W}",
+      "keyword": "echo",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{W}{W}"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, return target creature card from your graveyard to the battlefield.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "battlefield"
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ]
+    }
+  ]
+}

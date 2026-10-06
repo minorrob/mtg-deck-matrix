@@ -88,7 +88,8 @@ export const STATIC_RULES = Object.freeze({
       (script/effects/resources.mjs, changeLife) and lifelink in combat (rules/combat.mjs). */
   "cant-gain-life": "script/effects/resources.mjs",
   /** "Your opponents can't cast spells from anywhere other than their hands", "during your turn", "more than one spell each
-      turn" (CantBeCast): castForbidden, read where a cast is offered. rules/actions.mjs. */
+      turn" (CantBeCast): castForbidden, read where a cast is offered. rules/actions.mjs. And for a while, by an effect
+      (effectUntil): "can't cast spells with the same name as that creature until your next turn" (Reflector Mage). */
   "cant-cast": "rules/actions.mjs",
   /** "Creatures can't attack you unless their controller pays {2} for each" (CantAttackUnless): attackTax, paid as attackers
       are declared. rules/combat.mjs. */
@@ -120,6 +121,9 @@ export const STATIC_RULES = Object.freeze({
   /** Storm (CR 702.40a): the keyword kept as this static, read as the spell is cast (cards/index.mjs; batch 77 names it
       here, where every rule a definition carries is named). */
   "storm": "rules/actions.mjs",
+  /** Rebound (CR 702.88a): the keyword kept as this static (cards/index.mjs), read as the spell leaves the stack: cast from
+      its owner's hand and resolved, it is exiled and may be cast free at its caster's next upkeep (Ephemerate). */
+  "rebound": "rules/stack.mjs",
   /** "If an artifact or creature entering causes a triggered ability of a permanent you control to trigger, that ability
       triggers an additional time" (Panharmonicon, CR 603.2d): `affects` whose abilities, `cause` {event: enters, dies or
       attacks, filter} what caused it, if the card says. rules/trigger.mjs, as triggers are collected. */
@@ -189,6 +193,13 @@ export function freeCast(state, player, cardId) {
 export function castForbidden(state, player, cardId) {
   const object = state.objects[cardId];
   if (!object) return false;
+  /* AN EFFECT WITH A DURATION (effects/permanents.mjs, effectUntil's `rule: "cant-cast"`): "that creature's owner can't cast
+     spells with the same name as that creature until your next turn" (Reflector Mage) -- the players it names, and the
+     spells `spells` describes (a name, CR 201.2a), from any zone they would be cast from. */
+  for (const effect of state.effects ?? []) {
+    if (effect.rule !== "cant-cast" || !(effect.players ?? []).includes(player)) continue;
+    if (compileSelector({...(effect.spells ?? {}), what: "card", zone: object.zone})(state, cardId, {controller: effect.sourceController})) return true;
+  }
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
     for (const ability of holder.abilities ?? []) {

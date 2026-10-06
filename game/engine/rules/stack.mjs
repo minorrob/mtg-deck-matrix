@@ -40,6 +40,7 @@ import {moveObject, addObject, removeObject} from "../state/index.mjs";
 import {enteringModifications} from "./replacement.mjs";
 import {countersPlaced} from "./statics.mjs";
 import {beginResolution, resolutionPending} from "../script/resolution.mjs";
+import {delayedTrigger} from "../script/effects/permanents.mjs";
 import {recheckTargets, factsOf, modalScript} from "../script/bind.mjs";
 
 /* The projection contract (§12.1) names these zones with a capital, and the telemetry matches on
@@ -285,7 +286,13 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
        its OWNER's graveyard as the final part of its resolution — not the graveyard of whoever
        cast it, which is a different player whenever a card has been borrowed. */
     /* Cast with flashback, it is exiled instead of going anywhere else (CR 702.34a): resolved, or fizzled. */
-    const to = entry.permanent && !fizzled ? "battlefield" : entry.flashback || entry.graveyardToExile ? "exile" : "graveyard";
+    /* REBOUND (CR 702.88a): an instant or sorcery cast from its owner's hand that resolves is exiled instead of going to the
+       graveyard, and at the beginning of its caster's next upkeep they may cast it from exile without paying its mana cost
+       (below). Countered, or every target illegal, and it does not resolve: no rebound (the card's ruling); a copy was not
+       cast (CR 707.10) and has ceased to exist above. Instances are redundant (702.88c). */
+    const rebound = !fizzled && entry.cast?.from === "hand"
+      && (state.objects[entry.objectId].abilities ?? []).some((a) => a.kind === "static" && a.rule === "rebound");
+    const to = entry.permanent && !fizzled ? "battlefield" : entry.flashback || entry.graveyardToExile || rebound ? "exile" : "graveyard";
     /* CR 614.12, asked before the move: a permanent coming off the stack enters tapped or with
        counters as ONE event, and the abilities that say so are on the spell, not on anything that
        is on the battlefield yet. */
@@ -295,6 +302,14 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
         types: object.types, abilities: object.abilities, x: entry.x ?? 0, escaped: entry.escaped === true, kicked: entry.kicked ?? 0})
       : null;
     const arrived = moveObject(state, entry.objectId, to, to === "graveyard" ? owner : null);
+    /* Rebound's delayed trigger (CR 702.88a, 603.7d: its controller the spell's): at the beginning of THEIR next upkeep, the
+       card in exile -- the object it now is, so one that leaves exile meanwhile is not cast (CR 400.7) -- may be cast
+       without paying its mana cost, as the trigger resolves (CR 608.2g; effects/asking.mjs, `play`), or left there for good. */
+    if (rebound && state.objects[arrived]?.zone === "exile")
+      delayedTrigger(state, {at: "upkeep", yours: true, text: `Rebound: you may cast ${card.name} from exile without paying its mana cost.`,
+        effects: [{effect: "play", from: "targets", targets: [arrived], free: true}]}, {controller: entry.playerId, source: arrived});
+    /* "Or was cast from your library" (Fblthp, the Lost; script/condition.mjs, `cameFrom`): a permanent spell cast from a library. */
+    if (to === "battlefield" && entry.cast?.from === "library") state.objects[arrived].cameFrom = {zone: "library", owner, cast: true};
     /* CR 608.3a: it enters under its caster's control -- not its owner's, when a card was cast by another player (Tinybones,
        the Pickpocket casting a card from an opponent's graveyard). */
     if (to === "battlefield") state.objects[arrived].controller = entry.playerId;

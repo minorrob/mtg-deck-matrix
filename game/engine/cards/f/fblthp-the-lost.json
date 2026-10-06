@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fblthp, the Lost",
+    "oracleId": "ba5a7ac0-b625-42e9-af05-2680a01a95ed",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Homunculus"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "When Fblthp enters, draw a card. If it entered from your library or was cast from your library, draw two cards instead.\nWhen Fblthp becomes the target of a spell, shuffle Fblthp into its owner's library.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Fblthp enters, draw a card. If it entered from your library or was cast from your library, draw two cards instead.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "cameFrom": "library"
+          },
+          "then": [
+            {
+              "effect": "draw",
+              "count": 2
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When Fblthp becomes the target of a spell, shuffle Fblthp into its owner's library.",
+      "trigger": {
+        "on": "becomes target",
+        "who": "self",
+        "spell": true
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "library",
+          "shuffle": true
+        }
+      ]
+    }
+  ]
+}

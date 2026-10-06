@@ -443,6 +443,40 @@ export function payWithUnits(state, player, units, indices, amount) {
   return events;
 }
 
+/* ---- paying "unless" a mana cost with colored symbols (CR 118.12; echo's "{3}{W}{W}", CR 702.30a) ----
+ *
+ * The same units as a generic payment -- the pool's mana, then the payer's plain sources -- each able to pay a symbol of a
+ * color it gives (tapPlans). The ways to pay are told apart by the kinds of unit they spend, as a cast tapped for is; one
+ * way, and it is paid without asking; more, and which is the payer's (CR 605.3a). A cost with {X}, Phyrexian, snow or
+ * monohybrid symbols has no ways here. */
+const unitColors = (unit) => (unit.from === "pool" ? [unit.color] : unit.kind.split(""));
+/** The ways the payer could pay this mana cost now, up to `limit`, with the units they spend: `{units, plans}`. */
+export function unlessPlans(state, player, cost, limit = 12) {
+  const units = paymentUnits(state, player);
+  let parsed = null;
+  try { parsed = parseManaCost(cost); } catch { return {units, plans: []}; }
+  return {units, plans: tapPlans(units.map((unit, id) => ({id, colors: unitColors(unit)})), parsed, limit)};
+}
+/** How one of those ways reads: the units it spends. */
+export const planWords = (units, plan) => plan.taps.map((t) => units[t.id]?.label ?? "a source").join(", ");
+/** Pay it that way: the pool's mana spent, the sources tapped. @returns {Array} events */
+export function payPlan(state, player, units, plan) {
+  const events = [];
+  for (const {id} of plan.taps) {
+    const unit = units[id];
+    if (!unit) throw new Error("That way to pay is no longer there");
+    if (unit.from === "pool") {
+      if ((state.players[player].manaPool[unit.color] ?? 0) < 1) throw new Error("That way to pay is no longer there");
+      state.players[player].manaPool[unit.color] -= 1;
+      continue;
+    }
+    if (!state.objects[unit.id] || state.objects[unit.id].tapped) throw new Error("That way to pay is no longer there");
+    state.objects[unit.id].tapped = true;
+    events.push({kind: "GameEventCardTapped", data: {turn: state.turn, phase: state.phase, fields: {card: {cardId: unit.id, name: state.objects[unit.id].card, owner: state.objects[unit.id].owner, controller: player, faceDown: false}, tapped: true}}});
+  }
+  return events;
+}
+
 /** Pay it: the pool first, then tap sources as needed. @returns {Array} events */
 export function payGeneric(state, player, amount) {
   const events = [];
