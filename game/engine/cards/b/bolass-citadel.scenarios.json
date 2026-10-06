@@ -1,0 +1,540 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Bolas's Citadel",
+  "fixtures": {
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{3}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Pain": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{0}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "You lose 37 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "loseLife",
+            "amount": 37
+          }
+        ]
+      }
+    },
+    "Blaze": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{X}{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Blaze deals X damage to target player.",
+        "targets": [
+          {
+            "what": "player"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": "X",
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Shrine": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "abilities": [
+        {
+          "id": "g",
+          "kind": "activated",
+          "text": "{T}: You gain 1 life.",
+          "cost": [
+            {
+              "atom": "{T}"
+            }
+          ],
+          "targets": [],
+          "effects": [
+            {
+              "effect": "gainLife",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "The top card cast for life equal to its mana value, not mana: a Giant for 4 life, his pool untouched",
+      "library": [
+        "Giant"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bolas's Citadel",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Giant"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "cast": "Giant"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 36
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bolas's Citadel",
+            "Forest",
+            "Giant"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A land from the top, his land drop; then the next card down is the top, and is cast",
+      "library": [
+        "Forest",
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bolas's Citadel"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Forest"
+        },
+        {
+          "cast": "Bear"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "play-land",
+                "card": "Wastes"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bolas's Citadel",
+            "Forest",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 18
+        }
+      ]
+    },
+    {
+      "name": "An {X} spell from the top: X is 0, and 1 life (CR 107.3b)",
+      "library": [
+        "Blaze"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bolas's Citadel"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Blaze",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Blaze"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "At 3 life a Giant of mana value 4 on top is not offered: life is paid only from as much as there is (CR 119.4)",
+      "library": [
+        "Giant"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bolas's Citadel"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Pain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Pain"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 3
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Giant"
+          },
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 20
+        }
+      ]
+    },
+    {
+      "name": "... and at 3 life an Ogre of mana value 3 is",
+      "library": [
+        "Ogre"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bolas's Citadel"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Pain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Pain"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 3
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Ogre"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "{T}, sacrifice ten nonland permanents of twelve -- which ten asked once it is taken -- and each opponent loses 10",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bolas's Citadel",
+            "Forest",
+            "Shrine",
+            "Shrine",
+            "Shrine",
+            "Shrine",
+            "Shrine",
+            "Shrine",
+            "Shrine",
+            "Shrine",
+            "Shrine",
+            "Shrine",
+            "Shrine"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Bolas's Citadel"
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "min": 10
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Bolas's Citadel",
+            "Shrine (1)",
+            "Shrine (2)",
+            "Shrine (3)",
+            "Shrine (4)",
+            "Shrine (5)",
+            "Shrine (6)",
+            "Shrine (7)",
+            "Shrine (8)",
+            "Shrine (9)"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 30
+        },
+        {
+          "seat": 2,
+          "life": 30
+        },
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Shrine",
+            "Shrine"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "count": 10
+        }
+      ]
+    },
+    {
+      "name": "Ten nonland permanents, the Citadel among them: one way, all ten; nine is not enough",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bolas's Citadel",
+            "Forest",
+            "Shrine",
+            "Shrine",
+            "Shrine",
+            "Shrine",
+            "Shrine",
+            "Shrine",
+            "Shrine",
+            "Shrine",
+            "Shrine"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Shrine",
+            "Shrine",
+            "Shrine",
+            "Shrine",
+            "Shrine",
+            "Shrine",
+            "Shrine",
+            "Shrine",
+            "Shrine"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Bolas's Citadel"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "activate": "Bolas's Citadel"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 30
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Bolas's Citadel",
+            "seat": 0
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

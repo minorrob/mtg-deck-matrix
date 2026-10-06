@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bolas's Citadel",
+    "oracleId": "2bd111bb-ce02-414c-b5b7-e0e037d8d96b",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{B}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You may look at the top card of your library any time.\nYou may play lands and cast spells from the top of your library. If you cast a spell this way, pay life equal to its mana value rather than pay its mana cost.\n{T}, Sacrifice ten nonland permanents: Each opponent loses 10 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may look at the top card of your library any time.",
+      "rule": "look-at-top",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "You may play lands and cast spells from the top of your library. If you cast a spell this way, pay life equal to its mana value rather than pay its mana cost.",
+      "rule": "play-from",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "zone": "library-top",
+      "lands": true,
+      "spells": true,
+      "payLife": "manaValue"
+    },
+    {
+      "kind": "activated",
+      "text": "{T}, Sacrifice ten nonland permanents: Each opponent loses 10 life.",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "nonTypes": [
+              "Land"
+            ]
+          },
+          "count": 10
+        }
+      ],
+      "effects": [
+        {
+          "effect": "loseLife",
+          "who": "opponent",
+          "amount": 10
+        }
+      ]
+    }
+  ]
+}

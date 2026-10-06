@@ -683,6 +683,29 @@ never a copy; until its controller's next turn in four seats.
 `engine-manifest` holds manifest (Reality Shift): a face-down 2/2 with no name, the card its controller's alone to see --
 no other seat's projection, no event and no line of the history names it -- turned face up for its mana cost as a special
 action, the same object, or revealed as it leaves.
+`engine-ability-tax` holds Tithe Taker's "during your turn, spells your opponents cast and abilities they activate cost {1}
+more": each opponent's, in three players, never its controller's, never on another's turn; a {T} ability, a card's in hand,
+X; the increase before a reduction; and mana abilities untouched.
+`engine-mill-cost` holds a mill in a mana ability's cost (Millikin): offered only with the cards to mill, milled before the
+mana is added, off the stack, and never tapped by a cast for itself.
+`engine-corrupted` holds Skrelv's Hive's corrupted -- an opponent still in the game with three poison counters -- and "with
+toxic" in a layer's affects, ordered behind an effect that gives the keyword (CR 613.8a); its Mite that can't block.
+`engine-next-upkeep` holds "at the beginning of your next upkeep" (Rally the Ancestors): its controller's own, past every
+other player's in four, one made in that upkeep waiting for the next; and "mana value X or less".
+`engine-dig-total` holds "any number of cards with total mana value 4 or less" (Ao, the Dawn Sky): one card a question,
+only what still fits, "No more", the rest under in a random order; and "each permanent that's a creature or Vehicle" once.
+`engine-vow` holds Promise of Loyalty: each player keeps exactly one creature, asked in turn order in four players, a vow
+counter on it, the rest sacrificed at once; and those can't attack its caster or their planeswalkers while the counter stays.
+`engine-play-permission` holds which permanent's permission a card is played through when they differ (Serra Paragon,
+Crucible of Worlds, Bolas's Citadel, Thundermane Dragon): each its own offer; Paragon's grant on the permanent while it is
+that object; the Citadel's life rather than mana, X as 0, a card with no mana cost for 0.
+`engine-sacrifice-many` holds Bolas's Citadel's "sacrifice ten nonland permanents": listed while the sets are few, asked once
+taken past that, checked again as paid; each opponent still in the game losing 10.
+`engine-mana-riders` holds mana that triggers when spent (Path of Ancestry, Study Hall): paid with it or without as the player
+chooses, the plain mana first where it does nothing, which rider when one must go, gone with its pool; "shares a creature
+type with your commander" with partners and changelings; the times a commander was cast from the command zone.
+`engine-proliferate-twice` holds Tekuthal, Inquiry Dominus: each one doubling its controller's proliferates, each its own
+choice; and three counters from among its controller's other permanents, picked once taken and checked as removed.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -801,7 +824,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 324 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 334 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1097,6 +1120,16 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-class` — `tests/engine-class.mjs`
 - `engine-transform` — `tests/engine-transform.mjs`
 - `engine-manifest` — `tests/engine-manifest.mjs`
+- `engine-ability-tax` — `tests/engine-ability-tax.mjs`
+- `engine-mill-cost` — `tests/engine-mill-cost.mjs`
+- `engine-corrupted` — `tests/engine-corrupted.mjs`
+- `engine-next-upkeep` — `tests/engine-next-upkeep.mjs`
+- `engine-dig-total` — `tests/engine-dig-total.mjs`
+- `engine-vow` — `tests/engine-vow.mjs`
+- `engine-play-permission` — `tests/engine-play-permission.mjs`
+- `engine-sacrifice-many` — `tests/engine-sacrifice-many.mjs`
+- `engine-mana-riders` — `tests/engine-mana-riders.mjs`
+- `engine-proliferate-twice` — `tests/engine-proliferate-twice.mjs`
 
 ## Design and execution record
 

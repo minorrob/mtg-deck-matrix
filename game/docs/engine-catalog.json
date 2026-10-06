@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1153,
-  "everyRule": 2489
+  "defined": 1159,
+  "everyRule": 2492
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -8120,9 +8120,9 @@
   "Replacement effects": {
    "tally": {
     "built": 0,
-    "partial": 4,
+    "partial": 5,
     "named": 0,
-    "missing": 30
+    "missing": 29
    },
    "entries": [
     {
@@ -8381,12 +8381,12 @@
      "kind": "replacement",
      "rule": null,
      "name": "Proliferate",
-     "engine": null,
-     "status": "missing",
+     "engine": "script/resolution",
+     "status": "partial",
      "forge": "Proliferate",
      "top": 1,
      "all": 1,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -8946,8 +8946,8 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 98,
-     "alone": 26
+     "blocks": 97,
+     "alone": 25
     },
     {
      "kind": "option",
@@ -9006,8 +9006,8 @@
      "forge": "MayPlay",
      "top": 99,
      "all": 625,
-     "blocks": 73,
-     "alone": 18
+     "blocks": 72,
+     "alone": 17
     },
     {
      "kind": "option",
@@ -10024,7 +10024,7 @@
      "forge": "Num",
      "top": 1,
      "all": 3,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {

@@ -1,0 +1,470 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Path of Ancestry",
+  "fixtures": {
+    "Elder": {
+      "types": [
+        "Creature"
+      ],
+      "supertypes": [
+        "Legendary"
+      ],
+      "subtypes": [
+        "Elf",
+        "Druid"
+      ],
+      "manaCost": "{G}{W}",
+      "colors": [
+        "G",
+        "W"
+      ],
+      "colorIdentity": [
+        "G",
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Elf Warrior": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf",
+        "Warrior"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Gift": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "You gain 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Its mana spent on an Elf creature spell, his commander an Elf Druid: offered with it and without, and with it he scries 1",
+      "library": [
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "Elder"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Path of Ancestry",
+            "Forest",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Elf Warrior"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Path of Ancestry",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Elf Warrior"
+              },
+              "count": 2
+            }
+          ]
+        },
+        {
+          "cast": "Elf Warrior",
+          "riders": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Bear"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Path of Ancestry",
+            "Forest",
+            "Forest",
+            "Elf Warrior"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "... and paid with the Forest's {G} instead, nothing triggers: the Bear stays on top",
+      "library": [
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "Elder"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Path of Ancestry",
+            "Forest",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Elf Warrior"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Path of Ancestry",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Elf Warrior",
+          "riders": false
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            },
+            {
+              "seat": 0,
+              "pool": {
+                "G": 1
+              }
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Spent on a Bear, which shares no type with an Elf Druid, or on a Gift: one way to pay, and no scry",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "Elder"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Path of Ancestry",
+            "Forest",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Gift"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Path of Ancestry",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Bear"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "cast": "Bear"
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Path of Ancestry",
+          "mana": {
+            "W": 1
+          }
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Gift"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "cast": "Gift"
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 41
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Path of Ancestry",
+            "Forest",
+            "Plains",
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "It enters tapped; it taps for a color of his commander's identity, and for none for Maya, who has no commander",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "Elder"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Path of Ancestry"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Path of Ancestry"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Path of Ancestry"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Path of Ancestry"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Path of Ancestry"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "G": 1
+                },
+                {
+                  "W": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pass": 1
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Path of Ancestry",
+            "seat": 1
+          },
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Path of Ancestry",
+            "Path of Ancestry"
+          ]
+        }
+      ]
+    }
+  ]
+}

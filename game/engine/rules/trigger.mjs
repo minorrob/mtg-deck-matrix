@@ -562,9 +562,12 @@ export function collectTriggers(state, events) {
     if (moment && (state.delayedTriggers ?? []).length) {
       /* "At the beginning of your next upkeep" (rebound, `yours`) and "at the beginning of your precombat main phase" (paradigm,
          `yourTurn`): its controller's step only. "At the beginning of that player's next end step" (`player`, The Eternal
-         Wanderer): only in a turn of theirs. A paradigm's lasts the game (`forever`). */
-      const turnOf = event.data?.fields?.playerTurn?.playerId;
-      const due = state.delayedTriggers.filter((d) => d.at === moment && (!d.yours || d.controller === turnOf) && (!d.yourTurn || d.controller === turnOf) && (d.player === undefined || d.player === turnOf));
+         Wanderer): only in a turn of theirs. A paradigm's lasts the game (`forever`). "At the beginning of your next upkeep"
+         (Rally the Ancestors, `at: "your upkeep"`): the next upkeep of a turn that is its controller's -- another player's
+         upkeep passes it by (CR 603.7). */
+      const turnOf = event.data?.fields?.playerTurn?.playerId ?? state.activePlayer;
+      const due = state.delayedTriggers.filter((d) => (d.at === moment && (!d.yours || d.controller === turnOf) && (!d.yourTurn || d.controller === turnOf) && (d.player === undefined || d.player === turnOf))
+        || (moment === "upkeep" && d.at === "your upkeep" && d.controller === turnOf));
       state.delayedTriggers = state.delayedTriggers.filter((d) => !due.includes(d) || d.forever === true);
       for (const d of due) state.pendingTriggers.push({
         abilityId: "delayed", text: d.text ?? (moment === "upkeep" ? "At the beginning of the next upkeep" : "At the beginning of the next end step"), controller: d.controller,

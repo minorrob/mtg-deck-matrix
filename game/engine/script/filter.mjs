@@ -46,6 +46,7 @@ export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
   "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander", "nonColors", "owner", "enteredThisTurn", "toughnessOverPower",
   "unblocked", "singleTarget", "goaded", "uniqueName", "sharesCreatureType", "multicolored", "sharesColor",
+  "sharesCreatureTypeWithCommander",
 ]);
 
 /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
@@ -112,6 +113,18 @@ function assertGrammar(selector) {
   if (selector.sharesCreatureType !== undefined) compileSelector({...selector.sharesCreatureType, what: "permanent"});
   if (selector.multicolored !== undefined && selector.multicolored !== true) throw new Error("A selector's multicolored is true: two or more colors");
   if (selector.sharesColor !== undefined && selector.sharesColor !== "self") throw new Error("A selector's sharesColor is \"self\": a color of its source's");
+  if (selector.sharesCreatureTypeWithCommander !== undefined && selector.sharesCreatureTypeWithCommander !== true)
+    throw new Error("A selector's sharesCreatureTypeWithCommander is true: a creature type of a commander of yours");
+}
+
+/* AN OBJECT'S CREATURE TYPES (CR 205.3m): the subtypes of a creature or a kindred card, through the layers on the
+   battlefield and as printed elsewhere; `every` for a changeling (CR 702.73a). A planeswalker's subtypes are not. */
+function creatureTypesOf(state, id) {
+  const object = state.objects[id];
+  const types = typesOf(state, id);
+  if (!types.includes("Creature") && !types.includes("Kindred")) return {every: false, types: []};
+  const subtypes = object.zone === "battlefield" ? subtypesOf(state, id) : object.subtypes ?? [];
+  return {every: everyCreatureTypeOf(state, id) === true, types: subtypes.filter(isCreatureType)};
 }
 
 /* A player with hexproof (CR 702.11c): a permanent of theirs with the static "you have hexproof" (rules/statics.mjs). */
@@ -138,7 +151,8 @@ function matchesManaValue(state, id, rule, context = {}) {
   /* "With even mana values" (Void Winnower): zero is even. */
   if (rule.even !== undefined && (value % 2 === 0) !== rule.even) return false;
   if (rule.min !== undefined && value < rule.min) return false;
-  if (rule.max !== undefined && value > rule.max) return false;
+  /* "With mana value X or less" (Rally the Ancestors): the X paid, as `exactly` reads it. */
+  if (rule.max !== undefined && value > (rule.max === "X" ? context.x ?? 0 : rule.max)) return false;
   return true;
 }
 
@@ -286,6 +300,19 @@ export function compileSelector(selector) {
         return theirs.some((t) => mine.has(t));
       };
       if (!others.some(shares)) return false;
+    }
+    /* "A creature spell that shares a creature type with your commander" (Path of Ancestry): with a commander the chooser
+       owns, wherever it is (CR 903.3) -- either of two (CR 702.124). A changeling shares every creature type with anything
+       that has one (CR 702.73a). */
+    if (selector.sharesCreatureTypeWithCommander === true) {
+      const mine = creatureTypesOf(state, id);
+      const shares = Object.values(state.objects).filter((o) => o.commander === true && o.owner === chooser).some((commander) => {
+        const theirs = creatureTypesOf(state, commander.id);
+        if (mine.every) return theirs.every || theirs.types.length > 0;
+        if (theirs.every) return mine.types.length > 0;
+        return mine.types.some((t) => theirs.types.includes(t));
+      });
+      if (!shares) return false;
     }
     /* "Whenever a goaded creature attacks" (effects/permanents.mjs goad). */
     if (selector.goaded === true && !(state.effects ?? []).some((e) => e.rule === "goaded" && e.affects.ids.includes(id))) return false;

@@ -49,8 +49,14 @@ export const STATIC_RULES = Object.freeze({
   "spells-cost-less": "rules/actions.mjs",
   /** CR 601.2f: "Noncreature spells cost {1} more to cast" (Thalia), "spells your opponents cast cost {2} more" (God-
       Pharaoh's Statue): `caster` any (the default), you or opponent; `affects` the spell; `amount`. actions.mjs, castCost.
-      "Spells that target this creature cost more" waits for a cost read with the targets chosen. */
+      "Spells that target this creature cost more" waits for a cost read with the targets chosen. "During your turn, spells
+      your opponents cast cost {1} more" (Tithe Taker): its `condition`, asked at each cast. */
   "spells-cost-more": "rules/actions.mjs",
+  /** CR 602.2b, 601.2f: "During your turn, ... abilities your opponents activate cost {1} more to activate unless they're
+      mana abilities" (Tithe Taker): `affects` the players whose activations cost more (a player selector, "you" its
+      controller), `amount` generic mana, `condition`. A mana ability is never made to cost more by it (CR 605). Read as an
+      activated ability's cost is, on the battlefield, in a hand or in a graveyard: actions.mjs, costPayment. */
+  "abilities-cost-more": "rules/actions.mjs",
   /** CR 601.2f, the card's own: "This spell costs {1} less to cast for each creature on the battlefield" (Vanquish the
       Horde), "{X} less, where X is the total power of creatures you control" (Ghalta). Read from the card wherever it
       is cast from, by actions.mjs through costReduction; its `amount` may be counted (script/amount.mjs). */
@@ -61,8 +67,10 @@ export const STATIC_RULES = Object.freeze({
   /** "You may play lands from your graveyard" (Crucible of Worlds), "you may cast Dragon spells from the top of your
       library" (Korlessa): `zone` "graveyard" or "library-top"; "once during each of your turns" (Kess) `yourTurn` and
       `limit`; "if a spell cast this way would be put into your graveyard, exile it instead" `graveyardToExile`; `lands`
-      and `spells` (a selector of the spells, or true for any). For the static's controller; rules/actions.mjs offers
-      them. */
+      and `spells` (a selector of the spells, or true for any). "If you do, it gains '...'" (Serra Paragon) `grants`, the
+      abilities the permanent then has; "pay life equal to its mana value rather than pay its mana cost" (Bolas's Citadel)
+      `payLife: "manaValue"`. For the static's controller; rules/actions.mjs offers them, each that does something
+      different its own offer (`via`). */
   "play-from": "rules/actions.mjs",
   /** "You may cast spells as though they had flash" (Vedalken Orrery), "artifact spells" (Shimmer Myr), "Aura and
       Equipment spells" (Sigarda's Aid): `spells` true or a selector of the spell, for the static's controller (CR 702.8a
@@ -160,6 +168,10 @@ export const STATIC_RULES = Object.freeze({
       `manaValueAtMost` a counted cap (As Foretold's time counters), and `condition` its own ("once during each of your
       turns", Zaffai and the Tempests: yourTurn, with a limit of one). rules/actions.mjs. */
   "cast-without-paying": "rules/actions.mjs",
+  /** CR 614.1a, 701.34: "If you would proliferate, proliferate twice instead" (Tekuthal, Inquiry Dominus): `affects` the
+      players whose proliferating it replaces (a player selector, "you" its controller). script/resolution.mjs, as a
+      proliferate reaches the head of a resolution (proliferateTimes). */
+  "proliferate-twice": "script/resolution.mjs",
 });
 
 /**
@@ -319,6 +331,13 @@ export function cantAttack(state, attacker, defender, planeswalker = null) {
     /* "Can't attack Jaces you control" (`toward`): only a planeswalker it describes, "you" the effect's controller -- never
        a player (no planeswalker, and no match). */
     if (effect.toward && !(matchesSelector({what: "permanent", ...effect.toward}, state, planeswalker, {controller: effect.sourceController}))) continue;
+    /* "For as long as it has a vow counter on it" (Promise of Loyalty; CR 611.2b): over for a creature without one. Only
+       that effect puts vow counters on, and it makes an effect of its own each time, so one that lost its counter and
+       somehow gained another is not a case the game can reach. */
+    if (effect.whileCounter && !((state.objects[attacker]?.counters?.[effect.whileCounter] ?? 0) > 0)) continue;
+    /* "Can't attack you or planeswalkers you control": the effect's controller, or a planeswalker they control (CR 506.3) --
+       anyone else it may attack. */
+    if (effect.defender === "you" && (defender !== effect.sourceController || (planeswalker !== null && effect.planeswalkers !== true))) continue;
     return true;
   }
   return false;
@@ -490,6 +509,8 @@ export function costIncrease(state, player, cardId) {
       if (caster === "you" && player !== holder.controller) continue;
       if (caster === "opponent" && player === holder.controller) continue;
       if (!matchesSelector({...(ability.affects ?? {}), what: "card", zone: object.zone}, state, cardId, {controller: holder.controller, source: holderId})) continue;
+      /* "During your turn" (Tithe Taker): only while its condition holds, asked at each cast. */
+      if (!conditionHolds(state, ability.condition, {controller: holder.controller, source: holderId})) continue;
       total += amountOf(state, ability.amount ?? 1, {controller: holder.controller, source: holderId});
     }
   }
@@ -504,6 +525,46 @@ export function costIncrease(state, player, cardId) {
     if (caster === "opponent" && player === effect.sourceController) continue;
     if (!matchesSelector({...(effect.affects ?? {}), what: "card", zone: object.zone}, state, cardId, {controller: effect.sourceController, source: null})) continue;
     total += effect.apply?.amount ?? 1;
+  }
+  return total;
+}
+
+/**
+ * HOW MANY TIMES A PLAYER PROLIFERATES WHEN THEY WOULD ONCE (CR 701.34, 614.1a): each `proliferate-twice` static whose
+ * `affects` takes them in doubles it -- two Tekuthals, four times: each replacement applies once, to the event as the one
+ * before left it (CR 614.5), and each proliferate it made is one it may replace. The order they apply in changes nothing,
+ * so nobody is asked (CR 616.1 asks only when it would).
+ */
+export function proliferateTimes(state, player) {
+  let times = 1;
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static" || ability.rule !== "proliferate-twice") continue;
+      if (compileSelector({what: "player", ...(ability.affects ?? {})})(state, player, {controller: holder.controller, source: holderId})) times *= 2;
+    }
+  }
+  return times;
+}
+
+/**
+ * HOW MUCH MORE AN ACTIVATED ABILITY COSTS (CR 602.2b, which determines its total cost as CR 601.2f does a spell's): every
+ * `abilities-cost-more` static on the battlefield whose `affects` -- a player selector, "you" its controller -- takes in
+ * the player activating it, while its condition holds. "Abilities your opponents activate cost {1} more to activate unless
+ * they're mana abilities" (Tithe Taker): generic mana, summed. Mana abilities never ask (rules/actions.mjs reads this for
+ * the others only), so "unless they're mana abilities" needs no word of its own.
+ */
+export function abilityCostIncrease(state, player) {
+  let total = 0;
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static" || ability.rule !== "abilities-cost-more") continue;
+      const context = {controller: holder.controller, source: holderId};
+      if (!compileSelector({what: "player", ...(ability.affects ?? {})})(state, player, context)) continue;
+      if (!conditionHolds(state, ability.condition, context)) continue;
+      total += amountOf(state, ability.amount ?? 1, context);
+    }
   }
   return total;
 }

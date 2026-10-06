@@ -549,6 +549,11 @@ export function effectUntil(state, params, context) {
     /* `toward`: which planeswalkers they can't attack ("Jaces you control"), "you" this effect's controller -- attacking a
        player, or any other planeswalker, they still may (rules/statics.mjs, cantAttack). */
     ...(params.rule === "cant-attack" && params.toward ? {toward: params.toward} : {}),
+    /* "Each of those creatures can't attack you or planeswalkers you control for as long as it has a vow counter on it"
+       (Promise of Loyalty): `defender` "you", this effect's controller, `planeswalkers` theirs too (CR 506.3), and
+       `whileCounter`, a duration of each creature's own -- while it has that counter (CR 611.2b; rules/statics.mjs). */
+    ...(params.rule === "cant-attack" && params.defender === "you" ? {defender: "you", ...(params.planeswalkers === true ? {planeswalkers: true} : {})} : {}),
+    ...(params.rule === "cant-attack" && typeof params.whileCounter === "string" ? {whileCounter: params.whileCounter} : {}),
     apply: params.apply ?? {},
     /* "Until end of turn" (the default), "until your next turn", or "ever": an effect with no duration -- "up to one other
        target creature loses all abilities" (Abigale) -- lasting as long as what it affects does (CR 611.2a; a permanent

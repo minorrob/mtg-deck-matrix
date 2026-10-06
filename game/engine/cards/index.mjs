@@ -63,8 +63,10 @@ function wardCost(cost) {
 }
 
 /* The rule statics that read their own condition: an alternative cost's "if you control a commander" (rules/actions.mjs);
-   an attack tax and "doesn't untap" "as long as" or "unless you have an enduring story" (rules/statics.mjs). */
+   an attack tax and "doesn't untap" "as long as" or "unless you have an enduring story" (rules/statics.mjs); and Tithe
+   Taker's "during your turn", on spells and on abilities that cost more. */
 const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "triggers-again", "cant-cast", "attack-tax", "doesnt-untap", "cast-without-paying",
+  "spells-cost-more", "abilities-cost-more",
   /* "Twice that many ... instead" at a Class level (Innkeeper's Talent, CR 716.2a; rules/statics.mjs, countersPlaced). */
   "more-counters"];
 
@@ -166,8 +168,10 @@ const TRIGGERS = {
     ? {on: "GameEventCardChangeZone", from: "Battlefield", to: "Graveyard", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {})} : null),
   /* "Whenever a token you control leaves the battlefield" (Nadier's Nightblade): to anywhere, `filter` read as it last
      existed (CR 603.10a). */
-  leaves: (t) => (ARRIVALS.includes(t.who ?? "self")
-    ? {on: "GameEventCardChangeZone", from: "Battlefield", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {})} : null),
+  /* "When this permanent is put into a graveyard from the battlefield" (Serra Paragon's grant): `to: "graveyard"`, a
+     permanent of any type -- "dies" is a creature's word for it (CR 700.4). */
+  leaves: (t) => (ARRIVALS.includes(t.who ?? "self") && [undefined, "graveyard"].includes(t.to)
+    ? {on: "GameEventCardChangeZone", from: "Battlefield", who: t.who ?? "self", ...(t.to === "graveyard" ? {to: "Graveyard"} : {}), ...(t.filter ? {filter: t.filter} : {})} : null),
   /* "Whenever a creature is exiled from the battlefield" (Soulherder): a permanent put into exile from the battlefield, `who`
      and `filter` read as it last existed -- a leaves-the-battlefield ability, so it looks back (CR 603.10a): a creature
      exiled with this one is seen, and so is this one. One whose owner then puts it in the command zone was exiled first
@@ -312,7 +316,9 @@ function manaAbility(ability, id) {
   if (first?.effect !== "addMana") return (ability.effects ?? []).some((e) => e?.effect === "addMana") ? "unbuilt" : null;
   const cost = ability.cost ?? [];
   if ((ability.targets ?? []).length || !cost.every((a) => ["{T}", "mana", "payLife"].includes(a?.atom) || (a?.atom === "sacrifice" && (a.self === true || a.selector))
-    || (["addCounters", "removeCounters"].includes(a?.atom) && a.self === true && typeof a.counter === "string"))) return "unbuilt";
+    || (["addCounters", "removeCounters"].includes(a?.atom) && a.self === true && typeof a.counter === "string")
+    /* "{T}, Mill a card: Add {C}" (Millikin): its controller's top N cards, milled as the cost is paid (CR 701.17). */
+    || (a?.atom === "mill" && Number.isInteger(a.count ?? 1) && (a.count ?? 1) >= 1))) return "unbuilt";
   /* "Put a -0/-1 counter on this creature: Add {G}" (Wall of Roots), "Remove five +1/+1 counters from Ramos: Add ...". */
   const counterCost = cost.filter((a) => ["addCounters", "removeCounters"].includes(a.atom)).map((a) => ({counter: a.counter, count: a.count ?? 1, put: a.atom === "addCounters"}));
   if (then.some((e) => !isBuilt(e?.effect) || NEEDS_A_DECISION.includes(e?.effect))) return "unbuilt";
@@ -341,12 +347,30 @@ function manaAbility(ability, id) {
   return {id, kind: "mana", tapSelf: cost.some((a) => a.atom === "{T}"), ...adds, text: ability.text,
     ...(mana ? {cost: mana.cost} : {}), ...(life ? {payLife: life} : {}), ...(then.length ? {then} : {}),
     ...(cost.some((a) => a.atom === "sacrifice" && a.self === true) ? {sacrificeSelf: true} : {}),
+    /* "Mill a card" as part of the cost (Millikin): how many. */
+    ...(cost.some((a) => a.atom === "mill") ? {millCost: cost.filter((a) => a.atom === "mill").reduce((n, a) => n + (a.count ?? 1), 0)} : {}),
     /* "Sacrifice a creature: Add {C}{C}" (Ashnod's Altar): which creature is the player's choice, one offer each. */
     ...(cost.find((a) => a.atom === "sacrifice" && a.selector) ? {sacrifice: cost.find((a) => a.atom === "sacrifice" && a.selector).selector} : {}),
     /* "Activate only if you control a Swamp" (CR 602.5b; script/condition.mjs). */
     ...(ability.condition ? {condition: ability.condition} : {}),
     ...(counterCost.length ? {counterCost} : {}), ...(ability.limit ? {limit: ability.limit} : {}),
-    ...(first.spendOnly ? {spendOnly: first.spendOnly} : {})};
+    ...(first.spendOnly ? {spendOnly: first.spendOnly} : {}),
+    /* "When that mana is spent to cast a creature spell that shares a creature type with your commander, scry 1" (Path of
+       Ancestry; CR 106.6): what the mana does when it is spent (rules/restricted-mana.mjs). */
+    ...(first.whenSpent ? {whenSpent: first.whenSpent} : {})};
+}
+/* What mana that does something when it is spent says (CR 106.6): the spells it triggers for, a selector, and what it then
+   does -- effects held to the primitives, as a triggered ability's are. Not with a spending restriction as well, yet. */
+function whenSpentProblems(effect) {
+  const when = effect.whenSpent;
+  if (when === undefined) return [];
+  if (!when || typeof when !== "object" || !when.spell || !Array.isArray(when.effects) || !when.effects.length || typeof when.text !== "string")
+    return ["addMana: what its mana does when spent is {spell, effects, text}"];
+  const problems = [];
+  try { compileSelector({...when.spell, what: "card"}); } catch (error) { problems.push(`addMana: the spells its mana triggers for: ${error.message}`); }
+  for (const inner of effectsIn(when.effects)) if (!isBuilt(inner.effect)) problems.push(`${inner.effect}: declared, not built`);
+  if (effect.spendOnly !== undefined) problems.push("addMana: mana that is restricted and does something when spent is not built");
+  return problems;
 }
 function spendOnlyValid(only) {
   if (!only || typeof only !== "object" || Array.isArray(only) || !Object.keys(only).every((k) => SPEND_ONLY_KEYS.includes(k))) return false;
@@ -359,8 +383,9 @@ function spendOnlyValid(only) {
 /* "WHEN THAT CREATURE DIES THIS TURN" (CR 603.7): a delayed trigger that waits for an event says so in a triggered
    ability's words (`when`, compiled by TRIGGERS), with `who` the object it waits on when that is a target, "that card"
    or "self" -- remembered as the trigger is made (`watch`, effects/permanents.mjs) -- and `thisTurn` for one that lasts
-   the turn (CR 603.7b). One that waits for a moment says `at`: "end step" or "upkeep". */
-const DELAYED_MOMENTS = ["end step", "upkeep"];
+   the turn (CR 603.7b). One that waits for a moment says `at`: "end step" or "upkeep" -- or "your upkeep", the next upkeep
+   of its controller's own turn ("exile those creatures at the beginning of your next upkeep", Rally the Ancestors). */
+const DELAYED_MOMENTS = ["end step", "upkeep", "your upkeep"];
 function withDelayedTriggers(abilities, problems) {
   const walk = (effect) => {
     if (!effect || typeof effect !== "object") return effect;
@@ -734,6 +759,7 @@ export function compileScript(script) {
          the chosen type" (a mana ability's, cards/index.mjs manaAbility): what the mana may pay for, read here for both. */
       if (effect.effect === "addMana" && effect.spendOnly !== undefined && !spendOnlyValid(effect.spendOnly))
         problems.push(`addMana: a spending restriction says what it pays for -- a spell, an ability's source, or both, each a selector (${SPEND_ONLY_KEYS.join(", ")})`);
+      if (effect.effect === "addMana") problems.push(...whenSpentProblems(effect));
     }
 
     if (ability.kind === "spell") {
@@ -924,6 +950,11 @@ export function compileScript(script) {
         ...(given.keywords.length ? {addKeywords: [...(ability.apply.addKeywords ?? []), ...given.keywords]} : {})}};
     }
     if (["activated", "triggered"].includes(ability.kind)) compileGivenIn(ability.effects, ability.text, problems);
+    /* "If you do, it gains '...'" (Serra Paragon): what a permission to play gives what is played through it (rules/actions.mjs). */
+    if (ability.kind === "static" && ability.rule === "play-from" && ability.grants !== undefined) {
+      const given = compileGrant(ability.grants, ability.text, problems);
+      if (given) abilities[index] = {...ability, grants: given.abilities};
+    }
   }
   if (spell) compileGivenIn(spell.effects, spell.text, problems);
 

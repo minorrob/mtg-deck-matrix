@@ -99,7 +99,8 @@ function printed(state, id) {
 /* THE KEYS A LAYER STATIC'S `affects` MAY CARRY -- this matcher's, narrower than the selector grammar because the layers
    cannot ask what they are still deriving. Anything else would be ignored, and a static would affect more than it says:
    the card compiler refuses it (cards/index.mjs). */
-export const LAYER_AFFECTS_KEYS = Object.freeze(["anyOf", "what", "ids", "types", "subtypes", "supertypes", "controller", "token", "another", "self", "attachedBy", "colors", "colorless", "countersAtLeast", "tapped", "counters"]);
+export const LAYER_AFFECTS_KEYS = Object.freeze(["anyOf", "what", "ids", "types", "subtypes", "supertypes", "controller", "token", "another", "self", "attachedBy", "colors", "colorless", "countersAtLeast", "tapped", "counters",
+  "keywords"]);
 
 function affects(state, effect, current, sourceController) {
   const rule = effect.affects ?? {};
@@ -138,6 +139,9 @@ function affects(state, effect, current, sourceController) {
     : ((current.counters ?? {})[rule.counters] ?? 0) > 0)) return false;
   /* "Other tapped legendary creatures you control have indestructible" (The Seriema): tapped as it is, which no layer changes. */
   if (rule.tapped !== undefined && (state.objects[current.id]?.tapped === true) !== rule.tapped) return false;
+  /* "Creatures you control with toxic have lifelink" (Skrelv's Hive): its keywords as the derivation has them so far -- an
+     effect that gives or takes the keyword is one this depends on (CR 613.8a; dependsOn asks, and orders them). */
+  if (rule.keywords && !rule.keywords.every((word) => (current.keywords ?? []).includes(word))) return false;
   return true;
 }
 

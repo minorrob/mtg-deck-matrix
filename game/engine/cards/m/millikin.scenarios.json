@@ -1,0 +1,195 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Millikin",
+  "fixtures": {
+    "Gift": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "You gain 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{T}, mill a card: {C} -- the top card milled as it is paid, and the mana spent on Gift",
+      "library": [
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Millikin"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Gift"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Millikin"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "pool": {
+                "C": 1
+              }
+            },
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Bear"
+              ]
+            },
+            {
+              "seat": 0,
+              "zone": "library",
+              "count": 19
+            }
+          ]
+        },
+        {
+          "cast": "Gift"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 41
+        },
+        {
+          "seat": 0,
+          "tapped": "Millikin"
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Gift"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A mana ability: tapped on Maya's turn, with priority, off the stack",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Millikin"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Gift"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Millikin",
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "cast": "Gift",
+          "seat": 0
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 41
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "name": "Summoning sick, its {T} waits (CR 302.6)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Millikin"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Millikin"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}
