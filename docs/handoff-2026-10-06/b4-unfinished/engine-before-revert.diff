@@ -1,0 +1,907 @@
+diff --git a/game/engine/cards/index.mjs b/game/engine/cards/index.mjs
+index ef39c539..f14a671d 100644
+--- a/game/engine/cards/index.mjs
++++ b/game/engine/cards/index.mjs
+@@ -943,6 +943,14 @@ export function compileScript(script) {
+ 
+   /* What a static or an effect gives (compileGrant): compiled here, in place of the script's words. */
+   for (const [index, ability] of abilities.entries()) {
++    /* "This creature has all activated abilities of that card" (Conspicuous Snoop): the top card's, in layer 6 (CR 613.1f),
++       what that card must be a list of subtypes (rules/layers.mjs, topCardGrant). */
++    if (ability.kind === "static" && ability.apply?.topCardAbilities !== undefined) {
++      if (ability.layer !== 6) problems.push(`${ability.text}: abilities are given in layer 6 (CR 613.1f)`);
++      const wanted = ability.apply.topCardAbilities;
++      if (!wanted || typeof wanted !== "object" || Object.keys(wanted).some((k) => k !== "subtypes") || !Array.isArray(wanted.subtypes))
++        problems.push(`${ability.text}: what the top card must be is {subtypes: [...]}`);
++    }
+     if (ability.kind === "static" && ability.apply?.addAbilities !== undefined) {
+       if (ability.layer !== 6) problems.push(`${ability.text}: abilities are given in layer 6 (CR 613.1f)`);
+       const given = compileGrant(ability.apply.addAbilities, ability.text, problems);
+@@ -1006,6 +1014,17 @@ export function compileScript(script) {
+       definition.mdfc = {front: faceOfDefinition(definition, names[0]), back: faceOfDefinition(back.definition, names[1]), ...(script.layout === "transform" ? {transforming: true} : {})};
+     }
+   }
++  /* A PREPARATION CARD (CR 722): "Card // Prepare spell", its prepare spell compiled as a card of its own, the card's oracle
++     id and color identity; its characteristics go with the card (`prepareSpell`, 722.2a) and are never the card's own in
++     any zone (722.4) -- only a copy made in exile as the permanent becomes prepared has them (722.3c; effects/permanents.mjs). */
++  if (script.prepare !== undefined) {
++    const names = String(identity.name).split(" // ");
++    const prepared = compileScript({schema: script.schema, identity: {...script.prepare.identity, oracleId: identity.oracleId, colorIdentity: identity.colorIdentity ?? []},
++      oracleText: script.prepare.oracleText, source: script.source, abilities: script.prepare.abilities});
++    if (names.length !== 2 || script.prepare.identity?.name !== names[1]) problems.push(`a preparation card is named "Card // Prepare spell", and its prepare spell is the second name`);
++    for (const problem of prepared.problems) problems.push(`prepare spell: ${problem}`);
++    if (prepared.definition) definition.prepareSpell = faceOfDefinition(prepared.definition, names[1]);
++  }
+   /* AN ADVENTURER CARD (CR 715): "Card // Adventure", the Adventure -- an instant or sorcery with the subtype Adventure --
+      compiled as a card of its own, the card's oracle id and color identity both halves' (CR 903.4). Its own characteristics
+      and the Adventure's go with the card (`adventurer`); which it has is the object's (state/index.mjs): the Adventure's only
+diff --git a/game/engine/cards/scenario.mjs b/game/engine/cards/scenario.mjs
+index 123e06f9..3e4f4d3c 100644
+--- a/game/engine/cards/scenario.mjs
++++ b/game/engine/cards/scenario.mjs
+@@ -35,6 +35,7 @@ import {gameOver} from "../rules/sba.mjs";
+ import {projectFor} from "../projection.mjs";
+ import {createRng} from "../rng.mjs";
+ import {targetName, isChoosing} from "../script/bind.mjs";
++import {meetRequirements} from "../pilots/house-pilot.mjs";
+ 
+ export const SCENARIOS_SCHEMA = "CrankCardScenarios@1";
+ 
+@@ -48,12 +49,14 @@ const basic = (name) => (BASIC[name]
+ const ZONES = {hand: "Hand", battlefield: "Battlefield", graveyard: "Graveyard", exile: "Exile", command: "Command", library: "Library"};
+ const STEP_LIMIT = 2000;
+ 
+-/* Questions the rules ask on the way that a scenario has no view on: nobody attacks or blocks unless a step says so,
+-   a player's triggers go on in the order offered, and the legend rule keeps the first (CR 704.5j). Anything else stops
+-   the scenario, by name. */
++/* Questions the rules ask on the way that a scenario has no view on: nobody attacks or blocks unless a step says so -- or
++   the rules make it ("attacks each combat if able", CR 508.1d: those alone, each at its first player) -- a player's
++   triggers go on in the order offered, and the legend rule keeps the first (CR 704.5j). Anything else stops the scenario,
++   by name. */
+ function routine(state) {
+   const kind = state.awaiting?.kind;
+-  if (kind === "declare-attackers" || kind === "declare-blockers") return resolveAwaiting(state, []);
++  if (kind === "declare-attackers") return resolveAwaiting(state, meetRequirements(awaitingChoice(state), []));
++  if (kind === "declare-blockers") return resolveAwaiting(state, []);
+   if (kind === "order-triggers") return resolveAwaiting(state, awaitingChoice(state).options.map((o) => o.index));
+   if (kind === "legend-rule") return resolveAwaiting(state, [0]);
+   return null;
+diff --git a/game/engine/controller.mjs b/game/engine/controller.mjs
+index 073a8d2d..054f69d6 100644
+--- a/game/engine/controller.mjs
++++ b/game/engine/controller.mjs
+@@ -186,6 +186,13 @@ function validateIndices(choice, request) {
+       if (counts.get(key) > choice.capped.most[key]) throw new Error(choice.capped.why?.[key] ?? "Invalid selection");
+     }
+   }
++  /* AND SOME OPTIONS MUST BE AMONG THOSE TAKEN: "other Goblin creatures you control attack each combat if able" (CR 508.1d)
++     -- at least `least` of the options whose `by` field is one of `values`, each value once. Refused with the record's own
++     words (`why`): which, and what to do instead. */
++  for (const need of Array.isArray(choice.requires) ? choice.requires : []) {
++    const met = new Set(indices.map((n) => (choice.options ?? [])[n]?.[need.by]).filter((value) => (need.values ?? []).includes(value)));
++    if (met.size < (need.least ?? 0)) throw new Error(need.why ?? "Invalid selection");
++  }
+   if (choice.choiceKind === "manipulate") validateManipulateOrder(choice, request);
+ }
+ 
+diff --git a/game/engine/keywords/timing.mjs b/game/engine/keywords/timing.mjs
+index f9fe385a..aa4cb3b6 100644
+--- a/game/engine/keywords/timing.mjs
++++ b/game/engine/keywords/timing.mjs
+@@ -26,6 +26,7 @@
+  */
+ 
+ import {keywordsOf, typesOf, controllerOf} from "../rules/layers.mjs";
++import {ruleChanged} from "../rules/statics.mjs";
+ 
+ /** The family of §3.1, so `engine-coverage` counts these as behavior and not as words. */
+ export const KEYWORD_FAMILIES = Object.freeze({
+@@ -60,5 +61,16 @@ export function summoningSick(state, id) {
+   return object.controlledSinceTurn >= turnBegan;
+ }
+ 
++/**
++ * CR 302.6 for a creature's {T} abilities alone: sick as above, unless a static ability lets its controller "activate
++ * abilities of creatures you control as though those creatures had haste" (Thousand-Year Elixir; `rule:
++ * "activate-as-though-haste"`, rules/statics.mjs) -- haste's second half (CR 702.10c) and not its first: it still can't
++ * attack (702.10b is not given). Read wherever a {T} ability is offered or paid: an activated ability's cost, a mana
++ * ability, a source tapped to pay an "unless" cost.
++ */
++export function sickForAbilities(state, id) {
++  return summoningSick(state, id) && !ruleChanged(state, "activate-as-though-haste", id);
++}
++
+ /** CR 702.8a: this card may be cast any time its controller could cast an instant. */
+ export const hasFlash = (state, id) => keywordsOf(state, id).includes("Flash");
+diff --git a/game/engine/pilots/house-pilot.mjs b/game/engine/pilots/house-pilot.mjs
+index 1cf9977d..adb95e66 100644
+--- a/game/engine/pilots/house-pilot.mjs
++++ b/game/engine/pilots/house-pilot.mjs
+@@ -32,6 +32,39 @@
+ 
+ export const HOUSE_PILOT_ID = "house-pilot";
+ 
++/**
++ * A CHOICE'S REQUIREMENTS, MET (CR 508.1d: "other Goblin creatures you control attack each combat if able"): `indices`, with
++ * as few options added as the record's `requires` asks -- for each, at least `least` of the options whose `by` value is
++ * one of `values`, each value once -- keeping to `exclusiveBy` and to `capped` (no more at a planeswalker than it allows).
++ * A player the answerer prefers (`prefer`, the house pilot's defender) is tried first, then players before planeswalkers.
++ * Pure, over the record alone: the house pilot imports nothing, and the random pilot and the card scenarios use this one.
++ */
++export function meetRequirements(choice, indices, prefer = null) {
++  const options = choice.options ?? [];
++  let out = [...indices];
++  const room = (list, option) => option.planeswalkerId === undefined || choice.capped?.most?.[option.planeswalkerId] === undefined
++    || list.filter((i) => options[i]?.planeswalkerId === option.planeswalkerId).length < choice.capped.most[option.planeswalkerId];
++  const rank = (o) => (o.planeswalkerId === undefined ? (prefer !== null && o.defenderId === prefer ? 0 : 1) : 2);
++  for (const need of Array.isArray(choice.requires) ? choice.requires : []) {
++    const taken = new Set(out.map((i) => options[i]?.[need.by]));
++    const missing = (need.values ?? []).filter((value) => !taken.has(value));
++    const short = (need.least ?? 0) - ((need.values ?? []).length - missing.length);
++    /* The first way that fits, depth first, a value left out only when the rest can still make up the number. */
++    const fill = (k, list, left) => {
++      if (left <= 0) return [];
++      if (missing.length - k < left) return null;
++      const ways = options.filter((o) => o[need.by] === missing[k] && room(list, o)).sort((a, b) => rank(a) - rank(b) || a.index - b.index);
++      for (const way of ways) {
++        const rest = fill(k + 1, [...list, way.index], left - 1);
++        if (rest) return [way.index, ...rest];
++      }
++      return fill(k + 1, list, left);
++    };
++    out = [...out, ...(fill(0, out, short) ?? [])];
++  }
++  return out;
++}
++
+ const MAIN = ["MAIN1", "MAIN2"];
+ const isLand = (card) => (card?.types ?? []).includes("Land");
+ const isCreature = (card) => (card?.types ?? []).includes("Creature");
+@@ -190,12 +223,13 @@ export function housePilot({seat, cards = () => null} = {}) {
+           const through = powers.slice(0, Math.max(0, powers.length - walls.length)).reduce((n, x) => n + x, 0);
+           return {p, going, through, lethal: through >= p.life};
+         }).filter((plan) => plan.going.length);
+-        if (!plans.length) return {indices: []};
++        /* And every creature the rules make attack (CR 508.1d, the record's `requires`): sent at the same player, if it can. */
++        if (!plans.length) return {indices: meetRequirements(choice, [])};
+         const best = plans.reduce((a, b) => (b.lethal !== a.lethal ? (b.lethal ? b : a)
+           : b.through !== a.through ? (b.through > a.through ? b : a)
+           : b.p.life < a.p.life || (b.p.life === a.p.life && b.p.playerId < a.p.playerId) ? b : a));
+         const picks = best.going.map(([, o]) => o.index);
+-        return {indices: firstOf(choice, picks, max)};
++        return {indices: meetRequirements(choice, firstOf(choice, picks, max), best.p.playerId)};
+       }
+       if (id.startsWith("declare-blockers:")) {
+         const attacks = view.combat?.attacks.filter((a) => a.defender === seat) ?? [];
+diff --git a/game/engine/pilots/random-legal.mjs b/game/engine/pilots/random-legal.mjs
+index ee019318..34cdb246 100644
+--- a/game/engine/pilots/random-legal.mjs
++++ b/game/engine/pilots/random-legal.mjs
+@@ -22,6 +22,8 @@
+ /**
+  * @param {object} rng  from `createRng`; the game's own stream, so the choice is reproducible
+  */
++import {meetRequirements} from "./house-pilot.mjs";
++
+ export function randomLegalPilot(rng) {
+   if (!rng || typeof rng.int !== "function") throw new Error("A pilot needs the game's rng");
+   return {
+@@ -89,11 +91,17 @@ export function randomLegalPilot(rng) {
+        * once. Without this the pilot produces an illegal answer and the game stops — which is how
+        * the phase 1 gate found this on its first run, and which no single-rule suite would have. */
+       const pool = options.map((_, index) => index);
+-      const indices = [];
+-      const used = new Set();
++      /* What the record requires first ("attacks each combat if able", CR 508.1d): those, then any others at random. */
++      const indices = meetRequirements(choice, []);
++      const used = new Set(choice.exclusiveBy ? indices.map((i) => options[i]?.[choice.exclusiveBy]) : []);
+       /* And `capped` (no more than one creature attacking The Eternal Wanderer, CR 508.1c): no more of a value than it allows. */
+       const taken = new Map();
+-      for (let i = 0; i < take && pool.length > 0; i += 1) {
++      for (const index of indices) {
++        const cap = choice.capped ? options[index]?.[choice.capped.by] : undefined;
++        if (cap !== undefined) taken.set(cap, (taken.get(cap) ?? 0) + 1);
++      }
++      for (const index of indices) pool.splice(pool.indexOf(index), 1);
++      for (let i = indices.length; i < take && pool.length > 0; i += 1) {
+         const [index] = pool.splice(rng.int(pool.length), 1);
+         const key = choice.exclusiveBy ? options[index]?.[choice.exclusiveBy] : undefined;
+         if (key !== undefined && used.has(key)) continue;
+diff --git a/game/engine/rules/actions.mjs b/game/engine/rules/actions.mjs
+index 7bd9f2b8..f9e38ed2 100644
+--- a/game/engine/rules/actions.mjs
++++ b/game/engine/rules/actions.mjs
+@@ -57,7 +57,7 @@ import {pushSpell, pushAbility, becameTarget} from "./stack.mjs";
+ import {addMana, spend, parseManaCost, automaticPayment, canPay, chosenPayment, paymentOptions, paymentKey, paymentWords, PAY_CHOICES, manaValue, poolSize, tapPlans, convokeCanPay, convokePayments} from "./mana.mjs";
+ import {commanderTax, recordCommanderCast, colorIdentity} from "./commander.mjs";
+ import {COLORS, MANA_KEYS} from "./mana.mjs";
+-import {summoningSick, hasFlash} from "../keywords/timing.mjs";
++import {sickForAbilities, hasFlash} from "../keywords/timing.mjs";
+ import {targetChoices, targetName, isHostile, modalScript, isChoosing, countOf, targetCandidates, countedChoice, inWords} from "../script/bind.mjs";
+ import {moveOne, sacrificeOne, mill} from "../script/effects/zones.mjs";
+ import {compileSelector, matchesSelector, selectMatching} from "../script/filter.mjs";
+@@ -68,7 +68,7 @@ import {costReduction, costIncrease, abilityCostIncrease, playerStatics, freeCas
+ import {countMana, amountOf, countEffect} from "../script/amount.mjs";
+ import {bindEffect} from "../script/bind.mjs";
+ import {conditionHolds} from "../script/condition.mjs";
+-import {lastKnown, characteristicsOf, abilitiesOf, deriving, derivingAfresh, keywordsOf, colorsOf} from "./layers.mjs";
++import {lastKnown, characteristicsOf, abilitiesOf, deriving, derivingAfresh, keywordsOf, colorsOf, controllerOf} from "./layers.mjs";
+ import {namesChosen, withChosen, chosenFor} from "../script/chosen.mjs";
+ import {poolFor, spendFor, addRestricted, addRider, riderChoices} from "./restricted-mana.mjs";
+ import {askEntering} from "./entering.mjs";
+@@ -246,9 +246,11 @@ function castTerms(state, player, action) {
+   const fled = action.escape !== undefined ? escapeWays(state, player, action.objectId).find((w) => w.kind === action.escape) ?? null : null;
+   /* Cast from a graveyard or a library by a permanent's permission (play-from): the one the caster chose, or the one there
+      is -- and if it is the Citadel's, life equal to its mana value rather than its mana cost (lifeInstead). */
+-  const permission = !back && !fled && ["graveyard", "library"].includes(object.zone) ? playPermission(state, player, action.objectId, "spell", action.via ?? null) : null;
+-  const lifeCost = free || way ? null : lifeInstead(object, permission);
+-  return {tax, free, back, way, fled, permission, lifeCost};
++  const permission = !back && !fled && PERMITTED_ZONES.includes(object.zone) ? playPermission(state, player, action.objectId, "spell", action.via ?? null) : null;
++  /* Cast free through a permission that lets it be cast only that way (Maralen): free by it, once its own limit allows. */
++  const freely = free ?? (action.free && permitsFree(permission) ? {source: permission.source, limited: false} : null);
++  const lifeCost = freely || way ? null : lifeInstead(object, permission);
++  return {tax, free: freely, back, way, fled, permission, lifeCost};
+ }
+ /* The ways the pool pays a cast taken with `payWays` (castOffers): its total cost, as perform reckons it. */
+ function castPayments(state, player, action) {
+@@ -647,8 +649,9 @@ function costPayment(state, player, id, cost, x = 0, less = 0, key = undefined)
+     if (atom.atom === "discard" && atom.self === true && object.zone !== "hand") return null;
+     if (atom.atom === "{T}") {
+       if (object.tapped) return null;
+-      /* CR 302.6: a creature's {T} ability waits until it has been yours since your turn began. */
+-      if (summoningSick(state, id)) return null;
++      /* CR 302.6: a creature's {T} ability waits until it has been yours since your turn began -- unless it may be
++         activated as though it had haste (Thousand-Year Elixir, CR 702.10c). */
++      if (sickForAbilities(state, id)) return null;
+     }
+     if (atom.atom === "mana") {
+       if (printedMana) return null;
+@@ -784,20 +787,37 @@ const landDropsLeft = (state, player) => (state.players[player].landAllowance ??
+ const playKey = (ability) => `play-from:${ability.id}`;
+ const permissionOpen = (state, player, ability, source) => (!ability.yourTurn || state.activePlayer === player)
+   && (ability.limit === undefined || usesThisTurn(state, source, playKey(ability)) < ability.limit);
+-const permits = (state, player, ability, id, kind) => {
++/* "A spell with mana value less than or equal to the number of Elves and Faeries you control" (Maralen, Fae Ascendant):
++   `manaValueAtMost`, an amount counted now, against the card's mana value as it would be cast (an Adventure's, shown as
++   one; CR 715.3a). */
++const withinValue = (state, player, ability, id, source) => ability.manaValueAtMost === undefined
++  || manaValue(parseManaCost(state.objects[id].manaCost ?? "")) <= amountOf(state, ability.manaValueAtMost, {controller: player, source});
++const permits = (state, player, ability, id, kind, source = null) => {
+   const which = kind === "land" ? ability.lands : ability.spells;
+   return Boolean(which) && isLand(state.objects[id]) === (kind === "land")
+-    && (which === true || (typeof which === "object" && matchesSelector({...which, what: "card", zone: state.objects[id].zone}, state, id, {controller: player})));
++    && (which === true || (typeof which === "object" && matchesSelector({...which, what: "card", zone: state.objects[id].zone}, state, id, {controller: player})))
++    && withinValue(state, player, ability, id, source);
+ };
+-const permittedFrom = (state, player, ability) => (ability.zone === "graveyard" ? cardsIn(state, "graveyard", player)
+-  : ability.zone === "library-top" ? cardsIn(state, "library", player).slice(0, 1) : []);
++/* "From among cards exiled with Maralen this turn" (CR 607.2a, linked abilities): `zone: "exile"` and `linked`, what this
++   permanent's linked ability exiled (effects/zones.mjs, `link`) while each is still that card in exile (CR 400.7), whoever
++   owns it; `thisTurn`, only what it exiled this turn -- each arrived in exile this turn (state/index.mjs, arrivedTurn). */
++const linkedExile = (state, ability, source) => (state.links?.[source] ?? [])
++  .filter((id) => state.objects[id]?.zone === "exile" && (ability.thisTurn !== true || state.objects[id].arrivedTurn === state.turn));
++const permittedFrom = (state, player, ability, source = null) => (ability.zone === "graveyard" ? cardsIn(state, "graveyard", player)
++  : ability.zone === "library-top" ? cardsIn(state, "library", player).slice(0, 1)
++  : ability.zone === "exile" && ability.linked === true ? linkedExile(state, ability, source) : []);
++/* The zones a permission may let a card be cast from (permittedFrom). */
++const PERMITTED_ZONES = ["graveyard", "library", "exile"];
++/* "You may cast a spell ... without paying its mana cost" (Maralen): a permission that lets the card be cast only that way
++   (`withoutPaying`; CR 118.9) -- a free cast, its tax and additional costs still paid, no other cost beside it. */
++const permitsFree = (permit) => permit?.ability.withoutPaying === true;
+ /* The life a cast through this permission costs instead of its mana cost -- "pay life equal to its mana value" (Bolas's
+    Citadel; CR 118.9) -- or null when it is paid for as usual. X is 0 (CR 107.3b): no alternative cost of the Citadel's
+    includes X, so its mana value is the printed one with X as 0 (CR 202.3e). */
+ const lifeInstead = (object, permit) => (permit?.ability.payLife === "manaValue" ? (object.manaCost ? manaValue(parseManaCost(object.manaCost)) : 0) : null);
+ /* The permissions open now that let this card be played from where it is. */
+ const openPermissions = (state, player, id, kind) => playerStatics(state, "play-from", player)
+-  .filter(({ability, source}) => permissionOpen(state, player, ability, source) && permittedFrom(state, player, ability).includes(id) && permits(state, player, ability, id, kind));
++  .filter(({ability, source}) => permissionOpen(state, player, ability, source) && permittedFrom(state, player, ability, source).includes(id) && permits(state, player, ability, id, kind, source));
+ /* Of permissions that give the card the same thing, the one with the fewest drawbacks: no limit, so a limited one is spent
+    only when it must be, and no "exile it instead" (Kess) -- the two doing the same but for what is used up or lost, which is
+    no choice taken from the player. */
+@@ -814,7 +834,7 @@ function playPermission(state, player, id, kind, via = null) {
+    Worlds's does not; Bolas's Citadel's spell is paid for with life, Future Sight's with mana; Thundermane Dragon's creature
+    gains haste. Each permission that gives something different is an offer of its own, `via` its source -- the preferred of
+    those that give alike; ones that all give alike are one offer, as they always were (playPermission). */
+-const permissionDoes = (ability) => JSON.stringify([ability.grants ?? null, ability.gains ?? null, ability.payLife ?? null]);
++const permissionDoes = (ability) => JSON.stringify([ability.grants ?? null, ability.gains ?? null, ability.payLife ?? null, ability.withoutPaying ?? null]);
+ function permissionWays(state, player, id, kind) {
+   const groups = new Map();
+   for (const permission of openPermissions(state, player, id, kind)) {
+@@ -843,12 +863,19 @@ function playableElsewhere(state, player, kind) {
+   const found = [];
+   for (const {ability, source} of playerStatics(state, "play-from", player)) {
+     if (!permissionOpen(state, player, ability, source)) continue;
+-    for (const id of permittedFrom(state, player, ability)) if (permits(state, player, ability, id, kind) && !found.includes(id)) found.push(id);
++    for (const id of permittedFrom(state, player, ability, source)) if (permits(state, player, ability, id, kind, source) && !found.includes(id)) found.push(id);
+   }
+   if (kind === "spell") for (const zone of ["graveyard", "exile"]) {
+     const ids = zone === "exile" ? state.zones.exile.filter((id) => state.objects[id].owner === player) : cardsIn(state, zone, player);
+     for (const id of ids) if ((state.objects[id].abilities ?? []).some((a) => a.kind === "static" && a.rule === "cast-self-from" && (a.zones ?? []).includes(zone)) && !found.includes(id)) found.push(id);
+   }
++  /* A PREPARED PERMANENT'S SPELL (CR 722.3c): the copy of its prepare spell in exile, its controller's to cast while the
++     permanent is on the battlefield and prepared -- as any spell is cast, its mana cost paid. */
++  if (kind === "spell") for (const id of state.zones.exile) {
++    const by = state.objects[id].preparedBy;
++    if (by !== undefined && state.objects[by]?.zone === "battlefield" && state.objects[by].prepared === true && state.objects[by].preparedCopy === id
++      && controllerOf(state, by) === player && !found.includes(id)) found.push(id);
++  }
+   /* "Until the end of your next turn, you may play that card" (script/effects/zones.mjs, mayPlay): the cards an effect let
+      this player play, while each is still the object it named (CR 400.7) -- a land, or a spell ("you may cast" one only). */
+   for (const effect of state.effects ?? []) {
+@@ -878,7 +905,7 @@ function manaOffers(state, player) {
+       if (ability.tapSelf && object.tapped) continue;
+       /* CR 302.6: a creature's {T} ability waits until it has been yours since your turn began, unless it has haste.
+          A land is never sick; a land animated this turn is a creature, and is. */
+-      if (ability.tapSelf && summoningSick(state, id)) continue;
++      if (ability.tapSelf && sickForAbilities(state, id)) continue;
+       /* "Activate only if you control a Swamp" (CR 602.5b): asked as it would be offered. */
+       if (!conditionHolds(state, ability.condition, {controller: player, source: id})) continue;
+       if (!manaAbilityPayment(state, player, ability)) continue;
+@@ -963,7 +990,7 @@ function withAdventure(state, id, fn) {
+    of your library") is asked of the Adventure, shown as one (715.3a). */
+ function adventureFrom(state, player, id, from) {
+   if (from === "hand" || from === "command") return true;
+-  if (from === "exile") return (state.effects ?? []).some((e) => e.rule === "may-play" && e.player === player && e.notAdventure !== true && (e.affects?.ids ?? []).includes(id));
++  if (from === "exile" && (state.effects ?? []).some((e) => e.rule === "may-play" && e.player === player && e.notAdventure !== true && (e.affects?.ids ?? []).includes(id))) return true;
+   return playPermission(state, player, id, "spell") !== null;
+ }
+ 
+@@ -976,7 +1003,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
+   /* "If you cast a spell this way, pay life equal to its mana value rather than pay its mana cost" (Bolas's Citadel): the
+      permission it is cast through, and what it costs (lifeInstead). A card with no mana cost may be cast only for an
+      alternative cost (CR 118.6a), and this is one: its mana value, 0, in life. */
+-  const permit = !flashback && !escape && ["graveyard", "library"].includes(from) ? playPermission(state, player, id, "spell", via) : null;
++  const permit = !flashback && !escape && PERMITTED_ZONES.includes(from) ? playPermission(state, player, id, "spell", via) : null;
+   const lifeCost = lifeInstead(object, permit);
+   if (!object.manaCost && lifeCost === null) return actions;
+   if (lifeCost !== null && lifeCost > state.players[player].life) return actions;
+@@ -987,10 +1014,11 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
+   const tax = from === "command" ? commanderTax(state, player, id) : 0;
+   /* "Without paying its mana cost": offered alone when it may be used every time; beside the paid cast when it is "once
+      each turn", so the player decides which spell spends it. */
+-  const free = flashback || escape || lifeCost !== null ? null : freeCast(state, player, id);
++  /* A permission that lets it be cast only without paying its mana cost (Maralen): that cast alone, its limit its own. */
++  const free = flashback || escape || lifeCost !== null ? null : permitsFree(permit) ? {source: permit.source, limited: false} : freeCast(state, player, id);
+   /* Its own alternative costs (CR 118.9), each an offer of its own -- never with flashback, escape, a free cast or the
+      Citadel's life, each an alternative cost too (118.9a). */
+-  const alternatives = flashback || escape || lifeCost !== null ? [] : alternativeCosts(state, player, id);
++  const alternatives = flashback || escape || lifeCost !== null || permitsFree(permit) ? [] : alternativeCosts(state, player, id);
+   /* The flashback cost instead of the mana cost, and its life: a player can pay life only if their total is at least
+      that much (CR 119.4). */
+   const back = flashback ? flashbackCost(state, player, id) : null;
+@@ -1657,6 +1685,9 @@ function performOffered(state, player, action, during) {
+     const grants = structuredClone(permission?.ability.grants ?? []);
+     /* Cast from suspend (CR 702.62a): a suspended card cast from exile, read before it moves. */
+     const fromSuspend = object.suspended === true && object.zone === "exile";
++    /* A prepare spell's copy cast (CR 722.3c, 601.2i): the permanent it was made for loses the prepared designation. */
++    const prepared = object.zone === "exile" && object.preparedBy !== undefined ? state.objects[object.preparedBy] : null;
++    if (prepared?.preparedCopy === action.objectId) { prepared.prepared = false; delete prepared.preparedCopy; }
+     /* "Until this card is cast from exile" (Emrakul, the Exigent Doom; effects/permanents.mjs, effectUntil): over now. */
+     if (object.zone === "exile" && (state.effects ?? []).some((e) => e.untilCast === action.objectId)) state.effects = state.effects.filter((e) => e.untilCast !== action.objectId);
+ 
+@@ -1861,9 +1892,15 @@ function performOffered(state, player, action, during) {
+         fields.discarded = true;
+         if (ability.cycling === true) Object.assign(fields, {cycled: true}, action.x !== undefined ? {cycledX: action.x} : {});
+       }
+-      /* Each permanent of the set chosen, sacrificed (CR 701.21a) -- with the offer, or picked once it was taken. */
++      /* Each permanent of the set chosen, sacrificed (CR 701.21a) -- with the offer, or picked once it was taken. "Draw cards
++         equal to the sacrificed creature's toughness" (Felothar the Steadfast): each as it last existed, kept on the ability
++         for its effects (`sacrificed`; script/amount.mjs, CR 608.2h). */
+       if (atom.atom === "sacrifice" && atom.selector && action.costChoice?.sacrifice !== undefined)
+-        for (const fodder of [].concat(action.costChoice.sacrifice)) sacrificeOne(state, fodder, events);
++        for (const fodder of [].concat(action.costChoice.sacrifice)) {
++          const was = lastKnown(state, fodder);
++          sacrificeOne(state, fodder, events);
++          if (was) (entry.sacrificed ??= []).push(was);
++        }
+       if (atom.atom === "sacrifice" && atom.selector && Array.isArray(action.sacrificeSet))
+         for (const fodder of action.sacrificeSet) if (state.objects[fodder]) sacrificeOne(state, fodder, events);
+       /* Three counters from among them, each removed from the permanent it was picked on. */
+diff --git a/game/engine/rules/combat.mjs b/game/engine/rules/combat.mjs
+index 4e23eeee..8e253e31 100644
+--- a/game/engine/rules/combat.mjs
++++ b/game/engine/rules/combat.mjs
+@@ -56,7 +56,7 @@ import {runFollowUps} from "../script/effects/index.mjs";
+ import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf, deriving} from "./layers.mjs";
+ import {givePoison, changeLife, infects, addCounters, damagePermanent} from "../script/effects/resources.mjs";
+ import {summoningSick} from "../keywords/timing.mjs";
+-import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack, cantGainLife, attackerCaps} from "./statics.mjs";
++import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack as restricted, cantGainLife, attackerCaps, defenderLifted, attacksEachCombat} from "./statics.mjs";
+ import {paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits} from "./mana.mjs";
+ import {recordCommanderDamage} from "./commander.mjs";
+ import {damageAssignmentProblem} from "../controller.mjs";
+@@ -79,16 +79,23 @@ const hasNow = (state, id, keyword) => keywordsOf(state, id).includes(keyword);
+ /* CR 302.6, summoning sickness, and haste lifting it (CR 702.10b), are keywords/timing.mjs's: the same rule
+    decides a creature's {T} abilities, on anyone's turn. */
+ 
+-/** CR 508.1a: untapped, not sick, no defender (unless it may attack as though it had none, CR 702.3b), and yours. */
++/** CR 508.1a: untapped, not sick, no defender (unless it may attack as though it had none, CR 702.3b -- someone, at
++ *  least: rules/statics.mjs, defenderLifted), and yours. */
+ export function canAttack(state, id, player) {
+   const object = state.objects[id];
+   return isCreatureNow(state, id)
+     && controllerOf(state, id) === player
+     && !object.tapped
+     && !summoningSick(state, id)
+-    && (!hasNow(state, id, "Defender") || ruleChanged(state, "attacks-despite-defender", id));
++    && (!hasNow(state, id, "Defender") || defenderLifted(state, id));
+ }
+ 
++/* A RESTRICTION ON ATTACKING THAT PLAYER, OR THAT PLANESWALKER OF THEIRS (CR 508.1c): one a static or an effect says
++   (rules/statics.mjs, cantAttack), or defender (CR 702.3b) not lifted toward them -- "can attack players who attacked you
++   during their last turn as though it didn't have defender" (Weathered Sentinels) lifts it toward those players alone. */
++const cantAttack = (state, id, defender, planeswalker = null) => restricted(state, id, defender, planeswalker)
++  || (hasNow(state, id, "Defender") && !defenderLifted(state, id, defender, planeswalker));
++
+ /** CR 509.1a: untapped, yours, and you are the one being attacked -- and nothing saying it can't block (509.1b). */
+ export function canBlock(state, id, player) {
+   return isCreatureNow(state, id) && controllerOf(state, id) === player && !state.objects[id].tapped
+@@ -120,6 +127,62 @@ const capWords = (state, pw, most) => {
+     + "and send the rest at a player or another planeswalker, or keep them home.";
+ };
+ 
++/* "ATTACKS EACH COMBAT IF ABLE" (CR 508.1d; rules/statics.mjs, attacksEachCombat): of the creatures offered, each a static
++   requires to attack, and the way it may. One that can attack someone only by paying a cost is required nothing (508.1d:
++   no player is made to pay); one that can attack a player, or a planeswalker no cap limits, for free must be declared
++   (`each`). One whose only free attacks are at planeswalkers that allow only so many (attackerCaps, 508.1c) is `tight`:
++   as many of those as can attack at once must -- the most requirements obeyed without breaking a restriction -- counted
++   by matching them to the planeswalkers' places (`most`). The declaration obeys them all or is refused, saying which. */
++function attackRequirements(state, options) {
++  const caps = attackerCaps(state);
++  const free = (o) => attackTax(state, [{defenderId: o.defenderId, ...(o.planeswalkerId !== undefined ? {planeswalkerId: o.planeswalkerId} : {})}]) === 0;
++  const each = [], tight = [];
++  for (const id of new Set(options.map((o) => o.cardId))) {
++    const sources = attacksEachCombat(state, id);
++    if (!sources.length) continue;
++    const ways = options.filter((o) => o.cardId === id && free(o));
++    if (!ways.length) continue;
++    if (ways.some((o) => o.planeswalkerId === undefined || caps[o.planeswalkerId] === undefined)) each.push({id, sources});
++    else tight.push({id, sources, at: [...new Set(ways.map((o) => o.planeswalkerId))]});
++  }
++  return {each, tight, most: placesFilled(tight, caps)};
++}
++/* How many of these can attack at once, each at a planeswalker it may, none past a planeswalker's cap: a matching of the
++   creatures to the planeswalkers' places, grown one augmenting path at a time. */
++function placesFilled(tight, caps) {
++  const places = [...new Set(tight.flatMap((t) => t.at))].flatMap((pw) => Array.from({length: caps[pw]}, () => pw));
++  const holder = places.map(() => -1);
++  const seat = (c, seen) => {
++    for (let p = 0; p < places.length; p += 1) {
++      if (seen[p] || !tight[c].at.includes(places[p])) continue;
++      seen[p] = true;
++      if (holder[p] < 0 || seat(holder[p], seen)) { holder[p] = c; return true; }
++    }
++    return false;
++  };
++  return tight.reduce((n, _, c) => n + (seat(c, places.map(() => false)) ? 1 : 0), 0);
++}
++/* The refusal, what is wrong and then what to do, naming them (AGENTS.md): the creatures, and the permanents that say so. */
++const named = (list) => (list.length <= 1 ? list.join("") : `${list.slice(0, -1).join(", ")} and ${list[list.length - 1]}`);
++function requirementWords(state, required, most = null, at = []) {
++  const names = named(required.map((r) => shownName(state.objects[r.id])));
++  const sources = named([...new Set(required.flatMap((r) => r.sources).map((s) => state.objects[s]?.card ?? "a permanent"))]);
++  if (most === null) return `${names} ${required.length === 1 ? "has" : "have"} to attack this combat: ${sources} says ${required.length === 1 ? "it attacks" : "they attack"} each combat if able. `
++    + `Declare ${required.length === 1 ? "it" : "each of them"} attacking a player or a planeswalker.`;
++  const places = named(at.map((pw) => state.objects[pw]?.card ?? "a planeswalker"));
++  const howMany = String(COUNTED[most]?.replace(/ creatures?$/, "") ?? most);
++  return `${howMany[0].toUpperCase()}${howMany.slice(1)} of ${names} ${most === 1 ? "has" : "have"} to attack this combat: ${sources} says they attack each combat if able, and ${places} is all they can attack. `
++    + `Declare ${most === 1 ? "one of them" : `${most} of them`} attacking ${places}.`;
++}
++/* The record's `requires` (controller.mjs holds every answerer to it): at least `least` of the options naming these creatures. */
++function requiresOf(state, options) {
++  const {each, tight, most} = attackRequirements(state, options);
++  const out = [];
++  if (each.length) out.push({by: "cardId", values: each.map((r) => r.id), least: each.length, why: requirementWords(state, each)});
++  if (tight.length && most > 0) out.push({by: "cardId", values: tight.map((r) => r.id), least: most, why: requirementWords(state, tight, most, [...new Set(tight.flatMap((t) => t.at))])});
++  return out;
++}
++
+ export const attackers = {
+   /** Whether this step has anything to ask. Called by the turn structure as the step begins. */
+   open(state) {
+@@ -175,6 +238,9 @@ export const attackers = {
+        answerer is held to it by controller.mjs, as `exclusiveBy` holds them, and a pilot can keep to it. */
+     const caps = Object.entries(attackerCaps(state)).filter(([pw]) => options.some((o) => o.planeswalkerId === Number(pw)));
+     const capped = caps.length ? {by: "planeswalkerId", most: Object.fromEntries(caps), why: Object.fromEntries(caps.map(([pw, most]) => [pw, capWords(state, Number(pw), most)]))} : null;
++    /* "OTHER GOBLIN CREATURES YOU CONTROL ATTACK EACH COMBAT IF ABLE" (CR 508.1d): which must be among the attackers, said in
++       the record with what to do instead -- every answerer held to it by controller.mjs, and a pilot able to keep to it. */
++    const requires = requiresOf(state, options);
+     return {
+       id: `declare-attackers:${state.turn}`,
+       title: "Declare attackers",
+@@ -189,6 +255,7 @@ export const attackers = {
+          `resolve` stays as the last line, but nothing should reach it. */
+       exclusiveBy: "cardId",
+       ...(capped ? {capped} : {}),
++      ...(requires.length ? {requires} : {}),
+       options,
+     };
+   },
+@@ -242,6 +309,10 @@ export const attackers = {
+       const owed = mustAttackOf(state, id).filter((d) => defendersFor(state, awaiting.player).includes(d) && !cantAttack(state, id, d) && attackTax(state, [{defenderId: d}]) === 0);
+       if (owed.length) picked.push({cardId: id, defenderId: owed[0]});
+     }
++    /* "Attacks each combat if able" (CR 508.1d): a declaration that leaves out one it could have sent is not a legal one --
++       refused, saying which and what to do (the record's `requires`), and never quietly filled in for the player. */
++    for (const need of choice.requires ?? [])
++      if (new Set(picked.map((o) => o.cardId).filter((id) => need.values.includes(id))).size < need.least) throw new Error(need.why);
+     return picked;
+   },
+ 
+@@ -297,6 +368,11 @@ function declareAttacks(state, player, picked, events) {
+   state.combat.firstStrike = combatNeedsFirstStrike(state);
+   /* "Creatures that attacked this turn", "attacks for the first time each turn": counted on each attacker. */
+   for (const attack of state.combat.attacks) recordUse(state, attack.attacker, "attacked");
++  /* And whom the attacking player attacked this turn -- players, not their planeswalkers (CR 506.3): "players who attacked
++     you during their last turn" (Weathered Sentinels; rules/statics.mjs, defenderLifted), from none as their turn began
++     (rules/turn.mjs). */
++  const attackedPlayers = (state.players[player].attackedPlayers ??= []);
++  for (const attack of state.combat.attacks) if (attack.planeswalker === undefined && !attackedPlayers.includes(attack.defender)) attackedPlayers.push(attack.defender);
+   /* And whom it attacked: "a player it has already attacked this turn" (Port Razer; rules/statics.mjs, cantAttack). */
+   for (const attack of state.combat.attacks) if (attack.planeswalker === undefined) recordUse(state, attack.attacker, `attacked:${attack.defender}`);
+ 
+diff --git a/game/engine/rules/layers.mjs b/game/engine/rules/layers.mjs
+index 4bee1d6a..8f20a24e 100644
+--- a/game/engine/rules/layers.mjs
++++ b/game/engine/rules/layers.mjs
+@@ -209,6 +209,20 @@ function allEffects(state) {
+   if (key !== null) memo.effects.set(key, found);
+   return found;
+ }
++/* "AS LONG AS THE TOP CARD OF YOUR LIBRARY IS A GOBLIN CARD, THIS CREATURE HAS ALL ACTIVATED ABILITIES OF THAT CARD"
++   (Conspicuous Snoop; CR 613.1f, layer 6): `apply.topCardAbilities`, what that card must be (its subtypes, a changeling's
++   every creature type among them, CR 702.73a) -- read from the holder's controller's library as it now is, so the
++   abilities change as the top card does. Its activated abilities, mana abilities among them (CR 605.1a), given as granted
++   abilities are; none, and the static gives nothing. */
++function topCardGrant(state, holder, ability) {
++  const top = state.zones.library?.[holder.controller]?.[0];
++  const card = top === undefined ? null : state.objects[top];
++  const wanted = ability.apply.topCardAbilities?.subtypes ?? [];
++  if (!card || !wanted.every((t) => hasSubtype(card.subtypes ?? [], everyCreatureType(card.keywords), t))) return null;
++  const {topCardAbilities: _top, ...rest} = ability.apply;
++  return {...ability, apply: {...rest, addAbilities: (card.abilities ?? []).filter((a) => a.kind === "activated" || a.kind === "mana")}};
++}
++
+ function gatherEffects(state) {
+   const found = [];
+   for (const graveyard of state.zones.graveyard ?? []) for (const id of graveyard) {
+@@ -226,9 +240,11 @@ function gatherEffects(state) {
+       /* One that works from a graveyard does not work here (CR 113.6). */
+       if (ability.worksFrom === "graveyard") continue;
+       if (!holdsNow(state, ability.condition, {controller: holder.controller, source: id})) continue;
++      const given = ability.apply?.topCardAbilities !== undefined ? topCardGrant(state, holder, ability) : ability;
++      if (given === null) continue;
+       found.push({
+         /* "Creatures you control of the chosen type get +1/+1", "this creature is the chosen type": its own choice. */
+-        ...chosenFor(ability, holder),
++        ...chosenFor(given, holder),
+         sourceId: id,
+         sourceController: holder.controller,
+         /* A static ability's timestamp is its permanent's (CR 613.7d). */
+@@ -468,7 +484,7 @@ const heldAbilities = (object, current) => [...(current.lostAbilities ? [] : obj
+    graveyard (where one may work from, allEffects): when none does, a permanent's abilities are its own, and nothing need
+    be derived to read them. */
+ function abilitiesChange(state) {
+-  const changes = (apply) => Boolean(apply && (apply.addAbilities || apply.removeAllAbilities));
++  const changes = (apply) => Boolean(apply && (apply.addAbilities || apply.removeAllAbilities || apply.topCardAbilities));
+   if ((state.effects ?? []).some((effect) => changes(effect.apply))) return true;
+   const holders = [...state.zones.battlefield, ...(state.zones.graveyard ?? []).flat()];
+   return holders.some((id) => (state.objects[id].abilities ?? []).some((ability) => ability.kind === "static" && changes(ability.apply)));
+diff --git a/game/engine/rules/mana.mjs b/game/engine/rules/mana.mjs
+index b253d58d..588bc496 100644
+--- a/game/engine/rules/mana.mjs
++++ b/game/engine/rules/mana.mjs
+@@ -30,7 +30,7 @@
+ 
+ export const COLORS = Object.freeze(["W", "U", "B", "R", "G"]);
+ import {eventCard} from "../state/index.mjs";
+-import {summoningSick} from "../keywords/timing.mjs";
++import {sickForAbilities} from "../keywords/timing.mjs";
+ import {abilitiesOf} from "./layers.mjs";
+ 
+ /** The pool's keys: the five colors plus colorless. */
+@@ -422,8 +422,9 @@ function plainSources(state, player) {
+   for (const id of state.zones.battlefield) {
+     const object = state.objects[id];
+     if (object.controller !== player || object.tapped) continue;
+-    /* CR 302.6: a creature's {T} waits until it has been theirs since their turn began. */
+-    if (summoningSick(state, id)) continue;
++    /* CR 302.6: a creature's {T} waits until it has been theirs since their turn began (or "as though it had haste",
++       CR 702.10c: keywords/timing.mjs). */
++    if (sickForAbilities(state, id)) continue;
+     const ability = abilitiesOf(state, id).find((a) => a.kind === "mana" && a.tapSelf && !a.cost && !a.payLife && !a.sacrifice && !a.sacrificeSelf && !a.condition && !a.spendOnly
+       && (a.produces || a.anyColor === true));
+     if (ability) out.push({id, ability});
+diff --git a/game/engine/rules/stack.mjs b/game/engine/rules/stack.mjs
+index c90b6609..2abfaea7 100644
+--- a/game/engine/rules/stack.mjs
++++ b/game/engine/rules/stack.mjs
+@@ -236,6 +236,8 @@ export function resolveTop(state, effect = null, rng = null) {
+     /* How the spell was cast, for its own conditions ("if this spell was cast from a graveyard"; rules/actions.mjs). */
+     ...(entry.cast ? {cast: entry.cast} : {}),
+     ...(entry.sourceTransforms !== undefined ? {sourceTransforms: entry.sourceTransforms} : {}),
++    /* What its cost sacrificed, as each last existed: "the sacrificed creature's toughness" (rules/actions.mjs). */
++    ...(entry.sacrificed ? {sacrificed: entry.sacrificed} : {}),
+     /* What its permanent chose as it entered: "draw a card for each creature of the chosen type". */
+     ...(source !== null && state.objects[source]?.chosen !== undefined ? {chosen: state.objects[source].chosen} : {})};
+   /* "Another target" asked again with its source gone (Oblivion Ring destroyed with its trigger waiting): another than the
+diff --git a/game/engine/rules/statics.mjs b/game/engine/rules/statics.mjs
+index 3f1a6432..dba55068 100644
+--- a/game/engine/rules/statics.mjs
++++ b/game/engine/rules/statics.mjs
+@@ -148,7 +148,10 @@ export const STATIC_RULES = Object.freeze({
+       rules/actions.mjs offers it beside the paid cast. */
+   "alternative-cost": "rules/actions.mjs",
+   /** "Target creature with defender can attack this turn as though it didn't have defender" (Assault Formation, Walking
+-      Bulwark; CR 702.3b): combat.mjs, as attackers are offered. */
++      Bulwark; CR 702.3b): combat.mjs, as attackers are offered. And as a permanent's static: "creatures you control can
++      attack as though they didn't have defender" (Felothar the Steadfast), "this creature can attack players who attacked
++      you during their last turn as though it didn't have defender" (Weathered Sentinels: `against: "attackedYouLastTurn"`,
++      those players only, never a planeswalker). defenderLifted, below. */
+   "attacks-despite-defender": "rules/combat.mjs",
+   /** "Prevent all damage that would be dealt to [them] this turn": an effect with a duration only (effectUntil), with
+       `apply` {to, by, combat}; rules/replacement.mjs. */
+@@ -172,6 +175,14 @@ export const STATIC_RULES = Object.freeze({
+       players whose proliferating it replaces (a player selector, "you" its controller). script/resolution.mjs, as a
+       proliferate reaches the head of a resolution (proliferateTimes). */
+   "proliferate-twice": "script/resolution.mjs",
++  /** CR 702.10c by permission: "You may activate abilities of creatures you control as though those creatures had haste"
++      (Thousand-Year Elixir): `affects` the creatures, "you" its controller. Their {T} abilities are not held back by CR
++      302.6; their attack still is. keywords/timing.mjs, sickForAbilities. */
++  "activate-as-though-haste": "keywords/timing.mjs",
++  /** A requirement on attacking (CR 508.1d): "Other Goblin creatures you control attack each combat if able" (Goblin
++      Rabblemaster): `affects` the creatures, "you" its controller. Required of each that can attack someone with no cost to
++      pay; a declaration leaving out one it could have is refused, saying which (attacksEachCombat, below; rules/combat.mjs). */
++  "attacks-each-combat": "rules/combat.mjs",
+ });
+ 
+ /**
+@@ -356,6 +367,55 @@ export function attackerCaps(state) {
+   return caps;
+ }
+ 
++/** Whom a static `attacks-despite-defender` may limit its permission to (`against`): the players who attacked its
++ *  controller during their last turn (Weathered Sentinels). */
++export const DEFENDER_LIFTED_AGAINST = Object.freeze(["attackedYouLastTurn"]);
++/* "PLAYERS WHO ATTACKED YOU DURING THEIR LAST TURN": a player is one when, in their most recent turn, a creature of theirs
++   was declared attacking you -- you, not a planeswalker of yours (CR 506.3: attacking one is not attacking its controller).
++   Kept on each player as they declare attackers, from none as each of their turns begins (rules/combat.mjs, turn.mjs). */
++const attackedYouLastTurn = (state, player, you) => (state.players[player]?.attackedPlayers ?? []).includes(you);
++
++/**
++ * WHETHER DEFENDER IS LIFTED (CR 702.3b): a creature with defender can't attack, unless something lets it attack as though
++ * it didn't have defender. `defender` the player it would attack, `planeswalker` the planeswalker of theirs, or both
++ * undefined for "anyone at all" -- the question whether it may attack at all (rules/combat.mjs, canAttack). A static of a
++ * permanent's whose `affects` takes this creature in, with its condition holding, lifts it toward anyone, or -- `against`
++ * -- only toward the players it names, and never toward a planeswalker; an effect for a while lifts it toward anyone.
++ */
++export function defenderLifted(state, id, defender = undefined, planeswalker = null) {
++  for (const holderId of state.zones.battlefield) {
++    const holder = state.objects[holderId];
++    for (const ability of holder.abilities ?? []) {
++      if (ability.kind !== "static" || ability.rule !== "attacks-despite-defender") continue;
++      const context = {controller: holder.controller, source: holderId};
++      if (!conditionHolds(state, ability.condition, context) || !matchesSelector(chosenFor(ability, holder).affects, state, id, context)) continue;
++      if (ability.against === undefined) return true;
++      if (ability.against !== "attackedYouLastTurn" || planeswalker !== null) continue;
++      const toward = defender === undefined ? state.players.filter((p) => !p.lost && p.id !== holder.controller).map((p) => p.id) : [defender];
++      if (toward.some((player) => attackedYouLastTurn(state, player, holder.controller))) return true;
++    }
++  }
++  return (state.effects ?? []).some((effect) => effect.rule === "attacks-despite-defender" && staticAffects(state, effect, id, effect.sourceController));
++}
++
++/**
++ * "ATTACKS EACH COMBAT IF ABLE" (CR 508.1d): the permanents whose static `attacks-each-combat` takes this creature in, as
++ * it is now, with its condition holding -- each a requirement on it, said by name when a declaration breaks it. Empty, and
++ * nothing is required of it by a static.
++ */
++export function attacksEachCombat(state, id) {
++  const sources = [];
++  for (const holderId of state.zones.battlefield) {
++    const holder = state.objects[holderId];
++    for (const ability of holder.abilities ?? []) {
++      if (ability.kind !== "static" || ability.rule !== "attacks-each-combat") continue;
++      const context = {controller: holder.controller, source: holderId};
++      if (conditionHolds(state, ability.condition, context) && matchesSelector(chosenFor(ability, holder).affects, state, id, context)) sources.push(holderId);
++    }
++  }
++  return sources;
++}
++
+ /** The words `defender` may say on a `cant-attack` static. */
+ export const CANT_ATTACK_DEFENDERS = Object.freeze(["you", "owner", "attacked"]);
+ 
+diff --git a/game/engine/rules/turn.mjs b/game/engine/rules/turn.mjs
+index f165f718..a325eeca 100644
+--- a/game/engine/rules/turn.mjs
++++ b/game/engine/rules/turn.mjs
+@@ -610,6 +610,8 @@ export function advance(state) {
+     /* "Since the beginning of your last upkeep" (echo, CR 702.30a; script/condition.mjs): the turn of theirs before this one. */
+     if (state.players[state.activePlayer].turnBegan > 0) state.players[state.activePlayer].previousTurnBegan = state.players[state.activePlayer].turnBegan;
+     state.players[state.activePlayer].turnBegan = state.turn;   /* CR 302.6, keywords/timing.mjs */
++    /* Whom they attack in this turn, from none: "players who attacked you during their last turn" (rules/combat.mjs). */
++    if (state.players[state.activePlayer].attackedPlayers) state.players[state.activePlayer].attackedPlayers = [];
+     /* Whose next turn has now begun: this player's -- and each player who has left the game and whose turn it would have been
+        on the way here, since an effect lasting until that player's next turn lasts until that turn would have begun (CR
+        800.4m: Reflector Mage's controller conceding does not lock a name for the rest of the game). */
+@@ -642,6 +644,8 @@ export function advance(state) {
+       /* And how many permanents left the battlefield under each one's control (state/index.mjs, revolt), and what entered
+          under it (rules/trigger.mjs, recordArrivals). */
+       if (player.leftThisTurn) player.leftThisTurn = 0;
++      /* And how many cards left each one's graveyard (state/index.mjs; "if a card left your graveyard this turn"). */
++      if (player.leftGraveyardThisTurn) player.leftGraveyardThisTurn = 0;
+       if (player.enteredThisTurn) player.enteredThisTurn = [];
+       /* And whether each was dealt combat damage (rules/combat.mjs). */
+       if (player.combatDamagedThisTurn) player.combatDamagedThisTurn = false;
+diff --git a/game/engine/script/amount.mjs b/game/engine/script/amount.mjs
+index fb485de7..ca042d76 100644
+--- a/game/engine/script/amount.mjs
++++ b/game/engine/script/amount.mjs
+@@ -53,7 +53,7 @@ import {valueCostOf, commanderKeyOf} from "../state/index.mjs";
+ /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
+ export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "toughnessOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
+   "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn", "playersDealtCombatDamage", "cardTypesAmong", "manaSpent",
+-  "permanentsEnteredThisTurn", "excessDamage", "lesserOf", "kicked", "differentPowers", "commanderCasts"]);
++  "permanentsEnteredThisTurn", "excessDamage", "lesserOf", "kicked", "differentPowers", "commanderCasts", "cardsLeftGraveyardThisTurn"]);
+ const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "filter", "controlledBy"];
+ const COLORS = ["W", "U", "B", "R", "G"];
+ 
+@@ -69,7 +69,7 @@ export function amountProblems(value) {
+   const problems = [];
+   for (const key of Object.keys(value)) if (!AMOUNT_KINDS.includes(key) && !AMOUNT_EXTRAS.includes(key)) problems.push(`An amount has no key ${JSON.stringify(key)}`);
+   if ("countersOn" in value && typeof value.counter !== "string") problems.push("Counting counters says which kind: {countersOn, counter}");
+-  for (const key of ["lifeGainedThisTurn", "tokensCreatedThisTurn", "permanentsLeftThisTurn", "permanentsEnteredThisTurn"]) if (key in value && !["you", "that player"].includes(value[key])) problems.push(`${key} is "you" or "that player"`);
++  for (const key of ["lifeGainedThisTurn", "tokensCreatedThisTurn", "permanentsLeftThisTurn", "permanentsEnteredThisTurn", "cardsLeftGraveyardThisTurn"]) if (key in value && !["you", "that player"].includes(value[key])) problems.push(`${key} is "you" or "that player"`);
+   /* What entered, as it was (rules/trigger.mjs keeps it): a filter of what a last known snapshot answers, and only there. */
+   if ("filter" in value) {
+     if (!("permanentsEnteredThisTurn" in value)) problems.push("Only permanentsEnteredThisTurn takes a filter");
+@@ -158,6 +158,12 @@ export function amountOf(state, value, context = {}) {
+     /* A source sacrificed as the cost ("for each counter on this creature") is read as it last was (CR 608.2h). */
+     const counters = id !== null && state.objects[id] ? state.objects[id].counters : context.lastKnown?.counters;
+     n = value.counter === "any" ? Object.values(counters ?? {}).reduce((a, b) => a + b, 0) : counters?.[value.counter] ?? 0;
++  }
++  /* "Draw cards equal to the sacrificed creature's toughness, then discard cards equal to its power" (Felothar the
++     Steadfast): what the ability's cost sacrificed, as it last existed (CR 608.2h; rules/actions.mjs keeps it). */
++  else if (value.powerOf === "sacrificed" || value.toughnessOf === "sacrificed") {
++    const was = (context.sacrificed ?? [])[0];
++    n = (value.powerOf === "sacrificed" ? was?.power : was?.toughness) ?? 0;
+   } else if ("powerOf" in value) {
+     const id = objectOf(value.powerOf, context);
+     n = id !== null && state.objects[id]?.zone === "battlefield" ? powerOf(state, id) : (context.lastKnown?.power ?? 0);
+@@ -231,6 +237,12 @@ export function amountOf(state, value, context = {}) {
+     const player = playerOf(value.permanentsLeftThisTurn, context);
+     n = player !== null ? state.players[player]?.leftThisTurn ?? 0 : 0;
+   }
++  /* "If a card left your graveyard this turn" (Primary Research, Relic Retriever): how many cards did, from that player's
++     graveyard, to anywhere (state/index.mjs keeps it as each leaves, rules/turn.mjs clears it). */
++  else if ("cardsLeftGraveyardThisTurn" in value) {
++    const player = playerOf(value.cardsLeftGraveyardThisTurn, context);
++    n = player !== null ? state.players[player]?.leftGraveyardThisTurn ?? 0 : 0;
++  }
+   /* "The number of creatures that entered the battlefield under your control this turn" (Kinbinding), and "another
+      creature" (Wary Farmer, `another`: not this one): what entered under that player's control, as it entered (rules/
+      trigger.mjs, recordArrivals), that `filter` fits -- one that has left since included. */
+diff --git a/game/engine/script/effects/asking.mjs b/game/engine/script/effects/asking.mjs
+index 63b8a529..7098d463 100644
+--- a/game/engine/script/effects/asking.mjs
++++ b/game/engine/script/effects/asking.mjs
+@@ -32,7 +32,7 @@ import {event, cardRef, moveOne, playersFor, sacrificeOne} from "./zones.mjs";
+ import {proliferate as giveEachAnother, addCounters} from "./resources.mjs";
+ import {makeCopies, afterwards, joinAttack, defendingPlayers, attachTo, createToken, effectUntil} from "./permanents.mjs";
+ import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits, unlessPlans, planWords, payPlan} from "../../rules/mana.mjs";
+-import {typesOf, characteristicsOf, everyCreatureTypeOf} from "../../rules/layers.mjs";
++import {typesOf, characteristicsOf, everyCreatureTypeOf, controllerOf} from "../../rules/layers.mjs";
+ import {pushCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
+ import {loseLife, DAMAGING, damageQuestion} from "./resources.mjs";
+ import {damageOrderChoice} from "../../rules/replacement.mjs";
+@@ -743,9 +743,12 @@ export const amass = {
+    and when there is more than one way, which is the payer's (CR 605.3a). */
+ const lifeAsked = (awaiting) => awaiting.life > 0 || (awaiting.life === 0 && !(awaiting.amount > 0));
+ const noun = (selector) => (selector?.subtypes?.length ? `a ${selector.subtypes[0]}` : selector?.types?.length ? `a ${selector.types[0].toLowerCase()}` : "a permanent");
++/* "Another creature you control" (Faerie Impostor): `another` read against the "unless" ability's own source. */
++const otherNoun = (selector) => (selector?.another === true ? noun(selector).replace(/^a /, "another ") : noun(selector));
+ function costWords(awaiting) {
+   const paid = [awaiting.mana ?? null, awaiting.amount > 0 ? `{${awaiting.amount}}` : null, lifeAsked(awaiting) ? `${awaiting.life} life` : null].filter(Boolean);
+-  const other = awaiting.discard ? "discard a card" : awaiting.sacrificeCount ? `sacrifice ${awaiting.sacrificeCount} permanents` : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}` : null;
++  const other = awaiting.discard ? "discard a card" : awaiting.sacrificeCount ? `sacrifice ${awaiting.sacrificeCount} permanents` : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}`
++    : awaiting.returnToHand ? `return ${otherNoun(awaiting.returnToHand)} you control to its owner's hand` : null;
+   return [other, paid.length ? `pay ${paid.join(" and ")}` : null].filter(Boolean).join(" and ") || `pay {${awaiting.amount}}`;
+ }
+ function payOptions(state, awaiting) {
+@@ -768,6 +771,14 @@ function payOptions(state, awaiting) {
+       .map((id) => ({label: `Sacrifice ${state.objects[id].card}${also}`, pay: true, sacrifice: id, cardId: id}));
+   }
+   if (awaiting.discard) return cardsIn(state, "hand", player).map((id) => ({label: `Discard ${state.objects[id].card}${also}`, pay: true, discard: id, cardId: id}));
++  /* "UNLESS YOU RETURN ANOTHER CREATURE YOU CONTROL TO ITS OWNER'S HAND" (Faerie Impostor; CR 118.12a, a cost other than
++     mana): each permanent of the payer's the selector describes its own option -- `another` not the ability's source --
++     and none, and not paying is all there is. Which one is the payer's choice (AGENTS.md: the players decide). */
++  if (awaiting.returnToHand) {
++    const fits = compileSelector({...awaiting.returnToHand, what: "permanent", controller: "you"});
++    return state.zones.battlefield.filter((id) => fits(state, id, {controller: player, source: awaiting.source}))
++      .map((id) => ({label: `Return ${state.objects[id].card} to its owner's hand${also}`, pay: true, bounce: id, cardId: id}));
++  }
+   return [{label: `Pay ${paid || `{${amount}}`}`, pay: true}];
+ }
+ export const unlessPays = {
+@@ -776,11 +787,12 @@ export const unlessPays = {
+     if (payer === undefined) return false;
+     /* "You may pay {4}. If you do, ..." (Mana Vault), mana alone, by a player who cannot pay it: no choice to make, and
+        nothing happens. */
+-    if (params.ifPaid && !params.life && !params.discard && !params.sacrifice && !canPayGeneric(state, payer, Math.max(0, params.amount ?? 0))) return false;
++    if (params.ifPaid && !params.life && !params.discard && !params.sacrifice && !params.returnToHand && !canPayGeneric(state, payer, Math.max(0, params.amount ?? 0))) return false;
+     state.awaiting = {kind: "effect-choice", effect: "unlessPays", player: payer, amount: Math.max(0, params.amount ?? 0),
+       ...(typeof params.mana === "string" && params.mana ? {mana: params.mana} : {}),
+       ...(params.life !== undefined ? {life: params.life} : {}), ...(params.discard ? {discard: params.discard} : {}), ...(params.sacrifice ? {sacrifice: structuredClone(params.sacrifice)} : {}),
+       ...(params.sacrificeCount ? {sacrificeCount: params.sacrificeCount} : {}),
++      ...(params.returnToHand ? {returnToHand: structuredClone(params.returnToHand)} : {}),
+       effects: structuredClone(params.effects ?? []), source: context.source ?? null,
+       /* "You may pay {1}. If you do, ...": the effects when it is paid, not when it is not. */
+       ...(params.ifPaid ? {ifPaid: true} : {}),
+@@ -870,6 +882,11 @@ function unlessPaid(state, awaiting, option, events) {
+     if (moveOne(state, option.discard, "graveyard", events, {owner: awaiting.player}) !== null) events[events.length - 1].data.fields.discarded = true;
+   }
+   for (const id of option.sacrifice === undefined ? [] : [].concat(option.sacrifice)) if (state.objects[id]) sacrificeOne(state, id, events);
++  /* Returned to its owner's hand (CR 400.3), as a cost is paid: still there and still the payer's, or it cannot be. */
++  if (option.bounce !== undefined) {
++    if (state.objects[option.bounce]?.zone !== "battlefield" || controllerOf(state, option.bounce) !== awaiting.player) throw new Error("That permanent can no longer be returned to its owner's hand");
++    moveOne(state, option.bounce, "hand", events);
++  }
+   if (awaiting.ifPaid) return {events, splice: structuredClone(awaiting.effects)};
+   /* "If they do, you create a Lander token" (Divert Disaster): what paying leads to. */
+   return awaiting.whenPaid ? {events, splice: structuredClone(awaiting.whenPaid)} : events;
+diff --git a/game/engine/script/resolution.mjs b/game/engine/script/resolution.mjs
+index 98166189..50d889e8 100644
+--- a/game/engine/script/resolution.mjs
++++ b/game/engine/script/resolution.mjs
+@@ -48,7 +48,9 @@ export function beginResolution(state, effects, context = {}, rng = null) {
+       /* How a spell was cast, for "if this spell was cast from a graveyard" (script/condition.mjs, `cast`). */
+       ...(context.cast ? {cast: context.cast} : {}),
+       /* How many times its source had transformed as the ability went on the stack (CR 701.27f; rules/stack.mjs). */
+-      ...(context.sourceTransforms !== undefined ? {sourceTransforms: context.sourceTransforms} : {})},
++      ...(context.sourceTransforms !== undefined ? {sourceTransforms: context.sourceTransforms} : {}),
++      /* What the cost sacrificed, as it last existed ("the sacrificed creature's power"; script/amount.mjs). */
++      ...(context.sacrificed ? {sacrificed: context.sacrificed} : {})},
+     events: [],
+   };
+   return runResolution(state, rng);
+diff --git a/game/engine/script/schema.mjs b/game/engine/script/schema.mjs
+index 03e19393..0163f14d 100644
+--- a/game/engine/script/schema.mjs
++++ b/game/engine/script/schema.mjs
+@@ -122,6 +122,13 @@ function checkEffect(effect, path, errors) {
+     if (!parsed || !parsed.symbols.length || parsed.variable > 0) errors.push({path: `${path}.mana`, message: "An \"unless\" mana cost is mana symbols, without X: \"{3}{W}{W}\""});
+     if (effect.amount !== undefined) errors.push({path: `${path}.mana`, message: "An \"unless\" cost is `mana` or a generic `amount`, not both"});
+   }
++  /* "Unless you return another creature you control to its owner's hand" (Faerie Impostor): a selector of the payer's
++     permanents, the cost's only part beside mana or life. */
++  if (name === "unlessPays" && effect.returnToHand !== undefined) {
++    checkSelector(effect.returnToHand, `${path}.returnToHand`, errors);
++    if (effect.sacrifice !== undefined || effect.discard !== undefined)
++      errors.push({path: `${path}.returnToHand`, message: "An \"unless\" cost returns a permanent, sacrifices one or discards a card: one of them"});
++  }
+   if (name === "unlessPays" && effect.whenPaid !== undefined && !(Array.isArray(effect.whenPaid) && effect.whenPaid.length))
+     errors.push({path: `${path}.whenPaid`, message: "What follows paying is a list of effects"});
+   /* Where a countered spell goes instead of its owner's graveyard: exile (Force of Negation) or the top of its owner's
+@@ -386,6 +393,20 @@ export function validateScript(script) {
+     if (script.back !== undefined) errors.push({path: "adventure", message: "A card is an adventurer card or a double-faced card, not both"});
+   }
+ 
++  /* A PREPARATION CARD'S PREPARE SPELL (CR 722.2): its own identity, oracle text and abilities, the card's oracle id. A card
++     is one layout: never beside a back face or an Adventure. */
++  if (script.prepare !== undefined) {
++    const prepare = script.prepare;
++    if (!prepare || typeof prepare !== "object" || !Array.isArray(prepare.abilities)) errors.push({path: "prepare", message: "A prepare spell is an identity and a list of abilities"});
++    else {
++      const before = errors.length;
++      checkIdentity({...prepare.identity, oracleId: prepare.identity?.oracleId ?? script.identity?.oracleId}, errors);
++      for (const e of errors.slice(before)) e.path = `prepare.${e.path}`;
++      prepare.abilities.forEach((ability, index) => checkAbility(ability, `prepare.abilities[${index}]`, errors));
++    }
++    if (script.back !== undefined || script.adventure !== undefined) errors.push({path: "prepare", message: "A card is a preparation card, an adventurer card or a double-faced card, one of them"});
++  }
++
+   return {valid: errors.length === 0, errors};
+ }
+ 
