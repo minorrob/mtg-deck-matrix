@@ -1,0 +1,82 @@
+EDITS = [
+('game/engine/script/effects/zones.mjs', [
+('''  if (params.link === true && context.source !== null && context.source !== undefined) {
+    const links = (state.links ??= {});
+    links[context.source] = [...(links[context.source] ?? []), ...became.filter((id) => state.objects[id])];
+  }''',
+'''  if (params.link === true && context.source !== null && context.source !== undefined) {
+    const links = (state.links ??= {});
+    links[context.source] = [...(links[context.source] ?? []), ...became.filter((id) => state.objects[id])];
+    /* And the turn each was linked in: "cards exiled with Maralen this turn" (a play-from permission's `thisTurn`,
+       rules/actions.mjs). An object's id is never reused, so the turn stays true of that object for as long as it is one. */
+    const linkedOn = (state.linkedOn ??= {});
+    for (const id of became) if (state.objects[id]) linkedOn[id] = state.turn;
+  }'''),
+]),
+('game/engine/rules/actions.mjs', [
+('''const permits = (state, player, ability, id, kind) => {
+  const which = kind === "land" ? ability.lands : ability.spells;
+  return Boolean(which) && isLand(state.objects[id]) === (kind === "land")
+    && (which === true || (typeof which === "object" && matchesSelector({...which, what: "card", zone: state.objects[id].zone}, state, id, {controller: player})));
+};
+const permittedFrom = (state, player, ability) => (ability.zone === "graveyard" ? cardsIn(state, "graveyard", player)
+  : ability.zone === "library-top" ? cardsIn(state, "library", player).slice(0, 1) : []);''',
+'''/* "A spell with mana value less than or equal to the number of Elves and Faeries you control" (Maralen, Fae Ascendant):
+   `manaValueAtMost`, an amount counted now, against the card's mana value as it would be cast (an Adventure's, shown as
+   one; CR 715.3a). */
+const withinValue = (state, player, ability, id, source) => ability.manaValueAtMost === undefined
+  || manaValue(parseManaCost(state.objects[id].manaCost ?? "")) <= amountOf(state, ability.manaValueAtMost, {controller: player, source});
+const permits = (state, player, ability, id, kind, source = null) => {
+  const which = kind === "land" ? ability.lands : ability.spells;
+  return Boolean(which) && isLand(state.objects[id]) === (kind === "land")
+    && (which === true || (typeof which === "object" && matchesSelector({...which, what: "card", zone: state.objects[id].zone}, state, id, {controller: player})))
+    && withinValue(state, player, ability, id, source);
+};
+/* "From among cards exiled with Maralen this turn" (CR 607.2a, linked abilities): `zone: "exile"` and `linked`, what this
+   permanent's linked ability exiled (effects/zones.mjs, `link`) while each is still that card in exile (CR 400.7), whoever
+   owns it; `thisTurn`, only what it exiled this turn. */
+const linkedExile = (state, ability, source) => (state.links?.[source] ?? [])
+  .filter((id) => state.objects[id]?.zone === "exile" && (ability.thisTurn !== true || state.linkedOn?.[id] === state.turn));
+const permittedFrom = (state, player, ability, source = null) => (ability.zone === "graveyard" ? cardsIn(state, "graveyard", player)
+  : ability.zone === "library-top" ? cardsIn(state, "library", player).slice(0, 1)
+  : ability.zone === "exile" && ability.linked === true ? linkedExile(state, ability, source) : []);
+/* The zones a permission may let a card be cast from (permittedFrom). */
+const PERMITTED_ZONES = ["graveyard", "library", "exile"];
+/* "You may cast a spell ... without paying its mana cost" (Maralen): a permission that lets the card be cast only that way
+   (`withoutPaying`; CR 118.9) -- a free cast, its tax and additional costs still paid, no other cost beside it. */
+const permitsFree = (permit) => permit?.ability.withoutPaying === true;'''),
+('''const openPermissions = (state, player, id, kind) => playerStatics(state, "play-from", player)
+  .filter(({ability, source}) => permissionOpen(state, player, ability, source) && permittedFrom(state, player, ability).includes(id) && permits(state, player, ability, id, kind));''',
+'''const openPermissions = (state, player, id, kind) => playerStatics(state, "play-from", player)
+  .filter(({ability, source}) => permissionOpen(state, player, ability, source) && permittedFrom(state, player, ability, source).includes(id) && permits(state, player, ability, id, kind, source));'''),
+('''const permissionDoes = (ability) => JSON.stringify([ability.grants ?? null, ability.gains ?? null, ability.payLife ?? null]);''',
+'''const permissionDoes = (ability) => JSON.stringify([ability.grants ?? null, ability.gains ?? null, ability.payLife ?? null, ability.withoutPaying ?? null]);'''),
+('''    if (!permissionOpen(state, player, ability, source)) continue;
+    for (const id of permittedFrom(state, player, ability)) if (permits(state, player, ability, id, kind) && !found.includes(id)) found.push(id);''',
+'''    if (!permissionOpen(state, player, ability, source)) continue;
+    for (const id of permittedFrom(state, player, ability, source)) if (permits(state, player, ability, id, kind, source) && !found.includes(id)) found.push(id);'''),
+('''  const permission = !back && !fled && ["graveyard", "library"].includes(object.zone) ? playPermission(state, player, action.objectId, "spell", action.via ?? null) : null;
+  const lifeCost = free || way ? null : lifeInstead(object, permission);
+  return {tax, free, back, way, fled, permission, lifeCost};''',
+'''  const permission = !back && !fled && PERMITTED_ZONES.includes(object.zone) ? playPermission(state, player, action.objectId, "spell", action.via ?? null) : null;
+  /* Cast free through a permission that lets it be cast only that way (Maralen): free by it, once its own limit allows. */
+  const freely = free ?? (action.free && permitsFree(permission) ? {source: permission.source, limited: false} : null);
+  const lifeCost = freely || way ? null : lifeInstead(object, permission);
+  return {tax, free: freely, back, way, fled, permission, lifeCost};'''),
+('''  if (from === "exile") return (state.effects ?? []).some((e) => e.rule === "may-play" && e.player === player && e.notAdventure !== true && (e.affects?.ids ?? []).includes(id));
+  return playPermission(state, player, id, "spell") !== null;''',
+'''  if (from === "exile" && (state.effects ?? []).some((e) => e.rule === "may-play" && e.player === player && e.notAdventure !== true && (e.affects?.ids ?? []).includes(id))) return true;
+  return playPermission(state, player, id, "spell") !== null;'''),
+('''  const permit = !flashback && !escape && ["graveyard", "library"].includes(from) ? playPermission(state, player, id, "spell", via) : null;''',
+'''  const permit = !flashback && !escape && PERMITTED_ZONES.includes(from) ? playPermission(state, player, id, "spell", via) : null;'''),
+('''  const free = flashback || escape || lifeCost !== null ? null : freeCast(state, player, id);
+  /* Its own alternative costs (CR 118.9), each an offer of its own -- never with flashback, escape, a free cast or the
+     Citadel's life, each an alternative cost too (118.9a). */
+  const alternatives = flashback || escape || lifeCost !== null ? [] : alternativeCosts(state, player, id);''',
+'''  /* A permission that lets it be cast only without paying its mana cost (Maralen): that cast alone, its limit its own. */
+  const free = flashback || escape || lifeCost !== null ? null : permitsFree(permit) ? {source: permit.source, limited: false} : freeCast(state, player, id);
+  /* Its own alternative costs (CR 118.9), each an offer of its own -- never with flashback, escape, a free cast or the
+     Citadel's life, each an alternative cost too (118.9a). */
+  const alternatives = flashback || escape || lifeCost !== null || permitsFree(permit) ? [] : alternativeCosts(state, player, id);'''),
+]),
+]

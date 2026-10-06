@@ -1,0 +1,12 @@
+PATCHES = [
+("game/engine/rules/statics.mjs",
+"""      const selector = {...(ability.affects ?? {}), what: "card", zone: object.zone};
+      if (!matchesSelector(selector, state, cardId, {controller: holder.controller, source: holderId})) continue;
+      /* "During your turn, spells you cast cost {1} less for each creature you control with power 4 or greater" (Temur""",
+"""      const selector = {...(ability.affects ?? {}), what: "card", zone: object.zone};
+      if (!matchesSelector(selector, state, cardId, {controller: holder.controller, source: holderId})) continue;
+      /* "Spells you cast from anywhere other than your hand cost {2} less to cast" (Advanced Reconstruction): where the card
+         is being cast from (CR 601.2a) -- a graveyard, exile, a library, the command zone -- never a hand. */
+      if (ability.fromAnywhereButHand === true && object.zone === "hand") continue;
+      /* "During your turn, spells you cast cost {1} less for each creature you control with power 4 or greater" (Temur"""),
+]

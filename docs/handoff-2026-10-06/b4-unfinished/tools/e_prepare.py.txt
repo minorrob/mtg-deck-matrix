@@ -1,0 +1,161 @@
+EDITS = [
+('game/engine/state/index.mjs', [
+('''    /* Face down (CR 708.2): what the card is, beside the face-down characteristics it has (moveObject). */
+    ...(object.faceDown === true ? {faceDown: true, faceDownCard: structuredClone(object.faceDownCard ?? {})} : {}),
+  };''',
+'''    /* Face down (CR 708.2): what the card is, beside the face-down characteristics it has (moveObject). */
+    ...(object.faceDown === true ? {faceDown: true, faceDownCard: structuredClone(object.faceDownCard ?? {})} : {}),
+    /* A PREPARATION CARD (CR 722.2): its prepare spell's characteristics, which it has in no zone (722.4) -- what a copy is
+       made of as the permanent becomes prepared (722.3c; effects/permanents.mjs, becomePrepared). */
+    ...(object.prepareSpell ? {prepareSpell: structuredClone(object.prepareSpell)} : {}),
+    /* That copy, in exile: the prepared permanent it belongs to (rules/sba.mjs keeps it while that one is prepared). */
+    ...(Number.isInteger(object.preparedBy) ? {preparedBy: object.preparedBy} : {}),
+  };'''),
+('''    card: from.card, types: from.types, manaCost: from.manaCost, abilities: from.abilities,
+    power: from.power, toughness: from.toughness, loyalty: from.loyalty, keywords: from.keywords,
+    ...kept,''',
+'''    card: from.card, types: from.types, manaCost: from.manaCost, abilities: from.abilities,
+    power: from.power, toughness: from.toughness, loyalty: from.loyalty, keywords: from.keywords,
+    /* A preparation card's prepare spell goes with the card (CR 722.2a); being prepared does not (CR 400.7). */
+    ...(from.prepareSpell ? {prepareSpell: from.prepareSpell} : {}),
+    ...kept,'''),
+]),
+('game/engine/script/effects/permanents.mjs', [
+('''    ...(object.spell ? {spell: structuredClone(object.spell)} : {}),
+    ...(object.enchant ? {enchant: structuredClone(object.enchant)} : {}),
+  };
+}''',
+'''    ...(object.spell ? {spell: structuredClone(object.spell)} : {}),
+    ...(object.enchant ? {enchant: structuredClone(object.enchant)} : {}),
+    /* A prepare spell's characteristics are copiable values (CR 722.2b): a token copy of a preparation card can be prepared. */
+    ...(object.prepareSpell ? {prepareSpell: structuredClone(object.prepareSpell)} : {}),
+  };
+}'''),
+('''export function setState(state, params, context) {
+  const events = [];
+  for (const id of params.targets ?? []) {
+    const object = state.objects[id];
+    /* Gone from the battlefield -- a new object, if anywhere (CR 400.7) -- and there is nothing to change. */
+    if (object?.zone !== "battlefield") continue;''',
+'''export function setState(state, params, context) {
+  const events = [];
+  for (const id of params.targets ?? []) {
+    const object = state.objects[id];
+    /* Gone from the battlefield -- a new object, if anywhere (CR 400.7) -- and there is nothing to change. */
+    if (object?.zone !== "battlefield") continue;
+    /* "This creature becomes prepared" (Lorehold Archivist; CR 722.3a): becomePrepared, below. */
+    if (params.prepared === true) becomePrepared(state, id, events);'''),
+('''export function phaseOut(state, params, context) {''',
+'''/**
+ * PREPARED (CR 722.3): a designation a permanent with a prepare spell gains -- never one without one, nor one that has it
+ * already (722.3a). As it does, its controller creates a copy of it in exile with only its prepare spell's characteristics
+ * (722.3c): that copy stays only while the permanent is on the battlefield and prepared (rules/sba.mjs, an exception to
+ * 704.5e), and its controller may cast it (rules/actions.mjs) -- which unprepares the permanent (601.2i). A permanent that
+ * phases in prepared makes a new copy the same way (phaseIn). Said to everyone: it is a designation anyone can see.
+ */
+export function becomePrepared(state, id, events, again = false) {
+  const object = state.objects[id];
+  if (object?.zone !== "battlefield" || !object.prepareSpell || (object.prepared === true && !again)) return;
+  object.prepared = true;
+  const controller = object.controller;
+  const copy = addObject(state, {...structuredClone(object.prepareSpell), copy: true, owner: controller, controller, preparedBy: id}, "exile");
+  object.preparedCopy = copy;
+  events.push(event("GameEventCardPrepared", state, {card: cardRef(state, id), spell: cardRef(state, copy)}));
+}
+
+export function phaseOut(state, params, context) {'''),
+('''  for (const id of back) {
+    const object = state.objects[id];
+    delete object.phasedOut;
+    object.zone = "battlefield";
+    state.zones.battlefield.push(id);
+  }''',
+'''  for (const id of back) {
+    const object = state.objects[id];
+    delete object.phasedOut;
+    object.zone = "battlefield";
+    state.zones.battlefield.push(id);
+    /* Phased in prepared (CR 722.3c): its prepare spell's copy made again -- the one it had ceased to exist as it phased out. */
+    if (object.prepared === true) becomePrepared(state, id, [], true);
+  }'''),
+]),
+('game/engine/rules/sba.mjs', [
+('''          const copyAway = state.objects[id]?.copy === true && zone !== "stack";''',
+'''          /* A prepared permanent's copy of its prepare spell stays in exile while that permanent is on the battlefield and
+             prepared (CR 722.3c, its exception to 704.5e) -- and ceases to exist as either stops being so. */
+          const preparedBy = state.objects[id]?.preparedBy;
+          const kept = zone === "exile" && preparedBy !== undefined && state.objects[preparedBy]?.zone === "battlefield"
+            && state.objects[preparedBy].prepared === true && state.objects[preparedBy].preparedCopy === id;
+          const copyAway = state.objects[id]?.copy === true && zone !== "stack" && !kept;'''),
+]),
+('game/engine/rules/actions.mjs', [
+('''  /* "Until the end of your next turn, you may play that card" (script/effects/zones.mjs, mayPlay): the cards an effect let''',
+'''  /* A PREPARED PERMANENT'S SPELL (CR 722.3c): the copy of its prepare spell in exile, its controller's to cast while the
+     permanent is on the battlefield and prepared -- as any spell is cast, its mana cost paid. */
+  if (kind === "spell") for (const id of state.zones.exile) {
+    const by = state.objects[id].preparedBy;
+    if (by !== undefined && state.objects[by]?.zone === "battlefield" && state.objects[by].prepared === true && state.objects[by].preparedCopy === id
+      && controllerOf(state, by) === player && !found.includes(id)) found.push(id);
+  }
+  /* "Until the end of your next turn, you may play that card" (script/effects/zones.mjs, mayPlay): the cards an effect let'''),
+('''    /* "Until this card is cast from exile" (Emrakul, the Exigent Doom; effects/permanents.mjs, effectUntil): over now. */''',
+'''    /* A prepare spell's copy cast (CR 722.3c, 601.2i): the permanent it was made for loses the prepared designation. */
+    const prepared = object.zone === "exile" && object.preparedBy !== undefined ? state.objects[object.preparedBy] : null;
+    if (prepared?.preparedCopy === action.objectId) { prepared.prepared = false; delete prepared.preparedCopy; }
+    /* "Until this card is cast from exile" (Emrakul, the Exigent Doom; effects/permanents.mjs, effectUntil): over now. */'''),
+]),
+('game/engine/projection.mjs', [
+('''    /* A Class's level (CR 716.2a), a designation anyone can see (716.2b); none is level 1 (716.2d). */
+    ...(Number.isInteger(object.level) ? {level: object.level} : {}),''',
+'''    /* A Class's level (CR 716.2a), a designation anyone can see (716.2b); none is level 1 (716.2d). */
+    ...(Number.isInteger(object.level) ? {level: object.level} : {}),
+    /* Prepared (CR 722.3a), a designation anyone can see: its prepare spell waits in exile to be cast. */
+    ...(object.prepared === true ? {prepared: true} : {}),'''),
+]),
+('game/room/history.mjs', [
+('''    /* A Class's level (CR 716.2a). */
+    case "GameEventCardLevel":
+      return line(`${cardName(f.card)} reached level ${f.newValue}`);''',
+'''    /* A Class's level (CR 716.2a). */
+    case "GameEventCardLevel":
+      return line(`${cardName(f.card)} reached level ${f.newValue}`);
+    /* Prepared (CR 722.3a): its prepare spell, a copy in exile, now castable -- both public. */
+    case "GameEventCardPrepared":
+      return line(`${cardName(f.card)} became prepared (${cardName(f.spell)})`);'''),
+]),
+('game/engine/cards/index.mjs', [
+('''  /* AN ADVENTURER CARD (CR 715): "Card // Adventure", the Adventure -- an instant or sorcery with the subtype Adventure --''',
+'''  /* A PREPARATION CARD (CR 722): "Card // Prepare spell", its prepare spell compiled as a card of its own, the card's oracle
+     id and color identity; its characteristics go with the card (`prepareSpell`, 722.2a) and are never the card's own in
+     any zone (722.4) -- only a copy made in exile as the permanent becomes prepared has them (722.3c; effects/permanents.mjs). */
+  if (script.prepare !== undefined) {
+    const names = String(identity.name).split(" // ");
+    const prepared = compileScript({schema: script.schema, identity: {...script.prepare.identity, oracleId: identity.oracleId, colorIdentity: identity.colorIdentity ?? []},
+      oracleText: script.prepare.oracleText, source: script.source, abilities: script.prepare.abilities});
+    if (names.length !== 2 || script.prepare.identity?.name !== names[1]) problems.push(`a preparation card is named "Card // Prepare spell", and its prepare spell is the second name`);
+    for (const problem of prepared.problems) problems.push(`prepare spell: ${problem}`);
+    if (prepared.definition) definition.prepareSpell = faceOfDefinition(prepared.definition, names[1]);
+  }
+  /* AN ADVENTURER CARD (CR 715): "Card // Adventure", the Adventure -- an instant or sorcery with the subtype Adventure --'''),
+]),
+('game/engine/script/schema.mjs', [
+('''    if (script.back !== undefined) errors.push({path: "adventure", message: "A card is an adventurer card or a double-faced card, not both"});
+  }''',
+'''    if (script.back !== undefined) errors.push({path: "adventure", message: "A card is an adventurer card or a double-faced card, not both"});
+  }
+
+  /* A PREPARATION CARD'S PREPARE SPELL (CR 722.2): its own identity, oracle text and abilities, the card's oracle id. A card
+     is one layout: never beside a back face or an Adventure. */
+  if (script.prepare !== undefined) {
+    const prepare = script.prepare;
+    if (!prepare || typeof prepare !== "object" || !Array.isArray(prepare.abilities)) errors.push({path: "prepare", message: "A prepare spell is an identity and a list of abilities"});
+    else {
+      const before = errors.length;
+      checkIdentity({...prepare.identity, oracleId: prepare.identity?.oracleId ?? script.identity?.oracleId}, errors);
+      for (const e of errors.slice(before)) e.path = `prepare.${e.path}`;
+      prepare.abilities.forEach((ability, index) => checkAbility(ability, `prepare.abilities[${index}]`, errors));
+    }
+    if (script.back !== undefined || script.adventure !== undefined) errors.push({path: "prepare", message: "A card is a preparation card, an adventurer card or a double-faced card, one of them"});
+  }'''),
+]),
+]

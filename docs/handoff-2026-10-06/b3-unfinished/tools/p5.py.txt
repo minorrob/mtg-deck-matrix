@@ -1,0 +1,64 @@
+PATCHES = [
+("game/engine/script/effects/resources.mjs",
+"""export function removeCounter(state, params, context) {
+  const events = [];
+  for (const id of params.targets ?? []) {
+    const object = state.objects[id];
+    if (!object) continue;
+    const kinds = params.counter === "all" ? Object.keys(object.counters ?? {}) : [params.counter ?? "+1/+1"];
+    for (const kind of kinds) {
+      const before = object.counters[kind] ?? 0;
+      const after = params.counter === "all" ? 0 : Math.max(0, before - (params.count ?? 1));
+      if (after === before) continue;
+      object.counters[kind] = after;
+      events.push(event("GameEventCardCounters", state, {
+        card: cardRef(state, id), type: kind, oldValue: before, newValue: after,
+      }));
+    }
+  }
+  void context;
+  return events;
+}""",
+"""/* "Remove all charge counters from this artifact" (Coalition Relic): `all`, every counter of the kind. "For each charge
+   counter removed this way" (`remember`): how many it removed, a number remembered for the effects after it
+   (`rememberedNumber`, script/amount.mjs) -- none removed is 0. */
+export function removeCounter(state, params, context) {
+  const events = [];
+  let removed = 0;
+  for (const id of params.targets ?? []) {
+    const object = state.objects[id];
+    if (!object) continue;
+    const kinds = params.counter === "all" ? Object.keys(object.counters ?? {}) : [params.counter ?? "+1/+1"];
+    for (const kind of kinds) {
+      const before = object.counters[kind] ?? 0;
+      const after = params.counter === "all" || params.all === true ? 0 : Math.max(0, before - (params.count ?? 1));
+      if (after === before) continue;
+      object.counters[kind] = after;
+      removed += before - after;
+      events.push(event("GameEventCardCounters", state, {
+        card: cardRef(state, id), type: kind, oldValue: before, newValue: after,
+      }));
+    }
+  }
+  if (params.remember) context.rememberedNumber = removed;
+  return events;
+}"""),
+("game/engine/script/amount.mjs",
+"""  "permanentsEnteredThisTurn", "excessDamage", "lesserOf", "kicked", "differentPowers", "commanderCasts"]);""",
+"""  "permanentsEnteredThisTurn", "excessDamage", "lesserOf", "kicked", "differentPowers", "commanderCasts", "rememberedNumber"]);"""),
+("game/engine/script/amount.mjs",
+"""  if ("commanderCasts" in value && value.commanderCasts !== "that card") problems.push('commanderCasts is "that card"');""",
+"""  if ("commanderCasts" in value && value.commanderCasts !== "that card") problems.push('commanderCasts is "that card"');
+  if ("rememberedNumber" in value && value.rememberedNumber !== true) problems.push("rememberedNumber is true");"""),
+("game/engine/script/amount.mjs",
+"""  /* "Empower Jace X, where X is that excess damage" (Violent Echoes): the excess the damage before it dealt (effects/resources.mjs). */""",
+"""  /* "Add one mana of any color for each charge counter removed this way" (Coalition Relic; Forge's RememberedNumber): a
+     number the effect before it remembered -- the counters it removed (effects/resources.mjs, removeCounter). */
+  else if ("rememberedNumber" in value) n = context.rememberedNumber ?? 0;
+  /* "Empower Jace X, where X is that excess damage" (Violent Echoes): the excess the damage before it dealt (effects/resources.mjs). */"""),
+("game/engine/script/amount.mjs",
+""" *   {rememberedCount: true}              how many things the effect before it remembered -- "each player shuffles the cards""",
+""" *   {rememberedNumber: true}             a number the effect before it remembered: the counters it removed ("one mana of any
+ *                                        color for each charge counter removed this way", Coalition Relic)
+ *   {rememberedCount: true}              how many things the effect before it remembered -- "each player shuffles the cards"""),
+]

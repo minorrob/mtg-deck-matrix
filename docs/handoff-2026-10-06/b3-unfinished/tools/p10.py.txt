@@ -1,0 +1,66 @@
+PATCHES = [
+("game/engine/script/effects/permanents.mjs",
+"""    keywords: [...new Set([...(object.keywords ?? []), ...(except.addKeywords ?? [])])],
+    abilities: structuredClone(object.abilities ?? []),""",
+"""    keywords: [...new Set([...(object.keywords ?? []), ...(except.addKeywords ?? [])])],
+    /* "And it has 'When this token leaves the battlefield, ...'" (Hofri Ghostforge; CR 707.9a): abilities the copy has besides
+       the original's, part of its copiable values -- compiled with the card (cards/index.mjs), bound as it is made. */
+    abilities: [...structuredClone(object.abilities ?? []), ...structuredClone(except.addAbilities ?? [])],"""),
+("game/engine/script/effects/permanents.mjs",
+"""export function makeCopies(state, ids, params, context, events) {
+  const controller = params.controller ?? context.controller;
+  const made = [];
+  for (const id of ids) {
+    const original = state.objects[id];
+    if (!original) continue;
+    for (let i = 0; i < (params.count ?? 1); i += 1) {
+      const values = copiable(original, params.except);""",
+"""/* WHAT A COPY'S GIVEN ABILITY REMEMBERS (CR 603.7c's sense, for an ability made with the copy): "return THE EXILED CARD to
+   its owner's graveyard" (Hofri Ghostforge) -- `targets: "remembered"` in what `except.addAbilities` gives, the card the
+   effect before it exiled, bound now to that object; a card that has left exile since is a new object, and nothing
+   returns (CR 400.7). */
+function rememberedIn(abilities, remembered) {
+  const walk = (effect) => {
+    if (!effect || typeof effect !== "object") return effect;
+    const out = {...effect, ...(effect.targets === "remembered" ? {targets: [...(remembered ?? [])]} : {})};
+    for (const key of ["effects", "then", "otherwise"]) if (Array.isArray(out[key])) out[key] = out[key].map(walk);
+    return out;
+  };
+  return (abilities ?? []).map((ability) => ({...ability, ...(Array.isArray(ability.effects) ? {effects: ability.effects.map(walk)} : {})}));
+}
+export function makeCopies(state, ids, params, context, events) {
+  const controller = params.controller ?? context.controller;
+  const made = [];
+  for (const id of ids) {
+    /* "A copy of THAT CREATURE" (Hofri Ghostforge; CR 707.2, 608.2h): the creature the trigger is about, its copiable values as
+       it last existed on the battlefield (`asItLastWas`) -- a creature that was copying something, or face down, is that
+       (rules/layers.mjs, lastKnown's `copiable`); one that was neither, its card's own, which is where it now is. */
+    const original = params.asItLastWas === true && context.about?.copiedAs && state.objects[id] ? context.about.copiedAs : state.objects[id];
+    if (!original) continue;
+    const except = params.except?.addAbilities ? {...params.except, addAbilities: rememberedIn(params.except.addAbilities, context.remembered)} : params.except;
+    for (let i = 0; i < (params.count ?? 1); i += 1) {
+      const values = copiable(original, except);"""),
+("game/engine/rules/layers.mjs",
+"""    /* Its abilities as it last was, the ones given it included: "when this creature dies" given by Feign Death. */
+    abilities: structuredClone(heldAbilities(object, current)),
+  };
+}""",
+"""    /* Its abilities as it last was, the ones given it included: "when this creature dies" given by Feign Death. */
+    abilities: structuredClone(heldAbilities(object, current)),
+    /* Its copiable values (CR 707.2), when they were not its card's own -- a copy of something else, or face down (708.2a) --
+       for "create a token that's a copy of that creature" (Hofri Ghostforge; effects/permanents.mjs, `asItLastWas`). */
+    ...(object.uncopied || object.faceDown === true ? {copiable: Object.fromEntries(COPIED_KEYS.filter((key) => object[key] !== undefined).map((key) => [key, structuredClone(object[key])]))} : {}),
+  };
+}
+/* The copiable values a permanent shows (effects/permanents.mjs, COPY_KEYS: the same list, kept here to keep the layers free
+   of the effects). */
+const COPIED_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "spell", "enchant"]);"""),
+("game/engine/rules/trigger.mjs",
+"""    const came = fields.to?.zoneType === "Battlefield" ? state.objects[fields.becomes]?.cameFrom : undefined;
+    return [{card: fields.becomes, ...(Number.isInteger(player) ? {player} : {}), ...(came ? {cameFrom: {...came}} : {})}];""",
+"""    const came = fields.to?.zoneType === "Battlefield" ? state.objects[fields.becomes]?.cameFrom : undefined;
+    /* And, from the battlefield, its copiable values as it last existed when they were not its card's (rules/layers.mjs,
+       lastKnown): "create a token that's a copy of that creature" (Hofri Ghostforge). */
+    const copied = fields.from?.zoneType === "Battlefield" ? fields.leftBehind?.copiable : undefined;
+    return [{card: fields.becomes, ...(Number.isInteger(player) ? {player} : {}), ...(came ? {cameFrom: {...came}} : {}), ...(copied ? {copiedAs: structuredClone(copied)} : {})}];"""),
+]

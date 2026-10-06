@@ -1,0 +1,154 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Claim Jumper",
+    "oracleId": "18f0cd0b-3e4f-4637-a62e-75dd1b2f3fce",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Rabbit",
+      "Mercenary"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Vigilance\nWhen this creature enters, if an opponent controls more lands than you, you may search your library for a Plains card and put it onto the battlefield tapped. Then if an opponent controls more lands than you, repeat this process once. If you search your library this way, shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, if an opponent controls more lands than you, you may search your library for a Plains card and put it onto the battlefield tapped. Then if an opponent controls more lands than you, repeat this process once. If you search your library this way, shuffle.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "modal",
+          "title": "Search your library for a Plains card?",
+          "modes": [
+            {
+              "text": "Search",
+              "effects": [
+                {
+                  "effect": "chooseCard",
+                  "zone": "library",
+                  "selector": {
+                    "subtypes": [
+                      "Plains"
+                    ]
+                  },
+                  "destinations": [
+                    {
+                      "to": "battlefield",
+                      "tapped": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "text": "Don't search",
+              "effects": []
+            }
+          ]
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "compare": {
+              "count": {
+                "mostAmongOpponents": {
+                  "what": "permanent",
+                  "types": [
+                    "Land"
+                  ]
+                }
+              },
+              "moreThan": {
+                "count": {
+                  "what": "permanent",
+                  "types": [
+                    "Land"
+                  ],
+                  "controller": "you"
+                }
+              }
+            }
+          },
+          "then": [
+            {
+              "effect": "modal",
+              "title": "Search your library for a Plains card?",
+              "modes": [
+                {
+                  "text": "Search",
+                  "effects": [
+                    {
+                      "effect": "chooseCard",
+                      "zone": "library",
+                      "selector": {
+                        "subtypes": [
+                          "Plains"
+                        ]
+                      },
+                      "destinations": [
+                        {
+                          "to": "battlefield",
+                          "tapped": true
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "text": "Don't search",
+                  "effects": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "effect": "shuffle",
+          "condition": {
+            "searched": true
+          }
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "mostAmongOpponents": {
+              "what": "permanent",
+              "types": [
+                "Land"
+              ]
+            }
+          },
+          "moreThan": {
+            "count": {
+              "what": "permanent",
+              "types": [
+                "Land"
+              ],
+              "controller": "you"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+PATCHES = [
+("game/engine/rules/stack.mjs",
+"""    const to = entry.permanent && !fizzled ? "battlefield" : entry.flashback || entry.graveyardToExile || rebound || adventured || exiles ? "exile" : "graveyard";""",
+"""    const goes = entry.permanent && !fizzled ? "battlefield" : entry.flashback || entry.graveyardToExile || rebound || adventured || exiles ? "exile" : "graveyard";
+    /* "If that spell would be put into a graveyard, put it on the bottom of its owner's library instead" (Quintorius,
+       Loremaster; rules/actions.mjs): its owner's library, at the bottom (CR 401.1). */
+    const to = goes === "graveyard" && entry.graveyardToBottom === true ? "library" : goes;"""),
+("game/engine/rules/stack.mjs",
+"""    const arrived = moveObject(state, entry.objectId, to, to === "graveyard" ? owner : null);""",
+"""    const arrived = moveObject(state, entry.objectId, to, to === "graveyard" || to === "library" ? owner : null);"""),
+]

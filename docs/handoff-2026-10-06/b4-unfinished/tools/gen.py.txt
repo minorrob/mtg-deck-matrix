@@ -1,0 +1,365 @@
+# Train B, B4: static play/cast permissions, "left your graveyard this turn", attack requirements and restrictions as
+# statics, "as though it had haste", an "unless" cost other than mana, and a preparation card.
+# Usage, from the repository root: python3 <this file> <repo root> [card ...]
+import os
+import sys
+
+root = sys.argv[1]
+sys.path.insert(0, os.path.join(root, 'game', 'tools', 'batch'))
+from cardlib import Batch, kw, trig, at, later, creature, bare  # noqa: E402
+
+b = Batch(root)
+
+YOU = {'what': 'player', 'who': 'you'}
+ELVES_AND_FAERIES = {'what': 'permanent', 'controller': 'you', 'anyOf': [{'subtypes': ['Elf']}, {'subtypes': ['Faerie']}]}
+LEFT_GRAVEYARD = {'compare': {'count': {'cardsLeftGraveyardThisTurn': 'you'}, 'atLeast': 1}}
+TREASURE = {'effect': 'createToken', 'token': {'predefined': 'Treasure'}}
+
+CARDS, SCEN, PREPARES = {}, {}, {}
+
+# ---- Conspicuous Snoop ----------------------------------------------------------------------------------------------
+L = b.lines('Conspicuous Snoop')
+CARDS['Conspicuous Snoop'] = [
+    {'kind': 'static', 'text': L[0], 'rule': 'top-revealed', 'affects': YOU},
+    {'kind': 'static', 'text': L[1], 'rule': 'play-from', 'affects': YOU, 'zone': 'library-top', 'spells': {'subtypes': ['Goblin']}},
+    {'kind': 'static', 'text': L[2], 'layer': 6, 'affects': {'self': True}, 'apply': {'topCardAbilities': {'subtypes': ['Goblin']}}},
+]
+SNOOP_LANDS = ['Mountain', 'Mountain']
+SCEN['Conspicuous Snoop'] = ({
+    'Goblin Scout': creature('{R}', ['Goblin'], ('R',), 1, 1),
+    'Bear': creature('{1}{G}', ['Bear'], ('G',), 2, 2),
+}, [
+    {'name': 'A Goblin cast from the top of the library',
+     'library': ['Goblin Scout'],
+     'setup': [at(0, 'battlefield', 'Conspicuous Snoop', 'Mountain')],
+     'steps': [{'tap': 'Mountain'}, {'cast': 'Goblin Scout'}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': ['Conspicuous Snoop', 'Mountain', 'Goblin Scout']}]},
+    {'name': 'A card that is not a Goblin is not cast from there, and gives nothing',
+     'library': ['Bear'],
+     'setup': [at(0, 'battlefield', 'Conspicuous Snoop', 'Forest', 'Wastes')],
+     'steps': [{'tap': 'Forest'}, {'tap': 'Wastes'}],
+     'expect': [{'offers': {'kind': 'cast', 'card': 'Bear'}, 'count': 0}, {'offers': {'kind': 'activate', 'card': 'Conspicuous Snoop'}, 'count': 0}]},
+    {'name': "With Krenko on top, the Snoop has Krenko's ability: a Goblin for each Goblin it controls",
+     'library': ['Krenko, Mob Boss'],
+     'setup': [at(0, 'battlefield', 'Conspicuous Snoop', 'Goblin Scout')],
+     'steps': [{'activate': 'Conspicuous Snoop'}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': ['Conspicuous Snoop', 'Goblin Scout', 'Goblin', 'Goblin']},
+                {'seat': 0, 'tapped': 'Conspicuous Snoop'}]},
+    {'name': "With Skirk Prospector on top, the Snoop has its mana ability: sacrifice a Goblin, add {R}",
+     'library': ['Skirk Prospector'],
+     'setup': [at(0, 'battlefield', 'Conspicuous Snoop', 'Goblin Scout')],
+     'steps': [{'tap': 'Conspicuous Snoop', 'sacrifice': 'Goblin Scout'}],
+     'expect': [{'seat': 0, 'pool': {'R': 1}}, {'seat': 0, 'zone': 'graveyard', 'cards': ['Goblin Scout']}]},
+])
+
+# ---- Maralen, Fae Ascendant ------------------------------------------------------------------------------------------
+L = b.lines('Maralen, Fae Ascendant')
+CARDS['Maralen, Fae Ascendant'] = [
+    kw('Flying', 'flying'),
+    trig(L[1], {'on': 'enters', 'who': 'any', 'filter': {'anyOf': [{'self': True}, {'subtypes': ['Elf'], 'controller': 'you'}, {'subtypes': ['Faerie'], 'controller': 'you'}]}},
+         [{'effect': 'moveZone', 'fromTop': 2, 'who': {'target': 0}, 'to': 'exile', 'link': True}],
+         targets=[{'what': 'player', 'who': 'opponent'}]),
+    {'kind': 'static', 'text': L[2], 'rule': 'play-from', 'affects': YOU, 'zone': 'exile', 'linked': True, 'thisTurn': True,
+     'limit': 1, 'withoutPaying': True, 'spells': True, 'manaValueAtMost': {'count': ELVES_AND_FAERIES}},
+]
+MARALEN_LANDS = ['Swamp', 'Forest', 'Island', 'Wastes', 'Wastes']
+MARALEN_PAY = [{'tap': land} for land in MARALEN_LANDS]
+SCEN['Maralen, Fae Ascendant'] = ({
+    'Sprite': creature('{U}', ['Faerie'], ('U',), 1, 1),
+    'Bear': creature('{1}{G}', ['Bear'], ('G',), 2, 2),
+    'Elf Scout': creature('{G}', ['Elf'], ('G',), 1, 1),
+    'Ox': creature('{3}{W}', ['Ox'], ('W',), 2, 4),
+}, [
+    {'name': "Maralen enters: Maya's top two exiled; the one of mana value 1 is cast free, the 2 is not",
+     'library': ['Sprite', 'Bear'],
+     'setup': [at(0, 'battlefield', *MARALEN_LANDS), at(0, 'hand', 'Maralen, Fae Ascendant')],
+     'steps': [*MARALEN_PAY, {'cast': 'Maralen, Fae Ascendant'}, {'resolve': True}, {'resolve': True},
+               {'expect': [{'seat': 1, 'zone': 'exile', 'cards': ['Sprite', 'Bear']},
+                           {'offers': {'kind': 'cast', 'card': 'Sprite'}, 'count': 1},
+                           {'offers': {'kind': 'cast', 'card': 'Bear'}, 'count': 0}]},
+               {'cast': 'Sprite'}, {'resolve': True}],
+     'expect': [{'seat': 0, 'controls': [*MARALEN_LANDS, 'Maralen, Fae Ascendant', 'Sprite']},
+                {'seat': 1, 'zone': 'exile', 'cards': ['Bear']}]},
+    {'name': 'Another Elf entering exiles two more, and with two Elves and Faeries a 2 is cast free -- once each turn',
+     'library': ['Sprite', 'Bear', 'Sprite', 'Bear'],
+     'setup': [at(0, 'battlefield', 'Maralen, Fae Ascendant', 'Forest'), at(0, 'hand', 'Elf Scout')],
+     'steps': [{'tap': 'Forest'}, {'cast': 'Elf Scout'}, {'resolve': True}, {'resolve': True},
+               {'expect': [{'seat': 1, 'zone': 'exile', 'cards': ['Sprite', 'Bear']},
+                           {'offers': {'kind': 'cast', 'card': 'Bear'}, 'count': 1}]},
+               {'cast': 'Bear'}, {'resolve': True},
+               {'expect': [{'offers': {'kind': 'cast', 'card': 'Sprite'}, 'count': 0}]}],
+     'expect': [{'seat': 0, 'controls': ['Maralen, Fae Ascendant', 'Forest', 'Elf Scout', 'Bear']}]},
+    {'name': 'Not paying is the only way: a card too costly for the count stays, and next turn none of it is castable',
+     'library': ['Ox', 'Sprite'],
+     'setup': [at(0, 'battlefield', *MARALEN_LANDS, 'Wastes', 'Wastes', 'Wastes', 'Plains'), at(0, 'hand', 'Maralen, Fae Ascendant')],
+     'steps': [*MARALEN_PAY, {'cast': 'Maralen, Fae Ascendant'}, {'resolve': True}, {'resolve': True},
+               {'tap': 'Wastes'}, {'tap': 'Wastes'}, {'tap': 'Wastes'}, {'tap': 'Plains'},
+               {'expect': [{'offers': {'kind': 'cast', 'card': 'Ox'}, 'count': 0}, {'offers': {'kind': 'cast', 'card': 'Sprite'}, 'count': 1}]},
+               {'to': {'turn': 3, 'phase': 'MAIN1'}},
+               {'expect': [{'offers': {'kind': 'cast', 'card': 'Sprite'}, 'count': 0}]}],
+     'expect': [{'seat': 1, 'zone': 'exile', 'cards': ['Ox', 'Sprite']}]},
+])
+
+# ---- Realmwalker -----------------------------------------------------------------------------------------------------
+L = b.lines('Realmwalker')
+CARDS['Realmwalker'] = [
+    kw(L[0], 'changeling'),
+    {'kind': 'replacement', 'text': L[1], 'watches': {'event': 'enters', 'who': 'self'}, 'change': {'choose': 'creature type'}},
+    {'kind': 'static', 'text': L[2], 'rule': 'look-at-top', 'affects': YOU},
+    {'kind': 'static', 'text': L[3], 'rule': 'play-from', 'affects': YOU, 'zone': 'library-top', 'spells': {'types': ['Creature'], 'subtypes': ['$chosen']}},
+]
+SCEN['Realmwalker'] = ({
+    'Elf Scout': creature('{G}', ['Elf'], ('G',), 1, 1),
+    'Goblin Scout': creature('{R}', ['Goblin'], ('R',), 1, 1),
+    'Elf Rite': {'types': ['Kindred', 'Sorcery'], 'subtypes': ['Elf'], 'manaCost': '{G}', 'colors': ['G']},
+}, [
+    {'name': 'Elf chosen: an Elf creature cast from the top of the library',
+     'library': ['Elf Scout', 'Goblin Scout'],
+     'setup': [at(0, 'battlefield', 'Forest', 'Forest', 'Wastes', 'Forest'), at(0, 'hand', 'Realmwalker')],
+     'steps': [{'tap': 'Forest'}, {'tap': 'Wastes'}, {'tap': 'Forest'}, {'cast': 'Realmwalker'}, {'resolve': True}, {'choose': ['Elf']},
+               {'tap': 'Forest'}, {'cast': 'Elf Scout'}, {'resolve': True},
+               {'expect': [{'offers': {'kind': 'cast', 'card': 'Goblin Scout'}, 'count': 0}]}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': ['Forest', 'Forest', 'Wastes', 'Forest', 'Realmwalker', 'Elf Scout']}]},
+    {'name': 'Goblin chosen: an Elf on top is not cast from there',
+     'library': ['Elf Scout', 'Goblin Scout'],
+     'setup': [at(0, 'battlefield', 'Forest', 'Forest', 'Wastes', 'Forest'), at(0, 'hand', 'Realmwalker')],
+     'steps': [{'tap': 'Forest'}, {'tap': 'Wastes'}, {'tap': 'Forest'}, {'cast': 'Realmwalker'}, {'resolve': True}, {'choose': ['Goblin']},
+               {'tap': 'Forest'}],
+     'expect': [{'offers': {'kind': 'cast', 'card': 'Elf Scout'}, 'count': 0}]},
+    {'name': 'A creature spell only: an Elf sorcery of the chosen type is not cast from the top',
+     'library': ['Elf Rite'],
+     'setup': [at(0, 'battlefield', 'Forest', 'Forest', 'Wastes', 'Forest'), at(0, 'hand', 'Realmwalker')],
+     'steps': [{'tap': 'Forest'}, {'tap': 'Wastes'}, {'tap': 'Forest'}, {'cast': 'Realmwalker'}, {'resolve': True}, {'choose': ['Elf']},
+               {'tap': 'Forest'}],
+     'expect': [{'offers': {'kind': 'cast', 'card': 'Elf Rite'}, 'count': 0}]},
+])
+
+# ---- Primary Research ------------------------------------------------------------------------------------------------
+L = b.lines('Primary Research')
+CARDS['Primary Research'] = [
+    trig(L[0], {'on': 'enters'}, [{'effect': 'moveZone', 'targets': {'target': 0}, 'to': 'battlefield'}],
+         targets=[{'what': 'card', 'zone': 'graveyard', 'controller': 'you', 'nonTypes': ['Land', 'Instant', 'Sorcery'], 'manaValue': {'max': 3}}]),
+    trig(L[1], {'on': 'end step'}, [{'effect': 'draw', 'count': 1}], condition=LEFT_GRAVEYARD),
+]
+RESEARCH_LANDS = ['Plains', 'Wastes', 'Wastes', 'Wastes', 'Wastes']
+RESEARCH_PAY = [{'tap': land} for land in RESEARCH_LANDS]
+SCEN['Primary Research'] = ({
+    'Bear': creature('{1}{G}', ['Bear'], ('G',), 2, 2),
+    'Ox': creature('{3}{W}', ['Ox'], ('W',), 2, 4),
+    'Spark': {'types': ['Instant'], 'manaCost': '{R}', 'colors': ['R']},
+}, [
+    {'name': 'The Bear returned to the battlefield, and at the end step a card drawn, since it left the graveyard',
+     'setup': [at(0, 'battlefield', *RESEARCH_LANDS), at(0, 'hand', 'Primary Research'), at(0, 'graveyard', 'Bear')],
+     'steps': [*RESEARCH_PAY, {'cast': 'Primary Research'}, {'resolve': True}, {'resolve': True},
+               {'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': [*RESEARCH_LANDS, 'Primary Research', 'Bear']}, {'seat': 0, 'zone': 'hand', 'count': 0}]},
+               {'to': {'turn': 1, 'phase': 'END_OF_TURN'}}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'hand', 'count': 1}]},
+    {'name': 'Mana value 4, a land and an instant are not returned, and with nothing leaving the graveyard nothing is drawn',
+     'setup': [at(0, 'battlefield', *RESEARCH_LANDS), at(0, 'hand', 'Primary Research'), at(0, 'graveyard', 'Ox', 'Forest', 'Spark')],
+     'steps': [*RESEARCH_PAY, {'cast': 'Primary Research'}, {'resolve': True},
+               {'expect': [{'stack': 0}]}, {'to': {'turn': 1, 'phase': 'END_OF_TURN'}}, {'expect': [{'stack': 0}]}],
+     'expect': [{'seat': 0, 'zone': 'graveyard', 'cards': ['Ox', 'Forest', 'Spark']}, {'seat': 0, 'zone': 'hand', 'count': 0}]},
+    {'name': "A card that left the graveyard another way this turn counts: Eternal Witness's return",
+     'setup': [at(0, 'battlefield', 'Primary Research', 'Forest', 'Forest', 'Wastes'), at(0, 'hand', 'Eternal Witness'), at(0, 'graveyard', 'Spark')],
+     'steps': [{'tap': 'Forest'}, {'tap': 'Forest'}, {'tap': 'Wastes'}, {'cast': 'Eternal Witness'}, {'resolve': True}, {'resolve': True},
+               {'choose': ['Spark']},
+               {'expect': [{'seat': 0, 'zone': 'hand', 'cards': ['Spark']}]},
+               {'to': {'turn': 1, 'phase': 'END_OF_TURN'}}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'hand', 'count': 2}]},
+    {'name': "Only at your own end step: a card Maya's Ooze exiles from Rob's graveyard on her turn draws nothing at hers",
+     'setup': [at(0, 'battlefield', 'Primary Research'), at(0, 'graveyard', 'Spark'), at(1, 'battlefield', 'Scavenging Ooze', 'Forest')],
+     'steps': [{'to': {'turn': 2, 'phase': 'MAIN1'}}, {'tap': 'Forest', 'seat': 1}, {'activate': 'Scavenging Ooze', 'seat': 1, 'targets': [{'card': 'Spark'}]},
+               {'resolve': True}, {'expect': [{'seat': 0, 'zone': 'graveyard', 'count': 0}]},
+               {'to': {'turn': 2, 'phase': 'END_OF_TURN'}}, {'expect': [{'stack': 0}]}],
+     'expect': [{'seat': 0, 'zone': 'hand', 'count': 0}]},
+])
+
+# ---- Relic Retriever -------------------------------------------------------------------------------------------------
+L = b.lines('Relic Retriever')
+CARDS['Relic Retriever'] = [
+    kw('First strike', 'first strike'),
+    trig(bare(L[1]), {'on': 'end step', 'yours': False}, [TREASURE], condition=LEFT_GRAVEYARD),
+]
+SCEN['Relic Retriever'] = ({'Spark': {'types': ['Instant'], 'manaCost': '{R}', 'colors': ['R']}}, [
+    {'name': 'A card returned from the graveyard this turn: a Treasure at the end step',
+     'setup': [at(0, 'battlefield', 'Relic Retriever', 'Forest', 'Forest', 'Wastes'), at(0, 'hand', 'Eternal Witness'), at(0, 'graveyard', 'Spark')],
+     'steps': [{'tap': 'Forest'}, {'tap': 'Forest'}, {'tap': 'Wastes'}, {'cast': 'Eternal Witness'}, {'resolve': True}, {'resolve': True},
+               {'choose': ['Spark']}, {'to': {'turn': 1, 'phase': 'END_OF_TURN'}}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': ['Relic Retriever', 'Forest', 'Forest', 'Wastes', 'Eternal Witness', 'Treasure']}]},
+    {'name': 'Nothing left the graveyard: no Treasure, at either end step',
+     'setup': [at(0, 'battlefield', 'Relic Retriever'), at(0, 'graveyard', 'Spark')],
+     'steps': [{'to': {'turn': 1, 'phase': 'END_OF_TURN'}}, {'expect': [{'stack': 0}]}, {'to': {'turn': 2, 'phase': 'END_OF_TURN'}}, {'expect': [{'stack': 0}]}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': ['Relic Retriever']}]},
+    {'name': "Each end step: a card Maya's Ooze exiles from Rob's graveyard on her turn makes Rob a Treasure at hers",
+     'setup': [at(0, 'battlefield', 'Relic Retriever'), at(0, 'graveyard', 'Spark'), at(1, 'battlefield', 'Scavenging Ooze', 'Forest')],
+     'steps': [{'to': {'turn': 2, 'phase': 'MAIN1'}}, {'tap': 'Forest', 'seat': 1}, {'activate': 'Scavenging Ooze', 'seat': 1, 'targets': [{'card': 'Spark'}]},
+               {'resolve': True}, {'to': {'turn': 2, 'phase': 'END_OF_TURN'}}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': ['Relic Retriever', 'Treasure']}, {'seat': 1, 'zone': 'battlefield', 'cards': ['Scavenging Ooze', 'Forest']}]},
+])
+
+# ---- Lorehold Archivist // Restore Relic -----------------------------------------------------------------------------
+NAME = 'Lorehold Archivist // Restore Relic'
+L = b.lines(NAME)
+P = b.prepare_lines(NAME)
+ARTIFACT_OR_CREATURE = [{'types': ['Artifact']}, {'types': ['Creature']}]
+CARDS[NAME] = [
+    kw('First strike', 'first strike'),
+    trig(L[1], {'on': 'upkeep'}, [{'effect': 'setState', 'targets': 'self', 'prepared': True}],
+         condition={'compare': {'count': {'count': {'what': 'card', 'zone': 'graveyard', 'controller': 'you', 'anyOf': ARTIFACT_OR_CREATURE}}, 'atLeast': 3}}),
+]
+PREPARES[NAME] = [
+    {'kind': 'spell', 'text': P[0], 'targets': [{'what': 'card', 'zone': 'graveyard', 'controller': 'you', 'anyOf': ARTIFACT_OR_CREATURE}],
+     'effects': [{'effect': 'moveZone', 'targets': {'target': 0}, 'to': 'exile', 'remember': True},
+                 {'effect': 'copyPermanent', 'targets': 'remembered'}]},
+]
+RELIC_LANDS = ['Mountain', 'Plains', 'Wastes', 'Wastes']
+SCEN[NAME] = ({
+    'Bear': creature('{1}{G}', ['Bear'], ('G',), 2, 2),
+    'Ox': creature('{3}{W}', ['Ox'], ('W',), 2, 4),
+    'Trinket': {'types': ['Artifact'], 'manaCost': '{1}', 'colors': []},
+    'Spark': {'types': ['Instant'], 'manaCost': '{R}', 'colors': ['R']},
+}, [
+    {'name': 'Three artifact and creature cards at the upkeep: prepared, and Restore Relic cast makes a token Bear',
+     'setup': [at(0, 'battlefield', 'Lorehold Archivist // Restore Relic', *RELIC_LANDS), at(0, 'graveyard', 'Bear', 'Ox', 'Trinket')],
+     'steps': [{'expect': [{'seat': 0, 'zone': 'exile', 'cards': ['Restore Relic']}]},
+               *[{'tap': land} for land in RELIC_LANDS], {'cast': 'Restore Relic', 'targets': [{'card': 'Bear'}]}, {'resolve': True},
+               {'expect': [{'seat': 0, 'zone': 'exile', 'cards': ['Bear']}, {'offers': {'kind': 'cast', 'card': 'Restore Relic'}, 'count': 0}]}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': ['Lorehold Archivist // Restore Relic', *RELIC_LANDS, 'Bear']},
+                {'seat': 0, 'zone': 'graveyard', 'cards': ['Ox', 'Trinket']}]},
+    {'name': 'Two of them, a land and an instant: not prepared, and no Restore Relic to cast',
+     'setup': [at(0, 'battlefield', 'Lorehold Archivist // Restore Relic', *RELIC_LANDS), at(0, 'graveyard', 'Bear', 'Trinket', 'Forest', 'Spark')],
+     'steps': [*[{'tap': land} for land in RELIC_LANDS]],
+     'expect': [{'offers': {'kind': 'cast', 'card': 'Restore Relic'}, 'count': 0}, {'seat': 0, 'zone': 'exile', 'count': 0}]},
+    {'name': 'Prepared stays until cast: at the next upkeep it is not prepared twice, and the spell is cast on a later turn',
+     'setup': [at(0, 'battlefield', 'Lorehold Archivist // Restore Relic', *RELIC_LANDS), at(0, 'graveyard', 'Bear', 'Ox', 'Trinket')],
+     'steps': [{'to': {'turn': 3, 'phase': 'MAIN1'}},
+               {'expect': [{'seat': 0, 'zone': 'exile', 'cards': ['Restore Relic']}]},
+               *[{'tap': land} for land in RELIC_LANDS], {'cast': 'Restore Relic', 'targets': [{'card': 'Ox'}]}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': ['Lorehold Archivist // Restore Relic', *RELIC_LANDS, 'Ox']},
+                {'seat': 0, 'zone': 'exile', 'cards': ['Ox']}]},
+])
+
+# ---- Felothar the Steadfast ------------------------------------------------------------------------------------------
+L = b.lines('Felothar the Steadfast')
+MY_CREATURES = {'what': 'permanent', 'types': ['Creature'], 'controller': 'you'}
+CARDS['Felothar the Steadfast'] = [
+    {'kind': 'static', 'text': L[0], 'rule': 'combat-damage-by-toughness', 'affects': MY_CREATURES},
+    {'kind': 'static', 'text': L[1], 'rule': 'attacks-despite-defender', 'affects': MY_CREATURES},
+    {'kind': 'activated', 'text': L[2],
+     'cost': [{'atom': 'mana', 'cost': '{3}'}, {'atom': '{T}'}, {'atom': 'sacrifice', 'selector': {'types': ['Creature'], 'another': True}}],
+     'effects': [{'effect': 'draw', 'count': {'toughnessOf': 'sacrificed'}}, {'effect': 'discard', 'count': {'powerOf': 'sacrificed'}}]},
+]
+SCEN['Felothar the Steadfast'] = ({
+    'Wall': creature('{1}{W}', ['Wall'], ('W',), 0, 4, keywords=['Defender']),
+    'Hulk': creature('{2}{G}', ['Beast'], ('G',), 1, 3),
+}, [
+    {'name': 'Felothar, a 0/5, deals 5; a Wall with defender attacks and deals its 4',
+     'setup': [at(0, 'battlefield', 'Felothar the Steadfast', 'Wall')],
+     'steps': [{'attack': ['Felothar the Steadfast', 'Wall']}, {'to': {'turn': 1, 'phase': 'MAIN2'}}],
+     'expect': [{'seat': 1, 'life': 31}]},
+    {'name': "The Hulk sacrificed: three cards drawn for its toughness, then one discarded for its power",
+     'setup': [at(0, 'battlefield', 'Felothar the Steadfast', 'Hulk', 'Wastes', 'Wastes', 'Wastes')],
+     'steps': [{'tap': 'Wastes'}, {'tap': 'Wastes'}, {'tap': 'Wastes'}, {'activate': 'Felothar the Steadfast', 'sacrifice': 'Hulk'}, {'resolve': True},
+               {'answer': [0]}],
+     'expect': [{'seat': 0, 'zone': 'hand', 'count': 2}, {'seat': 0, 'zone': 'graveyard', 'cards': ['Hulk', 'Wastes']}, {'seat': 0, 'tapped': 'Felothar the Steadfast'}]},
+    {'name': 'Another creature only: Felothar cannot sacrifice itself',
+     'setup': [at(0, 'battlefield', 'Felothar the Steadfast', 'Wastes', 'Wastes', 'Wastes')],
+     'steps': [{'tap': 'Wastes'}, {'tap': 'Wastes'}, {'tap': 'Wastes'}],
+     'expect': [{'offers': {'kind': 'activate', 'card': 'Felothar the Steadfast'}, 'count': 0}]},
+])
+
+# ---- Weathered Sentinels ---------------------------------------------------------------------------------------------
+L = b.lines('Weathered Sentinels')
+CARDS['Weathered Sentinels'] = [
+    kw('Defender', 'defender'), kw('reach', 'reach'), kw('vigilance', 'vigilance'), kw('trample', 'trample'),
+    {'kind': 'static', 'text': L[1], 'rule': 'attacks-despite-defender', 'affects': {'what': 'permanent', 'self': True}, 'against': 'attackedYouLastTurn'},
+    trig(L[2], {'on': 'attacks'}, [{'effect': 'pump', 'targets': 'self', 'power': 3, 'toughness': 3, 'keywords': ['Indestructible']}]),
+]
+SCEN['Weathered Sentinels'] = ({'Bear': creature('{1}{G}', ['Bear'], ('G',), 2, 2)}, [
+    {'name': "Maya attacked Rob on her turn: on his, the Sentinels attack her as a 5/8, untapped, through her Bear",
+     'setup': [at(0, 'battlefield', 'Weathered Sentinels'), at(1, 'battlefield', 'Bear')],
+     'steps': [{'to': {'turn': 2, 'phase': 'COMBAT_BEGIN'}}, {'attack': ['Bear']}, {'to': {'turn': 3, 'phase': 'MAIN1'}},
+               {'attack': ['Weathered Sentinels']}, {'to': {'turn': 3, 'phase': 'MAIN2'}}],
+     'expect': [{'seat': 1, 'life': 35}, {'seat': 0, 'life': 38}, {'seat': 0, 'tapped': 'Weathered Sentinels', 'is': False},
+                {'seat': 0, 'keywords': {'card': 'Weathered Sentinels', 'has': ['Indestructible']}}, {'seat': 0, 'stats': {'card': 'Weathered Sentinels', 'power': 5, 'toughness': 8}}]},
+    {'name': "Maya did not attack: the Sentinels keep their defender, and nothing is asked",
+     'setup': [at(0, 'battlefield', 'Weathered Sentinels'), at(1, 'battlefield', 'Bear')],
+     'steps': [{'to': {'turn': 3, 'phase': 'MAIN2'}}],
+     'expect': [{'seat': 1, 'life': 40}, {'seat': 0, 'tapped': 'Weathered Sentinels', 'is': False}]},
+])
+
+# ---- Goblin Rabblemaster ---------------------------------------------------------------------------------------------
+L = b.lines('Goblin Rabblemaster')
+GOBLIN_TOKEN = {'name': 'Goblin', 'types': ['Creature'], 'subtypes': ['Goblin'], 'colors': ['R'], 'power': 1, 'toughness': 1, 'keywords': ['Haste']}
+CARDS['Goblin Rabblemaster'] = [
+    {'kind': 'static', 'text': L[0], 'rule': 'attacks-each-combat',
+     'affects': {'what': 'permanent', 'types': ['Creature'], 'subtypes': ['Goblin'], 'controller': 'you', 'another': True}},
+    trig(L[1], {'on': 'step', 'step': 'COMBAT_BEGIN'}, [{'effect': 'createToken', 'count': 1, 'token': GOBLIN_TOKEN}]),
+    trig(L[2], {'on': 'attacks'}, [{'effect': 'pump', 'targets': 'self', 'power': {'count': {'what': 'permanent', 'subtypes': ['Goblin'], 'attacking': True, 'another': True}}, 'toughness': 0}]),
+]
+SCEN['Goblin Rabblemaster'] = ({
+    'Bear': creature('{1}{G}', ['Bear'], ('G',), 2, 2),
+}, [
+    {'name': 'At the beginning of combat a hasty Goblin, which must attack; Rabblemaster and the Bear may stay home',
+     'setup': [at(0, 'battlefield', 'Goblin Rabblemaster', 'Bear')],
+     'steps': [{'to': {'turn': 1, 'phase': 'MAIN2'}}],
+     'expect': [{'seat': 1, 'life': 39}, {'seat': 0, 'tapped': 'Goblin'}, {'seat': 0, 'tapped': 'Goblin Rabblemaster', 'is': False}]},
+    {'name': 'Rabblemaster attacks with its Goblin: +1/+0 for the other attacking Goblin, 3 and 1',
+     'setup': [at(0, 'battlefield', 'Goblin Rabblemaster')],
+     'steps': [{'attack': ['Goblin Rabblemaster', 'Goblin']}, {'to': {'turn': 1, 'phase': 'MAIN2'}}],
+     'expect': [{'seat': 1, 'life': 36}, {'seat': 0, 'zone': 'battlefield', 'cards': ['Goblin Rabblemaster', 'Goblin']}]},
+    {'name': 'Each combat makes another: two Goblins by Rob\'s second turn, both attacking',
+     'setup': [at(0, 'battlefield', 'Goblin Rabblemaster')],
+     'steps': [{'to': {'turn': 3, 'phase': 'MAIN2'}}],
+     'expect': [{'seat': 1, 'life': 37}, {'seat': 0, 'zone': 'battlefield', 'cards': ['Goblin Rabblemaster', 'Goblin', 'Goblin']}]},
+])
+
+# ---- Thousand-Year Elixir --------------------------------------------------------------------------------------------
+L = b.lines('Thousand-Year Elixir')
+CARDS['Thousand-Year Elixir'] = [
+    {'kind': 'static', 'text': L[0], 'rule': 'activate-as-though-haste', 'affects': MY_CREATURES},
+    {'kind': 'activated', 'text': L[1], 'cost': [{'atom': 'mana', 'cost': '{1}'}, {'atom': '{T}'}],
+     'targets': [{'what': 'permanent', 'types': ['Creature']}], 'effects': [{'effect': 'untap', 'targets': {'target': 0}}]},
+]
+SCEN['Thousand-Year Elixir'] = (None, [
+    {'name': 'Llanowar Elves taps for mana the turn it arrives, then the Elixir untaps it',
+     'setup': [at(0, 'battlefield', 'Thousand-Year Elixir'), later(0, 'battlefield', 'Llanowar Elves')],
+     'steps': [{'tap': 'Llanowar Elves'}, {'expect': [{'seat': 0, 'pool': {'G': 1}}]},
+               {'activate': 'Thousand-Year Elixir', 'targets': [{'card': 'Llanowar Elves'}]}, {'resolve': True}],
+     'expect': [{'seat': 0, 'tapped': 'Llanowar Elves', 'is': False}, {'seat': 0, 'tapped': 'Thousand-Year Elixir'}]},
+    {'name': "Without it, a creature that has just arrived cannot tap: Krenko's ability waits",
+     'setup': [later(0, 'battlefield', 'Krenko, Mob Boss')],
+     'steps': [],
+     'expect': [{'offers': {'kind': 'activate', 'card': 'Krenko, Mob Boss'}, 'count': 0}]},
+    {'name': "With it, Krenko's {T} ability the turn it arrives: a Goblin",
+     'setup': [at(0, 'battlefield', 'Thousand-Year Elixir'), later(0, 'battlefield', 'Krenko, Mob Boss')],
+     'steps': [{'activate': 'Krenko, Mob Boss'}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': ['Thousand-Year Elixir', 'Krenko, Mob Boss', 'Goblin']}]},
+])
+
+# ---- Faerie Impostor -------------------------------------------------------------------------------------------------
+L = b.lines('Faerie Impostor')
+CARDS['Faerie Impostor'] = [
+    kw('Flying', 'flying'),
+    trig(L[1], {'on': 'enters'}, [{'effect': 'unlessPays', 'who': 'you', 'returnToHand': {'types': ['Creature'], 'another': True},
+                                    'effects': [{'effect': 'moveZone', 'targets': 'self', 'sacrifice': True}]}]),
+]
+SCEN['Faerie Impostor'] = ({'Bear': creature('{1}{G}', ['Bear'], ('G',), 2, 2), 'Trinket': {'types': ['Artifact'], 'manaCost': '{1}', 'colors': []}}, [
+    {'name': 'The Bear returned to its owner\'s hand: the Impostor stays',
+     'setup': [at(0, 'battlefield', 'Island', 'Bear', 'Trinket'), at(0, 'hand', 'Faerie Impostor')],
+     'steps': [{'tap': 'Island'}, {'cast': 'Faerie Impostor'}, {'resolve': True}, {'resolve': True},
+               {'expect': [{'asks': {'seat': 0, 'options': ["Return Bear to its owner's hand", "Don't pay"]}}]},
+               {'choose': ["Return Bear to its owner's hand"]}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': ['Island', 'Trinket', 'Faerie Impostor']}, {'seat': 0, 'zone': 'hand', 'cards': ['Bear']}]},
+    {'name': 'Not returned: the Impostor is sacrificed',
+     'setup': [at(0, 'battlefield', 'Island', 'Bear'), at(0, 'hand', 'Faerie Impostor')],
+     'steps': [{'tap': 'Island'}, {'cast': 'Faerie Impostor'}, {'resolve': True}, {'resolve': True}, {'choose': ["Don't pay"]}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': ['Island', 'Bear']}, {'seat': 0, 'zone': 'graveyard', 'cards': ['Faerie Impostor']}]},
+    {'name': 'No other creature: not returning is all there is, and it is sacrificed',
+     'setup': [at(0, 'battlefield', 'Island'), at(0, 'hand', 'Faerie Impostor')],
+     'steps': [{'tap': 'Island'}, {'cast': 'Faerie Impostor'}, {'resolve': True}, {'resolve': True},
+               {'expect': [{'asks': {'seat': 0, 'options': ["Don't pay"]}}]}, {'choose': ["Don't pay"]}],
+     'expect': [{'seat': 0, 'zone': 'graveyard', 'cards': ['Faerie Impostor']}]},
+])
+
+print(b.write(CARDS, SCEN, only=sys.argv[2:], prepares=PREPARES), 'definitions written')

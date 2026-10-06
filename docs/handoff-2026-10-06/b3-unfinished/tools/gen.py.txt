@@ -1,0 +1,620 @@
+# Train B, b3: the memory axis -- what an effect moved or changed, linked exile, hideaway, impulse draw. Run from the repo root:
+#   python3 <this file> [card ...]
+import os, sys
+root = os.getcwd()
+sys.path.insert(0, os.path.join(root, 'game', 'tools', 'batch'))
+from cardlib import Batch, kw, trig, at, later, creature, bare
+
+b = Batch(root)
+L = b.lines
+
+def spell(text, effects, targets=None, **more):
+    return {'kind': 'spell', 'text': text, 'targets': targets or [], 'effects': effects, **more}
+
+def act(text, cost, effects, targets=None, **more):
+    return {'kind': 'activated', 'text': text, 'cost': cost, **({'targets': targets} if targets else {}), 'effects': effects, **more}
+
+def static(text, **more):
+    return {'kind': 'static', 'text': text, **more}
+
+MANA = lambda c: {'atom': 'mana', 'cost': c}
+TAP = {'atom': '{T}'}
+YOU_CREATURE = {'what': 'permanent', 'types': ['Creature'], 'controller': 'you'}
+def tap(*lands, seat=None):
+    return [{'tap': land, **({'seat': seat} if seat is not None else {})} for land in lands]
+
+# ---- fixtures, shared ----
+SHOCK = {'types': ['Instant'], 'manaCost': '{R}', 'colors': ['R'], 'spell': {'id': 's', 'text': 'Shock deals 2 damage to any target.',
+    'targets': [{'anyOf': [{'what': 'permanent', 'types': ['Creature']}, {'what': 'player'}]}],
+    'effects': [{'effect': 'dealDamage', 'amount': 2, 'targets': {'target': 0}, 'who': {'target': 0}}]}}
+LOOT = {'types': ['Sorcery'], 'manaCost': '{U}', 'colors': ['U'], 'spell': {'id': 's', 'text': 'Draw a card, then discard a card.', 'targets': [],
+    'effects': [{'effect': 'draw', 'count': 1}, {'effect': 'discard', 'count': 1}]}}
+DOOM = {'types': ['Instant'], 'manaCost': '{B}', 'colors': ['B'], 'spell': {'id': 's', 'text': 'Destroy target creature.',
+    'targets': [{'what': 'permanent', 'types': ['Creature']}], 'effects': [{'effect': 'destroy', 'targets': {'target': 0}}]}}
+BEAR = creature('{1}{G}', ['Bear'], ('G',), 2, 2)
+CUB = creature('{G}', ['Bear'], ('G',), 1, 1)
+GRUNT = creature('{R}', ['Goblin'], ('R',), 1, 1)
+OGRE = creature('{2}{R}', ['Ogre'], ('R',), 3, 3)
+WALL = creature('{1}{G}', ['Wall'], ('G',), 0, 4)
+BRUTE = creature('{2}{B}', ['Horror'], ('B',), 5, 1)
+CORSAIR = creature('{1}{U}', ['Human', 'Pirate'], ('U',), 2, 2)
+# A card that exiles from a library and from a graveyard at once, for "one or more" (Laelia).
+SCOUR = {'types': ['Sorcery'], 'manaCost': '{B}', 'colors': ['B'], 'spell': {'id': 's', 'text': 'Exile the top two cards of your library and each card in your graveyard.', 'targets': [],
+    'effects': [{'effect': 'moveZone', 'fromTop': 2, 'to': 'exile'}, {'effect': 'moveZoneAll', 'selector': {'what': 'card', 'zone': 'graveyard', 'owner': 'you'}, 'to': 'exile'}]}}
+# "Return target card from a graveyard to its owner's hand" (for "one or more cards leave your graveyard").
+RAISE = {'types': ['Sorcery'], 'manaCost': '{B}', 'colors': ['B'], 'spell': {'id': 's', 'text': "Return target card from your graveyard to your hand.",
+    'targets': [{'what': 'card', 'zone': 'graveyard', 'controller': 'you'}], 'effects': [{'effect': 'moveZone', 'targets': {'target': 0}, 'to': 'hand'}]}}
+DIVINATION = {'types': ['Sorcery'], 'manaCost': '{U}', 'colors': ['U'], 'spell': {'id': 's', 'text': 'Draw two cards.', 'targets': [], 'effects': [{'effect': 'draw', 'count': 2}]}}
+# A spell with X in its cost, for "without paying its mana cost" (X is 0).
+BLAZE = {'types': ['Sorcery'], 'manaCost': '{X}{R}', 'colors': ['R'], 'spell': {'id': 's', 'text': 'Blaze deals X damage to any target.',
+    'targets': [{'anyOf': [{'what': 'permanent', 'types': ['Creature']}, {'what': 'player'}]}],
+    'effects': [{'effect': 'dealDamage', 'amount': 'X', 'targets': {'target': 0}, 'who': {'target': 0}}]}}
+# Two artifacts: a discard outlet, and "counter target spell".
+CANCEL = {'types': ['Instant'], 'manaCost': '{U}', 'colors': ['U'], 'spell': {'id': 's', 'text': 'Counter target spell.',
+    'targets': [{'what': 'spell'}], 'effects': [{'effect': 'counterSpell', 'spells': {'target': 0}}]}}
+
+CARDS, SCEN, BACKS = {}, {}, {}
+
+# =====================================================================================================================
+# Reckless Impulse -- impulse draw (mayPlay, until the end of your next turn): Wrenn's Resolve's construct.
+n = 'Reckless Impulse'
+CARDS[n] = [spell(L(n)[0], [{'effect': 'moveZone', 'fromTop': 2, 'to': 'exile', 'remember': True},
+                            {'effect': 'mayPlay', 'targets': 'remembered', 'until': 'your-next-end'}])]
+SCEN[n] = ({'Shock': SHOCK}, [
+    {'name': 'The top two exiled: a land played from exile as the land for the turn, and Shock cast from there at Maya', 'library': ['Mountain', 'Shock', 'Island'],
+     'setup': [at(0, 'battlefield', 'Mountain', 'Wastes'), at(0, 'hand', n)],
+     'steps': [*tap('Mountain', 'Wastes'), {'cast': n}, {'resolve': True},
+               {'expect': [{'seat': 0, 'zone': 'exile', 'cards': ['Mountain', 'Shock']}, {'offers': {'kind': 'play-land', 'card': 'Mountain'}, 'count': 1}]},
+               {'play': 'Mountain'}, {'tap': 'Mountain'}, {'cast': 'Shock', 'targets': [{'player': 1}]}, {'resolve': True}],
+     'expect': [{'seat': 1, 'life': 38}, {'seat': 0, 'zone': 'exile', 'cards': []}, {'seat': 0, 'zone': 'graveyard', 'cards': [n, 'Shock']}]},
+    {'name': 'Still playable through the end of Rob\'s next turn, and not after it', 'library': ['Shock', 'Island', 'Wastes', 'Wastes', 'Wastes'],
+     'setup': [at(0, 'battlefield', 'Mountain', 'Wastes'), at(0, 'hand', n)],
+     'steps': [*tap('Mountain', 'Wastes'), {'cast': n}, {'resolve': True},
+               {'to': {'turn': 3, 'phase': 'MAIN1'}}, {'tap': 'Mountain'},
+               {'expect': [{'offers': {'kind': 'cast', 'card': 'Shock'}, 'count': 2}, {'offers': {'kind': 'play-land', 'card': 'Island'}, 'count': 1}]},
+               {'to': {'turn': 5, 'phase': 'MAIN1'}}, {'tap': 'Mountain'}],
+     'expect': [{'offers': {'kind': 'cast', 'card': 'Shock'}, 'count': 0}, {'offers': {'kind': 'play-land', 'card': 'Island'}, 'count': 0},
+                {'seat': 0, 'zone': 'exile', 'cards': ['Shock', 'Island']}]},
+])
+
+# =====================================================================================================================
+# Rundvelt Hordemaster -- "this creature or another Goblin you control dies" (a self alternative read as it last was),
+# the exiled card's own condition, and a cast-only permission until the end of your next turn.
+n = 'Rundvelt Hordemaster'
+CARDS[n] = [static(L(n)[0], layer=7, sublayer='c', affects={'what': 'permanent', 'subtypes': ['Goblin'], 'controller': 'you', 'another': True}, apply={'power': 1, 'toughness': 1}),
+            trig(L(n)[1], {'on': 'dies', 'who': 'any', 'filter': {'anyOf': [{'self': True, 'types': ['Creature']}, {'types': ['Creature'], 'subtypes': ['Goblin'], 'controller': 'you'}]}},
+                 [{'effect': 'moveZone', 'fromTop': 1, 'to': 'exile', 'remember': True},
+                  {'effect': 'mayPlay', 'targets': 'remembered', 'spellsOnly': True, 'until': 'your-next-end',
+                   'condition': {'about': 'remembered', 'is': {'types': ['Creature'], 'subtypes': ['Goblin']}}}])]
+SCEN[n] = ({'Grunt': GRUNT, 'Shock': SHOCK, 'Bear': BEAR, 'Doom': DOOM}, [
+    {'name': 'Other Goblins get +1/+1, the Hordemaster itself not; a Grunt dies, a Goblin is exiled and cast from exile',
+     'library': ['Grunt', 'Wastes'],
+     'setup': [at(0, 'battlefield', n, 'Grunt', 'Mountain', 'Mountain'), at(0, 'hand', 'Shock')],
+     'steps': [{'expect': [{'seat': 0, 'stats': {'card': 'Grunt', 'power': 2, 'toughness': 2}}, {'seat': 0, 'stats': {'card': n, 'power': 1, 'toughness': 1}}]},
+               {'tap': 'Mountain'}, {'cast': 'Shock', 'targets': [{'card': 'Grunt'}]}, {'resolve': True}, {'resolve': True},
+               {'expect': [{'seat': 0, 'zone': 'exile', 'cards': ['Grunt']}]}, {'tap': 'Mountain'}, {'cast': 'Grunt'}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': [n, 'Grunt', 'Mountain', 'Mountain']}, {'seat': 0, 'zone': 'exile', 'cards': []}]},
+    {'name': 'The Hordemaster itself dies: it triggers; a card that is no Goblin creature is exiled and may not be played',
+     'library': ['Mountain', 'Wastes'],
+     'setup': [at(0, 'battlefield', n, 'Mountain'), at(0, 'hand', 'Shock')],
+     'steps': [{'tap': 'Mountain'}, {'cast': 'Shock', 'targets': [{'card': n}]}, {'resolve': True}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'exile', 'cards': ['Mountain']}, {'offers': {'kind': 'play-land', 'card': 'Mountain'}, 'count': 0}]},
+    {'name': "Maya's Goblin dying does not trigger it, nor does a Bear of Rob's",
+     'setup': [at(0, 'battlefield', n, 'Bear', 'Swamp', 'Swamp'), at(0, 'hand', 'Doom', 'Doom'), at(1, 'battlefield', 'Grunt')],
+     'steps': [{'tap': 'Swamp'}, {'cast': 'Doom', 'targets': [{'card': 'Grunt'}]}, {'resolve': True},
+               {'tap': 'Swamp'}, {'cast': 'Doom', 'targets': [{'card': 'Bear'}]}, {'resolve': True}],
+     'expect': [{'stack': 0}, {'seat': 0, 'zone': 'exile', 'cards': []}, {'seat': 1, 'zone': 'exile', 'cards': []}]},
+    {'name': 'A Goblin exiled on Rob\'s turn may be cast through his next turn, and not after it', 'library': ['Grunt', 'Wastes', 'Wastes', 'Wastes', 'Wastes'],
+     'setup': [at(0, 'battlefield', n, 'Mountain', 'Mountain'), at(0, 'hand', 'Shock')],
+     'steps': [{'tap': 'Mountain'}, {'cast': 'Shock', 'targets': [{'card': n}]}, {'resolve': True}, {'resolve': True},
+               {'to': {'turn': 3, 'phase': 'MAIN1'}}, {'tap': 'Mountain'}, {'expect': [{'offers': {'kind': 'cast', 'card': 'Grunt'}, 'count': 1}]},
+               {'to': {'turn': 5, 'phase': 'MAIN1'}}, {'tap': 'Mountain'}],
+     'expect': [{'offers': {'kind': 'cast', 'card': 'Grunt'}, 'count': 0}, {'seat': 0, 'zone': 'exile', 'cards': ['Grunt']}]},
+])
+
+# =====================================================================================================================
+# Laelia -- impulse draw on attack; "one or more cards put into exile from your library and/or your graveyard".
+n = 'Laelia, the Blade Reforged'
+CARDS[n] = [kw('Haste', 'haste'),
+            trig(L(n)[1], {'on': 'attacks'}, [{'effect': 'moveZone', 'fromTop': 1, 'to': 'exile', 'remember': True},
+                                               {'effect': 'mayPlay', 'targets': 'remembered', 'until': 'end-of-turn'}]),
+            trig(L(n)[2], {'on': 'exiled', 'from': ['library', 'graveyard'], 'batch': True},
+                 [{'effect': 'putCounter', 'targets': 'self', 'counter': '+1/+1', 'count': 1}])]
+SCEN[n] = ({'Shock': SHOCK, 'Scour': SCOUR, 'Bear': BEAR}, [
+    {'name': 'Haste: it attacks the turn it is cast; the top card exiled, a +1/+1 counter for it, and Shock cast from exile this turn',
+     'library': ['Shock', 'Wastes'],
+     'setup': [at(0, 'battlefield', 'Mountain', 'Mountain', 'Wastes', 'Wastes'), at(0, 'hand', n)],
+     'steps': [*tap('Mountain', 'Wastes', 'Wastes'), {'cast': 'Laelia, the Blade Reforged'}, {'resolve': True},
+               {'attack': ['Laelia, the Blade Reforged']}, {'resolve': True},
+               {'expect': [{'seat': 0, 'zone': 'exile', 'cards': ['Shock']}]}, {'resolve': True},
+               {'expect': [{'seat': 0, 'counters': {'card': n, 'counter': '+1/+1', 'count': 1}}]},
+               {'tap': 'Mountain'}, {'cast': 'Shock', 'targets': [{'player': 1}]}, {'resolve': True}],
+     'expect': [{'seat': 1, 'life': 35}]},
+    {'name': 'Two from the library and two from the graveyard exiled at once: one trigger, one counter',
+     'library': ['Wastes', 'Wastes'],
+     'setup': [at(0, 'battlefield', n, 'Swamp'), at(0, 'hand', 'Scour'), at(0, 'graveyard', 'Bear', 'Shock')],
+     'steps': [{'tap': 'Swamp'}, {'cast': 'Scour'}, {'resolve': True}, {'expect': [{'stack': 1}]}, {'resolve': True}],
+     'expect': [{'stack': 0}, {'seat': 0, 'counters': {'card': n, 'counter': '+1/+1', 'count': 1}}, {'seat': 0, 'zone': 'exile', 'count': 4}]},
+    {'name': "Maya's cards exiled from her library and graveyard: no counter", 'library': ['Wastes', 'Wastes'],
+     'setup': [at(0, 'battlefield', n), at(1, 'battlefield', 'Swamp'), at(1, 'hand', 'Scour'), at(1, 'graveyard', 'Bear')],
+     'steps': [{'to': {'turn': 2, 'phase': 'MAIN1'}}, {'tap': 'Swamp', 'seat': 1}, {'cast': 'Scour', 'seat': 1}, {'resolve': True}],
+     'expect': [{'stack': 0}, {'seat': 0, 'counters': {'card': n, 'counter': '+1/+1', 'count': 0}}]},
+    {'name': 'The attack exiles a land: played from exile this turn, and not on the next', 'library': ['Mountain', 'Wastes', 'Wastes'],
+     'setup': [at(0, 'battlefield', n)],
+     'steps': [{'attack': [n]}, {'resolve': True}, {'resolve': True}, {'to': {'turn': 1, 'phase': 'MAIN2'}},
+               {'expect': [{'offers': {'kind': 'play-land', 'card': 'Mountain'}, 'count': 1}]}, {'to': {'turn': 3, 'phase': 'MAIN1'}}],
+     'expect': [{'offers': {'kind': 'play-land', 'card': 'Mountain'}, 'count': 0}, {'seat': 0, 'zone': 'exile', 'cards': ['Mountain']}]},
+])
+
+# =====================================================================================================================
+# Sapling of Colfenor -- a revealed card remembered, its printed toughness and power read where it is.
+n = 'Sapling of Colfenor'
+CARDS[n] = [kw('Indestructible', 'indestructible'),
+            trig(L(n)[1], {'on': 'attacks'}, [{'effect': 'peekAndReveal', 'count': 1, 'reveal': True, 'remember': True},
+                                               {'effect': 'branch', 'if': {'about': 'remembered', 'is': {'types': ['Creature']}},
+                                                'then': [{'effect': 'gainLife', 'amount': {'toughnessOf': 'remembered'}},
+                                                         {'effect': 'loseLife', 'amount': {'powerOf': 'remembered'}},
+                                                         {'effect': 'moveZone', 'targets': 'remembered', 'to': 'hand'}]}])]
+SCEN[n] = ({'Wall': WALL, 'Brute': BRUTE, 'Doom': DOOM}, [
+    {'name': 'A 0/4 revealed: Rob gains 4, loses 0, and puts it into his hand', 'library': ['Wall', 'Wastes'],
+     'setup': [at(0, 'battlefield', n)],
+     'steps': [{'attack': [n]}, {'resolve': True}],
+     'expect': [{'seat': 0, 'life': 44}, {'seat': 0, 'zone': 'hand', 'cards': ['Wall']}, {'seat': 1, 'life': 40}]},
+    {'name': 'A 5/1 revealed: gain 1, then lose 5', 'library': ['Brute', 'Wastes'],
+     'setup': [at(0, 'battlefield', n)],
+     'steps': [{'attack': [n]}, {'resolve': True}],
+     'expect': [{'seat': 0, 'life': 36}, {'seat': 0, 'zone': 'hand', 'cards': ['Brute']}]},
+    {'name': 'A land revealed: nothing, and it stays on top (drawn next turn)', 'library': ['Forest', 'Wastes'],
+     'setup': [at(0, 'battlefield', n)],
+     'steps': [{'attack': [n]}, {'resolve': True}, {'expect': [{'seat': 0, 'life': 40}, {'seat': 0, 'zone': 'hand', 'cards': []}]}, {'to': {'turn': 3, 'phase': 'MAIN1'}}],
+     'expect': [{'seat': 0, 'zone': 'hand', 'cards': ['Forest']}]},
+    {'name': 'Indestructible: destroy does nothing to it', 'setup': [at(0, 'battlefield', n), at(1, 'battlefield', 'Swamp'), at(1, 'hand', 'Doom')],
+     'steps': [{'to': {'turn': 2, 'phase': 'MAIN1'}}, {'tap': 'Swamp', 'seat': 1}, {'cast': 'Doom', 'seat': 1, 'targets': [{'card': n}]}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': [n]}]},
+])
+
+# =====================================================================================================================
+# Legion Warboss -- mentor, and a token that "attacks this combat if able".
+n = 'Legion Warboss'
+GOBLIN = {'name': 'Goblin', 'types': ['Creature'], 'subtypes': ['Goblin'], 'colors': ['R'], 'power': 1, 'toughness': 1}
+CARDS[n] = [kw(L(n)[0], 'mentor'),
+            trig(L(n)[1], {'on': 'step', 'step': 'COMBAT_BEGIN'},
+                 [{'effect': 'createToken', 'count': 1, 'token': GOBLIN, 'gainsUntilEndOfTurn': ['Haste'], 'mustAttack': 'this combat'}])]
+SCEN[n] = ({'Bear': BEAR}, [
+    {'name': 'Beginning of combat: a hasty Goblin, which attacks; mentor puts a +1/+1 counter on it (power 1, less than 2)',
+     'setup': [at(0, 'battlefield', n)],
+     'steps': [{'to': {'turn': 1, 'phase': 'COMBAT_BEGIN'}}, {'resolve': True},
+               {'expect': [{'seat': 0, 'keywords': {'card': 'Goblin', 'has': ['Haste']}}]},
+               {'attack': ['Legion Warboss', 'Goblin']}, {'expect': [{'asks': {'seat': 0, 'options': ['Goblin']}}]}, {'choose': ['Goblin']}, {'resolve': True}],
+     'expect': [{'seat': 0, 'counters': {'card': 'Goblin', 'counter': '+1/+1', 'count': 1}}, {'seat': 0, 'stats': {'card': 'Goblin', 'power': 2, 'toughness': 2}}]},
+    {'name': 'Nobody declared: the Goblin attacks anyway, being required to (the routine answer), and Maya takes 1',
+     'setup': [at(0, 'battlefield', n)],
+     'steps': [{'to': {'turn': 1, 'phase': 'COMBAT_BEGIN'}}, {'resolve': True}, {'to': {'turn': 1, 'phase': 'MAIN2'}}],
+     'expect': [{'seat': 1, 'life': 39}]},
+    {'name': 'A 2/2 beside it is no mentor target (power not less than 2); and next turn the old Goblin need not attack',
+     'setup': [at(0, 'battlefield', n, 'Bear')],
+     'steps': [{'to': {'turn': 1, 'phase': 'COMBAT_BEGIN'}}, {'resolve': True}, {'attack': ['Legion Warboss', 'Bear', 'Goblin']},
+               {'expect': [{'asks': {'seat': 0, 'options': ['Goblin']}}]}, {'choose': ['Goblin']}, {'resolve': True},
+               {'to': {'turn': 3, 'phase': 'COMBAT_BEGIN'}}, {'resolve': True}, {'to': {'turn': 3, 'phase': 'MAIN2'}}],
+     'expect': [{'seat': 1, 'life': 34}, {'seat': 0, 'zone': 'battlefield', 'cards': [n, 'Bear', 'Goblin', 'Goblin']}]},
+    {'name': 'On Maya\'s turn it makes nothing', 'setup': [at(0, 'battlefield', n)],
+     'steps': [{'to': {'turn': 2, 'phase': 'MAIN2'}}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': [n]}]},
+])
+
+# =====================================================================================================================
+# Watcher for Tomorrow -- hideaway: one exiled face down, linked to "the exiled card".
+n = 'Watcher for Tomorrow'
+CARDS[n] = [kw(L(n)[0], 'hideaway', amount=4),
+            {'kind': 'replacement', 'text': L(n)[1], 'watches': {'event': 'enters', 'who': 'self'}, 'change': {'entersTapped': True}},
+            trig(L(n)[2], {'on': 'leaves'}, [{'effect': 'moveZone', 'linked': True, 'to': 'hand'}])]
+SCEN[n] = ({'Doom': DOOM, 'Shock': SHOCK, 'Bear': BEAR}, [
+    {'name': 'It enters tapped; of the top four, Shock exiled face down (nobody sees its name in exile); the Watcher dies and Shock goes to Rob\'s hand',
+     'library': ['Wastes', 'Shock', 'Bear', 'Island', 'Mountain'],
+     'setup': [at(0, 'battlefield', 'Island', 'Wastes'), at(0, 'hand', n), at(1, 'battlefield', 'Swamp'), at(1, 'hand', 'Doom')],
+     'steps': [*tap('Island', 'Wastes'), {'cast': n}, {'resolve': True}, {'expect': [{'seat': 0, 'tapped': n, 'is': True}]},
+               {'resolve': True}, {'expect': [{'asks': {'seat': 0, 'options': ['Wastes', 'Shock', 'Bear', 'Island']}}]}, {'choose': ['Shock']},
+               {'expect': [{'seat': 0, 'zone': 'exile', 'count': 1}, {'seat': 1, 'zone': 'exile', 'count': 0}]},
+               {'to': {'turn': 2, 'phase': 'MAIN1'}}, {'tap': 'Swamp', 'seat': 1}, {'cast': 'Doom', 'seat': 1, 'targets': [{'card': n}]}, {'resolve': True}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'hand', 'cards': ['Shock']}, {'seat': 0, 'zone': 'exile', 'count': 0}]},
+    {'name': 'The three not exiled go to the bottom: the fifth card is drawn next', 'library': ['Wastes', 'Shock', 'Bear', 'Island', 'Mountain'],
+     'setup': [at(0, 'battlefield', 'Island', 'Wastes'), at(0, 'hand', n)],
+     'steps': [*tap('Island', 'Wastes'), {'cast': n}, {'resolve': True}, {'resolve': True}, {'choose': ['Bear']}, {'to': {'turn': 3, 'phase': 'MAIN1'}}],
+     'expect': [{'seat': 0, 'zone': 'hand', 'cards': ['Mountain']}]},
+])
+
+# =====================================================================================================================
+# Siren's Ruse -- a flicker, and "if a Pirate was exiled this way": the creature as it last was, not the card that came back.
+n = "Siren's Ruse"
+CARDS[n] = [spell(L(n)[0], [{'effect': 'moveZone', 'targets': {'target': 0}, 'to': 'exile', 'andReturn': True, 'remember': True},
+                            {'effect': 'draw', 'count': 1, 'condition': {'about': 'moved', 'is': {'subtypes': ['Pirate']}}}],
+                    targets=[YOU_CREATURE])]
+SCEN[n] = ({'Corsair': CORSAIR, 'Bear': BEAR, 'Shock': SHOCK}, [
+    {'name': 'A Pirate flickered: it comes back untouched by the damage it had, and Rob draws a card', 'library': ['Wastes', 'Island'],
+     'setup': [at(0, 'battlefield', 'Corsair', 'Island', 'Wastes', 'Mountain'), at(0, 'hand', n, 'Shock')],
+     'steps': [{'tap': 'Mountain'}, {'cast': 'Shock', 'targets': [{'card': 'Corsair'}]}, {'resolve': True},
+               {'expect': [{'seat': 0, 'zone': 'graveyard', 'cards': ['Shock', 'Corsair']}]}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': ['Island', 'Wastes', 'Mountain']}]},
+    {'name': 'A Pirate flickered: Rob draws a card', 'library': ['Wastes', 'Island'],
+     'setup': [at(0, 'battlefield', 'Corsair', 'Island', 'Wastes'), at(0, 'hand', n)],
+     'steps': [*tap('Island', 'Wastes'), {'cast': n, 'targets': [{'card': 'Corsair'}]}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': ['Corsair', 'Island', 'Wastes']}, {'seat': 0, 'zone': 'hand', 'cards': ['Wastes']}, {'seat': 0, 'zone': 'exile', 'cards': []}]},
+    {'name': 'A Bear flickered: back, and no card drawn', 'library': ['Wastes', 'Island'],
+     'setup': [at(0, 'battlefield', 'Bear', 'Island', 'Wastes'), at(0, 'hand', n)],
+     'steps': [*tap('Island', 'Wastes'), {'cast': n, 'targets': [{'card': 'Bear'}]}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': ['Bear', 'Island', 'Wastes']}, {'seat': 0, 'zone': 'hand', 'cards': []}]},
+    {'name': "Maya's creatures are not targets", 'setup': [at(0, 'battlefield', 'Island', 'Wastes'), at(0, 'hand', n), at(1, 'battlefield', 'Corsair')],
+     'steps': [*tap('Island', 'Wastes')],
+     'expect': [{'offers': {'kind': 'cast', 'card': n}, 'count': 0}]},
+])
+# The first scenario above is only a setup check of the fixture; replace it by the real one.
+SCEN[n][1][0] = {'name': 'A damaged Pirate flickered: it comes back a new object with no damage, and Rob draws a card', 'library': ['Wastes', 'Island'],
+     'setup': [at(0, 'battlefield', 'Corsair', 'Island', 'Wastes'), at(0, 'hand', n), at(1, 'battlefield', 'Mountain'), at(1, 'hand', 'Shock')],
+     'steps': [{'to': {'turn': 2, 'phase': 'MAIN1'}}, {'tap': 'Mountain', 'seat': 1}, {'cast': 'Shock', 'seat': 1, 'targets': [{'player': 0}]}, {'pass': 1},
+               *tap('Island', 'Wastes', seat=0), {'cast': n, 'seat': 0, 'targets': [{'card': 'Corsair'}]}, {'resolve': True}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': ['Corsair', 'Island', 'Wastes']}, {'seat': 0, 'zone': 'hand', 'cards': ['Wastes']}, {'seat': 0, 'life': 38}]}
+
+# =====================================================================================================================
+# Settle the Wreckage -- what moveZoneAll exiled, counted: "that many basic land cards", the target player's "may".
+n = 'Settle the Wreckage'
+SEARCH = lambda: {'effect': 'chooseCard', 'zone': 'library', 'who': {'target': 0}, 'selector': {'types': ['Land'], 'supertypes': ['Basic']},
+                  'count': {'rememberedCount': True}, 'destinations': [{'to': 'battlefield', 'tapped': True}], 'shuffle': True}
+CARDS[n] = [spell(L(n)[0], [{'effect': 'moveZoneAll', 'selector': {'what': 'permanent', 'types': ['Creature'], 'attacking': True, 'controller': {'target': 0}}, 'to': 'exile', 'remember': True},
+                            {'effect': 'modal', 'chooser': {'target': 0}, 'title': 'Search your library for that many basic land cards?',
+                             'modes': [{'text': 'Search', 'effects': [SEARCH()]}, {'text': "Don't search", 'effects': []}],
+                             'condition': {'compare': {'count': {'rememberedCount': True}, 'atLeast': 1}}}],
+                    targets=[{'what': 'player'}])]
+SCEN[n] = ({'Bear': BEAR, 'Cub': CUB}, [
+    {'name': 'Maya attacks with two; Rob exiles both, and she finds two basic lands, onto the battlefield tapped',
+     'library': ['Plains', 'Forest', 'Island', 'Wastes'],
+     'setup': [at(0, 'battlefield', 'Plains', 'Plains', 'Wastes', 'Wastes'), at(0, 'hand', n), at(1, 'battlefield', 'Bear', 'Cub', 'Forest')],
+     'steps': [{'to': {'turn': 2, 'phase': 'MAIN1'}}, {'attack': ['Bear', 'Cub'], 'seat': 1}, {'pass': 1},
+               *tap('Plains', 'Plains', 'Wastes', 'Wastes', seat=0), {'cast': n, 'seat': 0, 'targets': [{'player': 1}]}, {'resolve': True},
+               {'expect': [{'asks': {'seat': 1, 'options': ['Search', "Don't search"]}}]}, {'choose': ['Search']},
+               {'expect': [{'asks': {'seat': 1}}]}, {'choose': ['Plains', 'Forest']}],
+     'expect': [{'seat': 1, 'zone': 'exile', 'cards': ['Bear', 'Cub']}, {'seat': 1, 'controls': ['Forest', 'Plains', 'Forest']},
+                {'seat': 1, 'tapped': 'Plains', 'is': True}, {'seat': 1, 'life': 40}]},
+    {'name': "She declines: nothing searched, her attackers still exiled", 'library': ['Plains', 'Forest'],
+     'setup': [at(0, 'battlefield', 'Plains', 'Plains', 'Wastes', 'Wastes'), at(0, 'hand', n), at(1, 'battlefield', 'Bear', 'Cub')],
+     'steps': [{'to': {'turn': 2, 'phase': 'MAIN1'}}, {'attack': ['Bear'], 'seat': 1}, {'pass': 1},
+               *tap('Plains', 'Plains', 'Wastes', 'Wastes', seat=0), {'cast': n, 'seat': 0, 'targets': [{'player': 1}]}, {'resolve': True}, {'choose': ["Don't search"]}],
+     'expect': [{'seat': 1, 'zone': 'exile', 'cards': ['Bear']}, {'seat': 1, 'controls': ['Cub']}]},
+    {'name': 'Aimed at a player with no attackers: nothing exiled, nobody asked', 'library': ['Plains'],
+     'setup': [at(0, 'battlefield', 'Plains', 'Plains', 'Wastes', 'Wastes'), at(0, 'hand', n), at(1, 'battlefield', 'Bear')],
+     'steps': [*tap('Plains', 'Plains', 'Wastes', 'Wastes'), {'cast': n, 'targets': [{'player': 1}]}, {'resolve': True}],
+     'expect': [{'seat': 1, 'controls': ['Bear']}, {'stack': 0}]},
+])
+
+# =====================================================================================================================
+# Claim Jumper -- "repeat this process once", and "if you search your library this way, shuffle" (a search remembered).
+n = 'Claim Jumper'
+MORE_LANDS = {'compare': {'count': {'mostAmongOpponents': {'what': 'permanent', 'types': ['Land']}}, 'moreThan': {'count': {'what': 'permanent', 'types': ['Land'], 'controller': 'you'}}}}
+PROCESS = lambda: {'effect': 'modal', 'title': 'Search your library for a Plains card?', 'modes': [
+    {'text': 'Search', 'effects': [{'effect': 'chooseCard', 'zone': 'library', 'selector': {'subtypes': ['Plains']}, 'destinations': [{'to': 'battlefield', 'tapped': True}]}]},
+    {'text': "Don't search", 'effects': []}]}
+CARDS[n] = [kw('Vigilance', 'vigilance'),
+            trig(L(n)[1], {'on': 'enters'}, [PROCESS(), {'effect': 'branch', 'if': MORE_LANDS, 'then': [PROCESS()]},
+                                              {'effect': 'shuffle', 'condition': {'searched': True}}], condition=MORE_LANDS)]
+FIVE = ['Forest'] * 5
+SCEN[n] = (None, [
+    {'name': 'Maya has five lands to Rob\'s three: he searches twice, a Plains each time, tapped, and shuffles',
+     'library': ['Wastes', 'Plains', 'Plains', 'Plains'],
+     'setup': [at(0, 'battlefield', 'Plains', 'Wastes', 'Wastes'), at(0, 'hand', n), at(1, 'battlefield', *FIVE)],
+     'steps': [*tap('Plains', 'Wastes', 'Wastes'), {'cast': n}, {'resolve': True}, {'resolve': True},
+               {'choose': ['Search']}, {'choose': ['Plains (1)']}, {'choose': ['Search']}, {'choose': ['Plains (1)']}],
+     'expect': [{'seat': 0, 'controls': [n, 'Plains', 'Wastes', 'Wastes', 'Plains', 'Plains']}, {'seat': 0, 'tapped': 'Plains', 'is': True},
+                {'event': 'GameEventShuffle', 'where': {'player': {'playerId': 0, 'name': 'Rob'}}}]},
+    {'name': 'Four lands to his three: one search brings him level, and there is no second', 'library': ['Plains', 'Plains'],
+     'setup': [at(0, 'battlefield', 'Plains', 'Wastes', 'Wastes'), at(0, 'hand', n), at(1, 'battlefield', 'Forest', 'Forest', 'Forest', 'Forest')],
+     'steps': [*tap('Plains', 'Wastes', 'Wastes'), {'cast': n}, {'resolve': True}, {'resolve': True}, {'choose': ['Search']}, {'choose': ['Plains (1)']}],
+     'expect': [{'stack': 0}, {'seat': 0, 'controls': [n, 'Plains', 'Wastes', 'Wastes', 'Plains']}]},
+    {'name': 'He declines the first and takes the second: one Plains', 'library': ['Plains', 'Plains'],
+     'setup': [at(0, 'battlefield', 'Plains', 'Wastes', 'Wastes'), at(0, 'hand', n), at(1, 'battlefield', *FIVE)],
+     'steps': [*tap('Plains', 'Wastes', 'Wastes'), {'cast': n}, {'resolve': True}, {'resolve': True}, {'choose': ["Don't search"]}, {'choose': ['Search']}, {'choose': ['Plains (1)']}],
+     'expect': [{'seat': 0, 'controls': [n, 'Plains', 'Wastes', 'Wastes', 'Plains']}]},
+    {'name': 'No opponent with more lands: it does not trigger', 'library': ['Plains'],
+     'setup': [at(0, 'battlefield', 'Plains', 'Wastes', 'Wastes'), at(0, 'hand', n), at(1, 'battlefield', 'Forest', 'Forest')],
+     'steps': [*tap('Plains', 'Wastes', 'Wastes'), {'cast': n}, {'resolve': True}],
+     'expect': [{'stack': 0}, {'seat': 0, 'controls': [n, 'Plains', 'Wastes', 'Wastes']}]},
+])
+
+# =====================================================================================================================
+# Coalition Relic -- the counters removed, remembered as a number; a mana of any color for each, each color its own choice.
+n = 'Coalition Relic'
+CARDS[n] = [act(L(n)[0], [TAP], [{'effect': 'addMana', 'anyColor': True}]),
+            act(L(n)[1], [TAP], [{'effect': 'putCounter', 'targets': 'self', 'counter': 'charge', 'count': 1}]),
+            trig(L(n)[2], {'on': 'step', 'step': 'MAIN1'}, [{'effect': 'removeCounter', 'targets': 'self', 'counter': 'charge', 'all': True, 'remember': True},
+                                                              {'effect': 'addMana', 'anyColor': True, 'count': {'rememberedNumber': True}}])]
+SCEN[n] = ({'Bear': BEAR, 'Ogre': OGRE}, [
+    {'name': 'A charge counter on turn 1; at Rob\'s next first main phase it is removed for one mana of the color he names',
+     'setup': [at(0, 'battlefield', n), at(0, 'hand', 'Bear')],
+     'steps': [{'activate': n}, {'resolve': True}, {'expect': [{'seat': 0, 'counters': {'card': n, 'counter': 'charge', 'count': 1}}]},
+               {'to': {'turn': 3, 'phase': 'MAIN1'}}, {'resolve': True}, {'expect': [{'asks': {'seat': 0, 'options': ['White', 'Blue', 'Black', 'Red', 'Green']}}]},
+               {'choose': ['Green']}],
+     'expect': [{'seat': 0, 'pool': {'G': 1}}, {'seat': 0, 'counters': {'card': n, 'counter': 'charge', 'count': 0}}]},
+    {'name': '{T}: one mana of any color, its color chosen as it is tapped', 'setup': [at(0, 'battlefield', n)],
+     'steps': [{'tap': n, 'mana': {'R': 1}}],
+     'expect': [{'seat': 0, 'pool': {'R': 1}}, {'seat': 0, 'tapped': n, 'is': True}]},
+    {'name': 'With no charge counter, the trigger adds nothing and asks nothing', 'setup': [at(0, 'battlefield', n)],
+     'steps': [{'to': {'turn': 3, 'phase': 'MAIN1'}}, {'resolve': True}],
+     'expect': [{'stack': 0}, {'seat': 0, 'pool': {'W': 0, 'U': 0, 'B': 0, 'R': 0, 'G': 0}}]},
+])
+
+# =====================================================================================================================
+# Currency Converter -- linked exile ("a card exiled with this artifact"), chosen as it resolves; the moved card's type.
+n = 'Currency Converter'
+ROGUE = {'name': 'Rogue', 'types': ['Creature'], 'subtypes': ['Rogue'], 'colors': ['B'], 'power': 2, 'toughness': 2}
+CARDS[n] = [trig(L(n)[0], {'on': 'discarded'}, [{'effect': 'moveZone', 'targets': 'that card', 'to': 'exile', 'link': True}], optional=True),
+            act(L(n)[1], [MANA('{2}'), TAP], [{'effect': 'draw', 'count': 1}, {'effect': 'discard', 'count': 1}]),
+            act(L(n)[2], [TAP], [{'effect': 'chooseCard', 'zone': 'exile', 'selector': {'exiledWith': 'self'}, 'to': 'graveyard', 'remember': True},
+                                 {'effect': 'createToken', 'count': 1, 'token': {'predefined': 'Treasure'}, 'condition': {'about': 'remembered', 'is': {'types': ['Land']}}},
+                                 {'effect': 'createToken', 'count': 1, 'token': ROGUE, 'condition': {'about': 'remembered', 'is': {'nonTypes': ['Land']}}}])]
+SCEN[n] = ({'Bear': BEAR, 'Loot': LOOT}, [
+    {'name': 'Loot: the Bear discarded and exiled with it; then {T}: the Bear into Rob\'s graveyard, and a 2/2 black Rogue',
+     'library': ['Wastes', 'Wastes'],
+     'setup': [at(0, 'battlefield', n, 'Island'), at(0, 'hand', 'Loot', 'Bear')],
+     'steps': [{'tap': 'Island'}, {'cast': 'Loot'}, {'resolve': True}, {'choose': ['Bear']}, {'resolve': True}, {'choose': ['Yes']},
+               {'expect': [{'seat': 0, 'zone': 'exile', 'cards': ['Bear']}]},
+               {'activate': n, 'ability': 'a2'}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'graveyard', 'cards': ['Loot', 'Bear']}, {'seat': 0, 'zone': 'battlefield', 'cards': [n, 'Island', 'Rogue']},
+                {'seat': 0, 'stats': {'card': 'Rogue', 'power': 2, 'toughness': 2}}]},
+    {'name': '{2},{T}: draw then discard; a land discarded and exiled, then returned for a Treasure (the next turn)',
+     'library': ['Forest', 'Wastes', 'Wastes'],
+     'setup': [at(0, 'battlefield', n, 'Wastes', 'Wastes')],
+     'steps': [*tap('Wastes', 'Wastes'), {'activate': n, 'ability': 'a1'}, {'resolve': True}, {'choose': ['Forest']}, {'resolve': True}, {'choose': ['Yes']},
+               {'to': {'turn': 3, 'phase': 'MAIN1'}}, {'activate': n, 'ability': 'a2'}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'graveyard', 'cards': ['Forest']}, {'seat': 0, 'zone': 'battlefield', 'cards': [n, 'Wastes', 'Wastes', 'Treasure']}]},
+    {'name': 'Declined: the card stays in the graveyard, and {T} with nothing exiled with it makes nothing', 'library': ['Wastes'],
+     'setup': [at(0, 'battlefield', n, 'Island'), at(0, 'hand', 'Loot', 'Bear')],
+     'steps': [{'tap': 'Island'}, {'cast': 'Loot'}, {'resolve': True}, {'choose': ['Bear']}, {'resolve': True}, {'choose': ['No']},
+               {'activate': n, 'ability': 'a2'}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'graveyard', 'cards': ['Loot', 'Bear']}, {'seat': 0, 'zone': 'battlefield', 'cards': [n, 'Island']}]},
+])
+
+# =====================================================================================================================
+# Conspiracy Theorist -- "you may pay {1} and discard a card. If you do", and "exile one of them" among a batch's cards.
+n = 'Conspiracy Theorist'
+CARDS[n] = [trig(L(n)[0], {'on': 'attacks'}, [{'effect': 'unlessPays', 'amount': 1, 'discard': 1, 'ifPaid': True, 'effects': [{'effect': 'draw', 'count': 1}]}]),
+            trig(L(n)[1], {'on': 'discarded', 'filter': {'nonTypes': ['Land']}, 'batch': True},
+                 [{'effect': 'chooseCard', 'zone': 'graveyard', 'among': 'those cards', 'upTo': True, 'count': 1, 'to': 'exile', 'remember': True},
+                  {'effect': 'mayPlay', 'targets': 'remembered', 'spellsOnly': True, 'until': 'end-of-turn'}])]
+SCEN[n] = ({'Shock': SHOCK, 'Bear': BEAR}, [
+    {'name': 'It attacks: Rob pays {1} and discards Shock, draws; then exiles Shock and casts it this turn',
+     'library': ['Wastes', 'Island'],
+     'setup': [at(0, 'battlefield', n, 'Wastes', 'Mountain'), at(0, 'hand', 'Shock')],
+     'steps': [{'tap': 'Wastes'}, {'attack': [n]}, {'resolve': True}, {'choose': ['Discard Shock and pay {1}']},
+               {'expect': [{'seat': 0, 'zone': 'hand', 'cards': ['Wastes']}]}, {'resolve': True}, {'expect': [{'asks': {'seat': 0, 'options': ['Shock']}}]}, {'choose': ['Shock']},
+               {'expect': [{'seat': 0, 'zone': 'exile', 'cards': ['Shock']}]}, {'to': {'turn': 1, 'phase': 'MAIN2'}},
+               {'tap': 'Mountain'}, {'cast': 'Shock', 'targets': [{'player': 1}]}, {'resolve': True}],
+     'expect': [{'seat': 1, 'life': 36}, {'seat': 0, 'zone': 'graveyard', 'cards': ['Shock']}]},
+    {'name': 'Not paid: nothing discarded, nothing drawn', 'library': ['Island'],
+     'setup': [at(0, 'battlefield', n, 'Wastes'), at(0, 'hand', 'Shock')],
+     'steps': [{'tap': 'Wastes'}, {'attack': [n]}, {'resolve': True}, {'choose': ["Don't pay"]}],
+     'expect': [{'seat': 0, 'zone': 'hand', 'cards': ['Shock']}, {'seat': 0, 'zone': 'graveyard', 'cards': []}]},
+    {'name': 'A land discarded triggers nothing; of two nonland cards discarded at once, one exiled, once', 'library': ['Wastes'],
+     'setup': [at(0, 'battlefield', n), at(0, 'hand', 'Shock', 'Bear', 'Forest'), at(1, 'battlefield', 'Swamp')],
+     'steps': [{'to': {'turn': 2, 'phase': 'END_OF_TURN'}}, {'to': {'turn': 3, 'phase': 'MAIN1'}}],
+     'expect': [{'stack': 0}]},
+])
+
+# =====================================================================================================================
+# Valakut Exploration -- linked exile with a permission that lasts while the card stays exiled; "that much damage".
+n = 'Valakut Exploration'
+CARDS[n] = [trig(L(n)[0], {'on': 'enters', 'who': 'any', 'filter': {'types': ['Land'], 'controller': 'you'}},
+                 [{'effect': 'moveZone', 'fromTop': 1, 'to': 'exile', 'remember': True, 'link': True},
+                  {'effect': 'mayPlay', 'targets': 'remembered', 'until': 'ever'}]),
+            trig(L(n)[1], {'on': 'end step'}, [{'effect': 'moveZone', 'linked': True, 'to': 'graveyard', 'remember': True},
+                                                {'effect': 'dealDamage', 'amount': {'rememberedCount': True}, 'who': 'opponent'}],
+                 condition={'compare': {'count': {'count': {'what': 'card', 'zone': 'exile', 'exiledWith': 'self'}}, 'atLeast': 1}})]
+SCEN[n] = ({'Shock': SHOCK, 'Bear': BEAR}, [
+    {'name': 'A land played: the top card exiled; Shock cast from exile; at the end step nothing is left, so nothing happens',
+     'library': ['Shock', 'Wastes'],
+     'setup': [at(0, 'battlefield', n), at(0, 'hand', 'Mountain')],
+     'steps': [{'play': 'Mountain'}, {'resolve': True}, {'expect': [{'seat': 0, 'zone': 'exile', 'cards': ['Shock']}]},
+               {'tap': 'Mountain'}, {'cast': 'Shock', 'targets': [{'player': 1}]}, {'resolve': True}, {'to': {'turn': 1, 'phase': 'END_OF_TURN'}}],
+     'expect': [{'stack': 0}, {'seat': 1, 'life': 38}]},
+    {'name': 'Two lands in, two cards exiled and left there: at the end step both go to the graveyard and each opponent takes 2',
+     'seats': 3, 'library': ['Bear', 'Bear', 'Wastes'],
+     'setup': [at(0, 'battlefield', n), at(0, 'hand', 'Mountain')],
+     'steps': [{'play': 'Mountain'}, {'resolve': True}, {'to': {'turn': 1, 'phase': 'END_OF_TURN'}}, {'resolve': True}],
+     'expect': [{'seat': 1, 'life': 39}, {'seat': 2, 'life': 39}, {'seat': 0, 'life': 40}, {'seat': 0, 'zone': 'graveyard', 'cards': ['Bear']}, {'seat': 0, 'zone': 'exile', 'cards': []}]},
+    {'name': "For as long as it remains exiled: a card exiled on Maya's turn is still playable on Rob's",
+     'library': ['Forest', 'Shock', 'Wastes', 'Wastes'],
+     'setup': [at(0, 'battlefield', n), at(1, 'battlefield', 'Mountain')],
+     'steps': [{'to': {'turn': 2, 'phase': 'MAIN1'}}, {'to': {'turn': 3, 'phase': 'MAIN1'}}],
+     'expect': [{'seat': 0, 'zone': 'hand', 'cards': ['Forest']}]},
+])
+# the third: a land played on Rob's turn 1, exiled card a land played on turn 3 (lasting across turns).
+SCEN[n][1][2] = {'name': "For as long as it remains exiled: a land exiled on turn 1 is played from exile on turn 3, and that land's arrival exiles another",
+     'library': ['Forest', 'Wastes', 'Wastes', 'Wastes'],
+     'setup': [at(0, 'battlefield', n), at(0, 'hand', 'Mountain')],
+     'steps': [{'play': 'Mountain'}, {'resolve': True}, {'expect': [{'seat': 0, 'zone': 'exile', 'cards': ['Forest']}]},
+               {'to': {'turn': 1, 'phase': 'END_OF_TURN'}}, {'resolve': True},
+               {'expect': [{'seat': 1, 'life': 39}, {'seat': 0, 'zone': 'graveyard', 'cards': ['Forest']}]}],
+     'expect': [{'seat': 0, 'zone': 'exile', 'cards': []}]}
+
+# =====================================================================================================================
+# Quintorius, Loremaster -- linked exile as a target ("target card exiled with Quintorius"); a free cast this turn; and the
+# spell put on the bottom of its owner's library instead of a graveyard.
+n = 'Quintorius, Loremaster'
+SPIRIT = {'name': 'Spirit', 'types': ['Creature'], 'subtypes': ['Spirit'], 'colors': ['R', 'W'], 'power': 3, 'toughness': 2}
+CARDS[n] = [kw('Vigilance', 'vigilance'),
+            trig(L(n)[1], {'on': 'end step'}, [{'effect': 'moveZone', 'targets': {'target': 0}, 'to': 'exile', 'link': True},
+                                                {'effect': 'createToken', 'count': 1, 'token': SPIRIT}],
+                 targets=[{'what': 'card', 'zone': 'graveyard', 'controller': 'you', 'nonTypes': ['Creature', 'Land']}]),
+            act(L(n)[2], [MANA('{1}{R}{W}'), TAP, {'atom': 'sacrifice', 'selector': {'subtypes': ['Spirit']}}],
+                [{'effect': 'mayPlay', 'targets': {'target': 0}, 'free': True, 'graveyardToBottom': True, 'until': 'end-of-turn'}],
+                targets=[{'what': 'card', 'zone': 'exile', 'exiledWith': 'self'}])]
+SCEN[n] = ({'Divination': DIVINATION, 'Bear': BEAR, 'Blaze': BLAZE, 'Cancel': CANCEL}, [
+    {'name': "End step: Divination exiled with it, and a 3/2 Spirit; next turn the Spirit is sacrificed, Divination cast free, and it goes to the bottom of Rob's library",
+     'library': ['Wastes'] * 6,
+     'setup': [at(0, 'battlefield', n, 'Mountain', 'Plains', 'Wastes'), at(0, 'graveyard', 'Divination', 'Bear')],
+     'steps': [{'to': {'turn': 1, 'phase': 'END_OF_TURN'}}, {'expect': [{'asks': {'seat': 0, 'options': ['Divination']}}]}, {'choose': ['Divination']}, {'resolve': True},
+               {'expect': [{'seat': 0, 'zone': 'exile', 'cards': ['Divination']}, {'seat': 0, 'zone': 'graveyard', 'cards': ['Bear']}]},
+               {'to': {'turn': 3, 'phase': 'MAIN1'}}, *tap('Mountain', 'Plains', 'Wastes'),
+               {'activate': n, 'targets': [{'card': 'Divination'}], 'sacrifice': 'Spirit'}, {'resolve': True},
+               {'expect': [{'offers': {'kind': 'cast', 'card': 'Divination'}, 'count': 1}]}, {'cast': 'Divination'}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'graveyard', 'cards': ['Bear']}, {'seat': 0, 'zone': 'exile', 'cards': []}, {'seat': 0, 'zone': 'hand', 'count': 3},
+                {'seat': 0, 'zone': 'library', 'count': 18}]},
+    {'name': 'Free means without paying its mana cost: Blaze cast for X = 0, nothing in the pool, and countered it goes to the bottom of the library',
+     'library': ['Wastes'] * 6,
+     'setup': [at(0, 'battlefield', n, 'Mountain', 'Plains', 'Wastes'), at(0, 'graveyard', 'Blaze'), at(1, 'battlefield', 'Island'), at(1, 'hand', 'Cancel')],
+     'steps': [{'to': {'turn': 1, 'phase': 'END_OF_TURN'}}, {'choose': ['Blaze']}, {'resolve': True},
+               {'to': {'turn': 3, 'phase': 'MAIN1'}}, *tap('Mountain', 'Plains', 'Wastes'),
+               {'activate': n, 'targets': [{'card': 'Blaze'}], 'sacrifice': 'Spirit'}, {'resolve': True},
+               {'cast': 'Blaze', 'targets': [{'player': 1}]}, {'pass': 1}, {'tap': 'Island', 'seat': 1}, {'cast': 'Cancel', 'seat': 1, 'targets': [{'card': 'Blaze'}]}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'graveyard', 'cards': []}, {'seat': 0, 'zone': 'exile', 'cards': []}, {'seat': 0, 'zone': 'library', 'count': 19}]},
+    {'name': 'Only a noncreature, nonland card is a target: with a Bear alone in the graveyard, no exile and no Spirit',
+     'setup': [at(0, 'battlefield', n), at(0, 'graveyard', 'Bear', 'Forest')],
+     'steps': [{'to': {'turn': 1, 'phase': 'END_OF_TURN'}}],
+     'expect': [{'stack': 0}, {'seat': 0, 'zone': 'battlefield', 'cards': [n]}]},
+    {'name': 'The permission lasts this turn only: not cast, the card stays in exile, and next turn it is not castable',
+     'library': ['Wastes'] * 6,
+     'setup': [at(0, 'battlefield', n, 'Mountain', 'Plains', 'Wastes'), at(0, 'graveyard', 'Divination')],
+     'steps': [{'to': {'turn': 1, 'phase': 'END_OF_TURN'}}, {'choose': ['Divination']}, {'resolve': True},
+               {'to': {'turn': 3, 'phase': 'MAIN1'}}, *tap('Mountain', 'Plains', 'Wastes'),
+               {'activate': n, 'targets': [{'card': 'Divination'}], 'sacrifice': 'Spirit'}, {'resolve': True}, {'to': {'turn': 5, 'phase': 'MAIN1'}}],
+     'expect': [{'offers': {'kind': 'cast', 'card': 'Divination'}, 'count': 0}, {'seat': 0, 'zone': 'exile', 'cards': ['Divination']}]},
+])
+
+# =====================================================================================================================
+# Hofri Ghostforge -- exile "it"; "if you do", a token copy of that creature, a Spirit, given a leaves ability that remembers
+# the exiled card.
+n = 'Hofri Ghostforge'
+SPIRITS = {'what': 'permanent', 'subtypes': ['Spirit'], 'controller': 'you'}
+CARDS[n] = [static(L(n)[0], layer=7, sublayer='c', affects=SPIRITS, apply={'power': 1, 'toughness': 1}),
+            static(L(n)[0], layer=6, affects=SPIRITS, apply={'addKeywords': ['Trample', 'Haste']}),
+            trig(L(n)[1], {'on': 'dies', 'who': 'another', 'filter': {'types': ['Creature'], 'token': False, 'controller': 'you'}},
+                 [{'effect': 'moveZone', 'targets': 'that card', 'to': 'exile', 'remember': True},
+                  {'effect': 'copyPermanent', 'targets': 'remembered', 'asItLastWas': True, 'condition': {'about': 'remembered', 'is': {}},
+                   'except': {'addSubtypes': ['Spirit'], 'addAbilities': [
+                       trig('When this token leaves the battlefield, return the exiled card to its owner\'s graveyard.', {'on': 'leaves'},
+                            [{'effect': 'moveZone', 'targets': 'remembered', 'to': 'graveyard'}])]}}])]
+SCEN[n] = ({'Bear': BEAR, 'Doom': DOOM, 'Shock': SHOCK}, [
+    {'name': 'The Bear dies: exiled, and a token copy that is a Spirit Bear, 3/3 with trample and haste',
+     'setup': [at(0, 'battlefield', n, 'Bear', 'Swamp'), at(0, 'hand', 'Doom')],
+     'steps': [{'tap': 'Swamp'}, {'cast': 'Doom', 'targets': [{'card': 'Bear'}]}, {'resolve': True}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'exile', 'cards': ['Bear']}, {'seat': 0, 'zone': 'battlefield', 'cards': [n, 'Bear', 'Swamp']},
+                {'seat': 0, 'stats': {'card': 'Bear', 'power': 3, 'toughness': 3}}, {'seat': 0, 'keywords': {'card': 'Bear', 'has': ['Trample', 'Haste']}}]},
+    {'name': 'The token leaves: the exiled Bear goes to Rob\'s graveyard',
+     'setup': [at(0, 'battlefield', n, 'Bear', 'Swamp', 'Swamp'), at(0, 'hand', 'Doom', 'Doom')],
+     'steps': [{'tap': 'Swamp'}, {'cast': 'Doom', 'targets': [{'card': 'Bear'}]}, {'resolve': True}, {'resolve': True},
+               {'tap': 'Swamp'}, {'cast': 'Doom', 'targets': [{'card': 'Bear'}]}, {'resolve': True}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'exile', 'cards': []}, {'seat': 0, 'zone': 'graveyard', 'cards': ['Doom', 'Doom', 'Bear']}, {'seat': 0, 'zone': 'battlefield', 'cards': [n, 'Swamp', 'Swamp']}]},
+    {'name': "Not another of Maya's, nor Hofri itself", 'setup': [at(0, 'battlefield', n, 'Swamp'), at(0, 'hand', 'Doom'), at(1, 'battlefield', 'Bear')],
+     'steps': [{'tap': 'Swamp'}, {'cast': 'Doom', 'targets': [{'card': 'Bear'}]}, {'resolve': True}],
+     'expect': [{'stack': 0}, {'seat': 1, 'zone': 'graveyard', 'cards': ['Bear']}]},
+])
+
+# =====================================================================================================================
+# Mizzix's Mastery -- the exiled card copied and the copy cast (CR 707.12); overloaded, each copy chosen for itself.
+n = "Mizzix's Mastery"
+IS = [{'what': 'card', 'zone': 'graveyard', 'controller': 'you', 'types': ['Instant']}, {'what': 'card', 'zone': 'graveyard', 'controller': 'you', 'types': ['Sorcery']}]
+CARDS[n] = [spell(L(n)[0], [{'effect': 'moveZone', 'targets': {'target': 0}, 'to': 'exile', 'remember': True},
+                            {'effect': 'play', 'from': 'targets', 'targets': 'remembered', 'copies': True, 'free': True},
+                            {'effect': 'moveZone', 'targets': 'self', 'to': 'exile'}], targets=[{'anyOf': IS}]),
+            kw(L(n)[1], 'overload', cost=[MANA('{5}{R}{R}{R}')], effects=[
+                {'effect': 'moveZoneAll', 'selector': {'what': 'card', 'zone': 'graveyard', 'owner': 'you', 'anyOf': [{'types': ['Instant']}, {'types': ['Sorcery']}]}, 'to': 'exile', 'remember': True},
+                {'effect': 'play', 'from': 'targets', 'targets': 'remembered', 'copies': True, 'free': True, 'anyNumber': True},
+                {'effect': 'moveZone', 'targets': 'self', 'to': 'exile'}])]
+SCEN[n] = ({'Shock': SHOCK, 'Divination': DIVINATION, 'Bear': BEAR, 'Blaze': BLAZE}, [
+    {'name': 'Shock exiled from the graveyard, a copy of it cast free at Maya; the card stays in exile and Mastery is exiled',
+     'setup': [at(0, 'battlefield', 'Mountain', 'Wastes', 'Wastes', 'Wastes'), at(0, 'hand', n), at(0, 'graveyard', 'Shock', 'Bear')],
+     'steps': [*tap('Mountain', 'Wastes', 'Wastes', 'Wastes'), {'cast': n, 'alternative': False, 'targets': [{'card': 'Shock'}]}, {'resolve': True},
+               {'expect': [{'asks': {'seat': 0, 'options': ['Shock → Maya', 'Shock → Rob', "Don't cast"]}}]}, {'choose': ['Shock → Maya']}, {'resolve': True}],
+     'expect': [{'seat': 1, 'life': 38}, {'seat': 0, 'zone': 'exile', 'cards': ['Shock', n]}, {'seat': 0, 'zone': 'graveyard', 'cards': ['Bear']}]},
+    {'name': 'Overloaded: Shock and Divination both exiled, both copies cast in the order Rob chooses',
+     'library': ['Wastes'] * 4,
+     'setup': [at(0, 'battlefield', 'Mountain', 'Mountain', 'Mountain', 'Mountain', 'Wastes', 'Wastes', 'Wastes', 'Wastes'), at(0, 'hand', n), at(0, 'graveyard', 'Shock', 'Divination', 'Bear')],
+     'steps': [*tap('Mountain', 'Mountain', 'Mountain', 'Mountain', 'Wastes', 'Wastes', 'Wastes', 'Wastes'), {'cast': n, 'alternative': 1}, {'resolve': True},
+               {'choose': ['Divination']}, {'choose': ['Shock → Maya']}, {'resolve': True}, {'resolve': True}],
+     'expect': [{'seat': 1, 'life': 38}, {'seat': 0, 'zone': 'hand', 'count': 2}, {'seat': 0, 'zone': 'exile', 'cards': ['Shock', 'Divination', n]}, {'seat': 0, 'zone': 'graveyard', 'cards': ['Bear']}]},
+    {'name': 'A copy not cast ceases to exist; the card stays in exile', 'setup': [at(0, 'battlefield', 'Mountain', 'Wastes', 'Wastes', 'Wastes'), at(0, 'hand', n), at(0, 'graveyard', 'Blaze')],
+     'steps': [*tap('Mountain', 'Wastes', 'Wastes', 'Wastes'), {'cast': n, 'alternative': False, 'targets': [{'card': 'Blaze'}]}, {'resolve': True}, {'choose': ["Don't cast"]}],
+     'expect': [{'seat': 0, 'zone': 'exile', 'cards': ['Blaze', n]}, {'stack': 0}]},
+])
+
+# =====================================================================================================================
+# Advanced Reconstruction -- a Class: mill, a card exiled from the graveyard AT RANDOM and played this turn; level 2's
+# "one or more cards leave your graveyard"; level 3's cost reduction for spells cast from anywhere but the hand.
+n = 'Advanced Reconstruction'
+CARDS[n] = [trig(L(n)[1], {'on': 'step', 'step': 'MAIN1'}, [{'effect': 'mill', 'count': 1},
+                                                          {'effect': 'chooseCard', 'zone': 'graveyard', 'random': True, 'count': 1, 'to': 'exile', 'remember': True},
+                                                          {'effect': 'mayPlay', 'targets': 'remembered', 'until': 'end-of-turn'}]),
+            act(L(n)[2], [MANA('{1}{R}')], [{'effect': 'setState', 'targets': 'self', 'level': 2}], timing='sorcery', condition={'level': {'exactly': 1}}),
+            trig(L(n)[3], {'on': 'left graveyard', 'batch': True}, [{'effect': 'dealDamage', 'amount': 2, 'who': 'opponent'}], level=2),
+            act(L(n)[4], [MANA('{1}{R}')], [{'effect': 'setState', 'targets': 'self', 'level': 3}], timing='sorcery', condition={'level': {'exactly': 2}}),
+            static(L(n)[5], rule='spells-cost-less', level=3, amount=2, affects={}, fromAnywhereButHand=True)]
+SCEN[n] = ({'Shock': SHOCK, 'Bear': BEAR, 'Ogre': OGRE, 'Raise': RAISE}, [
+    {'name': "Level 1: at Rob's first main phase, the top card milled and a card exiled from the graveyard at random -- the only one -- and played this turn",
+     'library': ['Wastes', 'Wastes', 'Mountain', 'Wastes'],
+     'setup': [at(0, 'battlefield', n)],
+     'steps': [{'to': {'turn': 3, 'phase': 'MAIN1'}}, {'resolve': True}, {'expect': [{'seat': 0, 'zone': 'exile', 'cards': ['Mountain']}]},
+               {'play': 'Mountain'}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': [n, 'Mountain']}, {'seat': 0, 'zone': 'graveyard', 'cards': []}]},
+    {'name': 'Level 2 ({1}{R}, a sorcery): one or more cards leaving the graveyard at once -- 2 damage to each opponent, once',
+     'seats': 3, 'library': ['Wastes', 'Wastes', 'Ogre', 'Wastes'],
+     'setup': [at(0, 'battlefield', n, 'Mountain', 'Wastes'), at(0, 'graveyard', 'Bear')],
+     'steps': [*tap('Mountain', 'Wastes'), {'activate': n}, {'resolve': True}, {'to': {'turn': 4, 'phase': 'MAIN1'}}, {'to': {'turn': 4, 'phase': 'MAIN1'}},
+               {'to': {'turn': 4, 'phase': 'END_OF_TURN'}}, {'to': {'turn': 7, 'phase': 'MAIN1'}}, {'resolve': True}, {'resolve': True}],
+     'expect': [{'seat': 1, 'life': 38}, {'seat': 2, 'life': 38}, {'seat': 0, 'life': 40}]},
+    {'name': 'Level 3: a spell cast from exile costs {2} less -- the Ogre for {R}; one cast from the hand does not',
+     'library': ['Wastes', 'Wastes', 'Ogre', 'Wastes'],
+     'setup': [at(0, 'battlefield', n, 'Mountain', 'Mountain', 'Wastes', 'Wastes'), at(0, 'hand', 'Bear')],
+     'steps': [*tap('Mountain', 'Wastes'), {'activate': n}, {'resolve': True}, {'to': {'turn': 3, 'phase': 'MAIN1'}}, {'resolve': True},
+               *tap('Mountain', 'Wastes'), {'activate': n}, {'resolve': True}, {'tap': 'Mountain'},
+               {'expect': [{'offers': {'kind': 'cast', 'card': 'Ogre'}, 'count': 1}, {'offers': {'kind': 'cast', 'card': 'Bear'}, 'count': 0}]},
+               {'cast': 'Ogre'}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': [n, 'Mountain', 'Mountain', 'Wastes', 'Wastes', 'Ogre']}]},
+])
+
+# =====================================================================================================================
+# Fable of the Mirror-Breaker // Reflection of Kiki-Jiki -- a transforming Saga: a token with an ability, "discard up to two;
+# draw that many", and "exile this Saga, then return it to the battlefield transformed".
+n = 'Fable of the Mirror-Breaker // Reflection of Kiki-Jiki'
+SHAMAN = {'name': 'Goblin Shaman', 'types': ['Creature'], 'subtypes': ['Goblin', 'Shaman'], 'colors': ['R'], 'power': 2, 'toughness': 2,
+          'abilities': [{'id': 'goblin-shaman-treasure', 'kind': 'triggered', 'text': 'Whenever this token attacks, create a Treasure token.',
+                         'trigger': {'on': 'GameEventAttackersDeclared', 'who': 'self'}, 'effects': [{'effect': 'createToken', 'count': 1, 'token': {'predefined': 'Treasure'}}]}]}
+CARDS[n] = [{'kind': 'keyword', 'text': bare(L(n)[0]) if bare(L(n)[0]) else 'As this Saga enters and after your draw step, add a lore counter.', 'keyword': 'saga'},
+            trig(L(n)[1], {'on': 'chapter', 'chapter': 1}, [{'effect': 'createToken', 'count': 1, 'token': SHAMAN}]),
+            trig(L(n)[2], {'on': 'chapter', 'chapter': 2}, [{'effect': 'discard', 'count': 2, 'upTo': True, 'remember': True},
+                                                            {'effect': 'draw', 'count': {'rememberedCount': True}}]),
+            trig(L(n)[3], {'on': 'chapter', 'chapter': 3}, [{'effect': 'moveZone', 'targets': 'self', 'to': 'exile', 'andReturn': True, 'transformed': True, 'under': 'you'}])]
+BACKS[n] = [act(b.back_lines(n)[0], [MANA('{1}'), TAP], [{'effect': 'copyPermanent', 'targets': {'target': 0}, 'except': {'addKeywords': ['Haste']}, 'atEndStep': 'sacrifice'}],
+                targets=[{'what': 'permanent', 'types': ['Creature'], 'controller': 'you', 'another': True, 'nonSupertypes': ['Legendary']}])]
+FABLE, KIKI = 'Fable of the Mirror-Breaker', 'Reflection of Kiki-Jiki'
+SCEN[n] = ({'Bear': BEAR, 'Shock': SHOCK, 'Ogre': OGRE}, [
+    {'name': 'I: a 2/2 Goblin Shaman, whose attack makes a Treasure', 'library': ['Wastes'] * 4,
+     'setup': [at(0, 'battlefield', 'Mountain', 'Wastes', 'Wastes'), at(0, 'hand', n)],
+     'steps': [*tap('Mountain', 'Wastes', 'Wastes'), {'cast': FABLE}, {'resolve': True}, {'resolve': True},
+               {'expect': [{'seat': 0, 'counters': {'card': FABLE, 'counter': 'lore', 'count': 1}}, {'seat': 0, 'stats': {'card': 'Goblin Shaman', 'power': 2, 'toughness': 2}}]},
+               {'to': {'turn': 3, 'phase': 'COMBAT_BEGIN'}}, {'attack': ['Goblin Shaman']}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': ['Mountain', 'Wastes', 'Wastes', FABLE, 'Goblin Shaman', 'Treasure']}]},
+    {'name': 'II: Rob discards two and draws two; III: exiled and back transformed, a creature with no lore counter that stays',
+     'library': ['Wastes'] * 8,
+     'setup': [at(0, 'battlefield', 'Mountain', 'Wastes', 'Wastes'), at(0, 'hand', n, 'Bear', 'Shock')],
+     'steps': [*tap('Mountain', 'Wastes', 'Wastes'), {'cast': FABLE}, {'resolve': True}, {'resolve': True},
+               {'to': {'turn': 3, 'phase': 'MAIN1'}}, {'resolve': True}, {'choose': ['Bear', 'Shock']},
+               {'expect': [{'seat': 0, 'zone': 'graveyard', 'cards': ['Bear', 'Shock']}, {'seat': 0, 'zone': 'hand', 'count': 3}]},
+               {'to': {'turn': 5, 'phase': 'MAIN1'}}, {'resolve': True}, {'to': {'turn': 5, 'phase': 'MAIN2'}}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': ['Mountain', 'Wastes', 'Wastes', 'Goblin Shaman', KIKI]}, {'seat': 0, 'counters': {'card': KIKI, 'counter': 'lore', 'count': 0}},
+                {'seat': 0, 'stats': {'card': KIKI, 'power': 2, 'toughness': 2}}, {'seat': 0, 'zone': 'exile', 'cards': []}]},
+    {'name': 'II: discarding none draws none', 'library': ['Wastes'] * 6,
+     'setup': [at(0, 'battlefield', 'Mountain', 'Wastes', 'Wastes'), at(0, 'hand', n, 'Bear')],
+     'steps': [*tap('Mountain', 'Wastes', 'Wastes'), {'cast': FABLE}, {'resolve': True}, {'resolve': True},
+               {'to': {'turn': 3, 'phase': 'MAIN1'}}, {'resolve': True}, {'answer': []}],
+     'expect': [{'seat': 0, 'zone': 'hand', 'cards': ['Bear', 'Wastes']}, {'seat': 0, 'zone': 'graveyard', 'cards': []}]},
+    {'name': 'Reflection: {1},{T} -- a hasty token copy of the Ogre, sacrificed at the next end step; not of a legendary or itself',
+     'library': ['Wastes'] * 8,
+     'setup': [at(0, 'battlefield', 'Mountain', 'Wastes', 'Wastes', 'Ogre'), at(0, 'hand', n)],
+     'steps': [*tap('Mountain', 'Wastes', 'Wastes'), {'cast': FABLE}, {'resolve': True}, {'resolve': True},
+               {'to': {'turn': 5, 'phase': 'MAIN1'}}, {'resolve': True}, {'to': {'turn': 7, 'phase': 'MAIN1'}},
+               {'tap': 'Wastes'}, {'expect': [{'offers': {'kind': 'activate', 'card': KIKI}, 'count': 2}]},
+               {'activate': KIKI, 'targets': [{'card': 'Ogre'}]}, {'resolve': True},
+               {'expect': [{'seat': 0, 'keywords': {'card': 'Ogre', 'has': ['Haste']}}, {'seat': 0, 'zone': 'battlefield', 'count': 7}]},
+               {'to': {'turn': 7, 'phase': 'END_OF_TURN'}}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': ['Mountain', 'Wastes', 'Wastes', 'Ogre', 'Goblin Shaman', KIKI]}]},
+])
+
+only = sys.argv[1:]
+print(b.write(CARDS, SCEN, only=only or None, backs=BACKS), 'definitions written')

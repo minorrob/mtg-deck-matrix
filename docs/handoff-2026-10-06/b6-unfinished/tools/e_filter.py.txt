@@ -1,0 +1,24 @@
+import sys
+root = sys.argv[1]
+p = root + '/game/engine/script/filter.mjs'
+s = open(p).read()
+old = """  /* "With mana value X or less" (Rally the Ancestors): the X paid, as `exactly` reads it. */
+  if (rule.max !== undefined && value > (rule.max === "X" ? context.x ?? 0 : rule.max)) return false;"""
+new = """  /* "With mana value X or less" (Rally the Ancestors): the X paid, as `exactly` reads it. "Less than or equal to the amount
+     of life you lost this turn" (Betor, Ancestor's Voice): an amount counted as the selector is asked (script/amount.mjs) --
+     as the target is chosen, and again as it resolves (CR 608.2b). */
+  const most = rule.max === "X" ? context.x ?? 0 : rule.max !== null && typeof rule.max === "object" ? amountOf(state, rule.max, context) : rule.max;
+  if (rule.max !== undefined && value > most) return false;"""
+assert old in s
+s = s.replace(old, new, 1)
+old = """  if (selector.sharesCreatureTypeWithCommander !== undefined && selector.sharesCreatureTypeWithCommander !== true)
+    throw new Error("A selector's sharesCreatureTypeWithCommander is true: a creature type of a commander of yours");"""
+new = old + """
+  /* A mana value's most may be an amount counted (Betor): one of the amount grammar's (script/amount.mjs). */
+  const most = selector.manaValue?.max;
+  if (most !== null && typeof most === "object" && amountProblems(most).length) throw new Error(`A selector's manaValue.max: ${amountProblems(most).join("; ")}`);"""
+assert old in s
+s = s.replace(old, new, 1)
+s = s.replace('import {protectedFrom} from "../rules/protection.mjs";', 'import {protectedFrom} from "../rules/protection.mjs";\nimport {amountOf, amountProblems} from "./amount.mjs";', 1)
+open(p, 'w').write(s)
+print("ok")

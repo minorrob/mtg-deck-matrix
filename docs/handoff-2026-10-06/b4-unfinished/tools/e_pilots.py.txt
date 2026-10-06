@@ -1,0 +1,95 @@
+EDITS = [
+('game/engine/pilots/house-pilot.mjs', [
+('''export const HOUSE_PILOT_ID = "house-pilot";''',
+'''export const HOUSE_PILOT_ID = "house-pilot";
+
+/**
+ * A CHOICE'S REQUIREMENTS, MET (CR 508.1d: "other Goblin creatures you control attack each combat if able"): `indices`, with
+ * as few options added as the record's `requires` asks -- for each, at least `least` of the options whose `by` value is
+ * one of `values`, each value once -- keeping to `exclusiveBy` and to `capped` (no more at a planeswalker than it allows).
+ * A player the answerer prefers (`prefer`, the house pilot's defender) is tried first, then players before planeswalkers.
+ * Pure, over the record alone: the house pilot imports nothing, and the random pilot and the card scenarios use this one.
+ */
+export function meetRequirements(choice, indices, prefer = null) {
+  const options = choice.options ?? [];
+  let out = [...indices];
+  const room = (list, option) => option.planeswalkerId === undefined || choice.capped?.most?.[option.planeswalkerId] === undefined
+    || list.filter((i) => options[i]?.planeswalkerId === option.planeswalkerId).length < choice.capped.most[option.planeswalkerId];
+  const rank = (o) => (o.planeswalkerId === undefined ? (prefer !== null && o.defenderId === prefer ? 0 : 1) : 2);
+  for (const need of Array.isArray(choice.requires) ? choice.requires : []) {
+    const taken = new Set(out.map((i) => options[i]?.[need.by]));
+    const missing = (need.values ?? []).filter((value) => !taken.has(value));
+    const short = (need.least ?? 0) - ((need.values ?? []).length - missing.length);
+    /* The first way that fits, depth first, a value left out only when the rest can still make up the number. */
+    const fill = (k, list, left) => {
+      if (left <= 0) return [];
+      if (missing.length - k < left) return null;
+      const ways = options.filter((o) => o[need.by] === missing[k] && room(list, o)).sort((a, b) => rank(a) - rank(b) || a.index - b.index);
+      for (const way of ways) {
+        const rest = fill(k + 1, [...list, way.index], left - 1);
+        if (rest) return [way.index, ...rest];
+      }
+      return fill(k + 1, list, left);
+    };
+    out = [...out, ...(fill(0, out, short) ?? [])];
+  }
+  return out;
+}'''),
+('''        if (!plans.length) return {indices: []};
+        const best = plans.reduce((a, b) => (b.lethal !== a.lethal ? (b.lethal ? b : a)
+          : b.through !== a.through ? (b.through > a.through ? b : a)
+          : b.p.life < a.p.life || (b.p.life === a.p.life && b.p.playerId < a.p.playerId) ? b : a));
+        const picks = best.going.map(([, o]) => o.index);
+        return {indices: firstOf(choice, picks, max)};''',
+'''        /* And every creature the rules make attack (CR 508.1d, the record's `requires`): sent at the same player, if it can. */
+        if (!plans.length) return {indices: meetRequirements(choice, [])};
+        const best = plans.reduce((a, b) => (b.lethal !== a.lethal ? (b.lethal ? b : a)
+          : b.through !== a.through ? (b.through > a.through ? b : a)
+          : b.p.life < a.p.life || (b.p.life === a.p.life && b.p.playerId < a.p.playerId) ? b : a));
+        const picks = best.going.map(([, o]) => o.index);
+        return {indices: meetRequirements(choice, firstOf(choice, picks, max), best.p.playerId)};'''),
+]),
+('game/engine/pilots/random-legal.mjs', [
+('''export function randomLegalPilot(rng) {''',
+'''import {meetRequirements} from "./house-pilot.mjs";
+
+export function randomLegalPilot(rng) {'''),
+('''      const pool = options.map((_, index) => index);
+      const indices = [];
+      const used = new Set();
+      /* And `capped` (no more than one creature attacking The Eternal Wanderer, CR 508.1c): no more of a value than it allows. */
+      const taken = new Map();''',
+'''      const pool = options.map((_, index) => index);
+      /* What the record requires first ("attacks each combat if able", CR 508.1d): those, then any others at random. */
+      const indices = meetRequirements(choice, []);
+      const used = new Set(choice.exclusiveBy ? indices.map((i) => options[i]?.[choice.exclusiveBy]) : []);
+      /* And `capped` (no more than one creature attacking The Eternal Wanderer, CR 508.1c): no more of a value than it allows. */
+      const taken = new Map();
+      for (const index of indices) {
+        const cap = choice.capped ? options[index]?.[choice.capped.by] : undefined;
+        if (cap !== undefined) taken.set(cap, (taken.get(cap) ?? 0) + 1);
+      }
+      for (const index of indices) pool.splice(pool.indexOf(index), 1);'''),
+('''      for (let i = 0; i < take && pool.length > 0; i += 1) {''',
+'''      for (let i = indices.length; i < take && pool.length > 0; i += 1) {'''),
+]),
+('game/engine/cards/scenario.mjs', [
+('''import {targetName, isChoosing} from "../script/bind.mjs";''',
+'''import {targetName, isChoosing} from "../script/bind.mjs";
+import {meetRequirements} from "../pilots/house-pilot.mjs";'''),
+('''/* Questions the rules ask on the way that a scenario has no view on: nobody attacks or blocks unless a step says so,
+   a player's triggers go on in the order offered, and the legend rule keeps the first (CR 704.5j). Anything else stops
+   the scenario, by name. */
+function routine(state) {
+  const kind = state.awaiting?.kind;
+  if (kind === "declare-attackers" || kind === "declare-blockers") return resolveAwaiting(state, []);''',
+'''/* Questions the rules ask on the way that a scenario has no view on: nobody attacks or blocks unless a step says so -- or
+   the rules make it ("attacks each combat if able", CR 508.1d: those alone, each at its first player) -- a player's
+   triggers go on in the order offered, and the legend rule keeps the first (CR 704.5j). Anything else stops the scenario,
+   by name. */
+function routine(state) {
+  const kind = state.awaiting?.kind;
+  if (kind === "declare-attackers") return resolveAwaiting(state, meetRequirements(awaitingChoice(state), []));
+  if (kind === "declare-blockers") return resolveAwaiting(state, []);'''),
+]),
+]

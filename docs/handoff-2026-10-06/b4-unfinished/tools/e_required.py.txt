@@ -1,0 +1,32 @@
+EDITS = [
+('game/engine/rules/statics.mjs', [
+('''  "activate-as-though-haste": "keywords/timing.mjs",
+});''',
+'''  "activate-as-though-haste": "keywords/timing.mjs",
+  /** A requirement on attacking (CR 508.1d): "Other Goblin creatures you control attack each combat if able" (Goblin
+      Rabblemaster): `affects` the creatures, "you" its controller. Required of each that can attack someone with no cost to
+      pay; a declaration leaving out one it could have is refused, saying which (attacksEachCombat, below; rules/combat.mjs). */
+  "attacks-each-combat": "rules/combat.mjs",
+});'''),
+('''/** The words `defender` may say on a `cant-attack` static. */''',
+'''/**
+ * "ATTACKS EACH COMBAT IF ABLE" (CR 508.1d): the permanents whose static `attacks-each-combat` takes this creature in, as
+ * it is now, with its condition holding -- each a requirement on it, said by name when a declaration breaks it. Empty, and
+ * nothing is required of it by a static.
+ */
+export function attacksEachCombat(state, id) {
+  const sources = [];
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static" || ability.rule !== "attacks-each-combat") continue;
+      const context = {controller: holder.controller, source: holderId};
+      if (conditionHolds(state, ability.condition, context) && matchesSelector(chosenFor(ability, holder).affects, state, id, context)) sources.push(holderId);
+    }
+  }
+  return sources;
+}
+
+/** The words `defender` may say on a `cant-attack` static. */'''),
+]),
+]

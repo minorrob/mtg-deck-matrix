@@ -1,0 +1,59 @@
+PATCHES = [
+("game/engine/script/effects/asking.mjs",
+"""      count: params.count ?? 1, who: params.who, controller: context.controller,
+      ...(params.remember ? {remembering: []} : {}),
+    };
+    return true;
+  },
+
+  choice(state, awaiting) {
+    const hand = cardsIn(state, "hand", awaiting.player);
+    const count = Math.min(awaiting.count, hand.length);
+    return {
+      id: `discard:${awaiting.player}:${state.turn}`,
+      title: `Discard ${count} card${count === 1 ? "" : "s"}`,
+      mode: count === 1 ? "one" : "many",
+      min: count,
+      max: count,
+      options: cardOptions(state, hand),
+    };
+  },
+
+  apply(state, awaiting, indices) {
+    const events = [];
+    const hand = cardsIn(state, "hand", awaiting.player);
+    /* Resolved to ids before anything moves, because each move makes a new object and rewrites the
+       hand underneath the positions the player answered with. */
+    const chosen = (indices ?? []).map((index) => hand[index]).filter((id) => id !== undefined);""",
+"""      count: params.count ?? 1, who: params.who, controller: context.controller,
+      ...(params.remember ? {remembering: []} : {}),
+      /* "You may discard UP TO two cards" (Fable of the Mirror-Breaker): any number from none to that many, the player's to say
+         -- "if you do, draw that many" counts what they did (`remember`). */
+      ...(params.upTo === true ? {upTo: true} : {}),
+    };
+    return true;
+  },
+
+  choice(state, awaiting) {
+    const hand = cardsIn(state, "hand", awaiting.player);
+    const count = Math.min(awaiting.count, hand.length);
+    return {
+      id: `discard:${awaiting.player}:${state.turn}`,
+      title: awaiting.upTo ? `Discard up to ${count} card${count === 1 ? "" : "s"}` : `Discard ${count} card${count === 1 ? "" : "s"}`,
+      mode: count === 1 && !awaiting.upTo ? "one" : "many",
+      min: awaiting.upTo ? 0 : count,
+      max: count,
+      options: cardOptions(state, hand),
+    };
+  },
+
+  apply(state, awaiting, indices) {
+    const events = [];
+    const hand = cardsIn(state, "hand", awaiting.player);
+    /* Resolved to ids before anything moves, because each move makes a new object and rewrites the
+       hand underneath the positions the player answered with. */
+    const chosen = (indices ?? []).map((index) => hand[index]).filter((id) => id !== undefined);
+    /* As many as asked -- fewer only when it says "up to" (CR 701.9a) -- each a card in that hand, once. */
+    const most = Math.min(awaiting.count, hand.length);
+    if (new Set(chosen).size !== chosen.length || chosen.length > most || (!awaiting.upTo && chosen.length < most)) throw new Error("Invalid selection");"""),
+]

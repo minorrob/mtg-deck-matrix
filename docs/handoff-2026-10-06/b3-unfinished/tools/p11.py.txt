@@ -1,0 +1,13 @@
+PATCHES = [
+("game/engine/cards/index.mjs",
+"""function compileGivenIn(effects, text, problems) {
+  for (const effect of effectsIn(effects)) {""",
+"""function compileGivenIn(effects, text, problems) {
+  for (const effect of effectsIn(effects)) {
+    /* "A token that's a copy of that creature, except ... it has 'When this token leaves the battlefield, ...'" (Hofri
+       Ghostforge; CR 707.9a): what a copy has besides the original's, compiled the same way, in place. */
+    if (effect.effect === "copyPermanent" && effect.except?.addAbilities !== undefined) {
+      const given = compileGrant(effect.except.addAbilities, text, problems);
+      if (given) effect.except = {...effect.except, addAbilities: given.abilities, ...(given.keywords.length ? {addKeywords: [...(effect.except.addKeywords ?? []), ...given.keywords]} : {})};
+    }"""),
+]

@@ -1,0 +1,76 @@
+PATCHES = [
+("game/engine/script/resolution.mjs",
+"""      excessDamage: resolving.context.excessDamage, rememberedControllers: resolving.context.rememberedControllers})) {""",
+"""      excessDamage: resolving.context.excessDamage, rememberedControllers: resolving.context.rememberedControllers,
+      /* "If a Pirate was exiled this way" (`movedWas`), "if you search your library this way" (`searched`), and the source as it
+         last was (CR 113.7a): what this resolution remembers of what its effects did. */
+      movedWas: resolving.context.movedWas, searched: resolving.context.searched, lastKnown: resolving.context.lastKnown})) {"""),
+("game/engine/script/resolution.mjs",
+"""      const holds = conditionHolds(state, effect.if, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about,
+        remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast});""",
+"""      const holds = conditionHolds(state, effect.if, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about,
+        remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast,
+        movedWas: resolving.context.movedWas, searched: resolving.context.searched, lastKnown: resolving.context.lastKnown});"""),
+("game/engine/script/resolution.mjs",
+"""  /* "Choose a creature type": the type, for the effects after it ("$chosen", script/bind.mjs). */""",
+"""  /* "If you search your library this way, shuffle" (Claim Jumper): a library was searched -- whatever it found (CR 701.23). */
+  if (!Array.isArray(outcome) && outcome.searched === true) state.resolving.context.searched = true;
+  /* "Choose a creature type": the type, for the effects after it ("$chosen", script/bind.mjs). */"""),
+("game/engine/script/effects/index.mjs",
+"""  const holds = conditionHolds(state, params.if, {controller: context.controller, source: context.source ?? null, about: context.about, remembered: context.remembered, targets: context.targets, cast: context.cast});""",
+"""  const holds = conditionHolds(state, params.if, {controller: context.controller, source: context.source ?? null, about: context.about, remembered: context.remembered, targets: context.targets, cast: context.cast,
+    movedWas: context.movedWas, searched: context.searched, lastKnown: context.lastKnown});"""),
+("game/engine/script/effects/asking.mjs",
+"""    const adds = awaiting.remember === "add" ? {rememberAdd: true} : {};
+    if (splice.length) return {events, splice, ...(awaiting.remember ? {remembered: [...found, ...tops], ...adds} : {})};
+    return awaiting.remember ? {events, remembered: [...found, ...tops], ...adds} : events;""",
+"""    const adds = awaiting.remember === "add" ? {rememberAdd: true} : {};
+    /* A library searched (CR 701.23), found or not: "if you search your library this way, shuffle" (Claim Jumper). */
+    const searched = awaiting.zone === "library" ? {searched: true} : {};
+    if (splice.length) return {events, splice, ...searched, ...(awaiting.remember ? {remembered: [...found, ...tops], ...adds} : {})};
+    return awaiting.remember || awaiting.zone === "library" ? {events, ...searched, ...(awaiting.remember ? {remembered: [...found, ...tops], ...adds} : {})} : events;"""),
+("game/engine/script/condition.mjs",
+"""  "cameFrom", "sinceYourLastUpkeep", "level", "opponentPoisonAtLeast"];""",
+"""  "cameFrom", "sinceYourLastUpkeep", "level", "opponentPoisonAtLeast", "searched"];"""),
+("game/engine/script/condition.mjs",
+"""const NAMED = ["remembered", "that card", "target"];""",
+"""/* "IF A PIRATE WAS EXILED THIS WAY" (Siren's Ruse): "moved" -- what the effect before it moved from the battlefield to where
+   it sent it, as each last existed there (CR 608.2h; effects/zones.mjs, moveZone's `movedWas`): one of them is enough, and
+   none moved is none. Not the card that came back, which is a new object (CR 400.7). */
+const NAMED = ["remembered", "that card", "target", "moved"];"""),
+("game/engine/script/condition.mjs",
+"""export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined, excessDamage = undefined, rememberedControllers = undefined} = {}) {
+  if (!condition) return true;""",
+"""export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined, excessDamage = undefined, rememberedControllers = undefined,
+  movedWas = undefined, searched = undefined, lastKnown = undefined} = {}) {
+  if (!condition) return true;
+  /* "If you search your library this way" (Claim Jumper): a search made earlier in this resolution (script/resolution.mjs). */
+  if (condition.searched === true && searched !== true) return false;"""),
+("game/engine/script/condition.mjs",
+"""  if (condition.about !== undefined && !namedIs(state, namedObject(condition.about, {remembered, targets, about}), condition.is ?? {}, {controller, source},""",
+"""  if (condition.about === "moved") {
+    let fits = false;
+    try { fits = (movedWas ?? []).some((was) => matchesLastKnown(condition.is ?? {}, was, {controller, source})); } catch { fits = false; }
+    if (!fits) return false;
+  } else if (condition.about !== undefined && !namedIs(state, namedObject(condition.about, {remembered, targets, about}), condition.is ?? {}, {controller, source},"""),
+("game/engine/script/condition.mjs",
+"""    const counted = {controller, source, ...(about ? {about} : {}), ...(x !== undefined ? {x} : {}), ...(remembered ? {remembered} : {}),""",
+"""    const counted = {controller, source, ...(about ? {about} : {}), ...(x !== undefined ? {x} : {}), ...(remembered ? {remembered} : {}),
+      /* The source as it last was, gone since its ability triggered (CR 113.7a): "if there are cards exiled with this
+         enchantment" still counts what its other ability exiled (script/filter.mjs, linkSource). */
+      ...(lastKnown ? {lastKnown} : {}),"""),
+("game/engine/script/condition.mjs",
+"""  if ("sinceYourLastUpkeep" in condition && condition.sinceYourLastUpkeep !== true) problems.push("sinceYourLastUpkeep is true");""",
+"""  if ("sinceYourLastUpkeep" in condition && condition.sinceYourLastUpkeep !== true) problems.push("sinceYourLastUpkeep is true");
+  if ("searched" in condition && condition.searched !== true) problems.push("searched is true: a library was searched earlier in this resolution");"""),
+("game/engine/script/amount.mjs",
+"""  const who = {controller: context.controller, source: context.source, ...(context.about ? {about: context.about} : {})};""",
+"""  const who = {controller: context.controller, source: context.source, ...(context.about ? {about: context.about} : {}),
+    /* The source as it last was (CR 113.7a), for "cards exiled with this enchantment" once it has gone (script/filter.mjs). */
+    ...(context.lastKnown ? {lastKnown: context.lastKnown} : {})};"""),
+("game/engine/rules/stack.mjs",
+"""  if (entry.kind === "trigger" && script.condition && !conditionHolds(state, script.condition, {controller: entry.playerId, source, about: entry.about ?? undefined,
+    ...(entry.spent ? {spent: entry.spent} : {})})) return finishTop(state, entry, events, false);""",
+"""  if (entry.kind === "trigger" && script.condition && !conditionHolds(state, script.condition, {controller: entry.playerId, source, about: entry.about ?? undefined,
+    ...(entry.spent ? {spent: entry.spent} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {})})) return finishTop(state, entry, events, false);"""),
+]

@@ -1,0 +1,15 @@
+"""Undo patch files in reverse order: python3 unrep.py p12.py p7.py ... (each spec's PATCHES reversed, last first)."""
+import os, runpy, sys
+root = os.getcwd()
+here = os.path.dirname(os.path.abspath(__file__))
+for spec_file in sys.argv[1:]:
+    patches = runpy.run_path(os.path.join(here, spec_file))['PATCHES']
+    for rel, old, new in reversed(patches):
+        path = os.path.join(root, rel)
+        s = open(path, encoding='utf-8').read()
+        n = s.count(new)
+        if n != 1:
+            sys.exit(f'{spec_file} {rel}: new text found {n} times: {new[:100]!r}')
+        s = s.replace(new, old)
+        open(path, 'w', encoding='utf-8').write(s)
+    print('reverted', spec_file)

@@ -1,0 +1,437 @@
+# Train B, worker 6 (X11): effect primitives, counts and triggers, and the cards they unlock.
+# Usage: python3 gen.py <worktree root> [card ...]
+import json
+import os
+import sys
+
+root = sys.argv[1]
+sys.path.insert(0, os.path.join(root, 'game', 'tools', 'batch'))
+from cardlib import Batch, kw, trig, at, later, creature, bare, slug  # noqa: E402
+
+b = Batch(root)
+CARDS, SCEN = {}, {}
+
+ROCK = {'types': ['Artifact'], 'manaCost': '{1}', 'colors': []}
+WARD = {'types': ['Enchantment'], 'manaCost': '{1}{W}', 'colors': ['W']}
+BEAR = creature('{1}{G}', ['Bear'], p=2, t=2)
+ELF = creature('{G}', ['Elf'])
+OGRE = creature('{2}{R}', ['Ogre'], colors=('R',), p=3, t=3)
+WURM = creature('{4}{G}', ['Wurm'], p=5, t=5)
+WALL = creature('{1}{W}', ['Wall'], colors=('W',), p=0, t=4)
+GOAT = creature('{1}{W}', ['Goat'], colors=('W',), p=2, t=3, keywords=['Lifelink'])
+SHADE = creature('{B}', ['Shade'], colors=('B',), p=1, t=1)
+# A creature that enters with counters (CR 122.6), so a scenario can move or proliferate them.
+GROWN = creature('{1}{G}', ['Bear'], p=2, t=2, abilities=[{'id': 'grown', 'kind': 'replacement', 'text': 'This creature enters with two +1/+1 counters on it.',
+                                                           'watches': {'event': 'enters', 'who': 'self'}, 'change': {'entersWithCounters': {'counter': '+1/+1', 'count': 2}}}])
+FLIER = creature('{1}{G}', ['Bird'], p=1, t=1, abilities=[
+    {'id': 'f1', 'kind': 'replacement', 'text': 'This creature enters with a +1/+1 counter on it.', 'watches': {'event': 'enters', 'who': 'self'}, 'change': {'entersWithCounters': {'counter': '+1/+1', 'count': 1}}},
+    {'id': 'f2', 'kind': 'replacement', 'text': 'This creature enters with a flying counter on it.', 'watches': {'event': 'enters', 'who': 'self'}, 'change': {'entersWithCounters': {'counter': 'flying', 'count': 1}}}])
+SIP = {'types': ['Sorcery'], 'manaCost': '{W}', 'colors': ['W'], 'spell': {'id': 's', 'text': 'You gain 3 life.', 'targets': [], 'effects': [{'effect': 'gainLife', 'amount': 3}]}}
+RITE = {'types': ['Sorcery'], 'manaCost': '{B}', 'colors': ['B'], 'spell': {'id': 's', 'text': 'You lose 3 life.', 'targets': [], 'effects': [{'effect': 'loseLife', 'amount': 3}]}}
+WALKER = {'types': ['Planeswalker'], 'subtypes': ['Jace'], 'manaCost': '{2}{U}{U}', 'colors': ['U'], 'loyalty': 13}
+LITTLE_WALKER = {'types': ['Planeswalker'], 'subtypes': ['Jace'], 'manaCost': '{2}{U}', 'colors': ['U'], 'loyalty': 3}
+
+
+def pay(n):
+    return b.pay(n)
+
+
+# ---- Demand Answers: an additional cost that can be paid one of two ways (AlternateAdditionalCost) ----
+N = 'Demand Answers'
+L = b.lines(N)
+CARDS[N] = [{'kind': 'spell', 'text': '\n'.join(L), 'targets': [],
+             'additionalCost': [{'atom': 'oneOf', 'options': [[{'atom': 'sacrifice', 'selector': {'types': ['Artifact']}}], [{'atom': 'discard'}]]}],
+             'effects': [{'effect': 'draw', 'count': 2}]}]
+lands, taps = pay(N)
+SCEN[N] = ({'Rock': ROCK, 'Bear': BEAR}, [
+    {'name': 'Sacrifice the Rock: Rob draws two, and keeps his Bear', 'library': ['Island', 'Forest'],
+     'setup': [at(0, 'battlefield', *lands, 'Rock'), at(0, 'hand', N, 'Bear')],
+     'steps': [*taps, {'cast': N, 'sacrifice': 'Rock'}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'hand', 'cards': ['Bear', 'Island', 'Forest']}, {'seat': 0, 'zone': 'graveyard', 'cards': ['Rock', N]}]},
+    {'name': 'Discard the Bear instead: the Rock stays', 'library': ['Island', 'Forest'],
+     'setup': [at(0, 'battlefield', *lands, 'Rock'), at(0, 'hand', N, 'Bear')],
+     'steps': [*taps, {'cast': N, 'discard': 'Bear'}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'hand', 'cards': ['Island', 'Forest']}, {'seat': 0, 'zone': 'graveyard', 'cards': ['Bear', N]},
+                {'seat': 0, 'zone': 'battlefield', 'cards': [*lands, 'Rock']}]},
+    {'name': 'Each way to pay is its own offer: the Rock, or either card in hand -- never Demand Answers itself',
+     'setup': [at(0, 'battlefield', *lands, 'Rock'), at(0, 'hand', N, 'Bear', 'Forest')],
+     'steps': [*taps],
+     'expect': [{'offers': {'kind': 'cast', 'card': N}, 'count': 3, 'costs': [['Rock'], ['Bear'], ['Forest']]}]},
+    {'name': 'No artifact and nothing else in hand: it cannot be cast',
+     'setup': [at(0, 'battlefield', *lands), at(0, 'hand', N)],
+     'steps': [*taps],
+     'expect': [{'offers': {'kind': 'cast', 'card': N}, 'count': 0}]},
+])
+
+# ---- Stir Up Trouble: sacrifice an artifact or creature, or pay {4} ----
+N = 'Stir Up Trouble'
+L = b.lines(N)
+CARDS[N] = [{'kind': 'spell', 'text': '\n'.join(L),
+             'additionalCost': [{'atom': 'oneOf', 'options': [
+                 [{'atom': 'sacrifice', 'selector': {'anyOf': [{'types': ['Artifact']}, {'types': ['Creature']}]}}],
+                 [{'atom': 'mana', 'cost': '{4}'}]]}],
+             'targets': [{'what': 'permanent', 'types': ['Creature']}],
+             'effects': [{'effect': 'destroy', 'targets': {'target': 0}}]}]
+SCEN[N] = ({'Rock': ROCK, 'Bear': BEAR, 'Elf': ELF, 'Ogre': OGRE}, [
+    {'name': 'Pay {4} more: Maya\'s Ogre is destroyed, and Rob keeps everything',
+     'setup': [at(0, 'battlefield', 'Swamp', 'Wastes', 'Wastes', 'Wastes', 'Wastes', 'Elf'), at(0, 'hand', N), at(1, 'battlefield', 'Ogre')],
+     'steps': [{'tap': 'Swamp'}, *[{'tap': 'Wastes'}] * 4, {'cast': N, 'extraMana': '{4}', 'targets': [{'card': 'Ogre'}]}, {'resolve': True}],
+     'expect': [{'seat': 1, 'zone': 'graveyard', 'cards': ['Ogre']}, {'seat': 0, 'zone': 'battlefield', 'cards': ['Swamp', 'Wastes', 'Wastes', 'Wastes', 'Wastes', 'Elf']}]},
+    {'name': 'Sacrifice the Rock: the Ogre is destroyed for {B}',
+     'setup': [at(0, 'battlefield', 'Swamp', 'Rock'), at(0, 'hand', N), at(1, 'battlefield', 'Ogre')],
+     'steps': [{'tap': 'Swamp'}, {'cast': N, 'sacrifice': 'Rock', 'targets': [{'card': 'Ogre'}]}, {'resolve': True}],
+     'expect': [{'seat': 1, 'zone': 'graveyard', 'cards': ['Ogre']}, {'seat': 0, 'zone': 'graveyard', 'cards': ['Rock', N]}]},
+    {'name': 'Or a creature: Rob sacrifices his Elf to destroy the Bear',
+     'setup': [at(0, 'battlefield', 'Swamp', 'Elf'), at(0, 'hand', N), at(1, 'battlefield', 'Bear')],
+     'steps': [{'tap': 'Swamp'}, {'cast': N, 'sacrifice': 'Elf', 'targets': [{'card': 'Bear'}]}, {'resolve': True}],
+     'expect': [{'seat': 1, 'zone': 'graveyard', 'cards': ['Bear']}, {'seat': 0, 'zone': 'graveyard', 'cards': ['Elf', N]}]},
+    {'name': 'With {B} alone and an Elf, only a sacrifice pays: each target and each sacrifice its own offer',
+     'setup': [at(0, 'battlefield', 'Swamp', 'Wastes', 'Elf', 'Rock'), at(0, 'hand', N), at(1, 'battlefield', 'Bear')],
+     'steps': [{'tap': 'Swamp'}, {'tap': 'Wastes'}],
+     'expect': [{'offers': {'kind': 'cast', 'card': N}, 'count': 4, 'costs': [['Elf'], ['Elf'], ['Rock'], ['Rock']]},
+                {'offers': {'kind': 'cast', 'card': N}, 'count': 4, 'targets': [['Elf'], ['Elf'], ['Bear'], ['Bear']]}]},
+])
+
+# ---- Return to Dust: a second target only if cast during your main phase ----
+N = 'Return to Dust'
+L = b.lines(N)
+AE = [{'what': 'permanent', 'types': ['Artifact']}, {'what': 'permanent', 'types': ['Enchantment']}]
+CARDS[N] = [{'kind': 'spell', 'text': L[0],
+             'targets': [{'anyOf': AE}, {'anyOf': AE, 'count': {'max': 1}, 'distinctFrom': [0], 'onlyIf': {'cast': {'mainPhase': True}}}],
+             'effects': [{'effect': 'moveZone', 'targets': {'target': 0}, 'to': 'exile'}, {'effect': 'moveZone', 'targets': {'target': 1}, 'to': 'exile'}]}]
+lands, taps = pay(N)
+SCEN[N] = ({'Rock': ROCK, 'Charm Ward': WARD}, [
+    {'name': 'In Rob\'s main phase: Maya\'s Rock and her Charm Ward, both exiled',
+     'setup': [at(0, 'battlefield', *lands), at(0, 'hand', N), at(1, 'battlefield', 'Rock', 'Charm Ward')],
+     'steps': [*taps, {'cast': N, 'targets': [{'card': 'Rock'}, [{'card': 'Charm Ward'}]]}, {'resolve': True}],
+     'expect': [{'seat': 1, 'zone': 'exile', 'cards': ['Rock', 'Charm Ward']}, {'seat': 1, 'zone': 'battlefield', 'cards': []}]},
+    {'name': 'Its second target is another: the one already chosen is not offered again',
+     'setup': [at(0, 'battlefield', *lands), at(0, 'hand', N), at(1, 'battlefield', 'Rock', 'Charm Ward')],
+     'steps': [*taps, {'cast': N, 'targets': 'any'},
+               {'expect': [{'asks': {'seat': 0, 'options': ["Charm Ward (Maya's)"]}}]}, {'choose': ["Charm Ward (Maya's)"]}, {'resolve': True}],
+     'expect': [{'seat': 1, 'zone': 'exile', 'cards': ['Rock', 'Charm Ward']}]},
+    {'name': 'Up to one: in the main phase it may still exile only the one',
+     'setup': [at(0, 'battlefield', *lands), at(0, 'hand', N), at(1, 'battlefield', 'Rock', 'Charm Ward')],
+     'steps': [*taps, {'cast': N, 'targets': [{'card': 'Rock'}, []]}, {'resolve': True}],
+     'expect': [{'seat': 1, 'zone': 'exile', 'cards': ['Rock']}, {'seat': 1, 'zone': 'battlefield', 'cards': ['Charm Ward']}]},
+    {'name': 'Cast at the beginning of combat, not a main phase: one target, and only one is exiled',
+     'setup': [at(0, 'battlefield', *lands), at(0, 'hand', N), at(1, 'battlefield', 'Rock', 'Charm Ward')],
+     'steps': [{'to': {'turn': 1, 'phase': 'COMBAT_BEGIN'}}, *taps,
+               {'expect': [{'offers': {'kind': 'cast', 'card': N}, 'count': 2, 'targets': [['Rock', 'no target'], ['Charm Ward', 'no target']]}]},
+               {'cast': N, 'targets': 'any'}, {'resolve': True}],
+     'expect': [{'seat': 1, 'zone': 'exile', 'cards': ['Rock']}, {'seat': 1, 'zone': 'battlefield', 'cards': ['Charm Ward']}]},
+    {'name': 'On Maya\'s turn, in her main phase: still not Rob\'s main phase, so one target',
+     'setup': [at(0, 'battlefield', *lands), at(0, 'hand', N), at(1, 'battlefield', 'Rock', 'Charm Ward')],
+     'steps': [{'to': {'turn': 2, 'phase': 'MAIN1'}}, {'pass': 1}, *[dict(t, seat=0) for t in taps],
+               {'expect': [{'offers': {'kind': 'cast', 'card': N, 'seat': 0}, 'count': 2, 'targets': [['Rock', 'no target'], ['Charm Ward', 'no target']]}]}],
+     'expect': []},
+])
+
+# ---- Smuggler's Copter: whenever this attacks or blocks (CR 509.3a) ----
+N = "Smuggler's Copter"
+L = b.lines(N)
+LOOT = [{'effect': 'draw', 'count': 1}, {'effect': 'discard', 'count': 1}]
+CARDS[N] = [kw('Flying', 'flying'),
+            trig(L[1], {'on': 'attacks', 'who': 'self'}, LOOT, optional=True),
+            trig(L[1], {'on': 'blocks', 'who': 'self'}, LOOT, optional=True),
+            kw(bare(L[2]), 'crew', amount=1)]
+SCEN[N] = ({'Elf': ELF, 'Bear': BEAR, 'Rock': ROCK}, [
+    {'name': 'Crewed by the Elf, it attacks: Rob draws the Island and discards the Rock', 'library': ['Island'],
+     'setup': [at(0, 'battlefield', N, 'Elf'), at(0, 'hand', 'Rock')],
+     'steps': [{'activate': N}, {'resolve': True}, {'attack': [N]}, {'resolve': True}, {'choose': ['Yes']}, {'choose': ['Rock']},
+               {'to': {'turn': 1, 'phase': 'MAIN2'}}],
+     'expect': [{'seat': 0, 'zone': 'hand', 'cards': ['Island']}, {'seat': 0, 'zone': 'graveyard', 'cards': ['Rock']}, {'seat': 1, 'life': 37}]},
+    {'name': 'Maya crews it on Rob\'s turn and blocks his Bear: she may loot', 'library': ['Island', 'Forest'],
+     'setup': [at(0, 'battlefield', 'Bear'), at(1, 'battlefield', N, 'Elf'), at(1, 'hand', 'Rock')],
+     'steps': [{'to': {'turn': 1, 'phase': 'COMBAT_BEGIN'}}, {'pass': 1}, {'activate': N, 'seat': 1}, {'resolve': True},
+               {'attack': ['Bear']}, {'block': [[N, 'Bear']]},
+               {'resolve': True}, {'expect': [{'asks': {'seat': 1, 'options': ['Yes', 'No']}}]}, {'choose': ['Yes']}, {'choose': ['Rock']}],
+     'expect': [{'seat': 1, 'zone': 'hand', 'cards': ['Island']}, {'seat': 1, 'zone': 'graveyard', 'cards': ['Rock']}]},
+    {'name': 'It blocks and Maya declines: nothing drawn', 'library': ['Island'],
+     'setup': [at(0, 'battlefield', 'Bear'), at(1, 'battlefield', N, 'Elf'), at(1, 'hand', 'Rock')],
+     'steps': [{'to': {'turn': 1, 'phase': 'COMBAT_BEGIN'}}, {'pass': 1}, {'activate': N, 'seat': 1}, {'resolve': True},
+               {'attack': ['Bear']}, {'block': [[N, 'Bear']]}, {'resolve': True}, {'choose': ['No']}],
+     'expect': [{'seat': 1, 'zone': 'hand', 'cards': ['Rock']}]},
+    {'name': 'Another creature blocking does not trigger it',
+     'setup': [at(0, 'battlefield', 'Bear'), at(1, 'battlefield', N, 'Elf')],
+     'steps': [{'attack': ['Bear']}, {'block': [['Elf', 'Bear']]}],
+     'expect': [{'stack': 0}]},
+])
+
+# ---- Tree of Perdition / Tree of Redemption: a life total exchanged with a toughness (CR 701.12g) ----
+N = 'Tree of Perdition'
+L = b.lines(N)
+CARDS[N] = [kw('Defender', 'defender'),
+            {'kind': 'activated', 'text': L[1], 'cost': [{'atom': '{T}'}], 'targets': [{'what': 'player', 'who': 'opponent'}],
+             'effects': [{'effect': 'exchangeLife', 'who': {'target': 0}, 'targets': 'self'}]}]
+SCEN[N] = (None, [
+    {'name': 'Maya\'s 40 for the Tree\'s 13: Maya at 13, the Tree a 0/40',
+     'setup': [at(0, 'battlefield', N)],
+     'steps': [{'activate': N, 'targets': [{'player': 1}]}, {'resolve': True}],
+     'expect': [{'seat': 1, 'life': 13}, {'seat': 0, 'life': 40}, {'seat': 0, 'stats': {'card': N, 'power': 0, 'toughness': 40}}, {'seat': 0, 'tapped': N}]},
+    {'name': 'Only an opponent: Rob is no target, Maya and Trey are',
+     'seats': 3, 'setup': [at(0, 'battlefield', N)],
+     'steps': [],
+     'expect': [{'offers': {'kind': 'activate', 'card': N}, 'count': 2, 'targets': [['Maya'], ['Trey']]}]},
+    {'name': 'Cast this turn, it waits: summoning sick, no {T} ability',
+     'setup': [at(0, 'battlefield', 'Swamp', 'Wastes', 'Wastes', 'Wastes'), at(0, 'hand', N)],
+     'steps': [{'tap': 'Swamp'}, *[{'tap': 'Wastes'}] * 3, {'cast': N}, {'resolve': True}],
+     'expect': [{'offers': {'kind': 'activate', 'card': N}, 'count': 0}]},
+])
+N = 'Tree of Redemption'
+L = b.lines(N)
+CARDS[N] = [kw('Defender', 'defender'),
+            {'kind': 'activated', 'text': L[1], 'cost': [{'atom': '{T}'}], 'targets': [],
+             'effects': [{'effect': 'exchangeLife', 'who': 'you', 'targets': 'self'}]}]
+SCEN[N] = (None, [
+    {'name': 'Rob\'s 40 for the Tree\'s 13: Rob at 13, the Tree a 0/40',
+     'setup': [at(0, 'battlefield', N)],
+     'steps': [{'activate': N}, {'resolve': True}],
+     'expect': [{'seat': 0, 'life': 13}, {'seat': 0, 'stats': {'card': N, 'power': 0, 'toughness': 40}}]},
+    {'name': 'And back again next turn: Rob at 40, the Tree a 0/13',
+     'setup': [at(0, 'battlefield', N)],
+     'steps': [{'activate': N}, {'resolve': True}, {'to': {'turn': 3, 'phase': 'MAIN1'}}, {'activate': N}, {'resolve': True}],
+     'expect': [{'seat': 0, 'life': 40}, {'seat': 0, 'stats': {'card': N, 'power': 0, 'toughness': 13}}]},
+])
+
+# ---- Wave of Reckoning: each creature deals damage to itself equal to its power (Forge's EachDamage) ----
+N = 'Wave of Reckoning'
+L = b.lines(N)
+CARDS[N] = [{'kind': 'spell', 'text': L[0], 'targets': [],
+             'effects': [{'effect': 'damageEach', 'selector': {'what': 'permanent', 'types': ['Creature']}, 'dealt': {'powerOf': 'that card'}, 'to': 'itself'}]}]
+lands, taps = pay(N)
+SCEN[N] = ({'Elf': ELF, 'Bear': BEAR, 'Ogre': OGRE, 'Wall': WALL, 'Goat': GOAT}, [
+    {'name': 'Each deals its power to itself: the Elf, Bear and Ogre die, the 0/4 Wall and the 2/3 Goat live',
+     'setup': [at(0, 'battlefield', *lands, 'Elf', 'Wall'), at(0, 'hand', N), at(1, 'battlefield', 'Bear', 'Ogre', 'Goat')],
+     'steps': [*taps, {'cast': N}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'graveyard', 'cards': ['Elf', N]}, {'seat': 1, 'zone': 'graveyard', 'cards': ['Bear', 'Ogre']},
+                {'seat': 0, 'zone': 'battlefield', 'cards': [*lands, 'Wall']}, {'seat': 1, 'zone': 'battlefield', 'cards': ['Goat']}]},
+    {'name': 'The lifelinking Goat deals its own 2 to itself, and Maya gains 2',
+     'setup': [at(0, 'battlefield', *lands), at(0, 'hand', N), at(1, 'battlefield', 'Goat')],
+     'steps': [*taps, {'cast': N}, {'resolve': True}],
+     'expect': [{'seat': 1, 'life': 42}, {'event': 'GameEventCardDamaged', 'where': {'amount': 2}}]},
+])
+
+# ---- Lethal Scheme: each creature that convoked it connives (CR 701.50, 702.51c) ----
+N = 'Lethal Scheme'
+L = b.lines(N)
+CARDS[N] = [kw('Convoke', 'convoke'),
+            {'kind': 'spell', 'text': bare(L[1]),
+             'targets': [{'anyOf': [{'what': 'permanent', 'types': ['Creature']}, {'what': 'permanent', 'types': ['Planeswalker']}]}],
+             'effects': [{'effect': 'destroy', 'targets': {'target': 0}}, {'effect': 'connive', 'targets': 'convoked'}]}]
+SCEN[N] = ({'Elf': ELF, 'Bear': BEAR, 'Ogre': OGRE, 'Rock': ROCK, 'Shade': SHADE}, [
+    {'name': 'Paid with lands alone: the Ogre is destroyed, and nobody connives',
+     'setup': [at(0, 'battlefield', 'Swamp', 'Swamp', 'Wastes', 'Wastes', 'Elf'), at(0, 'hand', N, 'Rock'), at(1, 'battlefield', 'Ogre')],
+     'steps': [{'tap': 'Swamp'}, {'tap': 'Swamp'}, {'tap': 'Wastes'}, {'tap': 'Wastes'}, {'cast': N, 'targets': [{'card': 'Ogre'}]}, {'resolve': True}],
+     'expect': [{'seat': 1, 'zone': 'graveyard', 'cards': ['Ogre']}, {'seat': 0, 'zone': 'hand', 'cards': ['Rock']}]},
+    {'name': 'Convoked by the Elf and the Bear: Rob picks which connives first; a nonland discard is a counter, a land is none',
+     'library': ['Island', 'Forest'],
+     'setup': [at(0, 'battlefield', 'Swamp', 'Swamp', 'Elf', 'Bear'), at(0, 'hand', N, 'Rock'), at(1, 'battlefield', 'Ogre')],
+     'steps': [{'tap': 'Swamp'}, {'tap': 'Swamp'}, {'cast': N, 'convoke': True, 'targets': [{'card': 'Ogre'}]}, {'choose': ['Elf', 'Bear']},
+               {'resolve': True},
+               {'expect': [{'asks': {'seat': 0, 'options': ['Elf', 'Bear']}}]}, {'choose': ['Bear']},
+               {'choose': ['Rock']},
+               {'choose': ['Forest']}],
+     'expect': [{'seat': 1, 'zone': 'graveyard', 'cards': ['Ogre']}, {'seat': 0, 'zone': 'hand', 'cards': ['Island']},
+                {'seat': 0, 'zone': 'graveyard', 'cards': ['Rock', 'Forest', N]},
+                {'seat': 0, 'counters': {'card': 'Bear', 'counter': '+1/+1', 'count': 1}}, {'seat': 0, 'counters': {'card': 'Elf', 'counter': '+1/+1', 'count': 0}}]},
+    {'name': 'A convoking creature that died still connives: its controller draws and discards, and there is no counter for it',
+     'library': ['Island'],
+     'setup': [at(0, 'battlefield', 'Swamp', 'Swamp', 'Wastes', 'Shade'), at(0, 'hand', N, 'Rock')],
+     'steps': [{'tap': 'Swamp'}, {'tap': 'Swamp'}, {'tap': 'Wastes'}, {'cast': N, 'convoke': True, 'targets': [{'card': 'Shade'}]}, {'choose': ['Shade']},
+               {'resolve': True}, {'choose': ['Rock']}],
+     'expect': [{'seat': 0, 'zone': 'graveyard', 'cards': ['Shade', 'Rock', N]}, {'seat': 0, 'zone': 'hand', 'cards': ['Island']}]},
+])
+
+# ---- Tidus, Yuna's Guardian: a counter moved (CR 122.5), and Cheer, done only once each turn ----
+N = "Tidus, Yuna's Guardian"
+L = b.lines(N)
+MINE = {'what': 'permanent', 'types': ['Creature'], 'controller': 'you'}
+CARDS[N] = [trig(L[0], {'on': 'step', 'step': 'COMBAT_BEGIN'},
+                 [{'effect': 'moveCounters', 'from': {'target': 0}, 'targets': {'target': 1}, 'counter': 'chosen', 'count': 1}],
+                 optional=True, targets=[MINE, {**MINE, 'distinctFrom': [0]}]),
+            trig(L[1], {'on': 'damage dealt once', 'who': 'any', 'to': 'player', 'combat': True,
+                        'filter': {'types': ['Creature'], 'controller': 'you', 'counters': 'any'}},
+                 [{'effect': 'draw', 'count': 1}, {'effect': 'proliferate'}], optional=True, onceEachTurn=True)]
+TID = "Tidus, Yuna's Guardian"
+SCEN[N] = ({'Grown Bear': GROWN, 'Bird': FLIER, 'Elf': ELF}, [
+    {'name': 'At the beginning of combat: one of the Grown Bear\'s counters moved onto Tidus',
+     'setup': [at(0, 'battlefield', N, 'Forest', 'Wastes'), at(0, 'hand', 'Grown Bear')],
+     'steps': [{'tap': 'Forest'}, {'tap': 'Wastes'}, {'cast': 'Grown Bear'}, {'resolve': True},
+               {'to': {'turn': 1, 'phase': 'COMBAT_BEGIN'}},
+               {'expect': [{'asks': {'seat': 0, 'options': [f'Grown Bear, {TID}', f'{TID}, Grown Bear']}}]},
+               {'choose': [f'Grown Bear, {TID}']}, {'resolve': True}, {'choose': ['Yes']}],
+     'expect': [{'seat': 0, 'counters': {'card': 'Grown Bear', 'counter': '+1/+1', 'count': 1}}, {'seat': 0, 'counters': {'card': TID, 'counter': '+1/+1', 'count': 1}},
+                {'seat': 0, 'stats': {'card': TID, 'power': 4, 'toughness': 4}}]},
+    {'name': 'Two kinds of counter on the Bird: Rob chooses the flying counter, and Tidus flies',
+     'setup': [at(0, 'battlefield', N, 'Forest', 'Wastes'), at(0, 'hand', 'Bird')],
+     'steps': [{'tap': 'Forest'}, {'tap': 'Wastes'}, {'cast': 'Bird'}, {'resolve': True},
+               {'to': {'turn': 1, 'phase': 'COMBAT_BEGIN'}}, {'choose': [f'Bird, {TID}']}, {'resolve': True}, {'choose': ['Yes']},
+               {'expect': [{'asks': {'seat': 0, 'options': ['+1/+1 counter (1 on Bird)', 'flying counter (1 on Bird)']}}]},
+               {'choose': ['flying counter (1 on Bird)']}],
+     'expect': [{'seat': 0, 'keywords': {'card': TID, 'has': ['Flying']}}, {'seat': 0, 'counters': {'card': 'Bird', 'counter': 'flying', 'count': 0}},
+                {'seat': 0, 'counters': {'card': 'Bird', 'counter': '+1/+1', 'count': 1}}]},
+    {'name': 'Declined: nothing moves',
+     'setup': [at(0, 'battlefield', N, 'Forest', 'Wastes'), at(0, 'hand', 'Grown Bear')],
+     'steps': [{'tap': 'Forest'}, {'tap': 'Wastes'}, {'cast': 'Grown Bear'}, {'resolve': True},
+               {'to': {'turn': 1, 'phase': 'COMBAT_BEGIN'}}, {'choose': [f'Grown Bear, {TID}']}, {'resolve': True}, {'choose': ['No']}],
+     'expect': [{'seat': 0, 'counters': {'card': 'Grown Bear', 'counter': '+1/+1', 'count': 2}}]},
+    {'name': 'Cheer: the Grown Bear deals combat damage to Maya, and Rob draws and proliferates',
+     'library': ['Island', 'Forest', 'Plains'],
+     'setup': [at(0, 'battlefield', N, 'Forest', 'Wastes'), at(0, 'hand', 'Grown Bear')],
+     'steps': [{'tap': 'Forest'}, {'tap': 'Wastes'}, {'cast': 'Grown Bear'}, {'resolve': True},
+               {'to': {'turn': 3, 'phase': 'COMBAT_BEGIN'}}, {'choose': [f'Grown Bear, {TID}']}, {'resolve': True}, {'choose': ['No']},
+               {'attack': ['Grown Bear']}, {'to': {'turn': 3, 'phase': 'COMBAT_DAMAGE'}}, {'resolve': True}, {'choose': ['Yes']},
+               {'choose': ['Grown Bear (2 +1/+1)']}],
+     'expect': [{'seat': 1, 'life': 36}, {'seat': 0, 'zone': 'hand', 'count': 2}, {'seat': 0, 'counters': {'card': 'Grown Bear', 'counter': '+1/+1', 'count': 3}}]},
+    {'name': 'Cheer asks nothing for a creature with no counters dealing the damage',
+     'setup': [at(0, 'battlefield', N, 'Elf')],
+     'steps': [{'to': {'turn': 1, 'phase': 'COMBAT_BEGIN'}}, {'choose': [f'Elf, {TID}']}, {'resolve': True}, {'choose': ['No']},
+               {'attack': ['Elf']}, {'to': {'turn': 1, 'phase': 'COMBAT_DAMAGE'}}],
+     'expect': [{'seat': 1, 'life': 39}, {'stack': 0}]},
+])
+
+# ---- Betor, Ancestor's Voice: the life you lost this turn, as a mana value at most ----
+N = "Betor, Ancestor's Voice"
+L = b.lines(N)
+CARDS[N] = [kw('Flying', 'flying'), kw('lifelink', 'lifelink'),
+            trig(L[1], {'on': 'end step'},
+                 [{'effect': 'putCounter', 'targets': {'target': 0}, 'counter': '+1/+1', 'count': {'lifeGainedThisTurn': 'you'}},
+                  {'effect': 'moveZone', 'targets': {'target': 1}, 'to': 'battlefield'}],
+                 targets=[{'what': 'permanent', 'types': ['Creature'], 'controller': 'you', 'another': True, 'count': {'max': 1}},
+                          {'what': 'card', 'zone': 'graveyard', 'types': ['Creature'], 'owner': 'you', 'manaValue': {'max': {'lifeLostThisTurn': 'you'}}, 'count': {'max': 1}}])]
+SCEN[N] = ({'Bear': BEAR, 'Ogre': OGRE, 'Wurm': WURM, 'Life Sip': SIP, 'Pain Rite': RITE}, [
+    {'name': 'Rob gained 3 and lost 3: three counters on his Bear, and the Ogre (mana value 3) back -- not the Wurm',
+     'setup': [at(0, 'battlefield', N, 'Plains', 'Swamp', 'Bear'), at(0, 'hand', 'Life Sip', 'Pain Rite'), at(0, 'graveyard', 'Ogre', 'Wurm')],
+     'steps': [{'tap': 'Plains'}, {'cast': 'Life Sip'}, {'resolve': True}, {'tap': 'Swamp'}, {'cast': 'Pain Rite'}, {'resolve': True},
+               {'to': {'turn': 1, 'phase': 'END_OF_TURN'}}, {'choose': ['Bear']},
+               {'expect': [{'asks': {'seat': 0, 'options': ['Ogre']}}]}, {'choose': ['Ogre']}, {'resolve': True}],
+     'expect': [{'seat': 0, 'counters': {'card': 'Bear', 'counter': '+1/+1', 'count': 3}}, {'seat': 0, 'zone': 'graveyard', 'cards': ['Wurm', 'Life Sip', 'Pain Rite']},
+                {'seat': 0, 'zone': 'battlefield', 'cards': [N, 'Plains', 'Swamp', 'Bear', 'Ogre']}, {'seat': 0, 'life': 40}]},
+    {'name': 'Nothing gained or lost: no counters, and no card can be returned',
+     'setup': [at(0, 'battlefield', N, 'Bear'), at(0, 'graveyard', 'Ogre')],
+     'steps': [{'to': {'turn': 1, 'phase': 'END_OF_TURN'}}, {'choose': ['Bear']}, {'resolve': True}],
+     'expect': [{'seat': 0, 'counters': {'card': 'Bear', 'counter': '+1/+1', 'count': 0}}, {'seat': 0, 'zone': 'graveyard', 'cards': ['Ogre']}]},
+    {'name': 'Not Betor itself: "other" -- with no other creature, its first target is none',
+     'setup': [at(0, 'battlefield', N, 'Plains'), at(0, 'hand', 'Life Sip')],
+     'steps': [{'tap': 'Plains'}, {'cast': 'Life Sip'}, {'resolve': True}, {'to': {'turn': 1, 'phase': 'END_OF_TURN'}}, {'resolve': True}],
+     'expect': [{'seat': 0, 'counters': {'card': N, 'counter': '+1/+1', 'count': 0}}, {'seat': 0, 'life': 43}]},
+])
+
+# ---- Protector of the Wastes: monstrosity (CR 701.37), "when this becomes monstrous", different players ----
+N = 'Protector of the Wastes'
+L = b.lines(N)
+EXILE2 = {'anyOf': AE, 'count': {'max': 2}, 'differentControllers': True}
+CARDS[N] = [kw('Flying', 'flying'),
+            trig(L[1], {'on': 'enters', 'who': 'self'}, [{'effect': 'moveZone', 'targets': {'target': 0}, 'to': 'exile'}], targets=[EXILE2]),
+            trig(L[1], {'on': 'becomes monstrous'}, [{'effect': 'moveZone', 'targets': {'target': 0}, 'to': 'exile'}], targets=[EXILE2]),
+            {'kind': 'activated', 'text': bare(L[2]), 'cost': [{'atom': 'mana', 'cost': '{4}{W}'}],
+             'effects': [{'effect': 'alterAttribute', 'targets': 'self', 'attribute': 'monstrous', 'counters': 3}]}]
+lands, taps = pay(N)
+MONSTER_LANDS = ['Plains', 'Wastes', 'Wastes', 'Wastes', 'Wastes']
+MONSTER_TAPS = [{'tap': 'Plains'}, *[{'tap': 'Wastes'}] * 4]
+SCEN[N] = ({'Rock': ROCK, 'Charm Ward': WARD}, [
+    {'name': 'It enters: Maya\'s Rock and Trey\'s Charm Ward, controlled by different players, exiled', 'seats': 3,
+     'setup': [at(0, 'battlefield', *lands), at(0, 'hand', N), at(1, 'battlefield', 'Rock'), at(2, 'battlefield', 'Charm Ward')],
+     'steps': [*taps, {'cast': N}, {'resolve': True},
+               {'expect': [{'asks': {'seat': 0, 'options': ["Rock (Maya's)", "Charm Ward (Trey's)"]}}]},
+               {'choose': ["Rock (Maya's)", "Charm Ward (Trey's)"]}, {'resolve': True}],
+     'expect': [{'seat': 1, 'zone': 'exile', 'cards': ['Rock']}, {'seat': 2, 'zone': 'exile', 'cards': ['Charm Ward']}]},
+    {'name': 'Monstrosity 3: three +1/+1 counters, it becomes monstrous, and that exiles Maya\'s Rock',
+     'setup': [at(0, 'battlefield', N, *MONSTER_LANDS), at(1, 'battlefield', 'Rock')],
+     'steps': [*MONSTER_TAPS, {'activate': N}, {'resolve': True}, {'choose': ["Rock (Maya's)"]}, {'resolve': True}],
+     'expect': [{'seat': 0, 'stats': {'card': N, 'power': 8, 'toughness': 8}}, {'seat': 1, 'zone': 'exile', 'cards': ['Rock']},
+                {'event': 'GameEventCardAttribute', 'where': {'attribute': 'monstrous', 'value': True}}]},
+    {'name': 'Already monstrous: a second activation puts no counters on it and exiles nothing',
+     'setup': [at(0, 'battlefield', N, *MONSTER_LANDS, *MONSTER_LANDS), at(1, 'battlefield', 'Rock', 'Charm Ward')],
+     'steps': [*MONSTER_TAPS, {'activate': N}, {'resolve': True}, {'choose': ["Rock (Maya's)"]}, {'resolve': True},
+               *MONSTER_TAPS, {'activate': N}, {'resolve': True}],
+     'expect': [{'seat': 0, 'stats': {'card': N, 'power': 8, 'toughness': 8}}, {'stack': 0}, {'seat': 1, 'zone': 'battlefield', 'cards': ['Charm Ward']}]},
+])
+
+# ---- Ichormoon Gauntlet: planeswalkers get "[0]: Proliferate" and "[-12]: an extra turn" (CR 500.7); a chosen counter ----
+N = 'Ichormoon Gauntlet'
+L = b.lines(N)
+CARDS[N] = [{'kind': 'static', 'text': L[0], 'layer': 6, 'affects': {'what': 'permanent', 'controller': 'you', 'types': ['Planeswalker']},
+             'apply': {'addAbilities': [
+                 {'kind': 'activated', 'text': '[0]: Proliferate', 'cost': [{'atom': 'loyalty', 'amount': 0}], 'effects': [{'effect': 'proliferate'}]},
+                 {'kind': 'activated', 'text': '[−12]: Take an extra turn after this one.', 'cost': [{'atom': 'loyalty', 'amount': -12}], 'effects': [{'effect': 'addTurn', 'who': 'you'}]}]}},
+            trig(L[1], {'on': 'spell cast', 'caster': 'you', 'filter': {'nonTypes': ['Creature']}},
+                 [{'effect': 'putCounter', 'targets': {'target': 0}, 'counter': 'chosen', 'count': 1}], targets=[{'what': 'permanent'}])]
+SCEN[N] = ({'Walker': WALKER, 'Little Walker': LITTLE_WALKER, 'Rock': ROCK, 'Grown Bear': GROWN, 'Bird': FLIER}, [
+    {'name': '[−12] on a 13-loyalty walker: Rob takes the next turn too, then Maya hers',
+     'setup': [at(0, 'battlefield', N, 'Walker')],
+     'steps': [{'activate': 'Walker', 'ability': 'a1'}, {'resolve': True},
+               {'expect': [{'event': 'GameEventExtraTurn', 'where': {'player': {'playerId': 0, 'name': 'Rob'}}}, {'seat': 0, 'counters': {'card': 'Walker', 'counter': 'loyalty', 'count': 1}}]},
+               {'to': {'turn': 2, 'phase': 'MAIN1'}},
+               {'expect': [{'event': 'GameEventTurnPhase', 'where': {'phase': 'UNTAP', 'playerTurn': {'playerId': 0, 'name': 'Rob'}, 'extraTurn': True}}]},
+               {'to': {'turn': 3, 'phase': 'MAIN1'}}],
+     'expect': [{'event': 'GameEventTurnPhase', 'where': {'phase': 'UNTAP', 'playerTurn': {'playerId': 1, 'name': 'Maya'}}}]},
+    {'name': 'Three loyalty is not twelve: only the [0] is offered, and it proliferates the walker and the Bear',
+     'setup': [at(0, 'battlefield', N, 'Little Walker', 'Forest', 'Wastes'), at(0, 'hand', 'Grown Bear')],
+     'steps': [{'tap': 'Forest'}, {'tap': 'Wastes'}, {'cast': 'Grown Bear'}, {'resolve': True},
+               {'expect': [{'offers': {'kind': 'activate', 'card': 'Little Walker'}, 'count': 1}]},
+               {'activate': 'Little Walker', 'ability': 'a0'}, {'resolve': True}, {'choose': ['Little Walker (3 loyalty)', 'Grown Bear (2 +1/+1)']}],
+     'expect': [{'seat': 0, 'counters': {'card': 'Little Walker', 'counter': 'loyalty', 'count': 4}}, {'seat': 0, 'counters': {'card': 'Grown Bear', 'counter': '+1/+1', 'count': 3}}]},
+    {'name': 'A noncreature spell: one more loyalty counter on the walker, the only kind there',
+     'setup': [at(0, 'battlefield', N, 'Little Walker', 'Wastes'), at(0, 'hand', 'Rock')],
+     'steps': [{'tap': 'Wastes'}, {'cast': 'Rock'}, {'choose': ['Little Walker']}, {'resolve': True}],
+     'expect': [{'seat': 0, 'counters': {'card': 'Little Walker', 'counter': 'loyalty', 'count': 4}}]},
+    {'name': 'Two kinds on the Bird: Rob chooses which gets another',
+     'setup': [at(0, 'battlefield', N, 'Forest', 'Wastes', 'Wastes'), at(0, 'hand', 'Bird', 'Rock')],
+     'steps': [{'tap': 'Forest'}, {'tap': 'Wastes'}, {'cast': 'Bird'}, {'resolve': True}, {'tap': 'Wastes'}, {'cast': 'Rock'}, {'choose': ['Bird']}, {'resolve': True},
+               {'expect': [{'asks': {'seat': 0, 'options': ['+1/+1 counter (1 on Bird)', 'flying counter (1 on Bird)']}}]}, {'choose': ['+1/+1 counter (1 on Bird)']}],
+     'expect': [{'seat': 0, 'counters': {'card': 'Bird', 'counter': '+1/+1', 'count': 2}}, {'seat': 0, 'counters': {'card': 'Bird', 'counter': 'flying', 'count': 1}}]},
+    {'name': 'A creature spell does not trigger it',
+     'setup': [at(0, 'battlefield', N, 'Forest', 'Wastes'), at(0, 'hand', 'Grown Bear')],
+     'steps': [{'tap': 'Forest'}, {'tap': 'Wastes'}, {'cast': 'Grown Bear'}],
+     'expect': [{'stack': 1}]},
+])
+
+# ---- Goblin Glasswright // Craft with Pride: enters prepared (CR 614.1c, 722.3) ----
+N = 'Goblin Glasswright // Craft with Pride'
+FRONT, BACK = 'Goblin Glasswright', 'Craft with Pride'
+card = b.card(N)
+f0, f1 = card['faces']
+GLASS = [{'kind': 'replacement', 'text': bare(f0['text']), 'watches': {'event': 'enters', 'who': 'self'}, 'change': {'entersPrepared': True}}]
+PREPARE = {'identity': {'name': BACK, 'types': ['Sorcery'], 'subtypes': [], 'manaCost': f1['mana'], 'colors': ['R'], 'power': None, 'toughness': None},
+           'oracleText': f1['text'],
+           'abilities': [{'kind': 'spell', 'text': bare(f1['text']), 'targets': [], 'effects': [{'effect': 'createToken', 'count': 1, 'token': {'predefined': 'Treasure'}}]}]}
+CARDS[N] = GLASS
+SCEN[N] = ({'Bear': BEAR}, [
+    {'name': 'It enters prepared: Craft with Pride waits in Rob\'s exile, cast it for {R}, a Treasure, and the Glasswright is unprepared',
+     'setup': [at(0, 'battlefield', 'Mountain', 'Mountain', 'Wastes'), at(0, 'hand', N)],
+     'steps': [{'tap': 'Mountain'}, {'tap': 'Wastes'}, {'cast': FRONT}, {'resolve': True},
+               {'expect': [{'seat': 0, 'zone': 'exile', 'cards': [BACK]}, {'event': 'GameEventCardAttribute', 'where': {'attribute': 'prepared', 'value': True}},
+                           {'offers': {'kind': 'cast', 'card': BACK}, 'count': 0}]},
+               {'tap': 'Mountain'}, {'cast': BACK}, {'resolve': True}],
+     'expect': [{'seat': 0, 'zone': 'battlefield', 'cards': ['Mountain', 'Mountain', 'Wastes', FRONT, 'Treasure']}, {'seat': 0, 'zone': 'exile', 'cards': []},
+                {'seat': 0, 'zone': 'graveyard', 'cards': []}, {'offers': {'kind': 'cast', 'card': BACK}, 'count': 0},
+                {'event': 'GameEventCardAttribute', 'where': {'attribute': 'prepared', 'value': False}}]},
+    {'name': 'In hand it is only Goblin Glasswright: Craft with Pride is never cast from there',
+     'setup': [at(0, 'battlefield', 'Mountain', 'Wastes'), at(0, 'hand', N)],
+     'steps': [{'tap': 'Mountain'}, {'tap': 'Wastes'}],
+     'expect': [{'offers': {'kind': 'cast', 'card': FRONT}, 'count': 1}, {'offers': {'kind': 'cast', 'card': BACK}, 'count': 0}]},
+    {'name': 'A sorcery: not on Maya\'s turn, and back on Rob\'s',
+     'setup': [at(0, 'battlefield', 'Mountain', 'Mountain', 'Wastes'), at(0, 'hand', N)],
+     'steps': [{'tap': 'Mountain'}, {'tap': 'Wastes'}, {'cast': FRONT}, {'resolve': True},
+               {'to': {'turn': 2, 'phase': 'MAIN1'}}, {'pass': 1}, {'tap': 'Mountain', 'seat': 0},
+               {'expect': [{'offers': {'kind': 'cast', 'card': BACK, 'seat': 0}, 'count': 0}]},
+               {'to': {'turn': 3, 'phase': 'MAIN1'}}, {'tap': 'Mountain'},
+               {'expect': [{'offers': {'kind': 'cast', 'card': BACK}, 'count': 1}]}],
+     'expect': [{'seat': 0, 'zone': 'exile', 'cards': [BACK]}]},
+])
+
+only = sys.argv[2:]
+written = b.write({k: v for k, v in CARDS.items()}, SCEN, only=only or None)
+# The preparation card's prepare spell (CR 722.2), beside its own face: cardlib writes a card from its oracle faces only for a
+# double-faced layout, so this one is written from its first face and its prepare spell added.
+if not only or N in only:
+    path = os.path.join(root, 'game', 'engine', 'cards', slug(N)[0], slug(N) + '.json')
+    script = json.load(open(path, encoding='utf-8'))
+    script['identity'] = {**b._identity(f0, card['name'], card['id'], card['ci']), 'manaCost': f0['mana'], 'colors': ['R']}
+    script['oracleText'] = f0['text']
+    script['prepare'] = PREPARE
+    with open(path, 'w', encoding='utf-8', newline='\n') as f:
+        f.write(json.dumps(script, indent=2, ensure_ascii=False) + '\n')
+print(written, 'definitions written')
