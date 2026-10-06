@@ -46,11 +46,14 @@ const BUDGET_MS = 45000;
    machine is slower at both, so the ratio is the machine's no more than the game's. Measured 2026-10-06 on the cloud
    container (Node 22.22, 4 cores), per thousand events: a game 1.8 to 9.4, the ten together 4.1 to 5.4, alone or three
    at a time as the gate runs suites (a run's yardstick moves all ten together by up to a third). With F-2 put back (a
-   trial a deep copy) seed 2 was 13.5 and seed 11 37.7. So a game may take 15, and the ten together 8.
+   trial a deep copy) seed 2 was 13.5 and seed 11 37.7. Then the house pilot could pay from a pool more than one way (X8b)
+   and every game changed: seed 4 became 75 turns, 3,755 events, on a board of layered effects -- 14.4 alone, 18.0 three
+   at a time -- and the ten together 5.5 alone, 6.6 three at a time. So a game may take 25, and the ten together 9.
    The counts are the machine's not at all: each object derived once per question (engine-derive-once) holds the
-   derivations to 81-271 an event, and each pair of effects asked once per ordering (CR 613.8a, rules/layers.mjs) the
-   dependency trials to 0-950; with the memo off a single projection derived a board hundreds of thousands of times. */
-const CPU_PER_THOUSAND_EVENTS = 15, CPU_PER_THOUSAND_EVENTS_IN_ALL = 8, DERIVATIONS_PER_EVENT = 450, TRIALS_PER_EVENT = 1600;
+   derivations to 79-121 an event, and seed 4's crowded board to 638; each pair of effects asked once per ordering (CR
+   613.8a, rules/layers.mjs) the dependency trials to 0-961, seed 4's to 1,302; with the memo off a single projection
+   derived a board hundreds of thousands of times. */
+const CPU_PER_THOUSAND_EVENTS = 25, CPU_PER_THOUSAND_EVENTS_IN_ALL = 9, DERIVATIONS_PER_EVENT = 1000, TRIALS_PER_EVENT = 2500;
 ok(typeof process.threadCpuUsage === "function", "this Node measures a thread's own CPU (process.threadCpuUsage, Node 22.22 and later)");
 const threadMs = () => { const used = process.threadCpuUsage(); return (used.user + used.system) / 1000; };
 function yardstick() {

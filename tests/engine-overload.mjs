@@ -31,7 +31,10 @@ const casts = (s) => legalActions(s, 0).filter((a) => a.kind === "cast" && s.obj
 
 {
   const s = play([at(0, "battlefield", ...SIX), at(0, "hand", WA), at(1, "battlefield", "Bear")], SIX.map((l) => ({tap: l})));
-  eq(casts(s).map((a) => [a.alternative, a.targets?.length ?? 0]), [[0, 0]], "{4}{W}{W} in the pool: overloaded, with no target");
+  /* The mana cost too: {1}{W} from {W}{W}{C}{C}{C}{C} is paid more than one way, and was not offered until the way could be
+     asked (X8b, tests/engine-pay-choice.mjs). */
+  eq(casts(s).map((a) => [a.alternative, a.targets?.length ?? 0, a.payWays ?? false]), [[undefined, 1, true], [0, 0, false]],
+    "{4}{W}{W} in the pool: for its mana cost at the Bear, the way to pay to be asked, or overloaded, with no target");
   const two = play([at(0, "battlefield", "Plains", "Wastes"), at(0, "hand", WA), at(1, "battlefield", "Bear")], [{tap: "Plains"}, {tap: "Wastes"}]);
   eq(casts(two).map((a) => [a.alternative ?? "mana cost", a.targets?.length ?? 0]), [["mana cost", 1]], "{1}{W}: for its mana cost, at Maya's Bear");
   const t = play([at(0, "battlefield", ...SIX), at(0, "hand", WA)], SIX.map((l) => ({tap: l})));
