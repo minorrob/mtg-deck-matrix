@@ -1,0 +1,635 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Purphoros, God of the Forge",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{R}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Goblin Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Zap": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Zap deals 1 damage to target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 1,
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Murder": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Devotion to red 1: not a creature, so Zap cannot aim at it; another creature of Rob's enters and it deals 2 damage to Maya and to Trey",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Purphoros, God of the Forge",
+            "Forest",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Zap"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Zap"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Bear"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 38
+            },
+            {
+              "seat": 2,
+              "life": 38
+            },
+            {
+              "seat": 0,
+              "life": 40
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Zap"
+          },
+          "count": 1,
+          "targets": [
+            [
+              "Bear"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Devotion five (two Ogres' {R}{R} and its own {R}): a 6/5 creature, indestructible -- Murder does not destroy it; an Ogre destroyed, devotion three, and it is not a creature again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Purphoros, God of the Forge",
+            "Ogre",
+            "Ogre",
+            "Swamp",
+            "Swamp",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Murder",
+            "Murder",
+            "Zap"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Purphoros, God of the Forge",
+                "power": 6,
+                "toughness": 5
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Murder"
+              },
+              "count": 6,
+              "targets": [
+                [
+                  "Purphoros, God of the Forge"
+                ],
+                [
+                  "Ogre"
+                ],
+                [
+                  "Ogre"
+                ],
+                [
+                  "Purphoros, God of the Forge"
+                ],
+                [
+                  "Ogre"
+                ],
+                [
+                  "Ogre"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Murder",
+          "targets": [
+            {
+              "card": "Purphoros, God of the Forge"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Purphoros, God of the Forge",
+                "Ogre",
+                "Ogre",
+                "Swamp",
+                "Swamp",
+                "Mountain"
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Murder",
+          "targets": [
+            {
+              "card": "Ogre"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Purphoros, God of the Forge",
+            "Ogre",
+            "Swamp",
+            "Swamp",
+            "Mountain"
+          ]
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Zap"
+          },
+          "count": 1,
+          "targets": [
+            [
+              "Ogre"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "{2}{R}: Rob's creatures get +1/+0 until end of turn -- the Ogres and Purphoros, a creature, 7/5 -- not Maya's Bear",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Purphoros, God of the Forge",
+            "Ogre",
+            "Ogre",
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Purphoros, God of the Forge"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Purphoros, God of the Forge",
+                "power": 7,
+                "toughness": 5
+              }
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Ogre",
+                "power": 3,
+                "toughness": 2
+              }
+            },
+            {
+              "seat": 1,
+              "stats": {
+                "card": "Bear",
+                "power": 2,
+                "toughness": 2
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Purphoros, God of the Forge",
+            "power": 6,
+            "toughness": 5
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Ogre",
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Only another creature Rob controls: Purphoros entering as a creature (two Ogres beside it), or Maya's Bear, deals no damage",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Ogre",
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Purphoros, God of the Forge"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Purphoros, God of the Forge"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Purphoros, God of the Forge",
+                "power": 6,
+                "toughness": 5
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "cast": "Bear",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Forest",
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Less than five: at devotion four (an Ogre, a Goblin Pal and its own {R}) it isn't a creature; a second Goblin Pal makes five, and it is",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Purphoros, God of the Forge",
+            "Ogre",
+            "Goblin Pal",
+            "Mountain",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Zap",
+            "Goblin Pal"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Zap"
+              },
+              "count": 2,
+              "targets": [
+                [
+                  "Ogre"
+                ],
+                [
+                  "Goblin Pal"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Goblin Pal"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 38
+            }
+          ]
+        },
+        {
+          "tap": "Mountain"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Zap"
+          },
+          "count": 4,
+          "targets": [
+            [
+              "Purphoros, God of the Forge"
+            ],
+            [
+              "Ogre"
+            ],
+            [
+              "Goblin Pal"
+            ],
+            [
+              "Goblin Pal"
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

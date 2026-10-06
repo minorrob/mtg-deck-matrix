@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Obyra, Dreaming Duelist",
+    "oracleId": "4162e60f-9d70-4b8c-a838-df57b83c208d",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Faerie",
+      "Warrior"
+    ],
+    "manaCost": "{U}{B}",
+    "colors": [
+      "B",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flash\nFlying\nWhenever another Faerie you control enters, each opponent loses 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another Faerie you control enters, each opponent loses 1 life.",
+      "trigger": {
+        "on": "enters",
+        "who": "another",
+        "filter": {
+          "subtypes": [
+            "Faerie"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "who": "opponent",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

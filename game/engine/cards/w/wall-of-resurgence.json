@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wall of Resurgence",
+    "oracleId": "8771e241-e69b-4e21-9108-223a9488e9c7",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Wall"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 0,
+    "toughness": 6
+  },
+  "oracleText": "Defender\nWhen this creature enters, you may put three +1/+1 counters on target land you control. If you do, that land becomes a 0/0 Elemental creature with haste that's still a land.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender",
+      "keyword": "defender"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, you may put three +1/+1 counters on target land you control. If you do, that land becomes a 0/0 Elemental creature with haste that's still a land.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "+1/+1",
+          "count": 3
+        },
+        {
+          "effect": "animate",
+          "targets": {
+            "target": 0
+          },
+          "addTypes": [
+            "Creature"
+          ],
+          "subtypes": [
+            "Elemental"
+          ],
+          "power": 0,
+          "toughness": 0
+        },
+        {
+          "effect": "effectUntil",
+          "layer": 6,
+          "targets": {
+            "target": 0
+          },
+          "apply": {
+            "addKeywords": [
+              "Haste"
+            ]
+          },
+          "until": "ever"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

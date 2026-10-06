@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Moonlit Lamenter",
+    "oracleId": "ce009bd4-5ffb-46a4-a9dd-b9c060926467",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Treefolk",
+      "Cleric"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 5
+  },
+  "oracleText": "This creature enters with a -1/-1 counter on it.\n{1}{W}, Remove a counter from this creature: Draw a card. Activate only as a sorcery.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This creature enters with a -1/-1 counter on it.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "-1/-1",
+          "count": 1
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{1}{W}, Remove a counter from this creature: Draw a card. Activate only as a sorcery.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{W}"
+        },
+        {
+          "atom": "removeAnyCounter",
+          "self": true
+        }
+      ],
+      "timing": "sorcery",
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

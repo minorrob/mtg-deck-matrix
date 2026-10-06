@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Peppersmoke",
+    "oracleId": "071733a2-6dc6-4b6e-8ed6-a130d14657fd",
+    "types": [
+      "Kindred",
+      "Instant"
+    ],
+    "subtypes": [
+      "Faerie"
+    ],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature gets -1/-1 until end of turn. If you control a Faerie, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Target creature gets -1/-1 until end of turn. If you control a Faerie, draw a card.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": -1,
+          "toughness": -1
+        },
+        {
+          "effect": "draw",
+          "count": 1,
+          "condition": {
+            "present": {
+              "what": "permanent",
+              "subtypes": [
+                "Faerie"
+              ],
+              "controller": "you"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

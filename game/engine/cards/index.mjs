@@ -68,7 +68,10 @@ function wardCost(cost) {
 const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "triggers-again", "cant-cast", "attack-tax", "doesnt-untap", "cast-without-paying",
   "spells-cost-more", "abilities-cost-more",
   /* "Twice that many ... instead" at a Class level (Innkeeper's Talent, CR 716.2a; rules/statics.mjs, countersPlaced). */
-  "more-counters"];
+  "more-counters",
+  /* "Can't ... block unless you control seven or more lands" (Topiary Stomper, CR 509.1b): read as each blocker is checked
+     (rules/combat.mjs canBlock, through rules/statics.mjs ruleChanged, which asks every rule's condition). */
+  "cant-block"];
 
 /* What a flashback cost may be made of (CR 702.34a): mana, life ("Flashback--{1}{U}, Pay 3 life"), and creatures to tap
    ("Flashback--Tap three untapped white creatures you control", Battle Screech: `tapCreature`, its `count` and `selector`). */
