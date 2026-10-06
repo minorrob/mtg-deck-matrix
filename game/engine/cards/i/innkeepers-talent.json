@@ -1,0 +1,137 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Innkeeper's Talent",
+    "oracleId": "915b75d1-b5e3-4aca-a54c-beaccef0a2e4",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Class"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "(Gain the next level as a sorcery to add its ability.)\nAt the beginning of combat on your turn, put a +1/+1 counter on target creature you control.\n{G}: Level 2\nPermanents you control with counters on them have ward {1}.\n{3}{G}: Level 3\nIf you would put one or more counters on a permanent or player, put twice that many of each of those kinds of counters on that permanent or player instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of combat on your turn, put a +1/+1 counter on target creature you control.",
+      "trigger": {
+        "on": "step",
+        "step": "COMBAT_BEGIN"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{G}: Level 2",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{G}"
+        }
+      ],
+      "timing": "sorcery",
+      "condition": {
+        "level": {
+          "exactly": 1
+        }
+      },
+      "effects": [
+        {
+          "effect": "setState",
+          "targets": "self",
+          "level": 2
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Permanents you control with counters on them have ward {1}.",
+      "level": 2,
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "counters": "any"
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "keyword",
+            "text": "ward {1}",
+            "keyword": "ward",
+            "cost": [
+              {
+                "atom": "mana",
+                "cost": "{1}"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{3}{G}: Level 3",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{G}"
+        }
+      ],
+      "timing": "sorcery",
+      "condition": {
+        "level": {
+          "exactly": 2
+        }
+      },
+      "effects": [
+        {
+          "effect": "setState",
+          "targets": "self",
+          "level": 3
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "If you would put one or more counters on a permanent or player, put twice that many of each of those kinds of counters on that permanent or player instead.",
+      "level": 3,
+      "rule": "more-counters",
+      "affects": {
+        "what": "permanent"
+      },
+      "putBy": "you",
+      "players": true,
+      "times": 2
+    }
+  ]
+}

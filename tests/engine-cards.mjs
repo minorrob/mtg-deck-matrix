@@ -49,11 +49,17 @@ const files = loadCardScenarios();
     const card = ORACLE.get(script.identity.name);
     if (!card) { drift.push(`${path}: no oracle card named ${script.identity.name}`); continue; }
     const num = (v) => (v !== null && v !== undefined && /^\d+$/.test(v) ? Number(v) : null);
-    /* A modal double-faced card (CR 712.3): its identity is its front face's, its back face the oracle's second. */
-    const double = card.layout === "modal_dfc";
-    const front = double ? card.faces[0] : card;
+    /* A double-faced card, modal (CR 712.3) or nonmodal (712.2, the oracle's "transform"): its identity is its front face's,
+       its back face the oracle's second -- and a nonmodal one's script says it transforms (`layout`). */
+    const double = card.layout === "modal_dfc" || card.layout === "transform";
+    if (double && (script.layout ?? "modal_dfc") !== card.layout) drift.push(`${path}: the oracle's ${card.layout} card, and its script says ${script.layout ?? "nothing"}`);
+    /* An adventurer card (CR 715.2): its identity is its own half's, the oracle's first face, and its Adventure the second.
+       The oracle gives an adventurer's halves no colors of their own: each half's are its mana cost's (CR 105.2, 202.2). */
+    const adventurer = card.layout === "adventure";
+    const front = double || adventurer ? card.faces[0] : card;
+    const colorsOf = (face) => face.colors ?? ["W", "U", "B", "R", "G"].filter((c) => new RegExp(`\\{[^}]*${c}[^}]*\\}`).test(face.mana ?? ""));
     /* And a planeswalker's printed loyalty (CR 306.5a). */
-    const want = {oracleId: card.id, manaCost: front.mana, colors: front.colors, colorIdentity: card.ci, power: num(front.power), toughness: num(front.toughness),
+    const want = {oracleId: card.id, manaCost: front.mana, colors: colorsOf(front), colorIdentity: card.ci, power: num(front.power), toughness: num(front.toughness),
       ...(front.loyalty ? {loyalty: num(front.loyalty)} : {})};
     const got = {oracleId: script.identity.oracleId, manaCost: script.identity.manaCost, colors: script.identity.colors,
       colorIdentity: script.identity.colorIdentity, power: script.identity.power, toughness: script.identity.toughness,
@@ -69,6 +75,17 @@ const files = loadCardScenarios();
       if (JSON.stringify(gotBack) !== JSON.stringify(wantBack)) drift.push(`${path}: back face ${JSON.stringify(gotBack)} is not the oracle's ${JSON.stringify(wantBack)}`);
       if (script.back.oracleText !== back.text) drift.push(`${path}: its back face's oracle text is not the oracle's`);
       for (const ability of script.back.abilities) if (!back.text.includes(ability.text)) drift.push(`${path}: "${ability.text}" is not a sentence of its back face`);
+    }
+    if (adventurer !== (script.adventure !== undefined)) drift.push(`${path}: ${adventurer ? "an adventurer card without its Adventure" : "an Adventure on a card that has none"}`);
+    if (adventurer && script.adventure) {
+      const adventure = card.faces[1];
+      const [left, right = ""] = adventure.type.split(" — ");
+      const wantAdventure = {name: adventure.name, types: left.split(" "), subtypes: right.split(" ").filter(Boolean), manaCost: adventure.mana, colors: colorsOf(adventure)};
+      const gotAdventure = {name: script.adventure.identity.name, types: script.adventure.identity.types, subtypes: script.adventure.identity.subtypes, manaCost: script.adventure.identity.manaCost,
+        colors: script.adventure.identity.colors};
+      if (JSON.stringify(gotAdventure) !== JSON.stringify(wantAdventure)) drift.push(`${path}: Adventure ${JSON.stringify(gotAdventure)} is not the oracle's ${JSON.stringify(wantAdventure)}`);
+      if (script.adventure.oracleText !== adventure.text) drift.push(`${path}: its Adventure's oracle text is not the oracle's`);
+      for (const ability of script.adventure.abilities) if (!adventure.text.includes(ability.text)) drift.push(`${path}: "${ability.text}" is not a sentence of its Adventure`);
     }
     if (!path.startsWith(`${foldName(script.identity.name).charAt(0)}/`)) drift.push(`${path}: filed under the wrong letter`);
   }
@@ -190,7 +207,8 @@ const files = loadCardScenarios();
   const text = execFileSync(process.execPath, ["game/tools/engine-coverage.mjs"], {encoding: "utf8"});
   const doc = readFileSync(new URL("../docs/engine/coverage.md", import.meta.url), "utf8");
   ok(text.startsWith(doc), "docs/engine/coverage.md is what `node game/tools/engine-coverage.mjs --write` writes today");
-  ok(doc.includes(`(${index.size} definitions in all)`) && /\| Rob's seven decks \| 477 \| \d+ \|/.test(doc), "and it counts the directory's definitions");
+  /* The hand-authored directory's: a learned definition stored provisional (data/engine/scripts) is counted apart (X10). */
+  ok(doc.includes(`(${scripts.length} definitions in all)`) && /\| Rob's seven decks \| 477 \| \d+ \| \d+ \|/.test(doc), "and it counts the directory's definitions");
 }
 
 /* ---- 7. the most-played list ---- */
@@ -210,9 +228,11 @@ const files = loadCardScenarios();
 {
   eq(readFileSync(DEFINITIONS_MODULE, "utf8") === definitionsModule(), true,
     "game/engine/cards/definitions.mjs is the card directory as it stands (node game/tools/engine-definitions.mjs --write)");
-  const playable = index.names.filter((n) => index.resolve(n)?.playable === true);
+  /* The hand-authored ones: a learned definition stored provisional (data/engine/scripts) seats at no table until a played
+     game or Rob confirms it (the execution plan's D5; tests/engine-learned.mjs holds that side). */
+  const playable = index.names.filter((n) => index.resolve(n)?.playable === true && index.resolve(n)?.source === "hand");
   eq([Object.keys(DEFINITIONS).length, playable.every((n) => JSON.stringify(tableDefinition(n)) === JSON.stringify(index.definition(n)))], [playable.length, true],
-    "it holds every playable definition, each the same as the directory's");
+    "it holds every playable hand-authored definition, each the same as the directory's");
   eq([tableDefinition("LIGHTNING BOLT")?.manaCost, tableDefinition("No Such Card")], ["{R}", null], "found by the same folded name, and nothing for a card it does not hold");
 }
 

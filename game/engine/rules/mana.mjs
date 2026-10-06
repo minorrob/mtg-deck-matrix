@@ -29,6 +29,7 @@
  */
 
 export const COLORS = Object.freeze(["W", "U", "B", "R", "G"]);
+import {eventCard} from "../state/index.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
 import {abilitiesOf} from "./layers.mjs";
 
@@ -253,6 +254,33 @@ export function paymentOptions(pool, cost, options = {}, limit = 12) {
   return payments(pool, cost, options, limit);
 }
 
+/* ---- which payment (the plan's X8b): the pool pays more than one way, and its player says which ----
+ *
+ * "Which color pays a generic symbol decides which spell the player can still cast afterwards" (automaticPayment), so a
+ * cast or an ability the pool can pay more than one way is offered all the same, and its player asked which way once it
+ * is taken (rules/actions.mjs, castCostChoice): {W} or {U} for {1}, {G} or 2 life for {G/P}. A way is named by its key --
+ * how much of each mana and how much life -- which travels with the action and is checked again as it is paid.
+ */
+
+/** The ways asked about at most: the first that `payments` finds, each a distinct amount. */
+export const PAY_CHOICES = 12;
+
+/** A payment's name: each mana's count, then the life. */
+export const paymentKey = (payment) => `${KEY_ORDER.map((key) => payment.mana?.[key] ?? 0).join(",")}|${payment.life ?? 0}`;
+
+/** A payment in words: "{W}{U}", "{G} and 2 life", "2 life". */
+export function paymentWords(payment) {
+  const mana = KEY_ORDER.flatMap((key) => Array.from({length: payment.mana?.[key] ?? 0}, () => `{${key}}`)).join("");
+  const life = payment.life > 0 ? `${payment.life} life` : "";
+  return [mana, life].filter(Boolean).join(" and ") || "nothing";
+}
+
+/** The way to pay `key` names, still payable from this pool; with no key, the one way there is (automaticPayment). */
+export function chosenPayment(pool, cost, options = {}, key = undefined) {
+  if (key === undefined || key === null) return automaticPayment(pool, cost, options);
+  return payments(pool, cost, options, PAY_CHOICES).find((way) => paymentKey(way) === key) ?? null;
+}
+
 /* ---- tapping to cast (the plan's X8: a spell cast in one click) ----
  *
  * A spell the pool cannot pay may still be cast in one action when tapping its caster's untapped sources can pay it: each
@@ -438,6 +466,40 @@ export function payWithUnits(state, player, units, indices, amount) {
   for (const unit of picked) {
     if (unit.from === "pool") { state.players[player].manaPool[unit.color] -= 1; continue; }
     state.objects[unit.id].tapped = true;
+    events.push({kind: "GameEventCardTapped", data: {turn: state.turn, phase: state.phase, fields: {card: {...eventCard(state, unit.id), controller: player}, tapped: true}}});
+  }
+  return events;
+}
+
+/* ---- paying "unless" a mana cost with colored symbols (CR 118.12; echo's "{3}{W}{W}", CR 702.30a) ----
+ *
+ * The same units as a generic payment -- the pool's mana, then the payer's plain sources -- each able to pay a symbol of a
+ * color it gives (tapPlans). The ways to pay are told apart by the kinds of unit they spend, as a cast tapped for is; one
+ * way, and it is paid without asking; more, and which is the payer's (CR 605.3a). A cost with {X}, Phyrexian, snow or
+ * monohybrid symbols has no ways here. */
+const unitColors = (unit) => (unit.from === "pool" ? [unit.color] : unit.kind.split(""));
+/** The ways the payer could pay this mana cost now, up to `limit`, with the units they spend: `{units, plans}`. */
+export function unlessPlans(state, player, cost, limit = 12) {
+  const units = paymentUnits(state, player);
+  let parsed = null;
+  try { parsed = parseManaCost(cost); } catch { return {units, plans: []}; }
+  return {units, plans: tapPlans(units.map((unit, id) => ({id, colors: unitColors(unit)})), parsed, limit)};
+}
+/** How one of those ways reads: the units it spends. */
+export const planWords = (units, plan) => plan.taps.map((t) => units[t.id]?.label ?? "a source").join(", ");
+/** Pay it that way: the pool's mana spent, the sources tapped. @returns {Array} events */
+export function payPlan(state, player, units, plan) {
+  const events = [];
+  for (const {id} of plan.taps) {
+    const unit = units[id];
+    if (!unit) throw new Error("That way to pay is no longer there");
+    if (unit.from === "pool") {
+      if ((state.players[player].manaPool[unit.color] ?? 0) < 1) throw new Error("That way to pay is no longer there");
+      state.players[player].manaPool[unit.color] -= 1;
+      continue;
+    }
+    if (!state.objects[unit.id] || state.objects[unit.id].tapped) throw new Error("That way to pay is no longer there");
+    state.objects[unit.id].tapped = true;
     events.push({kind: "GameEventCardTapped", data: {turn: state.turn, phase: state.phase, fields: {card: {cardId: unit.id, name: state.objects[unit.id].card, owner: state.objects[unit.id].owner, controller: player, faceDown: false}, tapped: true}}});
   }
   return events;
@@ -452,7 +514,7 @@ export function payGeneric(state, player, amount) {
   for (const {id} of plainSources(state, player)) {
     if (left <= 0) break;
     state.objects[id].tapped = true;
-    events.push({kind: "GameEventCardTapped", data: {turn: state.turn, phase: state.phase, fields: {card: {cardId: id, name: state.objects[id].card, owner: state.objects[id].owner, controller: player, faceDown: false}, tapped: true}}});
+    events.push({kind: "GameEventCardTapped", data: {turn: state.turn, phase: state.phase, fields: {card: {...eventCard(state, id), controller: player}, tapped: true}}});
     left -= 1;
   }
   return events;

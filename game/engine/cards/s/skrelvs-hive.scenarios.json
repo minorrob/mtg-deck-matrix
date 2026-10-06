@@ -1,0 +1,263 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Skrelv's Hive",
+  "fixtures": {
+    "Venom": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Target opponent gets three poison counters.",
+        "targets": [
+          {
+            "what": "player",
+            "who": "opponent"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "poison",
+            "who": {
+              "target": 0
+            },
+            "count": 3
+          }
+        ]
+      }
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "At the beginning of his upkeep -- not Maya's -- 1 life and a 1/1 Mite with toxic 1",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Skrelv's Hive"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 40
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Skrelv's Hive",
+            "Phyrexian Mite"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Phyrexian Mite",
+            "has": [
+              "Toxic"
+            ],
+            "lacks": [
+              "Lifelink"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Phyrexian Mite",
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Its Mite attacks: a poison counter and 1 damage, and no lifelink while Maya has none",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Skrelv's Hive"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Phyrexian Mite"
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "poison": 1
+        },
+        {
+          "seat": 1,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "life": 38
+        }
+      ]
+    },
+    {
+      "name": "Corrupted: Maya at three poison, Mites have lifelink -- he gains 1 as she gets her fourth",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Venom"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Skrelv's Hive"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Venom",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Phyrexian Mite",
+                "has": [
+                  "Toxic",
+                  "Lifelink"
+                ]
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Bear",
+                "lacks": [
+                  "Lifelink"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Phyrexian Mite"
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "poison": 4
+        },
+        {
+          "seat": 1,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "life": 39
+        }
+      ]
+    }
+  ]
+}

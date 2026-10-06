@@ -91,10 +91,15 @@ export function randomLegalPilot(rng) {
       const pool = options.map((_, index) => index);
       const indices = [];
       const used = new Set();
+      /* And `capped` (no more than one creature attacking The Eternal Wanderer, CR 508.1c): no more of a value than it allows. */
+      const taken = new Map();
       for (let i = 0; i < take && pool.length > 0; i += 1) {
         const [index] = pool.splice(rng.int(pool.length), 1);
         const key = choice.exclusiveBy ? options[index]?.[choice.exclusiveBy] : undefined;
         if (key !== undefined && used.has(key)) continue;
+        const cap = choice.capped ? options[index]?.[choice.capped.by] : undefined;
+        if (cap !== undefined && choice.capped.most?.[cap] !== undefined && (taken.get(cap) ?? 0) >= choice.capped.most[cap]) continue;
+        if (cap !== undefined) taken.set(cap, (taken.get(cap) ?? 0) + 1);
         if (key !== undefined) used.add(key);
         indices.push(index);
       }

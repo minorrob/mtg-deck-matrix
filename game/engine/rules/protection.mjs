@@ -6,7 +6,9 @@
  * A static ability `rule: "protection"` on a permanent: `affects` the permanents that have it, read as they are now
  * (rules/layers.mjs, staticAffects); `players: "you"`, its controller has it too (CR 702.16j); `from` the quality --
  * `{types: [...]}`, a card type, which may be the one its permanent chose as it entered ("$chosen", script/chosen.mjs),
- * or "everything" (CR 702.16k). A source has the quality when it is an object of one of those card types, as it now is.
+ * or "everything" (CR 702.16j), or `{colors: [...]}`, a color -- "protection from black" (Karmic Guide), the keyword compiled
+ * to this static on its own permanent (cards/index.mjs). A source has the quality when it is an object of one of those card
+ * types or colors, as it now is.
  *
  * What protection does is read where each thing happens (DEBT, CR 702.16b-f, j):
  *   Damage from such a source is prevented          rules/replacement.mjs, applyReplacements
@@ -15,11 +17,13 @@
  *   Targeted by a spell or ability from one, never    script/filter.mjs (a permanent, or a player)
  */
 
-import {staticAffects, typesOf, controllerOf} from "./layers.mjs";
+import {staticAffects, typesOf, colorsOf, controllerOf, onceAQuestion} from "./layers.mjs";
 import {chosenFor} from "../script/chosen.mjs";
 
-/* Every protection there is now, each with what it covers and its quality. */
-function protections(state) {
+/* Every protection there is now, each with what it covers and its quality: once a question, since a question asks it of
+   every target candidate. */
+const protections = (state) => onceAQuestion(state, "protections", () => gatherProtections(state));
+function gatherProtections(state) {
   const found = [];
   for (const holderId of state.zones.battlefield ?? []) {
     const holder = state.objects[holderId];
@@ -31,13 +35,17 @@ function protections(state) {
   return found;
 }
 
-/* Whether a source has the quality (CR 702.16a): "everything", or one of the card types, as the source is now -- a spell on
-   the stack, a permanent, a card in a graveyard. */
+/* Whether a source has the quality (CR 702.16a): "everything", one of the card types, or one of the colors (`colors`,
+   "protection from black": Karmic Guide), as the source is now -- a permanent through the layers, a spell on the stack or a
+   card elsewhere as it is. */
 function hasQuality(state, from, sourceId) {
   if (from === "everything") return true;
   if (sourceId === null || sourceId === undefined || !state.objects[sourceId]) return false;
-  const types = state.objects[sourceId].zone === "battlefield" ? typesOf(state, sourceId) : (state.objects[sourceId].types ?? []);
-  return (from?.types ?? []).some((type) => types.includes(type));
+  const onBattlefield = state.objects[sourceId].zone === "battlefield";
+  const types = onBattlefield ? typesOf(state, sourceId) : (state.objects[sourceId].types ?? []);
+  if ((from?.types ?? []).some((type) => types.includes(type))) return true;
+  const colors = onBattlefield ? colorsOf(state, sourceId) : (state.objects[sourceId].colors ?? []);
+  return (from?.colors ?? []).some((color) => colors.includes(color));
 }
 
 /**

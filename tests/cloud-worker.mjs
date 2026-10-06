@@ -87,6 +87,20 @@ eq((await call("GET", "/api/me", {jwt: await token({aud: ["another-app"]})})).st
 eq((await call("GET", "/api/me", {jwt: await token({iss: "https://elsewhere.cloudflareaccess.com"})})).status, 401, "a token from another team: 401");
 eq((await call("GET", "/api/me", {jwt: await token({exp: NOW / 1000 - 120})})).status, 401, "an expired token: 401");
 eq((await call("GET", "/api/me", {jwt: await token({email: undefined, common_name: "service-token-id"})})).status, 401, "a service token, which names no person: 401");
+/* WHERE A RELEASE SEATS A SERVICE TOKEN (SERVICE_SEATS, staging only; the review response's L6): the session's checks,
+   one identity no person can be -- and still only a token Access signed for this application. */
+{
+  const seated = async (jwt) => {
+    const response = await handle(new Request("https://crankmagic.test/api/me", {headers: {"cf-access-jwt-assertion": jwt}}), {...env, SERVICE_SEATS: "on"}, {fetchImpl, now: clock});
+    const text = await response.text();
+    return {status: response.status, json: text ? JSON.parse(text) : null};
+  };
+  const me = await seated(await token({email: undefined, common_name: "service-token-id"}));
+  eq([me.status, me.json?.email], [200, "service:session-checks"], "seated: a service token Access admitted is the session's checks, named as no person's address");
+  eq((await seated(await token({email: undefined}))).status, 401, "a token naming neither a person nor a service token: still 401");
+  eq((await seated(await token({email: undefined, common_name: "service-token-id", aud: ["another-app"]}))).status, 401, "a service token for another Access application: still 401");
+  eq((await seated(await token({}))).json?.email, "rob@example.com", "and a person is still themself");
+}
 eq((await call("GET", "/api/me", {jwt: await token({}, {header: {alg: "HS256"}})})).status, 401, "a token claiming another algorithm: 401");
 keyFetches = 0;
 eq((await call("GET", "/api/me", {jwt: await token({}, {key: rotated})})).status, 401, "a key the team never published: 401");
@@ -163,6 +177,19 @@ clock = NOW;
 const back = await call("GET", "/api/auth/login?to=%23decks%3Fdeck%3Dabc");
 eq([back.status, back.headers.get("location")], [302, "https://crankmagic.test/#decks?deck=abc"], "after sign-in, back to where the person was");
 eq((await call("GET", "/api/auth/login?to=https://evil.example/")).headers.get("location"), "https://crankmagic.test/", "and never to another site");
+
+/* AN INVITATION'S LINK comes back to the app with its code, once Access has let the person in -- a path, which Access's
+   sign-in keeps, where it drops a fragment. Anything but an invitation's shape is not a link. */
+{
+  const code = "AbC_dEf-0123456789xyzXYZ0123456789abcdEFGH0";
+  const joined = await call("GET", `/api/join/table0123abcd/${code}`);
+  eq([joined.status, joined.headers.get("location"), joined.headers.get("cache-control")], [302, `https://crankmagic.test/#table/table0123abcd/${code}`, "no-store"], "an invitation's link, opened signed in, comes back to the app at the seat's fragment, never cached");
+  eq((await call("GET", "/api/join/table0123abcd/short")).status, 404, "a code of the wrong shape is no link");
+  eq((await call("GET", `/api/join/Table_0123/${code}`)).status, 404, "nor a table id of the wrong shape");
+  eq((await call("GET", `/api/join/table0123abcd/${code}/../../evil`)).status, 404, "nor anything after the code");
+  const posted = await call("POST", `/api/join/table0123abcd/${code}`);
+  eq([posted.status, posted.headers.get("location")], [403, null], "and only a GET is a link: a POST from elsewhere is refused before it");
+}
 eq((await call("GET", "/api/nothing")).status, 404, "an unknown endpoint: 404");
 eq(me.headers.get("x-content-type-options") + " " + me.headers.get("cache-control"), "nosniff no-store", "answers are never sniffed or cached");
 

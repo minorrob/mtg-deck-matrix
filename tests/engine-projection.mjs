@@ -23,7 +23,7 @@
  * through a field somebody adds later, which is exactly how this kind of bug arrives.
  */
 import assert from "node:assert/strict";
-import {createState, addObject, cardsIn} from "../game/engine/state/index.mjs";
+import {createState, addObject, cardsIn, moveObject} from "../game/engine/state/index.mjs";
 import {beginGame, advance, currentPhase, awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {legalActions, applyAction} from "../game/engine/rules/actions.mjs";
 import {passPriority} from "../game/engine/rules/priority.mjs";
@@ -193,6 +193,21 @@ function everyString(value, out = []) {
     eq(spectator.players[seat].zones.Hand.cards, [],
       seat === 0 ? "and sees no hand at all, which is the safe default for anyone not in a seat" : true);
   checks -= 3;
+}
+
+/* ---- a face-down permanent (CR 708): present to all, a 2/2 creature with no name; the card its controller's alone to
+   look at (CR 708.5) -- manifested here from Krenko's library, whose cards' names no other seat holds ---- */
+{
+  const s = table();
+  const id = moveObject(s, cardsIn(s, "library", 1)[0], "battlefield", null, {faceDown: true});
+  for (let seat = 0; seat < 4; seat += 1) {
+    const card = projectFor(s, seat).players[1].zones.Battlefield.cards.find((c) => c.cardId === id);
+    eq([card.name, card.faceDown, card.types, card.power, card.toughness, card.faceDownName], [null, true, ["Creature"], 2, 2, seat === 1 ? "Forest of 1" : undefined],
+      seat === 0 ? "every seat sees a face-down 2/2 creature with no name, and only Krenko, its controller, which card it is" : true);
+    if (seat !== 1) ok(!everyString(projectFor(s, seat)).includes("Forest of 1"), seat === 0 ? "and nowhere in another seat's document is it named" : true);
+    checks -= seat === 0 ? 0 : seat === 1 ? 1 : 2;
+  }
+  eq(projectFor(s, 1).players[1].zones.Battlefield.hiddenCount, 1, "its own zone counts it as hidden: it has no name");
 }
 
 /* ---- THE PROPERTY: a whole random game, every seat, every decision point ---- */

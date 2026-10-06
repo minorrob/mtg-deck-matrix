@@ -1,0 +1,111 @@
+{
+ "schema": "CrankCompiledCard@1",
+ "name": "Koma, World-Eater",
+ "oracleId": "1ebf2142-f171-40cd-8143-15f50084b707",
+ "oracleHash": "88f40ca9f8908bdd",
+ "status": "provisional",
+ "script": {
+  "schema": "CrankCardScript@1",
+  "identity": {
+   "name": "Koma, World-Eater",
+   "oracleId": "1ebf2142-f171-40cd-8143-15f50084b707",
+   "supertypes": [
+    "Legendary"
+   ],
+   "types": [
+    "Creature"
+   ],
+   "subtypes": [
+    "Serpent"
+   ],
+   "manaCost": "{3}{G}{G}{U}{U}",
+   "colors": [
+    "G",
+    "U"
+   ],
+   "colorIdentity": [
+    "G",
+    "U"
+   ],
+   "power": 8,
+   "toughness": 12
+  },
+  "oracleText": "This spell can't be countered.\nTrample, ward {4}\nWhenever Koma deals combat damage to a player, create four 3/3 blue Serpent creature tokens named Koma's Coil.",
+  "source": "compiler",
+  "model": "x10-session",
+  "abilities": [
+   {
+    "kind": "static",
+    "text": "This spell can't be countered.",
+    "rule": "cant-be-countered",
+    "affects": {
+     "what": "spell",
+     "self": true
+    }
+   },
+   {
+    "kind": "keyword",
+    "text": "Trample",
+    "keyword": "trample"
+   },
+   {
+    "kind": "keyword",
+    "text": "ward {4}",
+    "keyword": "ward",
+    "cost": [
+     {
+      "atom": "mana",
+      "cost": "{4}"
+     }
+    ]
+   },
+   {
+    "kind": "triggered",
+    "text": "Whenever Koma deals combat damage to a player, create four 3/3 blue Serpent creature tokens named Koma's Coil.",
+    "trigger": {
+     "on": "damage dealt",
+     "who": "self",
+     "combat": true,
+     "to": "player"
+    },
+    "effects": [
+     {
+      "effect": "createToken",
+      "count": 4,
+      "token": {
+       "name": "Koma's Coil",
+       "types": [
+        "Creature"
+       ],
+       "subtypes": [
+        "Serpent"
+       ],
+       "colors": [
+        "U"
+       ],
+       "power": 3,
+       "toughness": 3
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "checks": {
+  "schema": "pass",
+  "fidelity": "pass",
+  "readBack": "not run",
+  "smoke": {
+   "played": true,
+   "resolutions": 1
+  }
+ },
+ "crFlags": [],
+ "notes": "",
+ "models": {
+  "writer": "x10-session",
+  "readBack": null
+ },
+ "attempts": 1,
+ "compiledAt": "2026-10-06T16:16:06.107Z"
+}

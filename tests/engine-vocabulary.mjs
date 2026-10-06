@@ -47,8 +47,8 @@ const eq = (a, b, m) => { assert.deepEqual(a, b, m); checks += 1; };
     if (!flat.startsWith("- ")) continue;
     for (const [, name] of flat.matchAll(/`([^`]+)`/g)) named.add(name);
   }
-  eq(named.size, 81,
-    "eighty-one names are written in backticks in §12.2 — seventy-nine effect primitives (regenerate joined in batch 28, addPhase in batch 33, becomeCopy in batch 58, digUntil in batch 62, poison in batch 64, earthbend and changeTargets in batch 65, winGame in batch 68, goad in batch 69, empowerJace on 2026-10-04) and the two symbolic cost atoms");
+  eq(named.size, 82,
+    "eighty-two names are written in backticks in §12.2 — eighty effect primitives (regenerate joined in batch 28, addPhase in batch 33, becomeCopy in batch 58, digUntil in batch 62, poison in batch 64, earthbend and changeTargets in batch 65, winGame in batch 68, goad in batch 69, empowerJace on 2026-10-04, manifest on 2026-10-06) and the two symbolic cost atoms");
 
   const missing = [...named].filter((name) => !ALL_PRIMITIVES.includes(name) && !COST_ATOMS.includes(name));
   eq(missing, [],

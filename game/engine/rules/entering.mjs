@@ -25,6 +25,7 @@ import {creatureTypesInGame} from "../script/effects/asking.mjs";
 import {copyOnto} from "../script/effects/permanents.mjs";
 import {ownEntering} from "./replacement.mjs";
 import {collectTriggers} from "./trigger.mjs";
+import {countersPlaced} from "./statics.mjs";
 
 /* The cards in the controller's hand a reveal could show ("an Island or Swamp card"). */
 const revealable = (state, player, selector) => cardsIn(state, "hand", player).filter((id) => matchesSelector({...selector, what: "card", zone: "hand"}, state, id, {controller: player}));
@@ -125,7 +126,8 @@ export function resolveEnteringChoice(state, awaiting, indices) {
       /* "Enter tapped as a copy" (Vesuva); and what the copied card says of its own entering. */
       const own = ownEntering(state, {objectId: awaiting.objectId, player: object.controller, types: object.types, abilities: object.abilities});
       if (awaiting.copy?.tapped || own.tapped) object.tapped = true;
-      for (const [counter, count] of Object.entries(own.counters)) object.counters[counter] = (object.counters[counter] ?? 0) + count;
+      /* Put on it as it enters (CR 122.6), by its controller (122.6a): "twice that many instead" sees them. */
+      for (const [counter, count] of Object.entries(own.counters)) object.counters[counter] = (object.counters[counter] ?? 0) + countersPlaced(state, awaiting.objectId, counter, count, object.controller);
       for (const ask of own.asks) queueEnteringQuestion(state, awaiting.objectId, ask);
       if (object.tapped && asked?.arrival) asked.arrival.data.fields.enteredTapped = true;
     }

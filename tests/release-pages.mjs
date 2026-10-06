@@ -140,7 +140,7 @@ eq(pw.vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: 
   "and it trusts the CrankMagic accounts application (crankmagic.com/api/*, the invite list), read from its sign-in redirect");
 const staging = build({source: worktreeSource(), profileName: "cloud-staging"});
 eq(staging.problems, [], "the staging build is complete, its Access application's team and audience included");
-eq(JSON.parse(staging.built.get("wrangler.jsonc").toString("utf8")).vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5", PLAYTEST_TABLES: "on"},
+eq(JSON.parse(staging.built.get("wrangler.jsonc").toString("utf8")).vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5", PLAYTEST_TABLES: "on", SERVICE_SEATS: "on"},
   "and the Worker trusts that team's keys for that application only (read from the sign-in redirect's kid, and confirmed by Rob from the dashboard); its tables are playtest tables (M8b)");
 const sb = staging.built, sw2 = JSON.parse(sb.get("wrangler.jsonc").toString("utf8"));
 eq([sw2.name, sw2.main, sw2.assets, sw2.routes], ["crankmagic-staging", PLAY_WORKER, {directory: "./", binding: "ASSETS", run_worker_first: ["/api/*"]}, [{pattern: "staging.crankmagic.com", custom_domain: true}]],
@@ -183,6 +183,9 @@ ok(verify(playConfig(sb, (c) => ({...c, migrations: []})), stagingProfile).some(
 ok(verify(playConfig(sb, (c) => ({...c, main: "cloud/worker.mjs"})), stagingProfile).some((p) => p.includes(`does not run ${PLAY_WORKER}`)), "and one that runs the Worker without the table");
 ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, PLAYTEST_TABLES: "off"}})), stagingProfile).some((p) => p.includes("playtest tables are not switched on")), "and staging's playtest tables switched off");
 ok(verify(playConfig(built, (c) => ({...c, vars: {...c.vars, PLAYTEST_TABLES: "on"}})), profile).some((p) => p.includes("full record would be downloadable")), "production with playtest tables on is refused: every finished game's full record would be downloadable");
+ok(verify(playConfig(built, (c) => ({...c, vars: {...c.vars, SERVICE_SEATS: "on"}})), profile).some((p) => p.includes("SERVICE_SEATS is on")), "production seating a service token is refused: an automated check would be a person there");
+ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, SERVICE_SEATS: undefined}})), stagingProfile).some((p) => p.includes("service token is not seated")), "and staging without it, its session checks shut out");
+eq(pw.vars.SERVICE_SEATS, undefined, "production's Worker never seats a service token");
 ok(verify(playConfig(built, (c) => ({...c, durable_objects: sw2.durable_objects})), profile).some((p) => p.includes("release without Play")), "and production binding a table");
 ok(verify(new Map([...sb, [".assetsignore", Buffer.from(sb.get(".assetsignore").toString().replace("game/\n", ""))]]), stagingProfile).some((p) => p.includes("engine's source as files")), "a Play release that would publish the engine's source is named");
 ok(verify(without(sb, "game/room/room.mjs"), stagingProfile).some((p) => p.includes("game/room/room.mjs")), "one missing a module the table imports is named");

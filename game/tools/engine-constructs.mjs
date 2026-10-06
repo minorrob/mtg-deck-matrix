@@ -28,6 +28,9 @@ export const FORGE_API = {
   Play: "play", Discover: "discover",
   /* DigUntil ("reveal cards until you reveal a land card", batch 62). */
   DigUntil: "digUntil",
+  /* Manifest ("its controller manifests the top card of their library", Reality Shift; claude/cards-faces-class): the top
+     card onto the battlefield face down, a 2/2 its controller alone may look at, turned face up for its mana cost (CR 701.40). */
+  Manifest: "manifest",
   /* ManaReflected ("any color that a land an opponent controls could produce", batch 50): addMana's reflect and among. */
   Mana: "addMana", ManaReflected: "addMana", Tap: "tap", Untap: "untap", UntapAll: "untapAll",
   ReduceCost: "costReduction", AlternativeCost: "alternativeCost",
@@ -106,7 +109,10 @@ export const FORGE_REPLACEMENT = {Moved: "replacement",
   Counter: "rules/statics",
   /* Damage replaced (batch 71): doubled, plus N, prevented -- for a while, a shield, or with what follows "that many"
      (CR 615.5) -- and redirected to what the holder enchants (CR 614.9); by its source, to whom, combat or not. */
-  DamageDone: "rules/replacement"};
+  DamageDone: "rules/replacement",
+  /* "If you would proliferate, proliferate twice instead" (Tekuthal, Inquiry Dominus): the static `proliferate-twice`, each
+     one doubling its controller's proliferates as one reaches the head of a resolution (script/resolution.mjs). */
+  Proliferate: "script/resolution"};
 
 /* Keywords the engine implements BEHAVIORALLY, as opposed to merely declaring the word. Declaring
    `Flying` in the vocabulary is what lets a card script say it; `keywords/combat.mjs` is what makes
@@ -150,12 +156,29 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   etbCounter: "putCounter",
   /* Encore (X5f): the card's activated ability in its owner's graveyard, a hasty token copy for each opponent, each required
      to attack that opponent this turn (cards/index.mjs, rules/combat.mjs). */
-  Encore: "copyPermanent"};
+  Encore: "copyPermanent",
+  /* Echo (CR 702.30a; Karmic Guide, AI 1's deck): the upkeep trigger, its intervening "if" (came under your control since
+     your last upkeep, script/condition.mjs), and "sacrifice it unless you pay" a mana cost with its colors (cards/index.mjs,
+     effects/asking.mjs). */
+  Echo: "unlessPays",
+  /* Class (CR 716; Innkeeper's Talent, claude/cards-faces-class): each level bar an activated ability, "this Class's level
+     becomes N", at sorcery speed from level N-1 (setState's `level`), and the level's abilities had from that level -- a
+     static or activated one on that condition, a triggered one gated as it triggers (cards/index.mjs, classLevel). Named,
+     not built: a replacement or a keyword ability gained at a level (refused by name). */
+  Class: "setState",
+  /* Paradigm (CR 702.192a; Germination Practicum): the spell exiled as it resolves, and the first time one of its name
+     resolves for a player, a copy cast free at each of their precombat main phases (rules/stack.mjs, play's copyOf). */
+  Paradigm: "play"};
+
+/* "PROTECTION FROM [QUALITY]" printed as a keyword (CR 702.16a; Karmic Guide's "protection from black"): built for the
+   qualities rules/protection.mjs reads -- a color, a card type, everything -- compiled from the keyword (cards/index.mjs).
+   Not a player, a name, "multicolored", "each color" or "the color of your choice". */
+const PROTECTION_QUALITIES = /^protection from (white|blue|black|red|green|everything|artifacts|creatures|enchantments|instants|lands|planeswalkers|sorceries)$/i;
 
 /** Whether a keyword is built: one a rules module acts on, an ability keyword whose primitive is built, or a deck rule the
     table holds. The one rule `missingFor` and the catalog (engine-catalog.mjs) both read. */
 export const keywordBuilt = (word) => [...BEHAVIORAL_KEYWORDS].some((k) => k.toLowerCase() === word.toLowerCase())
-  || Boolean(ABILITY_KEYWORDS[word] && isBuilt(ABILITY_KEYWORDS[word])) || Boolean(DECK_RULE_KEYWORDS[word]);
+  || Boolean(ABILITY_KEYWORDS[word] && isBuilt(ABILITY_KEYWORDS[word])) || Boolean(DECK_RULE_KEYWORDS[word]) || PROTECTION_QUALITIES.test(word);
 
 
 /* What a card needs that the engine has not got. Empty means the engine can play it. */
@@ -252,6 +275,8 @@ export const FORGE_COUNTS = Object.freeze({
   Converge: {name: "Colors of mana spent (converge)", status: "missing"},
   /* Rob's Priority Batch 10.3, its twenty-first slice: the mana spent to cast an object, by color (rules/actions.mjs). */
   Adamant: {name: "Mana of a color spent to cast it (adamant; \"if {G}{G} was spent to cast it\")", status: "built", engine: "condition {spent: {color: n}} (script/condition.mjs)"},
+  /* Fblthp, the Lost (AI 1's deck): "if it entered from your library or was cast from your library". */
+  wasCastFromYourLibrary: {name: "It entered from, or was cast from, your library", status: "built", engine: "condition {cameFrom: \"library\"} (script/condition.mjs)"},
   Threshold: {name: "Threshold (seven cards in your graveyard)", status: "missing"},
   Morbid: {name: "Morbid (a creature died this turn)", status: "missing"},
   UrzaLands: {name: "The Urza lands", status: "missing"},

@@ -36,10 +36,11 @@
 
 import {holdArrival} from "./entering.mjs";
 import {conditionHolds} from "../script/condition.mjs";
-import {moveObject, addObject, removeObject} from "../state/index.mjs";
+import {moveObject, addObject, removeObject, eventCard} from "../state/index.mjs";
 import {enteringModifications} from "./replacement.mjs";
 import {countersPlaced} from "./statics.mjs";
 import {beginResolution, resolutionPending} from "../script/resolution.mjs";
+import {delayedTrigger} from "../script/effects/permanents.mjs";
 import {recheckTargets, factsOf, modalScript} from "../script/bind.mjs";
 
 /* The projection contract (§12.1) names these zones with a capital, and the telemetry matches on
@@ -51,10 +52,7 @@ const ZONE_LABEL = {
 
 const event = (kind, state, fields) => ({kind, data: {turn: state.turn, phase: state.phase, fields}});
 
-const cardRef = (state, id) => {
-  const o = state.objects[id];
-  return o ? {cardId: o.id, name: o.card, owner: o.owner, controller: o.controller, faceDown: false} : null;
-};
+const cardRef = eventCard;
 
 /**
  * "Becomes the target of a spell or ability" (CR 115.1, 702.21a): one event for each object a stack entry is aimed at,
@@ -124,7 +122,7 @@ export function pushSpell(state, objectId, {controller, targets = [], permanent 
  * `sourceId` may be null for an ability whose source has already left the battlefield, which is a
  * legal position (CR 113.7a) rather than a bug.
  */
-export function pushAbility(state, {sourceId = null, controller, abilityId, kind = "ability", targets = [], script = null, about = null, x = null, lastKnown = null, spent = null} = {}) {
+export function pushAbility(state, {sourceId = null, controller, abilityId, kind = "ability", targets = [], script = null, about = null, x = null, lastKnown = null, spent = null, sourceTransforms = undefined} = {}) {
   if (!abilityId) throw new Error("An ability on the stack needs an abilityId, or nothing can resolve it");
   const source = sourceId === null ? null : state.objects[sourceId];
   const entry = entryFor(state, {
@@ -142,6 +140,11 @@ export function pushAbility(state, {sourceId = null, controller, abilityId, kind
   if (lastKnown) entry.lastKnown = structuredClone(lastKnown);
   /* The mana spent to cast its source, as it triggered (rules/trigger.mjs): its "if" is asked again as it resolves. */
   if (spent) entry.spent = {...spent};
+  /* "Transform Venat" (CR 701.27f): how many times a double-faced source had transformed as its ability was put on the
+     stack -- or, a delayed trigger's, as it was made (effects/permanents.mjs) -- for an instruction to transform it to be
+     ignored once it has since. */
+  const transforms = sourceTransforms ?? (source?.mdfc && source.zone === "battlefield" ? source.transforms ?? 0 : undefined);
+  if (transforms !== undefined) entry.sourceTransforms = transforms;
   state.stack.push(entry);
   return entry;
 }
@@ -232,6 +235,7 @@ export function resolveTop(state, effect = null, rng = null) {
   const context = {controller: entry.playerId, source, x, ...(entry.about ? {about: entry.about} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {}), ...(attached !== null ? {attached} : {}),
     /* How the spell was cast, for its own conditions ("if this spell was cast from a graveyard"; rules/actions.mjs). */
     ...(entry.cast ? {cast: entry.cast} : {}),
+    ...(entry.sourceTransforms !== undefined ? {sourceTransforms: entry.sourceTransforms} : {}),
     /* What its permanent chose as it entered: "draw a card for each creature of the chosen type". */
     ...(source !== null && state.objects[source]?.chosen !== undefined ? {chosen: state.objects[source].chosen} : {})};
   /* "Another target" asked again with its source gone (Oblivion Ring destroyed with its trigger waiting): another than the
@@ -265,12 +269,44 @@ export function finishResolving(state) {
   return finishTop(state, entry, [], false);
 }
 
+/* PARADIGM (CR 702.192a), as a spell that has it resolves: null for a spell without it. Its first ability -- only when no
+   spell of that name its controller controlled has resolved before this game -- makes a delayed trigger that lasts the
+   rest of the game: at each of its controller's precombat main phases, a copy of the spell is made in exile, and they
+   may cast it free (rules/trigger.mjs; effects/asking.mjs, play's `copyOf`).
+   The copy is of the object as it resolves, its copiable values (CR 707.2); it is cast, so what watches casts sees it
+   (CR 707.12). The names of the spells with paradigm that have resolved are kept per player: every spell with such a name
+   has paradigm -- the card's own keyword, and a copy's (CR 707.2) -- and nothing here takes an ability from a spell on the
+   stack, so those are the only names the question can be asked of. A copy counts: it is a spell its controller controls.
+   Its second ability, "exile this spell", is the caller's: the card goes to exile, and a copy ceases to exist (704.5e). */
+function paradigmResolves(state, entry) {
+  if (entry.kind !== "spell" || entry.objectId === null) return null;
+  const object = state.objects[entry.objectId];
+  if (!object || !(object.abilities ?? []).some((a) => a.kind === "static" && a.rule === "paradigm")) return null;
+  const resolved = (state.players[entry.playerId].paradigmResolved ??= []);
+  if (resolved.includes(object.card)) return {delayed: null};
+  resolved.push(object.card);
+  const copyOf = {card: object.card, types: [...(object.types ?? [])], manaCost: object.manaCost ?? null, abilities: structuredClone(object.abilities ?? []),
+    power: object.power ?? null, toughness: object.toughness ?? null, keywords: [...(object.keywords ?? [])],
+    ...(object.spell ? {spell: structuredClone(object.spell)} : {}), ...(object.subtypes ? {subtypes: [...object.subtypes]} : {}),
+    ...(object.supertypes ? {supertypes: [...object.supertypes]} : {}), ...(object.colors ? {colors: [...object.colors]} : {}),
+    ...(object.colorIdentity ? {colorIdentity: [...object.colorIdentity]} : {})};
+  const delayed = {at: "precombat main", yourTurn: true, forever: true, controller: entry.playerId, source: null,
+    text: `Paradigm: you may cast a copy of ${object.card} without paying its mana cost.`,
+    effects: [{effect: "play", copyOf, free: true}]};
+  (state.delayedTriggers ??= []).push(delayed);
+  return {delayed};
+}
+
 /* The entry leaves the stack: a permanent spell to the battlefield, an instant or sorcery (or a spell that did not
    resolve) to its owner's graveyard, and an ability to nowhere. */
 function finishTop(state, entry, events, fizzled, attachTo = null) {
   /* This entry, not whatever is on top: a copy it made as it resolved is above it (pushCopy). */
   const at = state.stack.indexOf(entry);
   if (at >= 0) state.stack.splice(at, 1);
+
+  /* PARADIGM'S TWO SPELL ABILITIES (CR 702.192a), the last of the spell's resolution: one that did not resolve does neither. */
+  const paradigm = fizzled ? null : paradigmResolves(state, entry);
+  const exiles = paradigm !== null;
 
   /* A copy leaves the stack and ceases to exist (CR 707.10a, 704.5e) -- an instant's or sorcery's, or one that did not
      resolve. A copy of a permanent spell that resolves becomes a token instead, and is no longer a copy (CR 608.3f). */
@@ -285,7 +321,17 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
        its OWNER's graveyard as the final part of its resolution — not the graveyard of whoever
        cast it, which is a different player whenever a card has been borrowed. */
     /* Cast with flashback, it is exiled instead of going anywhere else (CR 702.34a): resolved, or fizzled. */
-    const to = entry.permanent && !fizzled ? "battlefield" : entry.flashback || entry.graveyardToExile ? "exile" : "graveyard";
+    /* REBOUND (CR 702.88a): an instant or sorcery cast from its owner's hand that resolves is exiled instead of going to the
+       graveyard, and at the beginning of its caster's next upkeep they may cast it from exile without paying its mana cost
+       (below). Countered, or every target illegal, and it does not resolve: no rebound (the card's ruling); a copy was not
+       cast (CR 707.10) and has ceased to exist above. Instances are redundant (702.88c). */
+    const rebound = !fizzled && entry.cast?.from === "hand"
+      && (state.objects[entry.objectId].abilities ?? []).some((a) => a.kind === "static" && a.rule === "rebound");
+    /* CAST AS AN ADVENTURE AND RESOLVED (CR 715.3d): its controller exiles it rather than putting it into its owner's
+       graveyard -- one that did not resolve goes where any spell would. */
+    const adventured = entry.adventure === true && !fizzled;
+    /* "Exile this spell" (paradigm, CR 702.192a): it resolved, and is exiled as the last of it. */
+    const to = entry.permanent && !fizzled ? "battlefield" : entry.flashback || entry.graveyardToExile || rebound || adventured || exiles ? "exile" : "graveyard";
     /* CR 614.12, asked before the move: a permanent coming off the stack enters tapped or with
        counters as ONE event, and the abilities that say so are on the spell, not on anything that
        is on the battlefield yet. */
@@ -295,9 +341,24 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
         types: object.types, abilities: object.abilities, x: entry.x ?? 0, escaped: entry.escaped === true, kicked: entry.kicked ?? 0})
       : null;
     const arrived = moveObject(state, entry.objectId, to, to === "graveyard" ? owner : null);
+    /* Rebound's delayed trigger (CR 702.88a, 603.7d: its controller the spell's): at the beginning of THEIR next upkeep, the
+       card in exile -- the object it now is, so one that leaves exile meanwhile is not cast (CR 400.7) -- may be cast
+       without paying its mana cost, as the trigger resolves (CR 608.2g; effects/asking.mjs, `play`), or left there for good. */
+    if (rebound && state.objects[arrived]?.zone === "exile")
+      delayedTrigger(state, {at: "upkeep", yours: true, text: `Rebound: you may cast ${card.name} from exile without paying its mana cost.`,
+        effects: [{effect: "play", from: "targets", targets: [arrived], free: true}]}, {controller: entry.playerId, source: arrived});
+    /* "Or was cast from your library" (Fblthp, the Lost; script/condition.mjs, `cameFrom`): a permanent spell cast from a library. */
+    if (to === "battlefield" && entry.cast?.from === "library") state.objects[arrived].cameFrom = {zone: "library", owner, cast: true};
+    /* The delayed trigger's source is the card, now in exile (CR 603.7d: the source of the ability that made it). */
+    if (paradigm?.delayed) paradigm.delayed.source = arrived;
     /* CR 608.3a: it enters under its caster's control -- not its owner's, when a card was cast by another player (Tinybones,
        the Pickpocket casting a card from an opponent's graveyard). */
     if (to === "battlefield") state.objects[arrived].controller = entry.playerId;
+    /* And for as long as it remains exiled, that player may cast it -- as itself, not as an Adventure this way (CR 715.3d;
+       rules/actions.mjs, adventureFrom) -- or play it, a land adventurer card. A card that moves is a new object (CR 400.7)
+       and leaves the permission behind. */
+    if (adventured && state.objects[arrived]) (state.effects ??= []).push({id: `adventure:${arrived}`, rule: "may-play", affects: {ids: [arrived]}, player: entry.playerId,
+      ...((state.objects[arrived].types ?? []).includes("Land") ? {} : {spellsOnly: true}), until: "ever", notAdventure: true, madeOnTurn: state.turn, sourceController: entry.playerId});
     /* An Aura enters attached to what it was cast at (CR 303.4f). */
     if (to === "battlefield" && attachTo !== null && state.objects[attachTo]) {
       state.objects[arrived].attachedTo = attachTo;
@@ -316,19 +377,23 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     /* And for its impending cost (CR 702.176a): marked, with its N time counters (put on it as it enters, CR 122.6). */
     if (to === "battlefield" && entry.impending) {
       state.objects[arrived].impending = true;
-      state.objects[arrived].counters.time = (state.objects[arrived].counters.time ?? 0) + countersPlaced(state, arrived, "time", entry.impending);
+      state.objects[arrived].counters.time = (state.objects[arrived].counters.time ?? 0) + countersPlaced(state, arrived, "time", entry.impending, entry.playerId);
     }
     /* And the mana spent to cast it (rules/actions.mjs): "if {G}{G} was spent to cast it" asks the permanent. */
     if (to === "battlefield" && object.spent) state.objects[arrived].spent = {...object.spent};
     /* "If you cast a creature spell this way, it gains haste until end of turn" (rules/actions.mjs, castGains). */
     if (to === "battlefield" && (object.castGains ?? []).length)
       (state.effects ??= []).push({id: `cast-gains:${arrived}`, layer: 6, affects: {ids: [arrived]}, apply: {addKeywords: [...object.castGains]}, until: "end-of-turn", sourceController: entry.playerId});
+    /* "It gains 'When this permanent is put into a graveyard from the battlefield, ...'" (Serra Paragon; rules/actions.mjs,
+       castGrants): for as long as it is this permanent (CR 611.2a, 400.7), in layer 6 (CR 613.1f). */
+    if (to === "battlefield" && (object.castGrants ?? []).length)
+      (state.effects ??= []).push({id: `cast-grants:${arrived}`, layer: 6, affects: {ids: [arrived]}, apply: {addAbilities: structuredClone(object.castGrants)}, until: null, sourceController: entry.playerId});
     if (entering) {
       if (entering.tapped) state.objects[arrived].tapped = true;
       for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: arrived, ...ask});
-      /* Counters it enters with are put on it (CR 122.6): "twice that many instead" sees them. */
+      /* Counters it enters with are put on it (CR 122.6) -- by its controller (122.6a): "twice that many instead" sees them. */
       for (const [counter, count] of Object.entries(entering.counters)) {
-        state.objects[arrived].counters[counter] = (state.objects[arrived].counters[counter] ?? 0) + countersPlaced(state, arrived, counter, count);
+        state.objects[arrived].counters[counter] = (state.objects[arrived].counters[counter] ?? 0) + countersPlaced(state, arrived, counter, count, entry.playerId);
       }
     }
     events.push(event("GameEventCardChangeZone", state, {
@@ -358,5 +423,5 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
  */
 export function stackProjection(state) {
   /* How a spell was cast (`cast`, rules/actions.mjs) is the engine's, for its conditions: the board's contract is as it was. */
-  return state.stack.map(({objectId, permanent, script, cast, ...shown}) => ({...shown}));
+  return state.stack.map(({objectId, permanent, script, cast, sourceTransforms, ...shown}) => ({...shown}));
 }

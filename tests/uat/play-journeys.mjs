@@ -35,6 +35,7 @@ import {openBrowser, loadLiveState, ROOT} from "./browser-runner.mjs";
 import {basicCards} from "../../game/room/room.mjs";
 import {GameTable} from "../../cloud/game-room.mjs";
 import {build, worktreeSource} from "../../tools/release-pages.mjs";
+import {joinLocation} from "../../cloud/worker.mjs";
 
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1; console.log(`  ok  ${m}`);};
@@ -118,6 +119,8 @@ async function person(email, viewport, {fullscreen = true} = {}) {
   if (stub) await stub(page);
   await loadLiveState(page, base);
   await page.route(`${base}/index.html*`, (r) => r.fulfill({contentType: "text/html; charset=utf-8", body: PAGE}));
+  /* The app at "/", where an invitation's link comes back to (cloud/worker.mjs, joinLocation). */
+  await page.route((url) => url.origin === base && url.pathname === "/", (r) => r.fulfill({contentType: "text/html; charset=utf-8", body: PAGE}));
   await page.route(`${base}/api/me`, (r) => r.fulfill({json: {email}}));
   await page.route(`${base}/api/library**`, (r) => r.request().method() === "GET" ? r.fulfill({json: {head: null}})
     : r.fulfill({json: {head: {id: "00000000-0000-4000-8000-000000000000", revision: 1, checksum: "x", device: "test", createdAt: new Date().toISOString()}}}));
@@ -169,7 +172,7 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
   await rob.page.locator("#cm-table-link").waitFor();
   const link = await rob.page.inputValue("#cm-table-link");
   await rob.page.keyboard.press("Escape");
-  await maya.page.goto(link.replace(/^https?:\/\/[^/]+/, base));
+  await maya.page.goto(joinLocation(new URL(link.replace(/^https?:\/\/[^/]+/, base))));   /* the Worker's answer to the link */
   await maya.page.waitForFunction(() => /#table\?id=/.test(location.hash), null, {timeout: 30000});
   await maya.page.locator(".cm-cloud-table .cm-lobby-seat").first().waitFor({timeout: 30000});
   eq((await maya.page.locator(".cm-lobby-seat[data-seat='1'] h3").textContent()).trim(), "Seat 2 · You", `table ${n}: Maya opens the invite on her phone held sideways and lands on her seat`);

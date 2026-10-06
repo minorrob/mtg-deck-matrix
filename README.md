@@ -504,7 +504,11 @@ loyalty taking the combat damage, nothing dealt when it is gone, and attacking i
 restrictions, taxes and triggers unless they say "or planeswalkers you control". `engine-tap-to-cast` holds a spell
 the pool cannot pay cast in one action by tapping its caster's plain sources: without asking when there is one way, asked
 when there are more, the least flexible first; mana already in the pool, {X} and Phyrexian costs, a painland, a source of
-two mana and a summoning-sick creature left to tapping by hand. `engine-cards-pb1` holds what the scenarios of Rob's
+two mana and a summoning-sick creature left to tapping by hand. `engine-pay-choice` holds a cast or an ability the pool
+pays more than one way offered and asking which way (X8b): two colors for generic, a Phyrexian symbol's mana or life, a
+hybrid; one way asks nothing, a way gone from the pool is refused, and the house pilot pays with mana. `staging-check`
+holds `tools/staging-check.mjs`, a session reading staging back through its Access service token: the release, both
+pages' version and the seated identity, and what is wrong when Access refuses or the release is not the one expected. `engine-cards-pb1` holds what the scenarios of Rob's
 priority list's first cards cannot reach: a creature that can't block never offered as a blocker (on itself, on a
 selector, for a turn), "destroy all other creatures" sparing only what the spell made, every counter removed, and "choose
 one or both"; `engine-cards-pb2`, the next slice's: exhaust once per object (a new object may again), an ability of a
@@ -649,6 +653,63 @@ every selector, and back in, the same objects, at their controller's untap; a pl
 life total that can't change, until that player's next turn.
 `engine-exigent` holds Emrakul, the Exigent Doom's pieces: a spell's own cast trigger; a card exiled from hand as a cost,
 cast from exile for as long as it remains there, and an effect that lasts until that cast; ward of three sacrifices.
+AI 1's exile and flicker cards (Chulane, after the live game of 2026-10-04) have nine:
+`engine-name-lock` holds Reflector Mage's lock: its owner can't cast spells of that creature's name until your next turn,
+from any zone and as an effect casts, and it ends as that turn begins or would have (CR 800.4m).
+`engine-linked-token` holds Skyclave Apparition's token: each owner of the exiled cards creates an X/X of all their mana
+values together, none once nothing is in exile; a linked exile done twice has exiled both.
+`engine-same-name-exile` holds Deputy of Detention's exile of every nonland permanent of the target's name that player
+controls, hexproof or not, until it leaves; nothing when the target is illegal.
+`engine-exiled-trigger` holds "whenever a creature is exiled from the battlefield" (Soulherder), looking back at each one.
+`engine-came-from` holds Fblthp, the Lost: entered from, or cast from, your library, kept with its trigger; any spell's target.
+`engine-rebound` holds rebound (Ephemerate): cast from hand and resolved, exiled and cast free at its caster's next upkeep.
+`engine-echo` holds echo (Karmic Guide) and "unless" a mana cost with colors, paid the way the payer chooses.
+`engine-protection-color` holds protection from a color, as the source now is: no damage, block, target or Aura.
+`engine-unless-either-way` holds Divert Disaster's "unless its controller pays; if they do, you ...", an outcome either way.
+`engine-adventure` holds adventures (CR 715; Bofur, Reliable Guardian // Concerted Care): an adventurer card cast as itself
+or as its Adventure, each weighed by its own characteristics; exiled as the Adventure resolves and cast as itself from there,
+by the Adventure's controller; countered or copied, from the command zone, by an effect, and a land adventurer.
+`engine-wanderer` holds The Eternal Wanderer's pieces: no more than one creature attacking it, refused with what to do and
+kept by the pilots; a return at the beginning of its owner's next end step; a creature chosen for each player, the rest
+sacrificed.
+`engine-counts-among` holds Fell the Mighty's power greater than a target's, read as it resolves; Faeburrow Elder's mana of
+every color among your permanents; Loot, the Nexus's count of different powers.
+`engine-paradigm` holds paradigm (Germination Practicum): the spell exiled as it resolves, and the first time one of its
+name resolves for a player -- a copy's counting -- a copy cast free from exile at each of that player's precombat main
+phases, in a four-player game; a countered one nothing, a declined copy gone.
+`engine-class` holds a Class (Innkeeper's Talent): each level gained as a sorcery from the level below, its abilities had
+from that level, no copy or new object with a level; ward {1} on what has counters; every counter its controller puts --
+entering, as a loyalty cost, by infect, by proliferate -- doubled, and no other player's.
+`engine-transform` holds a card that transforms (Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal): its front face
+everywhere but the battlefield, never cast as its back; turned over, the same object with its back face's characteristics
+and its front face's mana value, and a new timestamp; ignored once it has transformed since its ability went on the stack;
+never a copy; until its controller's next turn in four seats.
+`engine-manifest` holds manifest (Reality Shift): a face-down 2/2 with no name, the card its controller's alone to see --
+no other seat's projection, no event and no line of the history names it -- turned face up for its mana cost as a special
+action, the same object, or revealed as it leaves.
+`engine-ability-tax` holds Tithe Taker's "during your turn, spells your opponents cast and abilities they activate cost {1}
+more": each opponent's, in three players, never its controller's, never on another's turn; a {T} ability, a card's in hand,
+X; the increase before a reduction; and mana abilities untouched.
+`engine-mill-cost` holds a mill in a mana ability's cost (Millikin): offered only with the cards to mill, milled before the
+mana is added, off the stack, and never tapped by a cast for itself.
+`engine-corrupted` holds Skrelv's Hive's corrupted -- an opponent still in the game with three poison counters -- and "with
+toxic" in a layer's affects, ordered behind an effect that gives the keyword (CR 613.8a); its Mite that can't block.
+`engine-next-upkeep` holds "at the beginning of your next upkeep" (Rally the Ancestors): its controller's own, past every
+other player's in four, one made in that upkeep waiting for the next; and "mana value X or less".
+`engine-dig-total` holds "any number of cards with total mana value 4 or less" (Ao, the Dawn Sky): one card a question,
+only what still fits, "No more", the rest under in a random order; and "each permanent that's a creature or Vehicle" once.
+`engine-vow` holds Promise of Loyalty: each player keeps exactly one creature, asked in turn order in four players, a vow
+counter on it, the rest sacrificed at once; and those can't attack its caster or their planeswalkers while the counter stays.
+`engine-play-permission` holds which permanent's permission a card is played through when they differ (Serra Paragon,
+Crucible of Worlds, Bolas's Citadel, Thundermane Dragon): each its own offer; Paragon's grant on the permanent while it is
+that object; the Citadel's life rather than mana, X as 0, a card with no mana cost for 0.
+`engine-sacrifice-many` holds Bolas's Citadel's "sacrifice ten nonland permanents": listed while the sets are few, asked once
+taken past that, checked again as paid; each opponent still in the game losing 10.
+`engine-mana-riders` holds mana that triggers when spent (Path of Ancestry, Study Hall): paid with it or without as the player
+chooses, the plain mana first where it does nothing, which rider when one must go, gone with its pool; "shares a creature
+type with your commander" with partners and changelings; the times a commander was cast from the command zone.
+`engine-proliferate-twice` holds Tekuthal, Inquiry Dominus: each one doubling its controller's proliferates, each its own
+choice; and three counters from among its controller's other permanents, picked once taken and checked as removed.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -767,7 +828,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 308 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 337 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -901,6 +962,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-event-triggers` — `tests/engine-event-triggers.mjs`
 - `engine-house-pilot` — `tests/engine-house-pilot.mjs`
 - `engine-ingest` — `tests/engine-ingest.mjs`
+- `engine-learned` — `tests/engine-learned.mjs`
 - `engine-mana-abilities` — `tests/engine-mana-abilities.mjs`
 - `engine-search` — `tests/engine-search.mjs`
 - `engine-storage` — `tests/engine-storage.mjs`
@@ -991,6 +1053,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-mdfc` — `tests/engine-mdfc.mjs`
 - `engine-planeswalkers` — `tests/engine-planeswalkers.mjs`
 - `engine-tap-to-cast` — `tests/engine-tap-to-cast.mjs`
+- `engine-pay-choice` — `tests/engine-pay-choice.mjs`
+- `staging-check` — `tests/staging-check.mjs`
 - `engine-cards-pb1` — `tests/engine-cards-pb1.mjs`
 - `engine-cards-pb2` — `tests/engine-cards-pb2.mjs`
 - `engine-modes-up-front` — `tests/engine-modes-up-front.mjs`
@@ -1047,6 +1111,32 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-suspend` — `tests/engine-suspend.mjs`
 - `engine-phasing` — `tests/engine-phasing.mjs`
 - `engine-exigent` — `tests/engine-exigent.mjs`
+- `engine-name-lock` — `tests/engine-name-lock.mjs`
+- `engine-linked-token` — `tests/engine-linked-token.mjs`
+- `engine-same-name-exile` — `tests/engine-same-name-exile.mjs`
+- `engine-exiled-trigger` — `tests/engine-exiled-trigger.mjs`
+- `engine-came-from` — `tests/engine-came-from.mjs`
+- `engine-rebound` — `tests/engine-rebound.mjs`
+- `engine-echo` — `tests/engine-echo.mjs`
+- `engine-protection-color` — `tests/engine-protection-color.mjs`
+- `engine-unless-either-way` — `tests/engine-unless-either-way.mjs`
+- `engine-adventure` — `tests/engine-adventure.mjs`
+- `engine-wanderer` — `tests/engine-wanderer.mjs`
+- `engine-counts-among` — `tests/engine-counts-among.mjs`
+- `engine-paradigm` — `tests/engine-paradigm.mjs`
+- `engine-class` — `tests/engine-class.mjs`
+- `engine-transform` — `tests/engine-transform.mjs`
+- `engine-manifest` — `tests/engine-manifest.mjs`
+- `engine-ability-tax` — `tests/engine-ability-tax.mjs`
+- `engine-mill-cost` — `tests/engine-mill-cost.mjs`
+- `engine-corrupted` — `tests/engine-corrupted.mjs`
+- `engine-next-upkeep` — `tests/engine-next-upkeep.mjs`
+- `engine-dig-total` — `tests/engine-dig-total.mjs`
+- `engine-vow` — `tests/engine-vow.mjs`
+- `engine-play-permission` — `tests/engine-play-permission.mjs`
+- `engine-sacrifice-many` — `tests/engine-sacrifice-many.mjs`
+- `engine-mana-riders` — `tests/engine-mana-riders.mjs`
+- `engine-proliferate-twice` — `tests/engine-proliferate-twice.mjs`
 
 ## Design and execution record
 

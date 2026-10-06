@@ -1,0 +1,154 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "The Eternal Wanderer",
+    "oracleId": "20a1671d-e8a4-4cf1-87a7-f2f6319f4b9e",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Planeswalker"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null,
+    "loyalty": 5
+  },
+  "oracleText": "No more than one creature can attack The Eternal Wanderer each combat.\n+1: Exile up to one target artifact or creature. Return that card to the battlefield under its owner's control at the beginning of that player's next end step.\n0: Create a 2/2 white Samurai creature token with double strike.\n−4: For each player, choose a creature that player controls. Each player sacrifices all creatures they control not chosen this way.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "No more than one creature can attack The Eternal Wanderer each combat.",
+      "rule": "attackers-at-most",
+      "count": 1,
+      "affects": {
+        "what": "permanent",
+        "self": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "+1: Exile up to one target artifact or creature. Return that card to the battlefield under its owner's control at the beginning of that player's next end step.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": 1
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            }
+          ],
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "andReturn": "owner's end step"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "0: Create a 2/2 white Samurai creature token with double strike.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": 0
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Samurai",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Samurai"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 2,
+            "toughness": 2,
+            "keywords": [
+              "Double Strike"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−4: For each player, choose a creature that player controls. Each player sacrifices all creatures they control not chosen this way.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -4
+        }
+      ],
+      "effects": [
+        {
+          "effect": "repeatFor",
+          "each": "player",
+          "effects": [
+            {
+              "effect": "chooseCard",
+              "zone": "battlefield",
+              "selector": {
+                "types": [
+                  "Creature"
+                ],
+                "controller": "that player"
+              },
+              "count": 1,
+              "to": "stay",
+              "remember": "add"
+            }
+          ]
+        },
+        {
+          "effect": "sacrificeAll",
+          "who": "each",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "except": "remembered"
+        }
+      ]
+    }
+  ]
+}

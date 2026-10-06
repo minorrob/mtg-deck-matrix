@@ -28,20 +28,27 @@
 import {readFileSync, writeFileSync} from "node:fs";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
-import {loadCardIndex} from "./engine-cards.mjs";
+import {loadCardIndex, loadCardScripts} from "./engine-cards.mjs";
+import {createCardIndex} from "../engine/cards/index.mjs";
 /* The Forge-to-engine translation, shared with the catalog (engine-constructs.mjs). */
 import {missingFor} from "./engine-constructs.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, "..", "..");
 
-/* The card directory (game/engine/cards): a card a table can seat has a definition the engine can play. */
-const directory = loadCardIndex();
+/* The card directory (game/engine/cards): a card a table can seat has a definition the engine can play. Only the
+   hand-authored directory: it is what the table's module is built from (engine-definitions.mjs). A learned definition
+   stored provisional (data/engine/scripts, written by engine-compile.mjs and engine-ingest.mjs) is counted apart, because
+   no table seats it until a played game or Rob confirms it (the execution plan's D5). */
+const directory = createCardIndex(loadCardScripts().map((entry) => ({...entry, source: "hand"})));
 const definedHere = (name) => directory.resolve(name)?.playable === true;
+const learned = loadCardIndex();
+const provisionalHere = (name) => !definedHere(name) && learned.resolve(name)?.playable === true && learned.resolve(name)?.source === "compiled";
 
 function report(label, perCard) {
   const entries = Object.entries(perCard ?? {});
   const defined = entries.filter(([name]) => definedHere(name)).length;
+  const provisional = entries.filter(([name]) => provisionalHere(name)).length;
   const covered = [];
   const blocked = new Map();
   for (const [name, card] of entries) {
@@ -60,6 +67,7 @@ function report(label, perCard) {
     label,
     total: entries.length,
     defined,
+    provisional,
     covered: covered.length,
     share: entries.length === 0 ? 0 : (100 * covered.length) / entries.length,
     blockers: [...blocked.values()].sort((a, b) => b.cards - a.cards),
@@ -88,10 +96,14 @@ lines.push("implements, so writing its definition is all that is left. A keyword
 lines.push("something — declaring `Flying` is what lets a card script say it, and `keywords/combat.mjs` is");
 lines.push("what makes a flier unblockable by the ground.");
 lines.push("");
-lines.push("| Scope | Cards | Defined | Every rule | Share |");
-lines.push("| --- | ---: | ---: | ---: | ---: |");
+lines.push("*Provisional* is how many more have a learned definition stored provisional in `data/engine/scripts`");
+lines.push(`(${learned.size - directory.size} in all): written by the card loader or in a session, passed its checks, and seated at no`);
+lines.push("table until a played game or Rob confirms it. They are not counted as defined.");
+lines.push("");
+lines.push("| Scope | Cards | Defined | Provisional | Every rule | Share |");
+lines.push("| --- | ---: | ---: | ---: | ---: | ---: |");
 for (const scope of scopes)
-  lines.push(`| ${scope.label} | ${scope.total} | ${scope.defined} | ${scope.covered} | ${scope.share.toFixed(1)}% |`);
+  lines.push(`| ${scope.label} | ${scope.total} | ${scope.defined} | ${scope.provisional} | ${scope.covered} | ${scope.share.toFixed(1)}% |`);
 lines.push("");
 
 for (const scope of scopes) {

@@ -1,0 +1,2775 @@
+{
+ "schema": "CrankSessionScripts@1",
+ "writer": "x10-session",
+ "createdAt": "2026-10-06T16:05:44Z",
+ "cards": [
+  {
+   "name": "Myr Battlesphere",
+   "abilities": [
+    {
+     "kind": "triggered",
+     "text": "When this creature enters, create four 1/1 colorless Myr artifact creature tokens.",
+     "trigger": {
+      "on": "enters",
+      "who": "self"
+     },
+     "effects": [
+      {
+       "effect": "createToken",
+       "count": 4,
+       "token": {
+        "name": "Myr",
+        "types": [
+         "Artifact",
+         "Creature"
+        ],
+        "subtypes": [
+         "Myr"
+        ],
+        "colors": [],
+        "power": 1,
+        "toughness": 1
+       }
+      }
+     ]
+    },
+    {
+     "kind": "triggered",
+     "text": "Whenever this creature attacks, you may tap X untapped Myr you control. If you do, this creature gets +X/+0 until end of turn and deals X damage to the player or planeswalker it's attacking.",
+     "trigger": {
+      "on": "attacks",
+      "who": "self"
+     },
+     "optional": true,
+     "effects": [
+      {
+       "effect": "tap",
+       "chooser": "you",
+       "selector": {
+        "what": "permanent",
+        "subtypes": [
+         "Myr"
+        ],
+        "controller": "you",
+        "tapped": false
+       },
+       "upTo": true,
+       "remember": true
+      },
+      {
+       "effect": "pump",
+       "targets": "self",
+       "power": {
+        "rememberedCount": true
+       },
+       "toughness": 0
+      },
+      {
+       "effect": "dealDamage",
+       "who": "that player",
+       "amount": {
+        "rememberedCount": true
+       }
+      }
+     ]
+    }
+   ],
+   "notes": "GAP: the attack trigger taps any number of untapped Myr chosen as it resolves; no primitive chooses permanents to tap (tap takes targets only), so the tap, the pump and the damage come to zero."
+  },
+  {
+   "name": "Shiny Impetus",
+   "abilities": [
+    {
+     "kind": "keyword",
+     "text": "Enchant creature",
+     "keyword": "enchant",
+     "target": {
+      "what": "permanent",
+      "types": [
+       "Creature"
+      ]
+     }
+    },
+    {
+     "kind": "static",
+     "text": "Enchanted creature gets +2/+2 and is goaded.",
+     "layer": 7,
+     "sublayer": "c",
+     "affects": {
+      "what": "permanent",
+      "attachedBy": "self"
+     },
+     "apply": {
+      "power": 2,
+      "toughness": 2
+     }
+    },
+    {
+     "kind": "static",
+     "text": "Enchanted creature gets +2/+2 and is goaded.",
+     "rule": "goaded",
+     "affects": {
+      "what": "permanent",
+      "attachedBy": "self"
+     }
+    },
+    {
+     "kind": "triggered",
+     "text": "Whenever enchanted creature attacks, you create a Treasure token.",
+     "trigger": {
+      "on": "attacks",
+      "who": "any",
+      "filter": {
+       "attachedBy": "self"
+      }
+     },
+     "effects": [
+      {
+       "effect": "createToken",
+       "count": 1,
+       "token": {
+        "predefined": "Treasure"
+       }
+      }
+     ]
+    }
+   ],
+   "notes": "GAP: 'is goaded' as a static of an Aura (a continuous goad while attached); goad exists only as a one-shot effect."
+  },
+  {
+   "name": "Shore Up",
+   "abilities": [
+    {
+     "kind": "spell",
+     "text": "Target creature you control gets +1/+1 and gains hexproof until end of turn. Untap it. (It can't be the target of spells or abilities your opponents control.)",
+     "targets": [
+      {
+       "what": "permanent",
+       "types": [
+        "Creature"
+       ],
+       "controller": "you"
+      }
+     ],
+     "effects": [
+      {
+       "effect": "pump",
+       "targets": {
+        "target": 0
+       },
+       "power": 1,
+       "toughness": 1,
+       "keywords": [
+        "Hexproof"
+       ]
+      },
+      {
+       "effect": "untap",
+       "targets": {
+        "target": 0
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Emrakul's Messenger",
+   "abilities": [
+    {
+     "kind": "keyword",
+     "text": "Devoid",
+     "keyword": "devoid"
+    },
+    {
+     "kind": "keyword",
+     "text": "Flying",
+     "keyword": "flying"
+    },
+    {
+     "kind": "triggered",
+     "text": "Whenever you draw your second card each turn, create a 0/1 colorless Eldrazi Spawn creature token with \"Sacrifice this token: Add {C}.\"",
+     "trigger": {
+      "on": "drawn",
+      "drawer": "you",
+      "nthThisTurn": 2
+     },
+     "effects": [
+      {
+       "effect": "createToken",
+       "count": 1,
+       "token": {
+        "name": "Eldrazi Spawn",
+        "types": [
+         "Creature"
+        ],
+        "subtypes": [
+         "Eldrazi",
+         "Spawn"
+        ],
+        "colors": [],
+        "power": 0,
+        "toughness": 1,
+        "abilities": [
+         {
+          "id": "spawn",
+          "kind": "mana",
+          "tapSelf": false,
+          "produces": {
+           "C": 1
+          },
+          "sacrificeSelf": true,
+          "text": "Sacrifice this token: Add {C}."
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "notes": "GAP: 'your second card each turn' -- the drawn trigger has no Nth-this-turn form (spell cast has nthThisTurn); written with nthThisTurn, which the drawn trigger does not read."
+  },
+  {
+   "name": "Liliana of the Dark Realms",
+   "abilities": [
+    {
+     "kind": "activated",
+     "text": "+1: Search your library for a Swamp card, reveal it, put it into your hand, then shuffle.",
+     "cost": [
+      {
+       "atom": "loyalty",
+       "amount": 1
+      }
+     ],
+     "effects": [
+      {
+       "effect": "chooseCard",
+       "zone": "library",
+       "selector": {
+        "subtypes": [
+         "Swamp"
+        ]
+       },
+       "to": "hand",
+       "reveal": true,
+       "shuffle": true
+      }
+     ]
+    },
+    {
+     "kind": "activated",
+     "text": "−3: Target creature gets +X/+X or -X/-X until end of turn, where X is the number of Swamps you control.",
+     "cost": [
+      {
+       "atom": "loyalty",
+       "amount": -3
+      }
+     ],
+     "targets": [
+      {
+       "what": "permanent",
+       "types": [
+        "Creature"
+       ]
+      }
+     ],
+     "effects": [
+      {
+       "effect": "modal",
+       "choose": 1,
+       "modes": [
+        {
+         "text": "+X/+X",
+         "effects": [
+          {
+           "effect": "pump",
+           "targets": {
+            "target": 0
+           },
+           "power": {
+            "count": {
+             "what": "permanent",
+             "subtypes": [
+              "Swamp"
+             ],
+             "controller": "you"
+            }
+           },
+           "toughness": {
+            "count": {
+             "what": "permanent",
+             "subtypes": [
+              "Swamp"
+             ],
+             "controller": "you"
+            }
+           }
+          }
+         ]
+        },
+        {
+         "text": "-X/-X",
+         "effects": [
+          {
+           "effect": "pump",
+           "targets": {
+            "target": 0
+           },
+           "power": {
+            "count": {
+             "what": "permanent",
+             "subtypes": [
+              "Swamp"
+             ],
+             "controller": "you"
+            },
+            "times": -1
+           },
+           "toughness": {
+            "count": {
+             "what": "permanent",
+             "subtypes": [
+              "Swamp"
+             ],
+             "controller": "you"
+            },
+            "times": -1
+           }
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "activated",
+     "text": "−6: You get an emblem with \"Swamps you control have '{T}: Add {B}{B}{B}{B}.'\"",
+     "cost": [
+      {
+       "atom": "loyalty",
+       "amount": -6
+      }
+     ],
+     "effects": [
+      {
+       "effect": "effectUntil",
+       "until": "ever",
+       "layer": 6,
+       "affects": {
+        "what": "permanent",
+        "subtypes": [
+         "Swamp"
+        ],
+        "controller": "you"
+       },
+       "apply": {
+        "addAbilities": [
+         {
+          "kind": "activated",
+          "text": "{T}: Add {B}{B}{B}{B}.",
+          "cost": [
+           {
+            "atom": "{T}"
+           }
+          ],
+          "effects": [
+           {
+            "effect": "addMana",
+            "mana": {
+             "B": 4
+            }
+           }
+          ]
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "crFlags": [
+    "CR 613.4c: the -3's +X/+X or -X/-X is a layer 7c change, X counted once as it resolves (CR 608.2h)"
+   ]
+  },
+  {
+   "name": "Calamity of the Titans",
+   "abilities": [
+    {
+     "kind": "spell",
+     "text": "As an additional cost to cast this spell, reveal a colorless creature card from your hand.\nExile each creature and planeswalker with mana value less than the revealed card's mana value.",
+     "additionalCost": [
+      {
+       "atom": "reveal",
+       "selector": {
+        "types": [
+         "Creature"
+        ],
+        "colorless": true
+       },
+       "remember": true
+      }
+     ],
+     "effects": [
+      {
+       "effect": "moveZoneAll",
+       "selector": {
+        "what": "permanent",
+        "anyOf": [
+         {
+          "types": [
+           "Creature"
+          ]
+         },
+         {
+          "types": [
+           "Planeswalker"
+          ]
+         }
+        ],
+        "manaValue": {
+         "lessThan": {
+          "manaValueOf": "remembered"
+         }
+        }
+       },
+       "to": "exile"
+      }
+     ]
+    }
+   ],
+   "notes": "GAP: an additional cost that reveals a card from the hand, and a mana value compared with the revealed card's."
+  },
+  {
+   "name": "Mortuary Mire",
+   "abilities": [
+    {
+     "kind": "replacement",
+     "text": "This land enters tapped.",
+     "watches": {
+      "event": "enters",
+      "who": "self"
+     },
+     "change": {
+      "entersTapped": true
+     }
+    },
+    {
+     "kind": "triggered",
+     "text": "When this land enters, you may put target creature card from your graveyard on top of your library.",
+     "trigger": {
+      "on": "enters",
+      "who": "self"
+     },
+     "optional": true,
+     "targets": [
+      {
+       "what": "card",
+       "zone": "graveyard",
+       "controller": "you",
+       "types": [
+        "Creature"
+       ]
+      }
+     ],
+     "effects": [
+      {
+       "effect": "moveZone",
+       "targets": {
+        "target": 0
+       },
+       "to": "library",
+       "top": true
+      }
+     ]
+    },
+    {
+     "kind": "activated",
+     "text": "{T}: Add {B}.",
+     "mana": true,
+     "cost": [
+      {
+       "atom": "{T}"
+      }
+     ],
+     "effects": [
+      {
+       "effect": "addMana",
+       "mana": {
+        "B": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Curious Altisaur",
+   "abilities": [
+    {
+     "kind": "keyword",
+     "text": "Reach",
+     "keyword": "reach"
+    },
+    {
+     "kind": "keyword",
+     "text": "vigilance",
+     "keyword": "vigilance"
+    },
+    {
+     "kind": "triggered",
+     "text": "Whenever a Dinosaur you control deals combat damage to a player, draw a card.",
+     "trigger": {
+      "on": "damage dealt",
+      "who": "any",
+      "combat": true,
+      "to": "player",
+      "filter": {
+       "subtypes": [
+        "Dinosaur"
+       ],
+       "controller": "you"
+      }
+     },
+     "effects": [
+      {
+       "effect": "draw",
+       "count": 1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Venser's Journal",
+   "abilities": [
+    {
+     "kind": "static",
+     "text": "You have no maximum hand size.",
+     "rule": "no-maximum-hand-size",
+     "affects": {
+      "what": "player",
+      "who": "you"
+     }
+    },
+    {
+     "kind": "triggered",
+     "text": "At the beginning of your upkeep, you gain 1 life for each card in your hand.",
+     "trigger": {
+      "on": "upkeep",
+      "yours": true
+     },
+     "effects": [
+      {
+       "effect": "gainLife",
+       "amount": {
+        "count": {
+         "what": "card",
+         "zone": "hand",
+         "controller": "you"
+        }
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Wave Goodbye",
+   "abilities": [
+    {
+     "kind": "spell",
+     "text": "Return each creature without a +1/+1 counter on it to its owner's hand.",
+     "effects": [
+      {
+       "effect": "moveZoneAll",
+       "selector": {
+        "what": "permanent",
+        "types": [
+         "Creature"
+        ],
+        "nonCounters": "+1/+1"
+       },
+       "to": "hand"
+      }
+     ]
+    }
+   ],
+   "notes": "GAP: a selector for a permanent WITHOUT a counter of a kind; the grammar has `counters` (with) only."
+  },
+  {
+   "name": "Betor, Kin to All",
+   "abilities": [
+    {
+     "kind": "keyword",
+     "text": "Flying",
+     "keyword": "flying"
+    },
+    {
+     "kind": "triggered",
+     "text": "At the beginning of your end step, if creatures you control have total toughness 10 or greater, draw a card. Then if creatures you control have total toughness 20 or greater, untap each creature you control. Then if creatures you control have total toughness 40 or greater, each opponent loses half their life, rounded up.",
+     "trigger": {
+      "on": "end step",
+      "yours": true
+     },
+     "condition": {
+      "compare": {
+       "count": {
+        "totalToughness": {
+         "what": "permanent",
+         "types": [
+          "Creature"
+         ],
+         "controller": "you"
+        }
+       },
+       "atLeast": 10
+      }
+     },
+     "effects": [
+      {
+       "effect": "draw",
+       "count": 1
+      },
+      {
+       "effect": "branch",
+       "if": {
+        "compare": {
+         "count": {
+          "totalToughness": {
+           "what": "permanent",
+           "types": [
+            "Creature"
+           ],
+           "controller": "you"
+          }
+         },
+         "atLeast": 20
+        }
+       },
+       "then": [
+        {
+         "effect": "untapAll",
+         "selector": {
+          "what": "permanent",
+          "types": [
+           "Creature"
+          ],
+          "controller": "you"
+         }
+        }
+       ]
+      },
+      {
+       "effect": "branch",
+       "if": {
+        "compare": {
+         "count": {
+          "totalToughness": {
+           "what": "permanent",
+           "types": [
+            "Creature"
+           ],
+           "controller": "you"
+          }
+         },
+         "atLeast": 40
+        }
+       },
+       "then": [
+        {
+         "effect": "repeatFor",
+         "each": "opponent",
+         "effects": [
+          {
+           "effect": "loseLife",
+           "who": "that player",
+           "amount": {
+            "lifeTotal": "that player",
+            "half": "up"
+           }
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "notes": "GAP: an amount for the total toughness of creatures you control (totalPower exists, totalToughness does not); and half a life total rounded up (half rounds down)."
+  },
+  {
+   "name": "Deeproot Waters",
+   "abilities": [
+    {
+     "kind": "triggered",
+     "text": "Whenever you cast a Merfolk spell, create a 1/1 blue Merfolk creature token with hexproof. (A creature with hexproof can't be the target of spells or abilities your opponents control.)",
+     "trigger": {
+      "on": "spell cast",
+      "caster": "you",
+      "filter": {
+       "subtypes": [
+        "Merfolk"
+       ]
+      }
+     },
+     "effects": [
+      {
+       "effect": "createToken",
+       "count": 1,
+       "token": {
+        "name": "Merfolk",
+        "types": [
+         "Creature"
+        ],
+        "subtypes": [
+         "Merfolk"
+        ],
+        "colors": [
+         "U"
+        ],
+        "power": 1,
+        "toughness": 1,
+        "keywords": [
+         "Hexproof"
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Koma, World-Eater",
+   "abilities": [
+    {
+     "kind": "static",
+     "text": "This spell can't be countered.",
+     "rule": "cant-be-countered",
+     "affects": {
+      "what": "spell",
+      "self": true
+     }
+    },
+    {
+     "kind": "keyword",
+     "text": "Trample",
+     "keyword": "trample"
+    },
+    {
+     "kind": "keyword",
+     "text": "ward {4}",
+     "keyword": "ward",
+     "cost": [
+      {
+       "atom": "mana",
+       "cost": "{4}"
+      }
+     ]
+    },
+    {
+     "kind": "triggered",
+     "text": "Whenever Koma deals combat damage to a player, create four 3/3 blue Serpent creature tokens named Koma's Coil.",
+     "trigger": {
+      "on": "damage dealt",
+      "who": "self",
+      "combat": true,
+      "to": "player"
+     },
+     "effects": [
+      {
+       "effect": "createToken",
+       "count": 4,
+       "token": {
+        "name": "Koma's Coil",
+        "types": [
+         "Creature"
+        ],
+        "subtypes": [
+         "Serpent"
+        ],
+        "colors": [
+         "U"
+        ],
+        "power": 3,
+        "toughness": 3
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Feldon of the Third Path",
+   "abilities": [
+    {
+     "kind": "activated",
+     "text": "{2}{R}, {T}: Create a token that's a copy of target creature card in your graveyard, except it's an artifact in addition to its other types. It gains haste. Sacrifice it at the beginning of the next end step.",
+     "cost": [
+      {
+       "atom": "mana",
+       "cost": "{2}{R}"
+      },
+      {
+       "atom": "{T}"
+      }
+     ],
+     "targets": [
+      {
+       "what": "card",
+       "zone": "graveyard",
+       "controller": "you",
+       "types": [
+        "Creature"
+       ]
+      }
+     ],
+     "effects": [
+      {
+       "effect": "copyPermanent",
+       "targets": {
+        "target": 0
+       },
+       "except": {
+        "addTypes": [
+         "Artifact"
+        ]
+       },
+       "gains": [
+        "Haste"
+       ],
+       "atEndStep": "sacrifice"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Malcolm, Alluring Scoundrel",
+   "abilities": [
+    {
+     "kind": "keyword",
+     "text": "Flash",
+     "keyword": "flash"
+    },
+    {
+     "kind": "keyword",
+     "text": "Flying",
+     "keyword": "flying"
+    },
+    {
+     "kind": "triggered",
+     "text": "Whenever Malcolm deals combat damage to a player, put a chorus counter on it. Draw a card, then discard a card. If there are four or more chorus counters on Malcolm, you may cast the discarded card without paying its mana cost.",
+     "trigger": {
+      "on": "damage dealt",
+      "who": "self",
+      "combat": true,
+      "to": "player"
+     },
+     "effects": [
+      {
+       "effect": "putCounter",
+       "targets": "self",
+       "counter": "chorus",
+       "count": 1
+      },
+      {
+       "effect": "draw",
+       "count": 1
+      },
+      {
+       "effect": "discard",
+       "count": 1,
+       "remember": true
+      },
+      {
+       "effect": "branch",
+       "if": {
+        "selfCounters": {
+         "counter": "chorus",
+         "atLeast": 4
+        }
+       },
+       "then": [
+        {
+         "effect": "play",
+         "from": "targets",
+         "targets": "remembered",
+         "free": true
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Return to Nature",
+   "abilities": [
+    {
+     "kind": "spell",
+     "text": "Choose one —\n• Destroy target artifact.\n• Destroy target enchantment.\n• Exile target card from a graveyard.",
+     "effects": [
+      {
+       "effect": "modal",
+       "choose": 1,
+       "modes": [
+        {
+         "text": "Destroy target artifact.",
+         "targets": [
+          {
+           "what": "permanent",
+           "types": [
+            "Artifact"
+           ]
+          }
+         ],
+         "effects": [
+          {
+           "effect": "destroy",
+           "targets": {
+            "target": 0
+           }
+          }
+         ]
+        },
+        {
+         "text": "Destroy target enchantment.",
+         "targets": [
+          {
+           "what": "permanent",
+           "types": [
+            "Enchantment"
+           ]
+          }
+         ],
+         "effects": [
+          {
+           "effect": "destroy",
+           "targets": {
+            "target": 0
+           }
+          }
+         ]
+        },
+        {
+         "text": "Exile target card from a graveyard.",
+         "targets": [
+          {
+           "what": "card",
+           "zone": "graveyard"
+          }
+         ],
+         "effects": [
+          {
+           "effect": "moveZone",
+           "targets": {
+            "target": 0
+           },
+           "to": "exile"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Shivan Gorge",
+   "abilities": [
+    {
+     "kind": "activated",
+     "text": "{T}: Add {C}.",
+     "mana": true,
+     "cost": [
+      {
+       "atom": "{T}"
+      }
+     ],
+     "effects": [
+      {
+       "effect": "addMana",
+       "mana": {
+        "C": 1
+       }
+      }
+     ]
+    },
+    {
+     "kind": "activated",
+     "text": "{2}{R}, {T}: Shivan Gorge deals 1 damage to each opponent.",
+     "cost": [
+      {
+       "atom": "mana",
+       "cost": "{2}{R}"
+      },
+      {
+       "atom": "{T}"
+      }
+     ],
+     "effects": [
+      {
+       "effect": "dealDamage",
+       "amount": 1,
+       "who": "opponent"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Vile Entomber",
+   "abilities": [
+    {
+     "kind": "keyword",
+     "text": "Deathtouch",
+     "keyword": "deathtouch"
+    },
+    {
+     "kind": "triggered",
+     "text": "When this creature enters, search your library for a card, put that card into your graveyard, then shuffle.",
+     "trigger": {
+      "on": "enters",
+      "who": "self"
+     },
+     "effects": [
+      {
+       "effect": "chooseCard",
+       "zone": "library",
+       "selector": {},
+       "to": "graveyard",
+       "shuffle": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chocobo Racetrack",
+   "abilities": [
+    {
+     "kind": "triggered",
+     "text": "Landfall — Whenever a land you control enters, create a 2/2 green Bird creature token with \"Whenever a land you control enters, this token gets +1/+0 until end of turn.\"",
+     "trigger": {
+      "on": "enters",
+      "who": "any",
+      "filter": {
+       "types": [
+        "Land"
+       ],
+       "controller": "you"
+      }
+     },
+     "effects": [
+      {
+       "effect": "createToken",
+       "count": 1,
+       "token": {
+        "name": "Bird",
+        "types": [
+         "Creature"
+        ],
+        "subtypes": [
+         "Bird"
+        ],
+        "colors": [
+         "G"
+        ],
+        "power": 2,
+        "toughness": 2,
+        "abilities": [
+         {
+          "id": "landfall",
+          "kind": "triggered",
+          "text": "Whenever a land you control enters, this token gets +1/+0 until end of turn.",
+          "trigger": {
+           "on": "GameEventCardChangeZone",
+           "to": "Battlefield",
+           "who": "any",
+           "filter": {
+            "types": [
+             "Land"
+            ],
+            "controller": "you"
+           }
+          },
+          "effects": [
+           {
+            "effect": "pump",
+            "targets": "self",
+            "power": 1,
+            "toughness": 0
+           }
+          ]
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Squirrel Sovereign",
+   "abilities": [
+    {
+     "kind": "static",
+     "text": "Other Squirrels you control get +1/+1.",
+     "layer": 7,
+     "sublayer": "c",
+     "affects": {
+      "what": "permanent",
+      "subtypes": [
+       "Squirrel"
+      ],
+      "controller": "you",
+      "another": true
+     },
+     "apply": {
+      "power": 1,
+      "toughness": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "Flicker of Fate",
+   "abilities": [
+    {
+     "kind": "spell",
+     "text": "Exile target creature or enchantment, then return it to the battlefield under its owner's control.",
+     "targets": [
+      {
+       "anyOf": [
+        {
+         "what": "permanent",
+         "types": [
+          "Creature"
+         ]
+        },
+        {
+         "what": "permanent",
+         "types": [
+          "Enchantment"
+         ]
+        }
+       ]
+      }
+     ],
+     "effects": [
+      {
+       "effect": "moveZone",
+       "targets": {
+        "target": 0
+       },
+       "to": "exile",
+       "andReturn": "now"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "March of the Multitudes",
+   "abilities": [
+    {
+     "kind": "keyword",
+     "text": "Convoke",
+     "keyword": "convoke"
+    },
+    {
+     "kind": "spell",
+     "text": "Create X 1/1 white Soldier creature tokens with lifelink.",
+     "effects": [
+      {
+       "effect": "createToken",
+       "count": "X",
+       "token": {
+        "name": "Soldier",
+        "types": [
+         "Creature"
+        ],
+        "subtypes": [
+         "Soldier"
+        ],
+        "colors": [
+         "W"
+        ],
+        "power": 1,
+        "toughness": 1,
+        "keywords": [
+         "Lifelink"
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Season of Gathering",
+   "abilities": [
+    {
+     "kind": "spell",
+     "text": "Choose up to five {P} worth of modes. You may choose the same mode more than once.\n{P} — Put a +1/+1 counter on a creature you control. It gains vigilance and trample until end of turn.\n{P}{P} — Choose artifact or enchantment. Destroy all permanents of the chosen type.\n{P}{P}{P} — Draw cards equal to the greatest power among creatures you control.",
+     "effects": [
+      {
+       "effect": "modal",
+       "pawprints": 5,
+       "repeatModes": true,
+       "modes": [
+        {
+         "text": "Put a +1/+1 counter on a creature you control. It gains vigilance and trample until end of turn.",
+         "pawprints": 1,
+         "effects": [
+          {
+           "effect": "chooseCard",
+           "zone": "battlefield",
+           "selector": {
+            "types": [
+             "Creature"
+            ],
+            "controller": "you"
+           },
+           "to": "battlefield",
+           "remember": true
+          },
+          {
+           "effect": "putCounter",
+           "targets": "remembered",
+           "counter": "+1/+1",
+           "count": 1
+          },
+          {
+           "effect": "pump",
+           "targets": "remembered",
+           "power": 0,
+           "toughness": 0,
+           "keywords": [
+            "Vigilance",
+            "Trample"
+           ]
+          }
+         ]
+        },
+        {
+         "text": "Choose artifact or enchantment. Destroy all permanents of the chosen type.",
+         "pawprints": 2,
+         "effects": [
+          {
+           "effect": "modal",
+           "choose": 1,
+           "modes": [
+            {
+             "text": "Artifact",
+             "effects": [
+              {
+               "effect": "destroyAll",
+               "selector": {
+                "what": "permanent",
+                "types": [
+                 "Artifact"
+                ]
+               }
+              }
+             ]
+            },
+            {
+             "text": "Enchantment",
+             "effects": [
+              {
+               "effect": "destroyAll",
+               "selector": {
+                "what": "permanent",
+                "types": [
+                 "Enchantment"
+                ]
+               }
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "text": "Draw cards equal to the greatest power among creatures you control.",
+         "pawprints": 3,
+         "effects": [
+          {
+           "effect": "draw",
+           "count": {
+            "greatestPower": {
+             "what": "permanent",
+             "types": [
+              "Creature"
+             ],
+             "controller": "you"
+            }
+           }
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "notes": "GAP: pawprint modes (CR 700.2h: choose up to five {P} worth of modes, the same mode more than once); the modal takes `choose` and `chooseUpTo` of distinct modes only. Mode one's creature is chosen, not targeted."
+  },
+  {
+   "name": "Ureni of the Unwritten",
+   "abilities": [
+    {
+     "kind": "keyword",
+     "text": "Flying",
+     "keyword": "flying"
+    },
+    {
+     "kind": "keyword",
+     "text": "trample",
+     "keyword": "trample"
+    },
+    {
+     "kind": "triggered",
+     "text": "Whenever Ureni enters or attacks, look at the top eight cards of your library. You may put a Dragon creature card from among them onto the battlefield. Put the rest on the bottom of your library in a random order.",
+     "trigger": {
+      "on": "enters",
+      "who": "self"
+     },
+     "effects": [
+      {
+       "effect": "dig",
+       "count": 8,
+       "take": 1,
+       "selector": {
+        "types": [
+         "Creature"
+        ],
+        "subtypes": [
+         "Dragon"
+        ]
+       },
+       "upTo": true,
+       "to": "battlefield",
+       "rest": "bottom",
+       "random": true
+      }
+     ]
+    },
+    {
+     "kind": "triggered",
+     "text": "Whenever Ureni enters or attacks, look at the top eight cards of your library. You may put a Dragon creature card from among them onto the battlefield. Put the rest on the bottom of your library in a random order.",
+     "trigger": {
+      "on": "attacks",
+      "who": "self"
+     },
+     "effects": [
+      {
+       "effect": "dig",
+       "count": 8,
+       "take": 1,
+       "selector": {
+        "types": [
+         "Creature"
+        ],
+        "subtypes": [
+         "Dragon"
+        ]
+       },
+       "upTo": true,
+       "to": "battlefield",
+       "rest": "bottom",
+       "random": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Palladium Myr",
+   "abilities": [
+    {
+     "kind": "activated",
+     "text": "{T}: Add {C}{C}.",
+     "mana": true,
+     "cost": [
+      {
+       "atom": "{T}"
+      }
+     ],
+     "effects": [
+      {
+       "effect": "addMana",
+       "mana": {
+        "C": 2
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Dour Port-Mage",
+   "abilities": [
+    {
+     "kind": "triggered",
+     "text": "Whenever one or more other creatures you control leave the battlefield without dying, draw a card.",
+     "trigger": {
+      "on": "leaves",
+      "who": "another",
+      "filter": {
+       "types": [
+        "Creature"
+       ],
+       "controller": "you"
+      },
+      "notTo": "graveyard",
+      "batch": true
+     },
+     "effects": [
+      {
+       "effect": "draw",
+       "count": 1
+      }
+     ]
+    },
+    {
+     "kind": "activated",
+     "text": "{1}{U}, {T}: Return another target creature you control to its owner's hand.",
+     "cost": [
+      {
+       "atom": "mana",
+       "cost": "{1}{U}"
+      },
+      {
+       "atom": "{T}"
+      }
+     ],
+     "targets": [
+      {
+       "what": "permanent",
+       "types": [
+        "Creature"
+       ],
+       "controller": "you",
+       "another": true
+      }
+     ],
+     "effects": [
+      {
+       "effect": "moveZone",
+       "targets": {
+        "target": 0
+       },
+       "to": "hand"
+      }
+     ]
+    }
+   ],
+   "notes": "GAP: 'one or more other creatures you control leave the battlefield without dying' -- a departure to anywhere but a graveyard, once per batch; the leaves trigger has neither form."
+  },
+  {
+   "name": "Agent Frank Horrigan",
+   "abilities": [
+    {
+     "kind": "keyword",
+     "text": "Trample",
+     "keyword": "trample"
+    },
+    {
+     "kind": "static",
+     "text": "Agent Frank Horrigan has indestructible as long as it attacked this turn.",
+     "layer": 6,
+     "affects": {
+      "self": true
+     },
+     "condition": {
+      "present": {
+       "self": true,
+       "attackedThisTurn": true
+      }
+     },
+     "apply": {
+      "addKeywords": [
+       "Indestructible"
+      ]
+     }
+    },
+    {
+     "kind": "triggered",
+     "text": "Whenever Agent Frank Horrigan enters or attacks, proliferate twice. (To proliferate, choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+     "trigger": {
+      "on": "enters",
+      "who": "self"
+     },
+     "effects": [
+      {
+       "effect": "proliferate"
+      },
+      {
+       "effect": "proliferate"
+      }
+     ]
+    },
+    {
+     "kind": "triggered",
+     "text": "Whenever Agent Frank Horrigan enters or attacks, proliferate twice. (To proliferate, choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+     "trigger": {
+      "on": "attacks",
+      "who": "self"
+     },
+     "effects": [
+      {
+       "effect": "proliferate"
+      },
+      {
+       "effect": "proliferate"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Worldsoul's Rage",
+   "abilities": [
+    {
+     "kind": "spell",
+     "text": "Worldsoul's Rage deals X damage to any target. Put up to X land cards from your hand and/or graveyard onto the battlefield tapped.",
+     "targets": [
+      {
+       "anyOf": [
+        {
+         "what": "permanent",
+         "types": [
+          "Creature"
+         ]
+        },
+        {
+         "what": "player"
+        },
+        {
+         "what": "permanent",
+         "types": [
+          "Planeswalker"
+         ]
+        },
+        {
+         "what": "permanent",
+         "types": [
+          "Battle"
+         ]
+        }
+       ]
+      }
+     ],
+     "effects": [
+      {
+       "effect": "dealDamage",
+       "amount": "X",
+       "targets": {
+        "target": 0
+       },
+       "who": {
+        "target": 0
+       }
+      },
+      {
+       "effect": "chooseCard",
+       "zone": "hand",
+       "alsoZone": "graveyard",
+       "selector": {
+        "types": [
+         "Land"
+        ]
+       },
+       "count": "X",
+       "upTo": true,
+       "to": "battlefield",
+       "tapped": true
+      }
+     ]
+    }
+   ],
+   "notes": "GAP: a choice of up to X cards from two zones together (hand and/or graveyard); chooseCard searches one zone. Written from the hand, with the graveyard named in a key nothing reads."
+  },
+  {
+   "name": "Planar Genesis",
+   "abilities": [
+    {
+     "kind": "spell",
+     "text": "Look at the top four cards of your library. You may put a land card from among them onto the battlefield tapped. If you don't, put a card from among them into your hand. Put the rest on the bottom of your library in a random order.",
+     "effects": [
+      {
+       "effect": "dig",
+       "count": 4,
+       "take": 1,
+       "selector": {
+        "types": [
+         "Land"
+        ]
+       },
+       "upTo": true,
+       "to": "battlefield",
+       "tapped": true,
+       "otherwise": {
+        "take": 1,
+        "to": "hand"
+       },
+       "rest": "bottom",
+       "random": true
+      }
+     ]
+    }
+   ],
+   "notes": "GAP: 'If you don't, put a card from among them into your hand' -- a second choice among the same looked-at cards when the first is declined; dig has one choice."
+  },
+  {
+   "name": "Iron Spider, Stark Upgrade",
+   "abilities": [
+    {
+     "kind": "keyword",
+     "text": "Vigilance",
+     "keyword": "vigilance"
+    },
+    {
+     "kind": "activated",
+     "text": "{T}: Put a +1/+1 counter on each artifact creature and/or Vehicle you control.",
+     "cost": [
+      {
+       "atom": "{T}"
+      }
+     ],
+     "effects": [
+      {
+       "effect": "putCounterAll",
+       "selector": {
+        "what": "permanent",
+        "controller": "you",
+        "anyOf": [
+         {
+          "types": [
+           "Artifact",
+           "Creature"
+          ]
+         },
+         {
+          "subtypes": [
+           "Vehicle"
+          ]
+         }
+        ]
+       },
+       "counter": "+1/+1",
+       "count": 1
+      }
+     ]
+    },
+    {
+     "kind": "activated",
+     "text": "{2}, Remove two +1/+1 counters from among artifacts you control: Draw a card.",
+     "cost": [
+      {
+       "atom": "mana",
+       "cost": "{2}"
+      },
+      {
+       "atom": "removeCounters",
+       "counter": "+1/+1",
+       "count": 2,
+       "fromAmong": {
+        "types": [
+         "Artifact"
+        ],
+        "controller": "you"
+       }
+      }
+     ],
+     "effects": [
+      {
+       "effect": "draw",
+       "count": 1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Cryptbreaker",
+   "abilities": [
+    {
+     "kind": "activated",
+     "text": "{1}{B}, {T}, Discard a card: Create a 2/2 black Zombie creature token.",
+     "cost": [
+      {
+       "atom": "mana",
+       "cost": "{1}{B}"
+      },
+      {
+       "atom": "{T}"
+      },
+      {
+       "atom": "discard"
+      }
+     ],
+     "effects": [
+      {
+       "effect": "createToken",
+       "count": 1,
+       "token": {
+        "name": "Zombie",
+        "types": [
+         "Creature"
+        ],
+        "subtypes": [
+         "Zombie"
+        ],
+        "colors": [
+         "B"
+        ],
+        "power": 2,
+        "toughness": 2
+       }
+      }
+     ]
+    },
+    {
+     "kind": "activated",
+     "text": "Tap three untapped Zombies you control: You draw a card and lose 1 life.",
+     "cost": [
+      {
+       "atom": "tapCreature",
+       "count": 3,
+       "selector": {
+        "subtypes": [
+         "Zombie"
+        ]
+       }
+      }
+     ],
+     "effects": [
+      {
+       "effect": "draw",
+       "count": 1
+      },
+      {
+       "effect": "loseLife",
+       "amount": 1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Loyal Warhound",
+   "abilities": [
+    {
+     "kind": "keyword",
+     "text": "Vigilance",
+     "keyword": "vigilance"
+    },
+    {
+     "kind": "triggered",
+     "text": "When this creature enters, if an opponent controls more lands than you, search your library for a basic Plains card, put it onto the battlefield tapped, then shuffle.",
+     "trigger": {
+      "on": "enters",
+      "who": "self"
+     },
+     "condition": {
+      "compare": {
+       "count": {
+        "mostAmongOpponents": {
+         "what": "permanent",
+         "types": [
+          "Land"
+         ],
+         "controller": "you"
+        }
+       },
+       "moreThan": {
+        "count": {
+         "what": "permanent",
+         "types": [
+          "Land"
+         ],
+         "controller": "you"
+        }
+       }
+      }
+     },
+     "effects": [
+      {
+       "effect": "chooseCard",
+       "zone": "library",
+       "selector": {
+        "types": [
+         "Land"
+        ],
+        "subtypes": [
+         "Plains"
+        ],
+        "supertypes": [
+         "Basic"
+        ]
+       },
+       "to": "battlefield",
+       "tapped": true,
+       "shuffle": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Boggart Trawler // Boggart Bog",
+   "abilities": [
+    {
+     "kind": "triggered",
+     "text": "When this creature enters, exile target player's graveyard.",
+     "trigger": {
+      "on": "enters",
+      "who": "self"
+     },
+     "targets": [
+      {
+       "what": "player"
+      }
+     ],
+     "effects": [
+      {
+       "effect": "moveZoneAll",
+       "selector": {
+        "what": "card",
+        "zone": "graveyard",
+        "controller": {
+         "target": 0
+        }
+       },
+       "to": "exile"
+      }
+     ]
+    }
+   ],
+   "notes": "TOOL GAP: a modal double-faced card's text is on its faces, and the session file carries no back face; written as the hand-authored MDFCs are, with the back below, which the session format does not read.",
+   "back": {
+    "identity": {
+     "name": "Boggart Bog",
+     "types": [
+      "Land"
+     ],
+     "subtypes": [],
+     "manaCost": null,
+     "colors": [],
+     "power": null,
+     "toughness": null
+    },
+    "oracleText": "As this land enters, you may pay 3 life. If you don't, it enters tapped.\n{T}: Add {B}.",
+    "abilities": [
+     {
+      "kind": "replacement",
+      "text": "As this land enters, you may pay 3 life. If you don't, it enters tapped.",
+      "watches": {
+       "event": "enters",
+       "who": "self"
+      },
+      "change": {
+       "entersTapped": true,
+       "unlessPay": {
+        "life": 3
+       }
+      }
+     },
+     {
+      "kind": "activated",
+      "text": "{T}: Add {B}.",
+      "mana": true,
+      "cost": [
+       {
+        "atom": "{T}"
+       }
+      ],
+      "effects": [
+       {
+        "effect": "addMana",
+        "mana": {
+         "B": 1
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "The Book of Exalted Deeds",
+   "abilities": [
+    {
+     "kind": "triggered",
+     "text": "At the beginning of your end step, if you gained 3 or more life this turn, create a 3/3 white Angel creature token with flying.",
+     "trigger": {
+      "on": "end step",
+      "yours": true
+     },
+     "condition": {
+      "compare": {
+       "count": {
+        "lifeGainedThisTurn": "you"
+       },
+       "atLeast": 3
+      }
+     },
+     "effects": [
+      {
+       "effect": "createToken",
+       "count": 1,
+       "token": {
+        "name": "Angel",
+        "types": [
+         "Creature"
+        ],
+        "subtypes": [
+         "Angel"
+        ],
+        "colors": [
+         "W"
+        ],
+        "power": 3,
+        "toughness": 3,
+        "keywords": [
+         "Flying"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "kind": "activated",
+     "text": "{W}{W}{W}, {T}, Exile The Book of Exalted Deeds: Put an enlightened counter on target Angel. It gains \"You can't lose the game and your opponents can't win the game.\" Activate only as a sorcery.",
+     "cost": [
+      {
+       "atom": "mana",
+       "cost": "{W}{W}{W}"
+      },
+      {
+       "atom": "{T}"
+      },
+      {
+       "atom": "exile",
+       "self": true
+      }
+     ],
+     "timing": "sorcery",
+     "targets": [
+      {
+       "what": "permanent",
+       "subtypes": [
+        "Angel"
+       ]
+      }
+     ],
+     "effects": [
+      {
+       "effect": "putCounter",
+       "targets": {
+        "target": 0
+       },
+       "counter": "enlightened",
+       "count": 1
+      },
+      {
+       "effect": "effectUntil",
+       "targets": {
+        "target": 0
+       },
+       "rule": "cant-lose",
+       "until": "ever"
+      },
+      {
+       "effect": "effectUntil",
+       "targets": {
+        "target": 0
+       },
+       "rule": "opponents-cant-win",
+       "until": "ever"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Felidar Retreat",
+   "abilities": [
+    {
+     "kind": "triggered",
+     "text": "Landfall — Whenever a land you control enters, choose one —\n• Create a 2/2 white Cat Beast creature token.\n• Put a +1/+1 counter on each creature you control. Those creatures gain vigilance until end of turn.",
+     "trigger": {
+      "on": "enters",
+      "who": "any",
+      "filter": {
+       "types": [
+        "Land"
+       ],
+       "controller": "you"
+      }
+     },
+     "effects": [
+      {
+       "effect": "modal",
+       "choose": 1,
+       "modes": [
+        {
+         "text": "Create a 2/2 white Cat Beast creature token.",
+         "effects": [
+          {
+           "effect": "createToken",
+           "count": 1,
+           "token": {
+            "name": "Cat Beast",
+            "types": [
+             "Creature"
+            ],
+            "subtypes": [
+             "Cat",
+             "Beast"
+            ],
+            "colors": [
+             "W"
+            ],
+            "power": 2,
+            "toughness": 2
+           }
+          }
+         ]
+        },
+        {
+         "text": "Put a +1/+1 counter on each creature you control. Those creatures gain vigilance until end of turn.",
+         "effects": [
+          {
+           "effect": "putCounterAll",
+           "selector": {
+            "what": "permanent",
+            "types": [
+             "Creature"
+            ],
+            "controller": "you"
+           },
+           "counter": "+1/+1",
+           "count": 1
+          },
+          {
+           "effect": "pumpAll",
+           "selector": {
+            "what": "permanent",
+            "types": [
+             "Creature"
+            ],
+            "controller": "you"
+           },
+           "power": 0,
+           "toughness": 0,
+           "keywords": [
+            "Vigilance"
+           ],
+           "until": "end-of-turn"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Ripples of Potential",
+   "abilities": [
+    {
+     "kind": "spell",
+     "text": "Proliferate, then choose any number of permanents you control that had a counter put on them this way. Those permanents phase out. (To proliferate, choose any number of permanents and/or players, then give each another counter of each kind already there. Treat phased-out permanents and anything attached to them as though they don't exist until their controller's next turn.)",
+     "effects": [
+      {
+       "effect": "proliferate",
+       "remember": true
+      },
+      {
+       "effect": "chooseCard",
+       "zone": "battlefield",
+       "among": "remembered",
+       "selector": {
+        "controller": "you"
+       },
+       "count": 99,
+       "upTo": true,
+       "to": "battlefield",
+       "remember": true
+      },
+      {
+       "effect": "phaseOut",
+       "targets": "remembered"
+      }
+     ]
+    }
+   ],
+   "notes": "GAP: what proliferate put counters on, remembered for the effect after it; proliferate does not remember."
+  },
+  {
+   "name": "Rat Colony",
+   "abilities": [
+    {
+     "kind": "static",
+     "text": "This creature gets +1/+0 for each other Rat you control.",
+     "layer": 7,
+     "sublayer": "c",
+     "affects": {
+      "what": "permanent",
+      "self": true
+     },
+     "apply": {
+      "power": {
+       "count": {
+        "what": "permanent",
+        "subtypes": [
+         "Rat"
+        ],
+        "controller": "you",
+        "another": true
+       }
+      },
+      "toughness": 0
+     }
+    },
+    {
+     "kind": "static",
+     "text": "A deck can have any number of cards named Rat Colony.",
+     "rule": "deck-any-number",
+     "affects": {
+      "self": true
+     }
+    }
+   ],
+   "notes": "GAP: the deck rule 'a deck can have any number of cards named ...' (an exception to CR 903.5b's singleton rule); no static or keyword says it."
+  },
+  {
+   "name": "Tegwyll, Duke of Splendor",
+   "abilities": [
+    {
+     "kind": "keyword",
+     "text": "Flying",
+     "keyword": "flying"
+    },
+    {
+     "kind": "keyword",
+     "text": "deathtouch",
+     "keyword": "deathtouch"
+    },
+    {
+     "kind": "static",
+     "text": "Other Faeries you control get +1/+1.",
+     "layer": 7,
+     "sublayer": "c",
+     "affects": {
+      "what": "permanent",
+      "subtypes": [
+       "Faerie"
+      ],
+      "controller": "you",
+      "another": true
+     },
+     "apply": {
+      "power": 1,
+      "toughness": 1
+     }
+    },
+    {
+     "kind": "triggered",
+     "text": "Whenever another Faerie you control dies, you draw a card and you lose 1 life.",
+     "trigger": {
+      "on": "dies",
+      "who": "another",
+      "filter": {
+       "subtypes": [
+        "Faerie"
+       ],
+       "controller": "you"
+      }
+     },
+     "effects": [
+      {
+       "effect": "draw",
+       "count": 1
+      },
+      {
+       "effect": "loseLife",
+       "amount": 1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Bladewing the Risen",
+   "abilities": [
+    {
+     "kind": "keyword",
+     "text": "Flying",
+     "keyword": "flying"
+    },
+    {
+     "kind": "triggered",
+     "text": "When Bladewing enters, you may return target Dragon permanent card from your graveyard to the battlefield.",
+     "trigger": {
+      "on": "enters",
+      "who": "self"
+     },
+     "optional": true,
+     "targets": [
+      {
+       "what": "card",
+       "zone": "graveyard",
+       "controller": "you",
+       "subtypes": [
+        "Dragon"
+       ],
+       "nonTypes": [
+        "Instant",
+        "Sorcery"
+       ]
+      }
+     ],
+     "effects": [
+      {
+       "effect": "moveZone",
+       "targets": {
+        "target": 0
+       },
+       "to": "battlefield"
+      }
+     ]
+    },
+    {
+     "kind": "activated",
+     "text": "{B}{R}: Dragon creatures get +1/+1 until end of turn.",
+     "cost": [
+      {
+       "atom": "mana",
+       "cost": "{B}{R}"
+      }
+     ],
+     "effects": [
+      {
+       "effect": "pumpAll",
+       "selector": {
+        "what": "permanent",
+        "types": [
+         "Creature"
+        ],
+        "subtypes": [
+         "Dragon"
+        ]
+       },
+       "power": 1,
+       "toughness": 1,
+       "until": "end-of-turn"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Kodama of the East Tree",
+   "abilities": [
+    {
+     "kind": "keyword",
+     "text": "Reach",
+     "keyword": "reach"
+    },
+    {
+     "kind": "triggered",
+     "text": "Whenever another permanent you control enters, if it wasn't put onto the battlefield with this ability, you may put a permanent card with equal or lesser mana value from your hand onto the battlefield.",
+     "trigger": {
+      "on": "enters",
+      "who": "another",
+      "filter": {
+       "controller": "you"
+      },
+      "notBy": "self"
+     },
+     "effects": [
+      {
+       "effect": "chooseCard",
+       "zone": "hand",
+       "selector": {
+        "nonTypes": [
+         "Instant",
+         "Sorcery"
+        ],
+        "manaValue": {
+         "max": {
+          "manaValueOf": "that card"
+         }
+        }
+       },
+       "upTo": true,
+       "to": "battlefield"
+      }
+     ]
+    },
+    {
+     "kind": "keyword",
+     "text": "Partner",
+     "keyword": "partner"
+    }
+   ],
+   "notes": "GAP: 'if it wasn't put onto the battlefield with this ability' -- an arrival told apart by the ability that put it there; the enters trigger cannot say so, so two Kodama-made arrivals would chain."
+  },
+  {
+   "name": "Nykthos Paragon",
+   "abilities": [
+    {
+     "kind": "triggered",
+     "text": "Whenever you gain life, you may put that many +1/+1 counters on each creature you control. Do this only once each turn.",
+     "trigger": {
+      "on": "life gained",
+      "gainer": "you"
+     },
+     "optional": true,
+     "limit": 1,
+     "effects": [
+      {
+       "effect": "putCounterAll",
+       "selector": {
+        "what": "permanent",
+        "types": [
+         "Creature"
+        ],
+        "controller": "you"
+       },
+       "counter": "+1/+1",
+       "count": {
+        "lifeGained": true
+       }
+      }
+     ]
+    }
+   ],
+   "notes": "'Do this only once each turn' is written as the trigger's limit; the rule limits doing it, so a turn's first trigger declined should leave the next one able to."
+  },
+  {
+   "name": "Favorable Winds",
+   "abilities": [
+    {
+     "kind": "static",
+     "text": "Creatures you control with flying get +1/+1.",
+     "layer": 7,
+     "sublayer": "c",
+     "affects": {
+      "what": "permanent",
+      "types": [
+       "Creature"
+      ],
+      "controller": "you",
+      "keywords": [
+       "Flying"
+      ]
+     },
+     "apply": {
+      "power": 1,
+      "toughness": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ulamog, the Infinite Gyre",
+   "abilities": [
+    {
+     "kind": "triggered",
+     "text": "When you cast this spell, destroy target permanent.",
+     "trigger": {
+      "on": "spell cast",
+      "who": "self"
+     },
+     "targets": [
+      {
+       "what": "permanent"
+      }
+     ],
+     "effects": [
+      {
+       "effect": "destroy",
+       "targets": {
+        "target": 0
+       }
+      }
+     ]
+    },
+    {
+     "kind": "keyword",
+     "text": "Indestructible",
+     "keyword": "indestructible"
+    },
+    {
+     "kind": "keyword",
+     "text": "Annihilator 4",
+     "keyword": "annihilator",
+     "amount": 4
+    },
+    {
+     "kind": "triggered",
+     "text": "When Ulamog is put into a graveyard from anywhere, its owner shuffles their graveyard into their library.",
+     "trigger": {
+      "on": "put into graveyard",
+      "owner": "you",
+      "who": "self"
+     },
+     "effects": [
+      {
+       "effect": "moveZoneAll",
+       "selector": {
+        "what": "card",
+        "zone": "graveyard",
+        "owner": "you"
+       },
+       "to": "library"
+      },
+      {
+       "effect": "shuffle"
+      }
+     ]
+    }
+   ],
+   "notes": "GAP: 'when this is put into a graveyard from anywhere' -- the put-into-graveyard trigger watches a graveyard's arrivals by owner and filter, not this card's own."
+  },
+  {
+   "name": "Raise the Past",
+   "abilities": [
+    {
+     "kind": "spell",
+     "text": "Return all creature cards with mana value 2 or less from your graveyard to the battlefield.",
+     "effects": [
+      {
+       "effect": "moveZoneAll",
+       "selector": {
+        "what": "card",
+        "zone": "graveyard",
+        "controller": "you",
+        "types": [
+         "Creature"
+        ],
+        "manaValue": {
+         "max": 2
+        }
+       },
+       "to": "battlefield"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Crackle with Power",
+   "abilities": [
+    {
+     "kind": "spell",
+     "text": "Crackle with Power deals five times X damage to each of up to X targets.",
+     "targets": [
+      {
+       "anyOf": [
+        {
+         "what": "permanent",
+         "types": [
+          "Creature"
+         ]
+        },
+        {
+         "what": "player"
+        },
+        {
+         "what": "permanent",
+         "types": [
+          "Planeswalker"
+         ]
+        },
+        {
+         "what": "permanent",
+         "types": [
+          "Battle"
+         ]
+        }
+       ],
+       "count": {
+        "min": 0,
+        "max": "X"
+       }
+      }
+     ],
+     "effects": [
+      {
+       "effect": "dealDamage",
+       "amount": {
+        "x": true,
+        "times": 5
+       },
+       "targets": {
+        "target": 0
+       },
+       "who": {
+        "target": 0
+       }
+      }
+     ]
+    }
+   ],
+   "notes": "GAP: 'up to X targets' -- a target count that is X (TargetMax partial: an X count is not built)."
+  },
+  {
+   "name": "Fling",
+   "abilities": [
+    {
+     "kind": "spell",
+     "text": "As an additional cost to cast this spell, sacrifice a creature.\nFling deals damage equal to the sacrificed creature's power to any target.",
+     "additionalCost": [
+      {
+       "atom": "sacrifice",
+       "selector": {
+        "types": [
+         "Creature"
+        ]
+       },
+       "remember": true
+      }
+     ],
+     "targets": [
+      {
+       "anyOf": [
+        {
+         "what": "permanent",
+         "types": [
+          "Creature"
+         ]
+        },
+        {
+         "what": "player"
+        },
+        {
+         "what": "permanent",
+         "types": [
+          "Planeswalker"
+         ]
+        },
+        {
+         "what": "permanent",
+         "types": [
+          "Battle"
+         ]
+        }
+       ]
+      }
+     ],
+     "effects": [
+      {
+       "effect": "dealDamage",
+       "amount": {
+        "powerOf": "remembered"
+       },
+       "targets": {
+        "target": 0
+       },
+       "who": {
+        "target": 0
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Prosperous Innkeeper",
+   "abilities": [
+    {
+     "kind": "triggered",
+     "text": "When this creature enters, create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+     "trigger": {
+      "on": "enters",
+      "who": "self"
+     },
+     "effects": [
+      {
+       "effect": "createToken",
+       "count": 1,
+       "token": {
+        "predefined": "Treasure"
+       }
+      }
+     ]
+    },
+    {
+     "kind": "triggered",
+     "text": "Whenever another creature you control enters, you gain 1 life.",
+     "trigger": {
+      "on": "enters",
+      "who": "another",
+      "filter": {
+       "what": "permanent",
+       "types": [
+        "Creature"
+       ],
+       "controller": "you"
+      }
+     },
+     "effects": [
+      {
+       "effect": "gainLife",
+       "amount": 1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Argentum Armor",
+   "abilities": [
+    {
+     "kind": "static",
+     "text": "Equipped creature gets +6/+6.",
+     "layer": 7,
+     "sublayer": "c",
+     "affects": {
+      "what": "permanent",
+      "attachedBy": "self"
+     },
+     "apply": {
+      "power": 6,
+      "toughness": 6
+     }
+    },
+    {
+     "kind": "triggered",
+     "text": "Whenever equipped creature attacks, destroy target permanent.",
+     "trigger": {
+      "on": "attacks",
+      "who": "any",
+      "filter": {
+       "attachedBy": "self"
+      }
+     },
+     "targets": [
+      {
+       "what": "permanent"
+      }
+     ],
+     "effects": [
+      {
+       "effect": "destroy",
+       "targets": {
+        "target": 0
+       }
+      }
+     ]
+    },
+    {
+     "kind": "activated",
+     "text": "Equip {6}",
+     "cost": [
+      {
+       "atom": "mana",
+       "cost": "{6}"
+      }
+     ],
+     "timing": "sorcery",
+     "targets": [
+      {
+       "what": "permanent",
+       "types": [
+        "Creature"
+       ],
+       "controller": "you"
+      }
+     ],
+     "effects": [
+      {
+       "effect": "attach",
+       "targets": {
+        "target": 0
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Finale of Devastation",
+   "abilities": [
+    {
+     "kind": "spell",
+     "text": "Search your library and/or graveyard for a creature card with mana value X or less and put it onto the battlefield. If you search your library this way, shuffle. If X is 10 or more, creatures you control get +X/+X and gain haste until end of turn.",
+     "effects": [
+      {
+       "effect": "chooseCard",
+       "zone": "library",
+       "alsoZone": "graveyard",
+       "selector": {
+        "types": [
+         "Creature"
+        ],
+        "manaValue": {
+         "max": "X"
+        }
+       },
+       "to": "battlefield",
+       "shuffle": true
+      },
+      {
+       "effect": "pumpAll",
+       "selector": {
+        "what": "permanent",
+        "types": [
+         "Creature"
+        ],
+        "controller": "you"
+       },
+       "power": "X",
+       "toughness": "X",
+       "keywords": [
+        "Haste"
+       ],
+       "until": "end-of-turn",
+       "condition": {
+        "compare": {
+         "count": "X",
+         "atLeast": 10
+        }
+       }
+      }
+     ]
+    }
+   ],
+   "notes": "GAP: a search of the library and/or the graveyard together, the shuffle only if the library was searched; chooseCard searches one zone. Written over the library, the graveyard in a key nothing reads."
+  },
+  {
+   "name": "Azusa, Lost but Seeking",
+   "abilities": [
+    {
+     "kind": "static",
+     "text": "You may play two additional lands on each of your turns.",
+     "rule": "extra-land-drop",
+     "affects": {
+      "what": "player",
+      "who": "you"
+     }
+    },
+    {
+     "kind": "static",
+     "text": "You may play two additional lands on each of your turns.",
+     "rule": "extra-land-drop",
+     "affects": {
+      "what": "player",
+      "who": "you"
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Millikin",
+    "oracleId": "fa4dffda-6f04-4d0b-829d-28a1a5794dee",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Construct"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 0,
+    "toughness": 1
+  },
+  "oracleText": "{T}, Mill a card: Add {C}. (Activate only as an instant. To mill a card, put the top card of your library into your graveyard.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}, Mill a card: Add {C}.",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "mill",
+          "count": 1
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    }
+  ]
+}

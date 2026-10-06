@@ -1,0 +1,121 @@
+{
+ "schema": "CrankCompiledCard@1",
+ "name": "Bladewing the Risen",
+ "oracleId": "c22cc70a-9533-4bfc-b3ce-b2d43a73f0c1",
+ "oracleHash": "0a637e00fa8acfe8",
+ "status": "provisional",
+ "script": {
+  "schema": "CrankCardScript@1",
+  "identity": {
+   "name": "Bladewing the Risen",
+   "oracleId": "c22cc70a-9533-4bfc-b3ce-b2d43a73f0c1",
+   "supertypes": [
+    "Legendary"
+   ],
+   "types": [
+    "Creature"
+   ],
+   "subtypes": [
+    "Zombie",
+    "Dragon"
+   ],
+   "manaCost": "{3}{B}{B}{R}{R}",
+   "colors": [
+    "B",
+    "R"
+   ],
+   "colorIdentity": [
+    "B",
+    "R"
+   ],
+   "power": 4,
+   "toughness": 4
+  },
+  "oracleText": "Flying\nWhen Bladewing enters, you may return target Dragon permanent card from your graveyard to the battlefield.\n{B}{R}: Dragon creatures get +1/+1 until end of turn.",
+  "source": "compiler",
+  "model": "x10-session",
+  "abilities": [
+   {
+    "kind": "keyword",
+    "text": "Flying",
+    "keyword": "flying"
+   },
+   {
+    "kind": "triggered",
+    "text": "When Bladewing enters, you may return target Dragon permanent card from your graveyard to the battlefield.",
+    "trigger": {
+     "on": "enters",
+     "who": "self"
+    },
+    "optional": true,
+    "targets": [
+     {
+      "what": "card",
+      "zone": "graveyard",
+      "controller": "you",
+      "subtypes": [
+       "Dragon"
+      ],
+      "nonTypes": [
+       "Instant",
+       "Sorcery"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "effect": "moveZone",
+      "targets": {
+       "target": 0
+      },
+      "to": "battlefield"
+     }
+    ]
+   },
+   {
+    "kind": "activated",
+    "text": "{B}{R}: Dragon creatures get +1/+1 until end of turn.",
+    "cost": [
+     {
+      "atom": "mana",
+      "cost": "{B}{R}"
+     }
+    ],
+    "effects": [
+     {
+      "effect": "pumpAll",
+      "selector": {
+       "what": "permanent",
+       "types": [
+        "Creature"
+       ],
+       "subtypes": [
+        "Dragon"
+       ]
+      },
+      "power": 1,
+      "toughness": 1,
+      "until": "end-of-turn"
+     }
+    ]
+   }
+  ]
+ },
+ "checks": {
+  "schema": "pass",
+  "fidelity": "pass",
+  "readBack": "not run",
+  "smoke": {
+   "played": true,
+   "resolutions": 1
+  }
+ },
+ "crFlags": [],
+ "notes": "",
+ "models": {
+  "writer": "x10-session",
+  "readBack": null
+ },
+ "attempts": 1,
+ "compiledAt": "2026-10-06T16:16:06.437Z"
+}

@@ -17,13 +17,15 @@
  * true` and nothing else here treats it specially.
  */
 
-import {addObject} from "../../state/index.mjs";
+import {addObject, transformObject} from "../../state/index.mjs";
 import {selectMatching, compileSelector} from "../filter.mjs";
 import {bindEffect, rememberNow} from "../bind.mjs";
 import {amountOf} from "../amount.mjs";
 import {event, cardRef} from "./zones.mjs";
 import {typesOf} from "../../rules/layers.mjs";
 import {protectedFrom} from "../../rules/protection.mjs";
+import {manaValue, parseManaCost} from "../../rules/mana.mjs";
+import {countersPlaced} from "../../rules/statics.mjs";
 
 /* A continuous effect needs a timestamp to be ordered by (CR 613.7), and it has to be part of the
    state so a checkpoint carries it. The state's own counter is the right source: it is monotonic
@@ -314,8 +316,27 @@ export function investigate(state, params, context) {
   return createToken(state, {...(params.controller !== undefined ? {controller: params.controller} : {}), count: params.count ?? 1, token: {predefined: "Clue"}}, context);
 }
 
+/**
+ * "THE EXILED CARD'S OWNER CREATES AN X/X BLUE ILLUSION CREATURE TOKEN, WHERE X IS THE MANA VALUE OF THE EXILED CARD"
+ * (Skyclave Apparition; CR 607.2a): createToken's `linked`. What this permanent's linked ability exiled (effects/zones.mjs,
+ * `link`), while each is still that card in exile (CR 400.7) -- read against the source as it last was, since its leaving
+ * is what triggered this. Each player who owns one of them creates the token, X the mana values of all of them together
+ * (the card's ruling of 2020-09-25; an {X} in a mana cost is 0 there, CR 202.3e) -- "X" in the token's power and
+ * toughness. None there, and nobody does. Used, the link is spent.
+ */
+function linkedTokens(state, params, context) {
+  const key = context.source ?? context.lastKnown?.cardId ?? null;
+  /* A linked card that has left exile is a new object, and its id here names nothing (CR 400.7). */
+  const exiled = (state.links?.[key] ?? []).filter((id) => state.objects[id]);
+  if (key !== null && state.links) delete state.links[key];
+  const x = exiled.reduce((n, id) => n + (state.objects[id].manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0), 0);
+  const {linked: _linked, ...rest} = params;
+  return [...new Set(exiled.map((id) => state.objects[id].owner))].flatMap((owner) => createToken(state, {...rest, controller: owner}, {...context, x}));
+}
+
 /** `createToken` — CR 111. */
 export function createToken(state, params, context) {
+  if (params.linked === true) return linkedTokens(state, params, context);
   const events = [];
   const spec = params.token?.predefined ? PREDEFINED_TOKENS[params.token.predefined] : params.token ?? {};
   if (!spec) throw new Error(`No predefined token named ${params.token.predefined}`);
@@ -326,7 +347,8 @@ export function createToken(state, params, context) {
   const made = [];
   /* "An X/X green Dinosaur Beast ... where X is the amount of damage those creatures dealt" (Quartzwood Crasher): its size
      counted as it is made. */
-  const sized = (value) => (value !== null && typeof value === "object" ? amountOf(state, value, context) : value ?? null);
+  /* "X/X ... where X is the mana value of the exiled card" (linkedTokens): "X", the X this effect was given. */
+  const sized = (value) => (value === "X" || (value !== null && typeof value === "object") ? amountOf(state, value, context) : value ?? null);
   for (let i = 0; i < count; i += 1) {
     const id = addObject(state, {
       card: spec.name ?? "Token",
@@ -422,7 +444,8 @@ export function earthbend(state, params, context) {
   for (const id of (params.targets ?? []).filter((t) => state.objects[t]?.zone === "battlefield")) {
     animate(state, {targets: [id], addTypes: ["Creature"], power: 0, toughness: 0}, context);
     pushEffect(state, {id: `earthbend:${id}`, layer: 6, affects: {ids: [id]}, apply: {addKeywords: ["Haste"]}, until: null, sourceController: context.controller});
-    const count = params.count ?? 1;
+    /* Put by the earthbending player (CR 122.6): "twice that many instead" sees them. */
+    const count = countersPlaced(state, id, "+1/+1", params.count ?? 1, context.controller);
     if (count > 0) {
       const before = state.objects[id].counters["+1/+1"] ?? 0;
       state.objects[id].counters["+1/+1"] = before + count;
@@ -500,6 +523,17 @@ function fixedAt(state, selector, context) {
 }
 
 export function effectUntil(state, params, context) {
+  /* "That creature's owner can't cast spells with the same name as that creature until your next turn" (Reflector Mage):
+     a rule changed for players, not objects -- `who`, bound as it resolves ({ownerOf: {target: 0}}, script/bind.mjs) -- and
+     the spells it forbids by `named`, that creature's name as it resolves ({nameOf: {target: 0}}; CR 201.2a). Read where a
+     cast is offered (rules/statics.mjs, castForbidden). Lands are played, not cast, and stay playable (the card's ruling). A
+     name that could not be read (the creature gone) forbids nothing. */
+  if (params.rule === "cant-cast") {
+    if (typeof params.named !== "string" || !Array.isArray(params.who) || !params.who.length) return [];
+    pushEffect(state, {id: params.id ?? `effect:${context.source ?? "effect"}`, rule: "cant-cast", players: [...params.who], spells: {named: params.named},
+      affects: {what: "player"}, apply: {}, until: params.until ?? "end-of-turn", sourceController: context.controller});
+    return [];
+  }
   pushEffect(state, {
     id: params.id ?? `effect:${context.source ?? "effect"}`,
     /* A rule changed for a while ("can't be blocked this turn", rules/statics.mjs), or a characteristic, in a layer. */
@@ -515,6 +549,11 @@ export function effectUntil(state, params, context) {
     /* `toward`: which planeswalkers they can't attack ("Jaces you control"), "you" this effect's controller -- attacking a
        player, or any other planeswalker, they still may (rules/statics.mjs, cantAttack). */
     ...(params.rule === "cant-attack" && params.toward ? {toward: params.toward} : {}),
+    /* "Each of those creatures can't attack you or planeswalkers you control for as long as it has a vow counter on it"
+       (Promise of Loyalty): `defender` "you", this effect's controller, `planeswalkers` theirs too (CR 506.3), and
+       `whileCounter`, a duration of each creature's own -- while it has that counter (CR 611.2b; rules/statics.mjs). */
+    ...(params.rule === "cant-attack" && params.defender === "you" ? {defender: "you", ...(params.planeswalkers === true ? {planeswalkers: true} : {})} : {}),
+    ...(params.rule === "cant-attack" && typeof params.whileCounter === "string" ? {whileCounter: params.whileCounter} : {}),
     apply: params.apply ?? {},
     /* "Until end of turn" (the default), "until your next turn", or "ever": an effect with no duration -- "up to one other
        target creature loses all abilities" (Abigale) -- lasting as long as what it affects does (CR 611.2a; a permanent
@@ -559,6 +598,37 @@ export function gainControl(state, params, context) {
  * "phased" -- with no zone change at all (CR 702.26e: nothing leaves or enters, nothing triggers), and phases back in, the
  * same object, before its controller untaps during their next untap step (rules/turn.mjs, CR 702.26b).
  */
+/**
+ * `setState` -- §12.2's state of a permanent (Forge's SetState is the ruler only), two of them built:
+ *   `level: N`         a Class's level set to N, its level bar's ability (CR 716.2a): a designation any permanent may have (716.2b), kept on
+ *                      the permanent until it leaves (a new object has none, CR 400.7; 716.2d reads none as 1). It is not
+ *                      copiable (716.2b): a copy of the Class is level 1.
+ *   `transform: true`  "transform Venat" (CR 701.27a; state/index.mjs, transformObject). An activated or triggered ability
+ *                      of the permanent that transforms it does so only if it hasn't transformed since the ability was put
+ *                      on the stack -- a delayed trigger's, since it was made (701.27f) -- the count then
+ *                      (`context.sourceTransforms`, rules/stack.mjs) against the count now; otherwise the instruction is
+ *                      ignored.
+ */
+export function setState(state, params, context) {
+  const events = [];
+  for (const id of params.targets ?? []) {
+    const object = state.objects[id];
+    /* Gone from the battlefield -- a new object, if anywhere (CR 400.7) -- and there is nothing to change. */
+    if (object?.zone !== "battlefield") continue;
+    if (Number.isInteger(params.level)) {
+      const before = object.level ?? 1;
+      object.level = params.level;
+      events.push(event("GameEventCardLevel", state, {card: cardRef(state, id), oldValue: before, newValue: params.level}));
+    }
+    if (params.transform === true) {
+      if (id === context.source && context.sourceTransforms !== undefined && (object.transforms ?? 0) !== context.sourceTransforms) continue;
+      const was = object.card;
+      if (transformObject(state, id)) events.push(event("GameEventCardTransformed", state, {card: cardRef(state, id), from: was, to: state.objects[id].card}));
+    }
+  }
+  return events;
+}
+
 export function phaseOut(state, params, context) {
   const ids = (params.selector ? selectMatching(state, params.selector, context) : params.targets ?? []).filter((id) => state.objects[id]?.zone === "battlefield");
   /* Anything attached to one phases out with it, indirectly (CR 702.26h), and back in with it, whoever controls it. */
@@ -679,9 +749,14 @@ export function delayedTrigger(state, params, context) {
       /* "Until your next turn, whenever a creature attacks you ..." (Jace, Reality Sculptor): every time, until its controller's
          next turn begins (rules/turn.mjs). */
       ...(params.untilYourNextTurn ? {untilYourNextTurn: true} : {}), fresh: true}
-      : {at: params.at ?? "end step"}),
+      /* "At the beginning of YOUR next upkeep" (rebound, CR 702.88a; rules/stack.mjs): its controller's, not the next one's.
+         "At the beginning of that player's next end step" (The Eternal Wanderer): a moment of that player's turn only (`player`). */
+      : {at: params.at ?? "end step", ...(params.yours === true ? {yours: true} : {}), ...(Number.isInteger(params.player) ? {player: params.player} : {})}),
     controller: context.controller,
     source: context.source ?? null,
+    /* A double-faced source's transforms as this is made: "transform it" from a delayed trigger is ignored once it has
+       transformed since (CR 701.27f; setState). */
+    ...(state.objects[context.source]?.mdfc && state.objects[context.source].zone === "battlefield" ? {sourceTransforms: state.objects[context.source].transforms ?? 0} : {}),
     effects: rememberNow(params.effects ?? [], context, {keepThat: waits, state}),
     text: params.text ?? null,
   });

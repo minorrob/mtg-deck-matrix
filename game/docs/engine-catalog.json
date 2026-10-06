@@ -9,16 +9,17 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1144,
-  "everyRule": 2460
+  "defined": 1159,
+  "provisional": 28,
+  "everyRule": 2492
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 38,
+    "built": 41,
     "partial": 0,
-    "named": 19,
-    "missing": 137
+    "named": 17,
+    "missing": 136
    },
    "entries": [
     {
@@ -649,13 +650,13 @@
      "kind": "keyword ability",
      "rule": "702.88",
      "name": "Rebound",
-     "engine": null,
-     "status": "named",
+     "engine": "Rebound",
+     "status": "built",
      "forge": "Rebound",
      "top": 3,
      "all": 35,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -769,13 +770,13 @@
      "kind": "keyword ability",
      "rule": "702.30",
      "name": "Echo",
-     "engine": null,
-     "status": "named",
+     "engine": "Echo",
+     "status": "built",
      "forge": "Echo",
      "top": 2,
      "all": 52,
-     "blocks": 2,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -1393,13 +1394,13 @@
      "kind": "keyword ability",
      "rule": "702.192",
      "name": "Paradigm",
-     "engine": null,
-     "status": "missing",
+     "engine": "Paradigm",
+     "status": "built",
      "forge": "Paradigm",
      "top": 1,
      "all": 5,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -2353,9 +2354,9 @@
   },
   "Keyword actions (CR 701)": {
    "tally": {
-    "built": 19,
+    "built": 20,
     "partial": 3,
-    "named": 4,
+    "named": 3,
     "missing": 44
    },
    "entries": [
@@ -2521,12 +2522,12 @@
      "rule": "701.27",
      "name": "Transform",
      "engine": "setState",
-     "status": "named",
+     "status": "built",
      "forge": "SetState",
      "top": 19,
      "all": 280,
-     "blocks": 19,
-     "alone": 9
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword action",
@@ -2634,7 +2635,7 @@
      "top": 6,
      "all": 35,
      "blocks": 6,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "keyword action",
@@ -3205,10 +3206,10 @@
   },
   "Effects": {
    "tally": {
-    "built": 62,
+    "built": 64,
     "partial": 1,
-    "named": 9,
-    "missing": 120
+    "named": 8,
+    "missing": 119
    },
    "entries": [
     {
@@ -3732,12 +3733,12 @@
      "rule": null,
      "name": "SetState",
      "engine": "setState",
-     "status": "named",
+     "status": "built",
      "forge": "SetState",
      "top": 19,
      "all": 280,
-     "blocks": 19,
-     "alone": 9
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -3796,7 +3797,7 @@
      "forge": "ReplaceCounter",
      "top": 16,
      "all": 33,
-     "blocks": 15,
+     "blocks": 14,
      "alone": 0
     },
     {
@@ -4109,7 +4110,7 @@
      "top": 6,
      "all": 35,
      "blocks": 6,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "effect",
@@ -4193,7 +4194,7 @@
      "top": 4,
      "all": 13,
      "blocks": 4,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -4235,13 +4236,13 @@
      "kind": "effect",
      "rule": null,
      "name": "Manifest",
-     "engine": null,
-     "status": "missing",
+     "engine": "manifest",
+     "status": "built",
      "forge": "Manifest",
      "top": 3,
      "all": 32,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4349,7 +4350,7 @@
      "top": 2,
      "all": 12,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -4445,7 +4446,7 @@
      "top": 1,
      "all": 26,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -5519,9 +5520,9 @@
   },
   "Triggers": {
    "tally": {
-    "built": 17,
+    "built": 18,
     "partial": 4,
-    "named": 5,
+    "named": 4,
     "missing": 112
    },
    "entries": [
@@ -6058,11 +6059,11 @@
      "rule": null,
      "name": "Exiled",
      "engine": "exiled",
-     "status": "named",
+     "status": "built",
      "forge": "Exiled",
      "top": 1,
      "all": 3,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -7380,7 +7381,7 @@
      "forge": "AttackRestrict",
      "top": 4,
      "all": 8,
-     "blocks": 4,
+     "blocks": 3,
      "alone": 2
     },
     {
@@ -8120,9 +8121,9 @@
   "Replacement effects": {
    "tally": {
     "built": 0,
-    "partial": 4,
+    "partial": 5,
     "named": 0,
-    "missing": 30
+    "missing": 29
    },
    "entries": [
     {
@@ -8381,12 +8382,12 @@
      "kind": "replacement",
      "rule": null,
      "name": "Proliferate",
-     "engine": null,
-     "status": "missing",
+     "engine": "script/resolution",
+     "status": "partial",
      "forge": "Proliferate",
      "top": 1,
      "all": 1,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -8922,7 +8923,7 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 95,
+     "blocks": 92,
      "alone": 23
     },
     {
@@ -8946,8 +8947,8 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 99,
-     "alone": 26
+     "blocks": 97,
+     "alone": 25
     },
     {
      "kind": "option",
@@ -9006,8 +9007,8 @@
      "forge": "MayPlay",
      "top": 99,
      "all": 625,
-     "blocks": 73,
-     "alone": 18
+     "blocks": 72,
+     "alone": 17
     },
     {
      "kind": "option",
@@ -9313,10 +9314,10 @@
   },
   "Amounts the game counts": {
    "tally": {
-    "built": 12,
+    "built": 13,
     "partial": 1,
     "named": 0,
-    "missing": 175
+    "missing": 174
    },
    "entries": [
     {
@@ -9424,7 +9425,7 @@
      "forge": "CounterNum",
      "top": 16,
      "all": 32,
-     "blocks": 15,
+     "blocks": 14,
      "alone": 0
     },
     {
@@ -9533,7 +9534,7 @@
      "top": 8,
      "all": 71,
      "blocks": 8,
-     "alone": 3
+     "alone": 5
     },
     {
      "kind": "count",
@@ -10024,7 +10025,7 @@
      "forge": "Num",
      "top": 1,
      "all": 3,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -10073,7 +10074,7 @@
      "top": 1,
      "all": 2,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "count",
@@ -10145,7 +10146,7 @@
      "top": 1,
      "all": 1,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "count",
@@ -11182,6 +11183,18 @@
     {
      "kind": "count",
      "rule": null,
+     "name": "It entered from, or was cast from, your library",
+     "engine": "condition {cameFrom: \"library\"} (script/condition.mjs)",
+     "status": "built",
+     "forge": "wasCastFromYourLibrary",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
      "name": "LastStateGraveyard",
      "engine": null,
      "status": "missing",
@@ -11482,18 +11495,6 @@
     {
      "kind": "count",
      "rule": null,
-     "name": "wasCastFromYourLibrary",
-     "engine": null,
-     "status": "missing",
-     "forge": "wasCastFromYourLibrary",
-     "top": 0,
-     "all": 1,
-     "blocks": 0,
-     "alone": 0
-    },
-    {
-     "kind": "count",
-     "rule": null,
      "name": "xColorPaid",
      "engine": null,
      "status": "missing",
@@ -11769,10 +11770,10 @@
   },
   "Other keyword constructs": {
    "tally": {
-    "built": 4,
+    "built": 7,
     "partial": 0,
     "named": 1,
-    "missing": 11
+    "missing": 8
    },
    "entries": [
     {
@@ -11815,13 +11816,13 @@
      "kind": "keyword construct",
      "rule": null,
      "name": "Class",
-     "engine": null,
-     "status": "missing",
+     "engine": "Class",
+     "status": "built",
      "forge": "Class",
      "top": 9,
      "all": 38,
-     "blocks": 9,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword construct",
@@ -11887,25 +11888,25 @@
      "kind": "keyword construct",
      "rule": null,
      "name": "Protection from black",
-     "engine": null,
-     "status": "missing",
+     "engine": "Protection from black",
+     "status": "built",
      "forge": "Protection from black",
      "top": 2,
      "all": 48,
-     "blocks": 2,
+     "blocks": 0,
      "alone": 0
     },
     {
      "kind": "keyword construct",
      "rule": null,
      "name": "Protection from white",
-     "engine": null,
-     "status": "missing",
+     "engine": "Protection from white",
+     "status": "built",
      "forge": "Protection from white",
      "top": 2,
      "all": 32,
-     "blocks": 2,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword construct",

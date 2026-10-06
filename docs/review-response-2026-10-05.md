@@ -17,6 +17,7 @@ until the first live game in the cloud is played. That plan's steps resume after
 | **Next** | Done: this branch merged on the gate (#665, `main` 2fd4b1bd), the staging release walked and pushed (`release/cloud-staging` 4f2c85df). **Staging runs it**: version `88cd1fae`, deployed 18:20:29 UTC, its Worker byte-identical to the release's bundle. Next, L2 (a signed-in person sees "Version 2fd4b1b · 2026-10-05" in Settings, a friend joins) and the first live game. |
 | **L2, the version** | Rob, 2026-10-06: "2fd4b1b · 2026-10-05 is current at staging" (Settings, signed in). Left of L2: a friend through Access, and both boards playing. |
 | **Rob's answers, 2026-10-06** | Workers Builds deployed staging, not Rob (D8 changes, 6.1); #663 and #664 folded in; once every person is out the game ends there (built); the standing decisions explained in 6.1. |
+| **Rob's actions, 2026-10-06 (later)** | **The repository is public** (D7, option C): Actions is free and unlimited on GitHub's runners, so the gate is Actions again, on the next push. **The Access service token exists** (`crankmagic-staging-checks`, to 2027-10-06) with a Service Auth policy, "Session checks", on CrankMagic staging, and **the rehearsal policy is gone** (A5, A8; read from the Cloudflare API). **The deploy fallback is set** as an environment variable (A4's second part), which only a new session receives. Left of A4: the injected token still expires 2026-10-25 and still cannot read Workers Builds. |
 
 ## 1. The review, claim by claim
 
@@ -99,7 +100,8 @@ From the review's "Before inviting a friend", which is the brief's:
   Access redirect losing the invitation fragment is a known limitation.
 - Use Jace's original deck and the three (table) copies. The original AI decks still contain unsupported cards.
 - Keep the invitation link handy. Before the game starts, Play opens New table instead of returning to the occupied
-  seat; reopening the link works.
+  seat; reopening the link works. *(Fixed by L5 in the next staging release, with the two above it: the invitation
+  survives a signed-out sign-in, and an empty library's deck dialog offers Restore.)*
 - For exile or alternate-cost casts, put mana into the pool first. On a phone, use landscape and the hand control; the
   upright board's rotation is documented behavior.
 
@@ -119,18 +121,19 @@ it, in their order, with the changes in the last table.
 | **L2** | Verify the deployed site: the version id and `crankmagic-version` meta read back; Rob signs in through Access and opens Play; a friend signs in and reopens the invite; both WebSockets carry a game; the five-second rule measured over the network | session (version), Rob and a friend (the rest) | the version, Rob's word, the record downloaded | A1, A3 |
 | **L3** | **The first live game**: Rob, a friend, two AI seats (or Rob and three), the backup's decks as seated in the brief; the full record downloaded and replayed; its `refusals` read | Rob and a friend; session reads the record | the record, replayed | L2 |
 | **L4** | The 80 games of section 2 on the exact decks, on the corrected metric; each refusal found becomes a house-pilot fix (attack taxes first) | session | `fuzz-human.json`, `fuzz-ai.json` | A2 |
-| **L5** | The three limitations likeliest to stop a friend, one PR each, released to staging: the invitation survives the Access sign-in (the code carried where a redirect keeps it, not in the `#` fragment); the empty library says how to restore the decks; Play returns to the occupied table before the game starts | session | the browser suites that hold each, `play-e2e` | -- |
+| **L5** | **Built (2026-10-06), one commit, to staging with the next release.** (1) The invitation survives the Access sign-in: the link is `/api/join/<table>/<code>`, behind Access on staging and production alike, and the Worker sends the person back to `#table/<table>/<code>` once they are in (Access keeps a path through its sign-in and drops a fragment). The trade: the code now reaches the Worker in the link's path, as production's sign-in already carried it in `to=`; nothing keeps it, it seats only someone Access admits, once, for a day, and a new link withdraws it. Older fragment links still open. (2) An empty library's deck dialog says how to bring a deck and opens Restore from a backup file on the table's page, the seat kept. (3) The table a person sits at before its game is kept on the device, and Play's New table leads with "Your seat is waiting" and Back to your table; once the game is over it is forgotten | session | `tests/cloud-worker.mjs` (96 checks; the redirect, and every other shape refused), `tests/table-lobby.mjs` (67: the link's shape, Play leading back, the seat forgotten after the game, the empty library's dialog and Restore), `play-e2e` under `wrangler dev` (35: the newcomer follows the real redirect through the Worker and sits in seat 2); each check red with its piece removed | -- |
 | **L6** | The deploy path without Personal-HP exists again (Workers Builds, D8). Left: preview builds off (D8), the token's read access to Builds (A4), an Access service token for the automated live checks G-C asks for (A5) | session after Rob | a build's log read by a session; the live walk run against staging | D8, A4, A5 |
 
 ### After Phase L: the execution plan's steps, as amended
 
 | Step | Change from `docs/plan-execution-2026-10-03.md` |
 | --- | --- |
-| The 28 undefined live-deck cards | First after L: helper B's 19 (waiting on A6), then the 9 others, so the true AI decks seat without stand-ins |
-| X8b, X8c | Unchanged |
-| **X9 The room's budget** | Narrowed: the regression is fixed; what is left is seed 1's spread cost and a CPU check in `tests/engine-perf.mjs` that fails on a machine like the container's, so a regression is caught where it is introduced instead of by an outside review |
+| The 28 undefined live-deck cards | **Done (2026-10-06), Train A.** Four workers in parallel, merged into this branch in four commits, each on check-cards and every engine, game, room and card suite. The 28 (helper B's 19 rebuilt among them) are each defined with every rule, and all 28 resolve at the table (`tableCards`), so the AI decks seat without stand-ins. New mechanics include rebound, echo, protection from a color, adventures, transform, Class, paradigm, manifest, mana that does something when spent, and Bolas's Citadel's life; 26 new suites. check-cards: 1,586 definitions, 2,516 scenarios |
+| X8b, X8c | **Done (2026-10-06).** X8c: hold priority or yield for the turn, said by the switch and in Tools. X8b: a cast or an ability the pool pays more than one way ({W} or {U} for {1}; {G} or 2 life for {G/P}; a hybrid) is offered and asks which way before anything is paid, where before it was not offered at all. The house pilot pays with mana rather than life (`tests/engine-pay-choice.mjs`, 24 checks, six breaks caught). Every game the AI plays changed with it: seed 4 of the room games is now a 75-turn game on a crowded board, so `SLICE_STEPS` went from 250 to 100 (its longest slice 9.0 s at 250 and 6.7 s at 100, about 17 s at the slowest machine's speed) and engine-room-games' ceilings were re-measured (a game 25 yardsticks a thousand events, the ten together 9, derivations 1,000 and trials 2,500 an event); with F-2 put back the suite still fails |
+| **X9 The room's budget** | **Done (2026-10-06).** The CPU check went into `tests/engine-room-games.mjs`, which already plays the games, instead of a new `engine-perf.mjs` that would play them twice: each game's own-thread CPU in units of a yardstick run in the same process, a game at most 15 a thousand events and the ten together 8 (measured 1.8-9.4 and 4.1-5.4, alone and three at a time), and derivations and dependency trials an event held under 450 and 1,600. With F-2 put back it fails: seed 10 at 23.4, the ten at 12.0. Seed 1's spread cost: two answers asked again and again inside one question are now made once (whether an ability names the chosen type; the protections in play, once per target candidate), seed 1 21.1 s of CPU to 18.0 s, the same game; no single cost is over 9% of it, so what is left is spread across derivation |
 | X7 Releases by script | Moves into L6 |
-| X10-X14, G-B to G-F | Unchanged, except that G-B's five-second rule and G-C's version read-back are first measured in L2 |
+| X10 | **Done (2026-10-06): the pilot measured** (`docs/engine/velocity-measured-2026-10-06.md`). A seeded 50 of the 1,316 most-played cards with every rule built: 80% pass the definition checks, 56% are right after scenarios, 28 stored provisional (seated nowhere: D5 holds, `tests/engine-learned.mjs`). About 85 right definitions a session-hour; about 740 of the 1,316 definable today, about 580 waiting on engine work |
+| X11-X14, G-B to G-F | Unchanged, except that G-B's five-second rule and G-C's version read-back are first measured in L2. X11 (the six other decks) is next: Rob's seven decks are 356 defined of 477, 422 with every rule; what blocks the rest is led by RememberChanged, MayPlay and RememberObjects (`docs/engine/coverage.md`) |
 | Readiness claims | Every claim of "no refused answer" is read from `room.refusals` (or `tools/fuzz-live.mjs`), never from the history |
 
 ## 6. Rob's questions and actions
@@ -142,11 +145,11 @@ Each has the recommended answer; the session takes it unless Rob says otherwise.
 | **A1** | ~~Deploy staging from Personal-HP~~ **Done without you (2026-10-05):** Workers Builds deployed the push to `release/cloud-staging` at 18:20 UTC (Rob, 2026-10-06: "I did not"). Pushing `release/cloud-staging` is how staging deploys again | -- | -- |
 | **A2** | Attach `crankmagic-backup-live-game-2026-10-04.json` to this session (or the next) | Yes | It is your library, and it is not in the repository by design |
 | **A3** | Let the friend through staging's Access. **Correction (read from the Cloudflare API, 2026-10-06):** the "CrankMagic staging" application has no Invited policy; it admits exactly two addresses, through "Rob Only" and "Rehearsal: test friend (2026-10-04)". ("Invited" belongs to production's `crankmagic.com/api/*`.) Add the friend's address to a staging policy, and tell them to sign in and restore the backup *before* opening the invite (section 4) | A policy "Friends" on the staging application, Allow, Include: Emails | Access is your dashboard |
-| **A4** | Optional now: the Cloudflare token as an environment variable (not the proxy's API credentials), only as a fallback if Workers Builds stops again; and, separately, read access to Workers Builds for the token (its Builds API answers "Invalid token" today), so a session can read a build's log instead of inferring it from the deployments list | Read access yes; the deploy fallback only if Builds fails again | Your environment and your credential |
-| **A5** | An Access service token for automated checks of staging (version read-back, the live walk), given to sessions as `CF_ACCESS_CLIENT_ID` and `CF_ACCESS_CLIENT_SECRET` | Yes, scoped to staging | It changes Access policy, which the review asked not to do on its say-so |
+| **A4** | **Half done (Rob, 2026-10-06: "6 ... done"):** the deploy fallback, the Cloudflare token as the environment variable `CLOUDFLARE_API_TOKEN`, which a new session receives (this one still runs on the injected token). **Left:** the injected token (`825fc1a3`) still expires 2026-10-25 and its Builds API still answers "Invalid token" (read 2026-10-06 after Rob's change): add Workers Builds Configuration, Read and move the expiry (6.2). Was: optional now: the Cloudflare token as an environment variable (not the proxy's API credentials), only as a fallback if Workers Builds stops again; and, separately, read access to Workers Builds for the token (its Builds API answers "Invalid token" today), so a session can read a build's log instead of inferring it from the deployments list | Read access yes; the deploy fallback only if Builds fails again | Your environment and your credential |
+| **A5** | **Done (Rob, 2026-10-06; read from the Cloudflare API):** service token `crankmagic-staging-checks`, expiring 2027-10-06, and the Service Auth policy "Session checks" on CrankMagic staging. Whether `CF_ACCESS_CLIENT_ID` and `CF_ACCESS_CLIENT_SECRET` are in the environment a new session says. Was: an Access service token for automated checks of staging (version read-back, the live walk), given to sessions as `CF_ACCESS_CLIENT_ID` and `CF_ACCESS_CLIENT_SECRET` | Yes, scoped to staging | It changes Access policy, which the review asked not to do on its say-so |
 | **A6** | Approve helper B's pushes (its 19 AI 1 and AI 3 cards), as ACTIVE.md has asked since 2026-10-04 | Yes | Its permission check refused every route |
 | **A7** | **Done (Rob, 2026-10-06: yes):** #663 and #664 folded into the next PR, their walk run on the merged tree (`play-e2e` 35 checks), #664's "none refused" qualified like the freeze record's | -- | -- |
-| **A8** | Remove the staging Access policy **"Rehearsal: test friend (2026-10-04)"** that #664 says that session added (it admits only its test identity; "Rob Only" untouched), or confirm it should stay for automated checks until A5 replaces it | Remove it once A5's service token exists | Access policy is yours, and the review asked that it not change on its say-so |
+| **A8** | **Done (Rob, 2026-10-06; read from the Cloudflare API):** staging's policies are now "Rob Only" and "Session checks". Was: remove the staging Access policy **"Rehearsal: test friend (2026-10-04)"** that #664 says that session added (it admits only its test identity; "Rob Only" untouched), or confirm it should stay for automated checks until A5 replaces it | Remove it once A5's service token exists | Access policy is yours, and the review asked that it not change on its say-so |
 | **Q1** | **Answered (Rob, 2026-10-06: no):** once every person at the table is out -- lost, conceded or out of time -- the game ends there, the AI seats not playing it out. Built as the pod's `endWhenNoPerson`, which the table sets as it launches, so a game made before it replays as it was played; the record says "every person had left the game, so it ended there", and a person knocked out files a loss | -- | -- |
 | **Q2** | The standing decisions D7, D8, D11 and production, explained with options in section 6.1 | See 6.1 | Yours |
 
@@ -162,7 +165,7 @@ minutes a month, and Linux minutes past that cost $0.006 each since January 2026
 | --- | --- | --- |
 | **A. Fix the Actions billing** (GitHub, Settings, Billing and plans: a working payment method and an Actions spending limit above $0, say $10 a month) | A run is about 22 minutes, so about 90 runs a month are free and each one past that is about 13 cents; $10 covers about 75 more | The gate returns as a green check on every PR at no session time. Recommended |
 | B. A self-hosted runner on Personal-HP (the plan's D7) | Free (GitHub postponed the per-minute fee it had announced for self-hosted runners) | Runs only while the PC is on and awake, on Windows, beside your own work; the workflow already has a fallback to GitHub's runners |
-| C. Make the repository public | Actions free and unlimited | Your library data and plans become public; not recommended |
+| **C. Make the repository public (Rob chose this, 2026-10-06)** | Actions free and unlimited | The code, the plans and the history are public. The history scanned on 2026-10-06 with the gate's own patterns: no key or token; three personal email addresses in commits of 2026-09-17 to 2026-09-24 (removed from the files on 2026-09-24, still in those commits; one only on the branch `cursor/personal-hp-online-2026-09-17`). Removing them from history is a rewrite of `main`, Rob's call. With a public repository, B is no longer safe: a self-hosted runner would run any fork's pull request on Personal-HP |
 | D. Keep the local gate | Free in dollars | About 32 minutes of a session per merge, and the merging session vouches for its own run |
 
 **D8 -- how releases deploy.** The plan recommended turning Cloudflare Workers Builds off and deploying from Personal-HP,
@@ -195,6 +198,46 @@ b630128 of 2026-10-01; five days of workshop work on `main` have not reached it.
 | --- | --- |
 | Refresh the workshop now: the `pages` build of `main`, walked by `release-acceptance`, pushed to `release/pages` (Workers Builds deploys), walked again live | Yes, whenever you say go: it changes nothing about Play, and the walks hold the journeys |
 | Play on production | Not before G-F, as the plan has it: after Grok Bot's agents, your invitees and your own review at staging |
+
+### 6.2 How to do A4, A5, A8 and A3 (Rob asked, 2026-10-06)
+
+The facts these rest on, read from the Cloudflare API on 2026-10-06: the account token this environment injects (id
+starting `825fc1a3`) **expires on 2026-10-25**; staging's Access application, "CrankMagic staging", has two Allow
+policies, "Rob Only" and "Rehearsal: test friend (2026-10-04)", each one email address; the account has no Access
+service token yet.
+
+**A4 -- the session's Cloudflare token (the part still worth doing).** Workers Builds now deploys staging on a push, so
+the deploy fallback can wait. Two small changes to the existing token, in the Cloudflare dashboard: Manage Account,
+Account API Tokens, the token whose id starts `825fc1a3`, Edit.
+1. Add the permission Account, **Workers Builds Configuration, Read** (lets a session read a build's status and log).
+2. Set its expiry past 2026-10-25, or sessions lose Cloudflare access that day.
+3. Save. Nothing changes in this environment: the proxy keeps injecting the same token.
+
+Only if Workers Builds stops deploying again: create a token from the "Edit Cloudflare Workers" template, then in this
+environment's settings (the cloud environment menu in the session's title bar, then Edit) add it as the environment
+variable `CLOUDFLARE_API_TOKEN` and remove the Cloudflare entry from the API credentials, since while the proxy injects
+a token it overwrites wrangler's own.
+
+**A5 -- a service token for automated staging checks.** In the Zero Trust dashboard (one.dash.cloudflare.com):
+1. Access, Service credentials, Service Tokens, **Create Service Token**. Name `crankmagic-staging-checks`, duration a
+   year. Copy the Client ID and the Client Secret now: the secret is shown once.
+2. Access, Applications, **CrankMagic staging**, Policies, Add a policy: name `Session checks`, action **Service
+   Auth**, Include: Service Token, `crankmagic-staging-checks`. Save.
+3. In this environment's settings (as above), add two environment variables, `CF_ACCESS_CLIENT_ID` and
+   `CF_ACCESS_CLIENT_SECRET`, with those values. A new session picks them up. Never paste them into a chat.
+
+With it a session can read staging's pages and `version.json` itself (sending `CF-Access-Client-Id` and
+`CF-Access-Client-Secret`). Playing a table needs one more step of ours: the Worker knows a person by the email in
+Access's token, and a service token carries none, so the table API answers "Sign in to use a table". Letting the
+service token sit at playtest tables as a named test seat is L6's code change, the session's.
+
+**A8 -- the rehearsal policy.** Access, Applications, CrankMagic staging, Policies, "Rehearsal: test friend
+(2026-10-04)", Delete. It admits only the test identity of 2026-10-04's session. Do it after A5 (or now: nothing of
+ours depends on it once the service token exists).
+
+**A3 -- the friend.** Same application, Add a policy: name `Friends`, action **Allow**, Include: Emails, the friend's
+address (more addresses later). Save. Then the friend signs in at staging.crankmagic.com, restores the backup in
+Settings, Data, and only then opens the invitation link (section 4).
 
 ## 7. Assumptions and confidence
 

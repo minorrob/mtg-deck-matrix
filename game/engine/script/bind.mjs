@@ -52,6 +52,7 @@
 import {compileSelector, selectMatching} from "./filter.mjs";
 import {powerOf, toughnessOf, controllerOf} from "../rules/layers.mjs";
 import {namesChosen, withChosen} from "./chosen.mjs";
+import {valueCostOf, shownName} from "../state/index.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {amountOf, AMOUNT_PARAMS} from "./amount.mjs";
 
@@ -180,7 +181,9 @@ export function recheckTargets(state, specs, chosen, context) {
 }
 
 const isRef = (value) => value && typeof value === "object" && !Array.isArray(value) && Number.isInteger(value.target);
-const FACT_KEYS = ["powerOf", "toughnessOf", "manaValueOf", "controllerOf"];
+/* `ownerOf` and `nameOf` (Reflector Mage): "that creature's owner can't cast spells with the same name as that creature" --
+   whose it is (CR 108.3) and what it is called (CR 201.2) as the resolution begins, before the creature is returned. */
+const FACT_KEYS = ["powerOf", "toughnessOf", "manaValueOf", "controllerOf", "ownerOf", "nameOf"];
 const factRef = (value) => value && typeof value === "object" && !Array.isArray(value) && FACT_KEYS.find((k) => isRef(value[k])) || null;
 
 /** What effects may need to know about each object target, read now (CR 608.2h): power, toughness, mana value, controller. */
@@ -195,8 +198,11 @@ export function factsOf(state, targets) {
     return {powerOf: o.zone === "battlefield" ? powerOf(state, t.id) : (o.power ?? 0),
       /* "Its controller gains life equal to its toughness" (Condemn): as it was, before the effect moved it. */
       toughnessOf: o.zone === "battlefield" ? toughnessOf(state, t.id) : (o.toughness ?? 0),
-      manaValueOf: o.manaCost ? manaValue(parseManaCost(o.manaCost)) : 0,
-      controllerOf: o.zone === "battlefield" ? controllerOf(state, t.id) : o.controller};
+      /* A transformed permanent's is its front face's (CR 202.3b). */
+      manaValueOf: valueCostOf(o) ? manaValue(parseManaCost(valueCostOf(o))) : 0,
+      controllerOf: o.zone === "battlefield" ? controllerOf(state, t.id) : o.controller,
+      /* A face-down permanent has no name (CR 708.2; Reflector Mage's ruling): a lock by its name locks nothing. */
+      ownerOf: o.owner, nameOf: o.faceDown === true ? null : o.card};
   });
 }
 /* A fact's value, or undefined when its target became illegal. */
@@ -250,13 +256,21 @@ export function bindEffect(effect, context, state = null) {
   const bound = namesChosen(effect) ? withChosen(effect, context.chosen) : {...effect};
   /* Facts first: a number for an amount, a player where a player goes. */
   for (const [key, value] of Object.entries(bound)) {
-    if (!factRef(value)) continue;
+    /* Who chooses by `ownerOf` is the owner as the object now is (below), not a fact read as the resolution began. */
+    if (!factRef(value) || (key === "chooser" && factRef(value) === "ownerOf")) continue;
     const fact = factValue(value, context);
     if (key === "who") bound.who = fact === undefined ? [] : [fact];
     else if (fact === undefined) delete bound[key];
     else bound[key] = fact;
   }
   if ("targets" in bound) bound.targets = objectsOf(bound.targets, context);
+  /* "Destroy all creatures with power greater than target creature's power" (Fell the Mighty; CR 608.2h): a selector's
+     `power.moreThan`, a fact about a target, read as the resolution began -- a number, or null when that target is no
+     longer legal, which matches nothing (script/filter.mjs). */
+  if (bound.selector && typeof bound.selector === "object" && factRef(bound.selector.power?.moreThan)) {
+    const fact = factValue(bound.selector.power.moreThan, context);
+    bound.selector = {...bound.selector, power: {...bound.selector.power, moreThan: Number.isInteger(fact) ? fact : null}};
+  }
   /* "Exile target player's graveyard": a selector's controller bound to the target player, or to nobody. */
   if (bound.selector && typeof bound.selector === "object" && isRef(bound.selector.controller)) {
     const [player] = playersOf(bound.selector.controller, context);
@@ -393,5 +407,6 @@ export function targetName(state, chosen) {
   if (Array.isArray(chosen)) return chosen.length ? chosen.map((t) => targetName(state, t)).join(" and ") : "no target";
   if (chosen.kind === "choose") return countWords(chosen);
   if (chosen.kind === "player") return state.players[chosen.id]?.name ?? `Seat ${chosen.id + 1}`;
-  return state.objects[chosen.id]?.card ?? "";
+  /* A face-down permanent has no name (CR 708.2a): it is said to be face down. */
+  return shownName(state.objects[chosen.id]);
 }

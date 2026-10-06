@@ -32,7 +32,8 @@ import {fileURLToPath} from "node:url";
 import {isPrimitive, isKeyword, isTriggerEvent, normalizeKeyword} from "../engine/vocabulary.mjs";
 import {isBuilt} from "../engine/script/effects/index.mjs";
 import {TRIGGER_KINDS} from "../engine/cards/index.mjs";
-import {loadCardIndex} from "./engine-cards.mjs";
+import {loadCardIndex, loadCardScripts} from "./engine-cards.mjs";
+import {createCardIndex} from "../engine/cards/index.mjs";
 import {FORGE_API, FORGE_TRIGGER, FORGE_STATIC, FORGE_REPLACEMENT, FORGE_OPTIONS, FORGE_COUNTS, BROAD_TRIGGERS, keywordBuilt, missingFor} from "./engine-constructs.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -75,7 +76,10 @@ function main() {
   const ALL = Object.fromEntries(["apis", "triggers", "statics", "replacements", "keywords", "costs", "params", "amounts"].map((k) => [k, countsOf("forge", k)]));
 
   /* What the most-played cards need that the engine has not got, and which of them one thing alone holds back. */
-  const directory = loadCardIndex();
+  /* Defined is what a table seats: the hand-authored directory, as engine-coverage.mjs counts it. A learned definition stored
+     provisional (data/engine/scripts) is counted apart, seated at no table until confirmed (the execution plan's D5). */
+  const directory = createCardIndex(loadCardScripts().map((entry) => ({...entry, source: "hand"})));
+  const learned = loadCardIndex();
   const topCards = Object.entries(inventory.top?.perCard ?? {});
   const blocks = new Map(), alone = new Map();
   let everyRule = 0;
@@ -89,6 +93,8 @@ function main() {
     void name;
   }
   const defined = topCards.filter(([name]) => directory.resolve(name)?.playable === true).length;
+  const provisional = topCards.filter(([name]) => directory.resolve(name)?.playable !== true && learned.resolve(name)?.playable === true
+    && learned.resolve(name)?.source === "compiled").length;
 
   /* ---- the entries ---- */
 
@@ -229,7 +235,7 @@ const PARTIAL_TRIGGERS = new Set([...BROAD_TRIGGERS, "DamageDone"]);
   const catalog = {
     schema: "CrankEngineCatalog@1",
     sources: {rules: cr.source, cards: {all: inventory.summary?.forgeAll?.cards ?? null, top: topCards.length}},
-    top: {cards: topCards.length, defined, everyRule},
+    top: {cards: topCards.length, defined, provisional, everyRule},
     sections: Object.fromEntries(sections.map(([title, rows]) => [title, {tally: tally(rows), entries: order(rows)}])),
   };
 
@@ -246,7 +252,8 @@ const PARTIAL_TRIGGERS = new Set([...BROAD_TRIGGERS, "DamageDone"]);
     `static abilities, replacement effects and costs are every one used by the ${n(catalog.sources.cards.all)} cards Forge implements.`,
     "",
     `**The most-played 80% of Commander cards:** ${n(topCards.length)} cards; ${n(defined)} defined and playable today; ${n(everyRule)} with every`,
-    "mechanic built, so only their definitions are left to write.",
+    "mechanic built, so only their definitions are left to write"
+      + (provisional ? `; ${n(provisional)} of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.` : "."),
     "",
     "**Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not",
     "yet named. **Top** is how many of the most-played cards use it, **All** how many of every card. **Holds back** is how",

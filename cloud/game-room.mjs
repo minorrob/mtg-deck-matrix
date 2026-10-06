@@ -43,11 +43,14 @@ const reply = (status, value) => new Response(JSON.stringify(value), {status, he
 const MAX_FRAME = 16 * 1024;
 const MATCH_KEY = "room-match";
 /* The engine steps a room plays in one request or alarm before it stops and the alarm plays on (game/room/room.mjs,
-   `continuing`): a Durable Object has 30 s of CPU for each. A whole game of four house pilots is 1,500 to 4,500 steps,
-   and a step late in a big game costs up to about 20 ms: at 250 the longest slice of engine-room-games' ten pinned games
-   took 5.0 s on the cloud container (Node 22, 2026-10-05), and the slowest machine measured runs these games about 2.6
-   times slower (docs/review-response-2026-10-05.md, "Slices"). A person's decision ends a slice sooner. */
-export const SLICE_STEPS = 250;
+   `continuing`): a Durable Object has 30 s of CPU for each. A step, not a clock: a Worker's clock stands still while it
+   computes, so a slice cannot stop itself by time. A whole game of four house pilots is 1,500 to 4,500 steps. At 250 the
+   longest slice of engine-room-games' ten pinned games took 5.0 s on the cloud container (Node 22, 2026-10-05); once the
+   house pilot could pay from a pool more than one way (X8b, 2026-10-06), seed 4 became a 75-turn game whose late board
+   (The Scarab God, Teysa Karlov, a dozen attackers) costs 300-900 ms a step, and its longest slice took 9.0 s at 250 and
+   6.7 s at 100 -- about 17 s on the slowest machine measured, which runs these games about 2.6 times slower
+   (docs/review-response-2026-10-05.md, "Slices"). A person's decision ends a slice sooner. */
+export const SLICE_STEPS = 100;
 
 export class GameRoom {
   constructor(ctx, env, {cards = tableCards, slice = SLICE_STEPS} = {}) {

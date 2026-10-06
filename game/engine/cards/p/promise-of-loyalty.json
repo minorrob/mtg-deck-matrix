@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Promise of Loyalty",
+    "oracleId": "e1d294e8-67b1-4a4a-86b8-f98f28a327d9",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each player puts a vow counter on a creature they control and sacrifices the rest. Each of those creatures can't attack you or planeswalkers you control for as long as it has a vow counter on it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each player puts a vow counter on a creature they control and sacrifices the rest. Each of those creatures can't attack you or planeswalkers you control for as long as it has a vow counter on it.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "who": "each",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "keep": 1,
+          "keepExactly": true,
+          "keptCounter": "vow",
+          "rememberKept": true
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "cant-attack",
+          "targets": "remembered",
+          "defender": "you",
+          "planeswalkers": true,
+          "whileCounter": "vow",
+          "until": "ever"
+        }
+      ]
+    }
+  ]
+}

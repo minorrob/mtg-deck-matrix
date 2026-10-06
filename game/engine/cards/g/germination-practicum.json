@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Germination Practicum",
+    "oracleId": "c8d22139-7b25-4bb1-b0d9-d4c622401edf",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [
+      "Lesson"
+    ],
+    "manaCost": "{3}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Put two +1/+1 counters on each creature you control.\nParadigm (Then exile this spell. After you first resolve a spell with this name, you may cast a copy of it from exile without paying its mana cost at the beginning of each of your first main phases.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Put two +1/+1 counters on each creature you control.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "putCounterAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "counter": "+1/+1",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Paradigm",
+      "keyword": "paradigm"
+    }
+  ]
+}

@@ -23,9 +23,19 @@
  *                                      escaped" (Uro)
  *   {evoked: true|false}               its own permanent was cast for its evoke cost, or was not (CR 702.74a): the
  *                                      evoke trigger's "if it was evoked"
+ *   {level: {atLeast: n}|{exactly: n}} its own permanent's level (CR 716.2a): N or more, for a level's abilities;
+ *                                      exactly N-1, for the level bar that makes it N -- one with no level is
+ *                                      level 1 (716.2d)
  *   {spent: {G: 2}}                    at least that much mana of each color was spent to cast its own object (CR
  *                                      601.2h): "if {G}{G} was spent to cast it" (Wistfulness); adamant's "if at least
  *                                      three red mana was spent to cast this spell" is {R: 3}, colorless {C: 3}
+ *   {cameFrom: "library"}              the permanent the trigger is about entered from its controller's library or was
+ *                                      cast from it (Fblthp, the Lost)
+ *   {sinceYourLastUpkeep: true}        its own permanent came under its controller's control since the beginning of
+ *                                      their last upkeep (echo, CR 702.30a)
+ *   {opponentPoisonAtLeast: 3}         an opponent of its controller, still in the game, has at least that many poison
+ *                                      counters (CR 122.1f): Corrupted's "as long as an opponent has three or more poison
+ *                                      counters" (Skrelv's Hive; an ability word, CR 207.2c, with no rules meaning of its own)
  *
  * The keys are closed, like every other grammar here: an unknown one is refused at the schema rather than read as true.
  */
@@ -34,7 +44,10 @@ import {cardsIn} from "../state/index.mjs";
 import {matchesSelector, compileSelector, matchesLastKnown} from "./filter.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
 
-const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "spent", "enduringStory", "loyaltyThisTurn", "impending"];
+const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "spent", "enduringStory", "loyaltyThisTurn", "impending",
+  "cameFrom", "sinceYourLastUpkeep", "level", "opponentPoisonAtLeast"];
+/* Where a permanent may have come from, for `cameFrom`: a library (effects/zones.mjs and rules/stack.mjs record it). */
+const CAME_FROM = ["library"];
 /* The mana a condition may ask was spent to cast its object: the five colors and colorless (CR 106.1). */
 const SPENT_KEYS = ["W", "U", "B", "R", "G", "C"];
 /* A counted comparison's keys: what is counted, and against what. */
@@ -96,11 +109,34 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   if (condition.evoked !== undefined && ((source !== null && state.objects[source]?.evoked === true) !== condition.evoked)) return false;
   /* "If this permanent's impending cost was paid" (CR 702.176a). */
   if (condition.impending !== undefined && ((source !== null && state.objects[source]?.impending === true) !== condition.impending)) return false;
+  /* "If it entered from your library or was cast from your library" (Fblthp, the Lost): the permanent the trigger is about
+     (its own, for "when this enters") came onto the battlefield from its controller's library, or was cast from it -- read
+     on the permanent, or, gone, as the trigger saw it (rules/trigger.mjs keeps `cameFrom`, CR 608.2h). A card exiled from
+     a library and cast from exile was cast from exile (the card's ruling). */
+  if (condition.cameFrom !== undefined) {
+    const id = about?.card ?? source;
+    const came = (id !== null && id !== undefined ? state.objects[id]?.cameFrom : undefined) ?? about?.cameFrom;
+    if (!(came?.zone === condition.cameFrom && came.owner === controller)) return false;
+  }
+  /* Echo's "if this permanent came under your control since the beginning of your last upkeep" (CR 702.30a): the turn it
+     came under its controller's control (state/index.mjs, controlledSinceTurn -- entering, or a change of control) is that
+     player's previous turn or later (rules/turn.mjs keeps it); before their first, any. Nothing changes control in an
+     untap step here, so a turn is fine enough: anything during that turn came after its upkeep began. Gone, it did not. */
+  if (condition.sinceYourLastUpkeep === true) {
+    const object = source !== null ? state.objects[source] : null;
+    if (!object || (object.controlledSinceTurn ?? 0) < (state.players[controller]?.previousTurnBegan ?? 0)) return false;
+  }
   /* "If {W}{W} was spent to cast it" (CR 601.2h): the mana spent to cast its own object (rules/actions.mjs) -- or, once that
      object has gone, as it last was: what the trigger remembered as it triggered (`spent`, rules/trigger.mjs; CR 608.2h). */
   if (condition.spent !== undefined) {
     const paid = (source !== null ? state.objects[source]?.spent : undefined) ?? spent ?? {};
     if (!Object.entries(condition.spent).every(([key, n]) => (paid[key] ?? 0) >= n)) return false;
+  }
+  /* A CLASS'S LEVEL (CR 716.2a): its own permanent's -- none, and it is level 1 (716.2d). */
+  if (condition.level !== undefined) {
+    const level = source !== null && state.objects[source] ? state.objects[source].level ?? 1 : 1;
+    if (condition.level.atLeast !== undefined && level < condition.level.atLeast) return false;
+    if (condition.level.exactly !== undefined && level !== condition.level.exactly) return false;
   }
   /* "12+ | Flying" (a station symbol, CR 721.2a): as long as its own object has that many counters of the kind. */
   if (condition.selfCounters !== undefined && (source === null ? 0 : state.objects[source]?.counters?.[condition.selfCounters.counter] ?? 0) < condition.selfCounters.atLeast) return false;
@@ -149,6 +185,10 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   if (condition.loyaltyThisTurn === true && !((state.players[controller]?.loyaltyThisTurn ?? 0) > 0)) return false;
   /* "Activate only during your turn" (Humble Defector). */
   if (condition.yourTurn === true && state.activePlayer !== controller) return false;
+  /* Corrupted (Skrelv's Hive): "as long as an opponent has three or more poison counters" -- a player who has left the game
+     is no opponent (CR 800.4a). */
+  if (condition.opponentPoisonAtLeast !== undefined
+    && !state.players.some((p) => p.id !== controller && !p.lost && (p.poison ?? 0) >= condition.opponentPoisonAtLeast)) return false;
   /* "If you have 40 or more life" (Felidar Sovereign). */
   if (condition.lifeAtLeast !== undefined && state.players[controller].life < condition.lifeAtLeast) return false;
   /* "If it's not your turn, you may exile a blue card from your hand rather than pay this spell's mana cost". */
@@ -181,11 +221,15 @@ export function conditionProblems(condition) {
   if ("enduringStory" in condition && typeof condition.enduringStory !== "boolean") problems.push("enduringStory is true or false");
   if ("notYourTurn" in condition && condition.notYourTurn !== true) problems.push("notYourTurn is true");
   if ("loyaltyThisTurn" in condition && condition.loyaltyThisTurn !== true) problems.push("loyaltyThisTurn is true");
+  if ("opponentPoisonAtLeast" in condition && !(Number.isInteger(condition.opponentPoisonAtLeast) && condition.opponentPoisonAtLeast >= 1))
+    problems.push("opponentPoisonAtLeast is a whole number of poison counters, 1 or more");
   if ("graveyardTypes" in condition && !(Number.isInteger(condition.graveyardTypes) && condition.graveyardTypes >= 1)) problems.push("graveyardTypes is a whole number of card types, 1 or more");
   if ("chosen" in condition && typeof condition.chosen !== "string") problems.push("chosen names what was chosen");
   if ("escaped" in condition && typeof condition.escaped !== "boolean") problems.push("escaped is true or false");
   if ("evoked" in condition && typeof condition.evoked !== "boolean") problems.push("evoked is true or false");
   if ("impending" in condition && typeof condition.impending !== "boolean") problems.push("impending is true or false");
+  if ("cameFrom" in condition && !CAME_FROM.includes(condition.cameFrom)) problems.push(`cameFrom is the zone the permanent came from: ${CAME_FROM.join(", ")}`);
+  if ("sinceYourLastUpkeep" in condition && condition.sinceYourLastUpkeep !== true) problems.push("sinceYourLastUpkeep is true");
   if ("spent" in condition) {
     const spent = condition.spent;
     if (!spent || typeof spent !== "object" || Array.isArray(spent) || !Object.keys(spent).length
@@ -201,6 +245,12 @@ export function conditionProblems(condition) {
       if (!COMPARE_KEYS.slice(1).some((key) => key in compare)) problems.push("compare says against what: atLeast, atMost, moreThan or fewerThan");
       for (const key of COMPARE_KEYS) if (key in compare) problems.push(...amountProblems(compare[key]).map((p) => `compare's ${key}: ${p}`));
     }
+  }
+  if ("level" in condition) {
+    const level = condition.level;
+    const whole = (n) => Number.isInteger(n) && n >= 1;
+    if (!level || typeof level !== "object" || Array.isArray(level) || Object.keys(level).length !== 1 || !(whole(level.atLeast) || whole(level.exactly)))
+      problems.push("level is {atLeast: n}, a Class's level N or more, or {exactly: n}: a whole number 1 or more");
   }
   if ("selfCounters" in condition && !(typeof condition.selfCounters?.counter === "string" && Number.isInteger(condition.selfCounters?.atLeast) && condition.selfCounters.atLeast >= 1))
     problems.push("selfCounters names a counter and how many, at least 1");

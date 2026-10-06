@@ -18,7 +18,7 @@
  *   {schema: "CrankCardScenarios@1", card, fixtures?: {name: object}, scenarios: [{
  *     name, seats?: 2..4, at?: {turn, phase}, library?: [names],
  *     setup: [{seat, zone, cards, sick?}]   (a card put in the command zone is that seat's commander),
- *     steps: [ {play|tap|cast|activate: name, seat?, targets?: [{card, seat?} | {player}] | "any", ability?, mana?, x?, optional?}
+ *     steps: [ {play|tap|cast|activate|turnFaceUp: name, seat?, targets?: [{card, seat?} | {player}] | "any", ability?, mana?, x?, optional?}
  *            | {resolve: true} | {settle: true} | {pass: n} | {to: {turn, phase}} | {answer: [indices]} | {expect: [...]} ],
  *   (`targets: "any"` takes the first legal aim; `optional` skips a move the rules do not offer; `settle` answers every
  *   question with its first legal answer and resolves the stack until it is empty -- the card loader's smoke test.)
@@ -150,8 +150,10 @@ export function runScenario(scenario, cards, fixtures = {}) {
 
   function act(step) {
     const seat = seatOf(step);
+    /* `turnFaceUp`: a manifested permanent turned face up (CR 701.40b), named by the card it is -- as its controller,
+       who is offered it, sees it (CR 708.5). */
     const [kind, card] = step.play ? ["play-land", step.play] : step.tap ? ["activate-mana", step.tap]
-      : step.cast ? ["cast", step.cast] : ["activate", step.activate];
+      : step.cast ? ["cast", step.cast] : step.turnFaceUp ? ["turn-face-up", step.turnFaceUp] : ["activate", step.activate];
     const aim = step.targets === "any" ? undefined : (kind === "cast" || kind === "activate" ? step.targets ?? [] : undefined);
     let found = offered({kind, card, seat}, aim);
     if (kind === "activate" && step.ability !== undefined) found = found.filter((a) => a.abilityId === step.ability);
@@ -185,6 +187,10 @@ export function runScenario(scenario, cards, fixtures = {}) {
     /* "Blight 1 or pay {3}": the cast that pays the additional cost's mana (`extraMana: "{3}"`), or the one that does not
        (`extraMana: ""`). */
     if (step.extraMana !== undefined) found = found.filter((a) => (a.extraMana ?? "") === step.extraMana);
+    /* Paid with the mana that does something when spent (`riders: true`), or without it (`false`; Path of Ancestry). */
+    if (step.riders !== undefined) found = found.filter((a) => ((a.riders ?? []).length > 0) === step.riders);
+    /* Through which permanent's permission ("via": its name), when two would let it be played and do different things. */
+    if (step.via !== undefined) found = found.filter((a) => (a.viaName ?? null) === step.via);
     if (!found.length && step.optional) return;
     if (!found.length) fail(`${names[seat]} is not offered ${kind} ${card}${step.targets ? ` at ${JSON.stringify(step.targets)}` : ""}`);
     record(applyAction(state, seat, found[0]));
@@ -303,7 +309,7 @@ export function runScenario(scenario, cards, fixtures = {}) {
   }
 
   for (const step of scenario.steps ?? []) {
-    if (step.play || step.tap || step.cast || step.activate) act(step);
+    if (step.play || step.tap || step.cast || step.activate || step.turnFaceUp) act(step);
     else if (step.resolve) {
       if (!state.stack.length) fail("there is nothing on the stack to resolve");
       /* Everyone passes in turn until the top object has left the stack, or stopped to ask somebody. What its

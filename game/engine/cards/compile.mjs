@@ -44,7 +44,10 @@ const SUPERTYPES = ["Legendary", "Basic", "Snow", "World"];
 /** The printed facts, from the oracle record and never from the model. A modal double-faced card's are its front face's
     (CR 712.8a), its name the whole card's and its color identity both faces' (903.4); its back face is the script's own. */
 export function identityOf(card) {
-  const face = card.layout === "modal_dfc" && Array.isArray(card.faces) && card.faces.length ? card.faces[0] : card;
+  /* An adventurer card's are its own half's, the first face (CR 715.4) -- whose colors the oracle leaves out, and are its
+     mana cost's (CR 105.2, 202.2); a nonmodal double-faced card's (the oracle's "transform", CR 712.2) too. */
+  const twoFaced = ["modal_dfc", "adventure", "transform"].includes(card.layout) && Array.isArray(card.faces) && card.faces.length;
+  const face = twoFaced ? {...card.faces[0], colors: card.faces[0].colors ?? colorsOfCost(card.faces[0].mana)} : card;
   const [left, right = ""] = String(face.type ?? "").split(" — ");
   const words = left.split(/\s+/).filter(Boolean);
   const supertypes = words.filter((w) => SUPERTYPES.includes(w));
@@ -57,6 +60,9 @@ export function identityOf(card) {
     ...(num(face.loyalty) !== null ? {loyalty: num(face.loyalty)} : {}),
   };
 }
+
+/* The colors of a mana cost's symbols, in WUBRG order: a hybrid symbol is both of its colors (CR 105.2, 202.2). */
+const colorsOfCost = (mana) => ["W", "U", "B", "R", "G"].filter((c) => (String(mana ?? "").match(/\{[^}]+\}/g) ?? []).some((s) => s.includes(c)));
 
 /** A type line from an identity, the way the oracle prints it. */
 export const typeLineOf = (identity) => [...(identity.supertypes ?? []), ...(identity.types ?? [])].join(" ")
@@ -76,9 +82,12 @@ const normalize = (s) => String(s ?? "").replace(/[‘’]/g, "'").replace(/[“
    Phyrexian mana symbol ("({U/P} can be paid with either {U} or 2 life.)", Phyrexian Metamorph), which is the cost's
    reminder and claims nothing; anywhere else, reminder text in parentheses explains a keyword and claims nothing. */
 const PHYREXIAN_REMINDER = /^\(\{[WUBRGC]\/P\} can be paid with either \{[WUBRGC]\} or 2 life\.\)$/;
+/* A Class's first line, "(Gain the next level as a sorcery to add its ability.)", explains its level bars (CR 716.2a),
+   which claim it themselves, each its own line ("{G}: Level 2"): the line claims nothing. */
+const CLASS_REMINDER = /^\(Gain the next level as a sorcery to add its abilit(y|ies)\.\)$/;
 const withoutReminders = (line) => {
   const t = line.trim();
-  if (PHYREXIAN_REMINDER.test(t)) return "";
+  if (PHYREXIAN_REMINDER.test(t) || CLASS_REMINDER.test(t)) return "";
   if (/^\(.*\)$/.test(t)) return t.slice(1, -1);
   return t.replace(/\s*\([^)]*\)/g, "").trim();
 };
@@ -104,6 +113,13 @@ export function oracleClauses(text) {
  * @returns {{ok: boolean, invented: string[], unclaimed: string[]}}
  */
 export function checkFidelity(script) {
+  /* An adventurer card's Adventure (CR 715.2) is held to its own text the same way, beside the card's. */
+  const own = faceFidelity(script);
+  if (script.adventure === undefined) return own;
+  const adventure = faceFidelity(script.adventure);
+  return {ok: own.ok && adventure.ok, invented: [...own.invented, ...adventure.invented], unclaimed: [...own.unclaimed, ...adventure.unclaimed]};
+}
+function faceFidelity(script) {
   const full = normalize(String(script.oracleText ?? "").replace(/[()]/g, ""));
   /* Both sides with the parentheses dropped: a spell's text is the card's whole text, and a reminder in the middle
      of it (Opt's "Scry 1. (Look at ...)\nDraw a card.") is quoted with its parentheses. */
@@ -188,8 +204,9 @@ const SMOKE_FIXTURES = Object.freeze({
  */
 export function smokeScenario(script) {
   const name = script.identity.name;
-  /* A modal double-faced card is cast as its front face, by that face's name (CR 712.11b). */
-  const front = script.back !== undefined ? String(name).split(" // ")[0] : name;
+  /* A modal double-faced card is cast as its front face, by that face's name (CR 712.11b); an adventurer card as itself,
+     by its own name (CR 715.4). */
+  const front = script.back !== undefined || script.adventure !== undefined ? String(name).split(" // ")[0] : name;
   const isLand = (script.identity.types ?? []).includes("Land");
   const lands = isLand ? ["Wastes", "Wastes"] : landsFor(script.identity.manaCost);
   /* What an ability aims at: its own targets, and its modes' (Warg Tactics: "destroy target creature with flying" or "put
@@ -294,7 +311,7 @@ export function smokeTest(script, cards) {
     /* Whether the card was actually played: a counterspell with nothing to counter stays in hand, which is the
        fixture's limit and not the script's fault -- so it is reported, not refused. */
     /* A double-faced card's events name the face that was cast or played. */
-    const names = script.back !== undefined ? String(script.identity.name).split(" // ") : [script.identity.name];
+    const names = script.back !== undefined || script.adventure !== undefined ? String(script.identity.name).split(" // ") : [script.identity.name];
     const played = (!(script.identity.types ?? []).includes("Land") && !script.identity.manaCost)
       || events.some((e) => (e.kind === "GameEventLandPlayed" && names.includes(e.data.fields.land?.name))
         || (e.kind === "GameEventSpellAbilityCast" && e.data.fields.sa?.isSpell && names.includes(e.data.fields.card?.name)));
@@ -369,6 +386,8 @@ export const writerRequest = (card, errors = null) => JSON.stringify({
  *
  * @returns {{script, stage: ?string, problems: string[]}} `stage` names the first check failed, or null
  */
+/** Why an adventurer card is not learned by the loader: what a refusal of one says. */
+export const ADVENTURE_BY_HAND = "an adventurer card (CR 715) is written with its Adventure, which the loader does not write yet: define it by hand";
 export function checkAnswer(card, answer, model = null) {
   let abilities = answer?.abilities;
   if (typeof answer?.abilitiesJson === "string") {
@@ -376,6 +395,9 @@ export function checkAnswer(card, answer, model = null) {
     catch (error) { return {script: assembleScript(card, {abilities: []}, model), stage: "schema", problems: [`abilitiesJson is not JSON: ${error.message}`]}; }
   }
   const script = assembleScript(card, {abilities}, model);
+  /* AN ADVENTURER CARD (CR 715.2) has two sets of characteristics and the writer is given one card's text: refused by name
+     rather than learned as its own half alone. Written by hand, it plays (cards/index.mjs, `adventure`). */
+  if (card?.layout === "adventure") return {script, stage: "layout", problems: [ADVENTURE_BY_HAND]};
   const {valid, errors} = validateScript(script);
   if (!valid) return {script, stage: "schema", problems: errors.map((e) => `${e.path}: ${e.message}`)};
   const fidelity = checkFidelity(script);

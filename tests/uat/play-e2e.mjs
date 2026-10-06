@@ -289,7 +289,7 @@ try {
       const input = page.locator("#cm-dialog[open] #cm-table-link");
       await until("the invitation link", async () => Boolean(await input.inputValue().catch(() => "")), 15000);
       const link = new URL(await input.inputValue());
-      ok(new RegExp(`^#table/${tableId}/[A-Za-z0-9_-]{20,100}$`).test(link.hash), "the host invites seat 2 and gets its link");
+      ok(new RegExp(`^/api/join/${tableId}/[A-Za-z0-9_-]{20,100}$`).test(link.pathname) && !link.hash, "the host invites seat 2 and gets its link, a path through the Worker (Access's sign-in keeps a path, drops a fragment)");
       await page.locator("#cm-dialog").getByRole("button", {name: "Done"}).click();
 
       /* The newcomer joins by the link and chooses a deck the table can play. */

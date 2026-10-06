@@ -66,6 +66,15 @@ export function historyLines(event, names = []) {
       const blocks = (f.blockers || []).map((b) => `${cardName(b.card)} blocked ${cardName(b.blocking)}`);
       return blocks.length ? line(`${who(f.player.playerId)}: ${blocks.join(", ")}`) : [];
     }
+    /* A double-faced permanent turned over (CR 701.27a): both faces are public, so both are named. */
+    case "GameEventCardTransformed":
+      return line(`${f.from ?? "A permanent"} transformed into ${cardName(f.card)}`);
+    /* A face-down permanent turned face up (CR 701.40b, 708.8): its card is shown to everyone as it is, so it is named now. */
+    case "GameEventCardTurnedFaceUp":
+      return line(`${who(f.player.playerId)} turned ${cardName(f.card)} face up`);
+    /* A Class's level (CR 716.2a). */
+    case "GameEventCardLevel":
+      return line(`${cardName(f.card)} reached level ${f.newValue}`);
     case "GameEventGameOutcome":
       return line(f.winner === null || f.winner === undefined ? "The game is over: no one is left" : `${who(f.winner)} won`, {mark: "end"});
     default:

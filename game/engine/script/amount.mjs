@@ -17,6 +17,8 @@
  *   {toughnessOf: ref}                   its toughness ("its controller gains life equal to its toughness", Condemn)
  *   {greatestPower: selector}            the greatest power among what the selector matches, 0 if nothing (CR 208.1)
  *   {totalPower: selector}               their powers added together
+ *   {differentPowers: selector}          how many different powers there are among them (Loot, the Nexus): a 2/1 and two
+ *                                        3/3s are two
  *   {devotion: [colors]}                 CR 700.5: the mana symbols of those colors among the mana costs of permanents you
  *                                        control -- a hybrid symbol of two of them once, a Phyrexian one of its color
  *   {lifeLostThisWay: true}              the life the effects before it in this resolution took ("You gain life equal to
@@ -46,11 +48,12 @@ import {conditionHolds, conditionProblems} from "./condition.mjs";
 import {selectMatching, compileSelector, matchesLastKnown} from "./filter.mjs";
 import {powerOf, toughnessOf, characteristicsOf, controllerOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
+import {valueCostOf, commanderKeyOf} from "../state/index.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
 export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "toughnessOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
   "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn", "playersDealtCombatDamage", "cardTypesAmong", "manaSpent",
-  "permanentsEnteredThisTurn", "excessDamage", "lesserOf", "kicked"]);
+  "permanentsEnteredThisTurn", "excessDamage", "lesserOf", "kicked", "differentPowers", "commanderCasts"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "filter", "controlledBy"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -75,6 +78,7 @@ export function amountProblems(value) {
   if ("playersDealtCombatDamage" in value && !["opponent", "any"].includes(value.playersDealtCombatDamage)) problems.push('playersDealtCombatDamage is "opponent" or "any"');
   if ("cardTypesAmong" in value && value.cardTypesAmong !== "remembered") problems.push('cardTypesAmong is "remembered"');
   if ("manaSpent" in value && !["that card", "self"].includes(value.manaSpent)) problems.push('manaSpent is "that card" or "self"');
+  if ("commanderCasts" in value && value.commanderCasts !== "that card") problems.push('commanderCasts is "that card"');
   if ("controlledBy" in value && !("rememberedCount" in value && value.controlledBy === "that player")) problems.push('controlledBy is "that player", of a rememberedCount');
   if ("lesserOf" in value && !(Array.isArray(value.lesserOf) && value.lesserOf.length >= 2)) problems.push("lesserOf is two or more amounts");
   else if ("lesserOf" in value) for (const one of value.lesserOf) problems.push(...amountProblems(one).map((p) => `lesserOf: ${p}`));
@@ -85,7 +89,7 @@ export function amountProblems(value) {
     for (const key of ["then", "else"]) if (key in value) problems.push(...amountProblems(value[key]));
   }
   /* What it counts is a selector, held to the selector grammar (script/filter.mjs), a choice of them included. */
-  for (const key of ["count", "greatestPower", "totalPower", "mostAmongOpponents"]) {
+  for (const key of ["count", "greatestPower", "totalPower", "mostAmongOpponents", "differentPowers"]) {
     if (!(key in value)) continue;
     const {anyOf, ...shared} = value[key] ?? {};
     try { for (const one of Array.isArray(anyOf) ? anyOf.map((a) => ({...shared, ...a})) : [value[key]]) compileSelector(one); }
@@ -169,7 +173,11 @@ export function amountOf(state, value, context = {}) {
   } else if ("greatestPower" in value || "totalPower" in value) {
     const powers = matching(state, value.greatestPower ?? value.totalPower, who).map((id) => characteristicsOf(state, id).power ?? 0);
     n = "greatestPower" in value ? Math.max(0, ...powers) : powers.reduce((a, b) => a + b, 0);
-  } else if ("devotion" in value) n = devotion(state, context.controller, value.devotion);
+  }
+  /* "One mana of that color for each different power among creatures you control" (Loot, the Nexus): the distinct values
+     among their powers now, through the layers (CR 208.1) -- 0 and less among them, each a power like any other. */
+  else if ("differentPowers" in value) n = new Set(matching(state, value.differentPowers, who).map((id) => characteristicsOf(state, id).power ?? 0)).size;
+  else if ("devotion" in value) n = devotion(state, context.controller, value.devotion);
   else if ("lifeLostThisWay" in value) n = context.lifeLost ?? 0;
   /* "Then draws that many cards" (Winds of Change): what the effect before it moved, and remembered, counted. */
   /* "For each creature exiled this way, its controller searches" (Winds of Abandon): `controlledBy` "that player", those of
@@ -245,7 +253,18 @@ export function amountOf(state, value, context = {}) {
   /* "Where X is the mana value of that spell" (Ovika): its printed cost, X counted as 0 (CR 202.3). */
   else if ("manaValueOf" in value) {
     const id = objectOf(value.manaValueOf, context);
-    n = id !== null && state.objects[id]?.manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0;
+    /* A transformed permanent's is its front face's (CR 202.3b). */
+    n = id !== null && valueCostOf(state.objects[id]) ? manaValue(parseManaCost(valueCostOf(state.objects[id]))) : 0;
+  }
+  /* "Scry X, where X is the number of times it's been cast from the command zone this game" (Study Hall; CR 903.8): the
+     commander a trigger is about, by the key its casts are kept under (rules/commander.mjs) -- taken as it triggered, so
+     a commander that has since left the stack is still counted -- this cast included. */
+  else if ("commanderCasts" in value) {
+    const id = objectOf(value.commanderCasts, context);
+    const object = id !== null ? state.objects[id] : null;
+    const key = context.about?.commanderKey ?? (object?.commander === true ? commanderKeyOf(object) : null);
+    const owner = object?.owner ?? context.about?.player ?? context.controller;
+    n = key === null ? 0 : state.players[owner]?.commanderCasts?.[key] ?? 0;
   }
   /* "If five or more mana was spent to cast that spell" (Expressive Firedancer; CR 601.2h): every mana spent on it, of
      whatever kind, as rules/actions.mjs recorded it on the spell. */
