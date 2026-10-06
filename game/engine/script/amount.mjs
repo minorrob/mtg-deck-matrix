@@ -17,6 +17,8 @@
  *   {toughnessOf: ref}                   its toughness ("its controller gains life equal to its toughness", Condemn)
  *   {greatestPower: selector}            the greatest power among what the selector matches, 0 if nothing (CR 208.1)
  *   {totalPower: selector}               their powers added together
+ *   {differentPowers: selector}          how many different powers there are among them (Loot, the Nexus): a 2/1 and two
+ *                                        3/3s are two
  *   {devotion: [colors]}                 CR 700.5: the mana symbols of those colors among the mana costs of permanents you
  *                                        control -- a hybrid symbol of two of them once, a Phyrexian one of its color
  *   {lifeLostThisWay: true}              the life the effects before it in this resolution took ("You gain life equal to
@@ -50,7 +52,7 @@ import {parseManaCost, manaValue} from "../rules/mana.mjs";
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
 export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "toughnessOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
   "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn", "playersDealtCombatDamage", "cardTypesAmong", "manaSpent",
-  "permanentsEnteredThisTurn", "excessDamage", "lesserOf", "kicked"]);
+  "permanentsEnteredThisTurn", "excessDamage", "lesserOf", "kicked", "differentPowers"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "filter", "controlledBy"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -85,7 +87,7 @@ export function amountProblems(value) {
     for (const key of ["then", "else"]) if (key in value) problems.push(...amountProblems(value[key]));
   }
   /* What it counts is a selector, held to the selector grammar (script/filter.mjs), a choice of them included. */
-  for (const key of ["count", "greatestPower", "totalPower", "mostAmongOpponents"]) {
+  for (const key of ["count", "greatestPower", "totalPower", "mostAmongOpponents", "differentPowers"]) {
     if (!(key in value)) continue;
     const {anyOf, ...shared} = value[key] ?? {};
     try { for (const one of Array.isArray(anyOf) ? anyOf.map((a) => ({...shared, ...a})) : [value[key]]) compileSelector(one); }
@@ -169,7 +171,11 @@ export function amountOf(state, value, context = {}) {
   } else if ("greatestPower" in value || "totalPower" in value) {
     const powers = matching(state, value.greatestPower ?? value.totalPower, who).map((id) => characteristicsOf(state, id).power ?? 0);
     n = "greatestPower" in value ? Math.max(0, ...powers) : powers.reduce((a, b) => a + b, 0);
-  } else if ("devotion" in value) n = devotion(state, context.controller, value.devotion);
+  }
+  /* "One mana of that color for each different power among creatures you control" (Loot, the Nexus): the distinct values
+     among their powers now, through the layers (CR 208.1) -- 0 and less among them, each a power like any other. */
+  else if ("differentPowers" in value) n = new Set(matching(state, value.differentPowers, who).map((id) => characteristicsOf(state, id).power ?? 0)).size;
+  else if ("devotion" in value) n = devotion(state, context.controller, value.devotion);
   else if ("lifeLostThisWay" in value) n = context.lifeLost ?? 0;
   /* "Then draws that many cards" (Winds of Change): what the effect before it moved, and remembered, counted. */
   /* "For each creature exiled this way, its controller searches" (Winds of Abandon): `controlledBy` "that player", those of

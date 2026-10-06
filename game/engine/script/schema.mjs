@@ -365,6 +365,23 @@ export function validateScript(script) {
     }
   }
 
+  /* AN ADVENTURER CARD'S ADVENTURE (CR 715.2): its own identity -- an instant or sorcery with the subtype Adventure -- its
+     own oracle text and abilities, the card's oracle id. Never beside a back face: a card is one layout or the other. */
+  if (script.adventure !== undefined) {
+    const adventure = script.adventure;
+    if (!adventure || typeof adventure !== "object" || !Array.isArray(adventure.abilities)) errors.push({path: "adventure", message: "An Adventure is an identity and a list of abilities"});
+    else {
+      const before = errors.length;
+      checkIdentity({...adventure.identity, oracleId: adventure.identity?.oracleId ?? script.identity?.oracleId}, errors);
+      for (const e of errors.slice(before)) e.path = `adventure.${e.path}`;
+      const types = adventure.identity?.types ?? [];
+      if (!(types.length === 1 && ["Instant", "Sorcery"].includes(types[0])) || !(adventure.identity?.subtypes ?? []).includes("Adventure"))
+        errors.push({path: "adventure.identity", message: "An Adventure is an instant or a sorcery with the subtype Adventure (CR 715.2)"});
+      adventure.abilities.forEach((ability, index) => checkAbility(ability, `adventure.abilities[${index}]`, errors));
+    }
+    if (script.back !== undefined) errors.push({path: "adventure", message: "A card is an adventurer card or a double-faced card, not both"});
+  }
+
   return {valid: errors.length === 0, errors};
 }
 

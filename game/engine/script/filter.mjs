@@ -312,6 +312,10 @@ export function compileSelector(selector) {
       const power = characteristicsOf(state, id).power ?? 0;
       if (selector.power.min !== undefined && power < selector.power.min) return false;
       if (selector.power.max !== undefined && power > selector.power.max) return false;
+      /* "With power greater than target creature's power" (Fell the Mighty): `moreThan`, the target's power, bound to a number
+         as the effect resolves (script/bind.mjs). Unbound -- a fact never read, or its target gone -- it matches nothing:
+         greater than a power nobody knows is no creature, never every one. */
+      if (selector.power.moreThan !== undefined && !(Number.isInteger(selector.power.moreThan) && power > selector.power.moreThan)) return false;
     }
     /* "Power or toughness 1 or less" (Tetsuko Umezawa): toughness the same way, through the layers. */
     if (selector.toughness) {

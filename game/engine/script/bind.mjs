@@ -261,6 +261,13 @@ export function bindEffect(effect, context, state = null) {
     else bound[key] = fact;
   }
   if ("targets" in bound) bound.targets = objectsOf(bound.targets, context);
+  /* "Destroy all creatures with power greater than target creature's power" (Fell the Mighty; CR 608.2h): a selector's
+     `power.moreThan`, a fact about a target, read as the resolution began -- a number, or null when that target is no
+     longer legal, which matches nothing (script/filter.mjs). */
+  if (bound.selector && typeof bound.selector === "object" && factRef(bound.selector.power?.moreThan)) {
+    const fact = factValue(bound.selector.power.moreThan, context);
+    bound.selector = {...bound.selector, power: {...bound.selector.power, moreThan: Number.isInteger(fact) ? fact : null}};
+  }
   /* "Exile target player's graveyard": a selector's controller bound to the target player, or to nobody. */
   if (bound.selector && typeof bound.selector === "object" && isRef(bound.selector.controller)) {
     const [player] = playersOf(bound.selector.controller, context);

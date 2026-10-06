@@ -292,7 +292,10 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
        cast (CR 707.10) and has ceased to exist above. Instances are redundant (702.88c). */
     const rebound = !fizzled && entry.cast?.from === "hand"
       && (state.objects[entry.objectId].abilities ?? []).some((a) => a.kind === "static" && a.rule === "rebound");
-    const to = entry.permanent && !fizzled ? "battlefield" : entry.flashback || entry.graveyardToExile || rebound ? "exile" : "graveyard";
+    /* CAST AS AN ADVENTURE AND RESOLVED (CR 715.3d): its controller exiles it rather than putting it into its owner's
+       graveyard -- one that did not resolve goes where any spell would. */
+    const adventured = entry.adventure === true && !fizzled;
+    const to = entry.permanent && !fizzled ? "battlefield" : entry.flashback || entry.graveyardToExile || rebound || adventured ? "exile" : "graveyard";
     /* CR 614.12, asked before the move: a permanent coming off the stack enters tapped or with
        counters as ONE event, and the abilities that say so are on the spell, not on anything that
        is on the battlefield yet. */
@@ -313,6 +316,11 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     /* CR 608.3a: it enters under its caster's control -- not its owner's, when a card was cast by another player (Tinybones,
        the Pickpocket casting a card from an opponent's graveyard). */
     if (to === "battlefield") state.objects[arrived].controller = entry.playerId;
+    /* And for as long as it remains exiled, that player may cast it -- as itself, not as an Adventure this way (CR 715.3d;
+       rules/actions.mjs, adventureFrom) -- or play it, a land adventurer card. A card that moves is a new object (CR 400.7)
+       and leaves the permission behind. */
+    if (adventured && state.objects[arrived]) (state.effects ??= []).push({id: `adventure:${arrived}`, rule: "may-play", affects: {ids: [arrived]}, player: entry.playerId,
+      ...((state.objects[arrived].types ?? []).includes("Land") ? {} : {spellsOnly: true}), until: "ever", notAdventure: true, madeOnTurn: state.turn, sourceController: entry.playerId});
     /* An Aura enters attached to what it was cast at (CR 303.4f). */
     if (to === "battlefield" && attachTo !== null && state.objects[attachTo]) {
       state.objects[arrived].attachedTo = attachTo;

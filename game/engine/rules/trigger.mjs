@@ -556,8 +556,10 @@ export function collectTriggers(state, events) {
           {effect: "play", from: "targets", targets: "that card", free: true, condition: {compare: {count: {countersOn: "that card", counter: "time"}, atMost: 0}}}]}});
     }
     if (moment && (state.delayedTriggers ?? []).length) {
-      /* "At the beginning of your next upkeep" (rebound, `yours`): its controller's step only. */
-      const due = state.delayedTriggers.filter((d) => d.at === moment && (!d.yours || d.controller === event.data?.fields?.playerTurn?.playerId));
+      /* "At the beginning of your next upkeep" (rebound, `yours`): its controller's step only. "At the beginning of that
+         player's next end step" (`player`, The Eternal Wanderer): only in a turn of theirs. */
+      const turnOf = event.data?.fields?.playerTurn?.playerId;
+      const due = state.delayedTriggers.filter((d) => d.at === moment && (!d.yours || d.controller === turnOf) && (d.player === undefined || d.player === turnOf));
       state.delayedTriggers = state.delayedTriggers.filter((d) => !due.includes(d));
       for (const d of due) state.pendingTriggers.push({
         abilityId: "delayed", text: d.text ?? (moment === "upkeep" ? "At the beginning of the next upkeep" : "At the beginning of the next end step"), controller: d.controller,

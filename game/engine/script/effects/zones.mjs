@@ -238,7 +238,10 @@ export function sacrificeAll(state, params, context) {
   const events = [];
   const players = playersFor(state, params.who ?? "each", context.controller);
   const matches = compileSelector({...(params.selector ?? {}), what: "permanent"});
-  const doomed = state.zones.battlefield.filter((id) => players.includes(state.objects[id].controller) && matches(state, id, {controller: state.objects[id].controller, source: context.source ?? null}));
+  /* "Each player sacrifices all creatures they control not chosen this way" (The Eternal Wanderer): `except` what the
+     effect before it remembered. */
+  const spared = params.except === "remembered" ? new Set(context.remembered ?? []) : null;
+  const doomed = state.zones.battlefield.filter((id) => !spared?.has(id) && players.includes(state.objects[id].controller) && matches(state, id, {controller: state.objects[id].controller, source: context.source ?? null}));
   for (const id of doomed) if (state.objects[id]) sacrificeOne(state, id, events);
   return events;
 }
@@ -317,6 +320,11 @@ export function moveZone(state, params, context, rng = null) {
       const back = {effect: "moveZone", targets: [moved], to: "battlefield", ...(params.under === "you" ? {controller: context.controller} : {}),
         ...(params.returnWithCounter ? {withCounter: params.returnWithCounter} : {})};
       if (params.andReturn === "end step") delayedTrigger(state, {at: "end step", text: "Return that card to the battlefield at the beginning of the next end step.", effects: [back]}, context);
+      /* "Return that card to the battlefield under its owner's control at the beginning of that player's next end step" (The
+         Eternal Wanderer; CR 603.7): the next end step of a turn of the card's owner -- this turn's, if it is theirs and its
+         end step has not begun. */
+      else if (params.andReturn === "owner's end step") delayedTrigger(state, {at: "end step", player: state.objects[moved].owner,
+        text: "Return that card to the battlefield under its owner's control at the beginning of that player's next end step.", effects: [back]}, context);
       else {
         /* The return remembers what came back in a context of its own, so this effect's `remember` is not overwritten. */
         const returning = {...context};

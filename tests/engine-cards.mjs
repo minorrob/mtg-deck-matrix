@@ -51,9 +51,13 @@ const files = loadCardScenarios();
     const num = (v) => (v !== null && v !== undefined && /^\d+$/.test(v) ? Number(v) : null);
     /* A modal double-faced card (CR 712.3): its identity is its front face's, its back face the oracle's second. */
     const double = card.layout === "modal_dfc";
-    const front = double ? card.faces[0] : card;
+    /* An adventurer card (CR 715.2): its identity is its own half's, the oracle's first face, and its Adventure the second.
+       The oracle gives an adventurer's halves no colors of their own: each half's are its mana cost's (CR 105.2, 202.2). */
+    const adventurer = card.layout === "adventure";
+    const front = double || adventurer ? card.faces[0] : card;
+    const colorsOf = (face) => face.colors ?? ["W", "U", "B", "R", "G"].filter((c) => new RegExp(`\\{[^}]*${c}[^}]*\\}`).test(face.mana ?? ""));
     /* And a planeswalker's printed loyalty (CR 306.5a). */
-    const want = {oracleId: card.id, manaCost: front.mana, colors: front.colors, colorIdentity: card.ci, power: num(front.power), toughness: num(front.toughness),
+    const want = {oracleId: card.id, manaCost: front.mana, colors: colorsOf(front), colorIdentity: card.ci, power: num(front.power), toughness: num(front.toughness),
       ...(front.loyalty ? {loyalty: num(front.loyalty)} : {})};
     const got = {oracleId: script.identity.oracleId, manaCost: script.identity.manaCost, colors: script.identity.colors,
       colorIdentity: script.identity.colorIdentity, power: script.identity.power, toughness: script.identity.toughness,
@@ -69,6 +73,17 @@ const files = loadCardScenarios();
       if (JSON.stringify(gotBack) !== JSON.stringify(wantBack)) drift.push(`${path}: back face ${JSON.stringify(gotBack)} is not the oracle's ${JSON.stringify(wantBack)}`);
       if (script.back.oracleText !== back.text) drift.push(`${path}: its back face's oracle text is not the oracle's`);
       for (const ability of script.back.abilities) if (!back.text.includes(ability.text)) drift.push(`${path}: "${ability.text}" is not a sentence of its back face`);
+    }
+    if (adventurer !== (script.adventure !== undefined)) drift.push(`${path}: ${adventurer ? "an adventurer card without its Adventure" : "an Adventure on a card that has none"}`);
+    if (adventurer && script.adventure) {
+      const adventure = card.faces[1];
+      const [left, right = ""] = adventure.type.split(" — ");
+      const wantAdventure = {name: adventure.name, types: left.split(" "), subtypes: right.split(" ").filter(Boolean), manaCost: adventure.mana, colors: colorsOf(adventure)};
+      const gotAdventure = {name: script.adventure.identity.name, types: script.adventure.identity.types, subtypes: script.adventure.identity.subtypes, manaCost: script.adventure.identity.manaCost,
+        colors: script.adventure.identity.colors};
+      if (JSON.stringify(gotAdventure) !== JSON.stringify(wantAdventure)) drift.push(`${path}: Adventure ${JSON.stringify(gotAdventure)} is not the oracle's ${JSON.stringify(wantAdventure)}`);
+      if (script.adventure.oracleText !== adventure.text) drift.push(`${path}: its Adventure's oracle text is not the oracle's`);
+      for (const ability of script.adventure.abilities) if (!adventure.text.includes(ability.text)) drift.push(`${path}: "${ability.text}" is not a sentence of its Adventure`);
     }
     if (!path.startsWith(`${foldName(script.identity.name).charAt(0)}/`)) drift.push(`${path}: filed under the wrong letter`);
   }

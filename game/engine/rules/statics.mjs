@@ -17,7 +17,7 @@
  */
 
 import {conditionHolds} from "../script/condition.mjs";
-import {staticAffects, powerOf, toughnessOf} from "./layers.mjs";
+import {staticAffects, powerOf, toughnessOf, abilitiesOf} from "./layers.mjs";
 import {compileSelector, matchesSelector, matchesLastKnown} from "../script/filter.mjs";
 import {amountOf} from "../script/amount.mjs";
 import {usesThisTurn} from "../state/index.mjs";
@@ -106,6 +106,10 @@ export const STATIC_RULES = Object.freeze({
   "player-hexproof": "script/filter.mjs",
   /** A restriction on attacking (CR 508.1c): `affects`, `defender`, `unless` (cantAttack, below). rules/combat.mjs. */
   "cant-attack": "rules/combat.mjs",
+  /** A restriction on how many attack it (CR 508.1c): "No more than one creature can attack The Eternal Wanderer each
+      combat" -- the permanent's own (`affects` itself), `count` the most declared attacking it (attackerCaps, below).
+      rules/combat.mjs, as attackers are declared. */
+  "attackers-at-most": "rules/combat.mjs",
   /** A restriction on blocking (CR 509.1b): "This token can't block" (White Sun's Twilight's Mites), "target creature
       can't block this turn" given until end of turn: `affects` what can't. rules/combat.mjs, canBlock. */
   "cant-block": "rules/combat.mjs",
@@ -297,6 +301,20 @@ export function cantAttack(state, attacker, defender, planeswalker = null) {
   }
   return false;
 }
+/**
+ * "NO MORE THAN ONE CREATURE CAN ATTACK THE ETERNAL WANDERER EACH COMBAT" (CR 508.1c): for each permanent with the static
+ * `attackers-at-most`, the most creatures that may be declared attacking it -- by id; the least of two such abilities.
+ * Only a declaration is restricted: a creature put onto the battlefield attacking it was never declared (CR 508.4).
+ */
+export function attackerCaps(state) {
+  const caps = {};
+  for (const id of state.zones.battlefield) for (const ability of abilitiesOf(state, id)) {
+    if (ability.kind !== "static" || ability.rule !== "attackers-at-most") continue;
+    caps[id] = Math.min(caps[id] ?? Infinity, Number.isInteger(ability.count) ? ability.count : 1);
+  }
+  return caps;
+}
+
 /** The words `defender` may say on a `cant-attack` static. */
 export const CANT_ATTACK_DEFENDERS = Object.freeze(["you", "owner", "attacked"]);
 

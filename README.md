@@ -662,6 +662,14 @@ controls, hexproof or not, until it leaves; nothing when the target is illegal.
 `engine-echo` holds echo (Karmic Guide) and "unless" a mana cost with colors, paid the way the payer chooses.
 `engine-protection-color` holds protection from a color, as the source now is: no damage, block, target or Aura.
 `engine-unless-either-way` holds Divert Disaster's "unless its controller pays; if they do, you ...", an outcome either way.
+`engine-adventure` holds adventures (CR 715; Bofur, Reliable Guardian // Concerted Care): an adventurer card cast as itself
+or as its Adventure, each weighed by its own characteristics; exiled as the Adventure resolves and cast as itself from there,
+by the Adventure's controller; countered or copied, from the command zone, by an effect, and a land adventurer.
+`engine-wanderer` holds The Eternal Wanderer's pieces: no more than one creature attacking it, refused with what to do and
+kept by the pilots; a return at the beginning of its owner's next end step; a creature chosen for each player, the rest
+sacrificed.
+`engine-counts-among` holds Fell the Mighty's power greater than a target's, read as it resolves; Faeburrow Elder's mana of
+every color among your permanents; Loot, the Nexus's count of different powers.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -780,7 +788,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 317 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 320 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1069,6 +1077,9 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-echo` — `tests/engine-echo.mjs`
 - `engine-protection-color` — `tests/engine-protection-color.mjs`
 - `engine-unless-either-way` — `tests/engine-unless-either-way.mjs`
+- `engine-adventure` — `tests/engine-adventure.mjs`
+- `engine-wanderer` — `tests/engine-wanderer.mjs`
+- `engine-counts-among` — `tests/engine-counts-among.mjs`
 
 ## Design and execution record
 
