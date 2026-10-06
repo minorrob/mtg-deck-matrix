@@ -1,0 +1,111 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Boros Charm",
+    "oracleId": "2679d0dd-ba30-4a1c-b6a0-b3ac6c790496",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Boros Charm deals 4 damage to target player or planeswalker.\n• Permanents you control gain indestructible until end of turn.\n• Target creature gains double strike until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Boros Charm deals 4 damage to target player or planeswalker.\n• Permanents you control gain indestructible until end of turn.\n• Target creature gains double strike until end of turn.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Boros Charm deals 4 damage to target player or planeswalker.",
+              "targets": [
+                {
+                  "anyOf": [
+                    {
+                      "what": "player"
+                    },
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Planeswalker"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "dealDamage",
+                  "amount": 4,
+                  "targets": {
+                    "target": 0
+                  },
+                  "who": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Permanents you control gain indestructible until end of turn.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "pumpAll",
+                  "selector": {
+                    "what": "permanent",
+                    "controller": "you"
+                  },
+                  "power": 0,
+                  "toughness": 0,
+                  "keywords": [
+                    "Indestructible"
+                  ],
+                  "until": "end-of-turn"
+                }
+              ]
+            },
+            {
+              "text": "Target creature gains double strike until end of turn.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "pump",
+                  "targets": {
+                    "target": 0
+                  },
+                  "power": 0,
+                  "toughness": 0,
+                  "keywords": [
+                    "Double Strike"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

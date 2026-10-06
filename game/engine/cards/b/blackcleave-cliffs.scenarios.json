@@ -3,6 +3,30 @@
   "card": "Blackcleave Cliffs",
   "scenarios": [
     {
+      "name": "Rob's first land: with no other land it enters untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blackcleave Cliffs"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Blackcleave Cliffs"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Blackcleave Cliffs",
+          "is": false
+        }
+      ]
+    },
+    {
       "name": "With two other lands, it enters untapped, and taps for either color",
       "setup": [
         {

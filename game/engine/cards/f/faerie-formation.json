@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Faerie Formation",
+    "oracleId": "0366c2f6-6e78-4526-808c-fa7bace6006e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Faerie"
+    ],
+    "manaCost": "{4}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 5,
+    "toughness": 4
+  },
+  "oracleText": "Flying\n{3}{U}: Create a 1/1 blue Faerie creature token with flying. Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "activated",
+      "text": "{3}{U}: Create a 1/1 blue Faerie creature token with flying. Draw a card.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{U}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Faerie",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Faerie"
+            ],
+            "colors": [
+              "U"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Flying"
+            ]
+          }
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}
