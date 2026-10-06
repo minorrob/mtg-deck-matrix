@@ -1,0 +1,104 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Chaos Warp",
+    "oracleId": "07a0cba9-8768-4fd9-a3d5-b0f83b4bf8e8",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "The owner of target permanent shuffles it into their library, then reveals the top card of their library. If it's a permanent card, they put it onto the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "The owner of target permanent shuffles it into their library, then reveals the top card of their library. If it's a permanent card, they put it onto the battlefield.",
+      "targets": [
+        {
+          "what": "permanent"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "library"
+        },
+        {
+          "effect": "shuffle",
+          "who": {
+            "ownerOf": {
+              "target": 0
+            }
+          }
+        },
+        {
+          "effect": "peekAndReveal",
+          "who": {
+            "ownerOf": {
+              "target": 0
+            }
+          },
+          "count": 1,
+          "reveal": true,
+          "remember": true
+        },
+        {
+          "effect": "moveZone",
+          "targets": "remembered",
+          "to": "battlefield",
+          "condition": {
+            "about": "remembered",
+            "is": {
+              "anyOf": [
+                {
+                  "types": [
+                    "Artifact"
+                  ]
+                },
+                {
+                  "types": [
+                    "Creature"
+                  ]
+                },
+                {
+                  "types": [
+                    "Enchantment"
+                  ]
+                },
+                {
+                  "types": [
+                    "Land"
+                  ]
+                },
+                {
+                  "types": [
+                    "Planeswalker"
+                  ]
+                },
+                {
+                  "types": [
+                    "Battle"
+                  ]
+                }
+              ],
+              "token": false
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

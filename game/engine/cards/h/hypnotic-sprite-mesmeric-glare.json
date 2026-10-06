@@ -1,0 +1,71 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hypnotic Sprite // Mesmeric Glare",
+    "oracleId": "1f9efad1-9f51-47aa-a5a7-9c8103435a01",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Faerie"
+    ],
+    "manaCost": "{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Flying",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    }
+  ],
+  "adventure": {
+    "identity": {
+      "name": "Mesmeric Glare",
+      "types": [
+        "Instant"
+      ],
+      "subtypes": [
+        "Adventure"
+      ],
+      "manaCost": "{2}{U}",
+      "colors": [
+        "U"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Counter target spell with mana value 3 or less. (Then exile this card. You may cast the creature later from exile.)",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Counter target spell with mana value 3 or less.",
+        "targets": [
+          {
+            "what": "spell",
+            "manaValue": {
+              "max": 3
+            }
+          }
+        ],
+        "effects": [
+          {
+            "effect": "counterSpell",
+            "spells": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

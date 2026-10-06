@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Atraxa, Praetors' Voice",
+    "oracleId": "7e6b9b59-cd68-4e3c-827b-38833c92d6eb",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Angel",
+      "Horror"
+    ],
+    "manaCost": "{G}{W}{U}{B}",
+    "colors": [
+      "B",
+      "G",
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "G",
+      "U",
+      "W"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Flying, vigilance, deathtouch, lifelink\nAt the beginning of your end step, proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "keyword",
+      "text": "deathtouch",
+      "keyword": "deathtouch"
+    },
+    {
+      "kind": "keyword",
+      "text": "lifelink",
+      "keyword": "lifelink"
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, proliferate.",
+      "trigger": {
+        "on": "end step",
+        "yours": true
+      },
+      "effects": [
+        {
+          "effect": "proliferate"
+        }
+      ]
+    }
+  ]
+}

@@ -71,7 +71,8 @@ function unlessHolds(state, unless, player) {
   const alternatives = Array.isArray(unless.controls?.anyOf) ? unless.controls.anyOf : [unless.controls ?? {}];
   const matchers = alternatives.map((selector) => compileSelector({...selector, controller: "you"}));
   const count = state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player}))).length;
-  return count >= (unless.min ?? 1) && (unless.max === undefined || count <= unless.max);
+  /* "Unless you control two or fewer other lands" (a fast land) holds with none at all: a `max` alone has no least. */
+  return count >= (unless.min ?? (unless.max !== undefined ? 0 : 1)) && (unless.max === undefined || count <= unless.max);
 }
 
 /** Where an effect has to be for it to act on the battlefield (CR 113.6). */

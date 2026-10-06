@@ -85,9 +85,12 @@ const PHYREXIAN_REMINDER = /^\(\{[WUBRGC]\/P\} can be paid with either \{[WUBRGC
 /* A Class's first line, "(Gain the next level as a sorcery to add its ability.)", explains its level bars (CR 716.2a),
    which claim it themselves, each its own line ("{G}: Level 2"): the line claims nothing. */
 const CLASS_REMINDER = /^\(Gain the next level as a sorcery to add its abilit(y|ies)\.\)$/;
+/* "(Melds with Hanweir Battlements.)": on the half of a meld pair without the meld ability, a reminder of the other card's
+   (CR 712.4a), which claims nothing on this one. */
+const MELD_REMINDER = /^\(Melds with [^()]+\.\)$/;
 const withoutReminders = (line) => {
   const t = line.trim();
-  if (PHYREXIAN_REMINDER.test(t) || CLASS_REMINDER.test(t)) return "";
+  if (PHYREXIAN_REMINDER.test(t) || CLASS_REMINDER.test(t) || MELD_REMINDER.test(t)) return "";
   if (/^\(.*\)$/.test(t)) return t.slice(1, -1);
   return t.replace(/\s*\([^)]*\)/g, "").trim();
 };

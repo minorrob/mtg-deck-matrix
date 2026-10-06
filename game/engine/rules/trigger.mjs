@@ -314,6 +314,8 @@ function matches(state, event, condition, sourceId, controller) {
       if (fields.sacrificed !== true || !whoseIs(condition.sacrificer ?? "you", fields.sacrificer, controller)) return false;
       if (condition.another && (fields.leftBehind?.cardId ?? fields.card?.cardId) === sourceId) return false;
     }
+    /* A discard (CR 701.9a) the same way: "whenever you discard a card" does not see its own permanent die (Bag of Holding). */
+    if (condition.discarded && fields.discarded !== true) return false;
     if (condition.from && fields.from?.zoneType !== condition.from) return false;
     if (condition.to && fields.to?.zoneType !== condition.to) return false;
     /* "Put into your graveyard from anywhere" (Moonshadow): the card it became there, read where it now is -- a token is no

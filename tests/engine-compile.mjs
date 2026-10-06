@@ -92,6 +92,8 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
   const scry2 = checkFidelity({...opt, abilities: [{...opt.abilities[0], text: opt.oracleText.replace("Scry 1.", "Scry 2.")}]});
   eq(scry2.ok, false, "and changing a word of it is still an invention");
   eq(oracleClauses("({T}: Add {W}.)"), ["{T}: Add {W}."], "unless it is the whole line, as a basic land's ability is");
+  eq(oracleClauses("Vigilance\n(Melds with Hanweir Battlements.)"), ["Vigilance"],
+    "and a meld card's reminder of its partner's ability, the whole line, claims nothing: the ability is the other card's (CR 712.4a)");
   eq(oracleClauses("Flying, double strike, vigilance"), ["Flying", "double strike", "vigilance"], "a keyword line is a clause per keyword");
 
   eq(checkReadBack({everyAbilityPresent: true, costsRight: true, targetsRight: true, zonesRight: true, effectsRight: true, problems: []}).ok, true, "a read-back of five yeses and no problem passes");

@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Frantic Search",
+    "oracleId": "16e015b2-f8a3-4b1a-80be-58a8f5fb5e8c",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Draw two cards, then discard two cards. Untap up to three lands.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Draw two cards, then discard two cards. Untap up to three lands.",
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2
+        },
+        {
+          "effect": "discard",
+          "count": 2
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "battlefield",
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          },
+          "count": 3,
+          "upTo": true,
+          "to": "stay",
+          "remember": true
+        },
+        {
+          "effect": "untap",
+          "targets": "remembered"
+        }
+      ]
+    }
+  ]
+}
