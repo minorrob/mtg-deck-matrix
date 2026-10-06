@@ -44,7 +44,8 @@ const SUPERTYPES = ["Legendary", "Basic", "Snow", "World"];
 /** The printed facts, from the oracle record and never from the model. A modal double-faced card's are its front face's
     (CR 712.8a), its name the whole card's and its color identity both faces' (903.4); its back face is the script's own. */
 export function identityOf(card) {
-  const face = card.layout === "modal_dfc" && Array.isArray(card.faces) && card.faces.length ? card.faces[0] : card;
+  /* A nonmodal double-faced card's (the oracle's "transform", CR 712.2) too. */
+  const face = (card.layout === "modal_dfc" || card.layout === "transform") && Array.isArray(card.faces) && card.faces.length ? card.faces[0] : card;
   const [left, right = ""] = String(face.type ?? "").split(" — ");
   const words = left.split(/\s+/).filter(Boolean);
   const supertypes = words.filter((w) => SUPERTYPES.includes(w));
@@ -76,9 +77,12 @@ const normalize = (s) => String(s ?? "").replace(/[‘’]/g, "'").replace(/[“
    Phyrexian mana symbol ("({U/P} can be paid with either {U} or 2 life.)", Phyrexian Metamorph), which is the cost's
    reminder and claims nothing; anywhere else, reminder text in parentheses explains a keyword and claims nothing. */
 const PHYREXIAN_REMINDER = /^\(\{[WUBRGC]\/P\} can be paid with either \{[WUBRGC]\} or 2 life\.\)$/;
+/* A Class's first line, "(Gain the next level as a sorcery to add its ability.)", explains its level bars (CR 716.2a),
+   which claim it themselves, each its own line ("{G}: Level 2"): the line claims nothing. */
+const CLASS_REMINDER = /^\(Gain the next level as a sorcery to add its abilit(y|ies)\.\)$/;
 const withoutReminders = (line) => {
   const t = line.trim();
-  if (PHYREXIAN_REMINDER.test(t)) return "";
+  if (PHYREXIAN_REMINDER.test(t) || CLASS_REMINDER.test(t)) return "";
   if (/^\(.*\)$/.test(t)) return t.slice(1, -1);
   return t.replace(/\s*\([^)]*\)/g, "").trim();
 };

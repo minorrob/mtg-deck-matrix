@@ -50,7 +50,7 @@
  * file marks damage and destroys nothing.
  */
 
-import {cardsIn, recordUse} from "../state/index.mjs";
+import {cardsIn, recordUse, shownName, eventCard} from "../state/index.mjs";
 import {applyReplacements, hitKey, damageChoicesPossible} from "./replacement.mjs";
 import {runFollowUps} from "../script/effects/index.mjs";
 import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf, deriving} from "./layers.mjs";
@@ -67,10 +67,7 @@ import {
 
 const event = (kind, state, fields) => ({kind, data: {turn: state.turn, phase: state.phase, fields}});
 
-const cardRef = (state, id) => {
-  const o = state.objects[id];
-  return o ? {cardId: o.id, name: o.card, owner: o.owner, controller: o.controller, faceDown: false} : null;
-};
+const cardRef = eventCard;
 
 const isCreature = (object) => (object.types ?? []).includes("Creature");
 const has = (object, keyword) => (object.keywords ?? []).includes(keyword);
@@ -149,7 +146,8 @@ export const attackers = {
         if (owed.length && !owed.includes(defender)) continue;
         options.push({
           index: options.length,
-          label: `${state.objects[id].card} → ${state.players[defender].name}`,
+          /* A face-down creature has no name (CR 708.2a): it is said to be one. */
+          label: `${shownName(state.objects[id])} → ${state.players[defender].name}`,
           cardId: id,
           defenderId: defender,
         });
@@ -159,7 +157,7 @@ export const attackers = {
       if (goaders.length || owed.length) continue;
       for (const defender of defendersFor(state, awaiting.player)) for (const pw of planeswalkersOf(state, defender)) {
         if (cantAttack(state, id, defender, pw)) continue;
-        options.push({index: options.length, label: `${state.objects[id].card} → ${state.objects[pw].card} (${state.players[defender].name})`,
+        options.push({index: options.length, label: `${shownName(state.objects[id])} → ${state.objects[pw].card} (${state.players[defender].name})`,
           cardId: id, defenderId: defender, planeswalkerId: pw});
       }
     }
@@ -338,7 +336,7 @@ export const blockers = {
         if (!canBlockAttacker(state, id, attack.attacker)) continue;
         options.push({
           index: options.length,
-          label: `${state.objects[id].card} blocks ${state.objects[attack.attacker].card}`,
+          label: `${shownName(state.objects[id])} blocks ${shownName(state.objects[attack.attacker])}`,
           cardId: id,
           attackerId: attack.attacker,
         });
@@ -441,7 +439,7 @@ export const combatDamage = {
     const attack = state.combat.attacks.find((a) => a.attacker === awaiting.attacker);
     const options = attack.blockers.filter((id) => onBattlefield(state, id)).map((id, index) => ({
       index,
-      label: state.objects[id].card,
+      label: shownName(state.objects[id]),
       cardId: id,
       /* What counts as lethal for this source (CR 702.2c: one, from deathtouch), damage already marked included. */
       lethal: lethalNeededFrom(state, awaiting.attacker, id),
@@ -593,7 +591,9 @@ export const combatDamage = {
         state.players[hit.toPlayer].combatDamagedThisTurn = true;
         /* The damage is a loss of life (CR 120.3a), counted as one this turn (batch 78: it was not) -- or, with infect, as
            many poison counters. */
-        if (infect) events.push(...givePoison(state, hit.toPlayer, hit.amount));
+        /* Whoever controls the source puts the counters (rules/statics.mjs, playerCountersPlaced). */
+        const putter = state.objects[hit.source] ? controllerOf(state, hit.source) : null;
+        if (infect) events.push(...givePoison(state, hit.toPlayer, hit.amount, putter));
         else changeLife(state, hit.toPlayer, -hit.amount, events);
         /* CR 903.10a: combat damage a commander deals a player -- infect or not, it was dealt -- is kept against that
            commander for the rest of the game. Until 2026-10-03 nothing in combat kept it, and no game could be lost
@@ -602,9 +602,9 @@ export const combatDamage = {
         /* TOXIC (CR 702.164c, batch 77): dealt combat damage by a creature with toxic, the player also gets that many
            poison counters -- every instance it has, given ones too, added together (702.164b). */
         const toxic = abilitiesOf(state, hit.source).filter((a) => a.kind === "static" && a.rule === "toxic").reduce((n, a) => n + (a.amount ?? 0), 0);
-        if (toxic > 0) events.push(...givePoison(state, hit.toPlayer, toxic));
+        if (toxic > 0) events.push(...givePoison(state, hit.toPlayer, toxic, putter));
       } else {
-        damagePermanent(state, hit.toCard, hit.amount, events, {infect});
+        damagePermanent(state, hit.toCard, hit.amount, events, {infect, by: state.objects[hit.source] ? controllerOf(state, hit.source) : null});
         /* CR 704.5h: the mark that makes state-based actions destroy it whatever its toughness. */
         markDeathtouch(state, hit.source, hit.toCard);
         /* Combat damage, as damage to a player says (Grateful Apparition's "to a player or planeswalker", rules/trigger.mjs). */

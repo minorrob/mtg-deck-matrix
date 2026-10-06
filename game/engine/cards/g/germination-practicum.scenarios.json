@@ -1,0 +1,415 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Germination Practicum",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Cub": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Resolved: two +1/+1 counters on each of Rob's creatures, not Maya's, and the card exiled rather than put into the graveyard",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bear",
+            "Cub"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Germination Practicum"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Germination Practicum"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Bear",
+            "counter": "+1/+1",
+            "count": 2
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Cub",
+            "counter": "+1/+1",
+            "count": 2
+          }
+        },
+        {
+          "seat": 1,
+          "counters": {
+            "card": "Bear",
+            "counter": "+1/+1",
+            "count": 0
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Germination Practicum"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Rob's next precombat main phase: a copy cast from exile without paying its mana cost, two more counters, and the copy gone; Maya's turn has none",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Germination Practicum"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Germination Practicum"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Germination Practicum",
+                  "Don't cast"
+                ]
+              }
+            },
+            {
+              "seat": 0,
+              "zone": "exile",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Germination Practicum"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            },
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Germination Practicum"
+              ]
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Bear",
+            "counter": "+1/+1",
+            "count": 4
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Germination Practicum"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        },
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "tapped": "Forest",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "Declined: no counters, and the copy made in exile ceases to exist; the next precombat main phase asks again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Germination Practicum"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Germination Practicum"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't cast"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Bear",
+                "counter": "+1/+1",
+                "count": 2
+              }
+            },
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Germination Practicum"
+              ]
+            },
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Germination Practicum",
+                  "Don't cast"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Germination Practicum"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Bear",
+            "counter": "+1/+1",
+            "count": 4
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Germination Practicum"
+          ]
+        }
+      ]
+    }
+  ]
+}

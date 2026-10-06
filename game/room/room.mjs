@@ -35,7 +35,7 @@
  * anything is written, naming every card it cannot play (docs/decisions-2026-09-25.md, M4: "refused by name;
  * compiled once M7 lands"). Today that is the basic lands, as it is for the engine itself.
  */
-import {createState, addObject} from "../engine/state/index.mjs";
+import {createState, addObject, shownName} from "../engine/state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../engine/rules/turn.mjs";
 import {legalActions, applyAction, nothingToDo, escapeWays, flashbackCost, tappersInWords, castTapPlans, tapWords} from "../engine/rules/actions.mjs";
 import {passPriority} from "../engine/rules/priority.mjs";
@@ -144,10 +144,12 @@ export function offerDetails(state, seat, actions) {
     let holder = o.controller;
     try { if (o.zone === "battlefield") holder = controllerOf(state, id); } catch { /* the base controller */ }
     const whose = holder === seat || holder === undefined || holder === null ? "" : ` (${state.players[holder]?.name ?? `Seat ${holder + 1}`}'s)`;
-    if (plain) return `${o.card}${whose}`;
+    /* A face-down permanent has no name (CR 708.2a): it is said to be face down. */
+    const name = shownName(o);
+    if (plain) return `${name}${whose}`;
     let shape = "";
     try { const c = characteristicsOf(state, id); if (c.power !== null && c.power !== undefined) shape = ` ${c.power}/${c.toughness}`; } catch { /* no shape */ }
-    return `${o.card}${whose}${shape}${o.tapped ? ", tapped" : ""}`;
+    return `${name}${whose}${shape}${o.tapped ? ", tapped" : ""}`;
   };
   const MANA = ["W", "U", "B", "R", "G", "C"];
   const manaText = (mana) => MANA.flatMap((k) => Array.from({length: mana?.[k] ?? 0}, () => `{${k}}`)).join("");
@@ -162,6 +164,9 @@ export function offerDetails(state, seat, actions) {
     const modal = a.kind === "activate" ? (state.objects[a.objectId]?.abilities ?? []).find((b) => b.id === a.abilityId)?.modal : state.objects[a.objectId]?.spell?.modal;
     if (Array.isArray(a.modes)) parts.push(a.modes.map((i) => modal?.modes?.[i]?.text ?? `mode ${i + 1}`).join(" + "));
     if (a.x !== undefined) parts.push(`X = ${a.x}`);
+    /* A manifested permanent of the seat's own turned face up for its card's mana cost (CR 701.40b): the label is the card,
+       which only this seat is offered (CR 708.5). */
+    if (a.kind === "turn-face-up") parts.push(`turn face up for ${state.objects[a.objectId]?.faceDownCard?.manaCost ?? "its mana cost"}`);
     /* A counted target (script/bind.mjs): what is still to be picked ("up to two targets"), or the ones picked. */
     const aimed = (t) => (!t ? "" : Array.isArray(t) ? (t.length ? t.map(aimed).join(" and ") : "no target") : t.kind === "choose" ? countWords(t)
       : t.kind === "player" ? player(t.id) : object(t.id, plain));

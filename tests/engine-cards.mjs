@@ -49,8 +49,10 @@ const files = loadCardScenarios();
     const card = ORACLE.get(script.identity.name);
     if (!card) { drift.push(`${path}: no oracle card named ${script.identity.name}`); continue; }
     const num = (v) => (v !== null && v !== undefined && /^\d+$/.test(v) ? Number(v) : null);
-    /* A modal double-faced card (CR 712.3): its identity is its front face's, its back face the oracle's second. */
-    const double = card.layout === "modal_dfc";
+    /* A double-faced card, modal (CR 712.3) or nonmodal (712.2, the oracle's "transform"): its identity is its front face's,
+       its back face the oracle's second -- and a nonmodal one's script says it transforms (`layout`). */
+    const double = card.layout === "modal_dfc" || card.layout === "transform";
+    if (double && (script.layout ?? "modal_dfc") !== card.layout) drift.push(`${path}: the oracle's ${card.layout} card, and its script says ${script.layout ?? "nothing"}`);
     const front = double ? card.faces[0] : card;
     /* And a planeswalker's printed loyalty (CR 306.5a). */
     const want = {oracleId: card.id, manaCost: front.mana, colors: front.colors, colorIdentity: card.ci, power: num(front.power), toughness: num(front.toughness),

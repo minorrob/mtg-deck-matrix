@@ -32,7 +32,7 @@
  * everything, schema-valid and silently wrong — the same reason the primitive catalog is declared.
  */
 
-import {usesThisTurn} from "../state/index.mjs";
+import {usesThisTurn, valueCostOf} from "../state/index.mjs";
 import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf, subtypesOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {hasSubtype, isCreatureType} from "../keywords/types.mjs";
@@ -130,7 +130,8 @@ function canBeTargetedBy(state, id, chooser, source = null) {
 }
 
 function matchesManaValue(state, id, rule, context = {}) {
-  const cost = state.objects[id].manaCost;
+  /* A transformed permanent's is its front face's (CR 202.3b; state/index.mjs, valueCostOf). */
+  const cost = valueCostOf(state.objects[id]);
   const value = cost ? manaValue(parseManaCost(cost)) : 0;
   /* "With mana value X" (Likeness Looter): the X paid, as it is targeted and as it resolves. */
   if (rule.exactly !== undefined) return value === (rule.exactly === "X" ? context.x ?? 0 : rule.exactly);
@@ -268,7 +269,8 @@ export function compileSelector(selector) {
        70): no other permanent its controller controls has its name -- a copy's name is the one it copied (CR 707.2). */
     if (selector.uniqueName === true) {
       const holder = controllerOf(state, id);
-      if (state.zones.battlefield.some((other) => other !== id && state.objects[other].card === object.card && controllerOf(state, other) === holder)) return false;
+      /* Nameless -- face down (CR 708.2a) -- it shares a name with nothing. */
+      if (object.card !== null && state.zones.battlefield.some((other) => other !== id && state.objects[other].card === object.card && controllerOf(state, other) === holder)) return false;
     }
     /* "A creature card that shares a creature type with a creature you control" (Descendants' Path, batch 73): one of its
        subtypes is one of a permanent's the selector describes, itself aside -- a creature's subtypes are creature types

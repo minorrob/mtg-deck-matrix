@@ -125,11 +125,78 @@ const listFor = (state, zone, player) => (PER_PLAYER.includes(zone) ? state.zone
  * `card` is the definition's name or id; the engine never stores card TEXT in the state, only a
  * reference, so a state stays small and the card directory stays the one place text lives.
  */
-/* A modal double-faced card's face (CR 712.8): its characteristics, from the card's own two. */
+/* A double-faced card's face (CR 712.8): its characteristics, from the card's own two. `mdfc` holds both faces of any
+   double-faced card -- a modal one, or a nonmodal one (`transforming`, CR 712.2) that transforms. */
 const FACE_KEYS = ["card", "types", "subtypes", "supertypes", "manaCost", "colors", "power", "toughness", "loyalty", "keywords", "abilities", "spell", "enchant"];
 function faceOf(mdfc, face) {
   const side = face === "back" ? mdfc.back : mdfc.front;
   return Object.fromEntries(FACE_KEYS.map((key) => [key, side[key]]));
+}
+
+/**
+ * TO TRANSFORM A PERMANENT (CR 701.27a): turn it over, so its other face is up -- the same object (CR 712.18), every effect
+ * on it still applying, with only the characteristics of the face now up (712.8d, 712.8e) and a new timestamp (613.7g).
+ * Only a permanent represented by a double-faced card transforms (701.27c, 712.9) -- a nonmodal one, or a modal one told to
+ * (712.3) -- not a copy that is no double-faced card, and not one face down, whose faces are hidden beside it (712.15a;
+ * moveObject). Into an instant or sorcery face, nothing happens (701.27d, 712.10). A
+ * permanent that is a copy of something else keeps showing the copy (CR 707.2, 712.9's second example): it is its own
+ * values, kept beside the copy's, that turn over (effects/permanents.mjs, copyOnto). `transforms` counts the times, for
+ * "only if it hasn't transformed since" (701.27f; effects/permanents.mjs, setState).
+ *
+ * @returns {boolean} whether it transformed
+ */
+export function transformObject(state, id) {
+  const object = state.objects[id];
+  if (!object?.mdfc) return false;
+  const to = object.face === "back" ? "front" : "back";
+  if ((object.mdfc[to].types ?? []).some((type) => type === "Instant" || type === "Sorcery")) return false;
+  const values = faceOf(object.mdfc, to);
+  const onto = object.uncopied ?? object;
+  for (const [key, value] of Object.entries(values)) {
+    if (value === undefined) delete onto[key];
+    else onto[key] = structuredClone(value);
+  }
+  if (to === "back") object.face = "back"; else delete object.face;
+  object.transforms = (object.transforms ?? 0) + 1;
+  object.timestamp = state.nextTimestamp;
+  state.nextTimestamp += 1;
+  return true;
+}
+
+/**
+ * THE MANA COST AN OBJECT'S MANA VALUE IS FIGURED FROM (CR 202.3): its own -- but a nonmodal double-faced permanent or
+ * spell with its back face up has its front face's (202.3b, 712.8e), and a copy of that back face is no double-faced card
+ * and has its own, none (202.3b). A face-down permanent has no mana cost (708.2a). Null for none.
+ */
+export function valueCostOf(object) {
+  if (!object) return null;
+  if (object.mdfc?.transforming === true && object.face === "back" && !object.uncopied) return object.mdfc.front.manaCost ?? null;
+  return object.manaCost ?? null;
+}
+
+/* A FACE-DOWN PERMANENT'S CHARACTERISTICS (CR 708.2a, 701.40a): a nameless 2/2 creature, textless, without subtypes or a
+   mana cost -- and so colorless, with no supertype -- its copiable values while it is face down. */
+const FACE_DOWN = Object.freeze({card: null, types: ["Creature"], subtypes: [], supertypes: [], manaCost: null, colors: [], power: 2, toughness: 2, keywords: [], abilities: []});
+/* What the card is, kept beside a face-down permanent's own (`faceDownCard`): seen by its controller (CR 708.5,
+   projection.mjs), and what it becomes as it is turned face up (708.8) or leaves the battlefield (708.9). */
+const CARD_KEYS = ["card", "types", "subtypes", "supertypes", "manaCost", "colors", "power", "toughness", "loyalty", "keywords", "abilities", "spell", "enchant", "mdfc"];
+
+/**
+ * TO TURN A FACE-DOWN PERMANENT FACE UP (CR 708.8): its copiable values go back to the card's own -- a double-faced card's
+ * front face (712.15a), as it was kept -- every effect on it still applying, nothing about entering the battlefield
+ * happening again, and a new timestamp (613.7f). The same object: its counters, damage and attachments stay.
+ */
+export function turnFaceUp(state, id) {
+  const object = state.objects[id];
+  const real = object.faceDownCard;
+  delete object.faceDown;
+  delete object.faceDownCard;
+  for (const key of CARD_KEYS) {
+    if (real[key] === undefined) delete object[key];
+    else object[key] = structuredClone(real[key]);
+  }
+  object.timestamp = state.nextTimestamp;
+  state.nextTimestamp += 1;
 }
 
 /** Turn a modal double-faced card in a player's hand to the face it is played with (CR 712.12): before it moves, so how
@@ -216,11 +283,25 @@ export function addObject(state, object, zone, player = null) {
        control" and a token's own color read them. Present only on a card that has one, as with subtypes. */
     ...(Array.isArray(object.colors) && object.colors.length ? {colors: [...object.colors]} : {}),
     ...(object.mdfc ? {mdfc: structuredClone(object.mdfc), ...(object.face === "back" ? {face: "back"} : {})} : {}),
+    /* Face down (CR 708.2): what the card is, beside the face-down characteristics it has (moveObject). */
+    ...(object.faceDown === true ? {faceDown: true, faceDownCard: structuredClone(object.faceDownCard ?? {})} : {}),
   };
   state.nextTimestamp += 1;
   listFor(state, zone, player).push(id);
   return id;
 }
+
+/** What an event says of a card (CommanderProbeEvent@1, journal.mjs): which object, its name, and whose -- every rules
+    module's `cardRef`. A face-down permanent has no name (CR 708.2a) -- its `card` is null while it is one -- and says it
+    is face down, so nothing that reads the event (the table's history, the audio) names it (CR 708.5). */
+export function eventCard(state, id) {
+  const o = state.objects[id];
+  return o ? {cardId: o.id, name: o.card, owner: o.owner, controller: o.controller, faceDown: o.faceDown === true} : null;
+}
+
+/** What a player is shown as an object's name in a choice: its name -- or, face down and with none (CR 708.2a), that it is
+    face down, the same for every seat (its controller learns more from their own view, projection.mjs). */
+export const shownName = (object) => object?.card ?? (object?.faceDown === true ? "A face-down permanent" : "");
 
 /** Which commander an object is (CR 903.3): the key its tax and its damage are kept under, the same in every zone. */
 export function commanderKeyOf(object) {
@@ -269,11 +350,13 @@ export function recordUse(state, id, key) {
   object.used.counts[key] = (object.used.counts[key] ?? 0) + 1;
 }
 
-export function moveObject(state, id, zone, player = null) {
+export function moveObject(state, id, zone, player = null, {faceDown = false} = {}) {
   const current = state.objects[id];
   if (!current) throw new Error(`There is no object ${id} to move`);
+  /* A face-down permanent leaving is revealed, and moves as the card it is (CR 708.9). */
+  const revealed = current.faceDown === true ? {...current, ...current.faceDownCard} : current;
   /* A permanent that became a copy moves as itself (CR 400.7; effects/permanents.mjs, becomeCopy). */
-  const from = current.uncopied ? {...current, ...current.uncopied} : current;
+  const from = revealed.uncopied ? {...revealed, ...revealed.uncopied} : revealed;
   assertZone(state, zone, player);
 
   const fromList = listFor(state, from.zone, from.zonePlayer);
@@ -288,15 +371,23 @@ export function moveObject(state, id, zone, player = null) {
   /* Only what the CARD says survives the move: its identity, its printed types and its owner. The
      owner does (CR 108.3): a card goes to its OWNER's graveyard however long someone else
      controlled it. Counters, damage, attachments and control do not — that is CR 400.7. */
+  const kept = {owner: from.owner, controller: from.owner, token: from.token, copy: from.copy, commander: from.commander,
+    commanderKey: from.commander === true ? commanderKeyOf(from) : undefined, colorIdentity: from.colorIdentity};
+  /* PUT ONTO THE BATTLEFIELD FACE DOWN (manifest, CR 701.40a): turned face down before it enters (708.3), so it arrives
+     with the face-down characteristics and nothing of its own -- the card it is kept beside them, as it was where it came
+     from: a double-faced card's front face (712.8a, 712.15). */
+  if (faceDown && zone === "battlefield") {
+    const faceDownCard = Object.fromEntries(CARD_KEYS.filter((key) => from[key] !== undefined).map((key) => [key, from[key]]));
+    return addObject(state, {...FACE_DOWN, ...kept, faceDown: true, faceDownCard}, zone, player);
+  }
   return addObject(state, {
     /* A double-faced card keeps the face that was up only onto the battlefield, where it was put that way; anywhere else
        it is its front (CR 712.8a). */
     ...(from.mdfc ? {mdfc: from.mdfc, face: zone === "battlefield" && from.face === "back" ? "back" : undefined} : {}),
     card: from.card, types: from.types, manaCost: from.manaCost, abilities: from.abilities,
     power: from.power, toughness: from.toughness, loyalty: from.loyalty, keywords: from.keywords,
-    owner: from.owner, controller: from.owner, token: from.token, copy: from.copy, commander: from.commander,
-    commanderKey: from.commander === true ? commanderKeyOf(from) : undefined,
-    spell: from.spell, subtypes: from.subtypes, supertypes: from.supertypes, colorIdentity: from.colorIdentity, colors: from.colors,
+    ...kept,
+    spell: from.spell, subtypes: from.subtypes, supertypes: from.supertypes, colors: from.colors,
     enchant: from.enchant,
   }, zone, player);
 }

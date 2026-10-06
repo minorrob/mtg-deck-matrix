@@ -120,6 +120,9 @@ export const STATIC_RULES = Object.freeze({
   /** Storm (CR 702.40a): the keyword kept as this static, read as the spell is cast (cards/index.mjs; batch 77 names it
       here, where every rule a definition carries is named). */
   "storm": "rules/actions.mjs",
+  /** Paradigm (CR 702.192a): the keyword kept as this static (cards/index.mjs), read as the spell resolves -- the delayed
+      trigger made the first time a spell of its name resolves for its controller, and the spell exiled. rules/stack.mjs. */
+  "paradigm": "rules/stack.mjs",
   /** "If an artifact or creature entering causes a triggered ability of a permanent you control to trigger, that ability
       triggers an additional time" (Panharmonicon, CR 603.2d): `affects` whose abilities, `cause` {event: enters, dies or
       attacks, filter} what caused it, if the card says. rules/trigger.mjs, as triggers are collected. */
@@ -232,18 +235,37 @@ export function cantGainLife(state, player) {
  * HOW MANY COUNTERS ARE PUT ON, after "twice that many ... instead" (`more-counters`; CR 614.1a): each such static over
  * this permanent and this kind multiplies them. Only multiplying is built, so their order does not change the result
  * and nobody need be asked (CR 616.1 asks when it would). A permanent entering with counters is read as it has entered.
+ *
+ * `by`: the player putting them -- an effect's controller, a cost's payer, and for a permanent entering with counters its
+ * controller (CR 122.6a), for "if YOU would put one or more counters on a permanent or player" (Innkeeper's Talent:
+ * `putBy: "you"`, its controller; `players: true`, a player's counters too, playerCountersPlaced). A condition is read
+ * now: Innkeeper's Talent's while it is level 3 or more (CR 716.2a; script/condition.mjs).
  */
-export function countersPlaced(state, id, kind, count) {
+const multiplies = (state, ability, holder, holderId, kind, by) => ability.kind === "static" && ability.rule === "more-counters"
+  && (!ability.counter || ability.counter === kind) && (ability.putBy !== "you" || by === holder.controller)
+  && conditionHolds(state, ability.condition, {controller: holder.controller, source: holderId});
+/* "Can't have -1/-1 counters put on them" (Darksteel Angel): `times` 0, none at all. */
+const timesOf = (ability) => (Number.isInteger(ability.times) && ability.times >= 0 ? ability.times : 2);
+export function countersPlaced(state, id, kind, count, by = null) {
   if (!(count > 0) || !state.objects[id]) return count;
   let n = count;
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
     for (const ability of holder.abilities ?? []) {
-      if (ability.kind !== "static" || ability.rule !== "more-counters" || (ability.counter && ability.counter !== kind)) continue;
+      if (!multiplies(state, ability, holder, holderId, kind, by)) continue;
       if (!matchesSelector({what: "permanent", ...ability.affects}, state, id, {controller: holder.controller, source: holderId})) continue;
-      /* "Can't have -1/-1 counters put on them" (Darksteel Angel): `times` 0, none at all. */
-      n *= Number.isInteger(ability.times) && ability.times >= 0 ? ability.times : 2;
+      n *= timesOf(ability);
     }
+  }
+  return n;
+}
+/** The same for counters put on a player (CR 122.1: poison and the rest): only a static that says `players: true`. */
+export function playerCountersPlaced(state, player, kind, count, by = null) {
+  if (!(count > 0) || !state.players[player]) return count;
+  let n = count;
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of holder.abilities ?? []) if (ability.players === true && multiplies(state, ability, holder, holderId, kind, by)) n *= timesOf(ability);
   }
   return n;
 }

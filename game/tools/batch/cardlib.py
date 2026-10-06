@@ -18,6 +18,11 @@ name, oracle id, cost, types, colors, power and toughness -- and its oracle text
     print(b.write(CARDS, SCEN, only=sys.argv[2:]), 'definitions written')
 
 SCEN maps each card to (fixtures or None, [scenario, ...]); every card in CARDS needs scenarios.
+
+A double-faced card (a modal one, or a nonmodal one that transforms; CR 712.2-712.3) is written from its oracle faces:
+its identity and oracle text are its front face's, under the whole card's name (`lines` reads the front, `back_lines`
+the back), and `write(..., backs={name: [ability, ...]})` gives its back face, with the face's own identity. A nonmodal
+one's script says `layout: "transform"`, so the engine knows it transforms (cards/index.mjs).
 """
 import json
 import os
@@ -79,24 +84,53 @@ class Batch:
             raise KeyError(f'{name}: not in data/engine/oracle.json')
         return self.oracle[name]
 
-    def lines(self, name):
-        """The card's oracle text, a line each."""
-        return self.card(name)['text'].split('\n')
+    DOUBLE = ('modal_dfc', 'transform')
 
-    def identity(self, name):
-        """The definition's identity block, from the oracle data."""
+    def faces(self, name):
+        """A double-faced card's two faces, front first, or None for any other card."""
         c = self.card(name)
-        left, _, right = c['type'].partition(' — ')
+        return c['faces'] if c.get('layout') in self.DOUBLE and c.get('faces') else None
+
+    def front(self, name):
+        """What a definition is written from: a double-faced card's front face (CR 712.8a), any other card itself."""
+        faces = self.faces(name)
+        return faces[0] if faces else self.card(name)
+
+    def lines(self, name):
+        """The card's oracle text, a line each (a double-faced card's front face's)."""
+        return self.front(name)['text'].split('\n')
+
+    def back_lines(self, name):
+        """A double-faced card's back face's oracle text, a line each."""
+        return self.faces(name)[1]['text'].split('\n')
+
+    @staticmethod
+    def _identity(face, name, oracle_id=None, ci=None):
+        left, _, right = face['type'].partition(' — ')
         words = left.split()
         num = lambda v: int(v) if v is not None and re.fullmatch(r'\d+', v) else None
         sup = [w for w in words if w in SUPERTYPES]
         return {
-            'name': c['name'], 'oracleId': c['id'], **({'supertypes': sup} if sup else {}), 'types': [w for w in words if w not in SUPERTYPES],
+            'name': name, **({'oracleId': oracle_id} if oracle_id else {}), **({'supertypes': sup} if sup else {}), 'types': [w for w in words if w not in SUPERTYPES],
             'subtypes': right.split() if right else [],
-            'manaCost': c['mana'], 'colors': c['colors'], 'colorIdentity': c['ci'],
-            'power': num(c['power']), 'toughness': num(c['toughness']),
-            **({'loyalty': num(c['loyalty'])} if c.get('loyalty') else {}),
+            'manaCost': face['mana'] or None, 'colors': face['colors'], **({'colorIdentity': ci} if ci is not None else {}),
+            'power': num(face['power']), 'toughness': num(face['toughness']),
+            **({'loyalty': num(face['loyalty'])} if face.get('loyalty') else {}),
         }
+
+    def identity(self, name):
+        """The definition's identity block, from the oracle data: a double-faced card's front face, under the card's name, its
+        color identity both faces' (CR 903.4)."""
+        c = self.card(name)
+        ident = self._identity(self.front(name), c['name'], c['id'], c['ci'])
+        if not self.faces(name):
+            ident['manaCost'] = c['mana']
+        return ident
+
+    def back(self, name, abilities):
+        """A double-faced card's back face (CR 712.8): its own identity (the card's oracle id is the front's), text and abilities."""
+        face = self.faces(name)[1]
+        return {'identity': self._identity(face, face['name']), 'oracleText': face['text'], 'abilities': abilities}
 
     def pay(self, name, seat=None):
         """The basic lands (and Wastes for generic mana) that pay the card's mana cost exactly, and the scenario steps
@@ -105,18 +139,26 @@ class Batch:
         lands = [LAND_FOR[s] for s in re.findall(r'\{([WUBRG])\}', cost)] + ['Wastes'] * sum(int(n) for n in re.findall(r'\{(\d+)\}', cost))
         return lands, [{'tap': land, **({'seat': seat} if seat is not None else {})} for land in lands]
 
-    def write(self, cards, scenarios, only=None):
-        """Write each card's definition and scenarios; `only` limits it to those names. Returns how many it wrote."""
+    def write(self, cards, scenarios, only=None, backs=None):
+        """Write each card's definition and scenarios; `only` limits it to those names; `backs` gives each double-faced
+        card's back-face abilities. Returns how many it wrote."""
         if set(cards) != set(scenarios):
             raise ValueError(f'cards and scenarios differ: {sorted(set(cards) ^ set(scenarios))}')
+        backs = backs or {}
         written = 0
         for name, abilities in cards.items():
             if only and name not in only:
                 continue
+            if bool(self.faces(name)) != (name in backs):
+                raise ValueError(f'{name}: a double-faced card is written with its back face, and only one is')
             s = slug(name)
             folder = os.path.join(self.root, 'game', 'engine', 'cards', s[0])
             os.makedirs(folder, exist_ok=True)
-            script = {'schema': 'CrankCardScript@1', 'identity': self.identity(name), 'oracleText': self.card(name)['text'], 'source': 'hand', 'abilities': abilities}
+            script = {'schema': 'CrankCardScript@1', 'identity': self.identity(name), 'oracleText': self.front(name)['text'], 'source': 'hand', 'abilities': abilities}
+            if name in backs:
+                if self.card(name)['layout'] == 'transform':
+                    script['layout'] = 'transform'
+                script['back'] = self.back(name, backs[name])
             with open(os.path.join(folder, s + '.json'), 'w', encoding='utf-8', newline='\n') as f:
                 f.write(json.dumps(script, indent=2, ensure_ascii=False) + '\n')
             fixtures, runs = scenarios[name]

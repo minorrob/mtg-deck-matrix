@@ -52,6 +52,7 @@
 import {compileSelector, selectMatching} from "./filter.mjs";
 import {powerOf, toughnessOf, controllerOf} from "../rules/layers.mjs";
 import {namesChosen, withChosen} from "./chosen.mjs";
+import {valueCostOf, shownName} from "../state/index.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {amountOf, AMOUNT_PARAMS} from "./amount.mjs";
 
@@ -195,7 +196,8 @@ export function factsOf(state, targets) {
     return {powerOf: o.zone === "battlefield" ? powerOf(state, t.id) : (o.power ?? 0),
       /* "Its controller gains life equal to its toughness" (Condemn): as it was, before the effect moved it. */
       toughnessOf: o.zone === "battlefield" ? toughnessOf(state, t.id) : (o.toughness ?? 0),
-      manaValueOf: o.manaCost ? manaValue(parseManaCost(o.manaCost)) : 0,
+      /* A transformed permanent's is its front face's (CR 202.3b). */
+      manaValueOf: valueCostOf(o) ? manaValue(parseManaCost(valueCostOf(o))) : 0,
       controllerOf: o.zone === "battlefield" ? controllerOf(state, t.id) : o.controller};
   });
 }
@@ -393,5 +395,6 @@ export function targetName(state, chosen) {
   if (Array.isArray(chosen)) return chosen.length ? chosen.map((t) => targetName(state, t)).join(" and ") : "no target";
   if (chosen.kind === "choose") return countWords(chosen);
   if (chosen.kind === "player") return state.players[chosen.id]?.name ?? `Seat ${chosen.id + 1}`;
-  return state.objects[chosen.id]?.card ?? "";
+  /* A face-down permanent has no name (CR 708.2a): it is said to be face down. */
+  return shownName(state.objects[chosen.id]);
 }

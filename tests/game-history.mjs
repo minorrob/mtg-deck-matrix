@@ -50,6 +50,12 @@ eq(say(ev("GameEventCardDamaged", {source: card("Bear"), card: card("Elf", 1), a
 eq(say(ev("GameEventAttackersDeclared", {player: {playerId: 0}, attackers: [{card: card("Bear")}, {card: card("Wolf")}]})), ["Rob attacked with Bear, Wolf"], "attackers");
 eq(say(ev("GameEventBlockersDeclared", {player: {playerId: 1}, blockers: [{card: card("Elf", 1), blocking: card("Bear")}]})), ["Maya: Elf blocked Bear"], "blockers");
 eq(say(ev("GameEventGameOutcome", {winner: 1, reason: "last player standing"})), ["Maya won"], "the outcome");
+/* A manifested card (CR 701.40a) enters with no name, and is named only once it is turned face up (CR 701.40b). */
+eq(say(zone("Library", "Battlefield", card(null, 1, {faceDown: true}))), ["a face-down card entered the battlefield"], "a card manifested, unnamed");
+eq(say(ev("GameEventCardTurnedFaceUp", {card: card("Ox", 1), player: {playerId: 1}})), ["Maya turned Ox face up"], "turned face up, named");
+eq(say(ev("GameEventCardTransformed", {card: card("Hydaelyn, the Mothercrystal"), from: "Venat, Heart of Hydaelyn", to: "Hydaelyn, the Mothercrystal"})),
+  ["Venat, Heart of Hydaelyn transformed into Hydaelyn, the Mothercrystal"], "a double-faced permanent transformed, both faces named (CR 701.27a)");
+eq(say(ev("GameEventCardLevel", {card: card("Innkeeper's Talent"), oldValue: 1, newValue: 2})), ["Innkeeper's Talent reached level 2"], "a Class's level (CR 716.2a)");
 for (const quiet of ["GameEventCardTapped", "GameEventManaPool", "GameEventShuffle"]) eq(say(ev(quiet, {player: {playerId: 0}, card: card("Forest")})), [], `${quiet} says nothing`);
 const draws = [];
 for (let i = 0; i < 7; i += 1) addToHistory(draws, zone("Library", "Hand", card(`Secret ${i}`)), NAMES);

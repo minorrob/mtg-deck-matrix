@@ -20,7 +20,7 @@
 import {holdArrival} from "../../rules/entering.mjs";
 import {afterwards, delayedTrigger, enchantable, enchantOnArrival} from "./permanents.mjs";
 import {typesOf} from "../../rules/layers.mjs";
-import {moveObject, cardsIn, PUBLIC_ZONES, removeObject} from "../../state/index.mjs";
+import {moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf, controllerOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector} from "../filter.mjs";
@@ -39,9 +39,14 @@ const PER_PLAYER = ["library", "hand", "graveyard", "command"];
 
 export const event = (kind, state, fields) => ({kind, data: {turn: state.turn, phase: state.phase, fields}});
 
-export const cardRef = (state, id) => {
+/* What an event says of a card (state/index.mjs, eventCard): a face-down permanent's says it is, and names nothing. */
+export const cardRef = eventCard;
+
+/* What an event says of a permanent as it leaves the battlefield: a face-down one is revealed to every player as it moves
+   (CR 708.9), so it is named -- as the card it is. Anything else, as cardRef says it. */
+export const leavingRef = (state, id) => {
   const o = state.objects[id];
-  return o ? {cardId: o.id, name: o.card, owner: o.owner, controller: o.controller, faceDown: false} : null;
+  return o?.faceDown === true && o.zone === "battlefield" ? {...cardRef(state, id), name: o.faceDownCard?.card ?? null, faceDown: false} : cardRef(state, id);
 };
 
 /* The card types a permanent may have (CR 110.4). */
@@ -53,11 +58,15 @@ const PERMANENT_TYPES = ["Artifact", "Battle", "Creature", "Enchantment", "Land"
  * Shared by everything here, because "the destination an effect asked for" and "the zone the card
  * reached" are two different things the moment anything on the board says "instead" (CR 614).
  */
-export function moveOne(state, id, to, events, {owner = null, tapped = false} = {}) {
+/* `faceDown`: onto the battlefield face down (manifest, CR 701.40a) -- turned face down before it moves (CR 708.3), so it
+   enters as a 2/2 creature with no text and no name: its own replacements ("enters tapped", an Aura's host) are nothing,
+   and what the move says of it names no card (the history is everyone's, game/room/history.mjs). */
+export function moveOne(state, id, to, events, {owner = null, tapped = false, faceDown = false} = {}) {
   const object = state.objects[id];
   if (!object) return null;
   const from = object.zone;
-  const card = cardRef(state, id);
+  const down = faceDown === true && to === "battlefield";
+  const card = down ? {...cardRef(state, id), name: null, faceDown: true} : leavingRef(state, id);
   /* Only a departure from the battlefield needs last known information (CR 113.7a): that is the
      zone where an object had characteristics worth remembering. A card moving hand to graveyard
      was never a 5/5. */
@@ -78,23 +87,25 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false} = 
 
   /* A modal double-faced card told to enter with its front face up, when that face is no permanent's (CR 712.14b): it
      stays where it is. */
-  if (destination === "battlefield" && object.mdfc && object.face !== "back" && !PERMANENT_TYPES.some((type) => (object.mdfc.front.types ?? []).includes(type))) return null;
+  /* Face down, it is a face-down 2/2 as it enters, whatever its faces (CR 712.15). */
+  const asDown = down && destination === "battlefield";
+  if (destination === "battlefield" && !asDown && object.mdfc && object.face !== "back" && !PERMANENT_TYPES.some((type) => (object.mdfc.front.types ?? []).includes(type))) return null;
   /* CR 614.12: how it ENTERS, asked before it moves, because the abilities answering it belong to
-     the card as it is now -- a zone change makes a new object. */
+     the card as it is now -- a zone change makes a new object. Face down, it has none, and is a creature (CR 708.3). */
   const entering = destination === "battlefield"
-    ? enteringModifications(state, {objectId: id, player: object.controller, types: object.types, abilities: object.abilities})
+    ? enteringModifications(state, {objectId: id, player: object.controller, types: asDown ? ["Creature"] : object.types, abilities: asDown ? [] : object.abilities})
     : null;
 
   /* An Aura put onto the battlefield by an effect, not resolving as a spell (CR 303.4f; Sun Titan returning one): it
      enchants what its controller chooses as it enters, and with nothing to enchant it stays where it is -- or, from the
      stack, goes to its owner's graveyard (CR 303.4g). */
-  const hosts = destination === "battlefield" && object.enchant ? enchantable(state, object.enchant, object.owner) : null;
+  const hosts = destination === "battlefield" && object.enchant && !asDown ? enchantable(state, object.enchant, object.owner) : null;
   if (hosts && !hosts.length) {
     if (from !== "stack") return null;
     return moveOne(state, id, "graveyard", events, {owner: object.owner});
   }
   if (leaving >= 0) state.stack.splice(leaving, 1);
-  const moved = moveObject(state, id, destination, PER_PLAYER.includes(destination) ? holder : null);
+  const moved = moveObject(state, id, destination, PER_PLAYER.includes(destination) ? holder : null, {faceDown: asDown});
   if (hosts) enchantOnArrival(state, moved, hosts, state.objects[moved].controller);
   if (entering) {
     /* Tapped by its own "enters tapped", or by the effect that put it there ("onto the battlefield tapped"): before the
@@ -102,9 +113,9 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false} = 
     if ((entering.tapped || tapped) && !entersUntapped(state, moved)) state.objects[moved].tapped = true;
     /* A question it asks as it enters waits for the next priority (rules/entering.mjs). */
     for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: moved, ...ask});
-    /* Counters it enters with are put on it (CR 122.6): "twice that many instead" sees them. */
+    /* Counters it enters with are put on it (CR 122.6) -- by its controller (122.6a): "twice that many instead" sees them. */
     for (const [counter, count] of Object.entries(entering.counters)) {
-      state.objects[moved].counters[counter] = (state.objects[moved].counters[counter] ?? 0) + countersPlaced(state, moved, counter, count);
+      state.objects[moved].counters[counter] = (state.objects[moved].counters[counter] ?? 0) + countersPlaced(state, moved, counter, count, state.objects[moved].controller);
     }
   }
   events.push(event("GameEventCardChangeZone", state, {
@@ -320,8 +331,33 @@ export function moveZone(state, params, context, rng = null) {
   if (params.link === true && context.source !== null && context.source !== undefined) (state.links ??= {})[context.source] = became.filter((id) => state.objects[id]);
   if (params.linked === true && state.links) delete state.links[linkOf(context)];
   /* Teferi's Time Twist: "if it enters as a creature, it enters with an additional +1/+1 counter on it". */
-  if (params.withCounter) for (const id of arrived) if (typesOf(state, id).includes("Creature")) state.objects[id].counters[params.withCounter] = (state.objects[id].counters[params.withCounter] ?? 0) + 1;
+  /* Put on it as it enters (CR 122.6), by its controller (122.6a): "twice that many instead" sees it. */
+  if (params.withCounter) for (const id of arrived) if (typesOf(state, id).includes("Creature"))
+    state.objects[id].counters[params.withCounter] = (state.objects[id].counters[params.withCounter] ?? 0) + countersPlaced(state, id, params.withCounter, 1, state.objects[id].controller);
   afterwards(state, arrived, params, context);
+  return events;
+}
+
+/**
+ * `manifest` -- "its controller manifests the top card of their library" (Reality Shift; CR 701.40a): each player `who`
+ * names puts the top card of their library onto the battlefield face down -- a nameless, textless 2/2 creature without
+ * subtypes or a mana cost (708.2a) -- under their control, `count` of them, one at a time (701.40e). Nothing in that library, and
+ * nothing happens. What the card is, its controller may look at (CR 708.5; projection.mjs); turned face up for its mana
+ * cost if it is a creature card (701.40b; rules/actions.mjs), or revealed as it leaves (708.9), everyone sees it.
+ * `remember`: the manifested permanents, for the effects after it.
+ */
+export function manifest(state, params, context) {
+  const events = [], made = [];
+  for (const player of playersFor(state, params.who, context.controller)) {
+    for (let n = 0; n < (params.count ?? 1); n += 1) {
+      /* "That player puts ... onto the battlefield": their own card, under their control (CR 110.2a). None left, nothing. */
+      const moved = moveOne(state, cardsIn(state, "library", player)[0], "battlefield", events, {faceDown: true});
+      /* Sent elsewhere instead, it was never manifested (CR 614.1, 701.40f). */
+      if (state.objects[moved]?.zone !== "battlefield") continue;
+      made.push(moved);
+    }
+  }
+  if (params.remember) context.remembered = made;
   return events;
 }
 

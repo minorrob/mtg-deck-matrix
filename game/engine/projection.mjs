@@ -55,29 +55,38 @@ const VISIBILITY = {
 };
 
 /* One card, as a viewer may see it. A face-down permanent is present — everyone can see that
-   SOMETHING is there — but carries no name, because that is the whole of what face-down means. */
-function cardFor(state, id, canSeeFace) {
+   SOMETHING is there — but carries no name, because that is the whole of what face-down means.
+   What it is face down IS public: a 2/2 creature with no name (CR 708.2a), and whatever effects have made of it, so the
+   board draws that. What card it is, only its controller may look at (CR 708.5): `faceDownName`, in that seat's view
+   alone. Everyone else learns it as it turns face up or leaves the battlefield (708.8, 708.9). */
+function cardFor(state, id, canSeeFace, viewer = null) {
   const object = state.objects[id];
   if (!object) return null;
   const faceDown = object.faceDown === true;
   const named = canSeeFace && !faceDown;
+  const shown = named || (canSeeFace && faceDown && object.zone === "battlefield");
   const current = object.zone === "battlefield" ? characteristicsOf(state, id) : object;
+  const controller = object.zone === "battlefield" ? current.controller : object.controller;
   return {
     cardId: object.id,
     name: named ? object.card : null,
     faceDown,
+    /* CR 708.5: its controller, and nobody else, may look at it. */
+    ...(faceDown && viewer !== null && viewer === controller && object.faceDownCard?.card ? {faceDownName: object.faceDownCard.card} : {}),
     owner: object.owner,
-    controller: object.zone === "battlefield" ? current.controller : object.controller,
+    controller,
     tapped: object.tapped,
     damage: object.damage,
     counters: {...object.counters},
     /* CURRENT characteristics for anything on the battlefield, so the board draws the creature a
        player is actually looking at rather than what was printed on the card. Elsewhere there is
        nothing to derive: a card in a graveyard is its printed self. */
-    types: named ? [...current.types] : [],
-    power: named ? current.power : null,
-    toughness: named ? current.toughness : null,
-    keywords: named ? [...current.keywords] : [],
+    types: shown ? [...current.types] : [],
+    power: shown ? current.power : null,
+    toughness: shown ? current.toughness : null,
+    keywords: shown ? [...current.keywords] : [],
+    /* A Class's level (CR 716.2a), a designation anyone can see (716.2b); none is level 1 (716.2d). */
+    ...(Number.isInteger(object.level) ? {level: object.level} : {}),
     commander: object.commander === true,
     /* Which commander (state/index.mjs, commanderKeyOf): the key its damage is kept under in every player's
        `health.commanderDamage`, the same in every zone, so the board can say whose commander dealt it. */
@@ -122,7 +131,7 @@ function zoneFor(state, zone, owner, viewer) {
   const rule = VISIBILITY[zone];
   const visible = rule === "public" || (rule === "owner" && viewer === owner);
   const looked = zone === "library" ? topLookedAtBy(state, viewer, ids) : 0;
-  const cards = visible ? ids.map((id) => cardFor(state, id, true)).filter(Boolean)
+  const cards = visible ? ids.map((id) => cardFor(state, id, true, viewer)).filter(Boolean)
     : zone === "library" && ids.length && (looked || topSeenBy(state, owner, viewer)) ? ids.slice(0, Math.max(1, looked)).map((id) => cardFor(state, id, true)).filter(Boolean) : [];
   return {
     count: ids.length,

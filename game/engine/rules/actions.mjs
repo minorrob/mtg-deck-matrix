@@ -52,7 +52,7 @@
  * `sacrifice` of the source itself; a card with any other is refused at prepare (cards/index.mjs).
  */
 
-import {cardsIn, moveObject, usesThisTurn, recordUse, showFace} from "../state/index.mjs";
+import {cardsIn, moveObject, usesThisTurn, recordUse, showFace, turnFaceUp, eventCard} from "../state/index.mjs";
 import {pushSpell, pushAbility, becameTarget} from "./stack.mjs";
 import {addMana, spend, parseManaCost, automaticPayment, manaValue, poolSize, tapPlans, convokeCanPay, convokePayments} from "./mana.mjs";
 import {commanderTax, recordCommanderCast, colorIdentity} from "./commander.mjs";
@@ -64,7 +64,7 @@ import {compileSelector, matchesSelector, selectMatching} from "../script/filter
 import {runEffects} from "../script/effects/index.mjs";
 import {changeLife} from "../script/effects/resources.mjs";
 import {checkStateBasedActions, gameOver} from "./sba.mjs";
-import {costReduction, costIncrease, playerStatics, freeCast, flashGranted, castForbidden} from "./statics.mjs";
+import {costReduction, costIncrease, playerStatics, freeCast, flashGranted, castForbidden, countersPlaced} from "./statics.mjs";
 import {countMana, amountOf, countEffect} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
@@ -80,14 +80,12 @@ const SORCERY_SPEED = ["Sorcery", "Creature", "Artifact", "Enchantment", "Planes
 
 const event = (kind, state, fields) => ({kind, data: {turn: state.turn, phase: state.phase, fields}});
 
-const cardRef = (state, id) => {
-  const o = state.objects[id];
-  return o ? {cardId: o.id, name: o.card, owner: o.owner, controller: o.controller, faceDown: false} : null;
-};
+const cardRef = eventCard;
 
 const isLand = (object) => (object.types ?? []).includes("Land");
-/* A modal double-faced card whose back face is a land, front face up (CR 712.12). */
-const backLand = (object) => object.mdfc !== undefined && object.face !== "back" && (object.mdfc.back.types ?? []).includes("Land");
+/* A modal double-faced card whose back face is a land, front face up (CR 712.12). A nonmodal one is played or cast only
+   with its front face up (CR 712.11): its back face is reached by transforming. */
+const backLand = (object) => object.mdfc !== undefined && object.mdfc.transforming !== true && object.face !== "back" && (object.mdfc.back.types ?? []).includes("Land");
 
 /* WHAT A SPELL COSTS TO CAST NOW (CR 601.2f): its mana cost plus the commander tax, less what "spells cost {N} less"
    takes off -- generic mana only, the printed generic first and then the tax, never below nothing. The offer and the
@@ -475,9 +473,11 @@ const withinLimit = (state, id, ability) => (!ability.limit || usesThisTurn(stat
   && !(ability.exhaust && (state.objects[id]?.exhausted ?? []).includes(ability.id));
 /* Whether a mana ability's counters can be paid: every removal has the counters to remove. */
 const countersPayable = (state, id, costs) => (costs ?? []).every((c) => c.put || (state.objects[id].counters?.[c.counter] ?? 0) >= c.count);
-function payCounters(state, id, costs) {
+/* A cost's counters (CR 602.2b, 606.4): put on by the player paying it -- "twice that many instead" sees them (a loyalty
+   ability's +1, Wall of Roots' -0/-1; rules/statics.mjs, countersPlaced) -- or removed. */
+function payCounters(state, id, costs, by = null) {
   const counters = state.objects[id].counters;
-  for (const c of costs ?? []) counters[c.counter] = Math.max(0, (counters[c.counter] ?? 0) + (c.put ? c.count : -c.count));
+  for (const c of costs ?? []) counters[c.counter] = Math.max(0, (counters[c.counter] ?? 0) + (c.put ? countersPlaced(state, id, c.counter, c.count, by) : -c.count));
 }
 
 /* "Sacrifice a creature: ..." (Viscera Seer, Ashnod's Altar, Phyrexian Tower): a cost the player chooses as they activate
@@ -763,6 +763,26 @@ export function castTapPlans(state, player, action, limit = 2) {
   return tapPlans(tapUnits(state, player), {...cost, generic: cost.generic + x}, limit);
 }
 
+/* TURNING A MANIFESTED PERMANENT FACE UP (CR 701.40b; 116.2b, a special action): any time its controller has priority,
+   whatever the step and whatever is on the stack -- for a creature card with a mana cost, that cost paid (X as 0, CR
+   107.3, nothing chooses it), from the pool as an activated ability's is. Its label names the card, for the one player it
+   is offered to, who may look at it (CR 708.5). An instant or sorcery card, or a card with no mana cost, can't be turned
+   face up this way (701.40b, 701.40g). */
+function faceUpCost(state, player, id) {
+  const real = state.objects[id].faceDownCard;
+  if (!(real.types ?? []).includes("Creature") || !real.manaCost) return null;
+  return automaticPayment({...state.players[player].manaPool}, parseManaCost(real.manaCost), {life: state.players[player].life, x: 0});
+}
+function faceUpOffers(state, player) {
+  const offers = [];
+  for (const id of state.zones.battlefield) {
+    if (state.objects[id].faceDown !== true || characteristicsOf(state, id).controller !== player) continue;
+    const payment = faceUpCost(state, player, id);
+    if (payment) offers.push({kind: "turn-face-up", objectId: id, label: state.objects[id].faceDownCard.card, text: "Turn face up", payment});
+  }
+  return offers;
+}
+
 export function legalActions(state, player) {
   /* It only reads: every object it derives, derived once (rules/layers.mjs, deriving). */
   return deriving(state, () => offers(state, player));
@@ -789,6 +809,7 @@ function offers(state, player) {
   /* CR 605.3a: any time you have priority, whatever the step. */
   const mana = manaOffers(state, player);
   actions.push(...mana);
+  actions.push(...faceUpOffers(state, player));
   /* What a cast could tap, read once and only if a cast asks (castTapPlans). */
   let units = null;
   const tappable = () => (units ??= tapUnits(state, player, mana));
@@ -1245,7 +1266,7 @@ function perform(state, player, action, during = null) {
     const life = (ability.payLife ?? 0) + payment.life;
     /* Life paid is life lost (CR 119.4): said, and counted (batch 78). */
     if (life > 0) changeLife(state, player, -life, events);
-    payCounters(state, action.objectId, ability.counterCost);
+    payCounters(state, action.objectId, ability.counterCost, player);
     if (ability.limit) recordUse(state, action.objectId, ability.id);
     if (ability.tapSelf) {
       object.tapped = true;
@@ -1486,7 +1507,7 @@ function perform(state, player, action, during = null) {
       }
       if (atom.atom === "payLife") changeLife(state, player, -(atom.amount ?? 0), events);
       if (atom.atom === "addCounters" || atom.atom === "removeCounters")
-        payCounters(state, action.objectId, [{counter: atom.counter, count: atom.count === "X" ? action.x ?? 0 : atom.count ?? 1, put: atom.atom === "addCounters"}]);
+        payCounters(state, action.objectId, [{counter: atom.counter, count: atom.count === "X" ? action.x ?? 0 : atom.count ?? 1, put: atom.atom === "addCounters"}], player);
       /* "Return a Forest you control to its owner's hand": the one chosen with the offer. */
       if (atom.atom === "returnToHand" && action.costChoice?.returnToHand !== undefined) moveOne(state, action.costChoice.returnToHand, "hand", events);
       /* "Discard a card": the one chosen with the offer, a discard -- "whenever you discard a card" sees it. */
@@ -1554,6 +1575,20 @@ function perform(state, player, action, during = null) {
     /* And by its player, whatever becomes of the permanent (CR 400.7): "if you've activated a loyalty ability this turn"
        (Kiora of Salt and Sand; script/condition.mjs, `loyaltyThisTurn`). */
     if (ability.loyalty !== undefined) state.players[player].loyaltyThisTurn = (state.players[player].loyaltyThisTurn ?? 0) + 1;
+    return events;
+  }
+
+  /* TURNED FACE UP (CR 701.40b): the card shown to every player -- a creature card, and its mana cost -- that cost paid,
+     and the permanent turned face up (state/index.mjs, turnFaceUp). A special action: nothing goes on the stack, and its
+     player receives priority afterward (CR 116.3; applyAction). */
+  if (action.kind === "turn-face-up") {
+    const events = [];
+    /* Recomputed, as a cast's payment is: what pays it, now. */
+    const payment = faceUpCost(state, player, action.objectId);
+    spend(state.players[player].manaPool, payment.mana);
+    if (payment.life > 0) changeLife(state, player, -payment.life, events);
+    turnFaceUp(state, action.objectId);
+    events.push(event("GameEventCardTurnedFaceUp", state, {card: cardRef(state, action.objectId), player: {playerId: player, name: state.players[player].name}}));
     return events;
   }
 

@@ -45,7 +45,9 @@ export function beginResolution(state, effects, context = {}, rng = null) {
       /* What the ability's permanent chose as it entered ("the chosen type", script/chosen.mjs). */
       ...(context.chosen !== undefined ? {chosen: context.chosen} : {}),
       /* How a spell was cast, for "if this spell was cast from a graveyard" (script/condition.mjs, `cast`). */
-      ...(context.cast ? {cast: context.cast} : {})},
+      ...(context.cast ? {cast: context.cast} : {}),
+      /* How many times its source had transformed as the ability went on the stack (CR 701.27f; rules/stack.mjs). */
+      ...(context.sourceTransforms !== undefined ? {sourceTransforms: context.sourceTransforms} : {})},
     events: [],
   };
   return runResolution(state, rng);

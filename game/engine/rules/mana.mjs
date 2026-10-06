@@ -29,6 +29,7 @@
  */
 
 export const COLORS = Object.freeze(["W", "U", "B", "R", "G"]);
+import {eventCard} from "../state/index.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
 import {abilitiesOf} from "./layers.mjs";
 
@@ -438,7 +439,7 @@ export function payWithUnits(state, player, units, indices, amount) {
   for (const unit of picked) {
     if (unit.from === "pool") { state.players[player].manaPool[unit.color] -= 1; continue; }
     state.objects[unit.id].tapped = true;
-    events.push({kind: "GameEventCardTapped", data: {turn: state.turn, phase: state.phase, fields: {card: {cardId: unit.id, name: state.objects[unit.id].card, owner: state.objects[unit.id].owner, controller: player, faceDown: false}, tapped: true}}});
+    events.push({kind: "GameEventCardTapped", data: {turn: state.turn, phase: state.phase, fields: {card: {...eventCard(state, unit.id), controller: player}, tapped: true}}});
   }
   return events;
 }
@@ -452,7 +453,7 @@ export function payGeneric(state, player, amount) {
   for (const {id} of plainSources(state, player)) {
     if (left <= 0) break;
     state.objects[id].tapped = true;
-    events.push({kind: "GameEventCardTapped", data: {turn: state.turn, phase: state.phase, fields: {card: {cardId: id, name: state.objects[id].card, owner: state.objects[id].owner, controller: player, faceDown: false}, tapped: true}}});
+    events.push({kind: "GameEventCardTapped", data: {turn: state.turn, phase: state.phase, fields: {card: {...eventCard(state, id), controller: player}, tapped: true}}});
     left -= 1;
   }
   return events;

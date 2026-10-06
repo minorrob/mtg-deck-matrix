@@ -46,6 +46,7 @@ import {conditionHolds, conditionProblems} from "./condition.mjs";
 import {selectMatching, compileSelector, matchesLastKnown} from "./filter.mjs";
 import {powerOf, toughnessOf, characteristicsOf, controllerOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
+import {valueCostOf} from "../state/index.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
 export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "toughnessOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
@@ -245,7 +246,8 @@ export function amountOf(state, value, context = {}) {
   /* "Where X is the mana value of that spell" (Ovika): its printed cost, X counted as 0 (CR 202.3). */
   else if ("manaValueOf" in value) {
     const id = objectOf(value.manaValueOf, context);
-    n = id !== null && state.objects[id]?.manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0;
+    /* A transformed permanent's is its front face's (CR 202.3b). */
+    n = id !== null && valueCostOf(state.objects[id]) ? manaValue(parseManaCost(valueCostOf(state.objects[id]))) : 0;
   }
   /* "If five or more mana was spent to cast that spell" (Expressive Firedancer; CR 601.2h): every mana spent on it, of
      whatever kind, as rules/actions.mjs recorded it on the spell. */

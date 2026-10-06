@@ -17,13 +17,14 @@
  * true` and nothing else here treats it specially.
  */
 
-import {addObject} from "../../state/index.mjs";
+import {addObject, transformObject} from "../../state/index.mjs";
 import {selectMatching, compileSelector} from "../filter.mjs";
 import {bindEffect, rememberNow} from "../bind.mjs";
 import {amountOf} from "../amount.mjs";
 import {event, cardRef} from "./zones.mjs";
 import {typesOf} from "../../rules/layers.mjs";
 import {protectedFrom} from "../../rules/protection.mjs";
+import {countersPlaced} from "../../rules/statics.mjs";
 
 /* A continuous effect needs a timestamp to be ordered by (CR 613.7), and it has to be part of the
    state so a checkpoint carries it. The state's own counter is the right source: it is monotonic
@@ -422,7 +423,8 @@ export function earthbend(state, params, context) {
   for (const id of (params.targets ?? []).filter((t) => state.objects[t]?.zone === "battlefield")) {
     animate(state, {targets: [id], addTypes: ["Creature"], power: 0, toughness: 0}, context);
     pushEffect(state, {id: `earthbend:${id}`, layer: 6, affects: {ids: [id]}, apply: {addKeywords: ["Haste"]}, until: null, sourceController: context.controller});
-    const count = params.count ?? 1;
+    /* Put by the earthbending player (CR 122.6): "twice that many instead" sees them. */
+    const count = countersPlaced(state, id, "+1/+1", params.count ?? 1, context.controller);
     if (count > 0) {
       const before = state.objects[id].counters["+1/+1"] ?? 0;
       state.objects[id].counters["+1/+1"] = before + count;
@@ -559,6 +561,37 @@ export function gainControl(state, params, context) {
  * "phased" -- with no zone change at all (CR 702.26e: nothing leaves or enters, nothing triggers), and phases back in, the
  * same object, before its controller untaps during their next untap step (rules/turn.mjs, CR 702.26b).
  */
+/**
+ * `setState` -- §12.2's state of a permanent (Forge's SetState is the ruler only), two of them built:
+ *   `level: N`         a Class's level set to N, its level bar's ability (CR 716.2a): a designation any permanent may have (716.2b), kept on
+ *                      the permanent until it leaves (a new object has none, CR 400.7; 716.2d reads none as 1). It is not
+ *                      copiable (716.2b): a copy of the Class is level 1.
+ *   `transform: true`  "transform Venat" (CR 701.27a; state/index.mjs, transformObject). An activated or triggered ability
+ *                      of the permanent that transforms it does so only if it hasn't transformed since the ability was put
+ *                      on the stack -- a delayed trigger's, since it was made (701.27f) -- the count then
+ *                      (`context.sourceTransforms`, rules/stack.mjs) against the count now; otherwise the instruction is
+ *                      ignored.
+ */
+export function setState(state, params, context) {
+  const events = [];
+  for (const id of params.targets ?? []) {
+    const object = state.objects[id];
+    /* Gone from the battlefield -- a new object, if anywhere (CR 400.7) -- and there is nothing to change. */
+    if (object?.zone !== "battlefield") continue;
+    if (Number.isInteger(params.level)) {
+      const before = object.level ?? 1;
+      object.level = params.level;
+      events.push(event("GameEventCardLevel", state, {card: cardRef(state, id), oldValue: before, newValue: params.level}));
+    }
+    if (params.transform === true) {
+      if (id === context.source && context.sourceTransforms !== undefined && (object.transforms ?? 0) !== context.sourceTransforms) continue;
+      const was = object.card;
+      if (transformObject(state, id)) events.push(event("GameEventCardTransformed", state, {card: cardRef(state, id), from: was, to: state.objects[id].card}));
+    }
+  }
+  return events;
+}
+
 export function phaseOut(state, params, context) {
   const ids = (params.selector ? selectMatching(state, params.selector, context) : params.targets ?? []).filter((id) => state.objects[id]?.zone === "battlefield");
   /* Anything attached to one phases out with it, indirectly (CR 702.26h), and back in with it, whoever controls it. */
@@ -682,6 +715,9 @@ export function delayedTrigger(state, params, context) {
       : {at: params.at ?? "end step"}),
     controller: context.controller,
     source: context.source ?? null,
+    /* A double-faced source's transforms as this is made: "transform it" from a delayed trigger is ignored once it has
+       transformed since (CR 701.27f; setState). */
+    ...(state.objects[context.source]?.mdfc && state.objects[context.source].zone === "battlefield" ? {sourceTransforms: state.objects[context.source].transforms ?? 0} : {}),
     effects: rememberNow(params.effects ?? [], context, {keepThat: waits, state}),
     text: params.text ?? null,
   });
