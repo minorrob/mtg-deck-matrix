@@ -334,8 +334,17 @@ let memo = null, memoOff = false, derivations = 0, trials = 0;
 /** Run `fn`, a question that reads the game and changes nothing, with one memo for every derivation it makes. */
 export function deriving(state, fn) {
   if (memo !== null || memoOff) return fn();
-  memo = {state, characteristics: new Map(), effects: new Map()};
+  memo = {state, characteristics: new Map(), effects: new Map(), asked: new Map()};
   try { return fn(); } finally { memo = null; }
+}
+/** Inside a `deriving` question, `fn`'s answer about the whole board, made once per guard level (as a derivation is) and
+    kept under `key` (the protections in play, asked once per target candidate); outside one, made afresh. The answer is
+    shared: never to be edited. */
+export function onceAQuestion(state, key, fn) {
+  if (memo === null || memo.state !== state) return fn();
+  const at = `${key}|${conditioning > 0 ? 1 : 0}|${counting > 0 ? 1 : 0}`;
+  if (!memo.asked.has(at)) memo.asked.set(at, fn());
+  return memo.asked.get(at);
 }
 /** For the suites: turn the memo off (to compare), and how many derivations -- and dependency trials (CR 613.8a,
     `dependsOn`) -- were made since `reset`. */

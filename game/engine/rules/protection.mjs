@@ -15,11 +15,13 @@
  *   Targeted by a spell or ability from one, never    script/filter.mjs (a permanent, or a player)
  */
 
-import {staticAffects, typesOf, controllerOf} from "./layers.mjs";
+import {staticAffects, typesOf, controllerOf, onceAQuestion} from "./layers.mjs";
 import {chosenFor} from "../script/chosen.mjs";
 
-/* Every protection there is now, each with what it covers and its quality. */
-function protections(state) {
+/* Every protection there is now, each with what it covers and its quality: once a question, since a question asks it of
+   every target candidate. */
+const protections = (state) => onceAQuestion(state, "protections", () => gatherProtections(state));
+function gatherProtections(state) {
   const found = [];
   for (const holderId of state.zones.battlefield ?? []) {
     const holder = state.objects[holderId];

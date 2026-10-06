@@ -23,6 +23,7 @@ import {memoryStorage} from "../game/engine/storage.mjs";
 import {tableCards} from "../cloud/game-room.mjs";
 import {readFileSync} from "node:fs";
 import {commanderLegal} from "../game/room/table.mjs";
+import {deriveMemo} from "../game/engine/rules/layers.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -37,6 +38,42 @@ const SEEDS = [1, 2, 4, 6, 7, 8, 9, 10, 11, 12];
    slower than the container, and slower again beside other jobs: there seed 1 is near the budget. A game over it on a
    machine like the container's is a regression to find; on a slower one, say which machine before moving the number. */
 const BUDGET_MS = 45000;
+
+/* THE CPU CHECK, MACHINE BY MACHINE (X9). The budget above catches a game that hangs; it cannot catch a game five times
+   slower on a fast machine, which is what F-2 was (seed 11, 4 s to 21 s, all of it under 45). So each game's CPU is
+   also measured -- its own thread's, as Cloudflare counts a request's -- in units of a yardstick run in the same process
+   just before: fixed engine-like work (objects spread and copied, lists filtered, JSON made, a Map asked). A slower
+   machine is slower at both, so the ratio is the machine's no more than the game's. Measured 2026-10-06 on the cloud
+   container (Node 22.22, 4 cores), per thousand events: a game 1.8 to 9.4, the ten together 4.1 to 5.4, alone or three
+   at a time as the gate runs suites (a run's yardstick moves all ten together by up to a third). With F-2 put back (a
+   trial a deep copy) seed 2 was 13.5 and seed 11 37.7. So a game may take 15, and the ten together 8.
+   The counts are the machine's not at all: each object derived once per question (engine-derive-once) holds the
+   derivations to 81-271 an event, and each pair of effects asked once per ordering (CR 613.8a, rules/layers.mjs) the
+   dependency trials to 0-950; with the memo off a single projection derived a board hundreds of thousands of times. */
+const CPU_PER_THOUSAND_EVENTS = 15, CPU_PER_THOUSAND_EVENTS_IN_ALL = 8, DERIVATIONS_PER_EVENT = 450, TRIALS_PER_EVENT = 1600;
+ok(typeof process.threadCpuUsage === "function", "this Node measures a thread's own CPU (process.threadCpuUsage, Node 22.22 and later)");
+const threadMs = () => { const used = process.threadCpuUsage(); return (used.user + used.system) / 1000; };
+function yardstick() {
+  const began = threadMs();
+  let sink = 0;
+  for (let round = 0; round < 160; round += 1) {
+    const board = Array.from({length: 60}, (_, i) => ({id: i, types: ["Creature", i % 3 ? "Artifact" : "Enchantment"], subtypes: ["Elf"], keywords: i % 2 ? ["Flying"] : [], power: i % 5, toughness: i % 7, abilities: [{kind: "static", apply: {power: 1}, affects: {what: "creature", controller: "you"}}]}));
+    const seen = new Map();
+    for (let pass = 0; pass < 120; pass += 1) {
+      for (const o of board) {
+        const c = {...o, types: [...o.types], keywords: [...o.keywords]};
+        if (c.types.includes("Artifact")) c.power += 1;
+        const key = `${o.id}|${pass & 3}`;
+        if (!seen.has(key)) seen.set(key, JSON.stringify(c).length);
+        sink += seen.get(key) + board.filter((x) => x.power === c.power).length;
+      }
+    }
+  }
+  ok(sink > 0, "the yardstick did its work");
+  return threadMs() - began;
+}
+yardstick();
+const UNIT_MS = [yardstick(), yardstick(), yardstick(), yardstick(), yardstick()].sort((a, b) => a - b)[2];
 
 const all = JSON.parse(readFileSync(new URL("./fixtures/room-games-pool.json", import.meta.url), "utf8")).names;
 const isLand = (d) => (d.types ?? []).includes("Land");
@@ -55,22 +92,33 @@ function deck(next, seat) {
 }
 
 const played = [];
+let allCpuMs = 0, allEvents = 0;
 for (const seed of SEEDS) {
   const next = stream(seed * 7919);
   const pod = {seats: [0, 1, 2, 3].map((seat) => deck(next, seat)), passEmpty: true};
   const started = Date.now();
+  deriveMemo.reset();
+  const cpuFrom = threadMs();
   let room;
   try {
     room = await startRoom({storage: memoryStorage(), matchId: `games${seed}`, cards: tableCards, pod, seed: `seed-${seed}`});
   } catch (error) {
     assert.fail(`seed ${seed}: the game threw -- ${error.message}`);
   }
-  const ms = Date.now() - started, turns = Math.max(...room.history.map((h) => h.turn));
+  const ms = Date.now() - started, cpuMs = threadMs() - cpuFrom, turns = Math.max(...room.history.map((h) => h.turn));
+  const events = room.fingerprint().events, perThousand = cpuMs / UNIT_MS / (events / 1000);
+  allCpuMs += cpuMs; allEvents += events;
   /* The room's own tally (F-1 of the review of 2026-10-05): the history keeps only its newest 300 lines. */
   const refused = room.refusals.total;
   ok(room.status === "finished", `seed ${seed}: four house pilots played their decks of the engine's own cards to the end (${turns} turns)`);
   ok(ms <= BUDGET_MS, `seed ${seed}: inside the budget of ${BUDGET_MS / 1000} s (${(ms / 1000).toFixed(1)} s)`);
-  played.push(`${seed}: ${turns} turns, ${(ms / 1000).toFixed(1)} s${refused ? `, ${refused} refused answer${refused === 1 ? "" : "s"} survived` : ""}`);
+  ok(perThousand <= CPU_PER_THOUSAND_EVENTS, `seed ${seed}: its CPU is ${perThousand.toFixed(1)} yardsticks a thousand events (${(cpuMs / 1000).toFixed(1)} s for ${events} events; a yardstick is ${UNIT_MS.toFixed(0)} ms here), inside ${CPU_PER_THOUSAND_EVENTS}`);
+  ok(deriveMemo.count() / events <= DERIVATIONS_PER_EVENT, `seed ${seed}: ${Math.round(deriveMemo.count() / events)} derivations an event, inside ${DERIVATIONS_PER_EVENT}`);
+  ok(deriveMemo.trials() / events <= TRIALS_PER_EVENT, `seed ${seed}: ${Math.round(deriveMemo.trials() / events)} dependency trials an event, inside ${TRIALS_PER_EVENT}`);
+  played.push(`${seed}: ${turns} turns, ${(ms / 1000).toFixed(1)} s, ${perThousand.toFixed(1)} yardsticks/1k events${refused ? `, ${refused} refused answer${refused === 1 ? "" : "s"} survived` : ""}`);
 }
+
+const inAll = allCpuMs / UNIT_MS / (allEvents / 1000);
+ok(inAll <= CPU_PER_THOUSAND_EVENTS_IN_ALL, `the ten games together: ${inAll.toFixed(1)} yardsticks a thousand events (${(allCpuMs / 1000).toFixed(1)} s of CPU for ${allEvents} events), inside ${CPU_PER_THOUSAND_EVENTS_IN_ALL}`);
 
 console.log(`engine-room-games: ${checks} checks passed -- ${SEEDS.length} four-seat games of the engine's own definitions through the table's card source and the real room, every one to its end with no exception (${played.join("; ")}).`);
