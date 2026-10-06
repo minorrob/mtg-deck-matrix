@@ -22,8 +22,8 @@ import {runFollowUps} from "./index.mjs";
 import {selectMatching} from "../filter.mjs";
 import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
-import {typesOf, powerOf, toughnessOf, keywordsOf, isKeywordCounter} from "../../rules/layers.mjs";
-import {cantGainLife, countersPlaced} from "../../rules/statics.mjs";
+import {typesOf, powerOf, toughnessOf, keywordsOf, isKeywordCounter, controllerOf} from "../../rules/layers.mjs";
+import {cantGainLife, countersPlaced, playerCountersPlaced} from "../../rules/statics.mjs";
 import {playerRuled} from "../../rules/sba.mjs";
 
 /** `addMana` — into the controller's pool, which empties at the end of the step (CR 500.4). */
@@ -188,8 +188,10 @@ export function dealDamage(state, params, context) {
     /* INFECT (CR 702.90b-c, batch 78): from a source with infect, damage to a player is poison counters, not life lost, and
        damage to a creature is -1/-1 counters, not damage marked -- still damage dealt. */
     const infect = source !== null && infects(state, source);
+    /* Whoever controls the source puts the counters infect makes (CR 702.90b-c): "if you would put counters". */
+    const putter = infect && state.objects[source] ? controllerOf(state, source) : null;
     if (toPlayer !== undefined) {
-      if (infect) events.push(...givePoison(state, toPlayer, proposal.amount));
+      if (infect) events.push(...givePoison(state, toPlayer, proposal.amount, putter));
       else changeLife(state, toPlayer, -proposal.amount, events);
       events.push(event("GameEventPlayerDamaged", state, {
         source: source === null ? null : cardRef(state, source),
@@ -201,7 +203,7 @@ export function dealDamage(state, params, context) {
          to a creature (its damage marked counted; from deathtouch, anything past 1, 702.2c), past its loyalty to a
          planeswalker, the greater for one that is both -- read before it is dealt, and kept for the effects after it. */
       context.excessDamage = (context.excessDamage ?? 0) + excessOf(state, toCard, proposal.amount, source);
-      damagePermanent(state, toCard, proposal.amount, events, {infect});
+      damagePermanent(state, toCard, proposal.amount, events, {infect, by: putter});
       events.push(event("GameEventCardDamaged", state, {
         card: cardRef(state, toCard),
         source: source === null ? null : cardRef(state, source),
@@ -254,7 +256,7 @@ export function damageAll(state, params, context) {
  * DAMAGE TO A PERMANENT (CR 120.3): to a planeswalker, that many loyalty counters removed (120.3c, 306.8); to a creature,
  * marked -- or, from a source with infect, that many -1/-1 counters (120.3d); to one that is both, both (120.3).
  */
-export function damagePermanent(state, id, amount, events, {infect = false} = {}) {
+export function damagePermanent(state, id, amount, events, {infect = false, by = null} = {}) {
   const types = typesOf(state, id);
   const object = state.objects[id];
   if (types.includes("Planeswalker")) {
@@ -263,16 +265,17 @@ export function damagePermanent(state, id, amount, events, {infect = false} = {}
     events.push(event("GameEventCardCounters", state, {card: cardRef(state, id), type: "loyalty", oldValue: before, newValue: object.counters.loyalty}));
     if (!types.includes("Creature")) return;
   }
-  if (infect) addCounters(state, id, "-1/-1", amount, events);
+  if (infect) addCounters(state, id, "-1/-1", amount, events, by);
   else object.damage += amount;
 }
 
-export function addCounters(state, id, kind, count, events) {
+/* `by`: the player putting them (rules/statics.mjs, countersPlaced) -- an effect's controller, an infect source's. */
+export function addCounters(state, id, kind, count, events, by = null) {
   if (count === 0) return;
   const object = state.objects[id];
   if (!object) return;
-  /* "Twice that many instead" (Branching Evolution; rules/statics.mjs). */
-  if (object.zone === "battlefield") count = countersPlaced(state, id, kind, count);
+  /* "Twice that many instead" (Branching Evolution; "if you would put", Innkeeper's Talent; rules/statics.mjs). */
+  if (object.zone === "battlefield") count = countersPlaced(state, id, kind, count, by);
   if (count === 0) return;
   const before = object.counters[kind] ?? 0;
   object.counters[kind] = before + count;
@@ -343,12 +346,15 @@ export function damageQuestion(state, effect, context, answers = {}) {
 export function poison(state, params, context) {
   const count = params.count ?? 1;
   if (!(count > 0)) return [];
-  return playersFor(state, params.who, context.controller).flatMap((id) => givePoison(state, id, count));
+  return playersFor(state, params.who, context.controller).flatMap((id) => givePoison(state, id, count, context.controller));
 }
 
-/** Poison counters on a player, reported as the board knows them -- an effect's (poison), or toxic's (rules/combat.mjs). */
-export function givePoison(state, id, count) {
+/** Poison counters on a player, reported as the board knows them -- an effect's (poison), or toxic's (rules/combat.mjs).
+    `by`, who puts them: "twice that many" for a player's counters too (rules/statics.mjs, playerCountersPlaced). */
+export function givePoison(state, id, count, by = null) {
   const player = state.players[id];
+  count = playerCountersPlaced(state, id, "poison", count, by);
+  if (!(count > 0)) return [];
   const before = player.poison ?? 0;
   player.poison = before + count;
   return [event("GameEventPlayerPoisoned", state, {receiver: {playerId: id, name: player.name}, oldValue: before, amount: count})];
@@ -368,8 +374,7 @@ export function winGame(state, params, context) {
 /** `putCounter` — CR 121. */
 export function putCounter(state, params, context) {
   const events = [];
-  for (const id of params.targets ?? []) addCounters(state, id, params.counter ?? "+1/+1", params.count ?? 1, events);
-  void context;
+  for (const id of params.targets ?? []) addCounters(state, id, params.counter ?? "+1/+1", params.count ?? 1, events, context.controller);
   return events;
 }
 
@@ -377,7 +382,7 @@ export function putCounter(state, params, context) {
 export function putCounterAll(state, params, context) {
   const events = [];
   for (const id of selectMatching(state, params.selector ?? {what: "permanent"}, context))
-    addCounters(state, id, params.counter ?? "+1/+1", params.count ?? 1, events);
+    addCounters(state, id, params.counter ?? "+1/+1", params.count ?? 1, events, context.controller);
   return events;
 }
 
@@ -392,10 +397,10 @@ export function multiplyCounters(state, params, context) {
   for (const id of params.targets ?? []) {
     const object = state.objects[id];
     if (!object || object.zone !== "battlefield") continue;
-    for (const [kind, n] of Object.entries({...object.counters})) if (n > 0) addCounters(state, id, kind, n * more, events);
+    for (const [kind, n] of Object.entries({...object.counters})) if (n > 0) addCounters(state, id, kind, n * more, events, context.controller);
   }
   for (const player of params.who !== undefined ? playersFor(state, params.who, context.controller) : [])
-    if ((state.players[player].poison ?? 0) > 0) events.push(...givePoison(state, player, state.players[player].poison * more));
+    if ((state.players[player].poison ?? 0) > 0) events.push(...givePoison(state, player, state.players[player].poison * more, context.controller));
   return events;
 }
 
@@ -437,19 +442,19 @@ export function proliferate(state, params, context) {
     if (choice && typeof choice === "object" && choice.player !== undefined) {
       const player = state.players[choice.player];
       if (!player) continue;
+      /* The proliferating player puts each (CR 701.34a): "twice that many" sees them. */
       for (const [kind, amount] of Object.entries(player.counters)) {
-        if (amount > 0) player.counters[kind] = amount + 1;
+        if (amount > 0) player.counters[kind] = amount + playerCountersPlaced(state, choice.player, kind, 1, context.controller);
       }
       /* Poison counters are counters (CR 122.1f): one more, reported as any poisoning is (batch 77). */
-      if (player.poison > 0) events.push(...givePoison(state, choice.player, 1));
+      if (player.poison > 0) events.push(...givePoison(state, choice.player, 1, context.controller));
       continue;
     }
     const object = state.objects[choice];
     if (!object) continue;
     for (const [kind, amount] of Object.entries({...object.counters})) {
-      if (amount > 0) addCounters(state, choice, kind, 1, events);
+      if (amount > 0) addCounters(state, choice, kind, 1, events, context.controller);
     }
   }
-  void context;
   return events;
 }

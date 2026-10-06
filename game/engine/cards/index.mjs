@@ -64,7 +64,9 @@ function wardCost(cost) {
 
 /* The rule statics that read their own condition: an alternative cost's "if you control a commander" (rules/actions.mjs);
    an attack tax and "doesn't untap" "as long as" or "unless you have an enduring story" (rules/statics.mjs). */
-const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "triggers-again", "cant-cast", "attack-tax", "doesnt-untap", "cast-without-paying"];
+const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "triggers-again", "cant-cast", "attack-tax", "doesnt-untap", "cast-without-paying",
+  /* "Twice that many ... instead" at a Class level (Innkeeper's Talent, CR 716.2a; rules/statics.mjs, countersPlaced). */
+  "more-counters"];
 
 /* What a flashback cost may be made of (CR 702.34a): mana, life ("Flashback--{1}{U}, Pay 3 life"), and creatures to tap
    ("Flashback--Tap three untapped white creatures you control", Battle Screech: `tapCreature`, its `count` and `selector`). */
@@ -380,6 +382,24 @@ function withDelayedTriggers(abilities, problems) {
   return abilities.map((ability) => (Array.isArray(ability.effects) ? {...ability, effects: ability.effects.map(walk)} : ability));
 }
 
+/* A CLASS LEVEL'S ABILITIES (CR 716.2a): a level bar stands for two abilities. The first is an activated ability the
+   script writes out -- it sets the Class's level to N (`setState` with `level`), from level N-1 only, at sorcery speed
+   (`condition: {level: {exactly: N-1}}`, `timing: "sorcery"`). The second grants the level's abilities while the Class's
+   level is N or more: each of those abilities says `level: N`. A static or an
+   activated ability has it on that condition (script/condition.mjs, `level`); a triggered one triggers only while its
+   permanent has it (rules/trigger.mjs) -- a gate as the event happens, never an intervening "if" asked again as it
+   resolves (CR 603.4 is about an "if" in the ability's own words). Any other kind at a level is refused until something
+   reads it there. */
+function classLevel(ability, problems) {
+  if (!ability || typeof ability !== "object" || ability.level === undefined) return ability;
+  const {level, ...rest} = ability;
+  if (!(Number.isInteger(level) && level >= 2)) { problems.push(`${ability.text}: a Class level is a whole number, 2 or more (level 1 is the Class's own text, CR 716.3)`); return rest; }
+  if (ability.kind === "triggered") return ability;
+  if (ability.kind !== "static" && ability.kind !== "activated") { problems.push(`${ability.text}: a ${ability.kind} ability gained at a Class level is not built; a static, activated or triggered one is`); return rest; }
+  if (ability.condition?.level !== undefined) problems.push(`${ability.text}: its Class level is \`level\`, not a condition of its own`);
+  return {...rest, condition: {...(ability.condition ?? {}), level: {atLeast: level}}};
+}
+
 /**
  * A script as the object the engine holds, or the reasons it cannot be one yet.
  *
@@ -425,7 +445,7 @@ export function compileScript(script) {
      only to what the same words describe. One keyword ability, `target` its selector; `hostile` when the Aura is a
      curse (Pacifism), so a pilot aims it at an opponent's creature. */
   let enchant = null;
-  withDelayedTriggers(script.abilities, problems).forEach((ability, index) => {
+  withDelayedTriggers(script.abilities, problems).map((ability) => classLevel(ability, problems)).forEach((ability, index) => {
     const id = ability.id ?? `a${index}`;
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "enchant") {
       if (!ability.target || typeof ability.target !== "object") { problems.push(`${ability.text}: Enchant says what it may enchant, as a selector in \`target\``); return; }
@@ -585,6 +605,17 @@ export function compileScript(script) {
       keywords.push("Protection");
       return;
     }
+    /* PARADIGM (CR 702.192a; Germination Practicum): two spell abilities, done as the spell resolves -- when no spell of
+       that name its controller controlled has resolved before in the game, a delayed trigger lasting the game, at each of
+       their precombat main phases, that makes a copy of the spell in exile they may cast free; and the spell is exiled.
+       Kept on the card as a static ability, read as the spell leaves
+       the stack (rules/stack.mjs). Only an instant or sorcery is a spell that resolves and is then exiled. */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "paradigm") {
+      if (!(identity.types ?? []).some((t) => t === "Instant" || t === "Sorcery")) problems.push(`${ability.text}: paradigm on a card that is not an instant or sorcery`);
+      abilities.push({id, kind: "static", rule: "paradigm", text: ability.text, affects: {what: "card", self: true}});
+      keywords.push("Paradigm");
+      return;
+    }
     /* FLASHBACK (CR 702.34a): the keyword with its cost, a list of atoms -- a mana cost, and "pay 3 life" -- kept as a
        static ability so the card carries it into its graveyard (rules/actions.mjs offers the cast there). Only on an
        instant or sorcery: "if the resulting spell is an instant or sorcery spell". */
@@ -691,6 +722,10 @@ export function compileScript(script) {
            (script/resolution.mjs). */
         for (const inner of effect.effects ?? []) if (!EFFECTS[inner?.effect] && !NEEDS_A_DECISION.includes(inner?.effect)) problems.push(`repeatFor: ${inner?.effect} is not something that repeats`);
       }
+      /* A permanent's state (effects/permanents.mjs, setState): a Class's level, or transforming -- one of them. Flipping, and
+         turning a permanent face up or face down as an effect, are not built. */
+      if (effect.effect === "setState" && (Number.isInteger(effect.level) && effect.level >= 1) === (effect.transform === true))
+        problems.push("setState: a Class's level (`level`, 1 or more) or `transform: true`, one of them -- flipping and turning face up or down are not built");
       /* An added phase is a combat, a main or a beginning phase (effects/permanents.mjs). */
       if (effect.effect === "addPhase" && !(effect.phases ?? ["combat"]).every((kind) => ADDED_PHASES.includes(kind))) problems.push(`addPhase: a phase of ${ADDED_PHASES.join(", ")}`);
       /* "You may play that card" until a time (effects/zones.mjs): this turn, or the end of its controller's next turn. */
@@ -854,7 +889,9 @@ export function compileScript(script) {
         ...((ability.targets ?? []).length ? {targets: ability.targets} : {}),
         ...(ability.condition ? {condition: ability.condition} : {}), ...(ability.optional ? {optional: true} : {}),
         /* "This ability triggers only once each turn". */
-        ...(ability.limit ? {limit: ability.limit} : {})});
+        ...(ability.limit ? {limit: ability.limit} : {}),
+        /* Had only at that Class level or greater (CR 716.2a; classLevel, above). */
+        ...(Number.isInteger(ability.level) ? {level: ability.level} : {})});
       return;
     }
     /* A condition on a static (Forge's IsPresentStatic) is read by the layers (rules/layers.mjs), and a static that works
@@ -931,7 +968,12 @@ export function compileScript(script) {
       oracleText: script.back.oracleText, source: script.source, abilities: script.back.abilities});
     if (names.length !== 2 || script.back.identity?.name !== names[1]) problems.push(`a double-faced card is named "Front // Back", and its back face is the second name`);
     for (const problem of back.problems) problems.push(`back face: ${problem}`);
-    if (back.definition) definition.mdfc = {front: faceOfDefinition(definition, names[0]), back: faceOfDefinition(back.definition, names[1])};
+    if (back.definition) {
+      /* A NONMODAL DOUBLE-FACED CARD (CR 712.2; `layout: "transform"`): the same two faces, the back one reached only by
+         transforming (state/index.mjs, transformObject) -- never cast or played with its back face up (CR 712.11), and its
+         back face's mana value its front's (202.3b). */
+      definition.mdfc = {front: faceOfDefinition(definition, names[0]), back: faceOfDefinition(back.definition, names[1]), ...(script.layout === "transform" ? {transforming: true} : {})};
+    }
   }
   /* AN ADVENTURER CARD (CR 715): "Card // Adventure", the Adventure -- an instant or sorcery with the subtype Adventure --
      compiled as a card of its own, the card's oracle id and color identity both halves' (CR 903.4). Its own characteristics

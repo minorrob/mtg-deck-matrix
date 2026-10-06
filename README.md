@@ -670,6 +670,19 @@ kept by the pilots; a return at the beginning of its owner's next end step; a cr
 sacrificed.
 `engine-counts-among` holds Fell the Mighty's power greater than a target's, read as it resolves; Faeburrow Elder's mana of
 every color among your permanents; Loot, the Nexus's count of different powers.
+`engine-paradigm` holds paradigm (Germination Practicum): the spell exiled as it resolves, and the first time one of its
+name resolves for a player -- a copy's counting -- a copy cast free from exile at each of that player's precombat main
+phases, in a four-player game; a countered one nothing, a declined copy gone.
+`engine-class` holds a Class (Innkeeper's Talent): each level gained as a sorcery from the level below, its abilities had
+from that level, no copy or new object with a level; ward {1} on what has counters; every counter its controller puts --
+entering, as a loyalty cost, by infect, by proliferate -- doubled, and no other player's.
+`engine-transform` holds a card that transforms (Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal): its front face
+everywhere but the battlefield, never cast as its back; turned over, the same object with its back face's characteristics
+and its front face's mana value, and a new timestamp; ignored once it has transformed since its ability went on the stack;
+never a copy; until its controller's next turn in four seats.
+`engine-manifest` holds manifest (Reality Shift): a face-down 2/2 with no name, the card its controller's alone to see --
+no other seat's projection, no event and no line of the history names it -- turned face up for its mana cost as a special
+action, the same object, or revealed as it leaves.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -788,7 +801,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 320 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 324 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1080,6 +1093,10 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-adventure` — `tests/engine-adventure.mjs`
 - `engine-wanderer` — `tests/engine-wanderer.mjs`
 - `engine-counts-among` — `tests/engine-counts-among.mjs`
+- `engine-paradigm` — `tests/engine-paradigm.mjs`
+- `engine-class` — `tests/engine-class.mjs`
+- `engine-transform` — `tests/engine-transform.mjs`
+- `engine-manifest` — `tests/engine-manifest.mjs`
 
 ## Design and execution record
 

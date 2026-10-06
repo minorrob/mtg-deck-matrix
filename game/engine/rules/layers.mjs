@@ -99,7 +99,7 @@ function printed(state, id) {
 /* THE KEYS A LAYER STATIC'S `affects` MAY CARRY -- this matcher's, narrower than the selector grammar because the layers
    cannot ask what they are still deriving. Anything else would be ignored, and a static would affect more than it says:
    the card compiler refuses it (cards/index.mjs). */
-export const LAYER_AFFECTS_KEYS = Object.freeze(["anyOf", "what", "ids", "types", "subtypes", "supertypes", "controller", "token", "another", "self", "attachedBy", "colors", "colorless", "countersAtLeast", "tapped"]);
+export const LAYER_AFFECTS_KEYS = Object.freeze(["anyOf", "what", "ids", "types", "subtypes", "supertypes", "controller", "token", "another", "self", "attachedBy", "colors", "colorless", "countersAtLeast", "tapped", "counters"]);
 
 function affects(state, effect, current, sourceController) {
   const rule = effect.affects ?? {};
@@ -132,6 +132,10 @@ function affects(state, effect, current, sourceController) {
   if (rule.colorless === true && (current.colors ?? []).length > 0) return false;
   /* "As long as this creature has four or more +1/+1 counters on it" (Voice of the Blessed): counters as they are now. */
   if (rule.countersAtLeast && ((current.counters ?? {})[rule.countersAtLeast.counter] ?? 0) < rule.countersAtLeast.count) return false;
+  /* "Permanents you control with counters on them have ward {1}" (Innkeeper's Talent): `counters` "any" -- or a kind, "with
+     a +1/+1 counter on it" -- as the selector grammar says it (script/filter.mjs), its counters as they are now. */
+  if (rule.counters !== undefined && !(rule.counters === "any" ? Object.values(current.counters ?? {}).some((n) => n > 0)
+    : ((current.counters ?? {})[rule.counters] ?? 0) > 0)) return false;
   /* "Other tapped legendary creatures you control have indestructible" (The Seriema): tapped as it is, which no layer changes. */
   if (rule.tapped !== undefined && (state.objects[current.id]?.tapped === true) !== rule.tapped) return false;
   return true;
@@ -510,6 +514,8 @@ export function lastKnown(state, id) {
     supertypes: [...(object.supertypes ?? [])],
     /* What it chose as it entered, for its abilities read as it last was. */
     ...(object.chosen !== undefined ? {chosen: object.chosen} : {}),
+    /* Its Class level (CR 716.2a), for the abilities it had at that level. */
+    ...(Number.isInteger(object.level) ? {level: object.level} : {}),
     attachments: [...(object.attachments ?? [])],
     /* What it was attached to: "sacrifice this Aura: exile enchanted creature" (Spiral into Solitude). */
     attachedTo: object.attachedTo ?? null,

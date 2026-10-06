@@ -15,6 +15,9 @@ if hasattr(sys.stdout, 'reconfigure'):
 batch = Batch(os.getcwd())
 for name in sys.argv[1:]:
     c = batch.card(name)
-    pt = f" {c['power']}/{c['toughness']}" if c.get('power') is not None else ''
-    print(f"== {name} | {c['type']} | {c['mana'] or 'no cost'}{pt}")
-    print(c['text'])
+    # A double-faced card's text is its faces' (CR 712.8): each face, front first.
+    for face in batch.faces(name) or [c]:
+        pt = f" {face['power']}/{face['toughness']}" if face.get('power') is not None else ''
+        label = name if face is c else f"{name} -- {'front' if face is batch.faces(name)[0] else 'back'} face, {face['name']}"
+        print(f"== {label} | {face['type']} | {face['mana'] or 'no cost'}{pt}")
+        print(face['text'])

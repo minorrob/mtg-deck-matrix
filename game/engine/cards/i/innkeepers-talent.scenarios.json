@@ -1,0 +1,682 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Innkeeper's Talent",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Cub": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{6}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 9,
+      "toughness": 9
+    },
+    "Ox": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ox"
+      ],
+      "manaCost": "{4}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 6,
+      "toughness": 6
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Level 1: at the beginning of combat on Rob's turn, a +1/+1 counter on target creature he controls -- not on Maya's turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Innkeeper's Talent",
+            "Bear",
+            "Cub"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Giant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_BEGIN"
+          }
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Bear",
+                  "Cub"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Bear",
+                "counter": "+1/+1",
+                "count": 1
+              }
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Bear",
+                "power": 3,
+                "toughness": 3
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "COMBAT_BEGIN"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Bear",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bear",
+            "lacks": [
+              "Ward"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Level 2 for {G}, at sorcery speed and only from level 1: Rob's permanents with counters have ward {1}, his others and Maya's do not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Innkeeper's Talent",
+            "Bear",
+            "Cub",
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Giant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Innkeeper's Talent"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Innkeeper's Talent"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "activate": "Innkeeper's Talent",
+          "ability": "a1"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Innkeeper's Talent"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Innkeeper's Talent"
+              },
+              "count": 1
+            },
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Innkeeper's Talent"
+              },
+              "count": 1
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Bear",
+                "lacks": [
+                  "Ward"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_BEGIN"
+          }
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bear",
+            "has": [
+              "Ward"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Cub",
+            "lacks": [
+              "Ward"
+            ]
+          }
+        },
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Giant",
+            "lacks": [
+              "Ward"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ward {1} at level 2: Maya's Lightning Bolt at Rob's Bear, which has a counter, is countered unless she pays {1}; she declines",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Innkeeper's Talent",
+            "Bear",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "activate": "Innkeeper's Talent",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_BEGIN"
+          }
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Lightning Bolt",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1,
+                "options": [
+                  "Pay {1}",
+                  "Don't pay"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Innkeeper's Talent",
+            "Bear",
+            "Forest"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Level 3 for {3}{G}: counters Rob puts are doubled -- on his creature, on Maya's, and poison on each player -- and Maya's are not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Innkeeper's Talent",
+            "Giant",
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Swamp",
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blight Rot",
+            "Ichor Rats"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Giant",
+            "Ox",
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Blight Rot"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "activate": "Innkeeper's Talent",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Innkeeper's Talent",
+          "ability": "a3"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Blight Rot",
+          "targets": [
+            {
+              "card": "Giant",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "counters": {
+                "card": "Giant",
+                "counter": "-1/-1",
+                "count": 8
+              }
+            },
+            {
+              "seat": 1,
+              "stats": {
+                "card": "Giant",
+                "power": 1,
+                "toughness": 1
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Ichor Rats"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "poison": 2
+            },
+            {
+              "seat": 1,
+              "poison": 2
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_BEGIN"
+          }
+        },
+        {
+          "choose": [
+            "Giant"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Giant",
+                "counter": "+1/+1",
+                "count": 2
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Swamp",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Blight Rot",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Ox"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "counters": {
+            "card": "Ox",
+            "counter": "-1/-1",
+            "count": 4
+          }
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Ox",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Giant",
+            "has": [
+              "Ward"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Ichor Rats",
+            "lacks": [
+              "Ward"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

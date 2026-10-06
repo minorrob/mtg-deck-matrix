@@ -1,0 +1,165 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
+    "oracleId": "2e5adbcf-6b5c-4ded-a339-8757040ef878",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elder",
+      "Wizard"
+    ],
+    "manaCost": "{1}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Whenever you cast a legendary spell, draw a card. This ability triggers only once each turn.\nHero's Sundering — {7}, {T}: Exile target nonland permanent. Transform Venat. Activate only as a sorcery.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a legendary spell, draw a card. This ability triggers only once each turn.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "supertypes": [
+            "Legendary"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "limit": 1
+    },
+    {
+      "kind": "activated",
+      "text": "Hero's Sundering — {7}, {T}: Exile target nonland permanent. Transform Venat. Activate only as a sorcery.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{7}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "nonTypes": [
+            "Land"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile"
+        },
+        {
+          "effect": "setState",
+          "targets": "self",
+          "transform": true
+        }
+      ]
+    }
+  ],
+  "layout": "transform",
+  "back": {
+    "identity": {
+      "name": "Hydaelyn, the Mothercrystal",
+      "supertypes": [
+        "Legendary"
+      ],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "God"
+      ],
+      "manaCost": null,
+      "colors": [
+        "W"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "oracleText": "Indestructible\nBlessing of Light — At the beginning of combat on your turn, put a +1/+1 counter on another target creature you control. Until your next turn, it gains indestructible. If that creature is legendary, draw a card.",
+    "abilities": [
+      {
+        "kind": "keyword",
+        "text": "Indestructible",
+        "keyword": "indestructible"
+      },
+      {
+        "kind": "triggered",
+        "text": "Blessing of Light — At the beginning of combat on your turn, put a +1/+1 counter on another target creature you control. Until your next turn, it gains indestructible. If that creature is legendary, draw a card.",
+        "trigger": {
+          "on": "step",
+          "step": "COMBAT_BEGIN"
+        },
+        "effects": [
+          {
+            "effect": "putCounter",
+            "targets": {
+              "target": 0
+            },
+            "counter": "+1/+1",
+            "count": 1
+          },
+          {
+            "effect": "pump",
+            "targets": {
+              "target": 0
+            },
+            "keywords": [
+              "Indestructible"
+            ],
+            "until": "your-next-turn"
+          },
+          {
+            "effect": "draw",
+            "count": 1,
+            "condition": {
+              "about": "target",
+              "is": {
+                "supertypes": [
+                  "Legendary"
+                ]
+              }
+            }
+          }
+        ],
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "another": true
+          }
+        ]
+      }
+    ]
+  }
+}

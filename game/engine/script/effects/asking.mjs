@@ -26,7 +26,7 @@
  * unwind across the pause and rebuild itself.
  */
 
-import {cardsIn, moveObject} from "../../state/index.mjs";
+import {cardsIn, moveObject, addObject, valueCostOf} from "../../state/index.mjs";
 import {compileSelector} from "../filter.mjs";
 import {event, cardRef, moveOne, playersFor, sacrificeOne} from "./zones.mjs";
 import {proliferate as giveEachAnother, addCounters} from "./resources.mjs";
@@ -513,7 +513,8 @@ const sacrificeable = (state, player, selector, source = null) => {
    (Soul Shatter): of what may be sacrificed, those with the most -- a tie is the player's choice among them. */
 const greatestBy = {
   power: (state, id) => characteristicsOf(state, id).power ?? 0,
-  manaValue: (state, id) => (state.objects[id].manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0),
+  /* A transformed permanent's is its front face's (CR 202.3b). */
+  manaValue: (state, id) => (valueCostOf(state.objects[id]) ? manaValue(parseManaCost(valueCostOf(state.objects[id]))) : 0),
 };
 const offeredToSacrifice = (state, player, awaiting) => {
   const mine = sacrificeable(state, player, awaiting.selector, awaiting.source ?? null);
@@ -620,7 +621,7 @@ const ARMY = compileSelector({what: "permanent", types: ["Creature"], subtypes: 
 const armiesOf = (state, player) => state.zones.battlefield.filter((id) => ARMY(state, id, {controller: player}));
 function amassOnto(state, army, params, player, source, events) {
   const count = Number.isInteger(params.count) ? params.count : 1;
-  addCounters(state, army, "+1/+1", count, events);
+  addCounters(state, army, "+1/+1", count, events, player);
   const current = [...typesOf(state, army), ...(state.objects[army].subtypes ?? [])];
   if (!current.includes(params.subtype) && !everyCreatureTypeOf(state, army))
     effectUntil(state, {id: `amass:${params.subtype}:${army}`, layer: 4, targets: [army], apply: {addTypes: [params.subtype]}, until: "ever"}, {controller: player, source});
@@ -1155,7 +1156,11 @@ export const play = {
     if (!state.players[player]) return false;
     const most = params.manaValueAtMost === undefined ? Infinity : amountOf(state, params.manaValueAtMost, context);
     const from = params.from ?? "hand";
-    const pool = from === "hand" ? cardsIn(state, "hand", player)
+    /* Paradigm's copy, made in exile and castable free (CR 702.192a;
+       rules/stack.mjs): the copy is made first, whatever is chosen, and is the one card that may be cast (CR 707.12). Not
+       cast, it ceases to exist as a copy of a card outside the stack does (CR 704.5e, rules/sba.mjs). */
+    const copied = params.copyOf ? addObject(state, {...structuredClone(params.copyOf), copy: true, owner: player, controller: player}, "exile") : null;
+    const pool = copied !== null ? [copied] : from === "hand" ? cardsIn(state, "hand", player)
       : from === "command" ? cardsIn(state, "command", player).filter((id) => state.objects[id].commander === true)
       : (params.targets ?? []).filter((id) => state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone)
         /* "For each player, you may cast a card that player milled this way" (The Ur-Sphinx): `ownedBy` "that player". */

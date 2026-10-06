@@ -35,7 +35,7 @@
  *   CR 500.4: mana pools empty at the end of every step and phase, not at end of turn.
  */
 
-import {cardsIn, moveObject} from "../state/index.mjs";
+import {cardsIn, moveObject, eventCard} from "../state/index.mjs";
 import {attackers, blockers, combatDamage, endCombat} from "./combat.mjs";
 import {checkStateBasedActions, gameOver, finishCommanderReplacement, legendChoice, finishLegendRule} from "./sba.mjs";
 import {commanderChoice} from "./commander.mjs";
@@ -135,10 +135,7 @@ const ZONE_LABEL = {
   graveyard: "Graveyard", exile: "Exile", stack: "Stack", command: "Command",
 };
 
-const cardRef = (state, id) => {
-  const o = state.objects[id];
-  return o ? {cardId: o.id, name: o.card, owner: o.owner, controller: o.controller, faceDown: false} : null;
-};
+const cardRef = eventCard;
 
 /* ---- turn-based actions, one per step that has any ---- */
 

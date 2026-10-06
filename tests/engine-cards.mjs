@@ -49,8 +49,10 @@ const files = loadCardScenarios();
     const card = ORACLE.get(script.identity.name);
     if (!card) { drift.push(`${path}: no oracle card named ${script.identity.name}`); continue; }
     const num = (v) => (v !== null && v !== undefined && /^\d+$/.test(v) ? Number(v) : null);
-    /* A modal double-faced card (CR 712.3): its identity is its front face's, its back face the oracle's second. */
-    const double = card.layout === "modal_dfc";
+    /* A double-faced card, modal (CR 712.3) or nonmodal (712.2, the oracle's "transform"): its identity is its front face's,
+       its back face the oracle's second -- and a nonmodal one's script says it transforms (`layout`). */
+    const double = card.layout === "modal_dfc" || card.layout === "transform";
+    if (double && (script.layout ?? "modal_dfc") !== card.layout) drift.push(`${path}: the oracle's ${card.layout} card, and its script says ${script.layout ?? "nothing"}`);
     /* An adventurer card (CR 715.2): its identity is its own half's, the oracle's first face, and its Adventure the second.
        The oracle gives an adventurer's halves no colors of their own: each half's are its mana cost's (CR 105.2, 202.2). */
     const adventurer = card.layout === "adventure";

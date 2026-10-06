@@ -45,8 +45,8 @@ const SUPERTYPES = ["Legendary", "Basic", "Snow", "World"];
     (CR 712.8a), its name the whole card's and its color identity both faces' (903.4); its back face is the script's own. */
 export function identityOf(card) {
   /* An adventurer card's are its own half's, the first face (CR 715.4) -- whose colors the oracle leaves out, and are its
-     mana cost's (CR 105.2, 202.2). */
-  const twoFaced = ["modal_dfc", "adventure"].includes(card.layout) && Array.isArray(card.faces) && card.faces.length;
+     mana cost's (CR 105.2, 202.2); a nonmodal double-faced card's (the oracle's "transform", CR 712.2) too. */
+  const twoFaced = ["modal_dfc", "adventure", "transform"].includes(card.layout) && Array.isArray(card.faces) && card.faces.length;
   const face = twoFaced ? {...card.faces[0], colors: card.faces[0].colors ?? colorsOfCost(card.faces[0].mana)} : card;
   const [left, right = ""] = String(face.type ?? "").split(" — ");
   const words = left.split(/\s+/).filter(Boolean);
@@ -82,9 +82,12 @@ const normalize = (s) => String(s ?? "").replace(/[‘’]/g, "'").replace(/[“
    Phyrexian mana symbol ("({U/P} can be paid with either {U} or 2 life.)", Phyrexian Metamorph), which is the cost's
    reminder and claims nothing; anywhere else, reminder text in parentheses explains a keyword and claims nothing. */
 const PHYREXIAN_REMINDER = /^\(\{[WUBRGC]\/P\} can be paid with either \{[WUBRGC]\} or 2 life\.\)$/;
+/* A Class's first line, "(Gain the next level as a sorcery to add its ability.)", explains its level bars (CR 716.2a),
+   which claim it themselves, each its own line ("{G}: Level 2"): the line claims nothing. */
+const CLASS_REMINDER = /^\(Gain the next level as a sorcery to add its abilit(y|ies)\.\)$/;
 const withoutReminders = (line) => {
   const t = line.trim();
-  if (PHYREXIAN_REMINDER.test(t)) return "";
+  if (PHYREXIAN_REMINDER.test(t) || CLASS_REMINDER.test(t)) return "";
   if (/^\(.*\)$/.test(t)) return t.slice(1, -1);
   return t.replace(/\s*\([^)]*\)/g, "").trim();
 };

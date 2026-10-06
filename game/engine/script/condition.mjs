@@ -23,6 +23,9 @@
  *                                      escaped" (Uro)
  *   {evoked: true|false}               its own permanent was cast for its evoke cost, or was not (CR 702.74a): the
  *                                      evoke trigger's "if it was evoked"
+ *   {level: {atLeast: n}|{exactly: n}} its own permanent's level (CR 716.2a): N or more, for a level's abilities;
+ *                                      exactly N-1, for the level bar that makes it N -- one with no level is
+ *                                      level 1 (716.2d)
  *   {spent: {G: 2}}                    at least that much mana of each color was spent to cast its own object (CR
  *                                      601.2h): "if {G}{G} was spent to cast it" (Wistfulness); adamant's "if at least
  *                                      three red mana was spent to cast this spell" is {R: 3}, colorless {C: 3}
@@ -39,7 +42,7 @@ import {matchesSelector, compileSelector, matchesLastKnown} from "./filter.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
 
 const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "spent", "enduringStory", "loyaltyThisTurn", "impending",
-  "cameFrom", "sinceYourLastUpkeep"];
+  "cameFrom", "sinceYourLastUpkeep", "level"];
 /* Where a permanent may have come from, for `cameFrom`: a library (effects/zones.mjs and rules/stack.mjs record it). */
 const CAME_FROM = ["library"];
 /* The mana a condition may ask was spent to cast its object: the five colors and colorless (CR 106.1). */
@@ -125,6 +128,12 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   if (condition.spent !== undefined) {
     const paid = (source !== null ? state.objects[source]?.spent : undefined) ?? spent ?? {};
     if (!Object.entries(condition.spent).every(([key, n]) => (paid[key] ?? 0) >= n)) return false;
+  }
+  /* A CLASS'S LEVEL (CR 716.2a): its own permanent's -- none, and it is level 1 (716.2d). */
+  if (condition.level !== undefined) {
+    const level = source !== null && state.objects[source] ? state.objects[source].level ?? 1 : 1;
+    if (condition.level.atLeast !== undefined && level < condition.level.atLeast) return false;
+    if (condition.level.exactly !== undefined && level !== condition.level.exactly) return false;
   }
   /* "12+ | Flying" (a station symbol, CR 721.2a): as long as its own object has that many counters of the kind. */
   if (condition.selfCounters !== undefined && (source === null ? 0 : state.objects[source]?.counters?.[condition.selfCounters.counter] ?? 0) < condition.selfCounters.atLeast) return false;
@@ -227,6 +236,12 @@ export function conditionProblems(condition) {
       if (!COMPARE_KEYS.slice(1).some((key) => key in compare)) problems.push("compare says against what: atLeast, atMost, moreThan or fewerThan");
       for (const key of COMPARE_KEYS) if (key in compare) problems.push(...amountProblems(compare[key]).map((p) => `compare's ${key}: ${p}`));
     }
+  }
+  if ("level" in condition) {
+    const level = condition.level;
+    const whole = (n) => Number.isInteger(n) && n >= 1;
+    if (!level || typeof level !== "object" || Array.isArray(level) || Object.keys(level).length !== 1 || !(whole(level.atLeast) || whole(level.exactly)))
+      problems.push("level is {atLeast: n}, a Class's level N or more, or {exactly: n}: a whole number 1 or more");
   }
   if ("selfCounters" in condition && !(typeof condition.selfCounters?.counter === "string" && Number.isInteger(condition.selfCounters?.atLeast) && condition.selfCounters.atLeast >= 1))
     problems.push("selfCounters names a counter and how many, at least 1");

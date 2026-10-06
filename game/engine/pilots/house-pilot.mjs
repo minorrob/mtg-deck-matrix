@@ -105,6 +105,9 @@ export function housePilot({seat, cards = () => null} = {}) {
       const untapped = actions.filter((a) => a.kind === "activate-mana" && !a.costChoice);
       if (best && best.x !== undefined && untapped.length && view.turnPlayerId === seat && MAIN.includes(view.phase) && view.stackSize === 0) return untapped[0];
       if (best) return best;
+      /* A manifested creature card of its own turned face up (CR 701.40b), when the pool already pays and nothing is cast. */
+      const faceUp = actions.find((a) => a.kind === "turn-face-up");
+      if (faceUp) return faceUp;
       /* Tap for mana only for a spell that would then fit: in its own main phase with the stack empty,
          a nonland card it holds (or its commander) costing no more than the mana it could have. */
       /* Never a source whose cost is a creature (Ashnod's Altar): the pilot does not trade its board for mana. */

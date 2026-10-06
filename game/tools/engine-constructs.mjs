@@ -28,6 +28,9 @@ export const FORGE_API = {
   Play: "play", Discover: "discover",
   /* DigUntil ("reveal cards until you reveal a land card", batch 62). */
   DigUntil: "digUntil",
+  /* Manifest ("its controller manifests the top card of their library", Reality Shift; claude/cards-faces-class): the top
+     card onto the battlefield face down, a 2/2 its controller alone may look at, turned face up for its mana cost (CR 701.40). */
+  Manifest: "manifest",
   /* ManaReflected ("any color that a land an opponent controls could produce", batch 50): addMana's reflect and among. */
   Mana: "addMana", ManaReflected: "addMana", Tap: "tap", Untap: "untap", UntapAll: "untapAll",
   ReduceCost: "costReduction", AlternativeCost: "alternativeCost",
@@ -154,7 +157,15 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   /* Echo (CR 702.30a; Karmic Guide, AI 1's deck): the upkeep trigger, its intervening "if" (came under your control since
      your last upkeep, script/condition.mjs), and "sacrifice it unless you pay" a mana cost with its colors (cards/index.mjs,
      effects/asking.mjs). */
-  Echo: "unlessPays"};
+  Echo: "unlessPays",
+  /* Class (CR 716; Innkeeper's Talent, claude/cards-faces-class): each level bar an activated ability, "this Class's level
+     becomes N", at sorcery speed from level N-1 (setState's `level`), and the level's abilities had from that level -- a
+     static or activated one on that condition, a triggered one gated as it triggers (cards/index.mjs, classLevel). Named,
+     not built: a replacement or a keyword ability gained at a level (refused by name). */
+  Class: "setState",
+  /* Paradigm (CR 702.192a; Germination Practicum): the spell exiled as it resolves, and the first time one of its name
+     resolves for a player, a copy cast free at each of their precombat main phases (rules/stack.mjs, play's copyOf). */
+  Paradigm: "play"};
 
 /* "PROTECTION FROM [QUALITY]" printed as a keyword (CR 702.16a; Karmic Guide's "protection from black"): built for the
    qualities rules/protection.mjs reads -- a color, a card type, everything -- compiled from the keyword (cards/index.mjs).

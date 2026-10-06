@@ -353,7 +353,11 @@ export function validateScript(script) {
     script.abilities.forEach((ability, index) => checkAbility(ability, `abilities[${index}]`, errors));
   }
 
-  /* A MODAL DOUBLE-FACED CARD'S BACK FACE (CR 712.3, 712.8): its own identity and abilities, the card's oracle id. */
+  /* A NONMODAL DOUBLE-FACED CARD (CR 712.2): one that transforms says so, `layout: "transform"`, beside its back face; a
+     double-faced card that does not say is a modal one (712.3). */
+  if (script.layout !== undefined && (script.layout !== "transform" || script.back === undefined))
+    errors.push({path: "layout", message: "A double-faced card that transforms says layout: \"transform\", with its back face; a modal one says nothing"});
+  /* A DOUBLE-FACED CARD'S BACK FACE (CR 712.3, 712.8): its own identity and abilities, the card's oracle id. */
   if (script.back !== undefined) {
     const back = script.back;
     if (!back || typeof back !== "object" || !Array.isArray(back.abilities)) errors.push({path: "back", message: "A back face is an identity and a list of abilities"});

@@ -495,6 +495,8 @@ export function collectTriggers(state, events) {
           const ability = chosenFor(own, object);
           /* A triggered mana ability happened with the mana ability that triggered it (manaTriggered). */
           if (ability.kind !== "triggered" || !ability.trigger || ability.trigger.manaAbility) continue;
+          /* An ability of a Class level its permanent has not reached, it does not have (CR 716.2a, 716.2d). */
+          if (Number.isInteger(ability.level) && (object.level ?? 1) < ability.level) continue;
           if (zone === "cycled" && !(ability.trigger.cycled && ability.trigger.who === "self")) continue;
           if (zone === "cast" && !(ability.trigger.on === "GameEventSpellAbilityCast" && ability.trigger.who === "self")) continue;
           for (const about of subjects(state, event, ability.trigger, id, object.controller)) {
@@ -543,7 +545,9 @@ export function collectTriggers(state, events) {
        made after that step began, so the next beginning this sees is the following turn's (CR 603.7c). */
     /* "At the beginning of the next turn's upkeep" (Arcane Denial) the same way: one made during an upkeep waits for the
        next turn's. */
-    const moment = event.kind === "GameEventTurnPhase" ? {END_OF_TURN: "end step", UPKEEP: "upkeep"}[event.data?.fields?.phase] : undefined;
+    /* Paradigm's delayed trigger (CR 702.192a), at each of its controller's precombat main phases from then on: the first
+       main phase of a turn (CR 505.1a) -- its controller's turns only (`yourTurn`), and again every time (`forever`). */
+    const moment = event.kind === "GameEventTurnPhase" ? {END_OF_TURN: "end step", UPKEEP: "upkeep", MAIN1: "precombat main"}[event.data?.fields?.phase] : undefined;
     /* SUSPEND (CR 702.62a): at the beginning of its owner's upkeep, a suspended card in exile with a time counter on it has
        one removed -- and when the last is, its owner may cast it without paying its mana cost (a creature so cast has haste,
        rules/actions.mjs). One triggered ability does both, in order. */
@@ -556,14 +560,16 @@ export function collectTriggers(state, events) {
           {effect: "play", from: "targets", targets: "that card", free: true, condition: {compare: {count: {countersOn: "that card", counter: "time"}, atMost: 0}}}]}});
     }
     if (moment && (state.delayedTriggers ?? []).length) {
-      /* "At the beginning of your next upkeep" (rebound, `yours`): its controller's step only. "At the beginning of that
-         player's next end step" (`player`, The Eternal Wanderer): only in a turn of theirs. */
+      /* "At the beginning of your next upkeep" (rebound, `yours`) and "at the beginning of your precombat main phase" (paradigm,
+         `yourTurn`): its controller's step only. "At the beginning of that player's next end step" (`player`, The Eternal
+         Wanderer): only in a turn of theirs. A paradigm's lasts the game (`forever`). */
       const turnOf = event.data?.fields?.playerTurn?.playerId;
-      const due = state.delayedTriggers.filter((d) => d.at === moment && (!d.yours || d.controller === turnOf) && (d.player === undefined || d.player === turnOf));
-      state.delayedTriggers = state.delayedTriggers.filter((d) => !due.includes(d));
+      const due = state.delayedTriggers.filter((d) => d.at === moment && (!d.yours || d.controller === turnOf) && (!d.yourTurn || d.controller === turnOf) && (d.player === undefined || d.player === turnOf));
+      state.delayedTriggers = state.delayedTriggers.filter((d) => !due.includes(d) || d.forever === true);
       for (const d of due) state.pendingTriggers.push({
         abilityId: "delayed", text: d.text ?? (moment === "upkeep" ? "At the beginning of the next upkeep" : "At the beginning of the next end step"), controller: d.controller,
         source: {cardId: d.source, name: d.source !== null ? state.objects[d.source]?.card ?? null : null}, cause: null, optional: false,
+        ...(d.sourceTransforms !== undefined ? {sourceTransforms: d.sourceTransforms} : {}),
         script: {targets: [], effects: d.effects},
       });
     }
@@ -577,6 +583,7 @@ export function collectTriggers(state, events) {
         state.pendingTriggers.push({
           abilityId: "delayed", text: d.text ?? "A delayed trigger", controller: d.controller,
           source: {cardId: d.source, name: d.source !== null ? state.objects[d.source]?.card ?? null : null}, cause: null, optional: false,
+          ...(d.sourceTransforms !== undefined ? {sourceTransforms: d.sourceTransforms} : {}),
           ...(about.card !== undefined || about.player !== undefined ? {about} : {}),
           script: {targets: [], effects: d.effects},
         });
@@ -591,6 +598,8 @@ export function collectTriggers(state, events) {
       for (const own of gone?.abilities ?? []) {
         const ability = chosenFor(own, gone);
         if (ability.kind !== "triggered" || !ability.trigger) continue;
+        /* At its Class level as it last was (CR 716.2a, 603.10a). */
+        if (Number.isInteger(ability.level) && (gone.level ?? 1) < ability.level) continue;
         if (!matches(state, event, ability.trigger, gone.cardId, gone.controller)) continue;
         if (!conditionHolds(state, ability.condition, {controller: gone.controller, source: gone.cardId})) continue;
         /* Dying with the rest, it sees them all (CR 603.10a) -- once, for "one or more". */
@@ -845,6 +854,8 @@ function putOnStack(state, triggers) {
       lastKnown: trigger.cause && trigger.cause.cardId === trigger.source?.cardId && !state.objects[trigger.source.cardId] ? trigger.cause : null,
       spent: trigger.spent ?? null,
       x: trigger.x ?? null,
+      /* A delayed trigger's source, as it was when the trigger was made (CR 701.27f). */
+      sourceTransforms: trigger.sourceTransforms,
     });
     /* Its targets are asked for once every trigger of the round is on the stack (askTriggerTargets) -- and a modal one's
        modes with them (CR 603.3c). */

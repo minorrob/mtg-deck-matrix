@@ -26,17 +26,14 @@
  * That is why `resolveAwaiting` takes an rng: this is the one decision that consumes randomness.
  */
 
-import {cardsIn, moveObject} from "../state/index.mjs";
+import {cardsIn, moveObject, eventCard} from "../state/index.mjs";
 
 /** CR 103.2, and the Commander rules do not change it. */
 const STARTING_HAND = 7;
 
 const event = (kind, state, fields) => ({kind, data: {turn: state.turn, phase: state.phase, fields}});
 
-const cardRef = (state, id) => {
-  const o = state.objects[id];
-  return o ? {cardId: o.id, name: o.card, owner: o.owner, controller: o.controller, faceDown: false} : null;
-};
+const cardRef = eventCard;
 
 /* Shuffle a player's library through the game's own stream, so the opening hand is reproducible
    from the seed. `rng.shuffle` returns a new array rather than mutating, so the zone is replaced. */

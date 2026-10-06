@@ -44,12 +44,12 @@
  * implemented is worse than a missing one.
  */
 
-import {moveObject, PER_PLAYER, PUBLIC_ZONES} from "../state/index.mjs";
+import {moveObject, PER_PLAYER, PUBLIC_ZONES, eventCard} from "../state/index.mjs";
 import {applyReplacements, regenerated} from "./replacement.mjs";
 import {lastKnown, toughnessOf, typesOf, keywordsOf, controllerOf, deriving} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./commander.mjs";
-import {sacrificeOne, moveOne, returnExiledUntil} from "../script/effects/zones.mjs";
+import {sacrificeOne, moveOne, returnExiledUntil, leavingRef} from "../script/effects/zones.mjs";
 import {changeLife} from "../script/effects/resources.mjs";
 import {enduringStories} from "../keywords/designations.mjs";
 import {protectedFrom} from "./protection.mjs";
@@ -66,10 +66,7 @@ const COMMANDER_DAMAGE_TO_LOSE = 21;
 
 const event = (kind, state, fields) => ({kind, data: {turn: state.turn, phase: state.phase, fields}});
 
-const cardRef = (state, id) => {
-  const o = state.objects[id];
-  return o ? {cardId: o.id, name: o.card, owner: o.owner, controller: o.controller, faceDown: false} : null;
-};
+const cardRef = eventCard;
 
 const isCreature = (object) => (object.types ?? []).includes("Creature");
 
@@ -108,7 +105,8 @@ function lossReason(state, player) {
 function removePlayerFromBoard(state, playerId, events) {
   for (const id of [...state.zones.battlefield]) {
     if (state.objects[id]?.owner !== playerId) continue;
-    const card = cardRef(state, id);
+    /* Face down, revealed as its owner leaves (CR 708.9). */
+    const card = leavingRef(state, id);
     const at = state.zones.battlefield.indexOf(id);
     state.zones.battlefield.splice(at, 1);
     delete state.objects[id];
@@ -247,7 +245,8 @@ export function checkStateBasedActions(state) {
       /* Or regenerated (CR 701.19a): a shield on it replaces the destruction. */
       if (destroyed && regenerated(state, id, events)) { acted = true; continue; }
       if (toughness <= 0 || deathtouched || (object.damage > 0 && object.damage >= toughness)) {
-        const card = cardRef(state, id);
+        /* Face down, revealed as it moves (CR 708.9). */
+        const card = leavingRef(state, id);
         /* WHAT DIED, IN FULL. A "whenever this creature dies" trigger has to be found after the
            creature is gone, and a zone change makes a new object (CR 400.7), so by then nothing on
            the board carries those abilities. This snapshot is the look-back CR 603.10a describes

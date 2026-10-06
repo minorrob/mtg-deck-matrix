@@ -1,0 +1,568 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Reality Shift",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ox": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ox"
+      ],
+      "manaCost": "{4}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 6,
+      "toughness": 6
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's Bear exiled; she manifests the top card of her library -- a face-down 2/2 creature with no name, under her control",
+      "library": [
+        "Ox"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Reality Shift"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Reality Shift",
+          "targets": [
+            {
+              "card": "Bear",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            null
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "library",
+          "count": 19
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": null,
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 1,
+          "controls": [
+            null
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Reality Shift"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 20
+        },
+        {
+          "event": "GameEventCardChangeZone",
+          "where": {
+            "card": {
+              "cardId": 21,
+              "name": null,
+              "owner": 1,
+              "controller": 1,
+              "faceDown": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Turned face up by Maya for its mana cost, {4}{B}, as a special action while she holds priority in Rob's turn: the Ox, a 6/6",
+      "library": [
+        "Ox"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Reality Shift"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Reality Shift",
+          "targets": [
+            {
+              "card": "Bear",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "turn-face-up",
+                "seat": 0
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "turn-face-up",
+                "seat": 1
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Swamp",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "turn-face-up",
+                "card": "Ox",
+                "seat": 1
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "turnFaceUp": "Ox",
+          "seat": 1
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ox",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Ox",
+            "power": 6,
+            "toughness": 6
+          }
+        },
+        {
+          "stack": 0
+        },
+        {
+          "seat": 1,
+          "pool": {
+            "B": 0,
+            "C": 0
+          }
+        },
+        {
+          "event": "GameEventCardTurnedFaceUp",
+          "where": {
+            "player": {
+              "playerId": 1,
+              "name": "Maya"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "A manifested creature card's own \"when this enters\" does nothing, face down or turned face up: Wall of Omens draws Maya no card",
+      "library": [
+        "Wall of Omens"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Reality Shift"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Plains",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Reality Shift",
+          "targets": [
+            {
+              "card": "Bear",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Plains",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "turnFaceUp": "Wall of Omens",
+          "seat": 1
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "count": 0
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Wall of Omens",
+            "power": 0,
+            "toughness": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "A manifested land card can't be turned face up; dealt lethal damage it dies and is revealed: Island in Maya's graveyard",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Reality Shift",
+            "Lightning Bolt"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Island",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Reality Shift",
+          "targets": [
+            {
+              "card": "Bear",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "turn-face-up",
+                "seat": 1
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Mountain",
+          "seat": 0
+        },
+        {
+          "cast": "Lightning Bolt",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "A face-down permanent"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Rob's Reality Shift on his own Bear: he manifests the top card of his own library",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Reality Shift"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Reality Shift",
+          "targets": [
+            {
+              "card": "Bear",
+              "seat": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            null,
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        },
+        {
+          "seat": 1,
+          "zone": "library",
+          "count": 20
+        }
+      ]
+    }
+  ]
+}
