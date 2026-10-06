@@ -1,0 +1,251 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mogg Raider",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Goblin Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "The Goblin Pal sacrificed: Rob's Bear a 3/3 until end of turn, a 2/2 again on Maya's turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mogg Raider",
+            "Goblin Pal",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Mogg Raider",
+          "sacrifice": "Goblin Pal",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Bear",
+                "power": 3,
+                "toughness": 3
+              }
+            },
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Goblin Pal"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Mogg Raider",
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Only a Goblin pays: Mogg Raider itself or the Goblin Pal, never the Bear; any creature is a target -- Maya's too",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mogg Raider",
+            "Goblin Pal",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Mogg Raider"
+              },
+              "count": 8,
+              "costs": [
+                [
+                  "Mogg Raider"
+                ],
+                [
+                  "Mogg Raider"
+                ],
+                [
+                  "Mogg Raider"
+                ],
+                [
+                  "Mogg Raider"
+                ],
+                [
+                  "Goblin Pal"
+                ],
+                [
+                  "Goblin Pal"
+                ],
+                [
+                  "Goblin Pal"
+                ],
+                [
+                  "Goblin Pal"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Mogg Raider",
+          "sacrifice": "Mogg Raider",
+          "targets": [
+            {
+              "card": "Bear",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Bear",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Mogg Raider"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "It sacrifices itself to pump itself: the ability resolves with its target gone, and does nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mogg Raider",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Mogg Raider",
+          "sacrifice": "Mogg Raider",
+          "targets": [
+            {
+              "card": "Mogg Raider"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Mogg Raider"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

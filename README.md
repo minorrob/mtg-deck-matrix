@@ -710,6 +710,9 @@ chooses, the plain mana first where it does nothing, which rider when one must g
 type with your commander" with partners and changelings; the times a commander was cast from the command zone.
 `engine-proliferate-twice` holds Tekuthal, Inquiry Dominus: each one doubling its controller's proliferates, each its own
 choice; and three counters from among its controller's other permanents, picked once taken and checked as removed.
+`engine-cards-x11-b2` holds what the scenarios of X11's second batch cannot reach: Topiary Stomper can't attack or block
+unless its controller has seven lands, at six and at seven ("can't block" on a condition, now compiled); Plaza of Heroes'
+two ways to make {W}, one only for a legendary spell; Purphoros an attacker only at devotion five.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -1137,6 +1140,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-sacrifice-many` — `tests/engine-sacrifice-many.mjs`
 - `engine-mana-riders` — `tests/engine-mana-riders.mjs`
 - `engine-proliferate-twice` — `tests/engine-proliferate-twice.mjs`
+- `engine-cards-x11-b2` — `tests/engine-cards-x11-b2.mjs`
 
 ## Design and execution record
 

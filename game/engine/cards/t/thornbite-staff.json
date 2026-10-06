@@ -1,0 +1,159 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thornbite Staff",
+    "oracleId": "dae4815e-9025-4993-ab46-52a3f1a7219e",
+    "types": [
+      "Kindred",
+      "Artifact"
+    ],
+    "subtypes": [
+      "Shaman",
+      "Equipment"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Equipped creature has \"{2}, {T}: This creature deals 1 damage to any target\" and \"Whenever a creature dies, untap this creature.\"\nWhenever a Shaman creature enters, you may attach this Equipment to it.\nEquip {4}",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Equipped creature has \"{2}, {T}: This creature deals 1 damage to any target\" and \"Whenever a creature dies, untap this creature.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "activated",
+            "text": "{2}, {T}: This creature deals 1 damage to any target",
+            "cost": [
+              {
+                "atom": "mana",
+                "cost": "{2}"
+              },
+              {
+                "atom": "{T}"
+              }
+            ],
+            "targets": [
+              {
+                "anyOf": [
+                  {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ]
+                  },
+                  {
+                    "what": "permanent",
+                    "types": [
+                      "Planeswalker"
+                    ]
+                  },
+                  {
+                    "what": "permanent",
+                    "types": [
+                      "Battle"
+                    ]
+                  },
+                  {
+                    "what": "player"
+                  }
+                ]
+              }
+            ],
+            "effects": [
+              {
+                "effect": "dealDamage",
+                "amount": 1,
+                "targets": {
+                  "target": 0
+                },
+                "who": {
+                  "target": 0
+                }
+              }
+            ]
+          },
+          {
+            "kind": "triggered",
+            "text": "Whenever a creature dies, untap this creature.",
+            "trigger": {
+              "on": "dies",
+              "who": "any",
+              "filter": {
+                "types": [
+                  "Creature"
+                ]
+              }
+            },
+            "effects": [
+              {
+                "effect": "untap",
+                "targets": "self"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a Shaman creature enters, you may attach this Equipment to it.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "subtypes": [
+            "Shaman"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": "that card"
+        }
+      ],
+      "optional": true
+    },
+    {
+      "kind": "activated",
+      "text": "Equip {4}",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}"
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}
