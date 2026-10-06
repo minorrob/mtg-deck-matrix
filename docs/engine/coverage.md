@@ -10,11 +10,15 @@ implements, so writing its definition is all that is left. A keyword counts only
 something — declaring `Flying` is what lets a card script say it, and `keywords/combat.mjs` is
 what makes a flier unblockable by the ground.
 
-| Scope | Cards | Defined | Every rule | Share |
-| --- | ---: | ---: | ---: | ---: |
-| Rob's seven decks | 477 | 336 | 409 | 85.7% |
-| the card library | 2365 | 879 | 1807 | 76.4% |
-| the most-played 80% of Commander cards | 3238 | 1144 | 2460 | 76.0% |
+*Provisional* is how many more have a learned definition stored provisional in `data/engine/scripts`
+(28 in all): written by the card loader or in a session, passed its checks, and seated at no
+table until a played game or Rob confirms it. They are not counted as defined.
+
+| Scope | Cards | Defined | Provisional | Every rule | Share |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Rob's seven decks | 477 | 336 | 1 | 409 | 85.7% |
+| the card library | 2365 | 879 | 8 | 1807 | 76.4% |
+| the most-played 80% of Commander cards | 3238 | 1144 | 28 | 2460 | 76.0% |
 
 ## What blocks the rest — Rob's seven decks
 

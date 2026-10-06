@@ -1,0 +1,83 @@
+{
+ "schema": "CrankCompiledCard@1",
+ "name": "Curious Altisaur",
+ "oracleId": "80686908-abb5-4728-a5f6-71baca27f467",
+ "oracleHash": "8b6a5144db2f2cbc",
+ "status": "provisional",
+ "script": {
+  "schema": "CrankCardScript@1",
+  "identity": {
+   "name": "Curious Altisaur",
+   "oracleId": "80686908-abb5-4728-a5f6-71baca27f467",
+   "types": [
+    "Creature"
+   ],
+   "subtypes": [
+    "Dinosaur"
+   ],
+   "manaCost": "{3}{G}",
+   "colors": [
+    "G"
+   ],
+   "colorIdentity": [
+    "G"
+   ],
+   "power": 2,
+   "toughness": 5
+  },
+  "oracleText": "Reach, vigilance\nWhenever a Dinosaur you control deals combat damage to a player, draw a card.",
+  "source": "compiler",
+  "model": "x10-session",
+  "abilities": [
+   {
+    "kind": "keyword",
+    "text": "Reach",
+    "keyword": "reach"
+   },
+   {
+    "kind": "keyword",
+    "text": "vigilance",
+    "keyword": "vigilance"
+   },
+   {
+    "kind": "triggered",
+    "text": "Whenever a Dinosaur you control deals combat damage to a player, draw a card.",
+    "trigger": {
+     "on": "damage dealt",
+     "who": "any",
+     "combat": true,
+     "to": "player",
+     "filter": {
+      "subtypes": [
+       "Dinosaur"
+      ],
+      "controller": "you"
+     }
+    },
+    "effects": [
+     {
+      "effect": "draw",
+      "count": 1
+     }
+    ]
+   }
+  ]
+ },
+ "checks": {
+  "schema": "pass",
+  "fidelity": "pass",
+  "readBack": "not run",
+  "smoke": {
+   "played": true,
+   "resolutions": 1
+  }
+ },
+ "crFlags": [],
+ "notes": "",
+ "models": {
+  "writer": "x10-session",
+  "readBack": null
+ },
+ "attempts": 1,
+ "compiledAt": "2026-10-06T16:16:06.014Z"
+}

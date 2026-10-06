@@ -1,0 +1,105 @@
+{
+ "schema": "CrankCompiledCard@1",
+ "name": "Mortuary Mire",
+ "oracleId": "1b3fb20a-e090-4286-9c03-6b71c27c45be",
+ "oracleHash": "c3d9154afab920f1",
+ "status": "provisional",
+ "script": {
+  "schema": "CrankCardScript@1",
+  "identity": {
+   "name": "Mortuary Mire",
+   "oracleId": "1b3fb20a-e090-4286-9c03-6b71c27c45be",
+   "types": [
+    "Land"
+   ],
+   "subtypes": [],
+   "manaCost": "",
+   "colors": [],
+   "colorIdentity": [
+    "B"
+   ],
+   "power": null,
+   "toughness": null
+  },
+  "oracleText": "This land enters tapped.\nWhen this land enters, you may put target creature card from your graveyard on top of your library.\n{T}: Add {B}.",
+  "source": "compiler",
+  "model": "x10-session",
+  "abilities": [
+   {
+    "kind": "replacement",
+    "text": "This land enters tapped.",
+    "watches": {
+     "event": "enters",
+     "who": "self"
+    },
+    "change": {
+     "entersTapped": true
+    }
+   },
+   {
+    "kind": "triggered",
+    "text": "When this land enters, you may put target creature card from your graveyard on top of your library.",
+    "trigger": {
+     "on": "enters",
+     "who": "self"
+    },
+    "optional": true,
+    "targets": [
+     {
+      "what": "card",
+      "zone": "graveyard",
+      "controller": "you",
+      "types": [
+       "Creature"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "effect": "moveZone",
+      "targets": {
+       "target": 0
+      },
+      "to": "library",
+      "top": true
+     }
+    ]
+   },
+   {
+    "kind": "activated",
+    "text": "{T}: Add {B}.",
+    "mana": true,
+    "cost": [
+     {
+      "atom": "{T}"
+     }
+    ],
+    "effects": [
+     {
+      "effect": "addMana",
+      "mana": {
+       "B": 1
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "checks": {
+  "schema": "pass",
+  "fidelity": "pass",
+  "readBack": "not run",
+  "smoke": {
+   "played": true,
+   "resolutions": 1
+  }
+ },
+ "crFlags": [],
+ "notes": "",
+ "models": {
+  "writer": "x10-session",
+  "readBack": null
+ },
+ "attempts": 1,
+ "compiledAt": "2026-10-06T16:16:05.980Z"
+}

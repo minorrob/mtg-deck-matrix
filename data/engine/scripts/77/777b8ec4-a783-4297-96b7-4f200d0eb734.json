@@ -1,0 +1,117 @@
+{
+ "schema": "CrankCompiledCard@1",
+ "name": "Return to Nature",
+ "oracleId": "777b8ec4-a783-4297-96b7-4f200d0eb734",
+ "oracleHash": "7938d69954ae353a",
+ "status": "provisional",
+ "script": {
+  "schema": "CrankCardScript@1",
+  "identity": {
+   "name": "Return to Nature",
+   "oracleId": "777b8ec4-a783-4297-96b7-4f200d0eb734",
+   "types": [
+    "Instant"
+   ],
+   "subtypes": [],
+   "manaCost": "{1}{G}",
+   "colors": [
+    "G"
+   ],
+   "colorIdentity": [
+    "G"
+   ],
+   "power": null,
+   "toughness": null
+  },
+  "oracleText": "Choose one —\n• Destroy target artifact.\n• Destroy target enchantment.\n• Exile target card from a graveyard.",
+  "source": "compiler",
+  "model": "x10-session",
+  "abilities": [
+   {
+    "kind": "spell",
+    "text": "Choose one —\n• Destroy target artifact.\n• Destroy target enchantment.\n• Exile target card from a graveyard.",
+    "effects": [
+     {
+      "effect": "modal",
+      "choose": 1,
+      "modes": [
+       {
+        "text": "Destroy target artifact.",
+        "targets": [
+         {
+          "what": "permanent",
+          "types": [
+           "Artifact"
+          ]
+         }
+        ],
+        "effects": [
+         {
+          "effect": "destroy",
+          "targets": {
+           "target": 0
+          }
+         }
+        ]
+       },
+       {
+        "text": "Destroy target enchantment.",
+        "targets": [
+         {
+          "what": "permanent",
+          "types": [
+           "Enchantment"
+          ]
+         }
+        ],
+        "effects": [
+         {
+          "effect": "destroy",
+          "targets": {
+           "target": 0
+          }
+         }
+        ]
+       },
+       {
+        "text": "Exile target card from a graveyard.",
+        "targets": [
+         {
+          "what": "card",
+          "zone": "graveyard"
+         }
+        ],
+        "effects": [
+         {
+          "effect": "moveZone",
+          "targets": {
+           "target": 0
+          },
+          "to": "exile"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "checks": {
+  "schema": "pass",
+  "fidelity": "pass",
+  "readBack": "not run",
+  "smoke": {
+   "played": true,
+   "resolutions": 2
+  }
+ },
+ "crFlags": [],
+ "notes": "",
+ "models": {
+  "writer": "x10-session",
+  "readBack": null
+ },
+ "attempts": 1,
+ "compiledAt": "2026-10-06T16:16:06.169Z"
+}

@@ -1,0 +1,123 @@
+{
+ "schema": "CrankCompiledCard@1",
+ "name": "Ureni of the Unwritten",
+ "oracleId": "99c2d3ef-e5b4-48cd-b3f5-de9b02c7c36a",
+ "oracleHash": "300893310b563e4e",
+ "status": "provisional",
+ "script": {
+  "schema": "CrankCardScript@1",
+  "identity": {
+   "name": "Ureni of the Unwritten",
+   "oracleId": "99c2d3ef-e5b4-48cd-b3f5-de9b02c7c36a",
+   "supertypes": [
+    "Legendary"
+   ],
+   "types": [
+    "Creature"
+   ],
+   "subtypes": [
+    "Spirit",
+    "Dragon"
+   ],
+   "manaCost": "{4}{G}{U}{R}",
+   "colors": [
+    "G",
+    "R",
+    "U"
+   ],
+   "colorIdentity": [
+    "G",
+    "R",
+    "U"
+   ],
+   "power": 7,
+   "toughness": 7
+  },
+  "oracleText": "Flying, trample\nWhenever Ureni enters or attacks, look at the top eight cards of your library. You may put a Dragon creature card from among them onto the battlefield. Put the rest on the bottom of your library in a random order.",
+  "source": "compiler",
+  "model": "x10-session",
+  "abilities": [
+   {
+    "kind": "keyword",
+    "text": "Flying",
+    "keyword": "flying"
+   },
+   {
+    "kind": "keyword",
+    "text": "trample",
+    "keyword": "trample"
+   },
+   {
+    "kind": "triggered",
+    "text": "Whenever Ureni enters or attacks, look at the top eight cards of your library. You may put a Dragon creature card from among them onto the battlefield. Put the rest on the bottom of your library in a random order.",
+    "trigger": {
+     "on": "enters",
+     "who": "self"
+    },
+    "effects": [
+     {
+      "effect": "dig",
+      "count": 8,
+      "take": 1,
+      "selector": {
+       "types": [
+        "Creature"
+       ],
+       "subtypes": [
+        "Dragon"
+       ]
+      },
+      "upTo": true,
+      "to": "battlefield",
+      "rest": "bottom",
+      "random": true
+     }
+    ]
+   },
+   {
+    "kind": "triggered",
+    "text": "Whenever Ureni enters or attacks, look at the top eight cards of your library. You may put a Dragon creature card from among them onto the battlefield. Put the rest on the bottom of your library in a random order.",
+    "trigger": {
+     "on": "attacks",
+     "who": "self"
+    },
+    "effects": [
+     {
+      "effect": "dig",
+      "count": 8,
+      "take": 1,
+      "selector": {
+       "types": [
+        "Creature"
+       ],
+       "subtypes": [
+        "Dragon"
+       ]
+      },
+      "upTo": true,
+      "to": "battlefield",
+      "rest": "bottom",
+      "random": true
+     }
+    ]
+   }
+  ]
+ },
+ "checks": {
+  "schema": "pass",
+  "fidelity": "pass",
+  "readBack": "not run",
+  "smoke": {
+   "played": true,
+   "resolutions": 2
+  }
+ },
+ "crFlags": [],
+ "notes": "",
+ "models": {
+  "writer": "x10-session",
+  "readBack": null
+ },
+ "attempts": 1,
+ "compiledAt": "2026-10-06T16:16:06.279Z"
+}

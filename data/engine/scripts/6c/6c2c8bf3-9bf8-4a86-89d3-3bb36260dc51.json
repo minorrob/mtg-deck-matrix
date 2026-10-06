@@ -1,0 +1,73 @@
+{
+ "schema": "CrankCompiledCard@1",
+ "name": "Azusa, Lost but Seeking",
+ "oracleId": "6c2c8bf3-9bf8-4a86-89d3-3bb36260dc51",
+ "oracleHash": "b1d8a89fece7f201",
+ "status": "provisional",
+ "script": {
+  "schema": "CrankCardScript@1",
+  "identity": {
+   "name": "Azusa, Lost but Seeking",
+   "oracleId": "6c2c8bf3-9bf8-4a86-89d3-3bb36260dc51",
+   "supertypes": [
+    "Legendary"
+   ],
+   "types": [
+    "Creature"
+   ],
+   "subtypes": [
+    "Human",
+    "Monk"
+   ],
+   "manaCost": "{2}{G}",
+   "colors": [
+    "G"
+   ],
+   "colorIdentity": [
+    "G"
+   ],
+   "power": 1,
+   "toughness": 2
+  },
+  "oracleText": "You may play two additional lands on each of your turns.",
+  "source": "compiler",
+  "model": "x10-session",
+  "abilities": [
+   {
+    "kind": "static",
+    "text": "You may play two additional lands on each of your turns.",
+    "rule": "extra-land-drop",
+    "affects": {
+     "what": "player",
+     "who": "you"
+    }
+   },
+   {
+    "kind": "static",
+    "text": "You may play two additional lands on each of your turns.",
+    "rule": "extra-land-drop",
+    "affects": {
+     "what": "player",
+     "who": "you"
+    }
+   }
+  ]
+ },
+ "checks": {
+  "schema": "pass",
+  "fidelity": "pass",
+  "readBack": "not run",
+  "smoke": {
+   "played": true,
+   "resolutions": 1
+  }
+ },
+ "crFlags": [],
+ "notes": "",
+ "models": {
+  "writer": "x10-session",
+  "readBack": null
+ },
+ "attempts": 1,
+ "compiledAt": "2026-10-06T16:16:06.466Z"
+}

@@ -1,0 +1,212 @@
+{
+ "schema": "CrankCompiledCard@1",
+ "name": "Liliana of the Dark Realms",
+ "oracleId": "92301066-8904-41bc-84bd-4aa286cbab9c",
+ "oracleHash": "3ff6ba4bdde0fe18",
+ "status": "provisional",
+ "script": {
+  "schema": "CrankCardScript@1",
+  "identity": {
+   "name": "Liliana of the Dark Realms",
+   "oracleId": "92301066-8904-41bc-84bd-4aa286cbab9c",
+   "supertypes": [
+    "Legendary"
+   ],
+   "types": [
+    "Planeswalker"
+   ],
+   "subtypes": [
+    "Liliana"
+   ],
+   "manaCost": "{2}{B}{B}",
+   "colors": [
+    "B"
+   ],
+   "colorIdentity": [
+    "B"
+   ],
+   "power": null,
+   "toughness": null,
+   "loyalty": 3
+  },
+  "oracleText": "+1: Search your library for a Swamp card, reveal it, put it into your hand, then shuffle.\n−3: Target creature gets +X/+X or -X/-X until end of turn, where X is the number of Swamps you control.\n−6: You get an emblem with \"Swamps you control have '{T}: Add {B}{B}{B}{B}.'\"",
+  "source": "compiler",
+  "model": "x10-session",
+  "abilities": [
+   {
+    "kind": "activated",
+    "text": "+1: Search your library for a Swamp card, reveal it, put it into your hand, then shuffle.",
+    "cost": [
+     {
+      "atom": "loyalty",
+      "amount": 1
+     }
+    ],
+    "effects": [
+     {
+      "effect": "chooseCard",
+      "zone": "library",
+      "selector": {
+       "subtypes": [
+        "Swamp"
+       ]
+      },
+      "to": "hand",
+      "reveal": true,
+      "shuffle": true
+     }
+    ]
+   },
+   {
+    "kind": "activated",
+    "text": "−3: Target creature gets +X/+X or -X/-X until end of turn, where X is the number of Swamps you control.",
+    "cost": [
+     {
+      "atom": "loyalty",
+      "amount": -3
+     }
+    ],
+    "targets": [
+     {
+      "what": "permanent",
+      "types": [
+       "Creature"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "effect": "modal",
+      "choose": 1,
+      "modes": [
+       {
+        "text": "+X/+X",
+        "effects": [
+         {
+          "effect": "pump",
+          "targets": {
+           "target": 0
+          },
+          "power": {
+           "count": {
+            "what": "permanent",
+            "subtypes": [
+             "Swamp"
+            ],
+            "controller": "you"
+           }
+          },
+          "toughness": {
+           "count": {
+            "what": "permanent",
+            "subtypes": [
+             "Swamp"
+            ],
+            "controller": "you"
+           }
+          }
+         }
+        ]
+       },
+       {
+        "text": "-X/-X",
+        "effects": [
+         {
+          "effect": "pump",
+          "targets": {
+           "target": 0
+          },
+          "power": {
+           "count": {
+            "what": "permanent",
+            "subtypes": [
+             "Swamp"
+            ],
+            "controller": "you"
+           },
+           "times": -1
+          },
+          "toughness": {
+           "count": {
+            "what": "permanent",
+            "subtypes": [
+             "Swamp"
+            ],
+            "controller": "you"
+           },
+           "times": -1
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "activated",
+    "text": "−6: You get an emblem with \"Swamps you control have '{T}: Add {B}{B}{B}{B}.'\"",
+    "cost": [
+     {
+      "atom": "loyalty",
+      "amount": -6
+     }
+    ],
+    "effects": [
+     {
+      "effect": "effectUntil",
+      "until": "ever",
+      "layer": 6,
+      "affects": {
+       "what": "permanent",
+       "subtypes": [
+        "Swamp"
+       ],
+       "controller": "you"
+      },
+      "apply": {
+       "addAbilities": [
+        {
+         "kind": "activated",
+         "text": "{T}: Add {B}{B}{B}{B}.",
+         "cost": [
+          {
+           "atom": "{T}"
+          }
+         ],
+         "effects": [
+          {
+           "effect": "addMana",
+           "mana": {
+            "B": 4
+           }
+          }
+         ]
+        }
+       ]
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "checks": {
+  "schema": "pass",
+  "fidelity": "pass",
+  "readBack": "not run",
+  "smoke": {
+   "played": true,
+   "resolutions": 2
+  }
+ },
+ "crFlags": [
+  "CR 613.4c: the -3's +X/+X or -X/-X is a layer 7c change, X counted once as it resolves (CR 608.2h)"
+ ],
+ "notes": "",
+ "models": {
+  "writer": "x10-session",
+  "readBack": null
+ },
+ "attempts": 1,
+ "compiledAt": "2026-10-06T16:16:05.952Z"
+}
