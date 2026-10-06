@@ -15,12 +15,12 @@
  *              again -- leaving there would be taped where a replay cannot put it;
  *   Alarmed    the table's object sets its alarm for now whenever a slice ran out, plays the next slice when it rings,
  *              a dropped player's five minutes running out mid-slice waits for the AI seats to stop instead of failing
- *              the alarm, and the game the last person left plays on, alarm by alarm, to its end.
+ *              the alarm, and once the last person is out the game ends there (Rob, 2026-10-06), nothing playing on.
  */
 import assert from "node:assert/strict";
 import {randomUUID} from "node:crypto";
 import {memoryStorage, createMatchStore} from "../game/engine/storage.mjs";
-import {startRoom, openRoom, basicCards} from "../game/room/room.mjs";
+import {startRoom, openRoom, basicCards, NO_PERSON_REASON} from "../game/room/room.mjs";
 import {replayMatch} from "../game/room/replay.mjs";
 import {hashState} from "../game/engine/journal.mjs";
 import {createRng} from "../game/engine/rng.mjs";
@@ -140,15 +140,15 @@ const SLICE = 25;
   clock += 5 * 60 * 1000;
   await object.table.tick(clock);
   ok((await object.load()).continuing && (await object.load()).view("s0").departures.s0 === undefined, "his time ran out mid-slice: the table's clock waits for the AI seats, and fails nothing");
+  /* Once they stop, his time running out concedes him; he was the only person at the table, so the game ends there
+     (Rob, 2026-10-06): the AI seats do not play it out for nobody. */
   let waited = 0;
-  while ((await object.load()).view("s0").departures.s0 === undefined && waited < 2000) {clock += 1; await object.alarm(); waited += 1;}
-  eq((await object.load()).view("s0").departures.s0, "timed-out", `once the AI seats stopped, his time running out conceded him (${waited} more alarm${waited === 1 ? "" : "s"})`);
-  /* The two AI seats play the rest of the game alone, slice by slice, on the alarm. */
-  let more = 0;
-  while ((await object.load()).continuing && more < 20000) {clock += 1; await object.alarm(); more += 1;}
-  const last = (await object.load()).view("s0");
-  ok(more > 5 && last.status === "finished", `the rest of the game, AI seats alone, played on over ${more} alarms to its end (${last.result.winner} won)`);
-  eq(alarms.at(-1), null, "and then the alarm is cleared");
+  while (room.view("s0").departures.s0 === undefined && waited < 2000) {clock += 1; await object.alarm(); waited += 1;}
+  const last = room.view("s0");
+  eq([last.departures.s0, last.status, last.result.winner, last.result.reason], ["timed-out", "finished", null, NO_PERSON_REASON],
+    `once the AI seats stopped, his time ran out (${waited} more alarm${waited === 1 ? "" : "s"}), and with no person left the game ended there`);
+  ok(room.history.at(-1).text === "Every person is out of the game, so it ends here · not finished" && !room.continuing, "the history says so, and nothing plays on");
+  ok((await call("/table")).table.phase !== "playing" && alarms.at(-1) === null, "the table moves on, and the alarm is cleared");
 }
 
 console.log(`room-slices: ${checks} checks passed -- a room played in slices is the same game, a person's decisions and a replay agree with it, leaving and ending wait for the AI seats with instructions, and the table's alarm plays each slice.`);

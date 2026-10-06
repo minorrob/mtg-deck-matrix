@@ -230,12 +230,15 @@ globalThis.CrankBoard = Object.freeze({
      nothing anyone else played ever reaches yours. A timeout or a game ended early is "unfinished" (Rob,
      2026-09-26); a concession is a loss. */
   const filed = new Set();
+  const NO_PERSON = "every person had left the game, so it ended there";  /* game/room/room.mjs NO_PERSON_REASON */
   function outcomeOf(v) {
     const gone = (v.departures || {})[v.seatId];
     if (gone === "conceded") return {outcome: "loss", reason: "conceded"};
     if (gone === "timed-out") return {outcome: "unfinished", reason: "ran out of time"};
     if (v.status !== "finished") return null;
     const r = v.result || {};
+    /* Ended because every person was out (Rob, 2026-10-06): a person still in it here had lost. */
+    if (r.reason === NO_PERSON) return {outcome: "loss", reason: (((v.state && v.state.players || [])[v.seat] || {}).health || {}).lossReason || "lost"};
     if (r.endedBy !== undefined || r.reason === "ended early") return {outcome: "unfinished", reason: "ended early"};
     if (r.winner === v.seatId) return {outcome: "win", reason: r.reason || ""};
     return r.winner ? {outcome: "loss", reason: r.reason || ""} : {outcome: "draw", reason: r.reason || ""};

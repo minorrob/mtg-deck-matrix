@@ -16,7 +16,7 @@
  *   6. two people and an AI from a library backup: each restores it in Settings; the host invites; the newcomer, a
  *      second Access identity, joins by the link, sees which decks the table can play, and takes one; both play the
  *      first turns; a reload mid-game returns to the board; End game; the record replays to the same end
- *   7. at a third table the host concedes and the two AI seats play on, slice by slice, on the object's alarm
+ *   7. at a third table the host, the only person, concedes, and the game ends there instead of the AI seats playing on
  *
  *   node tests/uat/play-e2e.mjs      (WRANGLER=<wrangler.js>, UAT_PLAYWRIGHT, UAT_CHROME, UAT_SHOTS as for the other walks)
  */
@@ -31,6 +31,7 @@ import path from "node:path";
 import {build, worktreeSource} from "../../tools/release-pages.mjs";
 import {replayTape} from "../../game/room/replay.mjs";
 import {tableCards} from "../../cloud/game-room.mjs";
+import {NO_PERSON_REASON} from "../../game/room/room.mjs";
 
 const require = createRequire(import.meta.url);
 const playwright = require(process.env.UAT_PLAYWRIGHT || "playwright");
@@ -370,23 +371,21 @@ try {
     }
   }
 
-  /* 6. THE AI SEATS PLAY ON IN SLICES, ON THE OBJECT'S ALARM (the review of 2026-10-05; cloud/game-room.mjs
-     SLICE_STEPS). In the cloud a request has 30 s of CPU, so a room never plays more than a slice in one: Rob and two
-     AI seats, he concedes as the game begins, and the concede comes back with the two still playing; the object's own
-     alarm plays the rest, slice by slice, to its end. */
+  /* 6. ONCE EVERY PERSON IS OUT, THE GAME ENDS THERE (Rob, 2026-10-06; game/room/room.mjs `endWhenNoPerson`). Rob and
+     two AI seats at a third table; he concedes as the game begins, and the game ends at once, the AI seats not playing it
+     out: its record is there to download straight away, says why it ended, and replays to the same end. */
   const goblins = {name: "Goblins", commander: ["Krenko, Mob Boss"], cards: [...Array(40).fill("Mountain"), "Lightning Bolt", "Blasphemous Act", "Sol Ring"]};
   const third = await api("POST", "/api/tables", {hostName: "Rob", seats: [{kind: "ai", name: "Bot"}, {kind: "ai", name: "Bot 2"}]});
-  const url2 = `/api/tables/${third.json.table.tableId}`;
-  for (const seatId of [0, 1, 2]) await api("POST", `${url2}/deck`, {seatId, deck: goblins});
-  await api("POST", `${url2}/ready`, {ready: true});
-  await api("POST", `${url2}/start`);
-  const match = (await until("the third table's countdown to end", async () => {const t = (await api("GET", url2)).json.table; return t.phase === "playing" && t;}, 45000)).matchId;
-  eq((await api("POST", `${url2}/concede`)).status, 200, "at a third table, Rob and two AI seats, Rob concedes as the game begins");
-  eq((await api("GET", `${url2}/record?match=${match}`)).status, 409, "and the concede comes back with the two AI seats still playing: one request plays one slice");
-  const done = await until("the object's alarm to play the AI seats to the end", async () => {const r = await api("GET", `${url2}/record?match=${match}`); return r.status === 200 && r.json.record;}, 60000);
-  eq([done.result.reason, done.departures.s0, done.refusals.since], ["last player standing", "conceded", 0], `the object's alarm played them on to the end (${done.result.winner} won), the record counting refusals from the start (${done.refusals.total})`);
+  const url3 = `/api/tables/${third.json.table.tableId}`;
+  for (const seatId of [0, 1, 2]) await api("POST", `${url3}/deck`, {seatId, deck: goblins});
+  await api("POST", `${url3}/ready`, {ready: true});
+  await api("POST", `${url3}/start`);
+  const match = (await until("the third table's countdown to end", async () => {const t = (await api("GET", url3)).json.table; return t.phase === "playing" && t;}, 45000)).matchId;
+  eq((await api("POST", `${url3}/concede`)).json.table.phase, "rematch", "at a third table, Rob and two AI seats, Rob concedes as the game begins, and the table moves on at once");
+  const done = (await api("GET", `${url3}/record?match=${match}`)).json.record;
+  eq([done.result.reason, done.result.winner, done.departures.s0, done.refusals.since], [NO_PERSON_REASON, null, "conceded", 0], "the game ended there, the AI seats not playing it out, and its record says why");
   const replayedOn = await replayTape({matchId: done.matchId, pod: done.pod, seed: done.seed, tape: done.tape, cards: tableCards});
-  eq(replayedOn.view("s0").result, done.result, "and the game played in slices replays, in one go, to the same end");
+  eq(replayedOn.view("s0").result, done.result, "and it replays to the same end");
   eq(errors, [], "and no page error on the way");
 } finally {
   await browser.close();

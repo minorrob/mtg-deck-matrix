@@ -23,7 +23,9 @@ import {beginMulligans, mulligansDone} from "../game/engine/rules/mulligan.mjs";
 import {createRng} from "../game/engine/rng.mjs";
 import {randomLegalPilot} from "../game/engine/pilots/random-legal.mjs";
 import {memoryStorage} from "../game/engine/storage.mjs";
-import {startRoom, openRoom, basicCards} from "../game/room/room.mjs";
+import {startRoom, openRoom, basicCards, NO_PERSON_REASON} from "../game/room/room.mjs";
+import {replayTape} from "../game/room/replay.mjs";
+import {createMatchStore} from "../game/engine/storage.mjs";
 import {tableOn, AWAY_LIMIT} from "../game/room/table.mjs";
 import {GameTable} from "../cloud/game-room.mjs";
 
@@ -258,4 +260,50 @@ async function playingTable(storage = memoryStorage()) {
   eq([last.status, last.result && last.result.reason], ["finished", "ended early"], "and the sockets still open are sent the view that says so, though the table has no game on any more");
 }
 
-console.log(`game-leave: ${checks} checks passed — ${conceded} concessions fuzzed through the engine, End game for everyone by any person, and the five minutes a dropped player has, recorded as not finished.`);
+
+/* 5. ONCE EVERY PERSON IS OUT, THE GAME ENDS THERE (Rob, 2026-10-06: the AI seats do not play it out for nobody;
+   game/room/room.mjs `endWhenNoPerson`, which the table sets as it launches a game, kept with the match so a game made
+   before it replays as it was played). */
+{
+  const pod = (flag, tags) => ({passEmpty: true, ...(flag ? {endWhenNoPerson: true} : {}), seats: [
+    {seatId: "s0", name: "Rob", pilot: "human", ...deck(tags[0])}, {seatId: "s1", name: "Bot", pilot: "house", ...deck(tags[1])}, {seatId: "s2", name: "Bot 2", pilot: "house", ...deck(tags[2])}]});
+  /* The last person concedes. */
+  const storage = memoryStorage();
+  await startRoom({storage, matchId: "nobody", cards, pod: pod(true, ["na", "nb", "nc"]), seed: "nobody"});
+  const room = await openRoom({storage, matchId: "nobody", cards});  /* woken first: the rule is kept with the room */
+  await room.leave("s0", "conceded");
+  const v = room.view("s0");
+  eq([v.status, v.result, v.departures], ["finished", {winner: null, reason: NO_PERSON_REASON, endedBy: null}, {s0: "conceded"}], "the only person concedes: the game ends there, with two AI seats still in it, and says why");
+  eq(room.history.at(-1).text, "Every person is out of the game, so it ends here · not finished", "the history says so too");
+  await refuses(room.end("s0"), 409, /over/, "nothing more is played, or ended");
+  const meta = await createMatchStore(storage, "nobody").loadMatch();
+  eq((await replayTape({matchId: "nobody", pod: meta.pod, seed: meta.seed, tape: await createMatchStore(storage, "nobody").readTape(), cards})).fingerprint(), room.fingerprint(), "and its replay ends in the same place");
+  eq((await openRoom({storage, matchId: "nobody", cards})).view("s1").result.reason, NO_PERSON_REASON, "a woken room still says so");
+  /* Without the flag, a game made before it: the AI seats play on to the end, as that game was played. */
+  const older = await startRoom({storage: memoryStorage(), matchId: "older", cards, pod: pod(false, ["na", "nb", "nc"]), seed: "nobody"});
+  await older.leave("s0", "conceded");
+  eq([older.status, older.view("s1").result.reason], ["finished", "last player standing"], "a match without the flag plays on to the end, as games did before 2026-10-06");
+  /* The last person is knocked out: the game ends then too, and their own result is a loss. */
+  let knocked = null;
+  for (let n = 0; n < 12 && !knocked; n += 1) {
+    const r = await startRoom({storage: memoryStorage(), matchId: `ko${n}`, cards, pod: {...pod(true, [`ka${n}`, `kb${n}`, `kc${n}`]), startingLife: 3}, seed: `ko-${n}`});
+    const people = answerer(`ko-person-${n}`);
+    while (r.waitingOn === "s0") {const w = r.view("s0"); await r.act("s0", {actionId: randomUUID(), revision: w.revision, ...people(w.decision)});}
+    const w = r.view("s0"), active = w.state.players.filter((p) => p.health.status === "active").length;
+    if (w.result.reason === NO_PERSON_REASON) {
+      ok(w.state.players[0].health.status === "lost" && !w.departures.s0 && active >= 2, `game ko${n}: Rob is knocked out with ${active} AI seats still in, and the game ends there`);
+      knocked = w;
+    } else ok(w.result.reason === "last player standing", `game ko${n}: it ended naturally first (${w.result.winner} won)`);
+  }
+  ok(knocked, "among a dozen short games, Rob is knocked out with AI seats still playing");
+  /* The table launches every game with the flag; with Maya gone, Rob conceding ends it and the table moves on. */
+  const tableStorage = memoryStorage(), t = await playingTable(tableStorage);
+  const matchId = (await t.currentRoom()).matchId;
+  eq((await createMatchStore(tableStorage, matchId).loadMatch()).pod.endWhenNoPerson, true, "the table launches its games with the rule");
+  await t.concede(MAYA, now);
+  eq((await t.view(ROB)).phase, "playing", "one person concedes: the other is still in, and the game goes on");
+  const ended = await t.concede(ROB, now);
+  eq(ended.phase, "rematch", "the last person concedes: the game ends, and the table moves on to the rematch question");
+}
+
+console.log(`game-leave: ${checks} checks passed — ${conceded} concessions fuzzed through the engine, End game for everyone by any person, the five minutes a dropped player has, recorded as not finished, and the game ending once every person is out.`);
