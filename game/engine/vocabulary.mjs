@@ -62,7 +62,7 @@ export const PRIMITIVES = Object.freeze({
   zones: Object.freeze([
     "moveZone", "moveZoneAll", "draw", "discard", "mill", "shuffle", "dig", "surveil", "scry",
     "peekAndReveal", "sacrifice", "sacrificeAll", "destroy", "destroyAll", "exileUntil",
-    "returnToHand", "play", "mayPlay", "discover", "digUntil",
+    "returnToHand", "play", "mayPlay", "discover", "digUntil", "manifest",
   ]),
   mana: Object.freeze([
     "addMana", "addManaReflected", "tap", "untap", "untapAll", "costReduction", "alternativeCost",
@@ -172,7 +172,10 @@ const BEYOND_TIER0 = ["shroud", "ward",
      reached only by a static granting it ("has fear"); a card printed with it could not say so. */
   "fear",
   /* Its twenty-eighth: Choose a Background (CR 702.124k), a partner ability -- a deck rule, as Partner is (cards/index.mjs). */
-  "choose a background"];
+  "choose a background",
+  /* Paradigm (CR 702.192; Germination Practicum): a spell exiled as it resolves, cast again as a copy each precombat main
+     phase after the first time one of its name resolves (rules/stack.mjs). */
+  "paradigm"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

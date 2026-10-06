@@ -99,7 +99,8 @@ function printed(state, id) {
 /* THE KEYS A LAYER STATIC'S `affects` MAY CARRY -- this matcher's, narrower than the selector grammar because the layers
    cannot ask what they are still deriving. Anything else would be ignored, and a static would affect more than it says:
    the card compiler refuses it (cards/index.mjs). */
-export const LAYER_AFFECTS_KEYS = Object.freeze(["anyOf", "what", "ids", "types", "subtypes", "supertypes", "controller", "token", "another", "self", "attachedBy", "colors", "colorless", "countersAtLeast", "tapped"]);
+export const LAYER_AFFECTS_KEYS = Object.freeze(["anyOf", "what", "ids", "types", "subtypes", "supertypes", "controller", "token", "another", "self", "attachedBy", "colors", "colorless", "countersAtLeast", "tapped", "counters",
+  "keywords"]);
 
 function affects(state, effect, current, sourceController) {
   const rule = effect.affects ?? {};
@@ -132,8 +133,15 @@ function affects(state, effect, current, sourceController) {
   if (rule.colorless === true && (current.colors ?? []).length > 0) return false;
   /* "As long as this creature has four or more +1/+1 counters on it" (Voice of the Blessed): counters as they are now. */
   if (rule.countersAtLeast && ((current.counters ?? {})[rule.countersAtLeast.counter] ?? 0) < rule.countersAtLeast.count) return false;
+  /* "Permanents you control with counters on them have ward {1}" (Innkeeper's Talent): `counters` "any" -- or a kind, "with
+     a +1/+1 counter on it" -- as the selector grammar says it (script/filter.mjs), its counters as they are now. */
+  if (rule.counters !== undefined && !(rule.counters === "any" ? Object.values(current.counters ?? {}).some((n) => n > 0)
+    : ((current.counters ?? {})[rule.counters] ?? 0) > 0)) return false;
   /* "Other tapped legendary creatures you control have indestructible" (The Seriema): tapped as it is, which no layer changes. */
   if (rule.tapped !== undefined && (state.objects[current.id]?.tapped === true) !== rule.tapped) return false;
+  /* "Creatures you control with toxic have lifelink" (Skrelv's Hive): its keywords as the derivation has them so far -- an
+     effect that gives or takes the keyword is one this depends on (CR 613.8a; dependsOn asks, and orders them). */
+  if (rule.keywords && !rule.keywords.every((word) => (current.keywords ?? []).includes(word))) return false;
   return true;
 }
 
@@ -334,8 +342,27 @@ let memo = null, memoOff = false, derivations = 0, trials = 0;
 /** Run `fn`, a question that reads the game and changes nothing, with one memo for every derivation it makes. */
 export function deriving(state, fn) {
   if (memo !== null || memoOff) return fn();
-  memo = {state, characteristics: new Map(), effects: new Map()};
+  memo = {state, characteristics: new Map(), effects: new Map(), asked: new Map()};
   try { return fn(); } finally { memo = null; }
+}
+/** Inside a `deriving` question, `fn`'s answer about the whole board, made once per guard level (as a derivation is) and
+    kept under `key` (the protections in play, asked once per target candidate); outside one, made afresh. The answer is
+    shared: never to be edited. */
+export function onceAQuestion(state, key, fn) {
+  if (memo === null || memo.state !== state) return fn();
+  const at = `${key}|${conditioning > 0 ? 1 : 0}|${counting > 0 ? 1 : 0}`;
+  if (!memo.asked.has(at)) memo.asked.set(at, fn());
+  return memo.asked.get(at);
+}
+/** Derive afresh for the length of `fn`, then go back to the memo that was open: an object shown another way for a moment --
+    an adventurer card weighed as its Adventure (CR 715.3a; rules/actions.mjs) -- is read as it then is, and what the open
+    memo holds of it as it was is neither read nor overwritten. With no memo open -- the cast itself, which changes the
+    game -- none is opened: each derivation is its own, as ever outside one. */
+export function derivingAfresh(state, fn) {
+  if (memo === null) return fn();
+  const outer = memo;
+  memo = {state, characteristics: new Map(), effects: new Map(), asked: new Map()};
+  try { return fn(); } finally { memo = outer; }
 }
 /** For the suites: turn the memo off (to compare), and how many derivations -- and dependency trials (CR 613.8a,
     `dependsOn`) -- were made since `reset`. */
@@ -491,6 +518,8 @@ export function lastKnown(state, id) {
     supertypes: [...(object.supertypes ?? [])],
     /* What it chose as it entered, for its abilities read as it last was. */
     ...(object.chosen !== undefined ? {chosen: object.chosen} : {}),
+    /* Its Class level (CR 716.2a), for the abilities it had at that level. */
+    ...(Number.isInteger(object.level) ? {level: object.level} : {}),
     attachments: [...(object.attachments ?? [])],
     /* What it was attached to: "sacrifice this Aura: exile enchanted creature" (Spiral into Solitude). */
     attachedTo: object.attachedTo ?? null,

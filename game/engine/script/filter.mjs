@@ -32,7 +32,7 @@
  * everything, schema-valid and silently wrong — the same reason the primitive catalog is declared.
  */
 
-import {usesThisTurn} from "../state/index.mjs";
+import {usesThisTurn, valueCostOf} from "../state/index.mjs";
 import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf, subtypesOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {hasSubtype, isCreatureType} from "../keywords/types.mjs";
@@ -46,6 +46,7 @@ export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
   "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander", "nonColors", "owner", "enteredThisTurn", "toughnessOverPower",
   "unblocked", "singleTarget", "goaded", "uniqueName", "sharesCreatureType", "multicolored", "sharesColor",
+  "sharesCreatureTypeWithCommander",
 ]);
 
 /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
@@ -112,6 +113,18 @@ function assertGrammar(selector) {
   if (selector.sharesCreatureType !== undefined) compileSelector({...selector.sharesCreatureType, what: "permanent"});
   if (selector.multicolored !== undefined && selector.multicolored !== true) throw new Error("A selector's multicolored is true: two or more colors");
   if (selector.sharesColor !== undefined && selector.sharesColor !== "self") throw new Error("A selector's sharesColor is \"self\": a color of its source's");
+  if (selector.sharesCreatureTypeWithCommander !== undefined && selector.sharesCreatureTypeWithCommander !== true)
+    throw new Error("A selector's sharesCreatureTypeWithCommander is true: a creature type of a commander of yours");
+}
+
+/* AN OBJECT'S CREATURE TYPES (CR 205.3m): the subtypes of a creature or a kindred card, through the layers on the
+   battlefield and as printed elsewhere; `every` for a changeling (CR 702.73a). A planeswalker's subtypes are not. */
+function creatureTypesOf(state, id) {
+  const object = state.objects[id];
+  const types = typesOf(state, id);
+  if (!types.includes("Creature") && !types.includes("Kindred")) return {every: false, types: []};
+  const subtypes = object.zone === "battlefield" ? subtypesOf(state, id) : object.subtypes ?? [];
+  return {every: everyCreatureTypeOf(state, id) === true, types: subtypes.filter(isCreatureType)};
 }
 
 /* A player with hexproof (CR 702.11c): a permanent of theirs with the static "you have hexproof" (rules/statics.mjs). */
@@ -130,14 +143,16 @@ function canBeTargetedBy(state, id, chooser, source = null) {
 }
 
 function matchesManaValue(state, id, rule, context = {}) {
-  const cost = state.objects[id].manaCost;
+  /* A transformed permanent's is its front face's (CR 202.3b; state/index.mjs, valueCostOf). */
+  const cost = valueCostOf(state.objects[id]);
   const value = cost ? manaValue(parseManaCost(cost)) : 0;
   /* "With mana value X" (Likeness Looter): the X paid, as it is targeted and as it resolves. */
   if (rule.exactly !== undefined) return value === (rule.exactly === "X" ? context.x ?? 0 : rule.exactly);
   /* "With even mana values" (Void Winnower): zero is even. */
   if (rule.even !== undefined && (value % 2 === 0) !== rule.even) return false;
   if (rule.min !== undefined && value < rule.min) return false;
-  if (rule.max !== undefined && value > rule.max) return false;
+  /* "With mana value X or less" (Rally the Ancestors): the X paid, as `exactly` reads it. */
+  if (rule.max !== undefined && value > (rule.max === "X" ? context.x ?? 0 : rule.max)) return false;
   return true;
 }
 
@@ -268,7 +283,8 @@ export function compileSelector(selector) {
        70): no other permanent its controller controls has its name -- a copy's name is the one it copied (CR 707.2). */
     if (selector.uniqueName === true) {
       const holder = controllerOf(state, id);
-      if (state.zones.battlefield.some((other) => other !== id && state.objects[other].card === object.card && controllerOf(state, other) === holder)) return false;
+      /* Nameless -- face down (CR 708.2a) -- it shares a name with nothing. */
+      if (object.card !== null && state.zones.battlefield.some((other) => other !== id && state.objects[other].card === object.card && controllerOf(state, other) === holder)) return false;
     }
     /* "A creature card that shares a creature type with a creature you control" (Descendants' Path, batch 73): one of its
        subtypes is one of a permanent's the selector describes, itself aside -- a creature's subtypes are creature types
@@ -284,6 +300,19 @@ export function compileSelector(selector) {
         return theirs.some((t) => mine.has(t));
       };
       if (!others.some(shares)) return false;
+    }
+    /* "A creature spell that shares a creature type with your commander" (Path of Ancestry): with a commander the chooser
+       owns, wherever it is (CR 903.3) -- either of two (CR 702.124). A changeling shares every creature type with anything
+       that has one (CR 702.73a). */
+    if (selector.sharesCreatureTypeWithCommander === true) {
+      const mine = creatureTypesOf(state, id);
+      const shares = Object.values(state.objects).filter((o) => o.commander === true && o.owner === chooser).some((commander) => {
+        const theirs = creatureTypesOf(state, commander.id);
+        if (mine.every) return theirs.every || theirs.types.length > 0;
+        if (theirs.every) return mine.types.length > 0;
+        return mine.types.some((t) => theirs.types.includes(t));
+      });
+      if (!shares) return false;
     }
     /* "Whenever a goaded creature attacks" (effects/permanents.mjs goad). */
     if (selector.goaded === true && !(state.effects ?? []).some((e) => e.rule === "goaded" && e.affects.ids.includes(id))) return false;
@@ -312,6 +341,10 @@ export function compileSelector(selector) {
       const power = characteristicsOf(state, id).power ?? 0;
       if (selector.power.min !== undefined && power < selector.power.min) return false;
       if (selector.power.max !== undefined && power > selector.power.max) return false;
+      /* "With power greater than target creature's power" (Fell the Mighty): `moreThan`, the target's power, bound to a number
+         as the effect resolves (script/bind.mjs). Unbound -- a fact never read, or its target gone -- it matches nothing:
+         greater than a power nobody knows is no creature, never every one. */
+      if (selector.power.moreThan !== undefined && !(Number.isInteger(selector.power.moreThan) && power > selector.power.moreThan)) return false;
     }
     /* "Power or toughness 1 or less" (Tetsuko Umezawa): toughness the same way, through the layers. */
     if (selector.toughness) {

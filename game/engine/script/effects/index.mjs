@@ -29,14 +29,14 @@ import {bindEffect} from "../bind.mjs";
 import {countEffect} from "../amount.mjs";
 import {conditionHolds} from "../condition.mjs";
 import {controllerOf, typesOf} from "../../rules/layers.mjs";
-import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sacrificeAll, digUntil, peekAndReveal, shuffle, exileUntil, mayPlay} from "./zones.mjs";
+import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sacrificeAll, digUntil, peekAndReveal, shuffle, exileUntil, mayPlay, manifest} from "./zones.mjs";
 import {
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
   putCounter, putCounterAll, removeCounter, proliferate, damageAll, fight, poison, winGame, multiplyCounters,
 } from "./resources.mjs";
 import {
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
-  becomeCopy, earthbend, goad, immediateTrigger, investigate, phaseOut,
+  becomeCopy, earthbend, goad, immediateTrigger, investigate, phaseOut, setState,
 } from "./permanents.mjs";
 
 /**
@@ -165,6 +165,9 @@ export const EFFECTS = Object.freeze({
   investigate, mayPlay,
   /* The live-game plan of 2026-10-04: phasing out (CR 702.26; Teferi's Reproach). */
   phaseOut,
+  /* claude/cards-faces-class: a permanent's state -- a Class's level (CR 716.2a), and transforming (CR 701.27a) -- and
+     the top card of a library manifested (CR 701.40a). */
+  setState, manifest,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */

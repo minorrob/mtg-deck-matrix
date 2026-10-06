@@ -105,6 +105,9 @@ export function housePilot({seat, cards = () => null} = {}) {
       const untapped = actions.filter((a) => a.kind === "activate-mana" && !a.costChoice);
       if (best && best.x !== undefined && untapped.length && view.turnPlayerId === seat && MAIN.includes(view.phase) && view.stackSize === 0) return untapped[0];
       if (best) return best;
+      /* A manifested creature card of its own turned face up (CR 701.40b), when the pool already pays and nothing is cast. */
+      const faceUp = actions.find((a) => a.kind === "turn-face-up");
+      if (faceUp) return faceUp;
       /* Tap for mana only for a spell that would then fit: in its own main phase with the stack empty,
          a nonland card it holds (or its commander) costing no more than the mana it could have. */
       /* Never a source whose cost is a creature (Ashnod's Altar): the pilot does not trade its board for mana. */
@@ -233,6 +236,12 @@ export function housePilot({seat, cards = () => null} = {}) {
       /* What a cast taps for itself (rules/actions.mjs, castTapPlans): the first way, the least flexible sources tapped,
          keeping the most colors for later. */
       if (id.startsWith("choose-cost:") && choice.cost === "mana") return {indices: [0]};
+      /* Which mana in the pool pays (rules/actions.mjs, X8b): mana rather than life where a way spends none, else the first
+         way found -- the pool's order, its colors as they came. */
+      if (id.startsWith("choose-cost:") && choice.cost === "pool") {
+        const lifeless = options.find((o) => /\|0$/.test(o.key ?? ""));
+        return {indices: [(lifeless ?? options[0]).index]};
+      }
       /* Escape's other cards (CR 702.138a): the lands first, then the cheapest -- what it is least likely to want back. */
       if (id.startsWith("choose-cost:")) {
         const yard = new Map(zone(self, "Graveyard").map((c) => [c.cardId, c]));

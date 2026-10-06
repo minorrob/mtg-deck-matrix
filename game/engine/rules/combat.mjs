@@ -50,13 +50,13 @@
  * file marks damage and destroys nothing.
  */
 
-import {cardsIn, recordUse} from "../state/index.mjs";
+import {cardsIn, recordUse, shownName, eventCard} from "../state/index.mjs";
 import {applyReplacements, hitKey, damageChoicesPossible} from "./replacement.mjs";
 import {runFollowUps} from "../script/effects/index.mjs";
 import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf, deriving} from "./layers.mjs";
 import {givePoison, changeLife, infects, addCounters, damagePermanent} from "../script/effects/resources.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
-import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack, cantGainLife} from "./statics.mjs";
+import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack, cantGainLife, attackerCaps} from "./statics.mjs";
 import {paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits} from "./mana.mjs";
 import {recordCommanderDamage} from "./commander.mjs";
 import {damageAssignmentProblem} from "../controller.mjs";
@@ -67,10 +67,7 @@ import {
 
 const event = (kind, state, fields) => ({kind, data: {turn: state.turn, phase: state.phase, fields}});
 
-const cardRef = (state, id) => {
-  const o = state.objects[id];
-  return o ? {cardId: o.id, name: o.card, owner: o.owner, controller: o.controller, faceDown: false} : null;
-};
+const cardRef = eventCard;
 
 const isCreature = (object) => (object.types ?? []).includes("Creature");
 const has = (object, keyword) => (object.keywords ?? []).includes(keyword);
@@ -114,6 +111,15 @@ const toAttacked = (state, attack, amount) => (attack.planeswalker === undefined
 
 /* ---- declare attackers ---- */
 
+/* The refusal of too many attackers at a planeswalker that allows only so many (CR 508.1c): what is wrong, then what to do
+   instead, naming it (AGENTS.md, "refused, with instructions"). */
+const COUNTED = ["no creatures", "one creature", "two creatures", "three creatures"];
+const capWords = (state, pw, most) => {
+  const name = state.objects[pw]?.card ?? "That planeswalker";
+  return `No more than ${COUNTED[most] ?? `${most} creatures`} can attack ${name} each combat. Declare ${most === 1 ? "one creature" : `at most ${most}`} at ${name}, `
+    + "and send the rest at a player or another planeswalker, or keep them home.";
+};
+
 export const attackers = {
   /** Whether this step has anything to ask. Called by the turn structure as the step begins. */
   open(state) {
@@ -149,7 +155,8 @@ export const attackers = {
         if (owed.length && !owed.includes(defender)) continue;
         options.push({
           index: options.length,
-          label: `${state.objects[id].card} → ${state.players[defender].name}`,
+          /* A face-down creature has no name (CR 708.2a): it is said to be one. */
+          label: `${shownName(state.objects[id])} → ${state.players[defender].name}`,
           cardId: id,
           defenderId: defender,
         });
@@ -159,10 +166,15 @@ export const attackers = {
       if (goaders.length || owed.length) continue;
       for (const defender of defendersFor(state, awaiting.player)) for (const pw of planeswalkersOf(state, defender)) {
         if (cantAttack(state, id, defender, pw)) continue;
-        options.push({index: options.length, label: `${state.objects[id].card} → ${state.objects[pw].card} (${state.players[defender].name})`,
+        options.push({index: options.length, label: `${shownName(state.objects[id])} → ${state.objects[pw].card} (${state.players[defender].name})`,
           cardId: id, defenderId: defender, planeswalkerId: pw});
       }
     }
+    /* "NO MORE THAN ONE CREATURE CAN ATTACK THE ETERNAL WANDERER EACH COMBAT" (CR 508.1c; rules/statics.mjs, attackerCaps):
+       the most options that may name each such planeswalker, and what to do instead, said in the record -- so every
+       answerer is held to it by controller.mjs, as `exclusiveBy` holds them, and a pilot can keep to it. */
+    const caps = Object.entries(attackerCaps(state)).filter(([pw]) => options.some((o) => o.planeswalkerId === Number(pw)));
+    const capped = caps.length ? {by: "planeswalkerId", most: Object.fromEntries(caps), why: Object.fromEntries(caps.map(([pw, most]) => [pw, capWords(state, Number(pw), most)]))} : null;
     return {
       id: `declare-attackers:${state.turn}`,
       title: "Declare attackers",
@@ -176,6 +188,7 @@ export const attackers = {
          to it by `controller.mjs`, rather than each being trusted to work it out. The refusal in
          `resolve` stays as the last line, but nothing should reach it. */
       exclusiveBy: "cardId",
+      ...(capped ? {capped} : {}),
       options,
     };
   },
@@ -206,6 +219,9 @@ export const attackers = {
        one of the two would be answering a different question than the one that was asked. */
     if (new Set(picked.map((o) => o.cardId)).size !== picked.length)
       throw new Error("A creature can attack only once; the same creature was declared twice");
+    /* No more creatures declared at a planeswalker than it allows (CR 508.1c; attackerCaps): refused, saying what to do. */
+    for (const [pw, most] of Object.entries(attackerCaps(state)))
+      if (picked.filter((o) => o.planeswalkerId === Number(pw)).length > most) throw new Error(capWords(state, Number(pw), most));
 
     /* GOADED (CR 701.15b, 508.1d): it attacks each combat if able -- with no cost to pay for it -- so one left out attacks
        anyway: the first player after its controller in turn order it may attack for free, not its goader if it can. */
@@ -338,7 +354,7 @@ export const blockers = {
         if (!canBlockAttacker(state, id, attack.attacker)) continue;
         options.push({
           index: options.length,
-          label: `${state.objects[id].card} blocks ${state.objects[attack.attacker].card}`,
+          label: `${shownName(state.objects[id])} blocks ${shownName(state.objects[attack.attacker])}`,
           cardId: id,
           attackerId: attack.attacker,
         });
@@ -441,7 +457,7 @@ export const combatDamage = {
     const attack = state.combat.attacks.find((a) => a.attacker === awaiting.attacker);
     const options = attack.blockers.filter((id) => onBattlefield(state, id)).map((id, index) => ({
       index,
-      label: state.objects[id].card,
+      label: shownName(state.objects[id]),
       cardId: id,
       /* What counts as lethal for this source (CR 702.2c: one, from deathtouch), damage already marked included. */
       lethal: lethalNeededFrom(state, awaiting.attacker, id),
@@ -593,7 +609,9 @@ export const combatDamage = {
         state.players[hit.toPlayer].combatDamagedThisTurn = true;
         /* The damage is a loss of life (CR 120.3a), counted as one this turn (batch 78: it was not) -- or, with infect, as
            many poison counters. */
-        if (infect) events.push(...givePoison(state, hit.toPlayer, hit.amount));
+        /* Whoever controls the source puts the counters (rules/statics.mjs, playerCountersPlaced). */
+        const putter = state.objects[hit.source] ? controllerOf(state, hit.source) : null;
+        if (infect) events.push(...givePoison(state, hit.toPlayer, hit.amount, putter));
         else changeLife(state, hit.toPlayer, -hit.amount, events);
         /* CR 903.10a: combat damage a commander deals a player -- infect or not, it was dealt -- is kept against that
            commander for the rest of the game. Until 2026-10-03 nothing in combat kept it, and no game could be lost
@@ -602,9 +620,9 @@ export const combatDamage = {
         /* TOXIC (CR 702.164c, batch 77): dealt combat damage by a creature with toxic, the player also gets that many
            poison counters -- every instance it has, given ones too, added together (702.164b). */
         const toxic = abilitiesOf(state, hit.source).filter((a) => a.kind === "static" && a.rule === "toxic").reduce((n, a) => n + (a.amount ?? 0), 0);
-        if (toxic > 0) events.push(...givePoison(state, hit.toPlayer, toxic));
+        if (toxic > 0) events.push(...givePoison(state, hit.toPlayer, toxic, putter));
       } else {
-        damagePermanent(state, hit.toCard, hit.amount, events, {infect});
+        damagePermanent(state, hit.toCard, hit.amount, events, {infect, by: state.objects[hit.source] ? controllerOf(state, hit.source) : null});
         /* CR 704.5h: the mark that makes state-based actions destroy it whatever its toughness. */
         markDeathtouch(state, hit.source, hit.toCard);
         /* Combat damage, as damage to a player says (Grateful Apparition's "to a player or planeswalker", rules/trigger.mjs). */

@@ -10,8 +10,17 @@
 
 export const NONE_CHOSEN = "(none chosen)";
 
+/* Asked of the same ability many times a step (every derivation, every offer, every trigger check), so the answer is
+   kept per object: an ability is not changed in place once it is on a card -- `withChosen` makes a new one. */
+const named = new WeakMap();
+
 /** Whether an ability, effect or selector names the choice at all. */
-export const namesChosen = (value) => JSON.stringify(value ?? null).includes('"$chosen"');
+export function namesChosen(value) {
+  if (!value || typeof value !== "object") return value === "$chosen";
+  let known = named.get(value);
+  if (known === undefined) { known = JSON.stringify(value).includes('"$chosen"'); named.set(value, known); }
+  return known;
+}
 
 /** The value with every "$chosen" replaced by the choice (or NONE_CHOSEN). */
 export function withChosen(value, chosen) {

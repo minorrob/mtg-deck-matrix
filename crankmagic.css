@@ -3263,24 +3263,24 @@ button.cm-vitals{cursor:pointer}
 .cm-board-tile-flag:not(:empty){padding:0 6px;border-radius:999px;background:rgb(0 0 0 / .72)}
 .cm-mat-head .v-button{margin-left:auto}
 #matrix-v2 .cm-mat-head .v-button.compact{min-height:0;height:24px;padding:0 8px;font-size:11px}
-.cm-mat-grid{--pile-row:calc(var(--bc) * 7 / 5 + 2 * var(--pad) + 1.3em);display:grid;grid-template-columns:minmax(0,1fr) calc(var(--bc) + 2 * var(--pad)) calc(var(--bc) + 2 * var(--pad));grid-template-rows:var(--pile-row) minmax(0,1fr) var(--pile-row);gap:calc(var(--bc) * .06);padding:var(--pad) var(--pad) calc(var(--pad) + var(--mat-reserve,0px));min-height:0;min-width:0;font-size:clamp(8px,calc(var(--bc) * .1),13px)}
+.cm-mat-grid{--pile-row:calc(var(--bc) * 7 / 5 + 2 * var(--pad) + 1.3em);display:grid;grid-template-columns:minmax(0,1fr) calc(var(--bc) + 2 * var(--pad)) calc(var(--bc) + 2 * var(--pad));grid-template-rows:var(--pile-row) minmax(0,1fr) var(--pile-row);gap:calc(var(--bc) * .06);padding:var(--pad) var(--pad) calc(var(--pad) + var(--mat-reserve,0px));min-height:0;min-width:0;font-size:clamp(10px,calc(var(--bc) * .1),13px)}
 .cm-mat-zone{position:relative;min-width:0;min-height:0;border:1px solid var(--zone-line);border-radius:10px;overflow:hidden}
 .cm-sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}   /* read, not seen */
-.cm-mat-label{position:absolute;left:8px;bottom:3px;font-style:normal;font-weight:700;letter-spacing:.02em;font-size:clamp(8px,calc(var(--bc) * .11),15px);color:var(--mat-ink);background:rgb(0 0 0 / .62);padding:0 5px;border-radius:5px;pointer-events:none;white-space:nowrap}
+.cm-mat-label{position:absolute;left:8px;bottom:3px;font-style:normal;font-weight:700;letter-spacing:.02em;font-size:clamp(10px,calc(var(--bc) * .11),15px);color:var(--mat-ink);background:rgb(0 0 0 / .62);padding:0 5px;border-radius:5px;pointer-events:none;white-space:nowrap}
 .cm-board-field{grid-column:1;grid-row:1 / 3;display:flex;flex-direction:column;gap:calc(var(--bc) * .08);padding:var(--pad) var(--pad) calc(var(--pad) + 1.3em)}
 .cm-board-lands{grid-column:1;grid-row:3;display:flex;align-items:flex-start;gap:8px;padding:var(--pad) var(--pad) calc(var(--pad) + 1.3em)}
 .cm-board-lands .cm-board-cards{flex:1 1 auto;min-width:0}
 /* The mana-open and land-drop reminder, directly outside and below the Lands frame at its right (item 8): your mat
    gives it a line of its own under the Lands. */
-.cm-board-chip{grid-column:1;grid-row:4;justify-self:end;align-self:start;padding:1px 8px;border-radius:8px;background:rgb(0 0 0 / .62);font-size:clamp(9px,calc(var(--bc) * .09),12px);line-height:1.35;white-space:nowrap;color:var(--mat-ink)}
+.cm-board-chip{grid-column:1;grid-row:4;justify-self:end;align-self:start;padding:1px 8px;border-radius:8px;background:rgb(0 0 0 / .62);font-size:clamp(10px,calc(var(--bc) * .09),12px);line-height:1.35;white-space:nowrap;color:var(--mat-ink)}
 .cm-mat.is-you:not(.is-bare) .cm-mat-grid{grid-template-rows:var(--pile-row) minmax(0,1fr) var(--pile-row) auto}
 /* A bare mat has no frame to be below: the reminder keeps to the foot of the lands' row, at its right, under the cards. */
 .cm-mat.is-bare .cm-board-chip{grid-row:3;align-self:end;z-index:1}
 .cm-board-group{min-width:0}
-.cm-board-group h3{display:inline-block;margin:0 0 4px;padding:0 5px;border-radius:5px;background:rgb(0 0 0 / .62);font-size:clamp(8px,calc(var(--bc) * .08),11px);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mat-ink);white-space:nowrap}
+.cm-board-group h3{display:inline-block;margin:0 0 4px;padding:0 5px;border-radius:5px;background:rgb(0 0 0 / .62);font-size:clamp(10px,calc(var(--bc) * .08),11px);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mat-ink);white-space:nowrap}
 .cm-board-cards{display:flex;align-items:flex-end;gap:6px;min-width:0}
 .cm-board-cards>*+*{margin-left:var(--lap,0px)}
-.cm-board-empty{align-self:flex-start;margin:0;padding:0 6px;border-radius:5px;background:rgb(0 0 0 / .62);color:var(--mat-ink);font-size:clamp(9px,calc(var(--bc) * .12),13px)}
+.cm-board-empty{align-self:flex-start;margin:0;padding:0 6px;border-radius:5px;background:rgb(0 0 0 / .62);color:var(--mat-ink);font-size:clamp(10px,calc(var(--bc) * .12),13px)}
 .cm-board-pile{margin:0;display:grid;grid-template-rows:minmax(0,1fr) auto;justify-items:center;align-items:center;padding:var(--pad) var(--pad) 2px;border-radius:8px}
 .cm-board-pile[data-zone="command"]{grid-column:2;grid-row:1}
 .cm-board-pile[data-zone="exile"]{grid-column:3;grid-row:1}
@@ -3293,7 +3293,12 @@ button.cm-vitals{cursor:pointer}
 .cm-mat:not(.is-bare) .cm-board-pile{overflow:visible;padding:0;grid-template-rows:auto auto;align-content:space-between}
 .cm-mat:not(.is-bare) .cm-board-pile>.cm-bcard,.cm-mat:not(.is-bare) .cm-board-pile>.cm-bcard.is-tapped{justify-self:start;margin:-3px 0 0 -3px;z-index:1}   /* 2px past each side of the frame */
 .cm-mat:not(.is-bare) .cm-board-pile>.cm-bcard.is-empty:not(.is-back){visibility:hidden}   /* nothing there: the frame alone */
-.cm-board-pile figcaption{display:flex;justify-content:space-between;gap:4px;width:100%;line-height:1.3;padding:0 2px}
+.cm-board-pile figcaption{display:flex;justify-content:space-between;gap:4px;width:100%;line-height:1.3;padding:0 2px;font-size:clamp(10px,calc(var(--bc) * .12),13px)}
+/* R12 (the plan review): never under AGENTS.md's 10px floor, so a pile too narrow for its name and count at 10px -- the
+   Table view at 1280x720 -- shows the count alone, centered; the zone is named by where it sits, the pile's
+   aria-label and its title (crankmagic-board.js, pile()). */
+.cm-board-pile{container-type:inline-size}
+@container (max-width:79px){.cm-board-pile figcaption em{display:none}.cm-board-pile figcaption{justify-content:center}}
 .cm-board-pile figcaption em{min-width:0;font-style:normal;font-weight:700;color:var(--mat-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cm-mat:not(.is-bare) .cm-board-pile figcaption{background:rgb(0 0 0 / .62);border-radius:0 0 8px 8px;color:var(--mat-ink)}
 /* Bare (Full screen, phones): no frames and no zone names -- the zones are where the cards sit; counts stay. */
@@ -3306,7 +3311,8 @@ button.cm-vitals{cursor:pointer}
 .cm-mat.is-bare .cm-board-field{flex-direction:row;flex-wrap:wrap;align-items:flex-start;column-gap:calc(var(--bc) * .3);row-gap:calc(var(--bc) * .1)}
 .cm-board-group{flex:0 0 auto;max-width:100%}
 /* A small board has no height for two stacked groups: they sit side by side while there is room, and wrap under. */
-.cm-mat[data-fit="table"] .cm-board-field,.cm-mat[data-fit="mini"] .cm-board-field{flex-direction:row;flex-wrap:wrap;align-items:flex-start;column-gap:calc(var(--bc) * .3);row-gap:calc(var(--bc) * .1)}
+/* Focus too (the board fixture at 1280x720, 2026-10-06): stacked, a second group fell under the first and out of the field. */
+.cm-mat[data-fit="table"] .cm-board-field,.cm-mat[data-fit="focus"] .cm-board-field,.cm-mat[data-fit="mini"] .cm-board-field{flex-direction:row;flex-wrap:wrap;align-items:flex-start;column-gap:calc(var(--bc) * .3);row-gap:calc(var(--bc) * .1)}
 .cm-board-group .cm-board-cards{max-width:100%}
 /* THE CARDS: 5:7 by width; the frame names the card until the picture comes. */
 .cm-bcard{position:relative;display:block;flex:0 0 auto;width:var(--bc);aspect-ratio:5 / 7;padding:0;overflow:hidden;border-radius:6% / 4.3%;border:1px solid rgb(0 0 0 / .6);background:linear-gradient(160deg,var(--card-face),var(--card-face-edge));color:var(--table-ink);font:inherit;text-align:left;cursor:default;box-shadow:0 6px 14px -6px rgb(0 0 0 / .85);transition:transform .16s ease}

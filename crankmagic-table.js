@@ -7,7 +7,8 @@
  *
  *   #table                   a new table (Play › New table)
  *   #table?id=<id>           the table's lobby, and its game once it is on
- *   #table/<id>/<code>       an invitation: joins that seat, then shows the lobby
+ *   #table/<id>/<code>       an invitation: joins that seat, then shows the lobby (the link itself is /api/join/<id>/<code>,
+ *                            which the Worker sends back here once Access has signed the person in)
  *
  * SHUT UNTIL PLAY SHIPS. The page is only drawn where the build is marked for cloud Play
  * (<meta name="crankmagic-play" content="cloud">) and accounts are on: staging is (2026-09-29), where the Play tab
@@ -49,6 +50,13 @@
   const MAT_KEY = "cm-mat";
   const rememberedMat = () => {try {const m = localStorage.getItem(MAT_KEY); return MATS.some(([k]) => k === m) ? m : null;} catch {return null;}};
   const matApplied = new Set();   /* tables this page has already put the remembered mat on */
+  /* YOUR SEAT, BEFORE THE GAME (the readiness checks of 2026-10-04): a friend who joined, then went to Settings to
+     restore the host's backup, came back to Play and found New table, their seat apparently gone. The table a person
+     sits at, before its game, is kept on this device; New table then leads with the way back to it. Once a game is on,
+     Play goes straight to its board (item 19); once it is over, the seat is forgotten. */
+  const SEAT_KEY = "crankmagic-play-seat";
+  const seatKept = () => {try {return localStorage.getItem(SEAT_KEY);} catch {return null;}};
+  const keepSeat = (id) => {try {if (id) localStorage.setItem(SEAT_KEY, id); else localStorage.removeItem(SEAT_KEY);} catch {/* kept for this page only */}};
   let matPicked = null;
   const ORDER = [["br", 0], ["bl", 1], ["tr", 2], ["tl", 3]];   /* the quadrant corners the local table uses, seat 1 first */
   let current = null, drawnKey = null;   /* the table last drawn, so a read that changed nothing redraws nothing */
@@ -69,7 +77,8 @@
   const tableUrl = (id) => `/api/tables/${encodeURIComponent(id)}`;
   /* The board sends End game and Concede through the same door, then has the lobby read the table again. */
   C.tableApi = {api, tableUrl, refresh: (id) => refresh(id)};
-  const inviteLink = (id, code) => `${location.origin}${location.pathname}#table/${id}/${code}`;
+  /* Through the Worker (cloud/worker.mjs, /api/join): Access's sign-in keeps the path, where it would drop a fragment. */
+  const inviteLink = (id, code) => `${location.origin}/api/join/${id}/${code}`;
 
   /* A library deck as the table takes it: its name, its commander(s), and every other card by name. */
   function deckForTable(deck) {
@@ -177,6 +186,8 @@
   function draw(t) {
     current = t;
     applyRememberedMat(t);
+    if (t.seats.some((s) => s && s.you) && t.phase !== "rematch") keepSeat(t.tableId);
+    else if (seatKept() === t.tableId) keepSeat(null);
     /* While the game is on, the page is the board's (crankmagic-board.js); it keeps its own socket. */
     if (C.board && C.board.wants(t)) return C.board.show(t);
     /* The table is read every two seconds; a read that changed nothing leaves the page as it is (Rob, 2026-09-29:
@@ -262,7 +273,24 @@
       <p class="cm-muted">You sit in seat 1 as the host. Each other seat is a person you invite, an AI, or nobody; a table seats two to four.</p>
       <form id="cm-table-new"><label>Your name at the table<input name="hostName" maxlength="60" required></label>${row(2)}${row(3)}${row(4)}
       <div class="cm-actions">${b("Create the table", "table-create", {}, true)}</div></form></section>`;
+    const kept = seatKept();
+    if (kept) waitingSeat(kept);
   }
+  /* The kept seat, if it is still yours and its game not over: said first, above New table. */
+  async function waitingSeat(id) {
+    let table;
+    try {({table} = await api("GET", tableUrl(id)));}
+    catch (error) {if (error.status === 403 || error.status === 404 || error.status === 410) keepSeat(null); return;}
+    const form = document.getElementById("cm-table-new");
+    if (!form || document.getElementById("cm-table-back")) return;
+    if (!table.seats.some((s) => s && s.you) || table.phase === "rematch") {keepSeat(null); return;}
+    const host = table.seats[0];   /* the host sits in seat 1 */
+    const whose = table.youAreHost ? "your table" : host && host.name ? `${e(host.name)}'s table` : "the host's table";
+    form.closest(".cm-table-new").insertAdjacentHTML("beforebegin", `<section class="v-panel cm-table-back" id="cm-table-back"><h2>Your seat is waiting</h2>
+      <p>You have a seat at ${whose}${table.phase === "playing" ? ", and its game is on" : ", and its game has not started yet"}.</p>
+      <div class="cm-actions">${b("Back to your table", "table-back", {table: table.tableId}, true)}</div></section>`);
+  }
+  actions["table-back"] = (el) => C.go("table", {id: el.dataset.table});
   actions["table-create"] = async () => {
     const form = document.getElementById("cm-table-new");
     const v = Object.fromEntries(new FormData(form));
@@ -308,8 +336,14 @@
       : "";
     const list = decks.length || test
       ? `<ul class="cm-table-decks">${test}${decks.map((d) => `<li><button type="button" class="cm-table-deck" data-action="table-use-deck" data-seat="${seatId}" data-deck="${e(d.id)}"><strong>${e(d.name)}</strong><span class="cm-muted">${e((d.commanders || []).map((c) => (C.card(c) || {}).name).filter(Boolean).join(" + "))}</span><span class="cm-muted cm-table-deck-known" data-known-for="${e(d.id)}"></span></button></li>`).join("")}</ul>`
-      : `<p class="cm-muted">Your library has no deck with a commander yet.</p>`;
-    C.modal(`Choose a deck · Seat ${seatId + 1}`, `${list}<div id="cm-table-deck-error" class="cm-note cm-warning" hidden></div><div class="cm-form-footer">${b("Cancel", "close")}</div>`);
+      : "";
+    /* AN EMPTY LIBRARY says how to fill it (the readiness checks of 2026-10-04: a friend new to CrankMagic, invited
+       before restoring the host's backup, saw only the test deck). A restore keeps this page, so the seat is still
+       theirs when it is done. */
+    const empty = decks.length ? "" : `<div class="cm-table-deck-empty"><p>Your library has no deck with a commander yet.</p>
+      <p class="cm-muted">If the host sent you a CrankMagic backup file, restore it here, then choose a deck: your seat stays yours while you do. Or build or import a deck in Decks with New deck, and open your invitation link again.</p>
+      <div class="cm-actions">${b("Restore from a backup file", "restore", {}, true)}</div></div>`;
+    C.modal(`Choose a deck · Seat ${seatId + 1}`, `${list}${empty}<div id="cm-table-deck-error" class="cm-note cm-warning" hidden></div><div class="cm-form-footer">${b("Cancel", "close")}</div>`);
     knownCounts(decks);
   };
   /* HOW MUCH OF EACH DECK THE TABLE CAN PLAY (M5; the plan review's A2): the table is asked which of the decks' card

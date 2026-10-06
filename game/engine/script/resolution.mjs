@@ -25,6 +25,7 @@ import {damageQuestion} from "./effects/resources.mjs";
 import {bindEffect} from "./bind.mjs";
 import {countEffect} from "./amount.mjs";
 import {conditionHolds} from "./condition.mjs";
+import {proliferateTimes} from "../rules/statics.mjs";
 
 /** Whether a resolution is paused, waiting for somebody. */
 export const resolutionPending = (state) => Boolean(state.resolving);
@@ -45,7 +46,9 @@ export function beginResolution(state, effects, context = {}, rng = null) {
       /* What the ability's permanent chose as it entered ("the chosen type", script/chosen.mjs). */
       ...(context.chosen !== undefined ? {chosen: context.chosen} : {}),
       /* How a spell was cast, for "if this spell was cast from a graveyard" (script/condition.mjs, `cast`). */
-      ...(context.cast ? {cast: context.cast} : {})},
+      ...(context.cast ? {cast: context.cast} : {}),
+      /* How many times its source had transformed as the ability went on the stack (CR 701.27f; rules/stack.mjs). */
+      ...(context.sourceTransforms !== undefined ? {sourceTransforms: context.sourceTransforms} : {})},
     events: [],
   };
   return runResolution(state, rng);
@@ -114,6 +117,17 @@ export function runResolution(state, rng = null) {
       resolving.queue.shift();
       if (effect.about === undefined) delete resolving.context.about; else resolving.context.about = effect.about;
       continue;
+    }
+    /* "IF YOU WOULD PROLIFERATE, PROLIFERATE TWICE INSTEAD" (Tekuthal, Inquiry Dominus; CR 614.1a, 701.34): replaced as it
+       reaches the head, before anything is chosen, by as many proliferates as the replacements make (rules/statics.mjs,
+       proliferateTimes) -- each its own choice of permanents and players, one after another (CR 701.34a). */
+    if (effect?.effect === "proliferate" && effect.replaced !== true) {
+      const times = proliferateTimes(state, resolving.context.controller);
+      if (times > 1) {
+        resolving.queue.shift();
+        resolving.queue.unshift(...Array.from({length: times}, () => ({...structuredClone(effect), replaced: true})));
+        continue;
+      }
     }
     if (effect?.effect === "empowerJace") {
       const jace = {what: "permanent", token: true, subtypes: ["Jace"], controller: "you"};
@@ -194,7 +208,10 @@ export function answerResolution(state, indices, extra = {}, rng = null) {
   state.awaiting = null;
   if (!state.resolving) return {status: "done", events};
   /* What the answer moved, remembered for the effects after it ("untap that land"). */
-  if (!Array.isArray(outcome) && Array.isArray(outcome.remembered)) state.resolving.context.remembered = outcome.remembered;
+  /* Beside what was remembered before, when the answer says so (`rememberAdd`): "for each player, choose a creature that
+     player controls" remembers each in turn (The Eternal Wanderer). */
+  if (!Array.isArray(outcome) && Array.isArray(outcome.remembered)) state.resolving.context.remembered = outcome.rememberAdd === true
+    ? [...(state.resolving.context.remembered ?? []), ...outcome.remembered] : outcome.remembered;
   /* "Choose a creature type": the type, for the effects after it ("$chosen", script/bind.mjs). */
   if (!Array.isArray(outcome) && typeof outcome.chosen === "string") state.resolving.context.chosen = outcome.chosen;
 

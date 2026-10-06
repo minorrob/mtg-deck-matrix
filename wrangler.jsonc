@@ -28,7 +28,8 @@
   "vars": {
     "ACCESS_TEAM_DOMAIN": "crankmagic.cloudflareaccess.com",
     "ACCESS_AUD": "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5",
-    "PLAYTEST_TABLES": "on"
+    "PLAYTEST_TABLES": "on",
+    "SERVICE_SEATS": "on"
   },
   "ratelimits": [
     {
