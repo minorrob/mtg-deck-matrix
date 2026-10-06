@@ -12,8 +12,11 @@
  *   GET  /api/tables/:id/connect             WebSocket to your seat, once the game is on
  *   GET  /api/tables/:id/record?match=<id>   a finished game's record (M8b; what it holds is the table's call)
  *
- * A table's invitation link is `https://<site>/#table/<id>/<code>`: the code rides in the fragment, which a
- * browser never sends, so it is in no server's logs until the invited person posts it to /join.
+ * A table's invitation link is `https://<site>/api/join/<id>/<code>` (cloud/worker.mjs): behind Access on every site,
+ * it survives Access's sign-in, which keeps a path and drops a fragment, and comes back to the app at
+ * `#table/<id>/<code>`, the form the app joins from (and an older link still opens). The code reaches the Worker in
+ * that path, as the sign-in's `to` already carried it, and is kept by nothing; it seats only someone Access admits, for
+ * a day, once, and a new link withdraws it.
  */
 const TABLE_ID = /^[a-z0-9]{8,40}$/, MATCH_ID = /^[a-z0-9]{8,40}g[1-9][0-9]{0,5}$/;
 const ACTIONS = new Set(["invite", "uninvite", "join", "deck", "known", "ready", "mat", "rules", "start", "cancel", "end", "concede"]);

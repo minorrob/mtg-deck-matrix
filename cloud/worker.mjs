@@ -6,6 +6,7 @@
  * to the person rather than settled here.
  *
  *   GET  /api/auth/login?to=#…     after Access has signed the person in, back to the app (a same-site path only)
+ *   GET  /api/join/:table/:code    an invitation's link: back to the app at #table/<table>/<code>, after Access's sign-in
  *   GET  /api/me                   who is signed in, and the version their devices converge on
  *   GET  /api/library              the head: {head} (null before a first save)
  *   PUT  /api/library              save {parent, revision, device, checksum, body, force?} -> 200 {head} | 409 {head}
@@ -24,6 +25,13 @@ import {createLibrary, Conflict, Invalid, LIMITS} from "./library.mjs";
 import {archidekt, ImportError} from "./import.mjs";
 import {createAi, settings, explain, Closed} from "./ai.mjs";
 import {tables} from "./tables.mjs";
+
+/** An invitation's link, `/api/join/<table>/<code>`: where it sends the person -- the app, at the seat's fragment -- or
+    null when the path is not one (the suites' browsers ask this too, behind their stand-in for Access). */
+export function joinLocation(url) {
+  const link = /^\/api\/join\/([a-z0-9]{8,40})\/([A-Za-z0-9_-]{20,100})$/.exec(url.pathname);
+  return link ? `${url.origin}/#table/${link[1]}/${link[2]}` : null;
+}
 
 const HEADERS = {
   "content-type": "application/json; charset=utf-8",
@@ -108,6 +116,13 @@ export async function handle(request, env, deps = {}) {
       const fragment = /^#[\w\-?=&%.:+~/]{0,200}$/.test(to) ? to : "";
       return new Response(null, {status: 302, headers: {location: `${url.origin}/${fragment}`, "cache-control": "no-store"}});
     }
+    /* AN INVITATION (cloud/tables.mjs). Access's sign-in keeps a link's path and drops its fragment, so a friend signed
+       out who opened `#table/<id>/<code>` at staging, where Access guards the whole site, landed on the home page with
+       the invitation gone (the readiness checks of 2026-10-04, R5). The link is this path instead, behind Access on
+       every site, and comes back to the fragment once the person is in. The code reaches this Worker, as the sign-in's
+       `to` already carried it; nothing here keeps it, and it seats only someone Access admits. */
+    const joined = method === "GET" ? joinLocation(url) : null;
+    if (joined) return new Response(null, {status: 302, headers: {location: joined, "cache-control": "no-store", "referrer-policy": "no-referrer"}});
     if (method === "GET" && path === "/api/me") return reply(200, {email: person.email, since: person.createdAt, head: await library.head(person.id)});
     if (method === "GET" && path === "/api/library") return reply(200, {head: await library.head(person.id)});
     if (method === "PUT" && path === "/api/library") {

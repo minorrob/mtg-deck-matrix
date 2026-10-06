@@ -30,6 +30,7 @@ import {basicCards} from "../game/room/room.mjs";
 import {GameTable} from "../cloud/game-room.mjs";
 import {MATS} from "../game/room/table.mjs";
 import {build, worktreeSource} from "../tools/release-pages.mjs";
+import {joinLocation} from "../cloud/worker.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 let checks = 0;
@@ -126,12 +127,14 @@ async function answer(route, email) {
 const STAGING_PAGE = build({source: worktreeSource(), profileName: "cloud-staging"}).built.get("index.html").toString("utf8");
 const html = (play) => play ? STAGING_PAGE : readFileSync(path.join(ROOT, "index.html"), "utf8").replace("</head>", `<meta name="crankmagic-accounts" content="on"></head>`);
 const {browser, base, stub, close} = await openBrowser({name: "table-lobby", flag: "GEOMETRY_REQUIRED"});
-async function person(email, viewport, {play = true} = {}) {
+async function person(email, viewport, {play = true, library = true} = {}) {
   const context = await browser.newContext({viewport, serviceWorkers: "block"});
   const page = await context.newPage();
   if (stub) await stub(page);
-  await loadLiveState(page, base);   /* a real library to bring decks from, restored before the account is on */
+  if (library) await loadLiveState(page, base);   /* a real library to bring decks from, restored before the account is on */
   await page.route(`${base}/index.html*`, (r) => r.fulfill({contentType: "text/html; charset=utf-8", body: html(play)}));
+  /* The app at "/", where an invitation's link comes back to (cloud/worker.mjs, joinLocation). */
+  await page.route((url) => url.origin === base && url.pathname === "/", (r) => r.fulfill({contentType: "text/html; charset=utf-8", body: html(play)}));
   await page.route(`${base}/api/me`, (r) => r.fulfill({json: {email}}));
   await page.route(`${base}/api/library**`, (r) => r.request().method() === "GET" ? r.fulfill({json: {head: null}})
     : r.fulfill({json: {head: {id: "00000000-0000-4000-8000-000000000000", revision: 1, checksum: "x", device: "test", createdAt: new Date().toISOString()}}}));
@@ -319,7 +322,7 @@ try {
   await rob.page.click(".cm-lobby-seat[data-seat='1'] [data-action=table-invite]");
   await rob.page.locator("#cm-table-link").waitFor();
   const link = await rob.page.inputValue("#cm-table-link");
-  ok(/#table\/table\d+\/[A-Za-z0-9_-]{40,}$/.test(link), `the invite dialog gives the seat's link: ${link.replace(/\/[^/]+$/, "/…")}`);
+  ok(/^https?:\/\/[^/]+\/api\/join\/table\d+\/[A-Za-z0-9_-]{40,}$/.test(link), `the invite dialog gives the seat's link, a path Access's sign-in keeps (a fragment it drops): ${link.replace(/\/[^/]+$/, "/…")}`);
   ok(await rob.page.locator("#cm-dialog .cm-qr-code svg").count() === 1, "a QR of it, to scan across the room");
   ok((await rob.page.getAttribute("#cm-table-mail", "href")).includes(encodeURIComponent(link)), "and an email that carries it");
   await shot(rob.page, "invite-1400");
@@ -328,16 +331,28 @@ try {
   ok(true, "the seat now says the invitation is out");
 
   /* JOIN: Maya opens the link on her phone. A made-up code first. */
-  const id = /#table\/(table\d+)\//.exec(link)[1];
+  const id = /\/api\/join\/(table\d+)\//.exec(link)[1];
   await maya.page.goto(`${base}/index.html#table/${id}/${"x".repeat(43)}`);
   await maya.page.locator("#cm-table-refused").waitFor({timeout: 30000});
   ok(/no longer works/.test(await pageText(maya.page, "#cm-table-refused")) && /Ask the host for a new link/.test(await pageText(maya.page, "#cm-table-refused")), "a made-up or spent link is refused, and says to ask the host for a new one");
-  await maya.page.goto(link.replace(/^https?:\/\/[^/]+/, base).replace("/index.html", "/index.html"));
+  /* Where the link takes her: the Worker's own answer to it (joinLocation). Playwright does not route the request a
+     redirect makes, so the suite goes where the Worker says; play-e2e follows the real redirect under wrangler dev. */
+  await maya.page.goto(joinLocation(new URL(link.replace(/^https?:\/\/[^/]+/, base))));
   await maya.page.waitForFunction(() => /#table\?id=/.test(location.hash), null, {timeout: 30000});
   await maya.page.locator(".cm-cloud-table .cm-lobby-seat").first().waitFor({timeout: 30000});
   eq((await maya.page.locator(".cm-lobby-seat[data-seat='1'] h3").textContent()).trim(), "Seat 2 · You", "Maya lands on her seat, as herself");
   ok(!/\d+ cards/.test(await pageText(maya.page, ".cm-lobby-seat[data-seat='0']")), "she sees Rob's deck by name, never its cards");
   ok(await maya.page.getAttribute(".cm-lobby-seat[data-seat='0']", "data-mat") === "forge" && !(await maya.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-mat]").count()) && await maya.page.locator(".cm-lobby-seat[data-seat='1'] [data-action=table-mat]").count() === 1, "she sees Rob's mat, and chooses only her own");
+  /* PLAY, BEFORE THE GAME, LEADS BACK TO HER SEAT (the readiness checks of 2026-10-04): she leaves for her library and
+     comes back by Play. New table says her seat is waiting, and takes her to it. */
+  await maya.page.goto(`${base}/index.html#table`);
+  await maya.page.locator("#cm-table-back").waitFor({timeout: 30000});
+  ok(/Your seat is waiting/.test(await pageText(maya.page, "#cm-table-back")) && /Rob's table, and its game has not started yet/.test(await pageText(maya.page, "#cm-table-back")) && await maya.page.locator("#cm-table-new").count() === 1,
+    "Play, before the game, says her seat at Rob's table is waiting, above New table");
+  await maya.page.click("#cm-table-back [data-action=table-back]");
+  await maya.page.waitForFunction(() => /#table\?id=/.test(location.hash), null, {timeout: 30000});
+  await maya.page.locator(".cm-cloud-table .cm-lobby-seat").first().waitFor({timeout: 30000});
+  eq((await maya.page.locator(".cm-lobby-seat[data-seat='1'] h3").textContent()).trim(), "Seat 2 · You", "and Back to your table puts her in it again");
   const sideways = await maya.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   eq(sideways, 0, "at 390 the lobby does not scroll sideways");
   await maya.page.click(".cm-lobby-seat[data-seat='1'] [data-action=table-deck]");
@@ -383,7 +398,30 @@ try {
   await waitText(maya.page, "#cm-table-game", /The game is over/);
   await waitText(rob.page, "#cm-table-game", /The game is over/);
   ok(/record is kept/.test(await pageText(rob.page, "#cm-table-game")), "once it is over, the lobby says so, and that its record is kept");
+  eq(await maya.page.evaluate(() => localStorage.getItem("crankmagic-play-seat")), null, "and her device forgets the seat: Play no longer leads back to a game that is over");
   await shot(maya.page, "over-390");
+
+  /* AN EMPTY LIBRARY (the readiness checks of 2026-10-04): a person new to CrankMagic, at a table before restoring any
+     decks, is told how to bring one, and Restore opens from the dialog itself, so the seat stays theirs. */
+  {
+    const nina = await person("nina@example.com", {width: 1400, height: 900}, {library: false});
+    await nina.page.goto(`${base}/index.html#table`);
+    const form = nina.page.locator("#cm-table-new");
+    await form.waitFor({timeout: 30000});
+    await form.locator("input[name=hostName]").fill("Nina");
+    await form.locator("select[name=kind2]").selectOption("ai");
+    await nina.page.click("[data-action=table-create]");
+    await nina.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]").click();
+    await nina.page.locator("#cm-dialog .cm-table-deck-empty").waitFor({timeout: 15000});
+    const said = await pageText(nina.page, "#cm-dialog .cm-table-deck-empty");
+    ok(/no deck with a commander yet/.test(said) && /restore it here/.test(said) && /your seat stays yours/.test(said) && /New deck/.test(said),
+      "an empty library's deck dialog says how to bring a deck: restore the host's backup here, or New deck");
+    await nina.page.click("#cm-dialog .cm-table-deck-empty [data-action=restore]");
+    await nina.page.locator("#cm-dialog input[type=file][name=file]").waitFor({timeout: 15000});
+    ok(/Restore a full backup/.test(await pageText(nina.page, "#cm-dialog")), "and Restore from a backup file opens the restore, on the table's page");
+    ok(/#table\?id=/.test(await nina.page.evaluate(() => location.hash)), "which is still her table");
+    await nina.context.close();
+  }
 
   /* NOT SIGNED IN: someone opening a table's link without an account is told it is invite-only, and where to go if
      their address is not on the list; that page says what to do, even on a phone. */

@@ -54,11 +54,13 @@ squash whenever the commits carry their own reasoning and proof. Rob set this on
 agent's call unless the PR is superseded by one the agent opened and the report names it.
 
 **CI is one run per PR, and the local gate stands in when Actions cannot run.** The repository
-is private on GitHub's free plan with a $0 budget, so Actions minutes are a monthly allowance,
-and when it is spent no job starts until the next billing cycle. So: work on a PR as a draft
-(drafts are not run), mark it ready when it is finished, and merge on one green run of the
-head. When Actions cannot run it (the job fails within seconds with no log, on `main` as
-well), the PR merges on `tools/local-ci.sh` instead: the workflow's own steps and toolchain
+is public since 2026-10-06 (Rob's choice, D7 of `docs/review-response-2026-10-05.md`), so Actions
+runs on GitHub's runners without a minutes allowance; while it was private on the free plan with a
+$0 budget, a spent allowance stopped every job until the next billing cycle. So: work on a PR as a
+draft (drafts are not run), mark it ready when it is finished, and merge on one green run of the
+head. Being public also means a self-hosted runner is never attached to this repository: a fork's
+pull request could run on it. When Actions cannot run it (the job fails within seconds with no
+log, on `main` as well), the PR merges on `tools/local-ci.sh` instead: the workflow's own steps and toolchain
 on a clean checkout of the exact head (merged with `main` if `main` has moved), run twice,
 with a scan for secrets and personal addresses in what the PR adds. Its closing PASS block
 goes on the PR as a comment before the merge, and the merge report says the merge was made
