@@ -13,7 +13,10 @@
  *   4. End game for everyone; the game-over panel offers Download the full record, and the file is the whole
  *      game, which the M8a replayer plays again to the same end
  *   5. a real deck's cards are refused by name, as the engine cannot play them yet
- *   6. at a second table the host concedes and the two AI seats play on, slice by slice, on the object's alarm
+ *   6. two people and an AI from a library backup: each restores it in Settings; the host invites; the newcomer, a
+ *      second Access identity, joins by the link, sees which decks the table can play, and takes one; both play the
+ *      first turns; a reload mid-game returns to the board; End game; the record replays to the same end
+ *   7. at a third table the host concedes and the two AI seats play on, slice by slice, on the object's alarm
  *
  *   node tests/uat/play-e2e.mjs      (WRANGLER=<wrangler.js>, UAT_PLAYWRIGHT, UAT_CHROME, UAT_SHOTS as for the other walks)
  */
@@ -193,18 +196,192 @@ try {
   ok(!JSON.stringify(rec).includes(EMAIL), "no one's address is in it");
   await shot(page, "record-1400");
 
-  /* 5. THE AI SEATS PLAY ON IN SLICES, ON THE OBJECT'S ALARM (the review of 2026-10-05; cloud/game-room.mjs
+  /* 5. TWO PEOPLE AND AN AI, FROM A LIBRARY BACKUP (the live game of 2026-10-04): the way a host and an invited
+     newcomer actually arrive. Each restores a library backup in Settings -- one built here with the app's own model,
+     of cards the engine defines, so no one's library is in the repository. The host makes a table with a person's
+     seat and an AI's and invites; the newcomer, a second Access identity with its own origin and library, joins by
+     the link, sees which decks the table can play, and takes one. Both boards open and both play the first turns; the
+     newcomer reloads mid-game and is back on their board with no seat away; the host ends the game; the record
+     replays to the same end with the table's own cards. */
+  {
+    const M = require("../../collection-model.js"), E = require("../../collection-exchange.js"), C = require("../../card-catalog.js");
+    const {tableCards} = await import("../../cloud/game-room.mjs");
+    const playable = (name) => {try {return Boolean(tableCards(name));} catch {return false;}};
+    const oracle = JSON.parse(readFileSync(new URL("../../data/engine/oracle.json", import.meta.url), "utf8")).cards;
+    const fact = (name) => {
+      const o = oracle.find((x) => x.name === name);
+      return C.normalize({name, typeLine: o.type, manaCost: o.mana ?? "", oracleText: o.text ?? "", colors: o.colors ?? [], colorIdentity: o.ci ?? [], legalities: {commander: "legal"}, price: null});
+    };
+    /* One red card the engine has yet to define, for the deck that is not whole: the first of these still waiting. */
+    const gap = ["Shared Animosity", "Purphoros, God of the Forge", "Wheel of Fortune", "Chaos Warp"].find((name) => !playable(name));
+    ok(Boolean(gap), `a red card the table cannot play yet, for the deck that is not whole (${gap})`);
+    const card = Object.fromEntries(["Krenko, Mob Boss", "Mountain", "Ezuri, Renegade Leader", "Forest", gap].map((name) => [name, fact(name)]));
+    let library = M.empty(), serial = 0;
+    const run = (type, args) => {library = M.apply(library, {type, id: `e2e-${++serial}`, at: "2026-10-04T12:00:00Z", ...args}).state;};
+    run("cards", {cards: Object.values(card)});
+    const deck = (deckId, name, commander, rest) => run("createDeck", {deckId, name, commanders: [card[commander].id],
+      slots: [[commander, 1], ...rest].map(([cardName, quantity], k) => ({id: `${deckId}-${k}`, cardId: card[cardName].id, quantity}))});
+    deck("goblins", "Goblins (e2e)", "Krenko, Mob Boss", [["Mountain", 99]]);
+    deck("elves", "Elves (e2e)", "Ezuri, Renegade Leader", [["Forest", 99]]);
+    deck("gap", "Goblins with a gap (e2e)", "Krenko, Mob Boss", [["Mountain", 98], [gap, 1]]);
+    const backupFile = path.join(dir, "e2e-library.json");
+    writeFileSync(backupFile, JSON.stringify(await E.backup({state: library, history: []})));
+    const counts = M.counters(library);
+    const review = `${library.decks.length} decks · ${counts.owned} owned · ${counts.ordered} ordered · ${counts.toBuy} to buy · 0 history records`;
+
+    /* The newcomer: their own Access token, through their own stand-in, so their own origin and library. */
+    const NEWCOMER = "newcomer@e2e.test", NPORT = PORT + 2, NBASE = `http://crankmagic.localhost:${NPORT}`;
+    const tokenFor = async (email) => {
+      const now = Math.floor(Date.now() / 1000), head = b64({alg: "RS256", kid: "e2e"}), body = b64({aud: [AUD], iss: `https://${TEAM}`, email, iat: now, exp: now + 7200});
+      return `${head}.${body}.${Buffer.from(await crypto.subtle.sign("RSASSA-PKCS1-v1_5", privateKey, new TextEncoder().encode(`${head}.${body}`))).toString("base64url")}`;
+    };
+    const second = http.createServer(async (req, res) => {
+      const upstream = http.request({host: "127.0.0.1", port: WORKER_PORT, method: req.method, path: req.url, headers: {...req.headers, "cf-access-jwt-assertion": await tokenFor(NEWCOMER)}}, (r) => {res.writeHead(r.statusCode, r.headers); r.pipe(res);});
+      upstream.on("error", () => {try {res.writeHead(502); res.end();} catch {}});
+      req.pipe(upstream);
+    });
+    second.on("upgrade", async (req, socket, head) => {
+      const upstream = net.connect(WORKER_PORT, "127.0.0.1", async () => {
+        const headers = {...req.headers, "cf-access-jwt-assertion": await tokenFor(NEWCOMER)};
+        upstream.write(`${req.method} ${req.url} HTTP/1.1\r\n${Object.entries(headers).map(([k, v]) => `${k}: ${v}`).join("\r\n")}\r\n\r\n`);
+        if (head && head.length) upstream.write(head);
+        upstream.pipe(socket); socket.pipe(upstream);
+      });
+      upstream.on("error", () => socket.destroy()); socket.on("error", () => upstream.destroy());
+    });
+    await new Promise((r) => second.listen(NPORT, "127.0.0.1", r));
+    try {
+      const newcomerContext = await browser.newContext({viewport: {width: 1400, height: 900}});
+      const newcomer = await newcomerContext.newPage();
+      newcomer.on("pageerror", (e) => errors.push(`newcomer: ${e.message}`));
+      await stubNetwork(newcomer, []);
+      const restore = async (p, base) => {
+        await p.goto("about:blank");
+        await p.goto(`${base}/index.html#settings`);
+        await p.locator("#cm-settings-h-data").waitFor({timeout: 30000});
+        await p.getByRole("button", {name: "Restore from a backup file"}).click();
+        await p.locator("#cm-dialog input[name=file]").setInputFiles(backupFile);
+        await p.locator("#cm-dialog").getByRole("button", {name: "Validate backup"}).click();
+        const said = p.locator("#cm-dialog").getByText(/\d+ decks · \d+ owned/).first();
+        await said.waitFor({timeout: 30000});
+        const text = (await said.textContent()).trim();
+        await p.locator("#cm-dialog input[name=confirm]").fill("RESTORE");
+        await p.locator("#cm-dialog").getByRole("button", {name: "Restore reviewed backup"}).click();
+        await p.getByText("Backup restored after checksum verification.").first().waitFor({timeout: 30000});
+        return text;
+      };
+      eq([await restore(page, BASE), await restore(newcomer, NBASE)], [review, review], `the host and the newcomer each restore the library in Settings, and its review reads "${review}"`);
+
+      /* The host's table: a person's seat and an AI's. */
+      await page.goto(`${BASE}/index.html#table`);
+      const form = page.locator("#cm-table-new");
+      await form.waitFor({timeout: 30000});
+      await form.locator("input[name=hostName]").fill("Rob");
+      await form.locator("select[name=kind2]").selectOption("human");
+      await form.locator("input[name=name2]").fill("Newcomer");
+      await form.locator("select[name=kind3]").selectOption("ai");
+      await form.locator("input[name=name3]").fill("Bot");
+      await page.locator("[data-action=table-create]").click();
+      await page.locator(".cm-cloud-table .cm-lobby-seat").nth(2).waitFor({timeout: 30000});
+      const tableId = (/id=([^&]+)/.exec(new URL(page.url()).hash) || [])[1], turl = `/api/tables/${tableId}`;
+      await page.locator(`.cm-lobby-seat[data-seat="1"]`).getByRole("button", {name: /^Invite$/}).click();
+      const input = page.locator("#cm-dialog[open] #cm-table-link");
+      await until("the invitation link", async () => Boolean(await input.inputValue().catch(() => "")), 15000);
+      const link = new URL(await input.inputValue());
+      ok(new RegExp(`^#table/${tableId}/[A-Za-z0-9_-]{20,100}$`).test(link.hash), "the host invites seat 2 and gets its link");
+      await page.locator("#cm-dialog").getByRole("button", {name: "Done"}).click();
+
+      /* The newcomer joins by the link and chooses a deck the table can play. */
+      await newcomer.goto(`${NBASE}${link.pathname}${link.hash}`);
+      await newcomer.locator(".cm-cloud-table .cm-lobby-seat").nth(2).waitFor({timeout: 30000});
+      const seen = await newcomer.evaluate(async (u) => (await (await fetch(u, {cache: "no-store"})).json()).table.seats.map((s) => [s.you, s.occupied]), turl);
+      eq(seen.slice(0, 2), [[false, true], [true, true]], "the newcomer opens the link, signed in as themself, and sits in seat 2");
+      await newcomer.locator(`.cm-lobby-seat[data-seat="1"]`).getByRole("button", {name: /^Choose a deck$/}).click();
+      const rows = newcomer.locator("#cm-dialog .cm-table-deck[data-action=table-use-deck]");
+      await rows.first().waitFor({timeout: 15000});
+      await until("the dialog's known counts", async () => newcomer.locator("#cm-dialog [data-known-for]").evaluateAll((els) => els.length > 0 && els.every((el) => el.textContent.trim())), 30000);
+      const known = Object.fromEntries(await rows.evaluateAll((els) => els.map((el) => [el.querySelector("strong").textContent.trim(), el.querySelector("[data-known-for]").textContent.trim()])));
+      eq([known["Elves (e2e)"], known["Goblins with a gap (e2e)"]], ["All 100 cards known", "99 of 100 known · 1 to learn"], "the deck dialog says which decks the table can play, before one is chosen");
+      await rows.filter({has: newcomer.locator("strong").getByText("Elves (e2e)", {exact: true})}).click();
+      await newcomer.locator(`.cm-lobby-seat[data-seat="1"] .cm-seat-line`, {hasText: "Elves (e2e)"}).waitFor({timeout: 15000});
+      await newcomer.locator(`.cm-lobby-seat[data-seat="1"]`).getByRole("button", {name: /^Ready$/}).click();
+
+      /* The host seats their deck and the AI's, and starts. */
+      await page.goto(`${BASE}/index.html#table?id=${tableId}`);
+      await page.locator(".cm-cloud-table .cm-lobby-seat").nth(2).waitFor({timeout: 30000});
+      for (const [seat, button] of [[0, /^Choose a deck$/], [2, /^Choose its deck$/]]) {
+        await page.locator(`.cm-lobby-seat[data-seat="${seat}"]`).getByRole("button", {name: button}).click();
+        await page.locator("#cm-dialog .cm-table-deck[data-action=table-use-deck]").filter({has: page.locator("strong").getByText("Goblins (e2e)", {exact: true})}).click();
+        await page.locator(`.cm-lobby-seat[data-seat="${seat}"] .cm-seat-line`, {hasText: "Goblins (e2e)"}).waitFor({timeout: 15000});
+      }
+      await page.locator(`.cm-lobby-seat[data-seat="0"]`).getByRole("button", {name: /^Ready$/}).click();
+      await until("everyone ready", async () => (await api("GET", turl)).json?.table?.blockers?.length === 0, 30000);
+      await page.locator("[data-action=table-start]").click();
+      await until("the game to start", async () => (await api("GET", turl)).json?.table?.phase === "playing", 60000);
+      for (const [p, base] of [[page, BASE], [newcomer, NBASE]]) {
+        await p.goto(`${base}/index.html#table?id=${tableId}`);
+        await p.locator("#cm-board .cm-board-strip").waitFor({timeout: 30000});
+      }
+      ok(true, "the host starts; both people's boards open on the game");
+
+      /* Both play the first turns: keep, draw, pass, and the first answer to anything else. */
+      const act = async (p) => {
+        const went = p.locator("[data-action=board-went-close]");
+        if (await went.count()) {await went.first().click(); return;}
+        const d = p.locator("#cm-board-decision:not(.is-also)").first();
+        if (await d.count()) {
+          assert.ok(!/cannot answer/.test((await d.textContent()) || ""), "the board can answer what it is asked");
+          const confirm = d.locator("[data-action=board-confirm]"), opts = d.locator("[data-action=board-option]");
+          if (await confirm.count()) {
+            for (let i = 0; i < await opts.count() && !(await confirm.isEnabled()); i++) await opts.nth(i).click();
+            if (await confirm.isEnabled()) await confirm.click();
+          } else if (await opts.count()) await opts.first().click();
+          return;
+        }
+        for (const action of ["board-draw", "board-pass"]) {
+          const b = p.locator(`[data-action=${action}]`).first();
+          if (await b.count() && await b.isEnabled()) {await b.click(); return;}
+        }
+      };
+      const turnOf = async (p) => Number((/Turn (\d+)/.exec((await p.locator(".cm-board-turn").first().textContent().catch(() => "")) || "") || [0, 0])[1]);
+      await until("both people to reach turn 3", async () => {await act(page); await act(newcomer); return Math.min(await turnOf(page), await turnOf(newcomer)) >= 3;}, 180000);
+      ok(true, `both people play through their boards to turn ${await turnOf(page)}`);
+
+      /* A reload mid-game: back on the board, and no seat away. */
+      await newcomer.reload();
+      await newcomer.locator("#cm-board .cm-board-strip").waitFor({timeout: 30000});
+      await until("the table to settle", async () => (await api("GET", turl)).json?.table?.away?.length === 0, 15000);
+      ok(true, "the newcomer reloads mid-game and is back on their board, with no seat counted away");
+
+      /* The host ends it for everyone; the record replays with the table's own cards. */
+      await page.locator("[data-action=board-tools]").click();
+      await page.locator("[data-action=board-end]").click();
+      await page.locator("[data-action=board-end][data-confirm]").click();
+      for (const p of [page, newcomer]) await p.locator(".cm-board-over").waitFor({timeout: 30000});
+      const [download] = await Promise.all([page.waitForEvent("download", {timeout: 20000}), page.locator(".cm-board-over [data-action=board-record]").click()]);
+      const rec = JSON.parse(readFileSync(await download.path(), "utf8"));
+      const again = await replayTape({matchId: rec.matchId, pod: rec.pod, seed: rec.seed, tape: rec.tape, cards: tableCards});
+      eq([again.status, again.view("s0").result, rec.pod.seats.map((s) => s.pilot)], ["finished", rec.result, ["human", "human", "house"]],
+        "the host ends the game for everyone, both see it over, and the record of two people and an AI replays to the same end");
+      ok(!JSON.stringify(rec).includes(NEWCOMER), "the newcomer's address is not in the record");
+      await newcomerContext.close();
+    } finally {
+      second.close();
+    }
+  }
+
+  /* 6. THE AI SEATS PLAY ON IN SLICES, ON THE OBJECT'S ALARM (the review of 2026-10-05; cloud/game-room.mjs
      SLICE_STEPS). In the cloud a request has 30 s of CPU, so a room never plays more than a slice in one: Rob and two
      AI seats, he concedes as the game begins, and the concede comes back with the two still playing; the object's own
      alarm plays the rest, slice by slice, to its end. */
   const goblins = {name: "Goblins", commander: ["Krenko, Mob Boss"], cards: [...Array(40).fill("Mountain"), "Lightning Bolt", "Blasphemous Act", "Sol Ring"]};
-  const second = await api("POST", "/api/tables", {hostName: "Rob", seats: [{kind: "ai", name: "Bot"}, {kind: "ai", name: "Bot 2"}]});
-  const url2 = `/api/tables/${second.json.table.tableId}`;
+  const third = await api("POST", "/api/tables", {hostName: "Rob", seats: [{kind: "ai", name: "Bot"}, {kind: "ai", name: "Bot 2"}]});
+  const url2 = `/api/tables/${third.json.table.tableId}`;
   for (const seatId of [0, 1, 2]) await api("POST", `${url2}/deck`, {seatId, deck: goblins});
   await api("POST", `${url2}/ready`, {ready: true});
   await api("POST", `${url2}/start`);
-  const match = (await until("the second table's countdown to end", async () => {const t = (await api("GET", url2)).json.table; return t.phase === "playing" && t;}, 45000)).matchId;
-  eq((await api("POST", `${url2}/concede`)).status, 200, "at a second table, Rob and two AI seats, Rob concedes as the game begins");
+  const match = (await until("the third table's countdown to end", async () => {const t = (await api("GET", url2)).json.table; return t.phase === "playing" && t;}, 45000)).matchId;
+  eq((await api("POST", `${url2}/concede`)).status, 200, "at a third table, Rob and two AI seats, Rob concedes as the game begins");
   eq((await api("GET", `${url2}/record?match=${match}`)).status, 409, "and the concede comes back with the two AI seats still playing: one request plays one slice");
   const done = await until("the object's alarm to play the AI seats to the end", async () => {const r = await api("GET", `${url2}/record?match=${match}`); return r.status === 200 && r.json.record;}, 60000);
   eq([done.result.reason, done.departures.s0, done.refusals.since], ["last player standing", "conceded", 0], `the object's alarm played them on to the end (${done.result.winner} won), the record counting refusals from the start (${done.refusals.total})`);
