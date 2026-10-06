@@ -15,6 +15,8 @@ until the first live game in the cloud is played. That plan's steps resume after
 | **The review, evaluated** | Its verdict stands. F-1 is right and was worse in our own suite than in its fuzz script. F-2 is right, and is a code regression rather than the machine: bisected to #600, fixed, the same games event for event. The unmodified gate on the freeze, run here on the supported toolchain, passes all 342 suites. |
 | **Found while evaluating** | A risk the review did not reach because it never ran on Cloudflare: once every person is out of a game, the AI seats played the rest inside one Durable Object request, and a request has 30 s of CPU. Built: the room plays the AI seats in slices on the object's alarm. |
 | **Next** | Done: this branch merged on the gate (#665, `main` 2fd4b1bd), the staging release walked and pushed (`release/cloud-staging` 4f2c85df). **Staging runs it**: version `88cd1fae`, deployed 18:20:29 UTC, its Worker byte-identical to the release's bundle. Next, L2 (a signed-in person sees "Version 2fd4b1b · 2026-10-05" in Settings, a friend joins) and the first live game. |
+| **L2, the version** | Rob, 2026-10-06: "2fd4b1b · 2026-10-05 is current at staging" (Settings, signed in). Left of L2: a friend through Access, and both boards playing. |
+| **Rob's answers, 2026-10-06** | Workers Builds deployed staging, not Rob (D8 changes, 6.1); #663 and #664 folded in; once every person is out the game ends there (built); the standing decisions explained in 6.1. |
 
 ## 1. The review, claim by claim
 
@@ -113,12 +115,12 @@ it, in their order, with the changes in the last table.
 | --- | --- | --- | --- | --- |
 | **L0** | This branch: F-1, F-2, slices. Gate on the exact head, PR, merge to `main` | session | `tools/local-ci.sh <head> 2` PASS block on the PR | -- |
 | **L1** | The staging release of that `main`: built, walked (`release-acceptance`, `play-e2e`), committed and pushed to `release/cloud-staging` (`tools/release-staging.sh`) | session | the two walks' counts, the release commit | -- |
-| **L1b** | **Deploy it** | **Rob** (A1) | `wrangler deploy`'s version id, which the session reads back from the Cloudflare API | A1 |
+| **L1b** | Deploy it | Workers Builds, on the push to `release/cloud-staging` (2026-10-05 18:20 UTC; Rob did not deploy) | the version id read back from the Cloudflare API, and the deployed Worker compared byte for byte with the release's bundle | -- |
 | **L2** | Verify the deployed site: the version id and `crankmagic-version` meta read back; Rob signs in through Access and opens Play; a friend signs in and reopens the invite; both WebSockets carry a game; the five-second rule measured over the network | session (version), Rob and a friend (the rest) | the version, Rob's word, the record downloaded | A1, A3 |
 | **L3** | **The first live game**: Rob, a friend, two AI seats (or Rob and three), the backup's decks as seated in the brief; the full record downloaded and replayed; its `refusals` read | Rob and a friend; session reads the record | the record, replayed | L2 |
 | **L4** | The 80 games of section 2 on the exact decks, on the corrected metric; each refusal found becomes a house-pilot fix (attack taxes first) | session | `fuzz-human.json`, `fuzz-ai.json` | A2 |
 | **L5** | The three limitations likeliest to stop a friend, one PR each, released to staging: the invitation survives the Access sign-in (the code carried where a redirect keeps it, not in the `#` fragment); the empty library says how to restore the decks; Play returns to the occupied table before the game starts | session | the browser suites that hold each, `play-e2e` | -- |
-| **L6** | A deploy path that does not need Personal-HP: either the cloud environment's credential changed (A4) and `tools/deploy.sh` (X7) run from the container, or Workers Builds repaired; and an Access service token for the automated live checks G-C asks for | session after Rob | a staging release deployed by script, its version read back | A4, A5 |
+| **L6** | The deploy path without Personal-HP exists again (Workers Builds, D8). Left: preview builds off (D8), the token's read access to Builds (A4), an Access service token for the automated live checks G-C asks for (A5) | session after Rob | a build's log read by a session; the live walk run against staging | D8, A4, A5 |
 
 ### After Phase L: the execution plan's steps, as amended
 
@@ -137,16 +139,62 @@ Each has the recommended answer; the session takes it unless Rob says otherwise.
 
 | # | Action or question | Recommended | Why it is Rob's |
 | --- | --- | --- | --- |
-| **A1** | **Deploy staging** once the session has pushed the release (L1). In PowerShell on Personal-HP: `cd C:\Users\robmi\CrankMagic\repo`; `git fetch origin release/cloud-staging`; `git archive --format=zip -o ..\staging-release.zip origin/release/cloud-staging`; `Expand-Archive ..\staging-release.zip -DestinationPath ..\staging-release -Force`; `cd ..\staging-release`; `C:\Users\robmi\CrankMagic\workbench\cloudflare\wrangler.cmd --version` (it must say 4.139.0); `C:\Users\robmi\CrankMagic\workbench\cloudflare\wrangler.cmd deploy`. No database migration is needed (none changed since the live build). Then tell the session "deployed" | Deploy the new release, not last night's freeze folder: it carries the slices, without which a game whose people are all out can stop on Cloudflare's 30 s limit with its end never recorded | The container's proxy replaces the `Authorization` header on every request to `*.cloudflare.com` with the account token, and wrangler's asset upload authenticates with its own upload token, so the upload is refused (seen 2026-10-02, and confirmed today: a request with another token in that header is answered as the account token) |
+| **A1** | ~~Deploy staging from Personal-HP~~ **Done without you (2026-10-05):** Workers Builds deployed the push to `release/cloud-staging` at 18:20 UTC (Rob, 2026-10-06: "I did not"). Pushing `release/cloud-staging` is how staging deploys again | -- | -- |
 | **A2** | Attach `crankmagic-backup-live-game-2026-10-04.json` to this session (or the next) | Yes | It is your library, and it is not in the repository by design |
-| **A3** | Confirm the friend's address is on staging's Access **Invited** policy, and tell them to sign in and restore the backup *before* opening the invite (section 4) | Yes | Access is your dashboard |
-| **A4** | Let cloud sessions deploy staging: in this environment's settings, remove the Cloudflare entry from the proxy-injected API credentials and add a token as the environment variable `CLOUDFLARE_API_TOKEN` instead, so wrangler sends its own headers. The same token moved is the first thing to try; if wrangler names a missing permission, the session says which | Yes, staging only; production stays your go every time | It is your environment and your credential |
+| **A3** | Let the friend through staging's Access. **Correction (read from the Cloudflare API, 2026-10-06):** the "CrankMagic staging" application has no Invited policy; it admits exactly two addresses, through "Rob Only" and "Rehearsal: test friend (2026-10-04)". ("Invited" belongs to production's `crankmagic.com/api/*`.) Add the friend's address to a staging policy, and tell them to sign in and restore the backup *before* opening the invite (section 4) | A policy "Friends" on the staging application, Allow, Include: Emails | Access is your dashboard |
+| **A4** | Optional now: the Cloudflare token as an environment variable (not the proxy's API credentials), only as a fallback if Workers Builds stops again; and, separately, read access to Workers Builds for the token (its Builds API answers "Invalid token" today), so a session can read a build's log instead of inferring it from the deployments list | Read access yes; the deploy fallback only if Builds fails again | Your environment and your credential |
 | **A5** | An Access service token for automated checks of staging (version read-back, the live walk), given to sessions as `CF_ACCESS_CLIENT_ID` and `CF_ACCESS_CLIENT_SECRET` | Yes, scoped to staging | It changes Access policy, which the review asked not to do on its say-so |
 | **A6** | Approve helper B's pushes (its 19 AI 1 and AI 3 cards), as ACTIVE.md has asked since 2026-10-04 | Yes | Its permission check refused every route |
-| **A7** | Two drafts of last night's session wait for you: **#663** (the Play walk with two people and an AI from a library backup, which also touches `tests/uat/play-e2e.mjs`) and **#664** (its record of the checks after the freeze). Folding them into this branch was refused by this session's permission check, so: merge them after this PR, or tell the session to fold them in | Fold them in after this PR merges, with their walk run again on the merged tree. #664's "100 games ... none refused" was counted from the history, like the review's script, and is recounted in L4 | Another session's PRs |
+| **A7** | **Done (Rob, 2026-10-06: yes):** #663 and #664 folded into the next PR, their walk run on the merged tree (`play-e2e` 35 checks), #664's "none refused" qualified like the freeze record's | -- | -- |
 | **A8** | Remove the staging Access policy **"Rehearsal: test friend (2026-10-04)"** that #664 says that session added (it admits only its test identity; "Rob Only" untouched), or confirm it should stay for automated checks until A5 replaces it | Remove it once A5's service token exists | Access policy is yours, and the review asked that it not change on its say-so |
-| **Q1** | When every person at the table is out, should the AI seats play the game to its end (as now, in slices, the board saying so) or should the table end the game there? | Play on: the record then says who won, and nothing a person chose is cut short | A product call |
-| **Q2** | Standing, unchanged: D7 (the runner or Actions billing), D8 (Workers Builds and previews off, or repaired), D11 (the permission rule for merges and release pushes), the production release and Play on production | As the execution plan recommends | Yours since 2026-10-03 |
+| **Q1** | **Answered (Rob, 2026-10-06: no):** once every person at the table is out -- lost, conceded or out of time -- the game ends there, the AI seats not playing it out. Built as the pod's `endWhenNoPerson`, which the table sets as it launches, so a game made before it replays as it was played; the record says "every person had left the game, so it ended there", and a person knocked out files a loss | -- | -- |
+| **Q2** | The standing decisions D7, D8, D11 and production, explained with options in section 6.1 | See 6.1 | Yours |
+
+### 6.1 The standing decisions, explained (Rob asked, 2026-10-06)
+
+**D7 -- where the test gate runs.** Every merge must pass the whole gate (344 suites, about 16 minutes a run). GitHub
+Actions is supposed to run it; since 2026-09-27 every job fails within seconds ("recent account payments have failed or
+your spending limit needs to be increased"), so each merge waits on `tools/local-ci.sh`, run twice, about 32 minutes of
+a session per merge, with its PASS block pasted on the PR. On a private repository GitHub Free includes 2,000 Actions
+minutes a month, and Linux minutes past that cost $0.006 each since January 2026 (they were $0.008).
+
+| Option | Cost | Trade-off |
+| --- | --- | --- |
+| **A. Fix the Actions billing** (GitHub, Settings, Billing and plans: a working payment method and an Actions spending limit above $0, say $10 a month) | A run is about 22 minutes, so about 90 runs a month are free and each one past that is about 13 cents; $10 covers about 75 more | The gate returns as a green check on every PR at no session time. Recommended |
+| B. A self-hosted runner on Personal-HP (the plan's D7) | Free (GitHub postponed the per-minute fee it had announced for self-hosted runners) | Runs only while the PC is on and awake, on Windows, beside your own work; the workflow already has a fallback to GitHub's runners |
+| C. Make the repository public | Actions free and unlimited | Your library data and plans become public; not recommended |
+| D. Keep the local gate | Free in dollars | About 32 minutes of a session per merge, and the merging session vouches for its own run |
+
+**D8 -- how releases deploy.** The plan recommended turning Cloudflare Workers Builds off and deploying from Personal-HP,
+because every build terminated in its queue from 2026-10-03 05:19 UTC. That has changed: on 2026-10-05 Workers Builds
+deployed the push to `release/cloud-staging` twelve minutes after it, with nobody at Personal-HP. So:
+
+| | Recommended |
+| --- | --- |
+| Staging | Keep Workers Builds on `release/cloud-staging`: a session's push is the deploy, and its version is read back from the Cloudflare API (done this way for 2fd4b1bd) |
+| Production | Keep it on `release/pages` too, which means **a push to `release/pages` is a production deploy**, so it stays your go, every time (AGENTS.md). `release/pages` holds 2543cef (2026-10-03), never deployed; crankmagic.com still serves b630128 (2026-10-01) |
+| Previews | Turn the preview builds off for both Workers (Workers, each Worker, Settings, Builds: non-production branch builds off). They build every branch push, fail (the configuration has no previews block), put two red checks on every PR, and crowd the queue that terminated the release builds |
+| The fallback | A4's environment variable, kept in reserve in case Builds stalls again |
+
+**D11 -- what a session may do without asking.** Rob set on 2026-09-19 that an agent may merge to `main` after standard
+practice. The session's own permission check does not know that rule: on 2026-10-03 it refused `gh pr merge` and the
+re-run of a build, and on 2026-10-05 it refused folding #663 and #664 into a branch until you said yes. D11 is a
+standing rule in the repository's Claude Code settings so those stop being asked one at a time.
+
+| Allow without asking | Keep asking |
+| --- | --- |
+| Merging a PR whose local-gate or Actions PASS is on it; merging other agents' `claude/*` branches into a working branch; pushing `release/cloud-staging` (a staging deploy) | Pushing `release/pages` (production); anything in Cloudflare Access; force-pushing or deleting branches; closing another session's PR |
+
+Recommended: yes, as that table splits it. The session writes it into `.claude/settings.json` on your go.
+
+**Production -- when crankmagic.com changes, and whether Play goes live there.** Production runs the `pages` profile:
+the workshop (Build, Decks, Explore, buying), Play showing Coming Soon, accounts behind Access on `/api/*`. It serves
+b630128 of 2026-10-01; five days of workshop work on `main` have not reached it.
+
+| Option | Recommended |
+| --- | --- |
+| Refresh the workshop now: the `pages` build of `main`, walked by `release-acceptance`, pushed to `release/pages` (Workers Builds deploys), walked again live | Yes, whenever you say go: it changes nothing about Play, and the walks hold the journeys |
+| Play on production | Not before G-F, as the plan has it: after Grok Bot's agents, your invitees and your own review at staging |
 
 ## 7. Assumptions and confidence
 

@@ -313,8 +313,9 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
         seatId: seatName(s.seatId), name: s.name, pilot: s.kind === "ai" ? "house" : "human",
         commander: record.decks[s.seatId].commander, cards: record.decks[s.seatId].cards,
       })), startingLife: rulesOf().startingLife,
-      /* The table's two beats (items 11 and 13): the draw waits for its click; a step with nothing to do passes itself. */
-      drawBeat: true, passEmpty: true};
+      /* The table's two beats (items 11 and 13): the draw waits for its click; a step with nothing to do passes itself.
+         And once every person is out, the game ends there (Rob, 2026-10-06; game/room/room.mjs). */
+      drawBeat: true, passEmpty: true, endWhenNoPerson: true};
       try {
         room = await startRoom({storage: storageForRoom, matchId, cards, pod, seed: `${matchId}:${now}`, slice});
         step({type: "engine-started", launchId: matchId, matchId}, now);

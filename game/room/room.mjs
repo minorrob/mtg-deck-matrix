@@ -27,6 +27,9 @@
  *   `passEmpty`  a person whose only legal action is to pass, with the stack empty, passes by itself -- there was no
  *                choice to make (AGENTS.md: decisions belong to the players, and this is not one) -- and a step that
  *                passes by itself says so in the history: "Draw step: nothing to do".
+ * And a third, Rob's of 2026-10-06, kept with the match the same way:
+ *   `endWhenNoPerson`  once every person at the table is out of the game -- lost, conceded or out of time -- the game
+ *                ends there, its record saying so, rather than the AI seats playing it out for nobody.
  *
  * WHAT IT PLAYS. Only cards the `cards` resolver can define. A pod with any other card is refused before
  * anything is written, naming every card it cannot play (docs/decisions-2026-09-25.md, M4: "refused by name;
@@ -56,7 +59,9 @@ const MAX_CARDS = 250;           // a Commander deck is 100; this is only a boun
 const DRIVE_LIMIT = 100000;      // engine steps between two human decisions before the room calls it a hang
 const HISTORY_KEEP = 300;         // lines of the table's history kept with the room
 const HISTORY_VIEW = 120;         // the newest of them, in every view
-const REFUSALS_SAID = 20;         // refused pilot answers kept in full with the match's tally; the count itself is never trimmed
+const REFUSALS_SAID = 20;
+/** How a game that ended because every person was out says so (`endWhenNoPerson`). */
+export const NO_PERSON_REASON = "every person had left the game, so it ended there";         // refused pilot answers kept in full with the match's tally; the count itself is never trimmed
 /* The steps as the history names them when one passes by itself (the untap and cleanup steps give no priority). */
 const QUIET_STEP = {UPKEEP: "Upkeep", DRAW: "Draw step", MAIN1: "Main 1", COMBAT_BEGIN: "Beginning of combat", COMBAT_DECLARE_ATTACKERS: "Declare attackers",
   COMBAT_DECLARE_BLOCKERS: "Declare blockers", COMBAT_FIRST_STRIKE_DAMAGE: "First-strike damage", COMBAT_DAMAGE: "Combat damage", COMBAT_END: "End of combat",
@@ -262,8 +267,10 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
      than claiming a zero it never measured. */
   let refusals = {total: 0, since: 0, first: []};
   /* PLAYED IN SLICES WHERE A REQUEST'S TIME IS CAPPED (the review of 2026-10-05; Cloudflare gives a Durable Object 30 s of
-     CPU per request or alarm). Between two people's decisions the AI seats play inside one call, and once every person
-     is out of the game the rest of it is AI seats alone: four house pilots ran 3 to 100 s to a game's end in the review.
+     CPU per request or alarm). Between two people's decisions the AI seats play inside one call, and a room of AI seats
+     alone plays a whole game in one: four house pilots ran 3 to 100 s to a game's end in the review. (At a table the
+     game now ends once every person is out, `endWhenNoPerson`, so the long stretch left is the AI seats' turns between
+     two people's decisions.)
      So a room given a `slice` stops after that many engine steps with nobody asked (`continuing`), saved like any other
      point of the game, and `resume` plays on from there. The engine and its pilots are deterministic and the house pilot
      keeps nothing between calls, so a game played in slices is the game played in one go -- its replay, which never
@@ -276,6 +283,9 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
   /* ITEM 11: whether a person with nothing to do passes by itself, and what the step in progress has seen -- a pass
      the room made for someone, and anything anyone chose to do (a person's pass counts: they could have acted). */
   let passEmpty = false, step = {key: null, quiet: false, acted: false};
+  /* Rob, 2026-10-06: when every person is out, the game ends; the AI seats do not play it out. */
+  let endWhenNoPerson = false;
+  const nobodyLeft = () => seats.some((s) => s.pilot === "human") && seats.every((s, i) => s.pilot !== "human" || state.players[i].lost);
   const track = () => {const key = `${state.turn}:${state.stepIndex}`; if (key !== step.key) step = {key, quiet: false, acted: false};};
   /* A step that passed by itself, said once; the quiet steps of a turn in a row share one line. */
   function quietly(phase) {
@@ -329,6 +339,12 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
         for (const seat of leaving) if (!state.players[seat].lost) write(concede(state, seat));
         leaving = [];
         continue;
+      }
+      if (endWhenNoPerson && state.stepIndex !== undefined && nobodyLeft()) {
+        ended = {by: null, why: "no-person"};
+        note("Every person is out of the game, so it ends here · not finished");
+        pendingSeat = null; pendingActions = null; driven = 0;
+        return;
       }
       if (state.stepIndex !== undefined) track();
       if (state.awaiting) {
@@ -403,7 +419,7 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
-    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history, refusals, ...(continuing ? {continuing, driven} : {}), ...(passEmpty ? {passEmpty, step} : {})}));
+    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {})}));
   }
 
   const api = {
@@ -425,8 +441,9 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
       if (await storage.get(ROOM_KEY) !== null) throw new RoomError(409, "This table already has a game.");
       /* The table's starting life (its host's rule), kept with the match so a replay deals the same game. */
       const startingLife = pod && pod.startingLife !== undefined ? pod.startingLife : undefined;
-      const beats = {...(pod && pod.drawBeat === true ? {drawBeat: true} : {}), ...(pod && pod.passEmpty === true ? {passEmpty: true} : {})};
-      passEmpty = beats.passEmpty === true;
+      const beats = {...(pod && pod.drawBeat === true ? {drawBeat: true} : {}), ...(pod && pod.passEmpty === true ? {passEmpty: true} : {}),
+        ...(pod && pod.endWhenNoPerson === true ? {endWhenNoPerson: true} : {})};
+      passEmpty = beats.passEmpty === true; endWhenNoPerson = beats.endWhenNoPerson === true;
       try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...(startingLife !== undefined ? {startingLife} : {}), ...(beats.drawBeat ? {drawBeat: true} : {})});}
       catch (error) {throw new RoomError(400, error.message);}
       seats.forEach((s, seat) => {
@@ -452,7 +469,7 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
       passEmpty = record.passEmpty === true; step = record.step || {key: null, quiet: false, acted: false};
       seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; history = record.history || [];
       refusals = record.refusals || {total: 0, since: point.sequence, first: []};
-      continuing = record.continuing === true; driven = record.driven || 0;
+      continuing = record.continuing === true; driven = record.driven || 0; endWhenNoPerson = record.endWhenNoPerson === true;
       state = structuredClone(point.state);
       rng = createRng(point.seed, point.rng);
       journal = createJournal({matchId, seed: point.seed}, point);
@@ -468,7 +485,7 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
       const seat = seatIndex(seatId);
       if (seat < 0) throw new RoomError(403, "That seat is not at this table.");
       const mine = pendingSeat === seat && controller.pending;
-      const over = ended ? {winner: null, reason: "ended early"} : gameOver(state);
+      const over = ended ? {winner: null, reason: ended.why === "no-person" ? NO_PERSON_REASON : "ended early"} : gameOver(state);
       return {
         schema: VIEW_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seatId, seat,
         revision: controller.revision,
