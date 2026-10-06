@@ -314,7 +314,9 @@ function manaAbility(ability, id) {
     /* "Any color that a land an opponent controls could produce", "any color among legendary creatures you control"
        (rules/actions.mjs, manaAlternatives): read as it is activated. */
     : first.reflect && typeof first.reflect === "object" ? {reflect: first.reflect, ...(first.anyType ? {anyType: true} : {}), ...(first.count ? {count: first.count} : {})}
-    : first.among && typeof first.among === "object" ? {among: first.among, ...(first.count ? {count: first.count} : {})}
+    /* "For each color among permanents you control, add one mana of that color" (Faeburrow Elder, CR 106.1): `each`, all of
+       those colors at once, one offer -- not one of them. */
+    : first.among && typeof first.among === "object" ? {among: first.among, ...(first.count ? {count: first.count} : {}), ...(first.each === true ? {each: true} : {})}
     /* "Two mana in any combination of colors" (Great Hall of the Citadel). */
     /* "In any combination of {U} and/or {R}" (Vivi Ornitier): the colors it may be. */
     : first.anyCombination === true || (Array.isArray(first.anyCombination) && first.anyCombination.length > 0 && first.anyCombination.every((c) => ["W", "U", "B", "R", "G"].includes(c)))
@@ -884,15 +886,31 @@ export function compileScript(script) {
       oracleText: script.back.oracleText, source: script.source, abilities: script.back.abilities});
     if (names.length !== 2 || script.back.identity?.name !== names[1]) problems.push(`a double-faced card is named "Front // Back", and its back face is the second name`);
     for (const problem of back.problems) problems.push(`back face: ${problem}`);
-    if (back.definition) {
-      const face = (d, name) => ({card: name, types: [...d.types], subtypes: [...d.subtypes], ...(d.supertypes ? {supertypes: [...d.supertypes]} : {}), manaCost: d.manaCost,
-        colors: [...d.colors], power: d.power, toughness: d.toughness, ...(Number.isInteger(d.loyalty) ? {loyalty: d.loyalty} : {}), keywords: [...d.keywords], abilities: structuredClone(d.abilities),
-        ...(d.spell ? {spell: structuredClone(d.spell)} : {}), ...(d.enchant ? {enchant: structuredClone(d.enchant)} : {})});
-      definition.mdfc = {front: face(definition, names[0]), back: face(back.definition, names[1])};
-    }
+    if (back.definition) definition.mdfc = {front: faceOfDefinition(definition, names[0]), back: faceOfDefinition(back.definition, names[1])};
+  }
+  /* AN ADVENTURER CARD (CR 715): "Card // Adventure", the Adventure -- an instant or sorcery with the subtype Adventure --
+     compiled as a card of its own, the card's oracle id and color identity both halves' (CR 903.4). Its own characteristics
+     and the Adventure's go with the card (`adventurer`); which it has is the object's (state/index.mjs): the Adventure's only
+     cast as one and on the stack (715.3b), its own everywhere else (715.4). Cast as an Adventure, it is exiled as it
+     resolves and may be cast as itself from there (715.3d; rules/actions.mjs, rules/stack.mjs). */
+  if (script.adventure !== undefined) {
+    const names = String(identity.name).split(" // ");
+    const adventure = compileScript({schema: script.schema, identity: {...script.adventure.identity, oracleId: identity.oracleId, colorIdentity: identity.colorIdentity ?? []},
+      oracleText: script.adventure.oracleText, source: script.source, abilities: script.adventure.abilities});
+    if (names.length !== 2 || script.adventure.identity?.name !== names[1]) problems.push(`an adventurer card is named "Card // Adventure", and its Adventure is the second name`);
+    for (const problem of adventure.problems) problems.push(`Adventure: ${problem}`);
+    /* What is cast from exile after it is a permanent spell (715.3d): an adventurer card is a permanent card. */
+    if (types.some((t) => t === "Instant" || t === "Sorcery")) problems.push("an adventurer card is a permanent card; its Adventure is the instant or sorcery");
+    if (adventure.definition) definition.adventurer = {main: faceOfDefinition(definition, names[0]), adventure: faceOfDefinition(adventure.definition, names[1])};
   }
   return {definition: problems.length ? null : definition, problems: [...new Set(problems)]};
 }
+
+/* One face's characteristics, from its compiled definition, under its own name: a double-faced card's front or back
+   (CR 712.8), an adventurer card's own or its Adventure's (CR 715.2). */
+const faceOfDefinition = (d, name) => ({card: name, types: [...d.types], subtypes: [...d.subtypes], ...(d.supertypes ? {supertypes: [...d.supertypes]} : {}), manaCost: d.manaCost,
+  colors: [...d.colors], power: d.power, toughness: d.toughness, ...(Number.isInteger(d.loyalty) ? {loyalty: d.loyalty} : {}), keywords: [...d.keywords], abilities: structuredClone(d.abilities),
+  ...(d.spell ? {spell: structuredClone(d.spell)} : {}), ...(d.enchant ? {enchant: structuredClone(d.enchant)} : {})});
 
 /* Edit distance, bounded: suggestions are for a misspelling, not for every card in the pool. */
 function distance(a, b, limit) {

@@ -679,7 +679,8 @@ export function delayedTrigger(state, params, context) {
       /* "Until your next turn, whenever a creature attacks you ..." (Jace, Reality Sculptor): every time, until its controller's
          next turn begins (rules/turn.mjs). */
       ...(params.untilYourNextTurn ? {untilYourNextTurn: true} : {}), fresh: true}
-      : {at: params.at ?? "end step"}),
+      /* "At the beginning of that player's next end step" (The Eternal Wanderer): a moment of that player's turn only (`player`). */
+      : {at: params.at ?? "end step", ...(Number.isInteger(params.player) ? {player: params.player} : {})}),
     controller: context.controller,
     source: context.source ?? null,
     effects: rememberNow(params.effects ?? [], context, {keepThat: waits, state}),

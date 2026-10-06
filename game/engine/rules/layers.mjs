@@ -337,6 +337,16 @@ export function deriving(state, fn) {
   memo = {state, characteristics: new Map(), effects: new Map()};
   try { return fn(); } finally { memo = null; }
 }
+/** Derive afresh for the length of `fn`, then go back to the memo that was open: an object shown another way for a moment --
+    an adventurer card weighed as its Adventure (CR 715.3a; rules/actions.mjs) -- is read as it then is, and what the open
+    memo holds of it as it was is neither read nor overwritten. With no memo open -- the cast itself, which changes the
+    game -- none is opened: each derivation is its own, as ever outside one. */
+export function derivingAfresh(state, fn) {
+  if (memo === null) return fn();
+  const outer = memo;
+  memo = {state, characteristics: new Map(), effects: new Map()};
+  try { return fn(); } finally { memo = outer; }
+}
 /** For the suites: turn the memo off (to compare), and how many derivations -- and dependency trials (CR 613.8a,
     `dependsOn`) -- were made since `reset`. */
 export const deriveMemo = {off(value = true) { memoOff = value; }, count() { return derivations; }, trials() { return trials; }, reset() { derivations = 0; trials = 0; }};

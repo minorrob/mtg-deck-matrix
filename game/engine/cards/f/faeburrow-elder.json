@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Faeburrow Elder",
+    "oracleId": "70a6f08e-854d-4e2f-9d8c-c45ec3231157",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Treefolk",
+      "Druid"
+    ],
+    "manaCost": "{1}{G}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": 0,
+    "toughness": 0
+  },
+  "oracleText": "Vigilance\nThis creature gets +1/+1 for each color among permanents you control.\n{T}: For each color among permanents you control, add one mana of that color.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "static",
+      "text": "This creature gets +1/+1 for each color among permanents you control.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "power": {
+          "colorsAmong": {
+            "what": "permanent",
+            "controller": "you"
+          }
+        },
+        "toughness": {
+          "colorsAmong": {
+            "what": "permanent",
+            "controller": "you"
+          }
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: For each color among permanents you control, add one mana of that color.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "among": {
+            "what": "permanent",
+            "controller": "you"
+          },
+          "each": true
+        }
+      ]
+    }
+  ]
+}

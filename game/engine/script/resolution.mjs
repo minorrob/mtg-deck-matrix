@@ -194,7 +194,10 @@ export function answerResolution(state, indices, extra = {}, rng = null) {
   state.awaiting = null;
   if (!state.resolving) return {status: "done", events};
   /* What the answer moved, remembered for the effects after it ("untap that land"). */
-  if (!Array.isArray(outcome) && Array.isArray(outcome.remembered)) state.resolving.context.remembered = outcome.remembered;
+  /* Beside what was remembered before, when the answer says so (`rememberAdd`): "for each player, choose a creature that
+     player controls" remembers each in turn (The Eternal Wanderer). */
+  if (!Array.isArray(outcome) && Array.isArray(outcome.remembered)) state.resolving.context.remembered = outcome.rememberAdd === true
+    ? [...(state.resolving.context.remembered ?? []), ...outcome.remembered] : outcome.remembered;
   /* "Choose a creature type": the type, for the effects after it ("$chosen", script/bind.mjs). */
   if (!Array.isArray(outcome) && typeof outcome.chosen === "string") state.resolving.context.chosen = outcome.chosen;
 

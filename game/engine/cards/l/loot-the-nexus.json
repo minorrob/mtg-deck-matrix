@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Loot, the Nexus",
+    "oracleId": "a99ce9db-9b7d-45a0-bee7-0875fc62ca48",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Beast",
+      "Noble"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "{T}: Choose a color. Add one mana of that color for each different power among creatures you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Choose a color. Add one mana of that color for each different power among creatures you control.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true,
+          "count": {
+            "differentPowers": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

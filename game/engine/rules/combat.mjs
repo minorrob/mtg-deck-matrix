@@ -56,7 +56,7 @@ import {runFollowUps} from "../script/effects/index.mjs";
 import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf, deriving} from "./layers.mjs";
 import {givePoison, changeLife, infects, addCounters, damagePermanent} from "../script/effects/resources.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
-import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack, cantGainLife} from "./statics.mjs";
+import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack, cantGainLife, attackerCaps} from "./statics.mjs";
 import {paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits} from "./mana.mjs";
 import {recordCommanderDamage} from "./commander.mjs";
 import {damageAssignmentProblem} from "../controller.mjs";
@@ -114,6 +114,15 @@ const toAttacked = (state, attack, amount) => (attack.planeswalker === undefined
 
 /* ---- declare attackers ---- */
 
+/* The refusal of too many attackers at a planeswalker that allows only so many (CR 508.1c): what is wrong, then what to do
+   instead, naming it (AGENTS.md, "refused, with instructions"). */
+const COUNTED = ["no creatures", "one creature", "two creatures", "three creatures"];
+const capWords = (state, pw, most) => {
+  const name = state.objects[pw]?.card ?? "That planeswalker";
+  return `No more than ${COUNTED[most] ?? `${most} creatures`} can attack ${name} each combat. Declare ${most === 1 ? "one creature" : `at most ${most}`} at ${name}, `
+    + "and send the rest at a player or another planeswalker, or keep them home.";
+};
+
 export const attackers = {
   /** Whether this step has anything to ask. Called by the turn structure as the step begins. */
   open(state) {
@@ -163,6 +172,11 @@ export const attackers = {
           cardId: id, defenderId: defender, planeswalkerId: pw});
       }
     }
+    /* "NO MORE THAN ONE CREATURE CAN ATTACK THE ETERNAL WANDERER EACH COMBAT" (CR 508.1c; rules/statics.mjs, attackerCaps):
+       the most options that may name each such planeswalker, and what to do instead, said in the record -- so every
+       answerer is held to it by controller.mjs, as `exclusiveBy` holds them, and a pilot can keep to it. */
+    const caps = Object.entries(attackerCaps(state)).filter(([pw]) => options.some((o) => o.planeswalkerId === Number(pw)));
+    const capped = caps.length ? {by: "planeswalkerId", most: Object.fromEntries(caps), why: Object.fromEntries(caps.map(([pw, most]) => [pw, capWords(state, Number(pw), most)]))} : null;
     return {
       id: `declare-attackers:${state.turn}`,
       title: "Declare attackers",
@@ -176,6 +190,7 @@ export const attackers = {
          to it by `controller.mjs`, rather than each being trusted to work it out. The refusal in
          `resolve` stays as the last line, but nothing should reach it. */
       exclusiveBy: "cardId",
+      ...(capped ? {capped} : {}),
       options,
     };
   },
@@ -206,6 +221,9 @@ export const attackers = {
        one of the two would be answering a different question than the one that was asked. */
     if (new Set(picked.map((o) => o.cardId)).size !== picked.length)
       throw new Error("A creature can attack only once; the same creature was declared twice");
+    /* No more creatures declared at a planeswalker than it allows (CR 508.1c; attackerCaps): refused, saying what to do. */
+    for (const [pw, most] of Object.entries(attackerCaps(state)))
+      if (picked.filter((o) => o.planeswalkerId === Number(pw)).length > most) throw new Error(capWords(state, Number(pw), most));
 
     /* GOADED (CR 701.15b, 508.1d): it attacks each combat if able -- with no cost to pay for it -- so one left out attacks
        anyway: the first player after its controller in turn order it may attack for free, not its goader if it can. */

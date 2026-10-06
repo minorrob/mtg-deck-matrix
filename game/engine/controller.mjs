@@ -174,6 +174,18 @@ function validateIndices(choice, request) {
       used.add(key);
     }
   }
+  /* AND SOME OPTIONS MAY BE TAKEN ONLY SO MANY TIMES BETWEEN THEM: "no more than one creature can attack The Eternal
+     Wanderer each combat" (CR 508.1c) -- at most `most[value]` of the options whose `by` field has that value. Refused with
+     the record's own words for it (`why`), which say what to do instead. */
+  if (choice.capped) {
+    const counts = new Map();
+    for (const n of indices) {
+      const key = (choice.options ?? [])[n]?.[choice.capped.by];
+      if (key === undefined || choice.capped.most?.[key] === undefined) continue;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+      if (counts.get(key) > choice.capped.most[key]) throw new Error(choice.capped.why?.[key] ?? "Invalid selection");
+    }
+  }
   if (choice.choiceKind === "manipulate") validateManipulateOrder(choice, request);
 }
 

@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fell the Mighty",
+    "oracleId": "1fbb2a7c-8093-4729-b8fe-cf032d99470f",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy all creatures with power greater than target creature's power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Destroy all creatures with power greater than target creature's power.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "power": {
+              "moreThan": {
+                "powerOf": {
+                  "target": 0
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

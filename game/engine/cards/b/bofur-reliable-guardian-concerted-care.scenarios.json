@@ -1,0 +1,638 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Bofur, Reliable Guardian // Concerted Care",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Elf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Squire": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Merfolk": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Merfolk"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Rat": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Rat"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Wall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 4
+    },
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}"
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Concerted Care on Rob's Bear: hexproof and indestructible until end of turn, and the card goes on an adventure, into exile",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bofur, Reliable Guardian // Concerted Care"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Concerted Care",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            },
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": []
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bear",
+            "has": [
+              "Hexproof",
+              "Indestructible"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Bofur, Reliable Guardian"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "Then Rob casts Bofur from exile: a 1/1 with lifelink; the Adventure is not offered again from there",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bofur, Reliable Guardian // Concerted Care"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Concerted Care",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Concerted Care"
+              },
+              "count": 0
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Bofur, Reliable Guardian"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "cast": "Bofur, Reliable Guardian"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Wastes",
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Bear",
+            "Bofur, Reliable Guardian"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bofur, Reliable Guardian",
+            "has": [
+              "Lifelink"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bofur, Reliable Guardian",
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Its target gone before it resolves: it does not resolve, and goes to the graveyard, not on an adventure",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Mountain",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bofur, Reliable Guardian // Concerted Care",
+            "Lightning Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Concerted Care",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Lightning Bolt",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bofur, Reliable Guardian",
+            "Lightning Bolt",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Bofur, Reliable Guardian"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Cast as itself from hand: Bofur, Reliable Guardian, a 1/1 with lifelink; or as Concerted Care, each its own offer",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bofur, Reliable Guardian // Concerted Care"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Bofur, Reliable Guardian"
+              },
+              "count": 1
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Concerted Care"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Bear"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Bofur, Reliable Guardian"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Wastes",
+            "Bear",
+            "Bofur, Reliable Guardian"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bofur, Reliable Guardian",
+            "has": [
+              "Lifelink"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "An instant, on Maya's turn: Concerted Care is offered and Bofur is not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bofur, Reliable Guardian // Concerted Care"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Plains",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Bofur, Reliable Guardian",
+                "seat": 0
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "cast": "Concerted Care",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Bofur, Reliable Guardian"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bear",
+            "has": [
+              "Hexproof",
+              "Indestructible"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A commander on an adventure: cast from the command zone, exiled, left there by Rob, and cast from exile with no tax",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Plains",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "Bofur, Reliable Guardian // Concerted Care"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Concerted Care",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Put it into the command zone",
+                  "Leave it in exile"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Leave it in exile"
+          ]
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Bofur, Reliable Guardian"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Wastes",
+            "Plains",
+            "Bear",
+            "Bofur, Reliable Guardian"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": []
+        }
+      ]
+    }
+  ]
+}

@@ -28,7 +28,7 @@ import {readFileSync, writeFileSync, mkdirSync, existsSync} from "node:fs";
 import path from "node:path";
 import {fileURLToPath, pathToFileURL} from "node:url";
 import {
-  COMPILED_SCHEMA, oracleHash, checkAnswer, checkReadBack, smokeTest, writerSystem, writerRequest, WRITER_SCHEMA,
+  COMPILED_SCHEMA, oracleHash, checkAnswer, checkReadBack, smokeTest, writerSystem, writerRequest, WRITER_SCHEMA, ADVENTURE_BY_HAND,
   READBACK_SYSTEM, READBACK_SCHEMA, readBackRequest,
 } from "../engine/cards/compile.mjs";
 import {loadCardScripts, loadCardIndex} from "./engine-cards.mjs";
@@ -89,6 +89,8 @@ export async function compileCards(job) {
     const card = oracle.get(name);
     if (!card) { results.push({name, outcome: "no oracle card"}); continue; }
     if (hand.has(name)) { results.push({name, outcome: "hand-authored"}); continue; }
+    /* An adventurer card is not asked of the writer at all (CR 715.2; cards/compile.mjs checkAnswer): nothing spent on it. */
+    if (card.layout === "adventure") { results.push({name, outcome: "refused", problems: [ADVENTURE_BY_HAND]}); continue; }
     const hash = oracleHash(card), prior = ledger.cards[card.id];
     if (prior && prior.oracleHash === hash && LEARNED.includes(prior.status)) { results.push({name, outcome: "already learned", status: prior.status}); continue; }
     if (job.sample !== undefined && taken >= job.sample) break;

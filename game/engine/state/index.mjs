@@ -141,11 +141,29 @@ export function showFace(state, id, face) {
   if (face === "back") object.face = "back"; else delete object.face;
 }
 
+/* AN ADVENTURER CARD (CR 715): two sets of characteristics, its own (`main`) and its Adventure's (`adventure`) -- an instant
+   or sorcery with the subtype Adventure (715.2). It has the Adventure's only while it is cast as one and on the stack as one
+   (715.3a-b); anywhere else, its own alone (715.4). */
+const adventureSide = (adventurer, shown) => Object.fromEntries(FACE_KEYS.map((key) => [key, (shown ? adventurer.adventure : adventurer.main)[key]]));
+
+/** Show an adventurer card as its Adventure (`shown`), or as itself again: what is weighed as it is cast as an Adventure
+    (CR 715.3a) -- rules/actions.mjs shows it for the offer and the cast, and puts it back unless the cast moved it. */
+export function showAdventure(state, id, shown) {
+  const object = state.objects[id];
+  if (!object?.adventurer) return;
+  Object.assign(object, adventureSide(object.adventurer, shown));
+  if (shown) object.face = "adventure"; else delete object.face;
+}
+
 export function addObject(state, object, zone, player = null) {
   assertZone(state, zone, player);
   /* A MODAL DOUBLE-FACED CARD (CR 712.8): the characteristics of the face that is up -- its front, unless it was played
      with its back face up (`face`), which only a permanent can be (rules/actions.mjs). */
   if (object.mdfc) object = {...object, ...faceOf(object.mdfc, object.face), mdfc: object.mdfc, face: object.face === "back" ? "back" : undefined};
+  /* An adventurer card: the Adventure's characteristics when it arrives shown as one -- on the stack, cast as one (CR 715.3b;
+     moveObject keeps the face for the stack alone) -- and its own everywhere else (715.4). */
+  const adventuring = Boolean(object.adventurer) && object.face === "adventure";
+  if (object.adventurer) object = {...object, ...adventureSide(object.adventurer, adventuring), adventurer: object.adventurer, face: adventuring ? "adventure" : undefined};
   const id = state.nextObjectId;
   state.nextObjectId += 1;
   const owner = Number.isInteger(object.owner) ? object.owner : player;
@@ -216,6 +234,7 @@ export function addObject(state, object, zone, player = null) {
        control" and a token's own color read them. Present only on a card that has one, as with subtypes. */
     ...(Array.isArray(object.colors) && object.colors.length ? {colors: [...object.colors]} : {}),
     ...(object.mdfc ? {mdfc: structuredClone(object.mdfc), ...(object.face === "back" ? {face: "back"} : {})} : {}),
+    ...(object.adventurer ? {adventurer: structuredClone(object.adventurer), ...(adventuring ? {face: "adventure"} : {})} : {}),
   };
   state.nextTimestamp += 1;
   listFor(state, zone, player).push(id);
@@ -292,6 +311,9 @@ export function moveObject(state, id, zone, player = null) {
     /* A double-faced card keeps the face that was up only onto the battlefield, where it was put that way; anywhere else
        it is its front (CR 712.8a). */
     ...(from.mdfc ? {mdfc: from.mdfc, face: zone === "battlefield" && from.face === "back" ? "back" : undefined} : {}),
+    /* An adventurer card goes to the stack as its Adventure when it was shown as one to be cast (CR 715.3b), and leaves it --
+       countered, resolved, wherever it goes -- as itself (715.4). */
+    ...(from.adventurer ? {adventurer: from.adventurer, face: zone === "stack" && from.face === "adventure" ? "adventure" : undefined} : {}),
     card: from.card, types: from.types, manaCost: from.manaCost, abilities: from.abilities,
     power: from.power, toughness: from.toughness, loyalty: from.loyalty, keywords: from.keywords,
     owner: from.owner, controller: from.owner, token: from.token, copy: from.copy, commander: from.commander,

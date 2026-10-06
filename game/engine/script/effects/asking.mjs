@@ -980,7 +980,9 @@ export const chooseCard = {
     const except = params.except === "remembered" ? new Set(context.remembered ?? []) : null;
     const pool = (among ? (context.remembered ?? []).filter((id) => state.objects[id]?.zone === zone) : onField ? [...state.zones.battlefield] : cardsIn(state, zone, player))
       .filter((id) => !except?.has(id));
-    const fitting = pool.filter((id) => matchers.some((m) => m(state, id, {controller: player, source: context.source})));
+    /* "For each player, choose a creature that player controls" (The Eternal Wanderer): the player a repetition is about,
+       for a selector's "that player" (script/resolution.mjs, repeatFor). */
+    const fitting = pool.filter((id) => matchers.some((m) => m(state, id, {controller: player, source: context.source, ...(context.about ? {about: context.about} : {})})));
     /* "Up to four cards with different names" (Gifts Ungiven): one of each name offered -- which of two identical cards in a
        library is found changes nothing, and no answer can then name two of a name. */
     const cards = params.differentNames === true ? fitting.filter((id, i) => fitting.findIndex((other) => state.objects[other].card === state.objects[id].card) === i) : fitting;
@@ -993,8 +995,9 @@ export const chooseCard = {
       kind: "effect-choice", effect: "chooseCard", player, zone, cards, min, max: Math.min(count, cards.length),
       destinations: params.destinations ?? [{to: params.to ?? "hand", ...(params.tapped ? {tapped: true} : {})}],
       shuffle: params.shuffle === true, reveal: params.reveal === true, controller: params.controller === "you" ? context.controller : params.controller ?? null,
-      /* "Untap that land" (Fabled Passage): what it found, for the effects after it (resolution.mjs). */
-      ...(params.remember ? {remember: true} : {}),
+      /* "Untap that land" (Fabled Passage): what it found, for the effects after it (resolution.mjs). "Add": beside what was
+         remembered before -- each player's creature chosen in turn, "not chosen this way" all of them (The Eternal Wanderer). */
+      ...(params.remember ? {remember: params.remember === "add" ? "add" : true} : {}),
       /* Sneak Attack: "That creature gains haste. Sacrifice the creature at the beginning of the next end step." */
       ...(params.gains || params.gainsUntilEndOfTurn || params.atEndStep ? {then: {gains: params.gains, gainsUntilEndOfTurn: params.gainsUntilEndOfTurn, atEndStep: params.atEndStep},
         source: context.source ?? null} : {}),
@@ -1076,8 +1079,9 @@ export const chooseCard = {
       ...(home.hand.length ? [{effect: "moveZone", targets: home.hand, to: "hand"}] : []),
       ...(home.library.length ? [{effect: "moveZone", targets: home.library, to: "library"}] : []),
     ];
-    if (splice.length) return {events, splice, ...(awaiting.remember ? {remembered: [...found, ...tops]} : {})};
-    return awaiting.remember ? {events, remembered: [...found, ...tops]} : events;
+    const adds = awaiting.remember === "add" ? {rememberAdd: true} : {};
+    if (splice.length) return {events, splice, ...(awaiting.remember ? {remembered: [...found, ...tops], ...adds} : {})};
+    return awaiting.remember ? {events, remembered: [...found, ...tops], ...adds} : events;
   },
 };
 
@@ -1096,14 +1100,18 @@ export const chooseCard = {
    again after each one, of what is left that can still be cast, until the player says "Don't cast" or nothing is left --
    each a choice of theirs, in the order they choose (CR 608.2g). Cast this way, each goes on the stack above the last. */
 const playable = (state, player, pool, {most, free, anyMana}) => {
-  const valueOf = (id) => (state.objects[id].manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0);
-  const owed = (id) => (free ? (state.objects[id].zone === "command" ? commanderTax(state, player, id) : 0) : anyMana ? valueOf(id) : null);
+  /* Its mana value as it would be cast: an adventurer card cast as its Adventure has the Adventure's (CR 715.3a). */
+  const valueOf = (id, adventure = false) => {
+    const cost = adventure ? state.objects[id].adventurer?.adventure?.manaCost : state.objects[id].manaCost;
+    return cost ? manaValue(parseManaCost(cost)) : 0;
+  };
+  const owed = (id, adventure) => (free ? (state.objects[id].zone === "command" ? commanderTax(state, player, id) : 0) : anyMana ? valueOf(id, adventure) : null);
   /* A card cast a moment ago is on the stack as a new object (CR 400.7): its id here no longer names anything. */
-  return pool.filter((id) => state.objects[id] && valueOf(id) <= most)
-    .flatMap((id) => {
-      const pay = owed(id);
-      return pay === null || !canPayGeneric(state, player, pay) ? [] : castChoicesNow(state, player, id).map((action) => ({...action, owed: pay}));
-    });
+  return pool.filter((id) => state.objects[id] && (valueOf(id) <= most || (Boolean(state.objects[id].adventurer) && valueOf(id, true) <= most)))
+    .flatMap((id) => castChoicesNow(state, player, id).filter((action) => valueOf(id, action.adventure === true) <= most).flatMap((action) => {
+      const pay = owed(id, action.adventure === true);
+      return pay === null || !canPayGeneric(state, player, pay) ? [] : [{...action, owed: pay}];
+    }));
 };
 export const play = {
   open(state, params, context) {
