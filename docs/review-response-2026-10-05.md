@@ -196,6 +196,46 @@ b630128 of 2026-10-01; five days of workshop work on `main` have not reached it.
 | Refresh the workshop now: the `pages` build of `main`, walked by `release-acceptance`, pushed to `release/pages` (Workers Builds deploys), walked again live | Yes, whenever you say go: it changes nothing about Play, and the walks hold the journeys |
 | Play on production | Not before G-F, as the plan has it: after Grok Bot's agents, your invitees and your own review at staging |
 
+### 6.2 How to do A4, A5, A8 and A3 (Rob asked, 2026-10-06)
+
+The facts these rest on, read from the Cloudflare API on 2026-10-06: the account token this environment injects (id
+starting `825fc1a3`) **expires on 2026-10-25**; staging's Access application, "CrankMagic staging", has two Allow
+policies, "Rob Only" and "Rehearsal: test friend (2026-10-04)", each one email address; the account has no Access
+service token yet.
+
+**A4 -- the session's Cloudflare token (the part still worth doing).** Workers Builds now deploys staging on a push, so
+the deploy fallback can wait. Two small changes to the existing token, in the Cloudflare dashboard: Manage Account,
+Account API Tokens, the token whose id starts `825fc1a3`, Edit.
+1. Add the permission Account, **Workers Builds Configuration, Read** (lets a session read a build's status and log).
+2. Set its expiry past 2026-10-25, or sessions lose Cloudflare access that day.
+3. Save. Nothing changes in this environment: the proxy keeps injecting the same token.
+
+Only if Workers Builds stops deploying again: create a token from the "Edit Cloudflare Workers" template, then in this
+environment's settings (the cloud environment menu in the session's title bar, then Edit) add it as the environment
+variable `CLOUDFLARE_API_TOKEN` and remove the Cloudflare entry from the API credentials, since while the proxy injects
+a token it overwrites wrangler's own.
+
+**A5 -- a service token for automated staging checks.** In the Zero Trust dashboard (one.dash.cloudflare.com):
+1. Access, Service credentials, Service Tokens, **Create Service Token**. Name `crankmagic-staging-checks`, duration a
+   year. Copy the Client ID and the Client Secret now: the secret is shown once.
+2. Access, Applications, **CrankMagic staging**, Policies, Add a policy: name `Session checks`, action **Service
+   Auth**, Include: Service Token, `crankmagic-staging-checks`. Save.
+3. In this environment's settings (as above), add two environment variables, `CF_ACCESS_CLIENT_ID` and
+   `CF_ACCESS_CLIENT_SECRET`, with those values. A new session picks them up. Never paste them into a chat.
+
+With it a session can read staging's pages and `version.json` itself (sending `CF-Access-Client-Id` and
+`CF-Access-Client-Secret`). Playing a table needs one more step of ours: the Worker knows a person by the email in
+Access's token, and a service token carries none, so the table API answers "Sign in to use a table". Letting the
+service token sit at playtest tables as a named test seat is L6's code change, the session's.
+
+**A8 -- the rehearsal policy.** Access, Applications, CrankMagic staging, Policies, "Rehearsal: test friend
+(2026-10-04)", Delete. It admits only the test identity of 2026-10-04's session. Do it after A5 (or now: nothing of
+ours depends on it once the service token exists).
+
+**A3 -- the friend.** Same application, Add a policy: name `Friends`, action **Allow**, Include: Emails, the friend's
+address (more addresses later). Save. Then the friend signs in at staging.crankmagic.com, restores the backup in
+Settings, Data, and only then opens the invitation link (section 4).
+
 ## 7. Assumptions and confidence
 
 | | |
