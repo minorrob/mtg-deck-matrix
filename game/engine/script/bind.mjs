@@ -180,7 +180,9 @@ export function recheckTargets(state, specs, chosen, context) {
 }
 
 const isRef = (value) => value && typeof value === "object" && !Array.isArray(value) && Number.isInteger(value.target);
-const FACT_KEYS = ["powerOf", "toughnessOf", "manaValueOf", "controllerOf"];
+/* `ownerOf` and `nameOf` (Reflector Mage): "that creature's owner can't cast spells with the same name as that creature" --
+   whose it is (CR 108.3) and what it is called (CR 201.2) as the resolution begins, before the creature is returned. */
+const FACT_KEYS = ["powerOf", "toughnessOf", "manaValueOf", "controllerOf", "ownerOf", "nameOf"];
 const factRef = (value) => value && typeof value === "object" && !Array.isArray(value) && FACT_KEYS.find((k) => isRef(value[k])) || null;
 
 /** What effects may need to know about each object target, read now (CR 608.2h): power, toughness, mana value, controller. */
@@ -196,7 +198,8 @@ export function factsOf(state, targets) {
       /* "Its controller gains life equal to its toughness" (Condemn): as it was, before the effect moved it. */
       toughnessOf: o.zone === "battlefield" ? toughnessOf(state, t.id) : (o.toughness ?? 0),
       manaValueOf: o.manaCost ? manaValue(parseManaCost(o.manaCost)) : 0,
-      controllerOf: o.zone === "battlefield" ? controllerOf(state, t.id) : o.controller};
+      controllerOf: o.zone === "battlefield" ? controllerOf(state, t.id) : o.controller,
+      ownerOf: o.owner, nameOf: o.card};
   });
 }
 /* A fact's value, or undefined when its target became illegal. */
@@ -250,7 +253,8 @@ export function bindEffect(effect, context, state = null) {
   const bound = namesChosen(effect) ? withChosen(effect, context.chosen) : {...effect};
   /* Facts first: a number for an amount, a player where a player goes. */
   for (const [key, value] of Object.entries(bound)) {
-    if (!factRef(value)) continue;
+    /* Who chooses by `ownerOf` is the owner as the object now is (below), not a fact read as the resolution began. */
+    if (!factRef(value) || (key === "chooser" && factRef(value) === "ownerOf")) continue;
     const fact = factValue(value, context);
     if (key === "who") bound.who = fact === undefined ? [] : [fact];
     else if (fact === undefined) delete bound[key];

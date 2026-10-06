@@ -9,15 +9,15 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1144,
-  "everyRule": 2460
+  "defined": 1148,
+  "everyRule": 2469
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 38,
+    "built": 40,
     "partial": 0,
-    "named": 19,
+    "named": 17,
     "missing": 137
    },
    "entries": [
@@ -649,13 +649,13 @@
      "kind": "keyword ability",
      "rule": "702.88",
      "name": "Rebound",
-     "engine": null,
-     "status": "named",
+     "engine": "Rebound",
+     "status": "built",
      "forge": "Rebound",
      "top": 3,
      "all": 35,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -769,13 +769,13 @@
      "kind": "keyword ability",
      "rule": "702.30",
      "name": "Echo",
-     "engine": null,
-     "status": "named",
+     "engine": "Echo",
+     "status": "built",
      "forge": "Echo",
      "top": 2,
      "all": 52,
-     "blocks": 2,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -5519,9 +5519,9 @@
   },
   "Triggers": {
    "tally": {
-    "built": 17,
+    "built": 18,
     "partial": 4,
-    "named": 5,
+    "named": 4,
     "missing": 112
    },
    "entries": [
@@ -6058,11 +6058,11 @@
      "rule": null,
      "name": "Exiled",
      "engine": "exiled",
-     "status": "named",
+     "status": "built",
      "forge": "Exiled",
      "top": 1,
      "all": 3,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -8922,8 +8922,8 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 95,
-     "alone": 23
+     "blocks": 93,
+     "alone": 22
     },
     {
      "kind": "option",
@@ -9313,10 +9313,10 @@
   },
   "Amounts the game counts": {
    "tally": {
-    "built": 12,
+    "built": 13,
     "partial": 1,
     "named": 0,
-    "missing": 175
+    "missing": 174
    },
    "entries": [
     {
@@ -11182,6 +11182,18 @@
     {
      "kind": "count",
      "rule": null,
+     "name": "It entered from, or was cast from, your library",
+     "engine": "condition {cameFrom: \"library\"} (script/condition.mjs)",
+     "status": "built",
+     "forge": "wasCastFromYourLibrary",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
      "name": "LastStateGraveyard",
      "engine": null,
      "status": "missing",
@@ -11482,18 +11494,6 @@
     {
      "kind": "count",
      "rule": null,
-     "name": "wasCastFromYourLibrary",
-     "engine": null,
-     "status": "missing",
-     "forge": "wasCastFromYourLibrary",
-     "top": 0,
-     "all": 1,
-     "blocks": 0,
-     "alone": 0
-    },
-    {
-     "kind": "count",
-     "rule": null,
      "name": "xColorPaid",
      "engine": null,
      "status": "missing",
@@ -11769,10 +11769,10 @@
   },
   "Other keyword constructs": {
    "tally": {
-    "built": 4,
+    "built": 6,
     "partial": 0,
     "named": 1,
-    "missing": 11
+    "missing": 9
    },
    "entries": [
     {
@@ -11887,25 +11887,25 @@
      "kind": "keyword construct",
      "rule": null,
      "name": "Protection from black",
-     "engine": null,
-     "status": "missing",
+     "engine": "Protection from black",
+     "status": "built",
      "forge": "Protection from black",
      "top": 2,
      "all": 48,
-     "blocks": 2,
+     "blocks": 0,
      "alone": 0
     },
     {
      "kind": "keyword construct",
      "rule": null,
      "name": "Protection from white",
-     "engine": null,
-     "status": "missing",
+     "engine": "Protection from white",
+     "status": "built",
      "forge": "Protection from white",
      "top": 2,
      "all": 32,
-     "blocks": 2,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword construct",

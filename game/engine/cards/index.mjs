@@ -166,6 +166,12 @@ const TRIGGERS = {
      existed (CR 603.10a). */
   leaves: (t) => (ARRIVALS.includes(t.who ?? "self")
     ? {on: "GameEventCardChangeZone", from: "Battlefield", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {})} : null),
+  /* "Whenever a creature is exiled from the battlefield" (Soulherder): a permanent put into exile from the battlefield, `who`
+     and `filter` read as it last existed -- a leaves-the-battlefield ability, so it looks back (CR 603.10a): a creature
+     exiled with this one is seen, and so is this one. One whose owner then puts it in the command zone was exiled first
+     (CR 903.9a; the card's ruling). From the battlefield only, yet. */
+  exiled: (t) => (ARRIVALS.includes(t.who ?? "self") && (t.from ?? "battlefield") === "battlefield"
+    ? {on: "GameEventCardChangeZone", from: "Battlefield", to: "Exile", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {})} : null),
   /* "Whenever one or more permanent cards are put into your graveyard from anywhere" (Moonshadow): a card arriving in a
      graveyard, from any zone, read as the card it became there -- a token is no card (CR 108.2b) -- `owner` whose
      graveyard (a card goes to its owner's, CR 400.3), `filter` what the card must be. "One or more" is `batch`. */
@@ -279,6 +285,8 @@ function effectsIn(list, out = []) {
     for (const mode of effect.modes ?? []) effectsIn(mode.effects, out);
     effectsIn(effect.then, out);
     effectsIn(effect.otherwise, out);
+    /* What follows paying an "unless" cost (Divert Disaster's Lander). */
+    effectsIn(effect.whenPaid, out);
   }
   return out;
 }
@@ -536,6 +544,43 @@ export function compileScript(script) {
       if (!(identity.types ?? []).some((t) => t === "Instant" || t === "Sorcery")) problems.push(`${ability.text}: storm on a card that is not an instant or sorcery`);
       abilities.push({id, kind: "static", rule: "storm", text: ability.text, affects: {what: "card", self: true}});
       keywords.push("Storm");
+      return;
+    }
+    /* REBOUND (CR 702.88a): kept on the card as a static ability, read as the spell leaves the stack (rules/stack.mjs): cast
+       from its owner's hand and resolved, it is exiled, and its caster may cast it free at their next upkeep. Only on an
+       instant or sorcery (702.88a). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "rebound") {
+      if (!(identity.types ?? []).some((t) => t === "Instant" || t === "Sorcery")) problems.push(`${ability.text}: rebound on a card that is not an instant or sorcery`);
+      abilities.push({id, kind: "static", rule: "rebound", text: ability.text, affects: {what: "card", self: true}});
+      keywords.push("Rebound");
+      return;
+    }
+    /* ECHO (CR 702.30a): "At the beginning of your upkeep, if this permanent came under your control since the beginning of
+       your last upkeep, sacrifice it unless you pay [cost]" -- the keyword IS that triggered ability: an intervening "if"
+       (`sinceYourLastUpkeep`, script/condition.mjs; asked again as it resolves, CR 603.4), and "unless you pay" asked of its
+       controller (effects/asking.mjs, unlessPays: a mana cost, colored symbols and all). A mana cost only, yet. */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "echo") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      let parsed = null;
+      try { parsed = cost.length === 1 && cost[0]?.atom === "mana" ? parseManaCost(cost[0].cost ?? "") : null; } catch { /* refused below */ }
+      if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`${ability.text}: an echo cost of mana, once`);
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.upkeep({}), condition: {sinceYourLastUpkeep: true},
+        effects: [{effect: "unlessPays", mana: String(cost[0]?.cost ?? ""), effects: [{effect: "moveZone", targets: "self", sacrifice: true}]}]});
+      keywords.push("Echo");
+      return;
+    }
+    /* PROTECTION FROM [QUALITY] (CR 702.16a), printed: "protection from black" (Karmic Guide) -- the keyword with its quality
+       in `from` ({colors}, {types}, or "everything"), compiled to the static `protection` on this permanent; what protection
+       does (DEBT, CR 702.16b-f) is read where each thing happens (rules/protection.mjs). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "protection") {
+      const from = ability.from;
+      const valid = from === "everything" || (from && typeof from === "object" && !Array.isArray(from) && Object.keys(from).length > 0
+        && Object.keys(from).every((k) => ["colors", "types"].includes(k))
+        && (from.colors ?? []).every((c) => ["W", "U", "B", "R", "G"].includes(c)) && (from.types ?? []).every((t) => typeof t === "string" && t.length > 0)
+        && [...(from.colors ?? []), ...(from.types ?? [])].length > 0);
+      if (!valid) problems.push(`${ability.text}: protection says from what: \`from\`, {colors: [...]}, {types: [...]} or "everything"`);
+      abilities.push({id, kind: "static", rule: "protection", text: ability.text, affects: {self: true}, from: valid ? structuredClone(from) : {}});
+      keywords.push("Protection");
       return;
     }
     /* FLASHBACK (CR 702.34a): the keyword with its cost, a list of atoms -- a mana cost, and "pay 3 life" -- kept as a

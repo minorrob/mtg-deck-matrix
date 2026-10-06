@@ -294,7 +294,10 @@ function subjects(state, event, condition, sourceId, controller) {
      1 life" (Suture Priest). */
   if (event.kind === "GameEventCardChangeZone" && fields.becomes !== undefined) {
     const player = fields.to?.zoneType === "Battlefield" ? state.objects[fields.becomes]?.controller : undefined;
-    return [{card: fields.becomes, ...(Number.isInteger(player) ? {player} : {})}];
+    /* And where it came from, if from a library (Fblthp, the Lost: "if it entered from your library or was cast from your
+       library"), kept with the trigger for when the permanent is gone before it resolves (CR 608.2h; script/condition.mjs). */
+    const came = fields.to?.zoneType === "Battlefield" ? state.objects[fields.becomes]?.cameFrom : undefined;
+    return [{card: fields.becomes, ...(Number.isInteger(player) ? {player} : {}), ...(came ? {cameFrom: {...came}} : {})}];
   }
   return [{}];
 }
@@ -553,7 +556,8 @@ export function collectTriggers(state, events) {
           {effect: "play", from: "targets", targets: "that card", free: true, condition: {compare: {count: {countersOn: "that card", counter: "time"}, atMost: 0}}}]}});
     }
     if (moment && (state.delayedTriggers ?? []).length) {
-      const due = state.delayedTriggers.filter((d) => d.at === moment);
+      /* "At the beginning of your next upkeep" (rebound, `yours`): its controller's step only. */
+      const due = state.delayedTriggers.filter((d) => d.at === moment && (!d.yours || d.controller === event.data?.fields?.playerTurn?.playerId));
       state.delayedTriggers = state.delayedTriggers.filter((d) => !due.includes(d));
       for (const d of due) state.pendingTriggers.push({
         abilityId: "delayed", text: d.text ?? (moment === "upkeep" ? "At the beginning of the next upkeep" : "At the beginning of the next end step"), controller: d.controller,

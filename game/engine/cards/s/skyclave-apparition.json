@@ -1,0 +1,88 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Skyclave Apparition",
+    "oracleId": "d90af00a-d322-4265-9954-7b1e80702e18",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Kor",
+      "Spirit"
+    ],
+    "manaCost": "{1}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, exile up to one target nonland, nontoken permanent you don't control with mana value 4 or less.\nWhen this creature leaves the battlefield, the exiled card's owner creates an X/X blue Illusion creature token, where X is the mana value of the exiled card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, exile up to one target nonland, nontoken permanent you don't control with mana value 4 or less.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "link": true
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "nonTypes": [
+            "Land"
+          ],
+          "token": false,
+          "controller": "opponent",
+          "manaValue": {
+            "max": 4
+          },
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature leaves the battlefield, the exiled card's owner creates an X/X blue Illusion creature token, where X is the mana value of the exiled card.",
+      "trigger": {
+        "on": "leaves"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "linked": true,
+          "token": {
+            "name": "Illusion",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Illusion"
+            ],
+            "colors": [
+              "U"
+            ],
+            "power": "X",
+            "toughness": "X"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,362 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Reflector Mage",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Cub": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Arbor": {
+      "types": [
+        "Land",
+        "Creature"
+      ],
+      "subtypes": [
+        "Forest",
+        "Dryad"
+      ],
+      "colors": [
+        "G"
+      ],
+      "manaCost": null,
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "g",
+          "kind": "mana",
+          "tapSelf": true,
+          "produces": {
+            "G": 1
+          }
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's Bear returned to her hand; on her turn she can't cast a Bear, though a Cub of the same cost she can; on her next turn she can",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Reflector Mage"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Cub"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Reflector Mage"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "zone": "hand",
+              "cards": [
+                "Bear",
+                "Cub"
+              ]
+            },
+            {
+              "seat": 1,
+              "controls": [
+                "Forest",
+                "Wastes"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Bear",
+                "seat": 1
+              },
+              "count": 0
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Cub",
+                "seat": 1
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 4,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Bear",
+                "seat": 1
+              },
+              "count": 1
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Island",
+            "Wastes",
+            "Reflector Mage"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A land creature returned can still be played: lands are played, not cast",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Reflector Mage"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Arbor"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Reflector Mage"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Arbor"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "zone": "hand",
+              "cards": [
+                "Arbor"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "play-land",
+                "card": "Arbor",
+                "seat": 1
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "play": "Arbor",
+          "seat": 1
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Arbor"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Only a creature an opponent controls: with none, the trigger has no target and Rob's own Bear stays",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Island",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Reflector Mage"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Reflector Mage"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Island",
+            "Wastes",
+            "Bear",
+            "Reflector Mage"
+          ]
+        }
+      ]
+    }
+  ]
+}

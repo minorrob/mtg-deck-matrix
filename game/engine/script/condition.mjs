@@ -26,6 +26,10 @@
  *   {spent: {G: 2}}                    at least that much mana of each color was spent to cast its own object (CR
  *                                      601.2h): "if {G}{G} was spent to cast it" (Wistfulness); adamant's "if at least
  *                                      three red mana was spent to cast this spell" is {R: 3}, colorless {C: 3}
+ *   {cameFrom: "library"}              the permanent the trigger is about entered from its controller's library or was
+ *                                      cast from it (Fblthp, the Lost)
+ *   {sinceYourLastUpkeep: true}        its own permanent came under its controller's control since the beginning of
+ *                                      their last upkeep (echo, CR 702.30a)
  *
  * The keys are closed, like every other grammar here: an unknown one is refused at the schema rather than read as true.
  */
@@ -34,7 +38,10 @@ import {cardsIn} from "../state/index.mjs";
 import {matchesSelector, compileSelector, matchesLastKnown} from "./filter.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
 
-const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "spent", "enduringStory", "loyaltyThisTurn", "impending"];
+const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "spent", "enduringStory", "loyaltyThisTurn", "impending",
+  "cameFrom", "sinceYourLastUpkeep"];
+/* Where a permanent may have come from, for `cameFrom`: a library (effects/zones.mjs and rules/stack.mjs record it). */
+const CAME_FROM = ["library"];
 /* The mana a condition may ask was spent to cast its object: the five colors and colorless (CR 106.1). */
 const SPENT_KEYS = ["W", "U", "B", "R", "G", "C"];
 /* A counted comparison's keys: what is counted, and against what. */
@@ -96,6 +103,23 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   if (condition.evoked !== undefined && ((source !== null && state.objects[source]?.evoked === true) !== condition.evoked)) return false;
   /* "If this permanent's impending cost was paid" (CR 702.176a). */
   if (condition.impending !== undefined && ((source !== null && state.objects[source]?.impending === true) !== condition.impending)) return false;
+  /* "If it entered from your library or was cast from your library" (Fblthp, the Lost): the permanent the trigger is about
+     (its own, for "when this enters") came onto the battlefield from its controller's library, or was cast from it -- read
+     on the permanent, or, gone, as the trigger saw it (rules/trigger.mjs keeps `cameFrom`, CR 608.2h). A card exiled from
+     a library and cast from exile was cast from exile (the card's ruling). */
+  if (condition.cameFrom !== undefined) {
+    const id = about?.card ?? source;
+    const came = (id !== null && id !== undefined ? state.objects[id]?.cameFrom : undefined) ?? about?.cameFrom;
+    if (!(came?.zone === condition.cameFrom && came.owner === controller)) return false;
+  }
+  /* Echo's "if this permanent came under your control since the beginning of your last upkeep" (CR 702.30a): the turn it
+     came under its controller's control (state/index.mjs, controlledSinceTurn -- entering, or a change of control) is that
+     player's previous turn or later (rules/turn.mjs keeps it); before their first, any. Nothing changes control in an
+     untap step here, so a turn is fine enough: anything during that turn came after its upkeep began. Gone, it did not. */
+  if (condition.sinceYourLastUpkeep === true) {
+    const object = source !== null ? state.objects[source] : null;
+    if (!object || (object.controlledSinceTurn ?? 0) < (state.players[controller]?.previousTurnBegan ?? 0)) return false;
+  }
   /* "If {W}{W} was spent to cast it" (CR 601.2h): the mana spent to cast its own object (rules/actions.mjs) -- or, once that
      object has gone, as it last was: what the trigger remembered as it triggered (`spent`, rules/trigger.mjs; CR 608.2h). */
   if (condition.spent !== undefined) {
@@ -186,6 +210,8 @@ export function conditionProblems(condition) {
   if ("escaped" in condition && typeof condition.escaped !== "boolean") problems.push("escaped is true or false");
   if ("evoked" in condition && typeof condition.evoked !== "boolean") problems.push("evoked is true or false");
   if ("impending" in condition && typeof condition.impending !== "boolean") problems.push("impending is true or false");
+  if ("cameFrom" in condition && !CAME_FROM.includes(condition.cameFrom)) problems.push(`cameFrom is the zone the permanent came from: ${CAME_FROM.join(", ")}`);
+  if ("sinceYourLastUpkeep" in condition && condition.sinceYourLastUpkeep !== true) problems.push("sinceYourLastUpkeep is true");
   if ("spent" in condition) {
     const spent = condition.spent;
     if (!spent || typeof spent !== "object" || Array.isArray(spent) || !Object.keys(spent).length

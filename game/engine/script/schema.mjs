@@ -40,6 +40,7 @@ import {STATIC_RULES, CANT_ATTACK_DEFENDERS} from "../rules/statics.mjs";
 import {amountProblems, AMOUNT_PARAMS} from "./amount.mjs";
 import {conditionProblems} from "./condition.mjs";
 import {isCreatureType} from "../keywords/types.mjs";
+import {parseManaCost} from "../rules/mana.mjs";
 
 /* The facts about a target an effect may name where it takes a number (script/bind.mjs). */
 const FACT_KEYS = ["powerOf", "manaValueOf", "controllerOf"];
@@ -60,7 +61,8 @@ const COMPOSERS = {
   /* One way or the other (batch 72): its `then` and its `otherwise`, each a list -- one that is not is reported, not read. */
   branch: (effect) => [...(Array.isArray(effect.then) ? effect.then : []), ...(Array.isArray(effect.otherwise) ? effect.otherwise : [])],
   modal: (effect) => (effect.modes ?? []).flatMap((mode) => mode.effects ?? []),
-  unlessPays: (effect) => effect.effects ?? [],
+  /* What follows not paying, and -- "if they do" (Divert Disaster) -- what follows paying. */
+  unlessPays: (effect) => [...(effect.effects ?? []), ...(Array.isArray(effect.whenPaid) ? effect.whenPaid : [])],
   delayedTrigger: (effect) => effect.effects ?? [],
   /* A reflexive trigger (batch 72): what it does. */
   immediateTrigger: (effect) => effect.effects ?? [],
@@ -107,6 +109,21 @@ function checkEffect(effect, path, errors) {
   /* "Exile ... until this leaves the battlefield" (CR 610.3): the one "until" the engine returns from. */
   if (name === "exileUntil" && effect.until !== "this leaves")
     errors.push({path: `${path}.until`, message: "exileUntil returns what it exiled when its source leaves the battlefield: `until: \"this leaves\"`"});
+  /* "And all other nonland permanents that player controls with the same name" (Deputy of Detention): a selector of the others. */
+  if (name === "exileUntil" && effect.sameName !== undefined) checkSelector(effect.sameName, `${path}.sameName`, errors);
+  /* "Can't cast spells with the same name as that creature" (Reflector Mage): which name, and whose -- both, or it forbids
+     nothing it could say. */
+  if (name === "effectUntil" && effect.rule === "cant-cast" && (effect.named === undefined || effect.who === undefined))
+    errors.push({path, message: "A cast forbidden for a while names the spells (`named`) and the players (`who`)"});
+  /* "Unless you pay {3}{W}{W}" (echo): a mana cost with its colors, `mana`, in place of a generic `amount`, never beside one. */
+  if (name === "unlessPays" && effect.mana !== undefined) {
+    let parsed = null;
+    try { parsed = typeof effect.mana === "string" ? parseManaCost(effect.mana) : null; } catch { /* reported below */ }
+    if (!parsed || !parsed.symbols.length || parsed.variable > 0) errors.push({path: `${path}.mana`, message: "An \"unless\" mana cost is mana symbols, without X: \"{3}{W}{W}\""});
+    if (effect.amount !== undefined) errors.push({path: `${path}.mana`, message: "An \"unless\" cost is `mana` or a generic `amount`, not both"});
+  }
+  if (name === "unlessPays" && effect.whenPaid !== undefined && !(Array.isArray(effect.whenPaid) && effect.whenPaid.length))
+    errors.push({path: `${path}.whenPaid`, message: "What follows paying is a list of effects"});
   /* Where a countered spell goes instead of its owner's graveyard: exile (Force of Negation) or the top of its owner's
      library (Memory Lapse) -- any other word would be read as the graveyard. */
   if (name === "counterSpell" && effect.to !== undefined && !["exile", "top"].includes(effect.to))

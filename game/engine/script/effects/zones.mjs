@@ -95,6 +95,9 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false} = 
   }
   if (leaving >= 0) state.stack.splice(leaving, 1);
   const moved = moveObject(state, id, destination, PER_PLAYER.includes(destination) ? holder : null);
+  /* "If it entered from your library" (Fblthp, the Lost): where the permanent came from, and whose library that was --
+     read by the condition `cameFrom` (script/condition.mjs). A library only; rules/stack.mjs records a cast from one. */
+  if (destination === "battlefield" && from === "library" && state.objects[moved]) state.objects[moved].cameFrom = {zone: "library", owner: object.zonePlayer ?? object.owner};
   if (hosts) enchantOnArrival(state, moved, hosts, state.objects[moved].controller);
   if (entering) {
     /* Tapped by its own "enters tapped", or by the effect that put it there ("onto the battlefield tapped"): before the
@@ -131,13 +134,26 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false} = 
  * (Ossification; CR 610.3). Each target exiled and linked to the source as it is on the battlefield; immediately after
  * that permanent leaves, a second one-shot effect returns them (returnExiledUntil). If it has already left by the time
  * the exile would happen -- after the ability triggered, or was put on the stack -- nothing moves (CR 610.3a, 610.3b).
+ *
+ * "And all other nonland permanents that player controls with the same name as that permanent" (Deputy of Detention):
+ * `sameName`, a selector of the others. They are not targets -- one with hexproof goes too -- and are read as the exile
+ * happens: every other permanent the target's controller then controls that has the target's name (CR 201.2a), exiled
+ * with it and returned with it.
  */
 export function exileUntil(state, params, context) {
   const events = [];
   /* The source as it is now: null once it has left the battlefield (rules/stack.mjs), and then nothing moves. */
   const source = context.source ?? null;
   if (source === null || state.objects[source]?.zone !== "battlefield") return events;
-  for (const id of params.targets ?? []) {
+  const exiling = [...(params.targets ?? [])];
+  const named = params.sameName ? exiling.find((id) => state.objects[id]?.zone === "battlefield") : undefined;
+  if (named !== undefined) {
+    const name = state.objects[named].card, holder = controllerOf(state, named);
+    const others = compileSelector({...params.sameName, what: "permanent"});
+    for (const id of state.zones.battlefield)
+      if (!exiling.includes(id) && state.objects[id].card === name && controllerOf(state, id) === holder && others(state, id, {controller: context.controller, source})) exiling.push(id);
+  }
+  for (const id of exiling) {
     if (!state.objects[id]) continue;
     const moved = moveOne(state, id, "exile", events);
     if (moved !== null && state.objects[moved]?.zone === "exile") (state.exiledUntil ??= []).push({source, exiled: moved});
@@ -316,8 +332,12 @@ export function moveZone(state, params, context, rng = null) {
      objects it became (CR 400.7), for the effects after it to name as "remembered" (script/bind.mjs). */
   if (params.remember) { context.remembered = became.filter((id) => state.objects[id]); context.rememberedControllers = was; }
   /* "Exile another target nonland permanent" (Oblivion Ring, `link`): what it exiled, kept against this source for the
-     ability linked to it (CR 607.2a); used, the link is spent. */
-  if (params.link === true && context.source !== null && context.source !== undefined) (state.links ??= {})[context.source] = became.filter((id) => state.objects[id]);
+     ability linked to it (CR 607.2a); used, the link is spent. Each time the ability exiles adds to what it exiled -- the
+     same trigger twice (Panharmonicon) is "the exiled cards", both (Skyclave Apparition's ruling of 2020-09-25). */
+  if (params.link === true && context.source !== null && context.source !== undefined) {
+    const links = (state.links ??= {});
+    links[context.source] = [...(links[context.source] ?? []), ...became.filter((id) => state.objects[id])];
+  }
   if (params.linked === true && state.links) delete state.links[linkOf(context)];
   /* Teferi's Time Twist: "if it enters as a creature, it enters with an additional +1/+1 counter on it". */
   if (params.withCounter) for (const id of arrived) if (typesOf(state, id).includes("Creature")) state.objects[id].counters[params.withCounter] = (state.objects[id].counters[params.withCounter] ?? 0) + 1;

@@ -31,7 +31,7 @@ import {compileSelector} from "../filter.mjs";
 import {event, cardRef, moveOne, playersFor, sacrificeOne} from "./zones.mjs";
 import {proliferate as giveEachAnother, addCounters} from "./resources.mjs";
 import {makeCopies, afterwards, joinAttack, defendingPlayers, attachTo, createToken, effectUntil} from "./permanents.mjs";
-import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits} from "../../rules/mana.mjs";
+import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits, unlessPlans, planWords, payPlan} from "../../rules/mana.mjs";
 import {typesOf, characteristicsOf, everyCreatureTypeOf} from "../../rules/layers.mjs";
 import {pushCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
 import {loseLife, DAMAGING, damageQuestion} from "./resources.mjs";
@@ -660,24 +660,29 @@ export const amass = {
 /* ---- unlessPays (CR 118.12): "counter target spell unless its controller pays {3}", "you may draw a card unless that
    player pays {1}". The player named is asked; paying is offered only to a player who can (pool and untapped mana
    sources together) and taps for them; not paying, the effects that follow `unless` happen, in order, with the same
-   targets. Generic mana only; the amount may be counted ("{X}, where X is this creature's power"). ---- */
+   targets. Generic mana (`amount`), which may be counted ("{X}, where X is this creature's power"), or a mana cost with
+   colored symbols (`mana`, echo's). Paid, `whenPaid` follows if it says so. ---- */
 /* Ward's other costs (CR 702.21a): `life`, which a player can pay only if their total is at least that much (CR 119.4);
    `discard` a card, each in their hand its own option; `sacrifice` a permanent of theirs the selector describes, each its
    own option. With mana, all of it is paid or none. */
 /* Life is part of the payment when there is some to pay, or when life is all it asks: "pay X life" with X of 0 is still
    paying 0 life (CR 119.4b), not {0}. */
+/* A MANA COST WITH COLORED SYMBOLS (`mana`, echo's "sacrifice it unless you pay {3}{W}{W}", CR 702.30a): paid from the pool
+   and the payer's plain sources as a generic amount is (rules/mana.mjs, unlessPlans); offered only to a payer who has a way,
+   and when there is more than one way, which is the payer's (CR 605.3a). */
 const lifeAsked = (awaiting) => awaiting.life > 0 || (awaiting.life === 0 && !(awaiting.amount > 0));
 const noun = (selector) => (selector?.subtypes?.length ? `a ${selector.subtypes[0]}` : selector?.types?.length ? `a ${selector.types[0].toLowerCase()}` : "a permanent");
 function costWords(awaiting) {
-  const paid = [awaiting.amount > 0 ? `{${awaiting.amount}}` : null, lifeAsked(awaiting) ? `${awaiting.life} life` : null].filter(Boolean);
+  const paid = [awaiting.mana ?? null, awaiting.amount > 0 ? `{${awaiting.amount}}` : null, lifeAsked(awaiting) ? `${awaiting.life} life` : null].filter(Boolean);
   const other = awaiting.discard ? "discard a card" : awaiting.sacrificeCount ? `sacrifice ${awaiting.sacrificeCount} permanents` : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}` : null;
   return [other, paid.length ? `pay ${paid.join(" and ")}` : null].filter(Boolean).join(" and ") || `pay {${awaiting.amount}}`;
 }
 function payOptions(state, awaiting) {
   const {player} = awaiting, amount = awaiting.amount ?? 0, life = awaiting.life ?? 0;
   if (amount > 0 && !canPayGeneric(state, player, amount)) return [];
+  if (awaiting.mana && !unlessPlans(state, player, awaiting.mana, 1).plans.length) return [];
   if (life > state.players[player].life) return [];
-  const paid = [amount > 0 ? `{${amount}}` : null, lifeAsked(awaiting) ? `${life} life` : null].filter(Boolean).join(" and ");
+  const paid = [awaiting.mana ?? null, amount > 0 ? `{${amount}}` : null, lifeAsked(awaiting) ? `${life} life` : null].filter(Boolean).join(" and ");
   const also = paid ? ` and pay ${paid}` : "";
   if (awaiting.sacrifice) {
     const alternatives = Array.isArray(awaiting.sacrifice.anyOf) ? awaiting.sacrifice.anyOf : [awaiting.sacrifice];
@@ -702,16 +707,27 @@ export const unlessPays = {
        nothing happens. */
     if (params.ifPaid && !params.life && !params.discard && !params.sacrifice && !canPayGeneric(state, payer, Math.max(0, params.amount ?? 0))) return false;
     state.awaiting = {kind: "effect-choice", effect: "unlessPays", player: payer, amount: Math.max(0, params.amount ?? 0),
+      ...(typeof params.mana === "string" && params.mana ? {mana: params.mana} : {}),
       ...(params.life !== undefined ? {life: params.life} : {}), ...(params.discard ? {discard: params.discard} : {}), ...(params.sacrifice ? {sacrifice: structuredClone(params.sacrifice)} : {}),
       ...(params.sacrificeCount ? {sacrificeCount: params.sacrificeCount} : {}),
       effects: structuredClone(params.effects ?? []), source: context.source ?? null,
       /* "You may pay {1}. If you do, ...": the effects when it is paid, not when it is not. */
-      ...(params.ifPaid ? {ifPaid: true} : {})};
+      ...(params.ifPaid ? {ifPaid: true} : {}),
+      /* "Counter target spell unless its controller pays {2}. If they do, you create a Lander token" (Divert Disaster; CR
+         118.12a): an outcome either way -- `effects` if it is not paid, `whenPaid` if it is, each done by this effect's
+         controller, not the payer (the resolution's own context carries on with them). */
+      ...(Array.isArray(params.whenPaid) && params.whenPaid.length ? {whenPaid: structuredClone(params.whenPaid)} : {})};
     return true;
   },
   choice(state, awaiting) {
     /* Having said they pay: which mana pays, when that is a choice (rules/mana.mjs, paymentUnits). */
     if (awaiting.paying) return paymentChoice(`unless-mana:${awaiting.player}:${state.turn}:${awaiting.amount}`, awaiting.amount, paymentUnits(state, awaiting.player));
+    /* Having said they pay a mana cost with colors, and there being more than one way: which way. */
+    if (awaiting.choosingPlan) {
+      const {units, plans} = unlessPlans(state, awaiting.player, awaiting.mana);
+      return {id: `unless-plan:${awaiting.player}:${state.turn}`, title: `Pay ${awaiting.mana}: choose the mana`, mode: "one", min: 1, max: 1,
+        options: plans.map((plan, index) => ({index, label: planWords(units, plan)}))};
+    }
     /* Having said they sacrifice that many: which ones. */
     if (awaiting.sacrificing) return {id: `unless-sacrifice:${awaiting.player}:${state.turn}`, title: `Choose ${awaiting.sacrificeCount} permanents to sacrifice`, mode: "many",
       min: awaiting.sacrificeCount, max: awaiting.sacrificeCount, options: payOptions(state, awaiting).map((option, index) => ({index, ...option}))};
@@ -725,6 +741,14 @@ export const unlessPays = {
     if (awaiting.paying) {
       const events = payWithUnits(state, awaiting.player, paymentUnits(state, awaiting.player), indices, awaiting.amount);
       return unlessPaid(state, awaiting, awaiting.paying.option, events);
+    }
+    /* The way chosen to pay a mana cost with colors: those units, spent. */
+    if (awaiting.choosingPlan) {
+      const {units, plans} = unlessPlans(state, awaiting.player, awaiting.mana);
+      const plan = plans[(indices ?? [])[0]];
+      if (!plan || (indices ?? []).length !== 1) throw new Error("Invalid selection");
+      const {choosingPlan, ...rest} = awaiting;
+      return unlessPays.paid(state, rest, choosingPlan.option, payPlan(state, awaiting.player, units, plan));
     }
     if (awaiting.sacrificing) {
       const ids = payOptions(state, awaiting).map((o) => o.cardId);
@@ -742,14 +766,24 @@ export const unlessPays = {
     if (!option.pay) return awaiting.ifPaid ? [] : {events: [], splice: structuredClone(awaiting.effects)};
     return unlessPays.paid(state, awaiting, option);
   },
-  /* Paying, with the option chosen: its mana, then the rest. */
-  paid(state, awaiting, option) {
+  /* Paying, with the option chosen: its mana, then the rest. `spent`, what a mana cost with colors was already paid with. */
+  paid(state, awaiting, option, spent = null) {
+    /* A mana cost with colors (`mana`): the one way there is, paid at once; more, and which is asked next. */
+    if (awaiting.mana && spent === null) {
+      const {units, plans} = unlessPlans(state, awaiting.player, awaiting.mana);
+      if (!plans.length) throw new Error(`${awaiting.mana} can no longer be paid`);
+      if (plans.length > 1) {
+        state.awaiting = {...awaiting, choosingPlan: {option}};
+        return {events: [], again: true};
+      }
+      return unlessPays.paid(state, awaiting, option, payPlan(state, awaiting.player, units, plans[0]));
+    }
     /* Which mana pays is the payer's: asked next when the ways to pay differ, paid at once when they do not. */
     if ((awaiting.amount ?? 0) > 0 && paymentIsAChoice(paymentUnits(state, awaiting.player), awaiting.amount)) {
       state.awaiting = {...awaiting, paying: {option}};
       return {events: [], again: true};
     }
-    const events = [];
+    const events = [...(spent ?? [])];
     if ((awaiting.amount ?? 0) > 0) {
       const paid = payGeneric(state, awaiting.player, awaiting.amount);
       events.push(...(Array.isArray(paid) ? paid : paid?.events ?? []));
@@ -765,7 +799,9 @@ function unlessPaid(state, awaiting, option, events) {
     if (moveOne(state, option.discard, "graveyard", events, {owner: awaiting.player}) !== null) events[events.length - 1].data.fields.discarded = true;
   }
   for (const id of option.sacrifice === undefined ? [] : [].concat(option.sacrifice)) if (state.objects[id]) sacrificeOne(state, id, events);
-  return awaiting.ifPaid ? {events, splice: structuredClone(awaiting.effects)} : events;
+  if (awaiting.ifPaid) return {events, splice: structuredClone(awaiting.effects)};
+  /* "If they do, you create a Lander token" (Divert Disaster): what paying leads to. */
+  return awaiting.whenPaid ? {events, splice: structuredClone(awaiting.whenPaid)} : events;
 }
 
 /* ---- chooseType (CR 205.3m): "choose a creature type" -- one of the creature types among the cards in the game, which is
