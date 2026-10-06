@@ -374,6 +374,39 @@ try {
   ok(tableGeo.same && Math.abs(tableGeo.ratio - 1.78) < 0.02 && tableGeo.fits && tableGeo.largest, `the boards are identical 16:9 (${tableGeo.ratio}), the largest that fit the tabletop`);
   ok(tableGeo.library === 2 && tableGeo.trayBelow, "each board draws its Library pile, and the hand sits along the foot below the boards");
   ok(tableGeo.centerBetween && tableGeo.sideways === 0 && /logo-wand/.test(tableGeo.logo), "the wand logo sits in the gap between the boards, and nothing scrolls sideways");
+  /* R12 (the plan review, X8): AT 1280x720 THE CAPTIONS ARE WORDS, NOT A PILE-UP. With Board cards at its smallest the
+     Table view's piles are narrowest, and their captions ran into each other ("CommandExile 0", "Library 9Grave...")
+     under AGENTS.md's 10px floor. Every pile caption, zone name and heading is 10px or larger, whole and clear of its
+     neighbors; a pile too narrow for its name shows its count, and still names its zone to a screen reader and on hover. */
+  {
+    const was = rob.page.viewportSize(), slider = rob.page.locator(".cm-board-rowbar [data-board-scale=board]");
+    await rob.page.setViewportSize({width: 1280, height: 720});
+    const before = await slider.inputValue(), lo = await slider.getAttribute("min");
+    await slider.fill(lo);
+    await rob.page.waitForTimeout(250);
+    const m = await rob.page.evaluate(() => {
+      const shown = (el) => {const r = el.getBoundingClientRect(), st = getComputedStyle(el); return r.width > 0 && r.height > 0 && st.display !== "none" && st.visibility !== "hidden";};
+      const texts = [...document.querySelectorAll(".cm-board-table .cm-mat .cm-board-pile figcaption > *, .cm-board-table .cm-mat .cm-mat-label, .cm-board-table .cm-mat .cm-board-group h3, .cm-board-table .cm-mat .cm-board-chip, .cm-board-table .cm-mat .cm-board-empty")].filter(shown);
+      const small = texts.map((el) => [el.textContent.trim(), parseFloat(getComputedStyle(el).fontSize)]).filter(([, f]) => f < 10);
+      const cut = texts.filter((el) => el.scrollWidth > el.clientWidth + 1).map((el) => el.textContent.trim());
+      let overlaps = 0;
+      for (const mat of document.querySelectorAll(".cm-board-table .cm-mat")) {
+        const parts = [...mat.querySelectorAll(".cm-board-pile figcaption > *")].filter(shown).map((c) => c.getBoundingClientRect());
+        for (let i = 0; i < parts.length; i += 1) for (let j = i + 1; j < parts.length; j += 1) {
+          const a = parts[i], b = parts[j];
+          if (a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1) overlaps += 1;
+        }
+      }
+      const piles = [...document.querySelectorAll(".cm-board-table .cm-board-pile")];
+      const named = piles.length > 0 && piles.every((p) => /^(Command|Exile|Library|Graveyard), \d+$/.test(p.getAttribute("aria-label") || "") && p.getAttribute("title") === p.getAttribute("aria-label"));
+      return {count: texts.length, small, cut, overlaps, named};
+    });
+    ok(m.count >= 8 && !m.small.length && !m.cut.length && m.overlaps === 0,
+      `R12: at 1280x720, Board cards at its smallest, every caption, zone name and heading in the Table view is 10px or larger, whole and clear of the next (${m.count} read; under 10px ${JSON.stringify(m.small)}; cut ${JSON.stringify(m.cut)}; overlapping ${m.overlaps})`);
+    ok(m.named, "and each pile still names its zone and count, to a screen reader and on hover");
+    await slider.fill(before);
+    await rob.page.setViewportSize(was);
+  }
   ok((await text(rob.page, `.cm-seatboard[data-seat='${activeSeat}']`)).includes(land), "the land played is on its owner's board in the Table view too");
   await shot(rob.page, "board-table-1400");
   await rob.page.click(".cm-board-center");

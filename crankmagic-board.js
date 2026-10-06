@@ -494,7 +494,7 @@ globalThis.CrankBoard = Object.freeze({
   /* A card-shaped zone: the top card (or the back of the library, its count on it), the name and the count below. */
   function pile(label, zone, top, {back = false} = {}) {
     const face = top ? card(top) : `<div class="cm-bcard is-empty${back && zone.count ? " is-back" : ""}" aria-hidden="true">${back && zone.count ? `<b class="cm-bcard-count">${zone.count}</b>` : ""}</div>`;
-    return `<figure class="cm-mat-zone cm-board-pile" data-zone="${e(label.toLowerCase())}" aria-label="${e(label)}, ${zone.count}">${face}<figcaption><em>${e(label)}</em><b>${zone.count}</b></figcaption></figure>`;
+    return `<figure class="cm-mat-zone cm-board-pile" data-zone="${e(label.toLowerCase())}" aria-label="${e(label)}, ${zone.count}" title="${e(label)}, ${zone.count}">${face}<figcaption><em>${e(label)}</em><b>${zone.count}</b></figcaption></figure>`;
   }
   function mat(p, {size = "focus", head = "top", focusButton = false} = {}) {
     const i = p.playerId, you = i === view.seat, z = p.zones, field = z.Battlefield.cards;
