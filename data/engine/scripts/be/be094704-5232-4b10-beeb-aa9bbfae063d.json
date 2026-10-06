@@ -1,0 +1,95 @@
+{
+ "schema": "CrankCompiledCard@1",
+ "name": "Feldon of the Third Path",
+ "oracleId": "be094704-5232-4b10-beeb-aa9bbfae063d",
+ "oracleHash": "550b125b6c667edb",
+ "status": "provisional",
+ "script": {
+  "schema": "CrankCardScript@1",
+  "identity": {
+   "name": "Feldon of the Third Path",
+   "oracleId": "be094704-5232-4b10-beeb-aa9bbfae063d",
+   "supertypes": [
+    "Legendary"
+   ],
+   "types": [
+    "Creature"
+   ],
+   "subtypes": [
+    "Human",
+    "Artificer"
+   ],
+   "manaCost": "{1}{R}{R}",
+   "colors": [
+    "R"
+   ],
+   "colorIdentity": [
+    "R"
+   ],
+   "power": 2,
+   "toughness": 3
+  },
+  "oracleText": "{2}{R}, {T}: Create a token that's a copy of target creature card in your graveyard, except it's an artifact in addition to its other types. It gains haste. Sacrifice it at the beginning of the next end step.",
+  "source": "compiler",
+  "model": "x10-session",
+  "abilities": [
+   {
+    "kind": "activated",
+    "text": "{2}{R}, {T}: Create a token that's a copy of target creature card in your graveyard, except it's an artifact in addition to its other types. It gains haste. Sacrifice it at the beginning of the next end step.",
+    "cost": [
+     {
+      "atom": "mana",
+      "cost": "{2}{R}"
+     },
+     {
+      "atom": "{T}"
+     }
+    ],
+    "targets": [
+     {
+      "what": "card",
+      "zone": "graveyard",
+      "controller": "you",
+      "types": [
+       "Creature"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "effect": "copyPermanent",
+      "targets": {
+       "target": 0
+      },
+      "except": {
+       "addTypes": [
+        "Artifact"
+       ]
+      },
+      "gains": [
+       "Haste"
+      ],
+      "atEndStep": "sacrifice"
+     }
+    ]
+   }
+  ]
+ },
+ "checks": {
+  "schema": "pass",
+  "fidelity": "pass",
+  "readBack": "not run",
+  "smoke": {
+   "played": true,
+   "resolutions": 1
+  }
+ },
+ "crFlags": [],
+ "notes": "",
+ "models": {
+  "writer": "x10-session",
+  "readBack": null
+ },
+ "attempts": 1,
+ "compiledAt": "2026-10-06T16:16:06.133Z"
+}

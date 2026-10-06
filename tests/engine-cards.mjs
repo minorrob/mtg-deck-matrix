@@ -207,7 +207,8 @@ const files = loadCardScenarios();
   const text = execFileSync(process.execPath, ["game/tools/engine-coverage.mjs"], {encoding: "utf8"});
   const doc = readFileSync(new URL("../docs/engine/coverage.md", import.meta.url), "utf8");
   ok(text.startsWith(doc), "docs/engine/coverage.md is what `node game/tools/engine-coverage.mjs --write` writes today");
-  ok(doc.includes(`(${index.size} definitions in all)`) && /\| Rob's seven decks \| 477 \| \d+ \|/.test(doc), "and it counts the directory's definitions");
+  /* The hand-authored directory's: a learned definition stored provisional (data/engine/scripts) is counted apart (X10). */
+  ok(doc.includes(`(${scripts.length} definitions in all)`) && /\| Rob's seven decks \| 477 \| \d+ \| \d+ \|/.test(doc), "and it counts the directory's definitions");
 }
 
 /* ---- 7. the most-played list ---- */
@@ -227,9 +228,11 @@ const files = loadCardScenarios();
 {
   eq(readFileSync(DEFINITIONS_MODULE, "utf8") === definitionsModule(), true,
     "game/engine/cards/definitions.mjs is the card directory as it stands (node game/tools/engine-definitions.mjs --write)");
-  const playable = index.names.filter((n) => index.resolve(n)?.playable === true);
+  /* The hand-authored ones: a learned definition stored provisional (data/engine/scripts) seats at no table until a played
+     game or Rob confirms it (the execution plan's D5; tests/engine-learned.mjs holds that side). */
+  const playable = index.names.filter((n) => index.resolve(n)?.playable === true && index.resolve(n)?.source === "hand");
   eq([Object.keys(DEFINITIONS).length, playable.every((n) => JSON.stringify(tableDefinition(n)) === JSON.stringify(index.definition(n)))], [playable.length, true],
-    "it holds every playable definition, each the same as the directory's");
+    "it holds every playable hand-authored definition, each the same as the directory's");
   eq([tableDefinition("LIGHTNING BOLT")?.manaCost, tableDefinition("No Such Card")], ["{R}", null], "found by the same folded name, and nothing for a card it does not hold");
 }
 

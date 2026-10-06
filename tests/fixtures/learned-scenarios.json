@@ -1,0 +1,2520 @@
+{
+ "schema": "CrankLearnedScenarios@1",
+ "note": "The late check of the X10 pilot (docs/engine/velocity-measured-2026-10-06.md): each stored provisional definition played in a scenario the way game/engine/cards scenario files are. `post` checks what a scenario file cannot say.",
+ "fixtures": {
+  "Bear": {
+   "types": [
+    "Creature"
+   ],
+   "manaCost": "{1}{G}",
+   "colors": [
+    "G"
+   ],
+   "power": 2,
+   "toughness": 2
+  },
+  "Giant": {
+   "types": [
+    "Creature"
+   ],
+   "manaCost": "{4}{G}",
+   "colors": [
+    "G"
+   ],
+   "power": 5,
+   "toughness": 5
+  },
+  "Zombie": {
+   "types": [
+    "Creature"
+   ],
+   "subtypes": [
+    "Zombie"
+   ],
+   "manaCost": "{1}{B}",
+   "colors": [
+    "B"
+   ],
+   "power": 2,
+   "toughness": 2
+  },
+  "Old Dragon": {
+   "types": [
+    "Creature"
+   ],
+   "subtypes": [
+    "Dragon"
+   ],
+   "manaCost": "{4}{R}",
+   "colors": [
+    "R"
+   ],
+   "power": 4,
+   "toughness": 4
+  },
+  "Faerie": {
+   "types": [
+    "Creature"
+   ],
+   "subtypes": [
+    "Faerie"
+   ],
+   "manaCost": "{1}{U}",
+   "colors": [
+    "U"
+   ],
+   "power": 1,
+   "toughness": 1
+  },
+  "Merfolk Spell": {
+   "types": [
+    "Creature"
+   ],
+   "subtypes": [
+    "Merfolk"
+   ],
+   "manaCost": "{C}",
+   "power": 1,
+   "toughness": 1
+  },
+  "Rock": {
+   "types": [
+    "Artifact"
+   ],
+   "manaCost": "{1}"
+  },
+  "Kill": {
+   "types": [
+    "Instant"
+   ],
+   "manaCost": "{C}",
+   "spell": {
+    "id": "s",
+    "text": "Destroy target creature.",
+    "targets": [
+     {
+      "what": "permanent",
+      "types": [
+       "Creature"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "effect": "destroy",
+      "targets": {
+       "target": 0
+      }
+     }
+    ]
+   }
+  },
+  "Squirrel": {
+   "types": [
+    "Creature"
+   ],
+   "subtypes": [
+    "Squirrel"
+   ],
+   "manaCost": "{G}",
+   "colors": [
+    "G"
+   ],
+   "power": 1,
+   "toughness": 1
+  },
+  "Ox": {
+   "types": [
+    "Creature"
+   ],
+   "manaCost": "{2}{G}",
+   "colors": [
+    "G"
+   ],
+   "power": 3,
+   "toughness": 3
+  }
+ },
+ "cards": [
+  {
+   "card": "Azusa, Lost but Seeking",
+   "kind": "static: two additional land drops",
+   "scenarios": [
+    {
+     "name": "Azusa: three lands in a turn, not four",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Azusa, Lost but Seeking"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "Forest",
+        "Forest",
+        "Forest",
+        "Forest"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "play": "Forest"
+      },
+      {
+       "play": "Forest"
+      },
+      {
+       "play": "Forest"
+      }
+     ],
+     "expect": [
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "Forest"
+       ]
+      },
+      {
+       "offers": {
+        "kind": "play-land",
+        "card": "Forest",
+        "seat": 0
+       },
+       "count": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Chocobo Racetrack",
+   "kind": "landfall token with its own granted trigger",
+   "scenarios": [
+    {
+     "name": "Racetrack: a land makes a Bird; the next land makes another and the first Bird gets +1/+0",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Chocobo Racetrack"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "Forest",
+        "Forest"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "play": "Forest"
+      },
+      {
+       "settle": true
+      },
+      {
+       "to": {
+        "turn": 3,
+        "phase": "MAIN1"
+       }
+      },
+      {
+       "play": "Forest"
+      },
+      {
+       "settle": true
+      }
+     ],
+     "post": [
+      {
+       "birds": {
+        "seat": 0,
+        "stats": [
+         [
+          2,
+          2
+         ],
+         [
+          3,
+          2
+         ]
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Cryptbreaker",
+   "kind": "activated abilities: discard cost; tap-three-Zombies cost",
+   "scenarios": [
+    {
+     "name": "Cryptbreaker: discard for a Zombie; tap three Zombies (itself among them) to draw and lose 1",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Cryptbreaker",
+        "Zombie",
+        "Zombie",
+        "Swamp",
+        "Wastes"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "Rock"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "tap": "Swamp"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "activate": "Cryptbreaker",
+       "discard": "Rock"
+      },
+      {
+       "resolve": true
+      },
+      {
+       "expect": [
+        {
+         "seat": 0,
+         "zone": "graveyard",
+         "cards": [
+          "Rock"
+         ]
+        },
+        {
+         "seat": 0,
+         "tapped": "Cryptbreaker"
+        }
+       ]
+      },
+      {
+       "to": {
+        "turn": 3,
+        "phase": "MAIN1"
+       }
+      },
+      {
+       "activate": "Cryptbreaker",
+       "tapping": [
+        "Zombie",
+        "Zombie",
+        "Cryptbreaker"
+       ]
+      },
+      {
+       "resolve": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 0,
+       "life": 39
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "count": 2
+      }
+     ],
+     "post": [
+      {
+       "count": {
+        "seat": 0,
+        "card": "Zombie",
+        "zone": "battlefield",
+        "n": 3
+       }
+      }
+     ]
+    },
+    {
+     "name": "Cryptbreaker: an opponent's Zombies do not pay its cost",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Cryptbreaker"
+       ]
+      },
+      {
+       "seat": 1,
+       "zone": "battlefield",
+       "cards": [
+        "Zombie",
+        "Zombie",
+        "Zombie"
+       ]
+      }
+     ],
+     "steps": [],
+     "expect": [
+      {
+       "offers": {
+        "kind": "activate",
+        "card": "Cryptbreaker",
+        "seat": 0
+       },
+       "count": 0
+      }
+     ]
+    },
+    {
+     "name": "Cryptbreaker: only Zombies pay the tap cost -- one set of three among it, two Zombies and a Bear",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Cryptbreaker",
+        "Zombie",
+        "Zombie",
+        "Bear"
+       ]
+      }
+     ],
+     "steps": [],
+     "expect": [
+      {
+       "offers": {
+        "kind": "activate",
+        "card": "Cryptbreaker",
+        "seat": 0
+       },
+       "count": 1,
+       "costs": [
+        [
+         "Cryptbreaker",
+         "Zombie",
+         "Zombie"
+        ]
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Liliana of the Dark Realms",
+   "kind": "planeswalker loyalty abilities",
+   "scenarios": [
+    {
+     "name": "Liliana -3: with two Swamps, -2/-2 kills a 2/2, and Liliana at 0 loyalty goes",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Liliana of the Dark Realms",
+        "Swamp",
+        "Swamp"
+       ]
+      },
+      {
+       "seat": 1,
+       "zone": "battlefield",
+       "cards": [
+        "Bear"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "activate": "Liliana of the Dark Realms",
+       "ability": "a1",
+       "targets": [
+        {
+         "card": "Bear"
+        }
+       ]
+      },
+      {
+       "pass": 2
+      },
+      {
+       "choose": [
+        "-X/-X"
+       ]
+      },
+      {
+       "settle": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 1,
+       "zone": "graveyard",
+       "cards": [
+        "Bear"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "graveyard",
+       "cards": [
+        "Liliana of the Dark Realms"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Liliana +1: a Swamp from the library to the hand",
+     "library": [
+      "Swamp"
+     ],
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Liliana of the Dark Realms"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "activate": "Liliana of the Dark Realms",
+       "ability": "a0"
+      },
+      {
+       "pass": 2
+      },
+      {
+       "answer": [
+        0
+       ]
+      },
+      {
+       "settle": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "Swamp"
+       ]
+      },
+      {
+       "seat": 0,
+       "counters": {
+        "card": "Liliana of the Dark Realms",
+        "counter": "loyalty",
+        "count": 4
+       }
+      }
+     ]
+    },
+    {
+     "name": "Liliana -3: X counts Swamps, not other lands -- two Swamps and a Wastes make a 3/3 a 1/1",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Liliana of the Dark Realms",
+        "Swamp",
+        "Swamp",
+        "Wastes"
+       ]
+      },
+      {
+       "seat": 1,
+       "zone": "battlefield",
+       "cards": [
+        "Ox"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "activate": "Liliana of the Dark Realms",
+       "ability": "a1",
+       "targets": [
+        {
+         "card": "Ox"
+        }
+       ]
+      },
+      {
+       "pass": 2
+      },
+      {
+       "choose": [
+        "-X/-X"
+       ]
+      },
+      {
+       "settle": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 1,
+       "stats": {
+        "card": "Ox",
+        "power": 1,
+        "toughness": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Feldon of the Third Path",
+   "kind": "activated: token copy of a graveyard card, sacrificed at end",
+   "scenarios": [
+    {
+     "name": "Feldon: a hasty artifact copy of the Giant, gone at the end step",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Feldon of the Third Path",
+        "Mountain",
+        "Wastes",
+        "Wastes"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "graveyard",
+       "cards": [
+        "Giant"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "tap": "Mountain"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "activate": "Feldon of the Third Path",
+       "targets": [
+        {
+         "card": "Giant"
+        }
+       ]
+      },
+      {
+       "resolve": true
+      },
+      {
+       "expect": [
+        {
+         "seat": 0,
+         "keywords": {
+          "card": "Giant",
+          "has": [
+           "Haste"
+          ]
+         }
+        },
+        {
+         "seat": 0,
+         "stats": {
+          "card": "Giant",
+          "power": 5,
+          "toughness": 5
+         }
+        }
+       ]
+      }
+     ],
+     "post": [
+      {
+       "types": {
+        "seat": 0,
+        "card": "Giant",
+        "has": [
+         "Artifact",
+         "Creature"
+        ]
+       }
+      }
+     ],
+     "then": {
+      "steps": [
+       {
+        "to": {
+         "turn": 1,
+         "phase": "END_OF_TURN"
+        }
+       },
+       {
+        "settle": true
+       }
+      ],
+      "post": [
+       {
+        "count": {
+         "seat": 0,
+         "card": "Giant",
+         "zone": "battlefield",
+         "n": 0
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "card": "Malcolm, Alluring Scoundrel",
+   "kind": "combat damage trigger: a counter, then loot",
+   "scenarios": [
+    {
+     "name": "Malcolm connects: a chorus counter, draw, discard",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Malcolm, Alluring Scoundrel"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "Rock"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "attack": [
+        "Malcolm, Alluring Scoundrel"
+       ]
+      },
+      {
+       "to": {
+        "turn": 1,
+        "phase": "COMBAT_DAMAGE"
+       }
+      },
+      {
+       "resolve": true
+      },
+      {
+       "answer": [
+        0
+       ]
+      },
+      {
+       "settle": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 1,
+       "life": 38
+      },
+      {
+       "seat": 0,
+       "counters": {
+        "card": "Malcolm, Alluring Scoundrel",
+        "counter": "chorus",
+        "count": 1
+       }
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "count": 1
+      },
+      {
+       "seat": 0,
+       "zone": "graveyard",
+       "count": 1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Agent Frank Horrigan",
+   "kind": "static that holds only after it attacked; enters-or-attacks trigger",
+   "scenarios": [
+    {
+     "name": "Horrigan: no indestructible before attacking, indestructible after",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Agent Frank Horrigan"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "expect": [
+        {
+         "seat": 0,
+         "keywords": {
+          "card": "Agent Frank Horrigan",
+          "lacks": [
+           "Indestructible"
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "attack": [
+        "Agent Frank Horrigan"
+       ]
+      },
+      {
+       "settle": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 0,
+       "keywords": {
+        "card": "Agent Frank Horrigan",
+        "has": [
+         "Indestructible"
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Felidar Retreat",
+   "kind": "landfall with a choice of modes",
+   "scenarios": [
+    {
+     "name": "Felidar Retreat: the second mode, counters and vigilance",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Felidar Retreat",
+        "Bear"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "Plains"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "play": "Plains"
+      },
+      {
+       "choose": [
+        "Put a +1/+1 counter on each creature you control. Those creatures gain vigilance until end of turn."
+       ]
+      },
+      {
+       "settle": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 0,
+       "counters": {
+        "card": "Bear",
+        "counter": "+1/+1",
+        "count": 1
+       }
+      },
+      {
+       "seat": 0,
+       "keywords": {
+        "card": "Bear",
+        "has": [
+         "Vigilance"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "Felidar Retreat: the first mode, a 2/2 Cat Beast",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Felidar Retreat"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "Plains"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "play": "Plains"
+      },
+      {
+       "choose": [
+        "Create a 2/2 white Cat Beast creature token."
+       ]
+      },
+      {
+       "settle": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 0,
+       "stats": {
+        "card": "Cat Beast",
+        "power": 2,
+        "toughness": 2
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Shivan Gorge",
+   "kind": "legendary land: mana ability and a damage ability",
+   "scenarios": [
+    {
+     "name": "Shivan Gorge: 1 damage to each opponent, in three seats",
+     "seats": 3,
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Shivan Gorge",
+        "Mountain",
+        "Wastes",
+        "Wastes"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "tap": "Mountain"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "activate": "Shivan Gorge"
+      },
+      {
+       "resolve": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 1,
+       "life": 39
+      },
+      {
+       "seat": 2,
+       "life": 39
+      },
+      {
+       "seat": 0,
+       "life": 40
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Koma, World-Eater",
+   "kind": "combat damage trigger making named tokens; ward",
+   "scenarios": [
+    {
+     "name": "Koma connects: 8 damage and four 3/3 Koma's Coil",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Koma, World-Eater"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "attack": [
+        "Koma, World-Eater"
+       ]
+      },
+      {
+       "to": {
+        "turn": 1,
+        "phase": "COMBAT_DAMAGE"
+       }
+      },
+      {
+       "settle": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 1,
+       "life": 32
+      },
+      {
+       "seat": 0,
+       "stats": {
+        "card": "Koma's Coil",
+        "power": 3,
+        "toughness": 3
+       }
+      }
+     ],
+     "post": [
+      {
+       "count": {
+        "seat": 0,
+        "card": "Koma's Coil",
+        "zone": "battlefield",
+        "n": 4
+       }
+      }
+     ]
+    },
+    {
+     "name": "Koma's ward: an opponent's removal is countered unless they pay {4}",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Koma, World-Eater"
+       ]
+      },
+      {
+       "seat": 1,
+       "zone": "battlefield",
+       "cards": [
+        "Wastes"
+       ]
+      },
+      {
+       "seat": 1,
+       "zone": "hand",
+       "cards": [
+        "Kill"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "pass": 1
+      },
+      {
+       "tap": "Wastes",
+       "seat": 1
+      },
+      {
+       "cast": "Kill",
+       "seat": 1,
+       "targets": [
+        {
+         "card": "Koma, World-Eater"
+        }
+       ]
+      },
+      {
+       "settle": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Koma, World-Eater"
+       ]
+      },
+      {
+       "seat": 1,
+       "zone": "graveyard",
+       "cards": [
+        "Kill"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Raise the Past",
+   "kind": "mass return from the graveyard by mana value",
+   "scenarios": [
+    {
+     "name": "Raise the Past: the 2-drop returns, the 5-drop stays",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Plains",
+        "Plains",
+        "Wastes",
+        "Wastes"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "graveyard",
+       "cards": [
+        "Bear",
+        "Giant"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "Raise the Past"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "tap": "Plains"
+      },
+      {
+       "tap": "Plains"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "cast": "Raise the Past"
+      },
+      {
+       "resolve": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 0,
+       "zone": "graveyard",
+       "cards": [
+        "Giant",
+        "Raise the Past"
+       ]
+      }
+     ],
+     "post": [
+      {
+       "count": {
+        "seat": 0,
+        "card": "Bear",
+        "zone": "battlefield",
+        "n": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Return to Nature",
+   "kind": "modal instant, a graveyard target",
+   "scenarios": [
+    {
+     "name": "Return to Nature: exile a card from an opponent's graveyard",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Forest",
+        "Wastes"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "Return to Nature"
+       ]
+      },
+      {
+       "seat": 1,
+       "zone": "graveyard",
+       "cards": [
+        "Bear"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "tap": "Forest"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "cast": "Return to Nature",
+       "targets": "any",
+       "modes": [
+        2
+       ]
+      },
+      {
+       "resolve": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 1,
+       "zone": "graveyard",
+       "cards": []
+      },
+      {
+       "seat": 1,
+       "zone": "exile",
+       "cards": [
+        "Bear"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Ureni of the Unwritten",
+   "kind": "look at eight, a Dragon onto the battlefield",
+   "scenarios": [
+    {
+     "name": "Ureni enters: of the top eight, only the Dragon creature card is offered, and it comes in",
+     "library": [
+      "Wastes",
+      "Giant",
+      "Old Dragon",
+      "Wastes"
+     ],
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Forest",
+        "Island",
+        "Mountain",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "Ureni of the Unwritten"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "tap": "Forest"
+      },
+      {
+       "tap": "Island"
+      },
+      {
+       "tap": "Mountain"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "cast": "Ureni of the Unwritten"
+      },
+      {
+       "resolve": true
+      },
+      {
+       "pass": 2
+      },
+      {
+       "answer": [
+        0
+       ]
+      },
+      {
+       "settle": true
+      }
+     ],
+     "post": [
+      {
+       "count": {
+        "seat": 0,
+        "card": "Old Dragon",
+        "zone": "battlefield",
+        "n": 1
+       }
+      },
+      {
+       "count": {
+        "seat": 0,
+        "card": "Giant",
+        "zone": "battlefield",
+        "n": 0
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Loyal Warhound",
+   "kind": "enters trigger with an intervening if",
+   "scenarios": [
+    {
+     "name": "Warhound: an opponent with more lands, a basic Plains enters tapped",
+     "library": [
+      "Plains"
+     ],
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Plains",
+        "Wastes"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "Loyal Warhound"
+       ]
+      },
+      {
+       "seat": 1,
+       "zone": "battlefield",
+       "cards": [
+        "Wastes",
+        "Wastes",
+        "Wastes"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "tap": "Plains"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "cast": "Loyal Warhound"
+      },
+      {
+       "resolve": true
+      },
+      {
+       "pass": 2
+      },
+      {
+       "answer": [
+        0
+       ]
+      },
+      {
+       "settle": true
+      }
+     ],
+     "post": [
+      {
+       "count": {
+        "seat": 0,
+        "card": "Plains",
+        "zone": "battlefield",
+        "n": 2
+       }
+      },
+      {
+       "tappedCount": {
+        "seat": 0,
+        "card": "Plains",
+        "n": 2
+       }
+      }
+     ]
+    },
+    {
+     "name": "Warhound: no opponent with more lands, so it does not trigger (CR 603.4)",
+     "library": [
+      "Plains"
+     ],
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Plains",
+        "Wastes"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "Loyal Warhound"
+       ]
+      },
+      {
+       "seat": 1,
+       "zone": "battlefield",
+       "cards": [
+        "Wastes"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "tap": "Plains"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "cast": "Loyal Warhound"
+      },
+      {
+       "resolve": true
+      }
+     ],
+     "post": [
+      {
+       "count": {
+        "seat": 0,
+        "card": "Plains",
+        "zone": "battlefield",
+        "n": 1
+       }
+      }
+     ],
+     "expect": [
+      {
+       "stack": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Bladewing the Risen",
+   "kind": "enters: return a Dragon permanent card; activated anthem for every Dragon",
+   "scenarios": [
+    {
+     "name": "Bladewing returns the Dragon; {B}{R} pumps every Dragon creature, an opponent's too",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Swamp",
+        "Swamp",
+        "Mountain",
+        "Mountain",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Swamp",
+        "Mountain"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "graveyard",
+       "cards": [
+        "Old Dragon"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "Bladewing the Risen"
+       ]
+      },
+      {
+       "seat": 1,
+       "zone": "battlefield",
+       "cards": [
+        "Old Dragon"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "tap": "Swamp"
+      },
+      {
+       "tap": "Swamp"
+      },
+      {
+       "tap": "Mountain"
+      },
+      {
+       "tap": "Mountain"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "cast": "Bladewing the Risen"
+      },
+      {
+       "resolve": true
+      },
+      {
+       "choose": [
+        "Old Dragon"
+       ]
+      },
+      {
+       "pass": 2
+      },
+      {
+       "choose": [
+        "Yes"
+       ]
+      },
+      {
+       "settle": true
+      },
+      {
+       "tap": "Swamp"
+      },
+      {
+       "tap": "Mountain"
+      },
+      {
+       "activate": "Bladewing the Risen"
+      },
+      {
+       "resolve": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 0,
+       "stats": {
+        "card": "Old Dragon",
+        "power": 5,
+        "toughness": 5
+       }
+      },
+      {
+       "seat": 0,
+       "stats": {
+        "card": "Bladewing the Risen",
+        "power": 5,
+        "toughness": 5
+       }
+      },
+      {
+       "seat": 1,
+       "stats": {
+        "card": "Old Dragon",
+        "power": 5,
+        "toughness": 5
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Mortuary Mire",
+   "kind": "land: enters tapped; enters trigger to the top of the library",
+   "scenarios": [
+    {
+     "name": "Mortuary Mire: enters tapped, the Bear goes on top and is drawn next turn",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "Mortuary Mire"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "graveyard",
+       "cards": [
+        "Bear"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "play": "Mortuary Mire"
+      },
+      {
+       "choose": [
+        "Bear"
+       ]
+      },
+      {
+       "pass": 2
+      },
+      {
+       "choose": [
+        "Yes"
+       ]
+      },
+      {
+       "settle": true
+      },
+      {
+       "expect": [
+        {
+         "seat": 0,
+         "tapped": "Mortuary Mire"
+        },
+        {
+         "seat": 0,
+         "zone": "graveyard",
+         "cards": []
+        }
+       ]
+      },
+      {
+       "to": {
+        "turn": 3,
+        "phase": "MAIN1"
+       }
+      }
+     ],
+     "expect": [
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "Bear"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Venser's Journal",
+   "kind": "upkeep trigger counting the hand",
+   "scenarios": [
+    {
+     "name": "Venser's Journal: three cards in hand at the next upkeep, 3 life",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Venser's Journal"
+       ],
+       "sick": true
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "Rock",
+        "Rock",
+        "Rock"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "to": {
+        "turn": 3,
+        "phase": "UPKEEP"
+       }
+      },
+      {
+       "settle": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 0,
+       "life": 43
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Deeproot Waters",
+   "kind": "spell-cast trigger with a subtype filter",
+   "scenarios": [
+    {
+     "name": "Deeproot Waters: a Merfolk spell makes a 1/1 hexproof Merfolk",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Deeproot Waters",
+        "Wastes"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "Merfolk Spell"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "tap": "Wastes"
+      },
+      {
+       "cast": "Merfolk Spell"
+      },
+      {
+       "settle": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 0,
+       "stats": {
+        "card": "Merfolk",
+        "power": 1,
+        "toughness": 1
+       }
+      },
+      {
+       "seat": 0,
+       "keywords": {
+        "card": "Merfolk",
+        "has": [
+         "Hexproof"
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Squirrel Sovereign",
+   "kind": "lord static for other Squirrels you control",
+   "scenarios": [
+    {
+     "name": "Squirrel Sovereign: my other Squirrel 2/2, itself 2/2, the opponent's 1/1",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Squirrel Sovereign",
+        "Squirrel"
+       ]
+      },
+      {
+       "seat": 1,
+       "zone": "battlefield",
+       "cards": [
+        "Squirrel"
+       ]
+      }
+     ],
+     "steps": [],
+     "expect": [
+      {
+       "seat": 0,
+       "stats": {
+        "card": "Squirrel",
+        "power": 2,
+        "toughness": 2
+       }
+      },
+      {
+       "seat": 0,
+       "stats": {
+        "card": "Squirrel Sovereign",
+        "power": 2,
+        "toughness": 2
+       }
+      },
+      {
+       "seat": 1,
+       "stats": {
+        "card": "Squirrel",
+        "power": 1,
+        "toughness": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Tegwyll, Duke of Splendor",
+   "kind": "lord static; another Faerie dies trigger",
+   "scenarios": [
+    {
+     "name": "Tegwyll: the Faerie is 2/2; it dies, a card and 1 life",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Tegwyll, Duke of Splendor",
+        "Faerie"
+       ]
+      },
+      {
+       "seat": 1,
+       "zone": "battlefield",
+       "cards": [
+        "Wastes"
+       ]
+      },
+      {
+       "seat": 1,
+       "zone": "hand",
+       "cards": [
+        "Kill"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "expect": [
+        {
+         "seat": 0,
+         "stats": {
+          "card": "Faerie",
+          "power": 2,
+          "toughness": 2
+         }
+        }
+       ]
+      },
+      {
+       "pass": 1
+      },
+      {
+       "tap": "Wastes",
+       "seat": 1
+      },
+      {
+       "cast": "Kill",
+       "seat": 1,
+       "targets": [
+        {
+         "card": "Faerie"
+        }
+       ]
+      },
+      {
+       "settle": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 0,
+       "life": 39
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "count": 1
+      },
+      {
+       "seat": 0,
+       "zone": "graveyard",
+       "cards": [
+        "Faerie"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Tegwyll: a non-Faerie dying draws nothing",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Tegwyll, Duke of Splendor",
+        "Bear"
+       ]
+      },
+      {
+       "seat": 1,
+       "zone": "battlefield",
+       "cards": [
+        "Wastes"
+       ]
+      },
+      {
+       "seat": 1,
+       "zone": "hand",
+       "cards": [
+        "Kill"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "pass": 1
+      },
+      {
+       "tap": "Wastes",
+       "seat": 1
+      },
+      {
+       "cast": "Kill",
+       "seat": 1,
+       "targets": [
+        {
+         "card": "Bear"
+        }
+       ]
+      },
+      {
+       "settle": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 0,
+       "life": 40
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "count": 0
+      },
+      {
+       "seat": 0,
+       "zone": "graveyard",
+       "cards": [
+        "Bear"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Prosperous Innkeeper",
+   "kind": "enters trigger (Treasure); another creature enters (life)",
+   "scenarios": [
+    {
+     "name": "Innkeeper: a Treasure as it enters, then 1 life for the Bear",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Forest",
+        "Wastes",
+        "Forest",
+        "Wastes"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "Prosperous Innkeeper",
+        "Bear"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "tap": "Forest"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "cast": "Prosperous Innkeeper"
+      },
+      {
+       "settle": true
+      },
+      {
+       "tap": "Forest"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "cast": "Bear"
+      },
+      {
+       "settle": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 0,
+       "life": 41
+      }
+     ],
+     "post": [
+      {
+       "count": {
+        "seat": 0,
+        "card": "Treasure",
+        "zone": "battlefield",
+        "n": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Argentum Armor",
+   "kind": "Equipment: static, attack trigger, equip",
+   "scenarios": [
+    {
+     "name": "Argentum Armor: equipped Bear is 8/8 and its attack destroys the opponent's Rock",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Argentum Armor",
+        "Bear",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes"
+       ]
+      },
+      {
+       "seat": 1,
+       "zone": "battlefield",
+       "cards": [
+        "Rock"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "tap": "Wastes"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "activate": "Argentum Armor",
+       "targets": [
+        {
+         "card": "Bear"
+        }
+       ]
+      },
+      {
+       "resolve": true
+      },
+      {
+       "expect": [
+        {
+         "seat": 0,
+         "stats": {
+          "card": "Bear",
+          "power": 8,
+          "toughness": 8
+         }
+        }
+       ]
+      },
+      {
+       "attack": [
+        "Bear"
+       ]
+      },
+      {
+       "choose": [
+        "Rock"
+       ]
+      },
+      {
+       "settle": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 1,
+       "zone": "graveyard",
+       "cards": [
+        "Rock"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "March of the Multitudes",
+   "kind": "X spell making tokens; convoke",
+   "scenarios": [
+    {
+     "name": "March: X is 2, two 1/1 lifelink Soldiers",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Forest",
+        "Plains",
+        "Plains",
+        "Wastes",
+        "Wastes"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "March of the Multitudes"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "tap": "Forest"
+      },
+      {
+       "tap": "Plains"
+      },
+      {
+       "tap": "Plains"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "cast": "March of the Multitudes",
+       "x": 2
+      },
+      {
+       "resolve": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 0,
+       "keywords": {
+        "card": "Soldier",
+        "has": [
+         "Lifelink"
+        ]
+       }
+      }
+     ],
+     "post": [
+      {
+       "count": {
+        "seat": 0,
+        "card": "Soldier",
+        "zone": "battlefield",
+        "n": 2
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Curious Altisaur",
+   "kind": "a Dinosaur you control deals combat damage: draw",
+   "scenarios": [
+    {
+     "name": "Altisaur connects: 2 damage and a card",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Curious Altisaur"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "attack": [
+        "Curious Altisaur"
+       ]
+      },
+      {
+       "to": {
+        "turn": 1,
+        "phase": "COMBAT_DAMAGE"
+       }
+      },
+      {
+       "settle": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 1,
+       "life": 38
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "count": 1
+      },
+      {
+       "seat": 0,
+       "tapped": "Curious Altisaur",
+       "is": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Vile Entomber",
+   "kind": "enters: search for any card into the graveyard",
+   "scenarios": [
+    {
+     "name": "Vile Entomber: the Bear from the library to the graveyard",
+     "library": [
+      "Wastes",
+      "Bear",
+      "Wastes"
+     ],
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Swamp",
+        "Swamp",
+        "Wastes",
+        "Wastes"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "Vile Entomber"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "tap": "Swamp"
+      },
+      {
+       "tap": "Swamp"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "cast": "Vile Entomber"
+      },
+      {
+       "resolve": true
+      },
+      {
+       "pass": 2
+      },
+      {
+       "choose": [
+        "Bear"
+       ]
+      },
+      {
+       "settle": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 0,
+       "zone": "graveyard",
+       "cards": [
+        "Bear"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "library",
+       "count": 19
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Flicker of Fate",
+   "kind": "flicker instant",
+   "scenarios": [
+    {
+     "name": "Flicker of Fate: the opponent's Bear leaves and returns under its owner's control",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Plains",
+        "Wastes"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "Flicker of Fate"
+       ]
+      },
+      {
+       "seat": 1,
+       "zone": "battlefield",
+       "cards": [
+        "Bear"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "tap": "Plains"
+      },
+      {
+       "tap": "Wastes"
+      },
+      {
+       "cast": "Flicker of Fate",
+       "targets": [
+        {
+         "card": "Bear"
+        }
+       ]
+      },
+      {
+       "resolve": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 1,
+       "zone": "battlefield",
+       "cards": [
+        "Bear"
+       ]
+      },
+      {
+       "controls": [
+        "Plains",
+        "Wastes"
+       ],
+       "seat": 0
+      },
+      {
+       "event": "GameEventCardChangeZone"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Shore Up",
+   "kind": "instant: pump, hexproof, untap",
+   "scenarios": [
+    {
+     "name": "Shore Up: the tapped attacker untaps as a 3/3 with hexproof",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Bear",
+        "Island"
+       ]
+      },
+      {
+       "seat": 0,
+       "zone": "hand",
+       "cards": [
+        "Shore Up"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "attack": [
+        "Bear"
+       ]
+      },
+      {
+       "tap": "Island"
+      },
+      {
+       "cast": "Shore Up",
+       "targets": [
+        {
+         "card": "Bear"
+        }
+       ]
+      },
+      {
+       "resolve": true
+      }
+     ],
+     "expect": [
+      {
+       "seat": 0,
+       "stats": {
+        "card": "Bear",
+        "power": 3,
+        "toughness": 3
+       }
+      },
+      {
+       "seat": 0,
+       "keywords": {
+        "card": "Bear",
+        "has": [
+         "Hexproof"
+        ]
+       }
+      },
+      {
+       "seat": 0,
+       "tapped": "Bear",
+       "is": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "card": "Palladium Myr",
+   "kind": "mana ability",
+   "scenarios": [
+    {
+     "name": "Palladium Myr: {C}{C}",
+     "setup": [
+      {
+       "seat": 0,
+       "zone": "battlefield",
+       "cards": [
+        "Palladium Myr"
+       ]
+      }
+     ],
+     "steps": [
+      {
+       "tap": "Palladium Myr"
+      }
+     ],
+     "expect": [
+      {
+       "seat": 0,
+       "pool": {
+        "C": 2
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

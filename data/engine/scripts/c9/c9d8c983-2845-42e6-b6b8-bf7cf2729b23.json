@@ -1,0 +1,81 @@
+{
+ "schema": "CrankCompiledCard@1",
+ "name": "Shore Up",
+ "oracleId": "c9d8c983-2845-42e6-b6b8-bf7cf2729b23",
+ "oracleHash": "27076455cc358575",
+ "status": "provisional",
+ "script": {
+  "schema": "CrankCardScript@1",
+  "identity": {
+   "name": "Shore Up",
+   "oracleId": "c9d8c983-2845-42e6-b6b8-bf7cf2729b23",
+   "types": [
+    "Instant"
+   ],
+   "subtypes": [],
+   "manaCost": "{U}",
+   "colors": [
+    "U"
+   ],
+   "colorIdentity": [
+    "U"
+   ],
+   "power": null,
+   "toughness": null
+  },
+  "oracleText": "Target creature you control gets +1/+1 and gains hexproof until end of turn. Untap it. (It can't be the target of spells or abilities your opponents control.)",
+  "source": "compiler",
+  "model": "x10-session",
+  "abilities": [
+   {
+    "kind": "spell",
+    "text": "Target creature you control gets +1/+1 and gains hexproof until end of turn. Untap it. (It can't be the target of spells or abilities your opponents control.)",
+    "targets": [
+     {
+      "what": "permanent",
+      "types": [
+       "Creature"
+      ],
+      "controller": "you"
+     }
+    ],
+    "effects": [
+     {
+      "effect": "pump",
+      "targets": {
+       "target": 0
+      },
+      "power": 1,
+      "toughness": 1,
+      "keywords": [
+       "Hexproof"
+      ]
+     },
+     {
+      "effect": "untap",
+      "targets": {
+       "target": 0
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "checks": {
+  "schema": "pass",
+  "fidelity": "pass",
+  "readBack": "not run",
+  "smoke": {
+   "played": true,
+   "resolutions": 2
+  }
+ },
+ "crFlags": [],
+ "notes": "",
+ "models": {
+  "writer": "x10-session",
+  "readBack": null
+ },
+ "attempts": 1,
+ "compiledAt": "2026-10-06T16:16:05.931Z"
+}

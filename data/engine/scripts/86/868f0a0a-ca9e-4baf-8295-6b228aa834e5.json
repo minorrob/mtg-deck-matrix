@@ -1,0 +1,109 @@
+{
+ "schema": "CrankCompiledCard@1",
+ "name": "Tegwyll, Duke of Splendor",
+ "oracleId": "868f0a0a-ca9e-4baf-8295-6b228aa834e5",
+ "oracleHash": "cba8c62d53cc8b92",
+ "status": "provisional",
+ "script": {
+  "schema": "CrankCardScript@1",
+  "identity": {
+   "name": "Tegwyll, Duke of Splendor",
+   "oracleId": "868f0a0a-ca9e-4baf-8295-6b228aa834e5",
+   "supertypes": [
+    "Legendary"
+   ],
+   "types": [
+    "Creature"
+   ],
+   "subtypes": [
+    "Faerie",
+    "Noble"
+   ],
+   "manaCost": "{1}{U}{B}",
+   "colors": [
+    "B",
+    "U"
+   ],
+   "colorIdentity": [
+    "B",
+    "U"
+   ],
+   "power": 2,
+   "toughness": 3
+  },
+  "oracleText": "Flying, deathtouch\nOther Faeries you control get +1/+1.\nWhenever another Faerie you control dies, you draw a card and you lose 1 life.",
+  "source": "compiler",
+  "model": "x10-session",
+  "abilities": [
+   {
+    "kind": "keyword",
+    "text": "Flying",
+    "keyword": "flying"
+   },
+   {
+    "kind": "keyword",
+    "text": "deathtouch",
+    "keyword": "deathtouch"
+   },
+   {
+    "kind": "static",
+    "text": "Other Faeries you control get +1/+1.",
+    "layer": 7,
+    "sublayer": "c",
+    "affects": {
+     "what": "permanent",
+     "subtypes": [
+      "Faerie"
+     ],
+     "controller": "you",
+     "another": true
+    },
+    "apply": {
+     "power": 1,
+     "toughness": 1
+    }
+   },
+   {
+    "kind": "triggered",
+    "text": "Whenever another Faerie you control dies, you draw a card and you lose 1 life.",
+    "trigger": {
+     "on": "dies",
+     "who": "another",
+     "filter": {
+      "subtypes": [
+       "Faerie"
+      ],
+      "controller": "you"
+     }
+    },
+    "effects": [
+     {
+      "effect": "draw",
+      "count": 1
+     },
+     {
+      "effect": "loseLife",
+      "amount": 1
+     }
+    ]
+   }
+  ]
+ },
+ "checks": {
+  "schema": "pass",
+  "fidelity": "pass",
+  "readBack": "not run",
+  "smoke": {
+   "played": true,
+   "resolutions": 1
+  }
+ },
+ "crFlags": [],
+ "notes": "",
+ "models": {
+  "writer": "x10-session",
+  "readBack": null
+ },
+ "attempts": 1,
+ "compiledAt": "2026-10-06T16:16:06.421Z"
+}

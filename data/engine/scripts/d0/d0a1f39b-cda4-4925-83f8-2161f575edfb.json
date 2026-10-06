@@ -1,0 +1,113 @@
+{
+ "schema": "CrankCompiledCard@1",
+ "name": "Argentum Armor",
+ "oracleId": "d0a1f39b-cda4-4925-83f8-2161f575edfb",
+ "oracleHash": "36c24a62e77330eb",
+ "status": "provisional",
+ "script": {
+  "schema": "CrankCardScript@1",
+  "identity": {
+   "name": "Argentum Armor",
+   "oracleId": "d0a1f39b-cda4-4925-83f8-2161f575edfb",
+   "types": [
+    "Artifact"
+   ],
+   "subtypes": [
+    "Equipment"
+   ],
+   "manaCost": "{6}",
+   "colors": [],
+   "colorIdentity": [],
+   "power": null,
+   "toughness": null
+  },
+  "oracleText": "Equipped creature gets +6/+6.\nWhenever equipped creature attacks, destroy target permanent.\nEquip {6}",
+  "source": "compiler",
+  "model": "x10-session",
+  "abilities": [
+   {
+    "kind": "static",
+    "text": "Equipped creature gets +6/+6.",
+    "layer": 7,
+    "sublayer": "c",
+    "affects": {
+     "what": "permanent",
+     "attachedBy": "self"
+    },
+    "apply": {
+     "power": 6,
+     "toughness": 6
+    }
+   },
+   {
+    "kind": "triggered",
+    "text": "Whenever equipped creature attacks, destroy target permanent.",
+    "trigger": {
+     "on": "attacks",
+     "who": "any",
+     "filter": {
+      "attachedBy": "self"
+     }
+    },
+    "targets": [
+     {
+      "what": "permanent"
+     }
+    ],
+    "effects": [
+     {
+      "effect": "destroy",
+      "targets": {
+       "target": 0
+      }
+     }
+    ]
+   },
+   {
+    "kind": "activated",
+    "text": "Equip {6}",
+    "cost": [
+     {
+      "atom": "mana",
+      "cost": "{6}"
+     }
+    ],
+    "timing": "sorcery",
+    "targets": [
+     {
+      "what": "permanent",
+      "types": [
+       "Creature"
+      ],
+      "controller": "you"
+     }
+    ],
+    "effects": [
+     {
+      "effect": "attach",
+      "targets": {
+       "target": 0
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "checks": {
+  "schema": "pass",
+  "fidelity": "pass",
+  "readBack": "not run",
+  "smoke": {
+   "played": true,
+   "resolutions": 1
+  }
+ },
+ "crFlags": [],
+ "notes": "",
+ "models": {
+  "writer": "x10-session",
+  "readBack": null
+ },
+ "attempts": 1,
+ "compiledAt": "2026-10-06T16:16:06.461Z"
+}

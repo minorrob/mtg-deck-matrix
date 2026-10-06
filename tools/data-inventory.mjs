@@ -117,7 +117,17 @@ const DECLARED = {
   "data/archive/deck-guides.json": ["(frozen copy)"], "data/archive/deck-swaps.json": ["(frozen copy)"], "data/archive/variants.json": ["(frozen copy)"],
   "data/archive/active-state.json": ["(the retired viewer's state, frozen)"], "data/archive/buy-plans.json": ["(the retired ladder's plans, frozen)"], "data/archive/my-load.json": ["(an early Load Live shape, frozen)"], "data/archive/base-rebuild.json": ["(the retired ladder's base rebuild, frozen)"], "data/archive/pull-list.json": ["(the pull sheet before it was a page, frozen)"],
 };
-for (const [file, list] of Object.entries(DECLARED)) for (const t of list) if (!t.startsWith("(") && !existsSync(path.join(ROOT, t))) { console.error(`data-inventory: ${file} declares producer ${t}, which is not in the tree`); process.exit(1); }
+/* A LEARNED DEFINITION, one file per card (data/engine/scripts/<prefix>/<oracle id>.json), and the ledger beside them:
+   written by the card loader and by engine-ingest, read by the card directory (game/tools/engine-cards.mjs,
+   loadCompiledScripts), which names the folder and never a card's file. Stored provisional, they are seated at no table
+   until a played game or Rob confirms them (the execution plan's D5): the table's module is built from the hand-authored
+   directory only (game/tools/engine-definitions.mjs). A session file (data/engine/sessions, CrankSessionScripts@1) is
+   what engine-ingest reads: the drafts of a session, kept so a draft blocked today is checked again once the engine
+   builds what it needs. */
+const LEARNED = /^data\/engine\/(scripts\/[0-9a-f]{2}\/[0-9a-f-]+\.json|onboarding-ledger\.json|sessions\/[a-z0-9-]+\.json)$/;
+const LEARNED_BY = ["game/tools/engine-ingest.mjs", "game/tools/engine-compile.mjs"];
+const declaredFor = (p) => DECLARED[p] || (/^data\/engine\/sessions\//.test(p) ? ["(written in a session, by hand)"] : LEARNED.test(p) ? LEARNED_BY : []);
+for (const [file, list] of [...Object.entries(DECLARED), ["learned definitions", LEARNED_BY]]) for (const t of list) if (!t.startsWith("(") && !existsSync(path.join(ROOT, t))) { console.error(`data-inventory: ${file} declares producer ${t}, which is not in the tree`); process.exit(1); }
 
 /* A tool the proximity scan mistakes for a producer: it names the file beside a write of a
    different one. */
@@ -133,6 +143,8 @@ const OVERRIDES = {
 };
 function disposition(a, groups) {
   const o = OVERRIDES[a.path]; if (o) return {disposition: o[0], note: o[1]};
+  if (/^data\/engine\/sessions\//.test(a.path)) return {disposition: "tool input", note: "a session's drafts, the input of game/tools/engine-ingest.mjs; kept so a blocked draft is checked again once the engine can play it"};
+  if (LEARNED.test(a.path)) return {disposition: "tool input", note: "a learned definition or its ledger: the card directory reads the folder (game/tools/engine-cards.mjs); seated at no table until confirmed (D5)"};
   if (groups.has("app") || groups.has("sw")) return {disposition: "serve", note: ""};
   if (a.path.startsWith("data/source/")) return {disposition: "source", note: "workbook or document the builders read; never fetched by a page"};
   if (a.path.startsWith("data/archive/")) return {disposition: "archive", note: "already under data/archive; tools and tests read it there"};
@@ -146,7 +158,7 @@ const rows = tracked.map((p) => {
   const who = readers.filter((r) => mentions(r.text, p));
   const groups = new Set(who.map((r) => r.group));
   const found = who.filter((r) => (r.group === "tools" || r.group === "workflows") && writesTo(r.text, p) && !(READS_ONLY[r.file] || []).includes(p)).map((r) => r.file);
-  const producers = [...found, ...(DECLARED[p] || []).filter((t) => !found.includes(t)).map((t) => t.startsWith("(") ? t : t + " (declared)")];
+  const producers = [...found, ...declaredFor(p).filter((t) => !found.includes(t)).map((t) => t.startsWith("(") ? t : t + " (declared)")];
   const tests = who.filter((r) => r.group === "tests").map((r) => path.basename(r.file));
   const precached = who.some((r) => r.group === "sw") && !runtimeCached.has(p);
   const onDemand = runtimeCached.has(p);

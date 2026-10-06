@@ -8,7 +8,7 @@ rules"). The keyword actions and abilities are the Comprehensive Rules' own list
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
 **The most-played 80% of Commander cards:** 3,238 cards; 1,159 defined and playable today; 2,492 with every
-mechanic built, so only their definitions are left to write.
+mechanic built, so only their definitions are left to write; 28 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
 yet named. **Top** is how many of the most-played cards use it, **All** how many of every card. **Holds back** is how

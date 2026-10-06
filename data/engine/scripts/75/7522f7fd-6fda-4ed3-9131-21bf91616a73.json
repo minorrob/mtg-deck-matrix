@@ -1,0 +1,109 @@
+{
+ "schema": "CrankCompiledCard@1",
+ "name": "Chocobo Racetrack",
+ "oracleId": "7522f7fd-6fda-4ed3-9131-21bf91616a73",
+ "oracleHash": "63e433b64ca34958",
+ "status": "provisional",
+ "script": {
+  "schema": "CrankCardScript@1",
+  "identity": {
+   "name": "Chocobo Racetrack",
+   "oracleId": "7522f7fd-6fda-4ed3-9131-21bf91616a73",
+   "types": [
+    "Artifact"
+   ],
+   "subtypes": [],
+   "manaCost": "{3}{G}{G}",
+   "colors": [
+    "G"
+   ],
+   "colorIdentity": [
+    "G"
+   ],
+   "power": null,
+   "toughness": null
+  },
+  "oracleText": "Landfall — Whenever a land you control enters, create a 2/2 green Bird creature token with \"Whenever a land you control enters, this token gets +1/+0 until end of turn.\"",
+  "source": "compiler",
+  "model": "x10-session",
+  "abilities": [
+   {
+    "kind": "triggered",
+    "text": "Landfall — Whenever a land you control enters, create a 2/2 green Bird creature token with \"Whenever a land you control enters, this token gets +1/+0 until end of turn.\"",
+    "trigger": {
+     "on": "enters",
+     "who": "any",
+     "filter": {
+      "types": [
+       "Land"
+      ],
+      "controller": "you"
+     }
+    },
+    "effects": [
+     {
+      "effect": "createToken",
+      "count": 1,
+      "token": {
+       "name": "Bird",
+       "types": [
+        "Creature"
+       ],
+       "subtypes": [
+        "Bird"
+       ],
+       "colors": [
+        "G"
+       ],
+       "power": 2,
+       "toughness": 2,
+       "abilities": [
+        {
+         "id": "landfall",
+         "kind": "triggered",
+         "text": "Whenever a land you control enters, this token gets +1/+0 until end of turn.",
+         "trigger": {
+          "on": "GameEventCardChangeZone",
+          "to": "Battlefield",
+          "who": "any",
+          "filter": {
+           "types": [
+            "Land"
+           ],
+           "controller": "you"
+          }
+         },
+         "effects": [
+          {
+           "effect": "pump",
+           "targets": "self",
+           "power": 1,
+           "toughness": 0
+          }
+         ]
+        }
+       ]
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "checks": {
+  "schema": "pass",
+  "fidelity": "pass",
+  "readBack": "not run",
+  "smoke": {
+   "played": true,
+   "resolutions": 1
+  }
+ },
+ "crFlags": [],
+ "notes": "",
+ "models": {
+  "writer": "x10-session",
+  "readBack": null
+ },
+ "attempts": 1,
+ "compiledAt": "2026-10-06T16:16:06.206Z"
+}
