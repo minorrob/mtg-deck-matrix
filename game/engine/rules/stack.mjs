@@ -266,6 +266,11 @@ export function resolveTop(state, effect = null, rng = null) {
  * @returns {Array} events, or none when the top was not waiting on its own resolution
  */
 export function finishResolving(state) {
+  if (state.finishingSpell && !resolutionPending(state)) {
+    const {entry, fizzled} = state.finishingSpell;
+    delete state.finishingSpell;
+    return finishTop(state, entry, [], fizzled);
+  }
   /* The one resolving, wherever it is: what it put on the stack as it resolved -- a copy -- is above it now. */
   const entry = state.stack.findLast((e) => e.stage === "resolving") ?? null;
   if (!entry || entry.stage !== "resolving" || resolutionPending(state)) return [];
@@ -334,16 +339,28 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
        graveyard -- one that did not resolve goes where any spell would. */
     const adventured = entry.adventure === true && !fizzled;
     /* "Exile this spell" (paradigm, CR 702.192a): it resolved, and is exiled as the last of it. */
-    const to = entry.permanent && !fizzled ? "battlefield" : entry.flashback || entry.graveyardToExile || rebound || adventured || exiles ? "exile" : "graveyard";
+    const to = entry.permanent && !fizzled ? "battlefield" : entry.flashback || entry.graveyardToExile || rebound || adventured || exiles ? "exile" : entry.graveyardToLibraryBottom ? "library" : "graveyard";
     /* CR 614.12, asked before the move: a permanent coming off the stack enters tapped or with
        counters as ONE event, and the abilities that say so are on the spell, not on anything that
        is on the battlefield yet. */
     const object = state.objects[entry.objectId];
+    /* Quintorius can send even a commander spell to its owner's library (CR 903.9b).
+       Ask its owner before moving it; the saved continuation emits resolution only after the answer. */
+    if (to === "library" && object.commander === true) {
+      entry.stage = "resolving";
+      if (at >= 0) state.stack.splice(at, 0, entry);
+      state.finishingSpell = {entry, fizzled};
+      const outcome = beginResolution(state, [{effect: "moveZone", targets: [entry.objectId], to: "library"}], {controller: entry.playerId});
+      events.push(...outcome.events);
+      if (outcome.status === "waiting") return events;
+      events.push(...finishResolving(state));
+      return events;
+    }
     const entering = to === "battlefield"
       ? enteringModifications(state, {objectId: entry.objectId, player: entry.playerId,
         types: object.types, abilities: object.abilities, x: entry.x ?? 0, escaped: entry.escaped === true, kicked: entry.kicked ?? 0})
       : null;
-    const arrived = moveObject(state, entry.objectId, to, to === "graveyard" ? owner : null);
+    const arrived = moveObject(state, entry.objectId, to, ["graveyard", "library"].includes(to) ? owner : null);
     /* Rebound's delayed trigger (CR 702.88a, 603.7d: its controller the spell's): at the beginning of THEIR next upkeep, the
        card in exile -- the object it now is, so one that leaves exile meanwhile is not cast (CR 400.7) -- may be cast
        without paying its mana cost, as the trigger resolves (CR 608.2g; effects/asking.mjs, `play`), or left there for good. */
@@ -405,7 +422,7 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
       /* What it became, on the battlefield or in the graveyard -- both public (CR 400.7e). */
       becomes: arrived,
       from: {zoneType: ZONE_LABEL.stack, player: {playerId: entry.playerId}},
-      to: {zoneType: ZONE_LABEL[to], player: {playerId: to === "graveyard" ? owner : entry.playerId}},
+      to: {zoneType: ZONE_LABEL[to], player: {playerId: ["graveyard", "library"].includes(to) ? owner : entry.playerId}},
     }));
     /* "You may have this creature enter as a copy of ...": its arrival waits for the answer (rules/entering.mjs). */
     if (to === "battlefield") holdArrival(state, arrived, events[events.length - 1]);

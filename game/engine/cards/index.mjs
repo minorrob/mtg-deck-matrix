@@ -785,7 +785,10 @@ export function compileScript(script) {
       /* An added phase is a combat, a main or a beginning phase (effects/permanents.mjs). */
       if (effect.effect === "addPhase" && !(effect.phases ?? ["combat"]).every((kind) => ADDED_PHASES.includes(kind))) problems.push(`addPhase: a phase of ${ADDED_PHASES.join(", ")}`);
       /* "You may play that card" until a time (effects/zones.mjs): this turn, or the end of its controller's next turn. */
-      if (effect.effect === "mayPlay" && !MAY_PLAY_UNTIL.includes(effect.until ?? "end-of-turn")) problems.push(`mayPlay: until ${MAY_PLAY_UNTIL.join(" or ")}`);
+      if (effect.effect === "mayPlay") {
+        if (!MAY_PLAY_UNTIL.includes(effect.until ?? "end-of-turn")) problems.push(`mayPlay: until ${MAY_PLAY_UNTIL.join(" or ")}`);
+        for (const key of ["free", "graveyardToLibraryBottom"]) if (effect[key] !== undefined && effect[key] !== true) problems.push(`mayPlay: ${key} is true`);
+      }
       /* "Spend this mana only to cast instant and sorcery spells" (effects/resources.mjs), "only to cast a creature spell of
          the chosen type" (a mana ability's, cards/index.mjs manaAbility): what the mana may pay for, read here for both. */
       if (effect.effect === "addMana" && effect.spendOnly !== undefined && !spendOnlyValid(effect.spendOnly))

@@ -69,7 +69,7 @@ import {costReduction, costIncrease, abilityCostIncrease, playerStatics, freeCas
 import {countMana, amountOf, countEffect} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
-import {lastKnown, characteristicsOf, abilitiesOf, deriving, derivingAfresh, keywordsOf, colorsOf, controllerOf} from "./layers.mjs";
+import {lastKnown, characteristicsOf, abilitiesOf, deriving, derivingAfresh, onceAQuestion, keywordsOf, colorsOf, controllerOf} from "./layers.mjs";
 import {namesChosen, withChosen, chosenFor} from "../script/chosen.mjs";
 import {poolFor, spendFor, addRestricted, addRider, riderChoices} from "./restricted-mana.mjs";
 import {askEntering} from "./entering.mjs";
@@ -238,7 +238,6 @@ function activationCostChoice(state, {action, player}) {
 function castTerms(state, player, action) {
   const object = state.objects[action.objectId];
   const tax = object.zone === "command" ? commanderTax(state, player, action.objectId) : 0;
-  const free = action.free ? freeCast(state, player, action.objectId) : null;
   /* Flashback (CR 702.34a): its cost rather than the mana cost, life and all. */
   const back = action.flashback ? flashbackCost(state, player, action.objectId) : null;
   /* Its alternative cost (CR 118.9), asked again now. */
@@ -247,7 +246,8 @@ function castTerms(state, player, action) {
   const fled = action.escape !== undefined ? escapeWays(state, player, action.objectId).find((w) => w.kind === action.escape) ?? null : null;
   /* Cast from a graveyard or a library by a permanent's permission (play-from): the one the caster chose, or the one there
      is -- and if it is the Citadel's, life equal to its mana value rather than its mana cost (lifeInstead). */
-  const permission = !back && !fled && ["graveyard", "library"].includes(object.zone) ? playPermission(state, player, action.objectId, "spell", action.via ?? null) : null;
+  const permission = !back && !fled && ["graveyard", "library", "exile"].includes(object.zone) ? playPermission(state, player, action.objectId, "spell", action.via ?? null) : null;
+  const free = action.free ? (permission?.ability.free ? {source: permission.source, limited: false} : freeCast(state, player, action.objectId)) : null;
   const lifeCost = free || way ? null : lifeInstead(object, permission);
   return {tax, free, back, way, fled, permission, lifeCost};
 }
@@ -786,20 +786,41 @@ const landDropsLeft = (state, player) => (state.players[player].landAllowance ??
 const playKey = (ability) => `play-from:${ability.id}`;
 const permissionOpen = (state, player, ability, source) => (!ability.yourTurn || state.activePlayer === player)
   && (ability.limit === undefined || usesThisTurn(state, source, playKey(ability)) < ability.limit);
-const permits = (state, player, ability, id, kind) => {
+const permits = (state, player, ability, id, kind, source) => {
   const which = kind === "land" ? ability.lands : ability.spells;
-  return Boolean(which) && isLand(state.objects[id]) === (kind === "land")
-    && (which === true || (typeof which === "object" && matchesSelector({...which, what: "card", zone: state.objects[id].zone}, state, id, {controller: player})));
+  return Boolean(which) && !(ability.notAdventure && state.objects[id].face === "adventure") && isLand(state.objects[id]) === (kind === "land")
+    && (which === true || (typeof which === "object" && matchesSelector({...which, what: "card", zone: state.objects[id].zone}, state, id, {controller: player, source})));
 };
-const permittedFrom = (state, player, ability) => (ability.zone === "graveyard" ? cardsIn(state, "graveyard", player)
-  : ability.zone === "library-top" ? cardsIn(state, "library", player).slice(0, 1) : []);
+const permittedFrom = (state, player, ability) => (ability.ids ? ability.ids.filter(id => state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone))
+  : ability.zone === "graveyard" ? cardsIn(state, "graveyard", player)
+  : ability.zone === "library-top" ? cardsIn(state, "library", player).slice(0, 1)
+  : ability.zone === "exile" ? state.zones.exile : []);
+/* A resolved permission (Quintorius) persists independently of its source. Static permissions
+   (Maralen) exist only while that permanent grants them. Both use the same cast/cost path. */
+const allPlayPermissions = (state, player) => onceAQuestion(state, `play-permissions:${player}`, () => {
+  const isPlay = a => a.kind === "static" && a.rule === "play-from";
+  const givesPlay = apply => (apply?.addAbilities ?? []).some(isPlay);
+  const mayGain = (state.effects ?? []).some(e => givesPlay(e.apply))
+    || [...state.zones.battlefield, ...state.zones.graveyard.flat()].some(id => (state.objects[id].abilities ?? []).some(a => givesPlay(a.apply)));
+  const statics = [];
+  for (const source of state.zones.battlefield) {
+    const holder = state.objects[source];
+    if (!mayGain && !(holder.abilities ?? []).some(isPlay)) continue;
+    const abilities = abilitiesOf(state, source).filter(isPlay);
+    if (abilities.length && controllerOf(state, source) === player)
+      for (const ability of abilities) statics.push({source, ability: chosenFor(ability, holder)});
+  }
+  return [...statics, ...(state.effects ?? []).filter(e => e.rule === "may-play" && e.player === player).map(e => ({source: e.id,
+    ability: {id: e.id, ids: e.affects.ids, spells: true, lands: !e.spellsOnly, free: e.free === true, notAdventure: e.notAdventure === true,
+      ...(e.graveyardToLibraryBottom ? {graveyardToLibraryBottom: true} : {})}}))];
+});
 /* The life a cast through this permission costs instead of its mana cost -- "pay life equal to its mana value" (Bolas's
    Citadel; CR 118.9) -- or null when it is paid for as usual. X is 0 (CR 107.3b): no alternative cost of the Citadel's
    includes X, so its mana value is the printed one with X as 0 (CR 202.3e). */
 const lifeInstead = (object, permit) => (permit?.ability.payLife === "manaValue" ? (object.manaCost ? manaValue(parseManaCost(object.manaCost)) : 0) : null);
 /* The permissions open now that let this card be played from where it is. */
-const openPermissions = (state, player, id, kind) => playerStatics(state, "play-from", player)
-  .filter(({ability, source}) => permissionOpen(state, player, ability, source) && permittedFrom(state, player, ability).includes(id) && permits(state, player, ability, id, kind));
+const openPermissions = (state, player, id, kind) => allPlayPermissions(state, player)
+  .filter(({ability, source}) => permissionOpen(state, player, ability, source) && permittedFrom(state, player, ability).includes(id) && permits(state, player, ability, id, kind, source));
 /* Of permissions that give the card the same thing, the one with the fewest drawbacks: no limit, so a limited one is spent
    only when it must be, and no "exile it instead" (Kess) -- the two doing the same but for what is used up or lost, which is
    no choice taken from the player. */
@@ -816,7 +837,7 @@ function playPermission(state, player, id, kind, via = null) {
    Worlds's does not; Bolas's Citadel's spell is paid for with life, Future Sight's with mana; Thundermane Dragon's creature
    gains haste. Each permission that gives something different is an offer of its own, `via` its source -- the preferred of
    those that give alike; ones that all give alike are one offer, as they always were (playPermission). */
-const permissionDoes = (ability) => JSON.stringify([ability.grants ?? null, ability.gains ?? null, ability.payLife ?? null]);
+const permissionDoes = (ability) => JSON.stringify([ability.grants ?? null, ability.gains ?? null, ability.payLife ?? null, ability.free === true, ability.graveyardToLibraryBottom === true]);
 function permissionWays(state, player, id, kind) {
   const groups = new Map();
   for (const permission of openPermissions(state, player, id, kind)) {
@@ -839,13 +860,13 @@ function ridersOffer(state, riders) {
   const entries = Object.values(state.players).flatMap((p) => p.manaRiders ?? []);
   return {riders, riderNames: riders.map((id) => state.objects[entries.find((e) => e.id === id)?.source]?.card ?? "mana")};
 }
-const viaOf = (state, via) => (via !== null && via !== undefined ? {via, viaName: state.objects[via]?.card ?? null} : {});
+const viaOf = (state, via) => (via !== null && via !== undefined ? {via, viaName: state.objects[via]?.card ?? (state.effects ?? []).find(e => e.id === via)?.name ?? null} : {});
 
 function playableElsewhere(state, player, kind) {
   const found = [];
-  for (const {ability, source} of playerStatics(state, "play-from", player)) {
-    if (!permissionOpen(state, player, ability, source)) continue;
-    for (const id of permittedFrom(state, player, ability)) if (permits(state, player, ability, id, kind) && !found.includes(id)) found.push(id);
+  for (const {ability, source} of allPlayPermissions(state, player)) {
+    if (ability.ids || !permissionOpen(state, player, ability, source)) continue;
+    for (const id of permittedFrom(state, player, ability)) if (permits(state, player, ability, id, kind, source) && !found.includes(id)) found.push(id);
   }
   if (kind === "spell") for (const zone of ["graveyard", "exile"]) {
     const ids = zone === "exile" ? state.zones.exile.filter((id) => state.objects[id].owner === player) : cardsIn(state, zone, player);
@@ -855,13 +876,10 @@ function playableElsewhere(state, player, kind) {
      controller may cast it, for as long as it stays there. */
   if (kind === "spell") for (const id of state.zones.exile)
     if (state.objects[id].prepareOf !== undefined && preparedCopyStays(state, id) && controllerOf(state, state.objects[id].prepareOf) === player && !found.includes(id)) found.push(id);
-  /* "Until the end of your next turn, you may play that card" (script/effects/zones.mjs, mayPlay): the cards an effect let
-     this player play, while each is still the object it named (CR 400.7) -- a land, or a spell ("you may cast" one only). */
-  for (const effect of state.effects ?? []) {
-    if (effect.rule !== "may-play" || effect.player !== player || (kind === "land" && effect.spellsOnly)) continue;
-    for (const id of effect.affects.ids)
-      if (state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone) && isLand(state.objects[id]) === (kind === "land") && !found.includes(id)) found.push(id);
-  }
+  /* Keep resolved permissions after the card's own zone permissions, preserving stable offer order. */
+  for (const {ability, source} of allPlayPermissions(state, player)) if (ability.ids)
+    for (const id of permittedFrom(state, player, ability))
+      if (permits(state, player, ability, id, kind, source) && !found.includes(id)) found.push(id);
   return found;
 }
 
@@ -969,7 +987,6 @@ function withAdventure(state, id, fn) {
    of your library") is asked of the Adventure, shown as one (715.3a). */
 function adventureFrom(state, player, id, from) {
   if (from === "hand" || from === "command") return true;
-  if (from === "exile") return (state.effects ?? []).some((e) => e.rule === "may-play" && e.player === player && e.notAdventure !== true && (e.affects?.ids ?? []).includes(id));
   return playPermission(state, player, id, "spell") !== null;
 }
 
@@ -979,24 +996,27 @@ function adventureFrom(state, player, id, from) {
 function castOffers(state, player, {id, from, flashback, escape, via = null, adventure = false}, tappable) {
   const actions = [];
   const object = state.objects[id];
+  /* A free alternative cost can make a costless spell castable, never a land (CR 305.9). */
+  if (isLand(object)) return actions;
   /* "If you cast a spell this way, pay life equal to its mana value rather than pay its mana cost" (Bolas's Citadel): the
      permission it is cast through, and what it costs (lifeInstead). A card with no mana cost may be cast only for an
      alternative cost (CR 118.6a), and this is one: its mana value, 0, in life. */
-  const permit = !flashback && !escape && ["graveyard", "library"].includes(from) ? playPermission(state, player, id, "spell", via) : null;
+  const permit = !flashback && !escape && ["graveyard", "library", "exile"].includes(from) ? playPermission(state, player, id, "spell", via) : null;
   const lifeCost = lifeInstead(object, permit);
-  if (!object.manaCost && lifeCost === null) return actions;
+  if (!object.manaCost && lifeCost === null && !(permit?.ability.free || freeCast(state, player, id))) return actions;
   if (lifeCost !== null && lifeCost > state.players[player].life) return actions;
   /* "Can't cast" (castForbidden): from a graveyard, during its controller's turn, more than one each turn. */
   if (castForbidden(state, player, id)) return actions;
   if (sorcerySpeed(object) && !hasFlash(state, id) && !flashGranted(state, player, id) && !(player === state.activePlayer && MAIN_PHASES.includes(state.phase) && state.stack.length === 0))
     return actions;
   const tax = from === "command" ? commanderTax(state, player, id) : 0;
+  /* Derive free-cast grants only after timing rejects spells that cannot be cast now. */
+  const free = flashback || escape || lifeCost !== null ? null : permit?.ability.free ? {source: permit.source, limited: false} : freeCast(state, player, id);
   /* "Without paying its mana cost": offered alone when it may be used every time; beside the paid cast when it is "once
      each turn", so the player decides which spell spends it. */
-  const free = flashback || escape || lifeCost !== null ? null : freeCast(state, player, id);
   /* Its own alternative costs (CR 118.9), each an offer of its own -- never with flashback, escape, a free cast or the
      Citadel's life, each an alternative cost too (118.9a). */
-  const alternatives = flashback || escape || lifeCost !== null ? [] : alternativeCosts(state, player, id);
+  const alternatives = flashback || escape || lifeCost !== null || permit?.ability.free ? [] : alternativeCosts(state, player, id);
   /* The flashback cost instead of the mana cost, and its life: a player can pay life only if their total is at least
      that much (CR 119.4). */
   const back = flashback ? flashbackCost(state, player, id) : null;
@@ -1125,12 +1145,16 @@ function offers(state, player) {
        taken (`castCostChoice`), never one offer per set of them. */
     ...cardsIn(state, "graveyard", player).flatMap((id) => escapeWays(state, player, id).map((way) => ({id, from: "graveyard", escape: way.kind}))),
   ];
-  for (const entry of castable) {
-    actions.push(...castOffers(state, player, entry, tappable));
-    /* AN ADVENTURER CARD (CR 715.3): cast as itself, or as its Adventure -- the player's choice, each its own offer, the
-       Adventure's weighed with the card shown as one (715.3a). Never for flashback or escape, which are the card's own. */
-    if (!state.objects[entry.id]?.adventurer || entry.flashback || entry.escape) continue;
-    actions.push(...withAdventure(state, entry.id, () => (adventureFrom(state, player, entry.id, entry.from) ? castOffers(state, player, {...entry, adventure: true}, tappable) : [])));
+  for (const entry of castable) actions.push(...castOffers(state, player, entry, tappable));
+  /* CR 715.3a: a permission weighs the Adventure's own characteristics. Its main face may
+     exceed Maralen's limit even when the Adventure is eligible, or the converse. */
+  const adventurers = new Set([...castable.filter(e => !e.flashback && !e.escape).map(e => e.id),
+    ...allPlayPermissions(state, player).flatMap(({ability}) => permittedFrom(state, player, ability))]);
+  for (const id of adventurers) {
+    if (!state.objects[id]?.adventurer) continue;
+    const from = state.objects[id].zone;
+    actions.push(...withAdventure(state, id, () => adventureFrom(state, player, id, from)
+      ? permissionWays(state, player, id, "spell").flatMap(via => castOffers(state, player, {id, from, via, adventure: true}, tappable)) : []));
   }
 
   /* CR 602.2: a permanent's activated abilities, whenever its controller has priority; a sorcery-speed one only
@@ -1730,6 +1754,7 @@ function performOffered(state, player, action, during) {
     if (next >= 0) { entry.uncounterable = true; state.effects.splice(next, 1); }
     /* "If a spell cast this way would be put into your graveyard, exile it instead" (Kess): to exile, if to a graveyard. */
     if (permission?.ability.graveyardToExile) entry.graveyardToExile = true;
+    if (permission?.ability.graveyardToLibraryBottom) entry.graveyardToLibraryBottom = true;
     /* On the spell as it now is: moving to the stack made a new object (CR 400.7). */
     if (gains.length && state.objects[entry.objectId]) state.objects[entry.objectId].castGains = gains;
     if (grants.length && state.objects[entry.objectId]) state.objects[entry.objectId].castGrants = grants;

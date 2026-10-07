@@ -3,9 +3,10 @@
 The repository remains isolated at `/workspace/crankmagic-cloud`. Main is
 `2ad84eb0`, Train B is `5d068d26`, library PR #670 is `5174b836`, D2 PR #671 is
 `6eec6348`, and advice PR #672 is `b58b4534`. The branches form that order;
-PR #670's repaired Actions run `37630443333` is successful. The other two were
-readied under Rob's continuation instruction and are running their exact-head
-checks. Nothing has been merged or deployed.
+PR #670's repaired Actions run `37630443333` is successful. PR #671's run
+`37632309093` and PR #672's run `37632350352` also completed successfully on
+the heads above, including all suites and commander companions. All three are
+ready and mergeable. Nothing has been merged or deployed.
 
 ## Independently verified cloud blockers
 

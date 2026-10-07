@@ -88,7 +88,8 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
   const destination = leaving >= 0 && (state.stack[leaving].flashback || (state.stack[leaving].graveyardToExile && proposal.to === "graveyard")) ? "exile"
     /* "If it would leave the battlefield, exile it instead of putting it anywhere else" (Whip of Erebos): on the permanent
        (effects/permanents.mjs, afterwards), gone with it when it leaves (CR 400.7). */
-    : from === "battlefield" && object.exileIfLeaves === true ? "exile" : proposal.to;
+    : from === "battlefield" && object.exileIfLeaves === true ? "exile"
+    : leaving >= 0 && state.stack[leaving].graveyardToLibraryBottom && proposal.to === "graveyard" ? "library" : proposal.to;
   const holder = owner ?? object.owner;
   const enteringController = controller ?? object.owner;
 
@@ -402,9 +403,11 @@ export function moveZone(state, params, context, rng = null) {
   /* "Exile another target nonland permanent" (Oblivion Ring, `link`): what it exiled, kept against this source for the
      ability linked to it (CR 607.2a); used, the link is spent. Each time the ability exiles adds to what it exiled -- the
      same trigger twice (Panharmonicon) is "the exiled cards", both (Skyclave Apparition's ruling of 2020-09-25). */
-  if (params.link === true && context.source !== null && context.source !== undefined) {
-    const links = (state.links ??= {});
-    links[context.source] = [...(links[context.source] ?? []), ...became.filter((id) => state.objects[id])];
+  if (params.link === true && linkOf(context) !== null) {
+    const links = (state.links ??= {}), source = linkOf(context);
+    const linked = became.filter(id => state.objects[id]?.zone === "exile");
+    for (const id of linked) state.objects[id].exiledTurn = state.turn;
+    links[source] = [...(links[source] ?? []), ...linked];
   }
   if (params.linked === true && state.links) delete state.links[linkOf(context)];
   /* Teferi's Time Twist: "if it enters as a creature, it enters with an additional +1/+1 counter on it". */
@@ -451,7 +454,13 @@ export function mayPlay(state, params, context) {
   const ids = (params.targets ?? []).filter((id) => state.objects[id]);
   const player = context.controller;
   if (!ids.length || !state.players[player]) return [];
-  (state.effects ??= []).push({id: `may-play:${ids.join(",")}:${state.effects.length}`, rule: "may-play", affects: {ids}, player,
+  const effects = (state.effects ??= []);
+  let serial = effects.length, id;
+  do { id = `may-play:${ids.join(",")}:${serial++}`; } while (effects.some(e => e.id === id));
+  effects.push({id, rule: "may-play", affects: {ids}, player,
+    name: state.objects[context.source]?.card ?? context.lastKnown?.name ?? "Effect",
+    ...(params.free === true ? {free: true} : {}),
+    ...(params.graveyardToLibraryBottom === true ? {graveyardToLibraryBottom: true} : {}),
     ...(params.spellsOnly === true ? {spellsOnly: true} : {}), until: params.until ?? "end-of-turn", madeOnTurn: state.turn, sourceController: player});
   return [];
 }
@@ -648,14 +657,14 @@ export function counterSpell(state, params, context) {
          chose so, the command zone (CR 903.9b; effects/asking.mjs, commandersGoingHome). */
       const owner = state.objects[entry.objectId].owner;
       const to = entry.flashback || entry.graveyardToExile || params.to === "exile" ? "exile"
-        : (params.commanderHome ?? []).includes(entry.objectId) ? "command" : params.to === "top" ? "library" : "graveyard";
+        : (params.commanderHome ?? []).includes(entry.objectId) ? "command" : params.to === "top" || entry.graveyardToLibraryBottom ? "library" : "graveyard";
       const moved = moveOne(state, entry.objectId, to, events, {owner});
       /* "Exile it with three time counters on it ... it gains suspend" (Delay; CR 702.62): in exile, suspended. */
       if (to === "exile" && moved !== null && state.objects[moved] && Number.isInteger(params.timeCounters)) {
         state.objects[moved].counters.time = (state.objects[moved].counters.time ?? 0) + params.timeCounters;
         if (params.suspend === true) state.objects[moved].suspended = true;
       }
-      if (to === "library" && moved !== null && state.objects[moved]) {
+      if (to === "library" && params.to === "top" && moved !== null && state.objects[moved]) {
         const library = state.zones.library[owner];
         library.splice(library.indexOf(moved), 1);
         library.unshift(moved);

@@ -49,7 +49,7 @@ export const SELECTOR_KEYS = Object.freeze([
   "unblocked", "singleTarget", "goaded", "uniqueName", "sharesCreatureType", "multicolored", "sharesColor",
   "sharesCreatureTypeWithCommander",
   /* "A card exiled with this artifact" (CR 607.2a, 406.6): what this source's linked ability exiled, still in exile. */
-  "exiledWith",
+  "exiledWith", "exiledThisTurn",
 ]);
 
 /* THE SOURCE A LINK IS KEPT AGAINST (CR 607.2a; effects/zones.mjs, `link`): the ability's source -- or, gone from the
@@ -132,6 +132,7 @@ function assertGrammar(selector) {
   /* A mana value's most may be an amount counted (Betor): one of the amount grammar's (script/amount.mjs). */
   const most = selector.manaValue?.max;
   if (most !== null && typeof most === "object" && amountProblems(most).length) throw new Error(`A selector's manaValue.max: ${amountProblems(most).join("; ")}`);
+  if (selector.exiledThisTurn !== undefined && selector.exiledThisTurn !== true) throw new Error("exiledThisTurn is true");
   if (selector.exiledWith !== undefined && selector.exiledWith !== "self") throw new Error("A selector's exiledWith is \"self\": a card this source's linked ability exiled");
   /* "With power less than this creature's power" (mentor, CR 702.134a): `power.lessThan` "self". */
   if (selector.power?.lessThan !== undefined && selector.power.lessThan !== "self") throw new Error("A selector's power.lessThan is \"self\": less than its source's power");
@@ -387,6 +388,7 @@ export function compileSelector(selector) {
     if (selector.self === true && id !== context.source) return false;
     /* "A card exiled with this artifact", "target card exiled with Quintorius" (CR 607.2a, 406.6): one this source's linked
        ability exiled, still that card in exile. */
+    if (selector.exiledThisTurn === true && !(object.zone === "exile" && object.exiledTurn === state.turn)) return false;
     if (selector.exiledWith === "self" && !exiledWithSource(state, linkSource(context)).includes(id)) return false;
     /* "A creature with flying": its keywords now, through the layers (CR 702). */
     if (selector.keywords && !selector.keywords.every((word) => keywordsOf(state, id).includes(word))) return false;

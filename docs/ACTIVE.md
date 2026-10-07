@@ -1,5 +1,21 @@
 # Who holds the work
 
+## Cloud linked-exile commanders, October 7, 2026
+
+**Holder:** Codex, `/workspace/crankmagic-cloud`, `codex/exile-commanders`,
+following advice PR #672 at `b58b4534`. Quintorius and Maralen are implemented;
+107 targeted checks, all 38 faults caught, all 242 engine/regression suites and
+final D2/D5 two-browser natural games pass. See
+`docs/exile-commanders-2026-10-07.md` for rules scope and evidence limits.
+
+**Verified stack:** #670 `5174b836` / Actions `37630443333`, #671 `6eec6348` /
+`37632309093`, and #672 `b58b4534` / `37632350352` are all ready with successful
+full Tests runs. Main `2ad84eb0` and Train B `5d068d26` remain unchanged.
+Nothing has been merged or deployed. Current release configuration/user actions
+and the Library screenshot transfer failure are documented in
+`docs/cloud-release-gates-2026-10-07.md`. Production Play is in scope, after
+staging, data, Access and rollback gates; paid AI remains unapproved.
+
 ## Cloud advice preparation, October 7, 2026
 
 **Holder:** Codex in `/workspace/crankmagic-cloud`, `codex/bounded-advice`,
