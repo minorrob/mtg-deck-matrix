@@ -697,4 +697,40 @@ assert.equal(M.localDate(''),null);assert.equal(M.localDate('not a date'),null);
   const kept=structuredClone(v3);kept.groups.find(g=>g.id==='group:main-deck').entries=[{id:'entry:x',cardId:'ring',quantity:1}];
   assert.equal(M.migrate(kept).groups.find(g=>g.id==='group:main-deck').template,'general','a Main Deck with cards in it stays, as General');checks+=2;}
  s=saved;}
+// Direct deck edits conserve owned copies and keep physical movement explicit.
+{const saved=s;s=M.empty();
+ run('cards',{cards:[...cards,{...cards[0],id:'next',name:'Next commander'}]});
+ run('createDeck',{deckId:'edit',name:'Edit',commanders:['leader'],slots:[{id:'old',cardId:'leader',quantity:1},{id:'rock',cardId:'ring',quantity:1},{id:'lands',cardId:'land',quantity:98}]});
+ run('finalize',{deckId:'edit'});
+ run('acquire',{lot:{id:'owned-old',cardId:'leader',quantity:1}});run('place',{lotId:'owned-old',deckId:'edit'});
+ run('acquire',{lot:{id:'owned-ring',cardId:'ring',quantity:1}});run('place',{lotId:'owned-ring',deckId:'edit'});
+ const original=structuredClone(s);
+ expectFailure('changeCommander',{deckId:'edit',previous:'leader',cardId:'next'},/Review/);
+ expectFailure('changeCommander',{deckId:'edit',previous:'leader',cardId:'ring',confirmed:true},/verified/);
+ run('changeCommander',{deckId:'edit',previous:'leader',cardId:'next',confirmed:true});
+ assert.deepEqual(M.deck(s,'edit').commanders,['next']);assert.equal(M.deck(s,'edit').status,'draft');
+ assert.equal(M.deck(s,'edit').slots.reduce((n,r)=>n+r.quantity,0),100);
+ assert.equal(M.lot(s,'owned-old').allocation,null);assert.equal(M.lot(s,'owned-old').location.deckId,'edit');
+ assert.equal(M.counters(s).owned,2);checks+=6;
+ expectFailure('changeCommander',{deckId:'edit',previous:'leader',cardId:'next',confirmed:true},/being replaced/);
+ s=structuredClone(original);
+ run('editDeck',{deckId:'edit',name:'Edit'});
+ // Promoting an existing card does not duplicate its slot or discard the former commander.
+ run('cards',{cards:[{...cards[2],commander:true}]});
+ run('changeCommander',{deckId:'edit',previous:'leader',cardId:'ring',confirmed:true});
+ assert.equal(M.deck(s,'edit').slots.length,3);assert.equal(M.lot(s,'owned-old').allocation.deckId,'edit');checks+=2;
+ s=structuredClone(original);
+ expectFailure('removeDeckCard',{deckId:'edit',slotId:'old',confirmed:true},/commander stays/);
+ expectFailure('removeDeckCard',{deckId:'edit',slotId:'rock'},/Review/);
+ run('removeDeckCard',{deckId:'edit',slotId:'rock',confirmed:true,returnToBench:false});
+ assert.equal(M.lot(s,'owned-ring').allocation,null);assert.equal(M.lot(s,'owned-ring').location.deckId,'edit');assert.equal(M.counters(s).owned,2);checks+=3;
+ s=structuredClone(original);
+ run('option',{deckId:'edit',replaces:'rock',option:{cardId:'stone',quantity:1,purpose:'upgrade'},reserve:false});
+ run('removeDeckCard',{deckId:'edit',slotId:'rock',confirmed:true,returnToBench:true});
+ assert.equal(M.lot(s,'owned-ring').location.kind,'bench');assert.equal(M.deck(s,'edit').slots.some(r=>r.cardId==='ring'||r.cardId==='stone'),false);assert.equal(M.counters(s).owned,2);checks+=3;
+ expectFailure('removeDeckCard',{deckId:'edit',slotId:'rock',confirmed:true},/slot/i);
+ run('deleteDeck',{deckId:'edit',confirmed:true});
+ assert.equal(s.decks.length,0);assert.equal(M.counters(s).owned,2);assert.ok(s.lots.every(l=>!l.allocation&&l.location.kind==='bench'));checks+=3;
+ s=saved;
+}
 console.log(`collection-model: ${checks} checks passed; planned cards never become owned without acquisition, and Watched covers a card you own.`);

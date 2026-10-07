@@ -1,5 +1,21 @@
 # Who holds the work
 
+## Cloud library continuation, October 7, 2026
+
+**Holder:** Codex in Rob's authorized separate cloud checkout, `/workspace/crankmagic-cloud`,
+`codex/real-deck-acceptance`. The remote follow-up was recovered at `e6715329`; Train B remains
+unchanged at `5d068d26`, PR #669 ready, with its successful Actions run freshly confirmed through
+GitHub's connected app. The offline desktop's uncommitted edit was not recovered.
+
+**Work:** direct reviewed card removal, commander changes, direct deck deletion, and a deletion
+Undo receipt that survives navigation. Ownership, reservation and physical location stay distinct.
+The evidence, commands, cloud toolchain differences and exact blockers are in
+`docs/cloud-continuation-2026-10-07.md`.
+
+**Release gates:** Access/Cloudflare credentials absent; staging egress CONNECT 403; exact October 4
+backup not materialized in cloud; AI spending unapproved. No merge or deployment, no production
+readiness claim. Continue the card coverage and real-game gates after this library increment.
+
 ## Library and real-deck acceptance, October 7, 2026
 
 **Holder:** Codex on Personal-HP, `codex/real-deck-acceptance`, based on the verified
