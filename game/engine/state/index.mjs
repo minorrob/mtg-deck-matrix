@@ -33,6 +33,14 @@ export const ZONES = [...PER_PLAYER, ...SHARED];
 
 const STARTING_LIFE = 40;
 
+/** A successful draw's ordinal this turn (CR 121.2): each card of a multi-card draw is separate.
+ * Stored on the event as well as the player so later draws in one resolution cannot change it. */
+export function recordDraw(state, player) {
+  const who = state.players[player];
+  who.drawnThisTurn = (who.drawnThisTurn ?? 0) + 1;
+  return who.drawnThisTurn;
+}
+
 /**
  * A new game state.
  *

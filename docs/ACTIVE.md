@@ -1,5 +1,20 @@
 # Who holds the work
 
+## Cloud Faerie interactions, October 7, 2026
+
+**Holder:** Codex, `/workspace/crankmagic-cloud`, `codex/faerie-interactions`,
+following commander draft PR #673 at `3fdedc29`. Mastermind, Spellstutter and
+Winnower pass 57 targeted checks, all 20 fault checks and all 243 engine/regression
+suites. See `docs/faerie-interactions-2026-10-07.md`. There are 46 distinct
+unavailable names left in the seven committed decks. Sower needs genuine
+source-duration control support; Tegwyll remains provisional.
+
+Main and Train B remain unchanged. PRs #670–672 have exact-head green Tests runs.
+No release or credential changes have occurred. GitHub-hosted staging acceptance
+is being investigated: current workflows have no staging job or Access-secret
+references, and the connected app cannot inspect secret metadata. A single
+service identity cannot stand in for a separately signed-in friend.
+
 ## Cloud linked-exile commanders, October 7, 2026
 
 **Holder:** Codex, `/workspace/crankmagic-cloud`, `codex/exile-commanders`,

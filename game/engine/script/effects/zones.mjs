@@ -21,7 +21,7 @@ import {holdArrival} from "../../rules/entering.mjs";
 import {prepare} from "./attributes.mjs";
 import {afterwards, delayedTrigger, enchantable, enchantOnArrival} from "./permanents.mjs";
 import {typesOf} from "../../rules/layers.mjs";
-import {moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard, rememberExileLooker} from "../../state/index.mjs";
+import {moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard, rememberExileLooker, recordDraw} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf, controllerOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector} from "../filter.mjs";
@@ -498,7 +498,12 @@ export function draw(state, params, context) {
     for (let i = 0; i < count; i += 1) {
       const library = cardsIn(state, "library", player);
       if (library.length === 0) { state.players[player].drewFromEmpty = true; break; }
-      if (moveOne(state, library[0], "hand", events, {owner: player}) !== null) events[events.length - 1].data.fields.drawn = true;
+      const moved = moveOne(state, library[0], "hand", events, {owner: player});
+      if (moved !== null && state.objects[moved]?.zone === "hand") {
+        const fields = events[events.length - 1].data.fields;
+        fields.drawn = true;
+        fields.drawNumber = recordDraw(state, player);
+      }
     }
   }
   return events;

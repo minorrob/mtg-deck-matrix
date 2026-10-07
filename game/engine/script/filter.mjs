@@ -49,7 +49,7 @@ export const SELECTOR_KEYS = Object.freeze([
   "unblocked", "singleTarget", "goaded", "uniqueName", "sharesCreatureType", "multicolored", "sharesColor",
   "sharesCreatureTypeWithCommander",
   /* "A card exiled with this artifact" (CR 607.2a, 406.6): what this source's linked ability exiled, still in exile. */
-  "exiledWith", "exiledThisTurn",
+  "exiledWith", "exiledThisTurn", "unequalPowerToughness",
 ]);
 
 /* THE SOURCE A LINK IS KEPT AGAINST (CR 607.2a; effects/zones.mjs, `link`): the ability's source -- or, gone from the
@@ -132,6 +132,7 @@ function assertGrammar(selector) {
   /* A mana value's most may be an amount counted (Betor): one of the amount grammar's (script/amount.mjs). */
   const most = selector.manaValue?.max;
   if (most !== null && typeof most === "object" && amountProblems(most).length) throw new Error(`A selector's manaValue.max: ${amountProblems(most).join("; ")}`);
+  if (selector.unequalPowerToughness !== undefined && selector.unequalPowerToughness !== true) throw new Error("unequalPowerToughness is true");
   if (selector.exiledThisTurn !== undefined && selector.exiledThisTurn !== true) throw new Error("exiledThisTurn is true");
   if (selector.exiledWith !== undefined && selector.exiledWith !== "self") throw new Error("A selector's exiledWith is \"self\": a card this source's linked ability exiled");
   /* "With power less than this creature's power" (mentor, CR 702.134a): `power.lessThan` "self". */
@@ -166,7 +167,9 @@ function canBeTargetedBy(state, id, chooser, source = null) {
 function matchesManaValue(state, id, rule, context = {}) {
   /* A transformed permanent's is its front face's (CR 202.3b; state/index.mjs, valueCostOf). */
   const cost = valueCostOf(state.objects[id]);
-  const value = cost ? manaValue(parseManaCost(cost)) : 0;
+  /* CR 202.3e: X has its chosen value on the stack, and zero elsewhere. */
+  const x = state.objects[id]?.zone === "stack" ? state.stack.find(e => e.objectId === id)?.x ?? 0 : 0;
+  const value = cost ? manaValue(parseManaCost(cost), {x}) : 0;
   /* "With mana value X" (Likeness Looter): the X paid, as it is targeted and as it resolves. */
   if (rule.exactly !== undefined) return value === (rule.exactly === "X" ? context.x ?? 0 : rule.exactly);
   /* "With even mana values" (Void Winnower): zero is even. */
@@ -345,6 +348,11 @@ export function compileSelector(selector) {
       : (object.counters?.[selector.counters] ?? 0) > 0)) return false;
     /* "Creatures that entered this turn" (Force of Despair): on the battlefield since this turn. */
     if (selector.enteredThisTurn === true && !(object.zone === "battlefield" && object.arrivedTurn === state.turn)) return false;
+    /* Gilt-Leaf Winnower: either direction of inequality, through current layers. */
+    if (selector.unequalPowerToughness === true) {
+      const c = characteristicsOf(state, id);
+      if ((c.power ?? 0) === (c.toughness ?? 0)) return false;
+    }
     /* "With toughness greater than its power" (Bedrock Tortoise), through the layers. */
     if (selector.toughnessOverPower === true) { const c = characteristicsOf(state, id); if (!((c.toughness ?? 0) > (c.power ?? 0))) return false; }
     /* "Permanents you don't own" (Agent of Treachery): whose it is, not who controls it (CR 108.3). */
