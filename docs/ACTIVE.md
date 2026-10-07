@@ -16,6 +16,11 @@ The evidence, commands, cloud toolchain differences and exact blockers are in
 backup not materialized in cloud; AI spending unapproved. No merge or deployment, no production
 readiness claim. Continue the card coverage and real-game gates after this library increment.
 
+**CI repair:** PR #670's first ready run passed every suite except the generated
+data inventory: the recovered real-deck harness added one reader. The generated
+record is repaired; the new head still needs a green Actions run. Full local
+generator testing reaches an unrelated Scryfall HTTP 403; the inventory check itself passes.
+
 ## Library and real-deck acceptance, October 7, 2026
 
 **Holder:** Codex on Personal-HP, `codex/real-deck-acceptance`, based on the verified

@@ -102,3 +102,19 @@ done
   The proposed $5/month budget has not been accepted. No paid model request was made.
 - D8 dashboard previews, optional D11 permissions, history rewriting, and deleting the old
   velocity branch remain untouched. No merge, staging release, or production deployment was made.
+
+## Actions follow-up
+
+PR #670 is ready for review. Actions run `37628223331` on `7a96c5d3` ran the
+396-suite inventory: only `tests/generators.mjs` failed. Its data-inventory check
+found the recovered `tests/uat/real-deck-game.mjs` reader missing from the generated
+`data/live-state.json` row. The remaining 395 suites passed; the separate companion
+step was skipped after the failure. Regenerating `docs/data-inventory.md` fixes the
+reader count without changing application code or weakening a check. The next
+Actions run must prove the new head before merge.
+
+The repaired inventory passes `node tools/data-inventory.mjs --check` locally.
+The complete generator suite cannot finish in this cloud environment: the unrelated
+`tools/flavor-names.mjs --check` requires `api.scryfall.com`, whose request returns
+HTTP 403 here. That source and its test were not changed or bypassed; Actions has
+the network access to recheck the entire suite.
