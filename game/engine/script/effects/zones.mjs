@@ -67,7 +67,7 @@ const PERMANENT_TYPES = ["Artifact", "Battle", "Creature", "Enchantment", "Land"
    nothing. */
 /* `transformed`: onto the battlefield with its back face up (CR 712.14a) -- a card that isn't a double-faced card that
    transforms stays where it is. */
-export function moveOne(state, id, to, events, {owner = null, tapped = false, faceDown = false, lookers = null, exiledBy = null, transformed = false} = {}) {
+export function moveOne(state, id, to, events, {owner = null, controller = null, tapped = false, faceDown = false, lookers = null, exiledBy = null, transformed = false} = {}) {
   const object = state.objects[id];
   if (!object) return null;
   const from = object.zone;
@@ -90,6 +90,7 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false, fa
        (effects/permanents.mjs, afterwards), gone with it when it leaves (CR 400.7). */
     : from === "battlefield" && object.exileIfLeaves === true ? "exile" : proposal.to;
   const holder = owner ?? object.owner;
+  const enteringController = controller ?? object.owner;
 
   /* A modal double-faced card told to enter with its front face up, when that face is no permanent's (CR 712.14b): it
      stays where it is. */
@@ -104,13 +105,13 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false, fa
      counter is not put on the creature it becomes. */
   const face = backUp ? object.mdfc.back : object;
   const entering = destination === "battlefield"
-    ? enteringModifications(state, {objectId: id, player: object.controller, types: asDown ? ["Creature"] : face.types, abilities: asDown ? [] : face.abilities})
+    ? enteringModifications(state, {objectId: id, player: enteringController, types: asDown ? ["Creature"] : face.types, abilities: asDown ? [] : face.abilities})
     : null;
 
   /* An Aura put onto the battlefield by an effect, not resolving as a spell (CR 303.4f; Sun Titan returning one): it
      enchants what its controller chooses as it enters, and with nothing to enchant it stays where it is -- or, from the
      stack, goes to its owner's graveyard (CR 303.4g). */
-  const hosts = destination === "battlefield" && object.enchant && !asDown ? enchantable(state, object.enchant, object.owner) : null;
+  const hosts = destination === "battlefield" && object.enchant && !asDown ? enchantable(state, object.enchant, enteringController) : null;
   if (hosts && !hosts.length) {
     if (from !== "stack") return null;
     return moveOne(state, id, "graveyard", events, {owner: object.owner});
@@ -121,6 +122,8 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false, fa
   const hidden = faceDown === true && to === "exile" && destination === "exile";
   if (faceDown === true && !asDown && !hidden) card = leavingRef(state, id);
   const moved = moveObject(state, id, destination, PER_PLAYER.includes(destination) ? holder : null, {faceDown: asDown || hidden, transformed: backUp});
+  // CR 110.2a, 614.12: the effect's recipient controls it as it enters, before entry effects.
+  if (destination === "battlefield" && state.objects[moved]) state.objects[moved].controller = enteringController;
   /* "The player who controls the permanent that exiled this card may look at this card in the exile zone" (CR 702.75a), and
      goes on being able to until it leaves exile (406.3). */
   if (hidden && state.objects[moved]) {
@@ -153,7 +156,7 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false, fa
     /* And what it became wherever it went, when that zone is public (CR 400.7e): "that card" in a dies trigger. */
     ...(PUBLIC_ZONES.includes(destination) ? {becomes: moved} : {}),
     from: {zoneType: ZONE_LABEL[from] ?? from, player: {playerId: object.controller}},
-    to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: holder}},
+    to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: destination === "battlefield" ? enteringController : holder}},
   }));
   /* "You may have this creature enter as a copy of ...": its arrival waits for the answer (rules/entering.mjs). */
   if (destination === "battlefield") holdArrival(state, moved, events[events.length - 1]);
@@ -224,6 +227,9 @@ export function returnExiledUntil(state, departed, events, leftBehind = null) {
  * permanent's id as it was; each of its abilities waiting on the stack that knows nothing of it yet is told.
  */
 export function keepLastKnown(state, departed, leftBehind) {
+  // A trigger's subject can leave too (Guardian Project); remember its final name, not its arrival name.
+  for (const entry of [...state.stack, ...(state.pendingTriggers ?? [])])
+    if (entry.about?.card === departed) entry.about.was = structuredClone(leftBehind);
   for (const entry of state.stack) if (entry.objectId === null && entry.cardId === departed && !entry.lastKnown) entry.lastKnown = structuredClone(leftBehind);
 }
 

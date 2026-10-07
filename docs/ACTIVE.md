@@ -1,5 +1,24 @@
 # Who holds the work
 
+## Cloud D2 completion, October 7, 2026
+
+**Holder:** Codex, `/workspace/crankmagic-cloud`, `codex/chulane-completion`,
+following PR #670. Train B/main remain unchanged. Guardian Project, Yavimaya
+Dryad and Claim Jumper are defined with engine behavior and rules tests.
+
+**Proof:** 241 engine/regression suites passed; 67 dedicated checks; 37 caught
+faults. A new cloud-local D2 game through two human browser sessions plus two
+house pilots finished naturally in 44 turns / 349 UI actions, zero refusals.
+Reload and all 354 hidden-information frames per person passed. See
+`docs/chulane-completion-2026-10-07.md` for commands and evidence limits.
+D2 has zero unavailable cards; 51 distinct unavailable names remain across the
+seven committed decks. This does not materialize the exact October 4 backup.
+
+**CI:** the separate library worktree repaired PR #670's generated inventory
+failure at `5174b836`; Actions `37630443333` is running. D2 is a separate draft
+follow-up. No merge or deployment. Staging egress/credentials, exact-backup
+materialization and AI budget approval remain open.
+
 ## Cloud library continuation, October 7, 2026
 
 **Holder:** Codex in Rob's authorized separate cloud checkout, `/workspace/crankmagic-cloud`,

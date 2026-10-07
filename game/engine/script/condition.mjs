@@ -40,12 +40,13 @@
  * The keys are closed, like every other grammar here: an unknown one is refused at the schema rather than read as true.
  */
 
+import {controllerOf, typesOf} from "../rules/layers.mjs";
 import {cardsIn} from "../state/index.mjs";
 import {matchesSelector, compileSelector, matchesLastKnown} from "./filter.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
 
 const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "spent", "enduringStory", "loyaltyThisTurn", "impending",
-  "cameFrom", "sinceYourLastUpkeep", "level", "opponentPoisonAtLeast", "searched"];
+  "uniqueCreatureName", "cameFrom", "sinceYourLastUpkeep", "level", "opponentPoisonAtLeast", "searched"];
 /* Where a permanent may have come from, for `cameFrom`: a library (effects/zones.mjs and rules/stack.mjs record it). */
 const CAME_FROM = ["library"];
 /* The mana a condition may ask was spent to cast its object: the five colors and colorless (CR 106.1). */
@@ -106,6 +107,21 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   if (!condition) return true;
   /* "If you search your library this way" (Claim Jumper): a search made earlier in this resolution (script/resolution.mjs). */
   if (condition.searched === true && searched !== true) return false;
+  /* Guardian Project (CR 603.4, 201.2a): compare the entering creature's current name,
+     or its last known name after it leaves (CR 608.2h), against creatures YOU control
+     and creature cards in YOUR graveyard. Tokens count as other creatures; nameless
+     objects share a name with nothing. Control, ownership and card type are distinct. */
+  if (condition.uniqueCreatureName === true) {
+    const id = about?.card, object = state.objects[id];
+    const name = object ? object.card : about?.was?.name;
+    if (name === undefined) return false;
+    if (name !== null) {
+      if (state.zones.battlefield.some(other => other !== id && state.objects[other].card === name
+          && controllerOf(state, other) === controller && typesOf(state, other).includes("Creature"))) return false;
+      if (cardsIn(state, "graveyard", controller).some(other => state.objects[other].card === name
+          && !state.objects[other].token && state.objects[other].types.includes("Creature"))) return false;
+    }
+  }
   if (condition.cast !== undefined && !castHolds(condition.cast, cast)) return false;
   /* "Khans -- ...": what its permanent chose as it entered (the Sieges). */
   if (condition.chosen !== undefined && (source === null || state.objects[source]?.chosen !== condition.chosen)) return false;
@@ -243,6 +259,7 @@ export function conditionProblems(condition) {
   if ("impending" in condition && typeof condition.impending !== "boolean") problems.push("impending is true or false");
   if ("cameFrom" in condition && !CAME_FROM.includes(condition.cameFrom)) problems.push(`cameFrom is the zone the permanent came from: ${CAME_FROM.join(", ")}`);
   if ("sinceYourLastUpkeep" in condition && condition.sinceYourLastUpkeep !== true) problems.push("sinceYourLastUpkeep is true");
+  if ("uniqueCreatureName" in condition && condition.uniqueCreatureName !== true) problems.push("uniqueCreatureName is true");
   if ("searched" in condition && condition.searched !== true) problems.push("searched is true: a library was searched earlier in this resolution");
   if ("spent" in condition) {
     const spent = condition.spent;

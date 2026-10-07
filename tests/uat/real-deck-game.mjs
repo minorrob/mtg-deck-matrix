@@ -2,7 +2,7 @@
 
 /* A NATURAL GAME END THROUGH TWO BROWSERS, using confirmed card definitions.
  *
- * D5 Shadrix at all four seats: two browser users at 1400x900 and 1280x720, two house pilots.
+ * D5 Shadrix (default) or REAL_DECK_ID=D2 Chulane at all four seats: two browser users at 1400x900 and 1280x720, two house pilots.
  * The host creates the table, invites the second user, and both choose decks and become ready.
  * Browser users take the house pilot's suggestions over their own visible state and offered
  * choices, exclusively through UI controls. Reload preserves a pending decision; both sessions
@@ -15,6 +15,7 @@
  * vanilla stand-ins. The real library and online accounts are untouched.
  *
  * node tests/uat/real-deck-game.mjs
+ * REAL_DECK_ID=D2 selects the committed Chulane list; this never uses an external backup.
  * REAL_DECKS_REQUIRED=1 refuses a missing browser; UAT_SHOTS=<dir> saves each end screen.
  * This deliberate full-game acceptance run is outside the regular suite inventory.
  */
@@ -31,6 +32,8 @@ import {joinLocation} from "../../cloud/worker.mjs";
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1; console.log(`  ok  ${m}`);};
 const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1; console.log(`  ok  ${m}`);};
+const DECK_ID = process.env.REAL_DECK_ID || "D5";
+assert.ok(/^(D2|D5)$/.test(DECK_ID), "REAL_DECK_ID must be D2 or D5, the completed committed deck lists");
 const SHOTS = process.env.UAT_SHOTS || "";
 if (SHOTS) mkdirSync(SHOTS, {recursive: true});
 const shot = async (page, name) => {if (SHOTS) await page.screenshot({path: path.join(SHOTS, `${name}.png`)});};
@@ -218,7 +221,7 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
     const began=Date.now();
     while(current(person)?.revision===v.revision && Date.now()-began<15000) await page.waitForTimeout(20);
     assert.notEqual(current(person)?.revision,v.revision,`action advances ${d.title}`);
-    if(actions%25===0) console.log(`D5 browser: ${actions} actions, turn ${current(person).state.turn}`);
+    if(actions%25===0) console.log(`${DECK_ID} browser: ${actions} actions, turn ${current(person).state.turn}`);
     return true;
   }
   for(let i=0;i<3000;i++) {
@@ -236,7 +239,7 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
     if(!moved) await rob.page.waitForTimeout(100);
   }
   const result=current(rob);
-  eq(result.status,'finished','real D5 game finishes naturally');
+  eq(result.status,'finished',`real ${DECK_ID} game finishes naturally`);
   eq(current(maya).status,'finished','second browser sees the same natural end');
   assert.notEqual(result.result?.reason,'ended early');
   eq(current(maya).result,result.result,'separate browser sessions agree on result');
@@ -245,7 +248,7 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
     const views=viewsAt(person.email,id);
     ok(views.every(v=>v.state.players.every((p,s)=>s===seat || ['Hand','Library'].every(z=>(p.zones[z]?.cards??[]).every(c=>!c.name)))),`seat ${seat}: all ${views.length} frames hide other hands and libraries`);
     await person.page.locator('.cm-board-over').waitFor({timeout:10000});
-    await shot(person.page,`d5-natural-end-seat${seat}`);
+    await shot(person.page,`${DECK_ID.toLowerCase()}-natural-end-seat${seat}`);
   }
   const room=tableFor(id).room;
   console.log(JSON.stringify({checks,actions,turns:result.state.turn,result:result.result,refusals:room.refusals},null,2));
@@ -254,10 +257,10 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
   return id;
 }
 try {
-  const d5=DECKS.find(d=>d.id==='deck:live:D5'); assert.ok(d5);
+  const deck=DECKS.find(d=>d.id===`deck:live:${DECK_ID}`); assert.ok(deck);
   const rob=await person(ROB,{width:1400,height:900});
   const maya=await person(MAYA,{width:1280,height:720});
-  await journey(1,rob,maya,[d5,d5,d5,d5]);
+  await journey(1,rob,maya,[deck,deck,deck,deck]);
 } finally {for (const alarm of alarms) clearInterval(alarm); await close();}
-console.log(`D5 real browser: ${checks} checks passed`);
+console.log(`${DECK_ID} real browser: ${checks} checks passed`);
 process.exit(0);
