@@ -186,6 +186,13 @@ function validateIndices(choice, request) {
       if (counts.get(key) > choice.capped.most[key]) throw new Error(choice.capped.why?.[key] ?? "Invalid selection");
     }
   }
+  /* AND SOME OPTIONS MUST BE AMONG THOSE TAKEN: "other Goblin creatures you control attack each combat if able" (CR 508.1d)
+     -- at least `least` of the options whose `by` field is one of `values`, each value once. Refused with the record's own
+     words (`why`): which, and what to do instead. */
+  for (const need of Array.isArray(choice.requires) ? choice.requires : []) {
+    const met = new Set(indices.map((n) => (choice.options ?? [])[n]?.[need.by]).filter((value) => (need.values ?? []).includes(value)));
+    if (met.size < (need.least ?? 0)) throw new Error(need.why ?? "Invalid selection");
+  }
   if (choice.choiceKind === "manipulate") validateManipulateOrder(choice, request);
 }
 

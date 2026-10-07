@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Tree of Redemption",
+  "scenarios": [
+    {
+      "name": "Rob's 40 for the Tree's 13: Rob at 13, the Tree a 0/40",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tree of Redemption"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Tree of Redemption"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 13
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Tree of Redemption",
+            "power": 0,
+            "toughness": 40
+          }
+        }
+      ]
+    },
+    {
+      "name": "And back again next turn: Rob at 40, the Tree a 0/13",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tree of Redemption"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Tree of Redemption"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Tree of Redemption"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Tree of Redemption",
+            "power": 0,
+            "toughness": 13
+          }
+        }
+      ]
+    }
+  ]
+}

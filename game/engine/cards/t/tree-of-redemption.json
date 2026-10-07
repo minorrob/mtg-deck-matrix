@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tree of Redemption",
+    "oracleId": "1372dd15-cdb9-470c-b3e8-3423697e46e8",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Plant"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 0,
+    "toughness": 13
+  },
+  "oracleText": "Defender\n{T}: Exchange your life total with this creature's toughness.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender",
+      "keyword": "defender"
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Exchange your life total with this creature's toughness.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [],
+      "effects": [
+        {
+          "effect": "exchangeLife",
+          "who": "you",
+          "targets": "self"
+        }
+      ]
+    }
+  ]
+}

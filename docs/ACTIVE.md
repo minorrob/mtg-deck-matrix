@@ -1,5 +1,27 @@
 # Who holds the work
 
+## Train B continuation, October 7, 2026
+
+**Holder:** Codex on Personal-HP, continuing the authorized production-readiness work on
+`claude/admiring-franklin-58cxy4` from `d8774b32`, PR #669. B4, B6 and B3 are integrated:
+25 additional definitions, 22 dedicated suites and 97 caught deliberate faults. The final
+affected aggregate passed 282 suites; check-cards passed 1,681 definitions and 2,747 scenarios.
+The exact commands, fixes and limits are in `docs/train-b-proof-2026-10-07.md`.
+The standalone ten-game CPU gate also passed after removing unnecessary controller and
+attack-cap derivations; no budget was raised. Real-deck refusal-free acceptance is still open.
+
+**Next:** complete the scan/push and ready #669 for Actions; diagnose its exact head. Then
+prove real-card games with D5 Shadrix, finish D2 Chulane's three missing cards, and continue
+library/deck integrity, human-game recovery and bounded AI acceptance as recorded in
+`docs/production-readiness-2026-10-07.md`. No production gate is declared passed.
+
+**Backup and access:** the exact October 4 live-game backup was found in the MtG project's
+AI Input folder and validated read-only with the app's checksum and model checks. No real
+library was restored or changed. The staging service-token environment variables are absent
+here, so signed-in live staging checks remain blocked. Paid AI usage waits on a concrete cap.
+Reserved access, credential, persistent-permission, history and branch-deletion actions are
+untouched. The unrelated local settings file remains untracked.
+
 ## PAUSED, 2026-10-06 ~18:30 UTC: read `docs/handoff-2026-10-06.md` first
 
 The review-response session paused at 97% of the week's usage (Rob: pause at 90% and "write up a comprehensive handoff

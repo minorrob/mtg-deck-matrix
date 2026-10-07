@@ -289,6 +289,9 @@ function applyOne(state, {holderId, ability}, proposal, dry = false) {
      once it is there, its arrival waiting for the answer (rules/entering.mjs) -- "except", "until end of turn", "tapped". */
   if (ability.change?.copyOf) next.asks = [...(next.asks ?? []), {copyOf: structuredClone(ability.change.copyOf),
     copy: {except: structuredClone(ability.change.except ?? {}), keep: [...(ability.change.keep ?? [])], until: ability.change.until ?? null, tapped: ability.change.tapped === true}}];
+  /* "This creature enters prepared" (Goblin Glasswright; CR 614.1c, 722.3a): a designation it enters with, given as it
+     arrives (effects/attributes.mjs, prepare) -- and with it the copy of its prepare spell in exile (722.3c). */
+  if (ability.change?.entersPrepared === true) next.designations = [...new Set([...(next.designations ?? []), "prepared"])];
   if (ability.change?.entersWithCounters) {
     const {counter, count} = ability.change.entersWithCounters;
     /* "With X +1/+1 counters on it" (CR 107.3m: the X paid to cast it), "a +1/+1 counter for each Zombie card in your
@@ -421,7 +424,7 @@ export function enteringModifications(state, {objectId, player, types, abilities
      planeswalker has. */
   const counters = {...(proposal.counters ?? {})}, loyalty = state.objects[objectId]?.loyalty;
   if ((types ?? []).includes("Planeswalker") && Number.isInteger(loyalty)) counters.loyalty = (counters.loyalty ?? 0) + loyalty;
-  return {tapped: proposal.tapped === true, counters, asks: proposal.asks ?? []};
+  return {tapped: proposal.tapped === true, counters, asks: proposal.asks ?? [], designations: proposal.designations ?? []};
 }
 
 /**
@@ -440,7 +443,7 @@ export function ownEntering(state, {objectId, player, types, abilities}) {
 /* How an event ends under every order of the effects that apply to it (CR 616.1f: each applied, then what still applies),
    and whether that is one way. Tried dry, so trying each order spends nothing. A damage event ends in how much, to whom,
    and how much a prevention that counts it stopped ("mills that many"). */
-const endOf = (p) => JSON.stringify({to: p.to ?? null, tapped: p.tapped === true, counters: p.counters ?? {}, asks: p.asks ?? [],
+const endOf = (p) => JSON.stringify({to: p.to ?? null, tapped: p.tapped === true, counters: p.counters ?? {}, asks: p.asks ?? [], designations: p.designations ?? [],
   amount: p.amount ?? null, toPlayer: p.toPlayer ?? null, toCard: p.toCard ?? null, counted: (p.followUps ?? []).map((f) => f.context.about?.amount ?? null)});
 function ends(state, proposal, out = new Set(), depth = 0) {
   const candidates = depth < 8 ? applicable(state, proposal) : [];

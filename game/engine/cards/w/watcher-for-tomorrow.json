@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Watcher for Tomorrow",
+    "oracleId": "277aafa6-4270-4d24-a888-cf9e8e635d4b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Hideaway 4 (When this creature enters, look at the top four cards of your library, exile one face down, then put the rest on the bottom in a random order.)\nThis creature enters tapped.\nWhen this creature leaves the battlefield, put the exiled card into its owner's hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Hideaway 4 (When this creature enters, look at the top four cards of your library, exile one face down, then put the rest on the bottom in a random order.)",
+      "keyword": "hideaway",
+      "amount": 4
+    },
+    {
+      "kind": "replacement",
+      "text": "This creature enters tapped.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature leaves the battlefield, put the exiled card into its owner's hand.",
+      "trigger": {
+        "on": "leaves"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "linked": true,
+          "to": "hand"
+        }
+      ]
+    }
+  ]
+}

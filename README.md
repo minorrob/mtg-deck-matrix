@@ -831,7 +831,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 338 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 360 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1141,6 +1141,29 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-mana-riders` — `tests/engine-mana-riders.mjs`
 - `engine-proliferate-twice` — `tests/engine-proliferate-twice.mjs`
 - `engine-cards-x11-b2` — `tests/engine-cards-x11-b2.mjs`
+
+- `engine-attack-requirements` - `tests/engine-attack-requirements.mjs`
+- `engine-defender-permission` - `tests/engine-defender-permission.mjs`
+- `engine-ability-haste` - `tests/engine-ability-haste.mjs`
+- `engine-unless-return` - `tests/engine-unless-return.mjs`
+- `engine-sacrificed-amounts` - `tests/engine-sacrificed-amounts.mjs`
+- `engine-top-card-abilities` - `tests/engine-top-card-abilities.mjs`
+- `engine-exchange-life` - `tests/engine-exchange-life.mjs`
+- `engine-damage-each` - `tests/engine-damage-each.mjs`
+- `engine-designations` - `tests/engine-designations.mjs`
+- `engine-prepare` - `tests/engine-prepare.mjs`
+- `engine-connive-memory` - `tests/engine-connive-memory.mjs`
+- `engine-block-designation-triggers` - `tests/engine-block-designation-triggers.mjs`
+- `engine-target-constraints` - `tests/engine-target-constraints.mjs`
+- `engine-mana-value-count-cap` - `tests/engine-mana-value-count-cap.mjs`
+- `engine-linked-memory` - `tests/engine-linked-memory.mjs`
+- `engine-hidden-exile` - `tests/engine-hidden-exile.mjs`
+- `engine-moved-memory` - `tests/engine-moved-memory.mjs`
+- `engine-copy-memory` - `tests/engine-copy-memory.mjs`
+- `engine-source-memory` - `tests/engine-source-memory.mjs`
+- `engine-card-choice-memory` - `tests/engine-card-choice-memory.mjs`
+- `engine-enter-transformed` - `tests/engine-enter-transformed.mjs`
+- `engine-power-comparison` - `tests/engine-power-comparison.mjs`
 
 ## Design and execution record
 

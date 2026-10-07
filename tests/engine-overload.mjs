@@ -58,8 +58,8 @@ const casts = (s) => legalActions(s, 0).filter((a) => a.kind === "cast" && s.obj
 }
 {
   const bad = compileScript({schema: "CrankCardScript@1", identity: {name: "Odd", oracleId: "x", types: ["Sorcery"], subtypes: [], manaCost: "{W}", colors: ["W"], colorIdentity: ["W"]},
-    oracleText: "x", source: "hand", abilities: [{kind: "spell", text: "x", targets: [], effects: [{effect: "repeatFor", each: "player", effects: [{effect: "exchangeLife"}]}]}]});
-  ok(bad.problems.some((p) => p.includes("repeatFor: exchangeLife is not something that repeats")), "what repeats is built, or it is refused");
+    oracleText: "x", source: "hand", abilities: [{kind: "spell", text: "x", targets: [], effects: [{effect: "repeatFor", each: "player", effects: [{effect: "addTurn"}]}]}]});
+  ok(bad.problems.some((p) => p.includes("repeatFor: addTurn is not something that repeats")), "what repeats is built, or it is refused");
   const odd = compileScript({schema: "CrankCardScript@1", identity: {name: "Odd", oracleId: "x", types: ["Sorcery"], subtypes: [], manaCost: "{W}", colors: ["W"], colorIdentity: ["W"]},
     oracleText: "x", source: "hand", abilities: [{kind: "spell", text: "x", targets: [], effects: [{effect: "draw", count: {rememberedCount: true, controlledBy: "you"}}]}]});
   ok(odd.problems.some((p) => p.includes('controlledBy is "that player"')), "controlledBy is \"that player\"");

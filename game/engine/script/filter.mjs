@@ -37,6 +37,7 @@ import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCre
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {hasSubtype, isCreatureType} from "../keywords/types.mjs";
 import {protectedFrom} from "../rules/protection.mjs";
+import {amountOf, amountProblems} from "./amount.mjs";
 
 /* The steps after blockers are declared, in which an attacker is blocked or unblocked (CR 509.1h). */
 const BLOCKERS_DECLARED = ["COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAGE", "COMBAT_DAMAGE", "COMBAT_END"];
@@ -47,12 +48,24 @@ export const SELECTOR_KEYS = Object.freeze([
   "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander", "nonColors", "owner", "enteredThisTurn", "toughnessOverPower",
   "unblocked", "singleTarget", "goaded", "uniqueName", "sharesCreatureType", "multicolored", "sharesColor",
   "sharesCreatureTypeWithCommander",
+  /* "A card exiled with this artifact" (CR 607.2a, 406.6): what this source's linked ability exiled, still in exile. */
+  "exiledWith",
 ]);
+
+/* THE SOURCE A LINK IS KEPT AGAINST (CR 607.2a; effects/zones.mjs, `link`): the ability's source -- or, gone from the
+   battlefield since its ability was put on the stack, that object as it last was (CR 113.7a): "if there are cards exiled
+   with this enchantment" still finds what its other ability exiled. */
+export const linkSource = (context) => context?.source ?? context?.lastKnown?.cardId ?? null;
+/** The cards in exile a source's linked ability put there (CR 607.2a), each still the object it exiled (CR 400.7). */
+export const exiledWithSource = (state, source) => (source === null || source === undefined ? []
+  : (state.links?.[source] ?? []).filter((id) => state.objects[id]?.zone === "exile"));
 
 /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
    asks what the thing was and whose, and by then it is a new object in a graveyard (CR 400.7): only the snapshot taken
    as it left (rules/layers.mjs, lastKnown) still knows. These are the keys a departure's filter may use. */
-const LAST_KNOWN_KEYS = ["what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "controller", "token", "another", "attachedBy", "anyOf"];
+/* `self` (Rundvelt Hordemaster): "whenever this creature or another Goblin you control dies" -- the source itself, as it
+   last was, whatever it then was (`anyOf: [{self: true}, {subtypes, controller}]`). */
+const LAST_KNOWN_KEYS = ["what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "controller", "token", "another", "attachedBy", "anyOf", "self"];
 export function matchesLastKnown(selector, lki, context = {}) {
   if (!lki) return false;
   const s = selector ?? {};
@@ -71,6 +84,7 @@ export function matchesLastKnown(selector, lki, context = {}) {
   if (s.controller === "opponent" && lki.controller === context.controller) return false;
   if (s.token !== undefined && (lki.token === true) !== s.token) return false;
   if (s.another === true && lki.cardId === context.source) return false;
+  if (s.self === true && lki.cardId !== context.source) return false;
   /* "Equipped creature dies": the Equipment was attached to it as it died. */
   if (s.attachedBy === "self" && !(lki.attachments ?? []).includes(context.source)) return false;
   return true;
@@ -115,6 +129,12 @@ function assertGrammar(selector) {
   if (selector.sharesColor !== undefined && selector.sharesColor !== "self") throw new Error("A selector's sharesColor is \"self\": a color of its source's");
   if (selector.sharesCreatureTypeWithCommander !== undefined && selector.sharesCreatureTypeWithCommander !== true)
     throw new Error("A selector's sharesCreatureTypeWithCommander is true: a creature type of a commander of yours");
+  /* A mana value's most may be an amount counted (Betor): one of the amount grammar's (script/amount.mjs). */
+  const most = selector.manaValue?.max;
+  if (most !== null && typeof most === "object" && amountProblems(most).length) throw new Error(`A selector's manaValue.max: ${amountProblems(most).join("; ")}`);
+  if (selector.exiledWith !== undefined && selector.exiledWith !== "self") throw new Error("A selector's exiledWith is \"self\": a card this source's linked ability exiled");
+  /* "With power less than this creature's power" (mentor, CR 702.134a): `power.lessThan` "self". */
+  if (selector.power?.lessThan !== undefined && selector.power.lessThan !== "self") throw new Error("A selector's power.lessThan is \"self\": less than its source's power");
 }
 
 /* AN OBJECT'S CREATURE TYPES (CR 205.3m): the subtypes of a creature or a kindred card, through the layers on the
@@ -151,8 +171,11 @@ function matchesManaValue(state, id, rule, context = {}) {
   /* "With even mana values" (Void Winnower): zero is even. */
   if (rule.even !== undefined && (value % 2 === 0) !== rule.even) return false;
   if (rule.min !== undefined && value < rule.min) return false;
-  /* "With mana value X or less" (Rally the Ancestors): the X paid, as `exactly` reads it. */
-  if (rule.max !== undefined && value > (rule.max === "X" ? context.x ?? 0 : rule.max)) return false;
+  /* "With mana value X or less" (Rally the Ancestors): the X paid, as `exactly` reads it. "Less than or equal to the amount
+     of life you lost this turn" (Betor, Ancestor's Voice): an amount counted as the selector is asked (script/amount.mjs) --
+     as the target is chosen, and again as it resolves (CR 608.2b). */
+  const most = rule.max === "X" ? context.x ?? 0 : rule.max !== null && typeof rule.max === "object" ? amountOf(state, rule.max, context) : rule.max;
+  if (rule.max !== undefined && value > most) return false;
   return true;
 }
 
@@ -345,6 +368,15 @@ export function compileSelector(selector) {
          as the effect resolves (script/bind.mjs). Unbound -- a fact never read, or its target gone -- it matches nothing:
          greater than a power nobody knows is no creature, never every one. */
       if (selector.power.moreThan !== undefined && !(Number.isInteger(selector.power.moreThan) && power > selector.power.moreThan)) return false;
+      /* "Target attacking creature with power less than this creature's power" (mentor, CR 702.134a): its source's power now,
+         through the layers -- or, gone from the battlefield, as it last was (CR 113.7a, 608.2h). No source to compare with,
+         and nothing is less. */
+      if (selector.power.lessThan === "self") {
+        const source = context.source;
+        const theirs = source !== null && source !== undefined && state.objects[source]?.zone === "battlefield" ? characteristicsOf(state, source).power ?? 0
+          : context.lastKnown && (source === null || source === undefined || context.lastKnown.cardId === source) ? context.lastKnown.power : null;
+        if (!(Number.isInteger(theirs) && power < theirs)) return false;
+      }
     }
     /* "Power or toughness 1 or less" (Tetsuko Umezawa): toughness the same way, through the layers. */
     if (selector.toughness) {
@@ -353,6 +385,9 @@ export function compileSelector(selector) {
       if (selector.toughness.max !== undefined && toughness > selector.toughness.max) return false;
     }
     if (selector.self === true && id !== context.source) return false;
+    /* "A card exiled with this artifact", "target card exiled with Quintorius" (CR 607.2a, 406.6): one this source's linked
+       ability exiled, still that card in exile. */
+    if (selector.exiledWith === "self" && !exiledWithSource(state, linkSource(context)).includes(id)) return false;
     /* "A creature with flying": its keywords now, through the layers (CR 702). */
     if (selector.keywords && !selector.keywords.every((word) => keywordsOf(state, id).includes(word))) return false;
     if (selector.target === true && !canBeTargetedBy(state, id, chooser, context.source ?? null)) return false;

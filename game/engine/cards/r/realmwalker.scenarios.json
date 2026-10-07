@@ -1,0 +1,250 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Realmwalker",
+  "fixtures": {
+    "Elf Scout": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Goblin Scout": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Elf Rite": {
+      "types": [
+        "Kindred",
+        "Sorcery"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Elf chosen: an Elf creature cast from the top of the library",
+      "library": [
+        "Elf Scout",
+        "Goblin Scout"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Realmwalker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Realmwalker"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Elf"
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Elf Scout"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Goblin Scout"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Forest",
+            "Realmwalker",
+            "Elf Scout"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Goblin chosen: an Elf on top is not cast from there",
+      "library": [
+        "Elf Scout",
+        "Goblin Scout"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Realmwalker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Realmwalker"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Goblin"
+          ]
+        },
+        {
+          "tap": "Forest"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Elf Scout"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "A creature spell only: an Elf sorcery of the chosen type is not cast from the top",
+      "library": [
+        "Elf Rite"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Realmwalker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Realmwalker"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Elf"
+          ]
+        },
+        {
+          "tap": "Forest"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Elf Rite"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

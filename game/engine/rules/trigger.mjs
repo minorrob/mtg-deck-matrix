@@ -51,7 +51,7 @@ import {playerStatics} from "./statics.mjs";
 import {matchesSelector, matchesLastKnown} from "../script/filter.mjs";
 import {abilitiesOf, characteristicsOf} from "./layers.mjs";
 import {chosenFor} from "../script/chosen.mjs";
-import {targetChoices, targetName, isHostile, isChoosing, targetCandidates, countedChoice, modalScript} from "../script/bind.mjs";
+import {targetChoices, targetName, isHostile, isChoosing, targetCandidates, countedChoice, modalScript, differentControllersProblem} from "../script/bind.mjs";
 
 /* An ability lives where its card is (CR 113.6). A triggered ability of a permanent watches the
    game only while that permanent is on the battlefield, so an ability on a card in a graveyard is
@@ -193,6 +193,21 @@ function subjects(state, event, condition, sourceId, controller) {
        it last was should it leave before the trigger resolves (CR 608.2h). */
     return matched.map((a) => ({card: a.card.cardId, player: a.defender?.playerId, controller: fields.player?.playerId}));
   }
+  /* "Whenever this Vehicle blocks" (CR 509.3a): each creature declared as a blocker that fits, once however many it
+     blocks; "blocks a creature" (`eachBlocked`, 509.3b), once for each attacker it blocks -- about the blocker, the attacker
+     (`blocked`) and that attacker's controller (the attacking player). */
+  if (condition.on === "GameEventBlockersDeclared") {
+    const blocks = (fields.blockers ?? []).filter((b) => fits(state, b.card?.cardId, condition, sourceId, controller));
+    const attacking = state.combat?.attackingPlayerId ?? state.activePlayer;
+    if (condition.eachBlocked) return blocks.map((b) => ({card: b.card.cardId, blocked: b.blocking?.cardId, player: attacking}));
+    return [...new Set(blocks.map((b) => b.card.cardId))].map((card) => ({card, player: attacking}));
+  }
+  /* "When this creature becomes monstrous" (CR 701.37b): this permanent given that designation (effects/attributes.mjs). */
+  if (condition.on === "GameEventCardAttribute") {
+    if (fields.attribute !== condition.attribute || fields.value !== true) return [];
+    if (condition.who === "self" && fields.card?.cardId !== sourceId) return [];
+    return [{card: fields.card?.cardId}];
+  }
   /* "Whenever this deals combat damage to a player", "whenever a creature you control deals combat damage to an
      opponent" (CR 510.2, 120.3): the source, and the player dealt the damage. */
   if (condition.on === "GameEventPlayerDamaged") {
@@ -297,7 +312,10 @@ function subjects(state, event, condition, sourceId, controller) {
     /* And where it came from, if from a library (Fblthp, the Lost: "if it entered from your library or was cast from your
        library"), kept with the trigger for when the permanent is gone before it resolves (CR 608.2h; script/condition.mjs). */
     const came = fields.to?.zoneType === "Battlefield" ? state.objects[fields.becomes]?.cameFrom : undefined;
-    return [{card: fields.becomes, ...(Number.isInteger(player) ? {player} : {}), ...(came ? {cameFrom: {...came}} : {})}];
+    /* And, from the battlefield, its copiable values as it last existed when they were not its card's (rules/layers.mjs,
+       lastKnown): "create a token that's a copy of that creature" (Hofri Ghostforge). */
+    const copied = fields.from?.zoneType === "Battlefield" ? fields.leftBehind?.copiable : undefined;
+    return [{card: fields.becomes, ...(Number.isInteger(player) ? {player} : {}), ...(came ? {cameFrom: {...came}} : {}), ...(copied ? {copiedAs: structuredClone(copied)} : {})}];
   }
   return [{}];
 }
@@ -688,7 +706,8 @@ function targeting(state, stackId) {
   if (!entry) return null;
   const source = entry.cardId !== null && state.objects[entry.cardId] ? entry.cardId : null;
   /* What it is about, for a target described by it: "target creature that player controls" (Mistblade Shinobi). */
-  return {entry, context: {controller: entry.playerId, source, ...(entry.about ? {about: entry.about} : {})}};
+  /* With what it has been aimed at so far: "a second target creature you control" (script/bind.mjs, distinctFrom). */
+  return {entry, context: {controller: entry.playerId, source, ...(entry.about ? {about: entry.about} : {}), chosenTargets: entry.targets ?? []}};
 }
 
 /**
@@ -756,6 +775,9 @@ export function resolveTriggerCounted(state, awaiting, indices) {
   if (picked.length !== (indices ?? []).length || picked.length < choice.min || picked.length > choice.max || picked.some((i) => !choice.options[i]))
     throw new Error("Invalid selection");
   const {entry} = targeting(state, awaiting.stackId);
+  /* "Controlled by different players" (script/bind.mjs): refused, with what to do instead, before anything is aimed. */
+  const split = differentControllersProblem(state, entry.script.targets[awaiting.index], picked.map((i) => choice.options[i].targets[0]), entry.name ?? "That ability");
+  if (split) throw new Error(split);
   entry.targets[awaiting.index] = picked.map((i) => choice.options[i].targets[0]);
   state.awaiting = null;
   if (askCounted(state, entry)) return [];

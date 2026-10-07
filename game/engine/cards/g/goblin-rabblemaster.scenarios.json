@@ -1,0 +1,133 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Goblin Rabblemaster",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "At the beginning of combat a hasty Goblin, which must attack; Rabblemaster and the Bear may stay home",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin Rabblemaster",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "tapped": "Goblin"
+        },
+        {
+          "seat": 0,
+          "tapped": "Goblin Rabblemaster",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "Rabblemaster attacks with its Goblin: +1/+0 for the other attacking Goblin, 3 and 1",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin Rabblemaster"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Goblin Rabblemaster",
+            "Goblin"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 36
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin Rabblemaster",
+            "Goblin"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Each combat makes another: two Goblins by Rob's second turn, both attacking",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin Rabblemaster"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 37
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin Rabblemaster",
+            "Goblin",
+            "Goblin"
+          ]
+        }
+      ]
+    }
+  ]
+}

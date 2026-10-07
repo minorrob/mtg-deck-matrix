@@ -57,18 +57,19 @@ import {pushSpell, pushAbility, becameTarget} from "./stack.mjs";
 import {addMana, spend, parseManaCost, automaticPayment, canPay, chosenPayment, paymentOptions, paymentKey, paymentWords, PAY_CHOICES, manaValue, poolSize, tapPlans, convokeCanPay, convokePayments} from "./mana.mjs";
 import {commanderTax, recordCommanderCast, colorIdentity} from "./commander.mjs";
 import {COLORS, MANA_KEYS} from "./mana.mjs";
-import {summoningSick, hasFlash} from "../keywords/timing.mjs";
-import {targetChoices, targetName, isHostile, modalScript, isChoosing, countOf, targetCandidates, countedChoice, inWords} from "../script/bind.mjs";
+import {sickForAbilities, hasFlash} from "../keywords/timing.mjs";
+import {targetChoices, targetName, isHostile, modalScript, isChoosing, countOf, targetCandidates, countedChoice, inWords, differentControllersProblem} from "../script/bind.mjs";
 import {moveOne, sacrificeOne, mill} from "../script/effects/zones.mjs";
 import {compileSelector, matchesSelector, selectMatching} from "../script/filter.mjs";
 import {runEffects} from "../script/effects/index.mjs";
 import {changeLife} from "../script/effects/resources.mjs";
+import {unprepare, preparedCopyStays} from "../script/effects/attributes.mjs";
 import {checkStateBasedActions, gameOver} from "./sba.mjs";
 import {costReduction, costIncrease, abilityCostIncrease, playerStatics, freeCast, flashGranted, castForbidden, countersPlaced} from "./statics.mjs";
 import {countMana, amountOf, countEffect} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
-import {lastKnown, characteristicsOf, abilitiesOf, deriving, derivingAfresh, keywordsOf, colorsOf} from "./layers.mjs";
+import {lastKnown, characteristicsOf, abilitiesOf, deriving, derivingAfresh, keywordsOf, colorsOf, controllerOf} from "./layers.mjs";
 import {namesChosen, withChosen, chosenFor} from "../script/chosen.mjs";
 import {poolFor, spendFor, addRestricted, addRider, riderChoices} from "./restricted-mana.mjs";
 import {askEntering} from "./entering.mjs";
@@ -647,8 +648,9 @@ function costPayment(state, player, id, cost, x = 0, less = 0, key = undefined) 
     if (atom.atom === "discard" && atom.self === true && object.zone !== "hand") return null;
     if (atom.atom === "{T}") {
       if (object.tapped) return null;
-      /* CR 302.6: a creature's {T} ability waits until it has been yours since your turn began. */
-      if (summoningSick(state, id)) return null;
+      /* CR 302.6: a creature's {T} ability waits until it has been yours since your turn began -- unless it may be
+         activated as though it had haste (Thousand-Year Elixir, CR 702.10c). */
+      if (sickForAbilities(state, id)) return null;
     }
     if (atom.atom === "mana") {
       if (printedMana) return null;
@@ -849,6 +851,10 @@ function playableElsewhere(state, player, kind) {
     const ids = zone === "exile" ? state.zones.exile.filter((id) => state.objects[id].owner === player) : cardsIn(state, zone, player);
     for (const id of ids) if ((state.objects[id].abilities ?? []).some((a) => a.kind === "static" && a.rule === "cast-self-from" && (a.zones ?? []).includes(zone)) && !found.includes(id)) found.push(id);
   }
+  /* A prepared permanent's prepare spell, the copy in exile (CR 722.3c; script/effects/attributes.mjs): that permanent's
+     controller may cast it, for as long as it stays there. */
+  if (kind === "spell") for (const id of state.zones.exile)
+    if (state.objects[id].prepareOf !== undefined && preparedCopyStays(state, id) && controllerOf(state, state.objects[id].prepareOf) === player && !found.includes(id)) found.push(id);
   /* "Until the end of your next turn, you may play that card" (script/effects/zones.mjs, mayPlay): the cards an effect let
      this player play, while each is still the object it named (CR 400.7) -- a land, or a spell ("you may cast" one only). */
   for (const effect of state.effects ?? []) {
@@ -878,7 +884,7 @@ function manaOffers(state, player) {
       if (ability.tapSelf && object.tapped) continue;
       /* CR 302.6: a creature's {T} ability waits until it has been yours since your turn began, unless it has haste.
          A land is never sick; a land animated this turn is a creature, and is. */
-      if (ability.tapSelf && summoningSick(state, id)) continue;
+      if (ability.tapSelf && sickForAbilities(state, id)) continue;
       /* "Activate only if you control a Swamp" (CR 602.5b): asked as it would be offered. */
       if (!conditionHolds(state, ability.condition, {controller: player, source: id})) continue;
       if (!manaAbilityPayment(state, player, ability)) continue;
@@ -1040,7 +1046,9 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
         ...viaOf(state, via), ...(lifeCost !== null ? {lifeInstead: lifeCost} : {}), ...ridersOffer(state, riders),
         /* Cast as its Adventure (CR 715.3): another action than the card cast as itself. */
         ...(adventure ? {adventure: true} : {})};
-      actions.push(...(object.spell?.modal && !way?.overload ? withModes(state, base, object.spell.modal, {controller: player, source: id}) : withTargets(state, base, way?.overload ?? object.spell, {controller: player, source: id})));
+      /* How it would be cast, for a target it has only if ("if you cast this spell during your main phase", script/bind.mjs). */
+      const cast = {from, mainPhase: player === state.activePlayer && MAIN_PHASES.includes(state.phase)};
+      actions.push(...(object.spell?.modal && !way?.overload ? withModes(state, base, object.spell.modal, {controller: player, source: id}) : withTargets(state, base, way?.overload ?? object.spell, {controller: player, source: id, cast})));
     }
   }
   }
@@ -1350,7 +1358,8 @@ const sameAction = (a, b) => a.kind === b.kind
 export function offerSpecs(state, player, action) {
   const object = state.objects[action.objectId];
   if (!object) return {specs: [], context: {controller: player, source: action.objectId}};
-  const context = {controller: player, source: action.objectId};
+  /* With what the offer has chosen so far: "a second target", "up to one other target" (script/bind.mjs, distinctFrom). */
+  const context = {controller: player, source: action.objectId, chosenTargets: action.targets ?? []};
   if (action.kind === "cast") return {specs: object.spell?.modal && Array.isArray(action.modes) ? modalScript(object.spell.modal, action.modes).targets : object.spell?.targets ?? [], context};
   const ability = chosenFor(abilitiesOf(state, action.objectId).find((candidate) => candidate.id === action.abilityId), object);
   return {specs: ability?.modal && Array.isArray(action.modes) ? modalScript(ability.modal, action.modes).targets : ability?.targets ?? [], context};
@@ -1410,6 +1419,9 @@ function countedProblem(state, player, action) {
     if (new Set(keys).size !== keys.length || !chosen.every((t) => legal.some((c) => c.kind === t?.kind && c.id === t?.id))
       || chosen.length < count.min || (count.max !== null && chosen.length > count.max))
       throw new Error(`Those are not ${targetName(state, {kind: "choose", ...count})} it can have`);
+    /* "Controlled by different players" (script/bind.mjs): refused with what to do instead. */
+    const split = differentControllersProblem(state, spec, chosen, state.objects[action.objectId]?.card ?? "That spell");
+    if (split) throw new Error(split);
   }
 }
 
@@ -1671,13 +1683,20 @@ function performOffered(state, player, action, during) {
     }
     /* What this player has cast this turn, for "whenever an opponent casts their first noncreature spell each turn". */
     (state.players[player].castThisTurn ??= []).push({types: [...(object.types ?? [])], colors: [...(object.colors ?? [])]});
+    /* A prepare spell's copy (CR 722.3c): the permanent it is the prepare spell of, read before it moves. */
+    const preparedBy = object.zone === "exile" && object.prepareOf !== undefined ? object.prepareOf : undefined;
     const entry = pushSpell(state, action.objectId, {controller: player, permanent, targets, ...(action.x !== undefined ? {x: action.x} : {}), ...(Array.isArray(action.modes) ? {modes: action.modes} : {})});
+    /* Cast, and that permanent loses the prepared designation as the spell becomes cast (CR 722.3c, 601.2i). */
+    if (preparedBy !== undefined) unprepare(state, preparedBy, events, {keepCopy: true});
     /* How it was cast, for its own conditions (script/condition.mjs, `cast`): "if this spell was cast from a graveyard"
        (Sevinne's Reclamation), and Addendum's "if you cast this spell during your main phase" -- its caster's turn, a main
        phase (Unbreakable Formation). A copy is not cast (CR 707.10) and has none. */
     entry.cast = {from: castFrom, mainPhase: player === state.activePlayer && MAIN_PHASES.includes(state.phase),
       /* "If this spell's additional cost was paid" (Cinder Strike): an optional one, paid -- its mana too. */
-      ...(extraPaid.length || action.extraMana ? {additionalPaid: true} : {})};
+      ...(extraPaid.length || action.extraMana ? {additionalPaid: true} : {}),
+      /* The creatures tapped to convoke it (CR 702.51c: they "convoked" it): "each creature that convoked this spell
+         connives" (Lethal Scheme; script/bind.mjs, "convoked"). */
+      ...((convoke?.ids ?? []).length ? {convoked: [...convoke.ids]} : {})};
     /* Kicked that many times (multikicker, CR 702.33c): the permanent it becomes knows it as it enters (rules/stack.mjs). */
     if (action.kicked) entry.kicked = action.kicked;
     /* Cast as an Adventure (CR 715.3): exiled as it resolves, and castable as itself from there (rules/stack.mjs, 715.3d). */
@@ -1861,9 +1880,15 @@ function performOffered(state, player, action, during) {
         fields.discarded = true;
         if (ability.cycling === true) Object.assign(fields, {cycled: true}, action.x !== undefined ? {cycledX: action.x} : {});
       }
-      /* Each permanent of the set chosen, sacrificed (CR 701.21a) -- with the offer, or picked once it was taken. */
+      /* Each permanent of the set chosen, sacrificed (CR 701.21a) -- with the offer, or picked once it was taken. "Draw cards
+         equal to the sacrificed creature's toughness" (Felothar the Steadfast): each as it last existed, kept on the ability
+         for its effects (`sacrificed`; script/amount.mjs, CR 608.2h). */
       if (atom.atom === "sacrifice" && atom.selector && action.costChoice?.sacrifice !== undefined)
-        for (const fodder of [].concat(action.costChoice.sacrifice)) sacrificeOne(state, fodder, events);
+        for (const fodder of [].concat(action.costChoice.sacrifice)) {
+          const was = lastKnown(state, fodder);
+          sacrificeOne(state, fodder, events);
+          if (was) (entry.sacrificed ??= []).push(was);
+        }
       if (atom.atom === "sacrifice" && atom.selector && Array.isArray(action.sacrificeSet))
         for (const fodder of action.sacrificeSet) if (state.objects[fodder]) sacrificeOne(state, fodder, events);
       /* Three counters from among them, each removed from the permanent it was picked on. */

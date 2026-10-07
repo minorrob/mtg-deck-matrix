@@ -18,9 +18,10 @@
  */
 
 import {holdArrival} from "../../rules/entering.mjs";
+import {prepare} from "./attributes.mjs";
 import {afterwards, delayedTrigger, enchantable, enchantOnArrival} from "./permanents.mjs";
 import {typesOf} from "../../rules/layers.mjs";
-import {moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard} from "../../state/index.mjs";
+import {moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard, rememberExileLooker} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf, controllerOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector} from "../filter.mjs";
@@ -61,12 +62,17 @@ const PERMANENT_TYPES = ["Artifact", "Battle", "Creature", "Enchantment", "Land"
 /* `faceDown`: onto the battlefield face down (manifest, CR 701.40a) -- turned face down before it moves (CR 708.3), so it
    enters as a 2/2 creature with no text and no name: its own replacements ("enters tapped", an Aura's host) are nothing,
    and what the move says of it names no card (the history is everyone's, game/room/history.mjs). */
-export function moveOne(state, id, to, events, {owner = null, tapped = false, faceDown = false} = {}) {
+/* Or into exile face down (hideaway, CR 702.75a; 406.3): a card with no characteristics there (406.3a), what it is kept
+   beside it for whoever may look (`lookers`, projection.mjs) -- so the move, which every player's history reads, names
+   nothing. */
+/* `transformed`: onto the battlefield with its back face up (CR 712.14a) -- a card that isn't a double-faced card that
+   transforms stays where it is. */
+export function moveOne(state, id, to, events, {owner = null, tapped = false, faceDown = false, lookers = null, exiledBy = null, transformed = false} = {}) {
   const object = state.objects[id];
   if (!object) return null;
   const from = object.zone;
   const down = faceDown === true && to === "battlefield";
-  const card = down ? {...cardRef(state, id), name: null, faceDown: true} : leavingRef(state, id);
+  let card = down || (faceDown === true && to === "exile") ? {...cardRef(state, id), name: null, faceDown: true} : leavingRef(state, id);
   /* Only a departure from the battlefield needs last known information (CR 113.7a): that is the
      zone where an object had characteristics worth remembering. A card moving hand to graveyard
      was never a 5/5. */
@@ -89,11 +95,16 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false, fa
      stays where it is. */
   /* Face down, it is a face-down 2/2 as it enters, whatever its faces (CR 712.15). */
   const asDown = down && destination === "battlefield";
-  if (destination === "battlefield" && !asDown && object.mdfc && object.face !== "back" && !PERMANENT_TYPES.some((type) => (object.mdfc.front.types ?? []).includes(type))) return null;
+  if (destination === "battlefield" && !asDown && object.mdfc && object.face !== "back" && !PERMANENT_TYPES.some((type) => (object.mdfc.front.types ?? []).includes(type)) && transformed !== true) return null;
+  const backUp = transformed === true && destination === "battlefield";
+  if (backUp && !(object.mdfc?.transforming === true && PERMANENT_TYPES.some((type) => (object.mdfc.back.types ?? []).includes(type)))) return null;
   /* CR 614.12: how it ENTERS, asked before it moves, because the abilities answering it belong to
      the card as it is now -- a zone change makes a new object. Face down, it has none, and is a creature (CR 708.3). */
+  /* Transformed, the face it enters with is its back (CR 712.14a): its abilities answer, never the front's -- a Saga's lore
+     counter is not put on the creature it becomes. */
+  const face = backUp ? object.mdfc.back : object;
   const entering = destination === "battlefield"
-    ? enteringModifications(state, {objectId: id, player: object.controller, types: asDown ? ["Creature"] : object.types, abilities: asDown ? [] : object.abilities})
+    ? enteringModifications(state, {objectId: id, player: object.controller, types: asDown ? ["Creature"] : face.types, abilities: asDown ? [] : face.abilities})
     : null;
 
   /* An Aura put onto the battlefield by an effect, not resolving as a spell (CR 303.4f; Sun Titan returning one): it
@@ -105,7 +116,18 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false, fa
     return moveOne(state, id, "graveyard", events, {owner: object.owner});
   }
   if (leaving >= 0) state.stack.splice(leaving, 1);
-  const moved = moveObject(state, id, destination, PER_PLAYER.includes(destination) ? holder : null, {faceDown: asDown});
+  /* A face-down instruction applies only to its intended zone (CR 614.1): manifest replaced with exile is face up,
+     just as hideaway replaced with another destination is. The public move names a card that was not hidden. */
+  const hidden = faceDown === true && to === "exile" && destination === "exile";
+  if (faceDown === true && !asDown && !hidden) card = leavingRef(state, id);
+  const moved = moveObject(state, id, destination, PER_PLAYER.includes(destination) ? holder : null, {faceDown: asDown || hidden, transformed: backUp});
+  /* "The player who controls the permanent that exiled this card may look at this card in the exile zone" (CR 702.75a), and
+     goes on being able to until it leaves exile (406.3). */
+  if (hidden && state.objects[moved]) {
+    state.objects[moved].lookers = [...new Set(lookers ?? [])];
+    /* And whoever controls that permanent from now on (projection.mjs). */
+    if (exiledBy !== null) state.objects[moved].exiledBy = exiledBy;
+  }
   /* "If it entered from your library" (Fblthp, the Lost): where the permanent came from, and whose library that was --
      read by the condition `cameFrom` (script/condition.mjs). A library only; rules/stack.mjs records a cast from one. */
   if (destination === "battlefield" && from === "library" && state.objects[moved]) state.objects[moved].cameFrom = {zone: "library", owner: object.zonePlayer ?? object.owner};
@@ -135,8 +157,10 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false, fa
   }));
   /* "You may have this creature enter as a copy of ...": its arrival waits for the answer (rules/entering.mjs). */
   if (destination === "battlefield") holdArrival(state, moved, events[events.length - 1]);
+  /* "Enters prepared" (CR 614.1c, 722.3a): the designation it entered with, and its prepare spell's copy in exile (722.3c). */
+  if ((entering?.designations ?? []).includes("prepared")) prepare(state, moved, events);
   /* What it exiled "until this leaves the battlefield", back now (CR 610.3). */
-  if (from === "battlefield") returnExiledUntil(state, id, events);
+  if (from === "battlefield") returnExiledUntil(state, id, events, leftBehind);
   return moved;
 }
 
@@ -180,7 +204,9 @@ export function exileUntil(state, params, context) {
  * 800.4a). Every departure from the battlefield calls this: moveOne here, and the state-based actions that move a
  * permanent themselves -- a player leaving the game among them (rules/sba.mjs).
  */
-export function returnExiledUntil(state, departed, events) {
+export function returnExiledUntil(state, departed, events, leftBehind = null) {
+  if (leftBehind) rememberExileLooker(state, departed, leftBehind.controller);
+  if (leftBehind) keepLastKnown(state, departed, leftBehind);
   const due = (state.exiledUntil ?? []).filter((link) => link.source === departed);
   if (!due.length) return;
   state.exiledUntil = state.exiledUntil.filter((link) => link.source !== departed);
@@ -189,6 +215,16 @@ export function returnExiledUntil(state, departed, events) {
     if (card?.zone !== "exile" || state.players[card.owner]?.lost) continue;
     moveOne(state, exiled, "battlefield", events, {owner: card.owner});
   }
+}
+
+/**
+ * AN ABILITY ON THE STACK OUTLIVES ITS SOURCE (CR 113.7a): once its source has left the battlefield, the ability uses the
+ * source's last known information -- "this creature's power" for mentor's target (script/filter.mjs), "cards exiled with
+ * this enchantment" for an end-step trigger whose enchantment has gone (script/filter.mjs, linkSource). `departed`, the
+ * permanent's id as it was; each of its abilities waiting on the stack that knows nothing of it yet is told.
+ */
+export function keepLastKnown(state, departed, leftBehind) {
+  for (const entry of state.stack) if (entry.objectId === null && entry.cardId === departed && !entry.lastKnown) entry.lastKnown = structuredClone(leftBehind);
 }
 
 /** Which players an effect is aimed at. */
@@ -290,6 +326,9 @@ export function moveZone(state, params, context, rng = null) {
   const arrived = [], became = [];
   /* Who controlled each as it left the battlefield, for `remember` (moveZoneAll says why). */
   const leftBy = new Map(), was = {};
+  /* And what each was as it left the battlefield, when it got where it was sent (`movedWas`): "if a Pirate was exiled this
+     way" (Siren's Ruse) asks of the creature exiled, as it last existed (CR 608.2h) -- not of the card that came back. */
+  const movedWas = [];
   /* "The top card of your library", "the top seven cards of that player's library" (`fromTop`, `who`), revealed first if
      it says so (Dark Confidant) -- or simply moved, face up, to exile (Lord of the Void). "The top card of each player's
      library" (Etali, batch 79): of every library `who` names; "the top X cards" (Villainous Wealth): an amount. */
@@ -309,7 +348,9 @@ export function moveZone(state, params, context, rng = null) {
     /* A commander whose owner chose the command zone instead (CR 903.9b; effects/asking.mjs, commanderHome). */
     const to = (params.commanderHome ?? []).includes(id) ? "command" : params.to ?? "graveyard";
     if (state.objects[id]?.zone === "battlefield") leftBy.set(id, controllerOf(state, id));
-    const moved = params.sacrifice === true ? sacrificeOne(state, id, events) : moveOne(state, id, to, events, {tapped: params.tapped === true});
+    const before = params.remember && state.objects[id]?.zone === "battlefield" ? lastKnown(state, id) : null;
+    const moved = params.sacrifice === true ? sacrificeOne(state, id, events) : moveOne(state, id, to, events, {tapped: params.tapped === true, transformed: params.transformed === true});
+    if (before && moved !== null && state.objects[moved]?.zone === (params.sacrifice === true ? "graveyard" : to)) movedWas.push(before);
     /* What it is now, for `remember`: what it became -- or, exiled and returned at once, the permanent that came back
        ("if that creature is a Bird", Splash Portal, batch 79), set below. */
     let landed = moved;
@@ -328,8 +369,10 @@ export function moveZone(state, params, context, rng = null) {
        found by what the move returned, and comes back now or at the beginning of the next end step -- under its
        owner's control unless the card says yours, with a +1/+1 counter if the card says so and it is a creature. */
     if (moved !== null && params.andReturn && state.objects[moved]) {
+      /* "Then return it to the battlefield transformed under your control" (Fable of the Mirror-Breaker; CR 712.14a): its
+         back face up as it enters -- not a transform (701.27) -- and a card that isn't a double-faced card stays where it is. */
       const back = {effect: "moveZone", targets: [moved], to: "battlefield", ...(params.under === "you" ? {controller: context.controller} : {}),
-        ...(params.returnWithCounter ? {withCounter: params.returnWithCounter} : {})};
+        ...(params.returnWithCounter ? {withCounter: params.returnWithCounter} : {}), ...(params.transformed === true ? {transformed: true} : {})};
       if (params.andReturn === "end step") delayedTrigger(state, {at: "end step", text: "Return that card to the battlefield at the beginning of the next end step.", effects: [back]}, context);
       /* "Return that card to the battlefield under its owner's control at the beginning of that player's next end step" (The
          Eternal Wanderer; CR 603.7): the next end step of a turn of the card's owner -- this turn's, if it is theirs and its
@@ -349,7 +392,7 @@ export function moveZone(state, params, context, rng = null) {
   if (params.shuffle === true) for (const owner of new Set(became.filter((id) => state.objects[id]?.zone === "library").map((id) => state.objects[id].owner))) shuffleLibrary(state, owner, rng, events);
   /* "Exile target creature card from a graveyard. Create a token that's a copy of it": what this moved, as the new
      objects it became (CR 400.7), for the effects after it to name as "remembered" (script/bind.mjs). */
-  if (params.remember) { context.remembered = became.filter((id) => state.objects[id]); context.rememberedControllers = was; }
+  if (params.remember) { context.remembered = became.filter((id) => state.objects[id]); context.rememberedControllers = was; context.movedWas = movedWas; }
   /* "Exile another target nonland permanent" (Oblivion Ring, `link`): what it exiled, kept against this source for the
      ability linked to it (CR 607.2a); used, the link is spent. Each time the ability exiles adds to what it exiled -- the
      same trigger twice (Panharmonicon) is "the exiled cards", both (Skyclave Apparition's ruling of 2020-09-25). */

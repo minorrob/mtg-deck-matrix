@@ -1,0 +1,82 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sapling of Colfenor",
+    "oracleId": "0c1e2bb8-0629-466c-b435-c4c71cdc755d",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Treefolk",
+      "Shaman"
+    ],
+    "manaCost": "{3}{B/G}{B/G}",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "power": 2,
+    "toughness": 5
+  },
+  "oracleText": "Indestructible\nWhenever Sapling of Colfenor attacks, reveal the top card of your library. If it's a creature card, you gain life equal to that card's toughness, lose life equal to its power, then put it into your hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Indestructible",
+      "keyword": "indestructible"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Sapling of Colfenor attacks, reveal the top card of your library. If it's a creature card, you gain life equal to that card's toughness, lose life equal to its power, then put it into your hand.",
+      "trigger": {
+        "on": "attacks"
+      },
+      "effects": [
+        {
+          "effect": "peekAndReveal",
+          "count": 1,
+          "reveal": true,
+          "remember": true
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "about": "remembered",
+            "is": {
+              "types": [
+                "Creature"
+              ]
+            }
+          },
+          "then": [
+            {
+              "effect": "gainLife",
+              "amount": {
+                "toughnessOf": "remembered"
+              }
+            },
+            {
+              "effect": "loseLife",
+              "amount": {
+                "powerOf": "remembered"
+              }
+            },
+            {
+              "effect": "moveZone",
+              "targets": "remembered",
+              "to": "hand"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -27,6 +27,9 @@ export function historyLines(event, names = []) {
   switch (kind) {
     case "GameEventTurnPhase":
       return f.phase === "UNTAP" && f.playerTurn ? line(`Turn ${turn} · ${who(f.playerTurn.playerId)}`, {mark: "turn"}) : [];
+    /* A designation (CR 701.37b, 722.3): monstrous, prepared or unprepared -- public. */
+    case "GameEventCardAttribute":
+      return line(f.attribute === "monstrous" ? `${cardName(f.card)} became monstrous` : `${cardName(f.card)} ${f.value ? "became prepared" : "is no longer prepared"}`);
     case "GameEventLandPlayed":
       return line(`${who(f.player.playerId)} played ${cardName(f.land)}`);
     case "GameEventSpellAbilityCast":

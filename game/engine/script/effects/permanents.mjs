@@ -17,12 +17,12 @@
  * true` and nothing else here treats it specially.
  */
 
-import {addObject, transformObject} from "../../state/index.mjs";
+import {addObject, transformObject, rememberExileLooker} from "../../state/index.mjs";
 import {selectMatching, compileSelector} from "../filter.mjs";
 import {bindEffect, rememberNow} from "../bind.mjs";
 import {amountOf} from "../amount.mjs";
 import {event, cardRef} from "./zones.mjs";
-import {typesOf} from "../../rules/layers.mjs";
+import {typesOf, controllerOf} from "../../rules/layers.mjs";
 import {protectedFrom} from "../../rules/protection.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
 import {countersPlaced} from "../../rules/statics.mjs";
@@ -137,7 +137,9 @@ function copiable(object, except = {}) {
     ...(supertypes.length ? {supertypes} : {}),
     colors: [...new Set([...(except.setColors ?? object.colors ?? []), ...(except.addColors ?? [])])],
     keywords: [...new Set([...(object.keywords ?? []), ...(except.addKeywords ?? [])])],
-    abilities: structuredClone(object.abilities ?? []),
+    /* "And it has 'When this token leaves the battlefield, ...'" (Hofri Ghostforge; CR 707.9a): abilities the copy has besides
+       the original's, part of its copiable values -- compiled with the card (cards/index.mjs), bound as it is made. */
+    abilities: [...structuredClone(object.abilities ?? []), ...structuredClone(except.addAbilities ?? [])],
     power: except.setPower ?? object.power ?? null, toughness: except.setToughness ?? object.toughness ?? null,
     ...(object.spell ? {spell: structuredClone(object.spell)} : {}),
     ...(object.enchant ? {enchant: structuredClone(object.enchant)} : {}),
@@ -221,14 +223,31 @@ export function afterwards(state, ids, params, context) {
  * lasts), and "sacrifice it at the beginning of the next end step"
  * (`atEndStep`), a delayed trigger that remembers the tokens made. Shared by copyPermanent and populate.
  */
+/* WHAT A COPY'S GIVEN ABILITY REMEMBERS (CR 603.7c's sense, for an ability made with the copy): "return THE EXILED CARD to
+   its owner's graveyard" (Hofri Ghostforge) -- `targets: "remembered"` in what `except.addAbilities` gives, the card the
+   effect before it exiled, bound now to that object; a card that has left exile since is a new object, and nothing
+   returns (CR 400.7). */
+function rememberedIn(abilities, remembered) {
+  const walk = (effect) => {
+    if (!effect || typeof effect !== "object") return effect;
+    const out = {...effect, ...(effect.targets === "remembered" ? {targets: [...(remembered ?? [])]} : {})};
+    for (const key of ["effects", "then", "otherwise"]) if (Array.isArray(out[key])) out[key] = out[key].map(walk);
+    return out;
+  };
+  return (abilities ?? []).map((ability) => ({...ability, ...(Array.isArray(ability.effects) ? {effects: ability.effects.map(walk)} : {})}));
+}
 export function makeCopies(state, ids, params, context, events) {
   const controller = params.controller ?? context.controller;
   const made = [];
   for (const id of ids) {
-    const original = state.objects[id];
+    /* "A copy of THAT CREATURE" (Hofri Ghostforge; CR 707.2, 608.2h): the creature the trigger is about, its copiable values as
+       it last existed on the battlefield (`asItLastWas`) -- a creature that was copying something, or face down, is that
+       (rules/layers.mjs, lastKnown's `copiable`); one that was neither, its card's own, which is where it now is. */
+    const original = params.asItLastWas === true && context.about?.copiedAs && state.objects[id] ? context.about.copiedAs : state.objects[id];
     if (!original) continue;
+    const except = params.except?.addAbilities ? {...params.except, addAbilities: rememberedIn(params.except.addAbilities, context.remembered)} : params.except;
     for (let i = 0; i < (params.count ?? 1); i += 1) {
-      const values = copiable(original, params.except);
+      const values = copiable(original, except);
       /* A copy of an Aura enchants something as it enters, or is not made (CR 303.4f-g). */
       const hosts = values.enchant ? enchantable(state, values.enchant, controller) : null;
       if (hosts && !hosts.length) continue;
@@ -586,8 +605,10 @@ export function gainControl(state, params, context) {
     const object = state.objects[id];
     if (params.until === "end-of-turn" && object.controller !== to)
       (state.effects ??= []).push({id: `control-returns:${id}:${state.effects.length}`, rule: "control-returns", affects: {ids: [id]}, apply: {controller: object.controller}, until: "end-of-turn", sourceController: context.controller});
+    rememberExileLooker(state, id, controllerOf(state, id));
     if (object.controller !== to) object.controlledSinceTurn = state.turn;
     object.controller = to;
+    rememberExileLooker(state, id, controllerOf(state, id));
   }
   return [];
 }
