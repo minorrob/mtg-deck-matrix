@@ -20,7 +20,9 @@ ready and mergeable. Nothing has been merged or deployed.
 2. Presence-only checks find neither `CF_ACCESS_CLIENT_ID` nor
    `CF_ACCESS_CLIENT_SECRET` in this environment. The later October 6 repository
    record says the existing token is `crankmagic-staging-checks`, admitted by
-   staging's `Session checks` Service Auth policy. Reuse those existing values
+   staging's `Session checks` Service Auth policy, with recorded expiry
+   October 6, 2027. This is separate from the account API token's historical
+   October 25, 2026 expiry. Reuse the existing Access token values
    through this saved environment's secret/settings fields and start a fresh
    session; never paste them into chat. Current dashboard policy and expiry
    cannot be freshly verified from this environment. Do not create a replacement
@@ -36,6 +38,29 @@ After the first two conditions are satisfied, the read-only check is
 `node tools/staging-check.mjs --expect <staged-source-commit>`. It verifies
 `version.json`, both page version tags and `/api/me` as `service:session-checks`.
 It does not prove a WebSocket game or a human friend's Access sign-in.
+
+## Supported cloud runner investigation
+
+The three current workflows are Tests, Load Live and Compile Game Logs. None
+contains a staging acceptance job or references `CF_ACCESS_CLIENT_ID` or
+`CF_ACCESS_CLIENT_SECRET`. This does not establish that repository/environment
+secrets are absent. The connected GitHub app explicitly excludes the secrets
+API, so secret names/presence could not be inspected through it; the shell's
+GitHub API access is blocked by this environment's proxy.
+
+A manually invoked job on a GitHub-hosted runner is a supported candidate for
+networked acceptance. It would need existing authorized Access secret references,
+an exact staged source commit, strict version/page readback, and an isolated
+table exercised over real WebSockets to a natural end with replay and refusal
+evidence. No such workflow or credential configuration has been installed or
+run by this investigation. Nothing should run this job on fork pull requests
+or expose credentials in output/artifacts.
+
+All admitted service tokens map to the same `service:session-checks` identity
+in `cloud/access.mjs`; using one token twice cannot prove two distinct people.
+An automated seat plus house pilots can prove a networked game. A friend's
+own allowlisted sign-in remains a separate gate. This path does not require
+Personal-HP to stay online, and it does not change or bypass Access policy.
 
 A real friend's access remains Rob's policy decision. The recorded destination
 is **Zero Trust → Access → Applications → CrankMagic staging → Policies**, an

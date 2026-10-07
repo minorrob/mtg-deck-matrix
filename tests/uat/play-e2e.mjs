@@ -135,7 +135,7 @@ try {
   eq([made.status, made.json.table.playtest, made.json.table.youAreHost], [201, true, true], "Rob makes a table with an AI seat, and on staging it is a playtest table");
   const id = made.json.table.tableId, url = `/api/tables/${id}`;
   const refused = await api("POST", `${url}/deck`, {seatId: 0, deck: {name: "Quintorius", commander: ["Quintorius, Loremaster"], cards: ["Cyclonic Rift", "Forest"]}});
-  eq([refused.status, refused.json.unsupported], [422, ["Cyclonic Rift", "Quintorius, Loremaster"]], "a deck's cards the engine has no definition of yet are refused by name");
+  eq([refused.status, refused.json.unsupported], [422, ["Cyclonic Rift"]], "only undefined cards are refused by name; Quintorius is supported");
   /* M5 (the plan review's C4): the table plays the engine's own definitions -- a deck wholly of them takes a seat, and
      the table says which names it does not know. */
   eq((await api("POST", `${url}/known`, {names: ["Krenko, Mob Boss", "Lightning Bolt", "Cyclonic Rift"]})).json.unknown, ["Cyclonic Rift"], "asked which names it cannot play, the table names only the undefined one");

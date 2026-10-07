@@ -60,6 +60,17 @@ The discarded diagnostic journal/profile runs are not acceptance evidence.
   11 unavailable cards. Across the seven committed lists, 49 distinct names
   remain unavailable (48 undefined plus provisional Tegwyll). D2 and D5 stay
   complete; D3 has 9 gaps, D4 has 4, and D6 has 7.
+- The actual local workerd walk, `tests/uat/play-e2e.mjs`, passes all 35 checks
+  with Wrangler 4.139.0. It exercises the built staging profile, local D1 and
+  Durable Objects, two browser identities, real local WebSockets, backup import,
+  invitations, mid-game reload, deliberate End game and record replay. Its
+  fixture identities use ephemeral signing keys; it is not live Access proof
+  or a natural full real-deck game. The test's stale expectation that Quintorius
+  was unsupported is corrected, as is the equivalent `tests/game-room.mjs`
+  expectation. `game-room` passes 520 checks, `game-table` 154 and `release-pages`
+  141. Runtime command: `WRANGLER=<4.139.0 bin/wrangler.js>
+  UAT_CHROME=/usr/bin/chromium node tests/uat/play-e2e.mjs`; this restricted cloud
+  also points `XDG_CONFIG_HOME` and `WRANGLER_LOG_PATH` at temporary directories.
 
 These are cloud-local isolated proofs, not a staged release or the exact October 4
 backup on the offline desktop. `docs/cloud-release-gates-2026-10-07.md` records
