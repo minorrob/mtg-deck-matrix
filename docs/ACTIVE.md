@@ -1,5 +1,23 @@
 # Who holds the work
 
+## Cloud advice preparation, October 7, 2026
+
+**Holder:** Codex in `/workspace/crankmagic-cloud`, `codex/bounded-advice`,
+following D2 draft PR #671 at `6eec6348`. D2 and its natural browser game are pushed.
+The advice contract prepares bounded, account-scoped, versioned requests and
+checks evidence/card/option references against fresh snapshots. It cannot call
+providers, schedule work, persist credentials or mutate game/library data.
+
+**Proof:** 45 contract checks, 10 caught deliberate faults, data integrity and
+feature wiring; existing AI door's 45 fake-provider checks still pass. See
+`docs/bounded-advice-2026-10-07.md`. Paid AI remains unapproved and disabled.
+This is groundwork; monthly reservations, trusted source/UI integration and
+responsive live delivery are not claimed complete.
+
+**CI:** library PR #670 at `5174b836` is checking in Actions `37630443333` after
+repairing its sole inventory failure. D2 PR #671 remains draft/mergeable on
+`6eec6348`. Train B/main remain unchanged. Release blockers below still apply.
+
 ## Cloud D2 completion, October 7, 2026
 
 **Holder:** Codex, `/workspace/crankmagic-cloud`, `codex/chulane-completion`,
