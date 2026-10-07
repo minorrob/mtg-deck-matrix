@@ -86,6 +86,13 @@ identity must stay disabled in production. The current `cloud/access.mjs` alread
 supports service seats for staging, superseding older documentation that called
 that code work unfinished.
 
+The separate `codex/production-play-profile` increment now prepares explicit
+production and standby candidates, with 27 passing actual-local-workerd recovery
+checks. Neither is deployed. The first GameTable class migration prevents an
+assumed rollback to a table-free production version; the exact standby version
+and live recovery sequence must be verified before activation. See
+`docs/production-play-profile-2026-10-07.md`.
+
 Before release: exact-head CI in integration order, isolated backup/recovery and
 real staging journeys, reviewed production profile, known previous deployment
 and a tested rollback/read-back. D8 Workers Builds preview configuration, history

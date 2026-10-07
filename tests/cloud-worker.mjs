@@ -193,6 +193,27 @@ eq((await call("GET", "/api/auth/login?to=https://evil.example/")).headers.get("
 eq((await call("GET", "/api/nothing")).status, 404, "an unknown endpoint: 404");
 eq(me.headers.get("x-content-type-options") + " " + me.headers.get("cache-control"), "nosniff no-store", "answers are never sniffed or cached");
 
+/* The standby release closes new Play requests without dropping the table class or
+   changing the library. A bound table would answer 200 if the gate were missing. */
+{
+  const prior = (await call("GET", "/api/library")).json;
+  let forwarded=0;
+  env.TABLES={idFromName:id=>id,get:()=>({fetch:async()=>{forwarded++;return new Response('{}',{status:200});}})};
+  env.PLAY_TABLES_CLOSED="on";
+  for(const [method,path,headers] of [
+    ["POST","/api/tables",{"x-crankmagic":"play"}],
+    ["GET","/api/tables/table0123abcd",{}],
+    ["GET","/api/tables/table0123abcd/connect",{upgrade:"websocket",origin:"https://crankmagic.test"}],
+    ["GET","/api/join/table0123abcd/AbC_dEf-0123456789xyzXYZ0123456789abcdEFGH0",{}],
+  ]) eq((await call(method,path,{headers})).status,503,`standby refuses ${method} ${path}`);
+  eq(forwarded,0,"standby never calls a table or changes its state");
+  eq((await call("GET","/api/tables/table0123abcd",{jwt:""})).status,401,"standby still requires Access");
+  eq((await call("GET","/api/library")).json,prior,"cloud library stays available and unchanged");
+  delete env.PLAY_TABLES_CLOSED;
+  eq((await call("GET","/api/tables/table0123abcd")).status,200,"reopening reaches the retained table binding");
+  delete env.TABLES;
+}
+
 /* RATE LIMITS (M3): per IP before anything else, per person once Access has said who. The bindings are
    Cloudflare's; here each is a counter with the same `limit({key}) -> {success}` shape. */
 {

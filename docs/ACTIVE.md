@@ -1,5 +1,26 @@
 # Who holds the work
 
+## Cloud production Play preparation, October 7, 2026
+
+**Holder:** Codex, `/workspace/crankmagic-cloud`, `codex/production-play-profile`,
+following Faerie draft PR #674 at `a985022f`. Commander draft PR #673 is now
+`3fdedc29`, with 35 successful actual-workerd browser checks and corrected
+runtime expectations for the now-supported Quintorius. Faerie proof remains
+57 targeted checks, 20 faults and 243 engine/regression suites.
+
+**Candidate:** explicit production Play and standby profiles, the same production
+account resources, no staging privileges, exact build binding guards and a
+standby entry closure that retains GameTable storage. Default pages is unchanged.
+108 Worker checks, 174 release-builder checks, three caught faults, and 27 actual
+local-workerd recovery checks pass. See
+`docs/production-play-profile-2026-10-07.md` for the first-migration rollback
+constraint, existing-socket/clock limitations and remaining live gates.
+
+No merge, deployment, new credentials or paid calls. Main `2ad84eb0`, Train B
+`5d068d26` and the exact-head green PRs #670–672 remain preserved. The saved cloud
+cannot currently reach staging; Actions secret presence cannot be inspected with
+the connected tool. The separate GitHub-runner route is documented, not installed.
+
 ## Cloud Faerie interactions, October 7, 2026
 
 **Holder:** Codex, `/workspace/crankmagic-cloud`, `codex/faerie-interactions`,

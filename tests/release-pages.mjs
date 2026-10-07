@@ -9,7 +9,7 @@
  */
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
-import {build, worktreeSource, verify, transform, referencesOf, workerModules, PROFILES, NEVER, PAGES, FIRST_PUBLIC, RETIRED_PUBLIC, PLAY_WORKER} from "../tools/release-pages.mjs";
+import {build, worktreeSource, verify, releaseBranch, transform, referencesOf, workerModules, PROFILES, NEVER, PAGES, FIRST_PUBLIC, RETIRED_PUBLIC, PLAY_WORKER} from "../tools/release-pages.mjs";
 
 let checks = 0;
 const ok = (value, message) => {assert.ok(value, message); checks++;};
@@ -194,5 +194,32 @@ ok(verify(new Map([...sb, ["game/room/history.mjs", Buffer.from(`import fs from 
 ok(verify(without(sb, "crankmagic-board.js"), stagingProfile).some((p) => p.includes("crankmagic-board.js is Play in the cloud")), "and a Play release without the board");
 ok(verify(new Map([...built, ["index.html", Buffer.from(built.get("index.html").toString().replace('<meta name="crankmagic-accounts" content="on">', ""))]]), profile).some((p) => p.includes("would stay asleep")),
   "a production page that lost its accounts-on mark is named");
+
+/* Production Play and its same-class recovery candidate are explicit profiles. The default
+   pages build above stays closed; no release is deployed by building any of these. */
+for (const name of ["cloud-production", "cloud-production-standby"]) {
+  const p = PROFILES[name], result = build({source: worktreeSource(), profileName: name});
+  eq(result.problems, [], `${name} builds and verifies`);
+  const b = result.built, c = JSON.parse(b.get("wrangler.jsonc")), closed = name.endsWith("-standby");
+  eq(releaseBranch(name), "release/pages", `${name} stays in production's one release record`);
+  eq([c.name, c.d1_databases, c.ratelimits, c.vars.ACCESS_TEAM_DOMAIN, c.vars.ACCESS_AUD],
+    [pw.name, pw.d1_databases, pw.ratelimits, pw.vars.ACCESS_TEAM_DOMAIN, pw.vars.ACCESS_AUD], `${name} retains the same production account resources`);
+  eq([c.main, c.durable_objects, c.migrations], [sw2.main, sw2.durable_objects, sw2.migrations], `${name} keeps the exact table class and migration`);
+  eq([c.vars.PLAYTEST_TABLES, c.vars.SERVICE_SEATS, c.vars.PLAY_TABLES_CLOSED], [undefined, undefined, closed ? "on" : undefined], `${name} has no service seats or full-record exposure`);
+  eq(b.has("crankmagic-board.js"), !closed, `${name} public Play modules match its entry state`);
+  eq(JSON.parse(b.get("version.json")).profile, name, `${name} is identified for exact readback`);
+  ok(b.get(".assetsignore").toString().includes("game/\n"), `${name} engine remains private`);
+  for (const [label, mutate, message] of [
+    ["staging database", x => {x.d1_databases[0].database_id=sw2.d1_databases[0].database_id;}, "database as DB"],
+    ["staging audience", x => {x.vars.ACCESS_AUD=sw2.vars.ACCESS_AUD;}, "exact Access application"],
+    ["other Access team", x => {x.vars.ACCESS_TEAM_DOMAIN="other.cloudflareaccess.com";}, "exact Access application"],
+    ["staging rate namespace", x => {x.ratelimits[0].namespace_id="2001";}, "rate-limit"],
+    ["service identity", x => {x.vars.SERVICE_SEATS="on";}, "SERVICE_SEATS"],
+    ["playtest record", x => {x.vars.PLAYTEST_TABLES="on";}, "full record"],
+    ["wrong entry state", x => {x.vars.PLAY_TABLES_CLOSED=closed ? "off" : "on";}, "entry state"],
+    ["deleted table class", x => {x.migrations.push({tag:"remove-tables",deleted_classes:["GameTable"]});}, "migration"],
+  ]) ok(verify(playConfig(b, x => {mutate(x);return x;}),p).some(v=>v.includes(message)), `${name} refuses ${label}`);
+}
+eq(releaseBranch("cloud-staging"), "release/cloud-staging", "staging keeps its separate release record");
 
 console.log(`release-pages: ${checks} checks passed — ${files.length} files, Play out, Coming Soon in, nothing that never ships.`);

@@ -91,15 +91,33 @@ const RELEASE = {
    a cloud profile builds but refuses to be written out or committed: verify() names what is missing. */
 export const PENDING = "pending";
 
+/* Production profiles share one origin, account database and Access audience. Selecting Play
+   never creates another library or borrows staging's service identity. */
+const PRODUCTION = {
+  worker: "crankmagic", origin: "https://crankmagic.com/", accounts: "on",
+  cloud: {database: {name: "crankmagic", id: "131b2c74-70a0-471e-8474-b8d079b0d322"}, limits: {ip: "1001", person: "1002"},
+    access: {team: "crankmagic.cloudflareaccess.com", aud: "ff51f3bcda0f6f50d2f48bb9d3d96b76530c128a23cdb1cc33aa4fa6d68611a3"}},
+};
+
 export const PROFILES = {
   /* Production. Rob registered crankmagic.com on Cloudflare (2026-09-24) and asked to make the cloud move now;
      he approved accounts on staging the same day ("Everything looks good!"). The pages stay public and
      signing in stays optional: only /api/* is behind the "CrankMagic accounts" Access application, whose
      policy is the invite list. */
   pages: {
-    ...RELEASE, worker: "crankmagic", origin: "https://crankmagic.com/", leaveOut: PLAY, accounts: "on",
-    cloud: {database: {name: "crankmagic", id: "131b2c74-70a0-471e-8474-b8d079b0d322"}, limits: {ip: "1001", person: "1002"},
-      access: {team: "crankmagic.cloudflareaccess.com", aud: "ff51f3bcda0f6f50d2f48bb9d3d96b76530c128a23cdb1cc33aa4fa6d68611a3"}},
+    ...RELEASE, ...PRODUCTION, leaveOut: PLAY,
+  },
+  /* Explicit opt-in after staging/data/Access/recovery gates and Rob's final release go.
+     Production games never expose playtest records or admit the service identity. */
+  "cloud-production": {
+    ...RELEASE, ...PRODUCTION, leaveOut: LOCAL_PLAY, play: "cloud", tables: {playtest: false},
+  },
+  /* Register/retain the same Durable Object class while the public app keeps Play closed.
+     This is a recovery candidate, not a pause of existing sockets or their game clocks.
+     Cloudflare cannot roll back across the first class migration: validate and deploy this
+     baseline before activating Play, then record its exact version as the recovery target. */
+  "cloud-production-standby": {
+    ...RELEASE, ...PRODUCTION, leaveOut: PLAY, tables: {playtest: false, closed: true},
   },
   /* Stage 2 on staging.crankmagic.com, for Rob alone behind Access (Rob, 2026-09-24: staging first). With PLAY IN
      THE CLOUD since 2026-09-29 (Rob: "execute the play release and merge to staging"): the lobby and the board,
@@ -146,7 +164,7 @@ export const HOST_FILES = {
       preview_urls: false,
       ...(profile.cloud ? {
         d1_databases: [{binding: "DB", database_name: profile.cloud.database.name, database_id: profile.cloud.database.id, migrations_dir: "cloud/migrations"}],
-        vars: {ACCESS_TEAM_DOMAIN: profile.cloud.access.team, ACCESS_AUD: profile.cloud.access.aud, ...(profile.tables?.playtest ? {PLAYTEST_TABLES: "on"} : {}), ...(profile.serviceSeats ? {SERVICE_SEATS: "on"} : {})},
+        vars: {ACCESS_TEAM_DOMAIN: profile.cloud.access.team, ACCESS_AUD: profile.cloud.access.aud, ...(profile.tables?.playtest ? {PLAYTEST_TABLES: "on"} : {}), ...(profile.serviceSeats ? {SERVICE_SEATS: "on"} : {}), ...(profile.tables?.closed ? {PLAY_TABLES_CLOSED: "on"} : {})},
         ratelimits: [
           {name: "LIMIT_IP", namespace_id: profile.cloud.limits.ip, simple: {limit: LIMITS_PER_MINUTE.ip, period: 60}},
           {name: "LIMIT_PERSON", namespace_id: profile.cloud.limits.person, simple: {limit: LIMITS_PER_MINUTE.person, period: 60}},
@@ -354,28 +372,29 @@ export function verify(built, profile) {
       if (profile.tables) {
         /* Play: the table as a Durable Object, the engine it carries, and nothing of game/ published as a file. */
         if (JSON.stringify(config?.durable_objects) !== JSON.stringify({bindings: [{name: "TABLES", class_name: "GameTable"}]})) problems.push("wrangler.jsonc does not bind TABLES to the GameTable Durable Object");
-        if (!(config?.migrations || []).some((m) => (m.new_sqlite_classes || []).includes("GameTable"))) problems.push("wrangler.jsonc has no migration that makes the GameTable class");
+        if (JSON.stringify(config?.migrations) !== JSON.stringify([{tag: "tables-v1", new_sqlite_classes: ["GameTable"]}])) problems.push("wrangler.jsonc has no migration that makes the GameTable class");
         problems.push(...engine.problems);
         for (const f of ["cloud/game-room.mjs", "game/room/table.mjs", "game/room/room.mjs"]) if (!engine.files.includes(f)) problems.push(`${f} is missing, so the table cannot be bundled`);
         if (!(built.get(".assetsignore")?.toString("utf8") || "").split("\n").includes("game/")) problems.push(".assetsignore would publish the engine's source as files");
-        for (const f of PLAY_CLOUD) if (!files.has(f)) problems.push(`${f} is Play in the cloud, and is not in this release`);
+        for (const f of profile.play === "cloud" ? PLAY_CLOUD : []) if (!files.has(f)) problems.push(`${f} is Play in the cloud, and is not in this release`);
       } else if (config?.durable_objects || config?.migrations) problems.push("wrangler.jsonc binds a Durable Object in a release without Play");
       if ((config?.vars?.PLAYTEST_TABLES === "on") !== !!profile.tables?.playtest) problems.push(profile.tables?.playtest ? "the playtest tables are not switched on (PLAYTEST_TABLES)" : "PLAYTEST_TABLES is on in a release whose tables are not playtest tables: every finished game's full record would be downloadable");
       if (config?.assets?.binding !== "ASSETS" || JSON.stringify(config?.assets?.run_worker_first) !== JSON.stringify(["/api/*"])) problems.push("wrangler.jsonc must run the Worker for /api/* only, with the assets bound as ASSETS");
       const db = (config?.d1_databases || [])[0];
-      if (!db || db.binding !== "DB" || db.database_name !== profile.cloud.database.name || !/^[0-9a-f-]{36}$/.test(db.database_id || "")) problems.push(`wrangler.jsonc does not bind the ${profile.cloud.database.name} database as DB`);
+      if (!db || db.binding !== "DB" || db.database_name !== profile.cloud.database.name || db.database_id !== profile.cloud.database.id || !/^[0-9a-f-]{36}$/.test(db.database_id || "")) problems.push(`wrangler.jsonc does not bind the ${profile.cloud.database.name} database as DB`);
       for (const [name, value] of Object.entries(config?.vars || {})) if (value === PENDING) problems.push(`${name} is pending: create the Access application for ${profile.origin} and put its value in PROFILES["${Object.keys(PROFILES).find((k) => PROFILES[k] === profile)}"]`);
-      if (!config?.vars?.ACCESS_TEAM_DOMAIN || !config?.vars?.ACCESS_AUD) problems.push("wrangler.jsonc does not tell the Worker which Access application to trust");
+      if (config?.vars?.ACCESS_TEAM_DOMAIN !== profile.cloud.access.team || config?.vars?.ACCESS_AUD !== profile.cloud.access.aud) problems.push("wrangler.jsonc does not trust the exact Access application for this profile");
       /* M3: every /api/* request is counted per IP and per person before it does any work. */
       for (const [name, limit] of [["LIMIT_IP", LIMITS_PER_MINUTE.ip], ["LIMIT_PERSON", LIMITS_PER_MINUTE.person]]) {
         const binding = (config?.ratelimits || []).find((r) => r.name === name);
-        if (!binding || !/^[1-9][0-9]*$/.test(binding.namespace_id || "") || binding.simple?.limit !== limit || binding.simple?.period !== 60)
+        if (!binding || !/^[1-9][0-9]*$/.test(binding.namespace_id || "") || binding.namespace_id !== profile.cloud.limits[name === "LIMIT_IP" ? "ip" : "person"] || binding.simple?.limit !== limit || binding.simple?.period !== 60)
           problems.push(`wrangler.jsonc does not rate-limit /api/* with ${name} at ${limit} a minute`);
       }
       const namespaces = (config?.ratelimits || []).map((r) => r.namespace_id);
       if (new Set(namespaces).size !== namespaces.length) problems.push("wrangler.jsonc counts two rate limits in one namespace");
       if (config?.vars && "ACCESS_JWKS" in config.vars) problems.push("wrangler.jsonc hands the Worker its own signing keys (ACCESS_JWKS) -- that is for the local end-to-end run only");
       if ((config?.vars?.SERVICE_SEATS === "on") !== !!profile.serviceSeats) problems.push(profile.serviceSeats ? "the session's service token is not seated (SERVICE_SEATS)" : "SERVICE_SEATS is on in a release that does not seat a service token: an automated check would be a person there");
+      if ((config?.vars?.PLAY_TABLES_CLOSED === "on") !== !!profile.tables?.closed) problems.push("wrangler.jsonc has the wrong Play entry state (PLAY_TABLES_CLOSED)");
       for (const f of ["cloud/worker.mjs", "cloud/access.mjs", "cloud/library.mjs"]) if (!files.has(f)) problems.push(`${f} is missing, so the Worker cannot be bundled`);
       if (![...files].some((f) => /^cloud\/migrations\/.+\.sql$/.test(f))) problems.push("the database migrations are missing");
       if (!(built.get(".assetsignore")?.toString("utf8") || "").split("\n").includes("cloud/")) problems.push(".assetsignore would publish the Worker's source as files");
@@ -446,7 +465,7 @@ export function build({source, profileName = "pages", origin = "", domain = ""})
 
 /* Commit the build to release/pages with plumbing and a private index: the working tree, the
    checked-out branch and the real index are never touched. */
-export const releaseBranch = (profileName) => profileName === "pages" ? RELEASE_BRANCH : `release/${profileName}`;
+export const releaseBranch = (profileName) => ["pages", "cloud-production", "cloud-production-standby"].includes(profileName) ? RELEASE_BRANCH : `release/${profileName}`;
 export function commitRelease(built, {commit, version, profileName}) {
   const RELEASE_BRANCH = releaseBranch(profileName);
   const tmp = mkdtempSync(path.join(os.tmpdir(), "release-index-"));
@@ -462,7 +481,7 @@ export function commitRelease(built, {commit, version, profileName}) {
     const parent = spawnSync("git", ["-C", ROOT, "rev-parse", "--verify", "-q", `refs/heads/${RELEASE_BRANCH}`], {encoding: "utf8"}).stdout.trim()
       || spawnSync("git", ["-C", ROOT, "rev-parse", "--verify", "-q", `refs/remotes/origin/${RELEASE_BRANCH}`], {encoding: "utf8"}).stdout.trim();
     if (parent && git("rev-parse", `${parent}^{tree}`) === tree) return {commit: parent, tree, unchanged: true, branch: RELEASE_BRANCH};
-    const message = `Release ${version} (${profileName}): main ${commit}\n\nBuilt by tools/release-pages.mjs from ${commit}. The web app only; Play says Coming Soon${PROFILES[profileName].accounts === "on" ? "; accounts on, with the API Worker" : ""}.\n`;
+    const message = `Release ${version} (${profileName}): main ${commit}\n\nBuilt by tools/release-pages.mjs from ${commit}. The web app; Play ${PROFILES[profileName].play === "cloud" ? "is in the cloud" : "says Coming Soon"}${PROFILES[profileName].accounts === "on" ? "; accounts on, with the API Worker" : ""}.\n`;
     const next = execFileSync("git", ["-C", ROOT, "commit-tree", tree, ...(parent ? ["-p", parent] : []), "-F", "-"], {input: message}).toString().trim();
     execFileSync("git", ["-C", ROOT, "update-ref", `refs/heads/${RELEASE_BRANCH}`, next, ...(parent ? [parent] : [])]);
     return {commit: next, tree, parent, unchanged: false, branch: RELEASE_BRANCH};
