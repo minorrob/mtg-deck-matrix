@@ -49,9 +49,19 @@ not the finish line. This record supplements `handoff-2026-10-06.md` and Part 7 
 - The exact October 4 live-game backup was found in the MtG project's AI Input folder.
   The app's `readBackup` validated its checksum, version and model, read-only. It contains
   four original 100-card decks and three explicitly named table alternatives. A2's file
-  availability is resolved; the 50+30 exact-deck runs still need to be completed.
+  availability is resolved. The 50 two-human-protocol and 30 all-house exact-deck runs
+  passed with zero whole-match refusals. The human-protocol games made 14,115 decisions,
+  took 35-65 turns and had a maximum local response wait of 4,198 ms.
 - Required Chromium browser checks passed: draft deck ownership 11, Library 137, Decks hub
   24 and deck page 41. These do not establish live Access or complete gameplay.
+- PR #669's exact head `5d068d26` passed Actions run `37576879773`: 396 suites and
+  262 companion tests. Both Workers Builds preview checks remain failed; no merge or deploy.
+- `tests/uat/real-deck-game.mjs` uses real D5 Shadrix definitions at four seats, two separate
+  browser sessions and two house pilots. It passed 377 UI actions to a natural win on turn 33,
+  zero AI refusals, reload preserving the pending question and 381 protected frames per person.
+  Its local GameTable transport does not establish workerd, Access or real-network latency.
+- Live verification is blocked here: staging service-token variables are absent and the
+  browser tool twice failed to load its request-header policy before interacting with a site.
 
 ## Remaining confirmed-card coverage
 

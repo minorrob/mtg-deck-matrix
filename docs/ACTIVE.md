@@ -1,6 +1,30 @@
 # Who holds the work
 
-## Train B continuation, October 7, 2026
+## Library and real-deck acceptance, October 7, 2026
+
+**Holder:** Codex on Personal-HP, `codex/real-deck-acceptance`, based on the verified
+Train B head `5d068d26`. PR #669 is pushed and ready. Its full Actions run
+`37576879773` passed 396 suites and 262 companion tests. Both Workers Builds previews
+remain failed (D8); no merge or deployment was performed.
+
+**New proof:** the exact October 4 backup passed 50 two-human-protocol/two-house games
+and 30 all-house games, all with zero whole-match refusals. The 50 games took 14,115 human
+decisions, 35-65 turns, and at most 4,198 ms for a local human response. These are isolated
+room simulations. `tests/uat/real-deck-game.mjs` also proves a natural D5 game through two
+separate browsers: 377 UI actions, 33 turns, zero AI refusals, reload preserving the pending
+question, and all 381 frames per person keeping other hands and libraries hidden.
+
+**Next:** audit the actual library/deck experience with isolated data and improve obvious
+remove, delete, commander and copy-moving paths, preserving quantities through undo,
+reload, repeated clicks and multiple tabs. Then take D2's three missing cards in bounded
+engine increments. Train B's tested head stays unchanged.
+
+**Live blockers:** service-token environment variables are absent, and the supported browser
+connection twice failed to load its request-header policy before any site interaction.
+No Access policy, credential, permission or reserved dashboard setting was changed.
+Paid AI waits on a concrete cap. D11's Claude settings are optional tooling, not a launch gate.
+
+## Train B proof record
 
 **Holder:** Codex on Personal-HP, continuing the authorized production-readiness work on
 `claude/admiring-franklin-58cxy4` from `d8774b32`, PR #669. B4, B6 and B3 are integrated:
