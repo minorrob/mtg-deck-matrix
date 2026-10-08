@@ -236,10 +236,30 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
       await rob.page.waitForTimeout(300);
       const g = await rob.page.evaluate(() => {
         const hand = [...document.querySelectorAll(".cm-board-hand .cm-bcard")];
+        /* Every caption on a board -- a zone's (Battlefield, Lands · 3), a group's (Creatures · 2), a pile's count -- is
+           read whole: no card of its zone over it, nor the life counter, a circle at the table's center. */
+        const meet = (a, b) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1;
+        const pie = document.querySelector("#cm-board .cm-board-table > .cm-board-pie"), round = pie && pie.getBoundingClientRect();
+        const underPie = (b) => {
+          if (!round) return false;
+          const cx = round.left + round.width / 2, cy = round.top + round.height / 2, r = round.width / 2 - 1;
+          const x = Math.max(b.left, Math.min(cx, b.right)), y = Math.max(b.top, Math.min(cy, b.bottom));
+          return (x - cx) ** 2 + (y - cy) ** 2 < r * r;
+        };
+        const covered = [];
+        for (const caption of document.querySelectorAll("#cm-board .cm-mat .cm-mat-label, #cm-board .cm-mat .cm-board-group h3, #cm-board .cm-mat .cm-board-pile figcaption > *")) {
+          const box = caption.getBoundingClientRect(), zone = caption.closest(".cm-mat-zone"), seat = caption.closest(".cm-mat")?.dataset.seat;
+          if (box.width <= 1 || box.height <= 1 || getComputedStyle(caption).visibility === "hidden" || !zone) continue;   /* a screen reader's alone */
+          const said = `seat ${seat}'s ${zone.dataset.zone} "${caption.textContent.trim()}"`;
+          const card = [...zone.querySelectorAll(".cm-bcard")].find((c) => !c.closest(".cm-board-pile") && meet(box, c.getBoundingClientRect()));
+          if (card) covered.push(`${said} under ${card.getAttribute("aria-label")?.split(/[,:]/)[0]}`);
+          else if (underPie(box)) covered.push(`${said} under the life counter`);
+        }
         return {cards: hand.length, whole: hand.every((c) => {const r = c.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight + 0.5;}), sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-          boards: document.querySelectorAll("#cm-board .cm-mat").length};
+          boards: document.querySelectorAll("#cm-board .cm-mat").length, covered};
       });
       ok(g.whole && g.sideways === 0 && g.boards >= (view === "focus" ? 1 : 4), `table ${n} at ${width}x${height}, ${view}: the hand whole in the window (${g.cards} cards), ${g.boards} boards, nothing scrolling sideways`);
+      ok(g.covered.length === 0, `table ${n} at ${width}x${height}, ${view}: every zone's caption whole, no card or the life counter over it${g.covered.length ? ` -- ${g.covered.join("; ")}` : ""}`);
       await shot(rob.page, `t${n}-${view}-${width}x${height}`);
     }
     await rob.page.evaluate(() => document.fullscreenElement && document.exitFullscreen()).catch(() => {});

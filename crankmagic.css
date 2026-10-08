@@ -3303,6 +3303,13 @@ button.cm-vitals{cursor:pointer}
 .cm-mat:not(.is-bare) .cm-board-pile figcaption{background:rgb(0 0 0 / .62);border-radius:0 0 8px 8px;color:var(--mat-ink)}
 /* Bare (Full screen, phones): no frames and no zone names -- the zones are where the cards sit; counts stay. */
 .cm-mat:not(.is-bare) .cm-mat-grid{--pile-row:calc(var(--bc) * 7 / 5 + 1.3em + 2px);grid-template-columns:minmax(0,1fr) calc(var(--bc) - 4px) calc(var(--bc) - 4px);column-gap:calc(var(--bc) * .06 + 6px)}
+/* At the table, the Lands row is the piles' row: an untapped land (7/5 of a card tall) and the caption under it share it,
+   so the land starts at the frame and the caption keeps to a tight line (play-journeys: "Lands · 2" was under a land). */
+.cm-mat[data-fit="table"]:not(.is-bare) .cm-board-lands{padding-top:1px}
+.cm-mat[data-fit="table"]:not(.is-bare) .cm-board-lands>.cm-mat-label{line-height:1.2;bottom:1px}
+/* A table's battlefield is short: once it holds a group, the group's heading (Creatures · 2) says what is there, and the
+   Battlefield caption under it is read only by a screen reader (at 1280x720 a second row of cards fell over it). */
+.cm-mat[data-fit="table"] .cm-board-field:has(.cm-board-group)>.cm-mat-label{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 .cm-mat.is-bare{--zone-line:transparent;border-radius:6px}
 .cm-mat.is-bare .cm-mat-label,.cm-mat.is-bare .cm-board-group h3,.cm-mat.is-bare .cm-board-pile figcaption em{display:none}
 .cm-mat.is-bare .cm-board-pile figcaption{justify-content:center;font-weight:900;color:var(--mat-ink);background:rgb(0 0 0 / .62);border-radius:5px;width:auto;padding:0 5px}
@@ -3335,7 +3342,7 @@ button.cm-vitals{cursor:pointer}
 /* THE TABLE VIEW: the tabletop (the living mat and the active player's fan behind), the 2×2 of identical 16:9
    boards sized by fit(), the logo at the true center, and the hand along the foot. */
 .cm-board-tabletop{position:relative;display:flex;flex-direction:column;min-height:0;min-width:0;padding:14px 14px 8px}
-.cm-board-table{position:relative;flex:1 1 auto;min-height:0;min-width:0;display:grid;grid-template-columns:repeat(2,var(--board-w,45%));grid-template-rows:calc(var(--top-w,45%) * 9 / 16) calc(var(--bot-w,45%) * 9 / 16);grid-template-areas:"a b" "c d";gap:22px 14px;justify-content:center;align-content:center;border-radius:var(--v-radius-tile);overflow:hidden;isolation:isolate}
+.cm-board-table{position:relative;flex:1 1 auto;min-height:0;min-width:0;display:grid;grid-template-columns:repeat(2,var(--board-w,45%));grid-template-rows:calc(var(--top-w,45%) * 9 / 16) calc(var(--bot-w,45%) * 9 / 16);grid-template-areas:"a b" "c d";gap:22px 14px;justify-content:center;align-content:center;border-radius:var(--v-radius-tile);overflow:hidden;isolation:isolate;--pie:clamp(64px,calc(var(--board-w,620px) * .13),112px)}
 .cm-board-table[data-seats="3"]{grid-template-areas:"a b" "c c"}
 .cm-board-table[data-seats="2"]{grid-template-columns:var(--board-w,90%);grid-template-areas:"a" "b"}
 .cm-board-slot{min-width:0;min-height:0;display:grid;z-index:1;width:var(--row-w,100%)}
@@ -3367,12 +3374,18 @@ button.cm-vitals{cursor:pointer}
 .cm-board-sound span{min-width:6ch}
 .cm-board-sound output{min-width:4ch;text-align:right;font-variant-numeric:tabular-nums}
 /* THE LIFE COUNTER at the true center (item 9): a slice per seat, its life on it, the logo in the middle. */
-.cm-board-pie{position:absolute;left:50%;top:var(--mid-y,50%);z-index:3;width:var(--pie,96px);height:var(--pie,96px);transform:translate(-50%,-50%);border-radius:50%;box-shadow:0 10px 30px -10px rgba(0,0,0,.6),0 0 0 2px var(--mat-felt-edge);--pie:clamp(64px,calc(var(--board-w,620px) * .13),112px)}
+.cm-board-pie{position:absolute;left:50%;top:var(--mid-y,50%);z-index:3;width:var(--pie,96px);height:var(--pie,96px);transform:translate(-50%,-50%);border-radius:50%;box-shadow:0 10px 30px -10px rgba(0,0,0,.6),0 0 0 2px var(--mat-felt-edge)}
 .cm-board-pie-life{position:absolute;transform:translate(-50%,-50%);font-weight:900;font-size:calc(var(--pie) * .16);line-height:1;font-variant-numeric:tabular-nums;color:var(--table-ink);pointer-events:none}
 .cm-board-center{position:absolute;left:50%;top:50%;z-index:3;width:34px;height:34px;padding:0;transform:translate(-50%,-50%);border-radius:50%;border:2px solid var(--v-accent);background:var(--mat-felt-edge);display:grid;place-items:center;cursor:pointer}
 .cm-board-center img{width:18px;height:18px;display:block}
 .cm-board-pie .cm-board-center{width:calc(var(--pie) * .4);height:calc(var(--pie) * .4);background:var(--mat-ink)}
 .cm-board-pie .cm-board-center img{width:62%;height:62%}
+/* The counter lies over the four boards' inner corners, so what is written there moves out from under it (every
+   caption read whole, tests/uat/play-journeys.mjs): the top-right board's Lands caption, the top-left board's last pile
+   count, and the bottom-right board's first group heading. --pie is the table's, so the boards can read it. */
+.cm-board-table[data-seats="4"] .cm-board-slot[data-area="b"] .cm-board-lands>.cm-mat-label{left:calc(var(--pie) / 2 + 4px)}
+.cm-board-table[data-seats="4"] .cm-board-slot[data-area="a"] [data-zone=graveyard] figcaption{justify-content:flex-start}
+#matrix-v2 .cm-board-table[data-seats="4"] .cm-board-slot[data-area="d"] .cm-board-field>.cm-board-group:first-child>h3{margin-left:calc(var(--pie) / 2 - var(--pad))}   /* the id: #matrix-v2 :is(h1,h2,h3,p) sets every margin */
 /* GAME ON, in the rail on every page but the table's (item 19): where the game is, and the way back to it. */
 #matrix-v2 .cm-game-on{display:flex;align-items:center;gap:8px;margin:10px 0 0;padding:8px 12px;border-radius:10px;border:1px solid var(--v-accent);background:color-mix(in srgb,var(--v-accent) 14%,var(--v-panel));color:var(--v-ink);font-size:13px;text-decoration:none;white-space:nowrap}
 #matrix-v2 .cm-game-on:hover{background:color-mix(in srgb,var(--v-accent) 24%,var(--v-panel))}
