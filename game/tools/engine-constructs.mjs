@@ -202,7 +202,10 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   "Living Weapon": "createToken",
   /* Evolve (CR 702.100a; Fathom Mage, Train B X11): the trigger as a creature you control enters, its intervening "if" the
      comparison of power and toughness, and a +1/+1 counter (cards/index.mjs, script/condition.mjs). */
-  Evolve: "putCounter"};
+  Evolve: "putCounter",
+  /* Backup N (CR 702.165a; Guardian Scalelord, Train B X11): the enters trigger, N +1/+1 counters on target creature, and
+     another creature given the abilities printed below until end of turn (cards/index.mjs). */
+  Backup: "putCounter"};
 
 /* "PROTECTION FROM [QUALITY]" printed as a keyword (CR 702.16a; Karmic Guide's "protection from black"): built for the
    qualities rules/protection.mjs reads -- a color, a card type, everything -- compiled from the keyword (cards/index.mjs).

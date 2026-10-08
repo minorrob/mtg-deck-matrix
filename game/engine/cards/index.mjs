@@ -716,6 +716,21 @@ export function compileScript(script) {
       keywords.push("Evolve");
       return;
     }
+    /* BACKUP N (CR 702.165a): "When this creature enters, put N +1/+1 counters on target creature. If that's another creature,
+       it also gains the non-backup abilities of this creature printed below this one until end of turn" -- those printed
+       after it on the card, its own and no others (702.165c), fixed here as the card is compiled (702.165d), and given as a
+       pump's abilities are (compileGivenIn, below): its keywords and its triggered and activated abilities. "That's another
+       creature" is the effect's condition on its target ({about: "target", is: {another: true}}, script/condition.mjs). */
+    if (word === "backup") {
+      if (!(Number.isInteger(ability.amount) && ability.amount >= 1)) problems.push(`${ability.text}: backup needs its number, 1 or more`);
+      const below = (script.abilities ?? []).slice(index + 1).filter((a) => !(a?.kind === "keyword" && String(a.keyword).toLowerCase() === "backup"));
+      if (!below.length) problems.push(`${ability.text}: backup gives the abilities printed below it, and none are`);
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.enters({who: "self"}), targets: [{what: "permanent", types: ["Creature"]}],
+        effects: [{effect: "putCounter", targets: {target: 0}, counter: "+1/+1", count: ability.amount ?? 1},
+          {effect: "pump", targets: {target: 0}, power: 0, toughness: 0, condition: {about: "target", is: {another: true}}, abilities: structuredClone(below)}]});
+      keywords.push("Backup");
+      return;
+    }
     /* FLASHBACK (CR 702.34a): the keyword with its cost, a list of atoms -- a mana cost, and "pay 3 life" -- kept as a
        static ability so the card carries it into its graveyard (rules/actions.mjs offers the cast there). Only on an
        instant or sorcery: "if the resulting spell is an instant or sorcery spell". */

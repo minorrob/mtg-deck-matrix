@@ -11,7 +11,7 @@ import {passPriority} from "../../game/engine/rules/priority.mjs";
 import {createRng} from "../../game/engine/rng.mjs";
 import {compileScript} from "../../game/engine/cards/index.mjs";
 import {missingFor, keywordBuilt} from "../../game/tools/engine-constructs.mjs";
-import {housePilot} from "../../game/engine/pilots/house-pilot.mjs";
+import {housePilot, meetRequirements} from "../../game/engine/pilots/house-pilot.mjs";
 import {randomLegalPilot} from "../../game/engine/pilots/random-legal.mjs";
 import {projectFor} from "../../game/engine/projection.mjs";
 import {runEffect} from "../../game/engine/script/effects/index.mjs";
@@ -24,7 +24,7 @@ export const at = (seat, zone, ...cards) => ({seat, zone, cards});
 export const later = (seat, zone, ...cards) => ({seat, zone, cards, sick: true});
 export const creature = (subtypes, power, toughness, more = {}) => ({types: ["Creature"], subtypes, manaCost: "{2}", colors: ["G"], power, toughness, ...more});
 export const FIXTURES = {
-  Bear: creature(["Bear"], 2, 2), "Big Bear": creature(["Bear"], 5, 5), Squirrel: creature(["Squirrel"], 1, 1),
+  Bear: creature(["Bear"], 2, 2), "Big Bear": creature(["Bear"], 5, 5, {manaCost: "{3}{G}{G}"}), Squirrel: creature(["Squirrel"], 1, 1),
   Spider: creature(["Spider"], 1, 3, {keywords: ["Reach"]}),
   Relic: {types: ["Artifact"], manaCost: "{1}", colors: []},
   "Charm Ward": {types: ["Enchantment"], manaCost: "{1}{W}", colors: ["W"]},
@@ -36,13 +36,15 @@ export function play(setup, steps = [], more = {}, fixtures = {}) {
 }
 
 /** The game moved on as the room moves it -- priority passed, steps advanced -- until `until` holds; a question on the way
-    that `answer` does not answer stops it, but the order of triggers put on the stack at once, which goes as offered. */
+    that `answer` does not answer stops it, but the routine ones the scenarios answer too (cards/scenario.mjs): the order of
+    triggers put on the stack at once as offered, nobody attacking but whom the rules make, and nobody blocking. */
 export function drive(state, until, {answer = () => null, rng = createRng("x11")} = {}) {
   for (let n = 0; n < 3000; n += 1) {
     if (until(state)) return state;
     if (state.awaiting) {
       const choice = awaitingChoice(state);
-      const indices = answer(state, choice) ?? (state.awaiting.kind === "order-triggers" ? choice.options.map((o) => o.index) : null);
+      const routine = {"order-triggers": () => choice.options.map((o) => o.index), "declare-attackers": () => meetRequirements(choice, []), "declare-blockers": () => []};
+      const indices = answer(state, choice) ?? routine[state.awaiting.kind]?.() ?? null;
       if (indices === null) throw new Error(`asked ${state.awaiting.kind} on the way`);
       resolveAwaiting(state, indices, null, rng);
       continue;

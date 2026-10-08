@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 46 | 0 | 12 | 136 |
+| Keyword abilities (CR 702) | 194 | 47 | 0 | 11 | 136 |
 | Keyword actions (CR 701) | 70 | 22 | 3 | 1 | 44 |
 | Effects | 192 | 68 | 1 | 4 | 119 |
 | Triggers | 138 | 20 | 4 | 2 | 112 |
@@ -181,7 +181,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.25 | Flanking | Flanking | built | 0 | 30 | 0 | 0 |
 | 702.31 | Horsemanship | — | missing | 0 | 29 | 0 | 0 |
 | 702.190 | Sneak | — | missing | 0 | 27 | 0 | 0 |
-| 702.165 | Backup | — | named | 0 | 26 | 0 | 0 |
+| 702.165 | Backup | Backup | built | 0 | 26 | 0 | 0 |
 | 702.87 | Level Up | — | missing | 0 | 26 | 0 | 0 |
 | 702.46 | Soulshift | — | missing | 0 | 26 | 0 | 0 |
 | 702.22 | Banding | — | missing | 0 | 24 | 0 | 0 |
