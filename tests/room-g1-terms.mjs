@@ -99,6 +99,19 @@ const card = (name, owner, extra = {}) => ({card: name, types: ["Creature"], pow
   const s = started();
   addObject(s, card("Anything", 0, {keywords: ["Flashback"]}), "graveyard", 0);
   ok(gameTerms(s).has("Flashback") && gameTerms(s).has("Creature"), "the game's words are read off the objects: keywords and types");
+  const names = new Set(["Mirkwood", "Mirkwood Nurturer"]), hidden = new Set(["Mirkwood"]);
+  eq(leaksIn({history: [{text: "Rob cast Mirkwood Nurturer."}]}, hidden, new Set(), names), [], "a secret name inside a longer card name written there is that card, judged as itself");
+  eq(leaksIn({history: [{text: "Rob played Mirkwood."}]}, hidden, new Set(), names).map((l) => l.name), ["Mirkwood"], "and the name on its own is still found");
+}
+{
+  /* A question shows the player it asks the cards it is about -- a search of their library, a scry -- and no one else. */
+  const s = started();
+  addObject(s, card("Searched For", 0), "library", 0);
+  const id = s.zones.library[0][0];
+  s.awaiting = {kind: "effect-choice", effect: "chooseCard", player: 0, pool: [id], count: id};
+  ok(!secretsFor(s, 0).has("Searched For") && secretsFor(s, 1).has("Searched For"), "Rob searching his library sees what it offers him (CR 701.19a); Maya does not");
+  s.awaiting = {kind: "effect-choice", effect: "chooseCard", player: 0, count: id};
+  ok(secretsFor(s, 0).has("Searched For"), "a count that happens to equal a card's id shows nothing: only a question's lists are its cards");
 }
 
 /* ---- A view that sends a seat another's card, read from a room's own storage: found, with the seat and the turn ---- */

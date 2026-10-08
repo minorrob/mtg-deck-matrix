@@ -105,7 +105,22 @@ function libraryKnowledge(state, viewer) {
   }
   return {known, shown};
 }
+/* THE CARDS A QUESTION SHOWS THE PLAYER IT ASKS: what a scry, a surveil or a dig looks at, what a search offers (CR 701.22a,
+   701.25a, 701.19a) -- the ids listed in the pending question (`state.awaiting`; a count or a player is not a list of
+   them), to that player alone and while it waits. */
+function askedAbout(state, viewer) {
+  const ids = new Set(), awaiting = state.awaiting;
+  if (!awaiting || awaiting.player !== viewer) return ids;
+  const walk = (v, listed) => {
+    if (listed && Number.isInteger(v) && state.objects[v]) ids.add(v);
+    else if (Array.isArray(v)) v.forEach((x) => walk(x, true));
+    else if (v && typeof v === "object") Object.values(v).forEach((x) => walk(x, false));
+  };
+  walk(awaiting, false);
+  return ids;
+}
 function mayKnow(state, o, viewer, library) {
+  if (library.asked.has(o.id)) return true;
   if (o.zone === "hand") return o.owner === viewer;
   if (o.zone === "library") return library.known.has(o.id);
   if (!PUBLIC_ZONES.has(o.zone)) return false;
@@ -123,7 +138,7 @@ function mayKnow(state, o, viewer, library) {
     may see now, nor was public at any earlier check (`seen`, which this adds to: a history line written while a card was
     public stays true after it is gone). */
 export function secretsFor(state, viewer, seen = new Set()) {
-  const library = libraryKnowledge(state, viewer), known = new Set(), secret = new Set();
+  const library = {...libraryKnowledge(state, viewer), asked: askedAbout(state, viewer)}, known = new Set(), secret = new Set();
   for (const o of Object.values(state.objects)) {
     const name = nameOf(o);
     if (!name) continue;
@@ -147,8 +162,9 @@ export function gameTerms(state) {
 
 /** The secret names a view holds: in a field that names a card (`name`, `faceDownName`), exactly; anywhere else -- a
     history line, a question, an option -- as a whole name (not "Opt" in "Option"), unless it is also one of the game's
-    own words. Each with a little of what surrounds it. */
-export function leaksIn(view, secrets, terms = new Set()) {
+    own words, or is part of a longer card name written there (`names`: Rob's decks hold a Mirkwood and a Mirkwood
+    Nurturer -- the longer is judged as itself). Each with a little of what surrounds it. */
+export function leaksIn(view, secrets, terms = new Set(), names = new Set()) {
   const found = [], prose = [];
   const walk = (v, key) => {
     if (typeof v === "string") {
@@ -162,8 +178,13 @@ export function leaksIn(view, secrets, terms = new Set()) {
   const word = (c) => c !== undefined && /[\p{L}\p{N}]/u.test(c);
   for (const name of secrets) {
     if (terms.has(name) || found.some((f) => f.name === name)) continue;
+    const longer = [...names].filter((other) => other.length > name.length && other.includes(name));
+    const inLonger = (at) => longer.some((other) => {
+      for (let i = other.indexOf(name); i >= 0; i = other.indexOf(name, i + 1)) if (text.startsWith(other, at - i)) return true;
+      return false;
+    });
     for (let at = text.indexOf(name); at >= 0; at = text.indexOf(name, at + 1)) {
-      if (word(text[at - 1]) || word(text[at + name.length])) continue;
+      if (word(text[at - 1]) || word(text[at + name.length]) || inLonger(at)) continue;
       found.push({name, context: text.slice(Math.max(0, at - 60), at + name.length + 60)});
       break;
     }
@@ -199,9 +220,9 @@ export async function checkLeaks(room, storage, matchId, memory, turn) {
   }
   memory.read = keys.length;
   const found = [];
-  const terms = gameTerms(point.state);
+  const terms = gameTerms(point.state), names = new Set(Object.values(point.state.objects).map(nameOf).filter(Boolean));
   room.seats.forEach((s, seat) => {
-    for (const leak of leaksIn(room.view(s.seatId), secretsFor(point.state, seat, memory.seen[seat]), terms)) found.push({turn, seatId: s.seatId, ...leak});
+    for (const leak of leaksIn(room.view(s.seatId), secretsFor(point.state, seat, memory.seen[seat]), terms, names)) found.push({turn, seatId: s.seatId, ...leak});
   });
   return found;
 }
