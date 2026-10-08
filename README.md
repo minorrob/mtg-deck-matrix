@@ -719,10 +719,8 @@ discards, the mana abilities that tap another creature (Jaspera Sentinel, Saruli
 graveyard (Rubble Rouser, with its "when you do"), Lorehold Excavation's creature card exiled, and Squee, Dubious
 Monarch's alternative cost from the graveyard, four other cards exiled (no escape); four players, both pilots' answers, the
 refusals, and no payer ever choosing the creature or the card for the player.
-`engine-x11-filters` holds the selector keys and the condition X11's costs worker built: "whose power and toughness aren't
-equal" through the layers (Gilt-Leaf Winnower), "each equipped creature" an Equipment attached and not an Aura (Hemlock
-Vial, its set fixed as it resolves), and Guardian Project's "if it doesn't have the same name as another creature you
-control or a creature card in your graveyard", asked again as it resolves and kept by name when the creature is gone.
+`engine-x11-filters` holds the selector key X11's costs worker built for Hemlock Vial: "each equipped creature", an
+Equipment attached and still there, not an Aura; only what the Vial's controller controls, its set fixed as it resolves.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.

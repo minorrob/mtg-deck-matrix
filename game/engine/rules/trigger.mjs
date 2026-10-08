@@ -315,11 +315,7 @@ function subjects(state, event, condition, sourceId, controller) {
     /* And, from the battlefield, its copiable values as it last existed when they were not its card's (rules/layers.mjs,
        lastKnown): "create a token that's a copy of that creature" (Hofri Ghostforge). */
     const copied = fields.from?.zoneType === "Battlefield" ? fields.leftBehind?.copiable : undefined;
-    /* And, onto the battlefield, the name it entered with, for when it is gone before it resolves: "if it doesn't have the
-       same name as another creature you control" (Guardian Project; script/condition.mjs, `nameUnshared`). */
-    const name = fields.to?.zoneType === "Battlefield" ? state.objects[fields.becomes]?.card : undefined;
-    return [{card: fields.becomes, ...(Number.isInteger(player) ? {player} : {}), ...(came ? {cameFrom: {...came}} : {}), ...(copied ? {copiedAs: structuredClone(copied)} : {}),
-      ...(typeof name === "string" ? {name} : {})}];
+    return [{card: fields.becomes, ...(Number.isInteger(player) ? {player} : {}), ...(came ? {cameFrom: {...came}} : {}), ...(copied ? {copiedAs: structuredClone(copied)} : {})}];
   }
   return [{}];
 }
