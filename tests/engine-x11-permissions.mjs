@@ -1,6 +1,7 @@
 /* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
 
-/* THE PLAN'S X11, TRAIN B: CONTROL, ATTACK REQUIREMENTS AND A GRAVEYARD COUNT -- WHAT THE CARDS' SCENARIOS CANNOT REACH.
+/* THE PLAN'S X11, TRAIN B: CONTROL, ATTACK REQUIREMENTS AND A GRAVEYARD COUNT -- WHAT THE CARDS' SCENARIOS CANNOT REACH,
+ * AND WHAT CONTROL DOES WHEN A PLAYER LEAVES THE GAME.
  *
  * Four of Rob's decks' cards, each with the engine piece it lacked:
  *   - "If a card left your graveyard this turn" (Primary Research, Relic Retriever): the count `cardsLeftGraveyardThisTurn`,
@@ -10,6 +11,10 @@
  *     gainControl `until: "this leaves"`, nothing at all if Sower has already gone (CR 611.2b), ended as Sower leaves the
  *     battlefield however it goes; and every control change for a while now ends in layer 2's timestamp order (CR 613.7):
  *     a later change still holding the permanent keeps it (effects/permanents.mjs, endControlChange).
+ *   - A player leaving the game (CR 800.4a; rules/sba.mjs): every effect giving them control of an object ends, for good
+ *     ones too -- so every change leaves its record -- the permanent going where the changes still in effect would have it;
+ *     what they control still is exiled; and a change ending later that would return a permanent to a player who has left
+ *     exiles it instead (800.4c).
  *   - Mentor (CR 702.134a) compiled from the keyword, and "that token ... attacks this combat if able" (Legion Warboss): an
  *     effect read with the statics' "attacks each combat if able" (rules/statics.mjs), refused with instructions when a
  *     declaration leaves the token home, met by both pilots, and for this combat alone (CR 508.1d).
@@ -25,7 +30,7 @@ import {passPriority} from "../game/engine/rules/priority.mjs";
 import {advance, awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {attackers} from "../game/engine/rules/combat.mjs";
 import {attacksEachCombat} from "../game/engine/rules/statics.mjs";
-import {concede} from "../game/engine/rules/sba.mjs";
+import {concede, checkStateBasedActions} from "../game/engine/rules/sba.mjs";
 import {summoningSick} from "../game/engine/keywords/timing.mjs";
 import {runEffects} from "../game/engine/script/effects/index.mjs";
 import {moveOne} from "../game/engine/script/effects/zones.mjs";
@@ -182,6 +187,125 @@ const toCleanup = (s) => playUntil(s, (x) => x.turn === 2 && x.priorityPlayer !=
 }
 
 /* ---------------------------------------------------------------------------------------------------------------------
+ * A PLAYER LEAVES THE GAME (CR 800.4a): every effect giving them control of an object ends -- for good, for the turn, for
+ * as long as -- the permanent going where the changes still in effect, in timestamp order, would have it (CR 613.7);
+ * whatever they control still is exiled; and a change ending later that would give it back to them exiles it (800.4c).
+ * ------------------------------------------------------------------------------------------------------------------- */
+const takeForGood = (s, target, by) => runEffects(s, [{effect: "gainControl", targets: [target]}], {controller: by, source: null});
+const records = (s) => (s.effects ?? []).filter((e) => e.rule === "control-returns").length;
+const bearOf = (s, owner) => idOf(s, "Bear", owner);
+{
+  /* For good, for the turn, and for as long as a Sower Rob does not own remains: Rob concedes, and each ends. */
+  const s = table([at(1, "battlefield", "Bear", "Bear", "Bear"), at(2, "battlefield", SOWER)], 4);
+  const [kept, lent, sown] = s.zones.battlefield.filter((id) => s.objects[id].card === "Bear"), sower = idOf(s, SOWER, 2);
+  takeForGood(s, kept, 0);
+  loan(s, lent, 0);
+  takeForGood(s, sower, 0);
+  runEffects(s, [{effect: "gainControl", targets: [sown], until: "this leaves"}], {controller: 0, source: sower});
+  eq(controls(s, 0), ["Bear", "Bear", "Bear", SOWER], "four players: Rob has Maya's three Bears -- for good, for the turn, by Trey's Sower -- and the Sower");
+  concede(s, 0);
+  eq([controls(s, 1), controls(s, 2)], [["Bear", "Bear", "Bear"], [SOWER]], "Rob concedes: every change giving him control ends at once -- the Bears are Maya's, the Sower Trey's again, still on the battlefield");
+  eq(records(s), 0, "and every record spent");
+}
+{
+  /* Losing is leaving too: Rob at 0 life, the state-based actions take him out, and his Bear goes back. */
+  const s = table([at(1, "battlefield", "Bear")], 4);
+  takeForGood(s, bearOf(s, 1), 0);
+  s.players[0].life = 0;
+  checkStateBasedActions(s);
+  eq([s.players[0].lost, controls(s, 1)], [true, ["Bear"]], "Rob loses at 0 life: Maya's Bear is hers again");
+}
+{
+  /* A later change of another player's still holds it: Rob took it for good, Trey until end of turn. Rob concedes: Trey
+     keeps it, and as the turn ends it goes to Maya, not Rob. */
+  const s = table([at(1, "battlefield", "Bear")], 4);
+  const bear = bearOf(s, 1);
+  takeForGood(s, bear, 0);
+  loan(s, bear, 2);
+  concede(s, 0);
+  eq(s.objects[bear].controller, 2, "Rob concedes: Trey's loan, later, still holds the Bear");
+  toCleanup(s);
+  eq(s.objects[bear].controller, 1, "the turn over: Maya's");
+}
+{
+  /* The other way round: Trey took it for good, then Rob until end of turn. Trey concedes: Rob's later loan keeps it for
+     the turn, and then it goes to Maya -- Trey's change ended with him. */
+  const s = table([at(1, "battlefield", "Bear")], 4);
+  const bear = bearOf(s, 1);
+  takeForGood(s, bear, 2);
+  loan(s, bear, 0);
+  concede(s, 2);
+  eq(s.objects[bear].controller, 0, "Trey concedes: Rob's loan still holds the Bear");
+  toCleanup(s);
+  eq(s.objects[bear].controller, 1, "the turn over: Maya's, not Trey's");
+}
+{
+  /* Two changes for good, Rob's then Trey's: Trey leaving gives it to Rob, Rob leaving then to Maya -- the earlier change
+     decides again once the later one has gone (CR 613.7). */
+  const s = table([at(1, "battlefield", "Bear")], 4);
+  const bear = bearOf(s, 1);
+  takeForGood(s, bear, 0);
+  takeForGood(s, bear, 2);
+  concede(s, 2);
+  eq(s.objects[bear].controller, 0, "Trey concedes: Rob's earlier change gives it to Rob");
+  concede(s, 0);
+  eq(controls(s, 1), ["Bear"], "Rob concedes: Maya's");
+}
+{
+  /* A change that changes nothing still counts: Rob lends himself Maya's Bear until end of turn, then takes it for good --
+     at the end of the turn the later change keeps it his. */
+  const s = table([at(1, "battlefield", "Bear")], 4);
+  const bear = bearOf(s, 1);
+  loan(s, bear, 0);
+  takeForGood(s, bear, 0);
+  toCleanup(s);
+  eq(s.objects[bear].controller, 0, "the loan ends, the change for good after it holds: Rob's");
+}
+{
+  /* Effects giving control to someone else do not end with the player whose effect they were: Rob gives Trey's Bear to
+     Maya (as "target opponent gains control" does) and concedes; it is Maya the effect gives control to. */
+  const s = table([at(2, "battlefield", "Bear")], 4);
+  const bear = bearOf(s, 2);
+  runEffects(s, [{effect: "gainControl", targets: [bear], toPlayer: 1}], {controller: 0, source: null});
+  concede(s, 0);
+  eq(s.objects[bear].controller, 1, "Rob's effect gave Maya the Bear: Rob conceding ends nothing, it stays hers");
+}
+{
+  /* The owner gone first: Maya's Bear, Rob's for good, leaves the game with Maya (800.4a), its records with it; Rob
+     conceding afterwards has nothing to give back. */
+  const s = table([at(1, "battlefield", "Bear"), at(0, "battlefield", "Forest")], 4);
+  const bear = bearOf(s, 1);
+  takeForGood(s, bear, 0);
+  concede(s, 1);
+  eq([s.objects[bear], records(s)], [undefined, 0], "Maya concedes: her Bear leaves the game though Rob controls it, and no record is left");
+  concede(s, 0);
+  eq(s.zones.battlefield.map((id) => s.objects[id].card).filter((c) => c !== "Forest"), [], "Rob concedes after: nothing comes back");
+}
+{
+  /* Whatever they control still is exiled (800.4a): Maya's Bear that entered under Rob's control, no effect giving it him. */
+  const s = table([], 4);
+  const bear = addObject(s, {...FIX.Bear, card: "Bear", owner: 1, controller: 0}, "battlefield");
+  concede(s, 0);
+  eq([s.objects[bear], s.zones.exile.map((id) => [s.objects[id].card, s.objects[id].owner])], [undefined, [["Bear", 1]]],
+    "Rob concedes: Maya's Bear, under his control from the start, is exiled");
+}
+{
+  /* And if another player holds such a permanent when its default controller leaves, it stays -- until that change ends,
+     and then, with nobody in the game to have it, it is exiled (800.4c): as the turn ends, or as a Sower leaves. */
+  const s = table([at(2, "battlefield", SOWER)], 4);
+  const lent = addObject(s, {...FIX.Bear, card: "Bear", owner: 1, controller: 0}, "battlefield");
+  const sown = addObject(s, {...FIX.Bear, card: "Bear", owner: 1, controller: 0}, "battlefield");
+  loan(s, lent, 2);
+  runEffects(s, [{effect: "gainControl", targets: [sown], until: "this leaves"}], {controller: 2, source: idOf(s, SOWER, 2)});
+  concede(s, 0);
+  eq(controls(s, 2), ["Bear", "Bear", SOWER], "Rob concedes: Trey holds both Bears that were Rob's by default");
+  toCleanup(s);
+  eq([s.objects[lent], s.objects[sown]?.controller], [undefined, 2], "the turn over: the lent Bear is exiled, not given to Rob");
+  runEffects(s, [{effect: "destroy", targets: [idOf(s, SOWER, 2)]}], {controller: 1, source: null});
+  eq([s.objects[sown], s.zones.exile.filter((id) => s.objects[id].card === "Bear").length], [undefined, 2], "the Sower destroyed: the other is exiled too");
+}
+
+/* ---------------------------------------------------------------------------------------------------------------------
  * LEGION WARBOSS: its token must attack this combat; mentor on attack, its target's power read as it resolves.
  * ------------------------------------------------------------------------------------------------------------------- */
 const toAttackers = (s) => playUntil(s, (x) => x.awaiting?.kind === "declare-attackers");
@@ -252,4 +376,4 @@ const toAttackers = (s) => playUntil(s, (x) => x.awaiting?.kind === "declare-att
   for (const name of ["Primary Research", "Relic Retriever", WARBOSS, SOWER]) ok(index.resolve(name)?.playable === true, `${name} is defined and playable`);
 }
 
-console.log(`engine-x11-permissions: ${checks} checks passed -- a card leaving a graveyard counted per graveyard, cards only, from none each turn; Sower's control while it remains, and control changes ending in timestamp order; Legion Warboss's token required this combat, refused with instructions, met by both pilots; mentor's lesser power as it resolves; the credits.`);
+console.log(`engine-x11-permissions: ${checks} checks passed -- a card leaving a graveyard counted per graveyard, cards only, from none each turn; Sower's control while it remains, and control changes ending in timestamp order; a player leaving the game, each kind of change given back, what they still control exiled, and what would return to them exiled; Legion Warboss's token required this combat, refused with instructions, met by both pilots; mentor's lesser power as it resolves; the credits.`);

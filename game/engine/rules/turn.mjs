@@ -45,7 +45,7 @@ import {answerResolution, resolutionChoice} from "../script/resolution.mjs";
 import {finishResolving} from "./stack.mjs";
 import {playerRuleChanged, untapsDuringOthers, ruleChanged} from "./statics.mjs";
 import {emptyRestricted} from "./restricted-mana.mjs";
-import {endCopies, phaseIn, endControlChange} from "../script/effects/permanents.mjs";
+import {endCopies, phaseIn, endControlChange, nextRecord} from "../script/effects/permanents.mjs";
 import {untapOne} from "../script/effects/resources.mjs";
 import {runEffect} from "../script/effects/index.mjs";
 import {askEntering, enteringChoice, resolveEnteringChoice} from "./entering.mjs";
@@ -215,12 +215,11 @@ function cleanup(state, events) {
   const limit = playerRuleChanged(state, "no-maximum-hand-size", state.activePlayer) ? Infinity : (player.maxHandSize ?? 7);
   const over = player.lost ? 0 : cardsIn(state, "hand", state.activePlayer).length - limit;
   if (over > 0) { state.awaiting = {kind: "discard-to-hand-size", player: state.activePlayer, count: over}; return; }
-  endOfTurn(state);
-  void events;
+  endOfTurn(state, events);
 }
 
 /* CR 514.2, as one event: all damage is removed from permanents AND every "until end of turn" effect ends. */
-function endOfTurn(state) {
+function endOfTurn(state, events) {
   /* Without the second half, a Giant Growth's +3/+3, Heroic Intervention's indestructible and Craterhoof's +X/+X lasted the
      rest of the game -- and the scenarios, which look within a turn, never saw it. */
   for (const id of state.zones.battlefield) {
@@ -229,7 +228,7 @@ function endOfTurn(state) {
   /* Control gained "until end of turn" returns now (effects/permanents.mjs, gainControl and endControlChange), each change
      ending in timestamp order: twice in one turn, the first controller has it back -- and a change lasting longer, made
      after one of these, keeps it (CR 613.7). */
-  for (const effect of (state.effects ?? []).filter((e) => e.rule === "control-returns" && e.until === "end-of-turn")) endControlChange(state, effect);
+  for (let record; (record = nextRecord(state, (e) => e.until === "end-of-turn"));) endControlChange(state, record, events);
   if ((state.effects ?? []).some((effect) => effect.until === "end-of-turn")) state.effects = state.effects.filter((effect) => effect.until !== "end-of-turn");
   /* "Until the end of your next turn" (script/effects/zones.mjs, mayPlay): over at the end of the first turn of that player
      begun after it was made -- this one, if it was made before this turn began. */
@@ -439,7 +438,7 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
   /* What the discard triggered, as it happened (CR 603.2) -- a "this turn" ability among them, before CR 514.2 ends it;
      then CR 514.2; then CR 514.3a, those triggers on the stack and the active player with priority. */
   collectTriggers(state, events);
-  endOfTurn(state);
+  endOfTurn(state, events);
   grantStepPriority(state, events, []);
   return events;
 }

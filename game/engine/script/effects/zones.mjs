@@ -208,7 +208,7 @@ export function returnExiledUntil(state, departed, events, leftBehind = null) {
   if (leftBehind) rememberExileLooker(state, departed, leftBehind.controller);
   if (leftBehind) keepLastKnown(state, departed, leftBehind);
   /* And control gained "for as long as" it remained on the battlefield ends with it (CR 611.2b; Sower of Temptation). */
-  controlSourceLeft(state, departed);
+  controlSourceLeft(state, departed, events);
   const due = (state.exiledUntil ?? []).filter((link) => link.source === departed);
   if (!due.length) return;
   state.exiledUntil = state.exiledUntil.filter((link) => link.source !== departed);

@@ -53,6 +53,7 @@ import {sacrificeOne, moveOne, returnExiledUntil, leavingRef} from "../script/ef
 import {changeLife} from "../script/effects/resources.mjs";
 import {enduringStories} from "../keywords/designations.mjs";
 import {preparedCopyStays} from "../script/effects/attributes.mjs";
+import {endControlChange, nextRecord} from "../script/effects/permanents.mjs";
 import {protectedFrom} from "./protection.mjs";
 
 /* The capitalized zone names the projection and the telemetry use. */
@@ -120,6 +121,13 @@ function removePlayerFromBoard(state, playerId, events) {
     /* It left the battlefield: what it exiled "until this leaves the battlefield" comes back (CR 610.3). */
     returnExiledUntil(state, id, events);
   }
+  /* And every effect that gives them control of an object ends -- for good, for the turn, for as long as -- each spliced out
+     of its permanent's changes in timestamp order (effects/permanents.mjs, endControlChange): the permanent goes back to
+     its owner, or to whoever a change still in effect gives it (CR 800.4a, 613.7). */
+  for (let record; (record = nextRecord(state, (e) => e.to === playerId));) endControlChange(state, record, events);
+  /* Then whatever they control still -- a permanent of someone else's that entered under their control, with no effect to
+     end -- is exiled (CR 800.4a). */
+  for (const id of state.zones.battlefield.filter((x) => state.objects[x].controller === playerId)) moveOne(state, id, "exile", events);
 }
 
 /**
