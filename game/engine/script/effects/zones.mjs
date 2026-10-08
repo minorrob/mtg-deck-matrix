@@ -67,7 +67,9 @@ const PERMANENT_TYPES = ["Artifact", "Battle", "Creature", "Enchantment", "Land"
    nothing. */
 /* `transformed`: onto the battlefield with its back face up (CR 712.14a) -- a card that isn't a double-faced card that
    transforms stays where it is. */
-export function moveOne(state, id, to, events, {owner = null, tapped = false, faceDown = false, lookers = null, exiledBy = null, transformed = false} = {}) {
+/* `counters`: what the effect putting it onto the battlefield says it enters with -- "with a finality counter on it" (Excava,
+   the Risen Past; CR 122.6) -- put on as it arrives, by its controller (122.6a), whatever kind of permanent it is. */
+export function moveOne(state, id, to, events, {owner = null, tapped = false, faceDown = false, lookers = null, exiledBy = null, transformed = false, counters = null} = {}) {
   const object = state.objects[id];
   if (!object) return null;
   const from = object.zone;
@@ -139,7 +141,7 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false, fa
     /* A question it asks as it enters waits for the next priority (rules/entering.mjs). */
     for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: moved, ...ask});
     /* Counters it enters with are put on it (CR 122.6) -- by its controller (122.6a): "twice that many instead" sees them. */
-    for (const [counter, count] of Object.entries(entering.counters)) {
+    for (const [counter, count] of [...Object.entries(entering.counters), ...Object.entries(counters ?? {})]) {
       state.objects[moved].counters[counter] = (state.objects[moved].counters[counter] ?? 0) + countersPlaced(state, moved, counter, count, state.objects[moved].controller);
     }
   }
@@ -361,7 +363,8 @@ export function moveZone(state, params, context, rng = null) {
     const to = (params.commanderHome ?? []).includes(id) ? "command" : params.to ?? "graveyard";
     if (state.objects[id]?.zone === "battlefield") leftBy.set(id, controllerOf(state, id));
     const before = params.remember && state.objects[id]?.zone === "battlefield" ? lastKnown(state, id) : null;
-    const moved = params.sacrifice === true ? sacrificeOne(state, id, events) : moveOne(state, id, to, events, {tapped: params.tapped === true, transformed: params.transformed === true});
+    const moved = params.sacrifice === true ? sacrificeOne(state, id, events) : moveOne(state, id, to, events, {tapped: params.tapped === true, transformed: params.transformed === true,
+      ...(params.withCounters ? {counters: params.withCounters} : {})});
     if (before && moved !== null && state.objects[moved]?.zone === (params.sacrifice === true ? "graveyard" : to)) movedWas.push(before);
     /* What it is now, for `remember`: what it became -- or, exiled and returned at once, the permanent that came back
        ("if that creature is a Bird", Splash Portal, batch 79), set below. */

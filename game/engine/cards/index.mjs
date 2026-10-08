@@ -340,7 +340,13 @@ function manaAbility(ability, id) {
   if ((ability.targets ?? []).length || !cost.every((a) => ["{T}", "mana", "payLife"].includes(a?.atom) || (a?.atom === "sacrifice" && (a.self === true || a.selector))
     || (["addCounters", "removeCounters"].includes(a?.atom) && a.self === true && typeof a.counter === "string")
     /* "{T}, Mill a card: Add {C}" (Millikin): its controller's top N cards, milled as the cost is paid (CR 701.17). */
-    || (a?.atom === "mill" && Number.isInteger(a.count ?? 1) && (a.count ?? 1) >= 1))) return "unbuilt";
+    || (a?.atom === "mill" && Number.isInteger(a.count ?? 1) && (a.count ?? 1) >= 1)
+    /* "{T}, Tap an untapped creature you control: Add one mana of any color" (Jaspera Sentinel): one creature the selector
+       describes, beside the source's own {T} (rules/actions.mjs, manaTappers). */
+    || (a?.atom === "tapCreature" && (a.count ?? 1) === 1 && Boolean(a.selector) && typeof a.selector === "object" && cost.some((t) => t?.atom === "{T}"))
+    /* "{T}, Exile a card from your graveyard: Add {R}" (Rubble Rouser): one card of its controller's graveyard the selector
+       describes (rules/actions.mjs, graveyardChoices). */
+    || (a?.atom === "exileFromGraveyard" && a.self !== true && (a.count ?? 1) === 1 && Boolean(a.selector) && typeof a.selector === "object"))) return "unbuilt";
   /* "Put a -0/-1 counter on this creature: Add {G}" (Wall of Roots), "Remove five +1/+1 counters from Ramos: Add ...". */
   const counterCost = cost.filter((a) => ["addCounters", "removeCounters"].includes(a.atom)).map((a) => ({counter: a.counter, count: a.count ?? 1, put: a.atom === "addCounters"}));
   if (then.some((e) => !isBuilt(e?.effect) || NEEDS_A_DECISION.includes(e?.effect))) return "unbuilt";
@@ -371,6 +377,10 @@ function manaAbility(ability, id) {
     ...(cost.some((a) => a.atom === "sacrifice" && a.self === true) ? {sacrificeSelf: true} : {}),
     /* "Mill a card" as part of the cost (Millikin): how many. */
     ...(cost.some((a) => a.atom === "mill") ? {millCost: cost.filter((a) => a.atom === "mill").reduce((n, a) => n + (a.count ?? 1), 0)} : {}),
+    /* "Tap an untapped creature you control" (Jaspera Sentinel): which creature is the player's choice, one offer each. */
+    ...(cost.find((a) => a.atom === "tapCreature") ? {tapCreature: cost.find((a) => a.atom === "tapCreature").selector} : {}),
+    /* "Exile a card from your graveyard" (Rubble Rouser): which card is the player's choice, one offer each. */
+    ...(cost.find((a) => a.atom === "exileFromGraveyard") ? {exileFromGraveyard: cost.find((a) => a.atom === "exileFromGraveyard").selector} : {}),
     /* "Sacrifice a creature: Add {C}{C}" (Ashnod's Altar): which creature is the player's choice, one offer each. */
     ...(cost.find((a) => a.atom === "sacrifice" && a.selector) ? {sacrifice: cost.find((a) => a.atom === "sacrifice" && a.selector).selector} : {}),
     /* "Activate only if you control a Swamp" (CR 602.5b; script/condition.mjs). */
@@ -806,6 +816,11 @@ export function compileScript(script) {
       if (effect.effect === "addPhase" && !(effect.phases ?? ["combat"]).every((kind) => ADDED_PHASES.includes(kind))) problems.push(`addPhase: a phase of ${ADDED_PHASES.join(", ")}`);
       /* "You may play that card" until a time (effects/zones.mjs): this turn, or the end of its controller's next turn. */
       if (effect.effect === "mayPlay" && !MAY_PLAY_UNTIL.includes(effect.until ?? "end-of-turn")) problems.push(`mayPlay: until ${MAY_PLAY_UNTIL.join(" or ")}`);
+      /* "Return ... to the battlefield with a finality counter on it" (Excava, the Risen Past): onto the battlefield only, each
+         kind of counter a whole number, 1 or more (effects/zones.mjs, moveOne's `counters`). */
+      if (effect.effect === "moveZone" && effect.withCounters !== undefined && !(effect.to === "battlefield" && effect.withCounters && typeof effect.withCounters === "object"
+        && Object.keys(effect.withCounters).length && Object.values(effect.withCounters).every((n) => Number.isInteger(n) && n >= 1)))
+        problems.push("moveZone: withCounters is the counters it enters the battlefield with, {kind: 1 or more}");
       /* "Spend this mana only to cast instant and sorcery spells" (effects/resources.mjs), "only to cast a creature spell of
          the chosen type" (a mana ability's, cards/index.mjs manaAbility): what the mana may pay for, read here for both. */
       if (effect.effect === "addMana" && effect.spendOnly !== undefined && !spendOnlyValid(effect.spendOnly))
@@ -815,10 +830,6 @@ export function compileScript(script) {
 
     if (ability.kind === "spell") {
       if (spell) problems.push("a second spell ability: one card, one spell");
-      /* What an alternative cost (CR 118.9) may be made of: mana or none, life, a card exiled from the hand, a sacrifice. */
-      for (const alt of (script.abilities ?? []).filter((a) => a?.kind === "static" && a.rule === "alternative-cost"))
-        for (const atom of alt.cost ?? []) if (!["mana", "payLife", "exileFromHand", "sacrifice"].includes(atom?.atom) || (atom.atom === "sacrifice" && !atom.selector))
-          problems.push(`${alt.text}: an alternative cost of ${atom?.atom ?? "something"} nothing pays yet`);
       for (const atom of ability.additionalCost ?? []) {
         /* "Blight 1 or pay {3}" (Bogslither's Embrace): a choice between two or more additional costs, each a list of the atoms
            below or mana, each choice its own offer (rules/actions.mjs, additionalVariants). */
@@ -836,7 +847,16 @@ export function compileScript(script) {
           }
           continue;
         }
-        if (!["discard", "sacrifice", "blight"].includes(atom?.atom)) problems.push(`${atom?.atom ?? "an additional cost"}: an additional cost nothing pays yet`);
+        if (!["discard", "sacrifice", "blight", "tapCreature"].includes(atom?.atom)) problems.push(`${atom?.atom ?? "an additional cost"}: an additional cost nothing pays yet`);
+        /* "Discard two cards" (Cathartic Reunion): a whole number of cards, 1 or more (rules/actions.mjs, additionalChoices). */
+        if (atom?.atom === "discard" && atom.count !== undefined && !(Number.isInteger(atom.count) && atom.count >= 1)) problems.push("discard: an additional cost of 1 or more cards");
+        /* "Tap any number of untapped creatures you control" (Burn at the Stake): `count: "any"` and the creatures it may tap, a
+           selector -- which ones, asked once the cast is taken (rules/actions.mjs, tapAnyAtom). A fixed number is not built. */
+        if (atom?.atom === "tapCreature") {
+          let fits = atom.count === "any" && Boolean(atom.selector) && typeof atom.selector === "object";
+          try { if (fits) compileSelector({...atom.selector, what: "permanent"}); } catch { fits = false; }
+          if (!fits) problems.push("tapCreature: an additional cost taps any number of creatures (`count: \"any\"`), a selector saying which");
+        }
         /* "As an additional cost to cast this spell, blight 1" (CR 701.68a): a whole number of -1/-1 counters, 1 or more. */
         if (atom?.atom === "blight" && !(Number.isInteger(atom.count ?? 1) && (atom.count ?? 1) >= 1)) problems.push("blight: an additional cost of 1 or more -1/-1 counters");
         /* "You may blight 1" (Cinder Strike): an optional additional cost, read by "if this spell's additional cost was paid"
@@ -993,6 +1013,16 @@ export function compileScript(script) {
        for it), its cost the cards to exile. */
     if (ability.kind === "static" && ability.rule === "escape")
       problems.push(...escapeCostProblems(ability.cost, {given: true}).map((problem) => `${ability.text}: ${problem}`));
+    /* What an alternative cost (CR 118.9) may be made of, on any card: mana or none, life, a card exiled from the hand, a
+       sacrifice -- and, cast from the graveyard (`zone: "graveyard"`: "you may cast this card from your graveyard by paying
+       {3}{R} and exiling four other cards from your graveyard", Squee, Dubious Monarch), other cards of it to exile, a number
+       (rules/actions.mjs, alternativeCosts). */
+    if (ability.kind === "static" && ability.rule === "alternative-cost") {
+      for (const atom of ability.cost ?? []) if (!["mana", "payLife", "exileFromHand", "sacrifice"].includes(atom?.atom) || (atom.atom === "sacrifice" && !atom.selector))
+        if (!(ability.zone === "graveyard" && atom?.atom === "exileFromGraveyard" && atom.self !== true && Number.isInteger(atom.count) && atom.count >= 1))
+          problems.push(`${ability.text}: an alternative cost of ${atom?.atom ?? "something"} nothing pays yet`);
+      if (ability.zone !== undefined && ability.zone !== "graveyard") problems.push(`${ability.text}: an alternative cost is cast from where it is, or from the graveyard (\`zone: "graveyard"\`)`);
+    }
     /* What follows a prevention is done at once, inside the damage event (CR 615.5): nothing in it may stop to ask. */
     if (ability.kind === "replacement") for (const effect of ability.change?.then ?? [])
       if (!EFFECTS[effect?.effect]) problems.push(`${ability.text}: ${effect?.effect} follows a prevention, and it asks a question or is not built`);

@@ -710,7 +710,8 @@ function targeting(state, stackId) {
   const source = entry.cardId !== null && state.objects[entry.cardId] ? entry.cardId : null;
   /* What it is about, for a target described by it: "target creature that player controls" (Mistblade Shinobi). */
   /* With what it has been aimed at so far: "a second target creature you control" (script/bind.mjs, distinctFrom). */
-  return {entry, context: {controller: entry.playerId, source, ...(entry.about ? {about: entry.about} : {}), chosenTargets: entry.targets ?? []}};
+  /* And its X, for a target "with mana value X" (Halo Forager's reflexive trigger). */
+  return {entry, context: {controller: entry.playerId, source, ...(entry.about ? {about: entry.about} : {}), ...(Number.isInteger(entry.x) ? {x: entry.x} : {}), chosenTargets: entry.targets ?? []}};
 }
 
 /**

@@ -138,6 +138,11 @@ function checkEffect(effect, path, errors) {
     if (effect.sacrifice !== undefined || effect.discard !== undefined)
       errors.push({path: `${path}.returnToHand`, message: "An \"unless\" cost returns a permanent, sacrifices one or discards a card: one of them"});
   }
+  /* "You may pay {X}. When you do, ..." (Halo Forager): X chosen as it is paid, so no amount beside it, and only a "you may". */
+  if (name === "unlessPays" && effect.amountX !== undefined && !(effect.amountX === true && effect.ifPaid === true && effect.amount === undefined && effect.mana === undefined))
+    errors.push({path: `${path}.amountX`, message: "\"You may pay {X}\" is `amountX: true` with `ifPaid: true`, and no amount or mana beside it"});
+  if (name === "play" && effect.exileInstead !== undefined && effect.exileInstead !== true)
+    errors.push({path: `${path}.exileInstead`, message: "\"If that spell would be put into a graveyard, exile it instead\" is `exileInstead: true`"});
   if (name === "unlessPays" && effect.whenPaid !== undefined && !(Array.isArray(effect.whenPaid) && effect.whenPaid.length))
     errors.push({path: `${path}.whenPaid`, message: "What follows paying is a list of effects"});
   /* Where a countered spell goes instead of its owner's graveyard: exile (Force of Negation) or the top of its owner's

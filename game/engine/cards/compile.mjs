@@ -235,7 +235,8 @@ export function smokeScenario(script) {
      each choice of a choice of costs too ("sacrifice a creature or planeswalker or pay {3}", Silence the Echo: `oneOf`). */
   const extra = ((script.abilities ?? []).find((a) => a?.kind === "spell")?.additionalCost ?? [])
     .flatMap((a) => (a?.atom === "oneOf" && Array.isArray(a.options) ? a.options.flat() : [a]));
-  const fodderHand = extra.some((a) => a?.atom === "discard") ? ["Smoke Charm"] : [];
+  /* As many cards as its discard takes ("discard two cards", Cathartic Reunion). */
+  const fodderHand = Array.from({length: Math.max(0, ...extra.filter((a) => a?.atom === "discard").map((a) => a.count ?? 1))}, () => "Smoke Charm");
   /* A card aimed at its caster's own things ("target creature you control") gets something of the caster's to aim at. */
   const ownTargets = (script.abilities ?? []).some((a) => aims(a).some((t) => JSON.stringify(t).includes('"controller":"you"'))
     /* An Aura's target is its Enchant's: "Enchant creature you control" (Super State). */

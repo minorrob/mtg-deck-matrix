@@ -75,6 +75,9 @@ function unlessHolds(state, unless, player) {
   return count >= (unless.min ?? (unless.max !== undefined ? 0 : 1)) && (unless.max === undefined || count <= unless.max);
 }
 
+/* The replacement effect finality counters make (CR 122.1h): the counted permanent's own, never an ability it could lose. */
+const FINALITY = Object.freeze({id: "finality-counter", kind: "replacement", watches: {event: "zone-change", from: "battlefield", to: "graveyard"}, change: {to: "exile"}});
+
 /** Where an effect has to be for it to act on the battlefield (CR 113.6). */
 const ACTING_ZONES = ["battlefield"];
 
@@ -202,6 +205,11 @@ function applicable(state, proposal) {
   }
   /* The copied card's own, alone (ownEntering): the others' applied as it entered. */
   if (proposal.ownOnly) return found;
+  /* A FINALITY COUNTER (CR 122.1h): one or more on a permanent make one replacement effect, "if this permanent would be put
+     into a graveyard from the battlefield, exile it instead" (Excava, the Risen Past) -- its own, ordered with the others
+     that apply as any is (CR 616.1). */
+  const moving = proposal.event === "zone-change" ? state.objects[proposal.objectId] : null;
+  if ((moving?.counters?.finality ?? 0) > 0 && applies(state, FINALITY, moving, proposal)) found.push({holderId: proposal.objectId, ability: FINALITY});
   for (const zone of ACTING_ZONES) {
     for (const id of state.zones[zone]) {
       const holder = state.objects[id];

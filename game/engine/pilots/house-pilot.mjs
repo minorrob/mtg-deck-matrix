@@ -212,6 +212,21 @@ export function housePilot({seat, cards = () => null} = {}) {
         const order = options.map((o, i) => i).sort((a, b) => rank(options[b]) - rank(options[a]) || a - b);
         return {indices: firstOf(choice, order, min)};
       }
+      /* A choice held to a budget ("any number of creatures with total power 4 or less", Slaughter the Strong): the strongest
+         first while they fit, so the most power is kept. */
+      if (choice.budget) {
+        const by = choice.budget.by, order = options.map((o) => o.index).sort((a, b) => (options[b][by] ?? 0) - (options[a][by] ?? 0) || a - b);
+        const kept = [];
+        let total = 0;
+        for (const index of order) if (kept.length < max && total + (options[index][by] ?? 0) <= choice.budget.most) { kept.push(index); total += options[index][by] ?? 0; }
+        return {indices: kept};
+      }
+      /* Which permanent of a type a player keeps, chosen by this seat for each player (Tragic Arrogance): its own costliest,
+         another player's cheapest. */
+      if (id.startsWith("sacrifice-keep-type:") && options.length) {
+        const own = options[0].keeper === seat, value = (o) => manaValue(o.label);
+        return {indices: [options.reduce((best, o) => ((own ? value(o) > value(best) : value(o) < value(best)) ? o : best)).index]};
+      }
       if (id.startsWith("sacrifice:")) {
         const rank = (o) => (o.token ? -1 : manaValue(o.label));
         const order = options.map((o, i) => i).sort((a, b) => rank(options[a]) - rank(options[b]) || a - b);
@@ -288,6 +303,9 @@ export function housePilot({seat, cards = () => null} = {}) {
         const order = options.map((o, i) => i).sort((a, b) => (mine.get(options[a].cardId)?.power ?? 0) - (mine.get(options[b].cardId)?.power ?? 0) || a - b);
         return {indices: firstOf(choice, order, min)};
       }
+      /* Creatures tapped as an additional cost, any number of them ("three times the number of creatures tapped this way",
+         Burn at the Stake): every one it is offered, for the most the spell can do. */
+      if (id.startsWith("choose-cost:") && choice.cost === "tapAny") return {indices: options.map((o) => o.index).slice(0, max)};
       /* What a cast taps for itself (rules/actions.mjs, castTapPlans): the first way, the least flexible sources tapped,
          keeping the most colors for later. */
       if (id.startsWith("choose-cost:") && choice.cost === "mana") return {indices: [0]};
@@ -296,6 +314,13 @@ export function housePilot({seat, cards = () => null} = {}) {
       if (id.startsWith("choose-cost:") && choice.cost === "pool") {
         const lifeless = options.find((o) => /\|0$/.test(o.key ?? ""));
         return {indices: [(lifeless ?? options[0]).index]};
+      }
+      /* "You may pay {X}" (Halo Forager): the most it can pay that is the mana value of an instant or sorcery card in a
+         graveyard -- what that X is for -- or nothing. */
+      if (id.startsWith("unless:") && options.some((o) => o.x !== undefined)) {
+        const values = new Set(view.players.flatMap((p) => zone(p, "Graveyard")).filter((c) => (known(c.name)?.types ?? []).some((t) => t === "Instant" || t === "Sorcery")).map((c) => manaValue(c.name)));
+        const best = options.filter((o) => o.x !== undefined && values.has(o.x)).reduce((top, o) => (!top || o.x > top.x ? o : top), null);
+        return {indices: [(best ?? options.find((o) => o.pay === false)).index]};
       }
       /* Escape's other cards (CR 702.138a): the lands first, then the cheapest -- what it is least likely to want back. */
       if (id.startsWith("choose-cost:")) {
