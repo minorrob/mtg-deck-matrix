@@ -1,0 +1,46 @@
+EDITS = [
+('game/engine/rules/layers.mjs', [
+('''function gatherEffects(state) {
+  const found = [];''',
+'''/* "AS LONG AS THE TOP CARD OF YOUR LIBRARY IS A GOBLIN CARD, THIS CREATURE HAS ALL ACTIVATED ABILITIES OF THAT CARD"
+   (Conspicuous Snoop; CR 613.1f, layer 6): `apply.topCardAbilities`, what that card must be (its subtypes, a changeling's
+   every creature type among them, CR 702.73a) -- read from the holder's controller's library as it now is, so the
+   abilities change as the top card does. Its activated abilities, mana abilities among them (CR 605.1a), given as granted
+   abilities are; none, and the static gives nothing. */
+function topCardGrant(state, holder, ability) {
+  const top = state.zones.library?.[holder.controller]?.[0];
+  const card = top === undefined ? null : state.objects[top];
+  const wanted = ability.apply.topCardAbilities?.subtypes ?? [];
+  if (!card || !wanted.every((t) => hasSubtype(card.subtypes ?? [], everyCreatureType(card.keywords), t))) return null;
+  const {topCardAbilities: _top, ...rest} = ability.apply;
+  return {...ability, apply: {...rest, addAbilities: (card.abilities ?? []).filter((a) => a.kind === "activated" || a.kind === "mana")}};
+}
+
+function gatherEffects(state) {
+  const found = [];'''),
+('''      if (!holdsNow(state, ability.condition, {controller: holder.controller, source: id})) continue;
+      found.push({
+        /* "Creatures you control of the chosen type get +1/+1", "this creature is the chosen type": its own choice. */
+        ...chosenFor(ability, holder),''',
+'''      if (!holdsNow(state, ability.condition, {controller: holder.controller, source: id})) continue;
+      const given = ability.apply?.topCardAbilities !== undefined ? topCardGrant(state, holder, ability) : ability;
+      if (given === null) continue;
+      found.push({
+        /* "Creatures you control of the chosen type get +1/+1", "this creature is the chosen type": its own choice. */
+        ...chosenFor(given, holder),'''),
+('''  const changes = (apply) => Boolean(apply && (apply.addAbilities || apply.removeAllAbilities));''',
+'''  const changes = (apply) => Boolean(apply && (apply.addAbilities || apply.removeAllAbilities || apply.topCardAbilities));'''),
+]),
+('game/engine/cards/index.mjs', [
+('''    if (ability.kind === "static" && ability.apply?.addAbilities !== undefined) {''',
+'''    /* "This creature has all activated abilities of that card" (Conspicuous Snoop): the top card's, in layer 6 (CR 613.1f),
+       what that card must be a list of subtypes (rules/layers.mjs, topCardGrant). */
+    if (ability.kind === "static" && ability.apply?.topCardAbilities !== undefined) {
+      if (ability.layer !== 6) problems.push(`${ability.text}: abilities are given in layer 6 (CR 613.1f)`);
+      const wanted = ability.apply.topCardAbilities;
+      if (!wanted || typeof wanted !== "object" || Object.keys(wanted).some((k) => k !== "subtypes") || !Array.isArray(wanted.subtypes))
+        problems.push(`${ability.text}: what the top card must be is {subtypes: [...]}`);
+    }
+    if (ability.kind === "static" && ability.apply?.addAbilities !== undefined) {'''),
+]),
+]

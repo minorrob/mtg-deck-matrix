@@ -122,6 +122,13 @@ function checkEffect(effect, path, errors) {
     if (!parsed || !parsed.symbols.length || parsed.variable > 0) errors.push({path: `${path}.mana`, message: "An \"unless\" mana cost is mana symbols, without X: \"{3}{W}{W}\""});
     if (effect.amount !== undefined) errors.push({path: `${path}.mana`, message: "An \"unless\" cost is `mana` or a generic `amount`, not both"});
   }
+  /* "Unless you return another creature you control to its owner's hand" (Faerie Impostor): a selector of the payer's
+     permanents, the cost's only part beside mana or life. */
+  if (name === "unlessPays" && effect.returnToHand !== undefined) {
+    checkSelector(effect.returnToHand, `${path}.returnToHand`, errors);
+    if (effect.sacrifice !== undefined || effect.discard !== undefined)
+      errors.push({path: `${path}.returnToHand`, message: "An \"unless\" cost returns a permanent, sacrifices one or discards a card: one of them"});
+  }
   if (name === "unlessPays" && effect.whenPaid !== undefined && !(Array.isArray(effect.whenPaid) && effect.whenPaid.length))
     errors.push({path: `${path}.whenPaid`, message: "What follows paying is a list of effects"});
   /* Where a countered spell goes instead of its owner's graveyard: exile (Force of Negation) or the top of its owner's
@@ -134,6 +141,18 @@ function checkEffect(effect, path, errors) {
       errors.push({path: `${path}.subtype`, message: "Amass names the creature type its Army is: `subtype`, \"Goblin\" for \"amass Goblins\""});
     if (effect.remember !== undefined && effect.remember !== true) errors.push({path: `${path}.remember`, message: "Amass remembers the amassed Army with `remember: true`"});
   }
+  /* Damage dealt by each of a set (damageEach): what each deals, an amount counted for it ("that card" the one dealing it),
+     and to whom -- itself, or the effect's targets and players. */
+  if (name === "damageEach") {
+    if (effect.dealt === undefined) errors.push({path: `${path}.dealt`, message: "damageEach says what each deals: `dealt`, an amount"});
+    else for (const message of amountProblems(effect.dealt)) errors.push({path: `${path}.dealt`, message});
+    if (effect.to !== undefined && effect.to !== "itself") errors.push({path: `${path}.to`, message: "damageEach deals to `to: \"itself\"`, or to its targets and players"});
+    if (effect.to === undefined && effect.targets === undefined && effect.who === undefined) errors.push({path, message: "damageEach deals its damage to itself, or to targets or players"});
+    if (effect.selector !== undefined) checkSelector(effect.selector, `${path}.selector`, errors, {choice: true});
+  }
+  /* A designation (alterAttribute, script/effects/attributes.mjs): monstrous or prepared. */
+  if (name === "alterAttribute" && !["monstrous", "prepared"].includes(effect.attribute))
+    errors.push({path: `${path}.attribute`, message: "alterAttribute gives or takes a designation: \"monstrous\" or \"prepared\""});
   /* A branch's test: a condition, and there must be one. */
   if (name === "branch") {
     if (effect.if === undefined) errors.push({path: `${path}.if`, message: "A branch says what decides it: `if`, a condition"});
@@ -181,9 +200,16 @@ function checkAbility(ability, path, errors) {
   /* A target is a selector, or `{anyOf: [...]}` for "any target" (script/bind.mjs) -- either with a `count`, `{min, max}`, for
      "up to N", "any number of", "one or two" (CR 115.1, 601.2c). */
   for (const [index, spec] of (ability.targets ?? []).entries()) {
-    const {count, ...selector} = spec && typeof spec === "object" ? spec : {};
+    const {count, distinctFrom, onlyIf, differentControllers, ...selector} = spec && typeof spec === "object" ? spec : {};
     if (count !== undefined && !countValid(count))
       errors.push({path: `${path}.targets[${index}].count`, message: "A target's count is `{min, max}`: whole numbers, max at least 1 and at least min, or no max for \"any number\""});
+    /* "A second target", "up to one other target" (script/bind.mjs, SPEC_KEYS): an earlier target of the same ability. */
+    if (distinctFrom !== undefined && !(Array.isArray(distinctFrom) && distinctFrom.length && distinctFrom.every((n) => Number.isInteger(n) && n >= 0 && n < index)))
+      errors.push({path: `${path}.targets[${index}].distinctFrom`, message: "distinctFrom names earlier targets of the same ability, by number: [0]"});
+    /* A target had only if, as it is cast (CR 601.2c): a condition, held to the condition grammar. */
+    for (const message of conditionProblems(onlyIf)) errors.push({path: `${path}.targets[${index}].onlyIf`, message});
+    if (differentControllers !== undefined && !(differentControllers === true && count !== undefined))
+      errors.push({path: `${path}.targets[${index}].differentControllers`, message: "\"Controlled by different players\" is differentControllers: true, on a counted target"});
     if (spec && typeof spec === "object" && "anyOf" in spec) {
       if (!Array.isArray(selector.anyOf) || selector.anyOf.length === 0 || Object.keys(selector).length !== 1)
         errors.push({path: `${path}.targets[${index}]`, message: "A choice of targets is `{anyOf: [selector, ...]}` and nothing else, or that with a count"});
@@ -384,6 +410,20 @@ export function validateScript(script) {
       adventure.abilities.forEach((ability, index) => checkAbility(ability, `adventure.abilities[${index}]`, errors));
     }
     if (script.back !== undefined) errors.push({path: "adventure", message: "A card is an adventurer card or a double-faced card, not both"});
+  }
+
+  /* A PREPARATION CARD'S PREPARE SPELL (CR 722.2): its own identity, oracle text and abilities, the card's oracle id. One
+     layout per card. */
+  if (script.prepare !== undefined) {
+    const prepare = script.prepare;
+    if (!prepare || typeof prepare !== "object" || !Array.isArray(prepare.abilities)) errors.push({path: "prepare", message: "A prepare spell is an identity and a list of abilities"});
+    else {
+      const before = errors.length;
+      checkIdentity({...prepare.identity, oracleId: prepare.identity?.oracleId ?? script.identity?.oracleId}, errors);
+      for (const e of errors.slice(before)) e.path = `prepare.${e.path}`;
+      prepare.abilities.forEach((ability, index) => checkAbility(ability, `prepare.abilities[${index}]`, errors));
+    }
+    if (script.back !== undefined || script.adventure !== undefined) errors.push({path: "prepare", message: "A card is a preparation card, an adventurer card or a double-faced card: one of them"});
   }
 
   return {valid: errors.length === 0, errors};

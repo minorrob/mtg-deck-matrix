@@ -44,7 +44,7 @@
  * implemented is worse than a missing one.
  */
 
-import {moveObject, PER_PLAYER, PUBLIC_ZONES, eventCard} from "../state/index.mjs";
+import {moveObject, PER_PLAYER, PUBLIC_ZONES, eventCard, rememberExileLooker} from "../state/index.mjs";
 import {applyReplacements, regenerated} from "./replacement.mjs";
 import {lastKnown, toughnessOf, typesOf, keywordsOf, controllerOf, deriving} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
@@ -52,6 +52,7 @@ import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./c
 import {sacrificeOne, moveOne, returnExiledUntil, leavingRef} from "../script/effects/zones.mjs";
 import {changeLife} from "../script/effects/resources.mjs";
 import {enduringStories} from "../keywords/designations.mjs";
+import {preparedCopyStays} from "../script/effects/attributes.mjs";
 import {protectedFrom} from "./protection.mjs";
 
 /* The capitalized zone names the projection and the telemetry use. */
@@ -127,6 +128,11 @@ function removePlayerFromBoard(state, playerId, events) {
  * @returns {Array} events for the caller to journal
  */
 export function checkStateBasedActions(state) {
+  /* Continuous control changes also confer hideaway's look permission (CR 406.3, 702.75a). Record it before a state-based
+     action can remove the source or an effect granting control; projections only read these permissions. */
+  for (const source of new Set(state.zones.exile.filter((id) => state.objects[id]?.faceDown === true)
+    .map((id) => state.objects[id].exiledBy).filter((id) => state.objects[id]?.zone === "battlefield")))
+    rememberExileLooker(state, source, controllerOf(state, source));
   /* Storied (CR 702.195a): "any time" its controller has three artifacts, Sagas or legendaries -- read as the game is
      checked, before the actions, which never add a permanent (keywords/designations.mjs). */
   const events = enduringStories(state);
@@ -147,7 +153,9 @@ export function checkStateBasedActions(state) {
       for (const list of lists) {
         for (const id of [...list]) {
           /* CR 704.5e: and a copy of a spell anywhere but the stack -- returned to a hand, put into a graveyard. */
-          const copyAway = state.objects[id]?.copy === true && zone !== "stack";
+          /* Except a prepared permanent's prepare spell in exile, there for as long as that permanent is on the battlefield
+             and prepared (CR 722.3c; script/effects/attributes.mjs). */
+          const copyAway = state.objects[id]?.copy === true && zone !== "stack" && !(zone === "exile" && preparedCopyStays(state, id));
           if (state.objects[id]?.token !== true && !copyAway) continue;
           list.splice(list.indexOf(id), 1);
           delete state.objects[id];
@@ -190,7 +198,7 @@ export function checkStateBasedActions(state) {
         to: {zoneType: ZONE_LABEL[proposal.to] ?? proposal.to, player: {playerId: object.owner}},
       }));
       /* What it exiled "until this Aura leaves the battlefield", back (CR 610.3; Ossification). */
-      returnExiledUntil(state, id, events);
+      returnExiledUntil(state, id, events, leftBehind);
       acted = true;
     }
 
@@ -275,7 +283,7 @@ export function checkStateBasedActions(state) {
           to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: object.owner}},
         }));
         /* What it exiled "until this leaves the battlefield", back (CR 610.3). */
-        returnExiledUntil(state, id, events);
+        returnExiledUntil(state, id, events, leftBehind);
         acted = true;
       }
     }
@@ -295,7 +303,7 @@ export function checkStateBasedActions(state) {
         from: {zoneType: "Battlefield", player: {playerId: object.controller}},
         to: {zoneType: ZONE_LABEL[proposal.to] ?? proposal.to, player: {playerId: object.owner}},
       }));
-      returnExiledUntil(state, id, events);
+      returnExiledUntil(state, id, events, leftBehind);
       acted = true;
     }
 

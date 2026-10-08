@@ -1,0 +1,95 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Topiary Stomper",
+    "oracleId": "e3fc10d2-2733-4265-8275-112c285fd11a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Plant",
+      "Dinosaur"
+    ],
+    "manaCost": "{1}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Vigilance (Attacking doesn't cause this creature to tap.)\nWhen this creature enters, search your library for a basic land card, put it onto the battlefield tapped, then shuffle.\nThis creature can't attack or block unless you control seven or more lands.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance (Attacking doesn't cause this creature to tap.)",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, search your library for a basic land card, put it onto the battlefield tapped, then shuffle.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "to": "battlefield",
+          "tapped": true,
+          "shuffle": true
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "This creature can't attack or block unless you control seven or more lands.",
+      "rule": "cant-attack",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "unless": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        },
+        "atLeast": 7
+      }
+    },
+    {
+      "kind": "static",
+      "text": "This creature can't attack or block unless you control seven or more lands.",
+      "rule": "cant-block",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        },
+        "atMost": 6
+      }
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Reckless Impulse",
+    "oracleId": "584cf0fd-112a-4ca6-9c0e-1f3228a7d325",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Exile the top two cards of your library. Until the end of your next turn, you may play those cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Exile the top two cards of your library. Until the end of your next turn, you may play those cards.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "fromTop": 2,
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "mayPlay",
+          "targets": "remembered",
+          "until": "your-next-end"
+        }
+      ]
+    }
+  ]
+}

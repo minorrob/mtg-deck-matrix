@@ -1,0 +1,24 @@
+import sys
+root = sys.argv[1]
+p = root + '/tests/engine-cards.mjs'
+s = open(p).read()
+old = '    const adventurer = card.layout === "adventure";'
+new = '    /* A preparation card (CR 722.2) the same way: its own half first, its prepare spell second. */\n    const adventurer = card.layout === "adventure" || card.layout === "prepare";\n    const second = card.layout === "prepare" ? script.prepare : script.adventure;'
+assert old in s; s = s.replace(old, new, 1)
+old = """    if (adventurer !== (script.adventure !== undefined)) drift.push(`${path}: ${adventurer ? "an adventurer card without its Adventure" : "an Adventure on a card that has none"}`);
+    if (adventurer && script.adventure) {"""
+new = """    if (adventurer !== (second !== undefined)) drift.push(`${path}: ${adventurer ? "an adventurer card without its Adventure" : "an Adventure on a card that has none"}`);
+    if (adventurer && second) {"""
+assert old in s; s = s.replace(old, new, 1)
+a = s.index('    if (adventurer && second) {')
+b = s.index('    if (!path.startsWith(', a)
+block = s[a:b].replace('script.adventure.', 'second.')
+s = s[:a] + block + s[b:]
+open(p, 'w').write(s)
+p = root + '/game/engine/cards/compile.mjs'
+s = open(p).read()
+old = '  const twoFaced = ["modal_dfc", "adventure", "transform"].includes(card.layout)'
+new = '  /* And a preparation card\'s (CR 722.4: its own characteristics in every zone). */\n  const twoFaced = ["modal_dfc", "adventure", "transform", "prepare"].includes(card.layout)'
+assert old in s; s = s.replace(old, new, 1)
+open(p, 'w').write(s)
+print('ok')

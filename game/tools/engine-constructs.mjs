@@ -98,6 +98,15 @@ export const FORGE_STATIC = {Continuous: "layers", CombatDamageToughness: "rules
   /* "Inklings can't attack you", "can't attack its owner", "a player it has already attacked this turn", "unless you control
      seven or more lands" (X5g): the static `cant-attack`, rules/combat.mjs, before any requirement (CR 508.1c-d). */
   CantAttack: "rules/combat",
+  /* Train B B4, CR 702.3b: defender lifted for selected creatures, either toward anyone or toward players who attacked
+     their controller during their last turn; the latter never includes a planeswalker (rules/statics.mjs). */
+  CanAttackDefender: "rules/statics",
+  /* Train B B4, CR 702.10c: activate as though a creature had haste, for ordinary and mana abilities and payment sources;
+     the permission leaves the restriction on attacking intact (keywords/timing.mjs, sickForAbilities). */
+  ActivateAbilityAsIfHaste: "keywords/timing",
+  /* Train B B4, CR 508.1d: attacks each combat if able, respecting restrictions, optional attack costs and planeswalker
+     caps; required attackers are in the choice record and both pilots meet the requirement. */
+  MustAttack: "rules/combat",
   /* "This token can't block" (White Sun's Twilight's Mites), "this creature can't block" (Bloodghast, Gravecrawler), on a
      selector of creatures (priority batch 1): the static `cant-block`, rules/combat.mjs canBlock (CR 509.1b). */
   CantBlock: "rules/combat"};
@@ -130,7 +139,22 @@ export const BEHAVIORAL_KEYWORDS = new Set([...Object.values(KEYWORD_FAMILIES), 
    "Partner with", which is also a trigger as the card enters (702.124j). */
 export const DECK_RULE_KEYWORDS = {Partner: "room/table.mjs", "Choose a Background": "room/table.mjs"};
 
+/* Keywords that are a way of casting or entering, held by the rules module named (Train B, X11):
+   AlternateAdditionalCost -- "as an additional cost to cast this spell, sacrifice an artifact or discard a card" (Demand
+     Answers), "sacrifice an artifact or creature or pay {4}" (Stir Up Trouble): one additional cost of a choice of them
+     (CR 601.2b, 601.2h), each choice its own offer -- a sacrifice, a discard, a blight or mana (rules/actions.mjs,
+     additionalVariants, `{atom: "oneOf"}`). Built before it was credited (Bogslither's Embrace, Silence the Echo); no new
+     code. Named, not built: an exile or a life payment as one of the choices.
+   ETBReplacement -- "[this permanent] enters ..." and "as [this permanent] enters ..." (CR 614.1c, 614.12): tapped, with
+     counters, as a copy, with a choice made, unless a cost is paid or a card revealed, and -- new here -- prepared
+     (Goblin Glasswright, CR 722.3a; rules/replacement.mjs, script/effects/attributes.mjs). Named, not built: one that
+     enters attached to something chosen as it enters, other than an Aura's own Enchant. */
+export const CAST_RULE_KEYWORDS = {AlternateAdditionalCost: "rules/actions.mjs", ETBReplacement: "rules/replacement.mjs"};
+
 export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: "chooseCard", Enchant: "attach",
+  /* Hideaway (Train B, CR 702.75a): dig links a face-down exile, shuffles the rest to the bottom,
+     and preserves each entitled controller's permission to look (CR 406.3). */
+  Hideaway: "dig",
   /* Ninjutsu (batch 54): an ability of the card in hand, returning an unblocked attacker, the Ninja put onto the battlefield
      tapped and attacking (cards/index.mjs). */
   Ninjutsu: "moveZone",
@@ -168,7 +192,11 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   Class: "setState",
   /* Paradigm (CR 702.192a; Germination Practicum): the spell exiled as it resolves, and the first time one of its name
      resolves for a player, a copy cast free at each of their precombat main phases (rules/stack.mjs, play's copyOf). */
-  Paradigm: "play"};
+  Paradigm: "play",
+  /* Monstrosity (CR 701.37a; Protector of the Wastes, Train B): "{cost}: Monstrosity N" -- if it isn't monstrous, N +1/+1
+     counters and it becomes monstrous (alterAttribute's `counters`, script/effects/attributes.mjs), "when this becomes
+     monstrous" its trigger (cards/index.mjs). */
+  Monstrosity: "alterAttribute"};
 
 /* "PROTECTION FROM [QUALITY]" printed as a keyword (CR 702.16a; Karmic Guide's "protection from black"): built for the
    qualities rules/protection.mjs reads -- a color, a card type, everything -- compiled from the keyword (cards/index.mjs).
@@ -178,7 +206,7 @@ const PROTECTION_QUALITIES = /^protection from (white|blue|black|red|green|every
 /** Whether a keyword is built: one a rules module acts on, an ability keyword whose primitive is built, or a deck rule the
     table holds. The one rule `missingFor` and the catalog (engine-catalog.mjs) both read. */
 export const keywordBuilt = (word) => [...BEHAVIORAL_KEYWORDS].some((k) => k.toLowerCase() === word.toLowerCase())
-  || Boolean(ABILITY_KEYWORDS[word] && isBuilt(ABILITY_KEYWORDS[word])) || Boolean(DECK_RULE_KEYWORDS[word]) || PROTECTION_QUALITIES.test(word);
+  || Boolean(ABILITY_KEYWORDS[word] && isBuilt(ABILITY_KEYWORDS[word])) || Boolean(DECK_RULE_KEYWORDS[word]) || Boolean(CAST_RULE_KEYWORDS[word]) || PROTECTION_QUALITIES.test(word);
 
 
 /* What a card needs that the engine has not got. Empty means the engine can play it. */
@@ -259,6 +287,13 @@ export const FORGE_COUNTS = Object.freeze({
   Compare: {name: "A comparison (\"if you control ...\")", status: "built", engine: "{if: condition, then, else}; a modal's chooseMore, as it is cast"},
   YourLifeTotal: {name: "Your life total", status: "missing"},
   LifeYouGainedThisTurn: {name: "Life you gained this turn", status: "built", engine: "amount {lifeGainedThisTurn} (effects/resources.mjs and rules/combat.mjs keep it)"},
+  /* Train B (X11; Betor, Ancestor's Voice): "the amount of life you lost this turn" -- the amount Wound Reflection's "that
+     player" was built with, for "you"; and a mana value at most it (script/filter.mjs). */
+  LifeYouLostThisTurn: {name: "Life you lost this turn", status: "built", engine: "amount {lifeLostThisTurn: \"you\"} (effects/resources.mjs keeps it, rules/turn.mjs clears it); a selector's manaValue.max may be it"},
+  /* Train B (X11; Return to Dust): "if you cast this spell during your main phase" -- the cast's own record (rules/actions.mjs,
+     Addendum's condition) -- for a target the spell has only then (CR 601.2c; script/bind.mjs, `onlyIf`). */
+  IfCastInOwnMainPhase: {name: "If it was cast during its caster's main phase (\"if you cast this spell during your main phase\")", status: "built",
+    engine: "condition {cast: {mainPhase: true}}; a target spec's onlyIf (script/bind.mjs)"},
   LifeOppsLostThisTurn: {name: "Life your opponents lost this turn", status: "missing"},
   ThisTurnEntered: {name: "What entered or died this turn", status: "missing"},
   ThisTurnCast: {name: "Spells cast this turn", status: "missing"},

@@ -22,6 +22,8 @@
 /**
  * @param {object} rng  from `createRng`; the game's own stream, so the choice is reproducible
  */
+import {meetRequirements} from "./house-pilot.mjs";
+
 export function randomLegalPilot(rng) {
   if (!rng || typeof rng.int !== "function") throw new Error("A pilot needs the game's rng");
   return {
@@ -89,11 +91,17 @@ export function randomLegalPilot(rng) {
        * once. Without this the pilot produces an illegal answer and the game stops — which is how
        * the phase 1 gate found this on its first run, and which no single-rule suite would have. */
       const pool = options.map((_, index) => index);
-      const indices = [];
-      const used = new Set();
+      /* What the record requires first ("attacks each combat if able", CR 508.1d): those, then any others at random. */
+      const indices = meetRequirements(choice, []);
+      const used = new Set(choice.exclusiveBy ? indices.map((i) => options[i]?.[choice.exclusiveBy]) : []);
       /* And `capped` (no more than one creature attacking The Eternal Wanderer, CR 508.1c): no more of a value than it allows. */
       const taken = new Map();
-      for (let i = 0; i < take && pool.length > 0; i += 1) {
+      for (const index of indices) {
+        const cap = choice.capped ? options[index]?.[choice.capped.by] : undefined;
+        if (cap !== undefined) taken.set(cap, (taken.get(cap) ?? 0) + 1);
+      }
+      for (const index of indices) pool.splice(pool.indexOf(index), 1);
+      for (let i = indices.length; i < take && pool.length > 0; i += 1) {
         const [index] = pool.splice(rng.int(pool.length), 1);
         const key = choice.exclusiveBy ? options[index]?.[choice.exclusiveBy] : undefined;
         if (key !== undefined && used.has(key)) continue;

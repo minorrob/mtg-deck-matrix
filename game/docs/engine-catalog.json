@@ -9,16 +9,16 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1159,
+  "defined": 1195,
   "provisional": 28,
-  "everyRule": 2492
+  "everyRule": 2525
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 41,
+    "built": 42,
     "partial": 0,
-    "named": 17,
+    "named": 16,
     "missing": 136
    },
    "entries": [
@@ -602,13 +602,13 @@
      "kind": "keyword ability",
      "rule": "702.75",
      "name": "Hideaway",
-     "engine": null,
-     "status": "named",
+     "engine": "Hideaway",
+     "status": "built",
      "forge": "Hideaway",
      "top": 4,
      "all": 15,
-     "blocks": 4,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -1232,7 +1232,7 @@
      "top": 1,
      "all": 16,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -2354,9 +2354,9 @@
   },
   "Keyword actions (CR 701)": {
    "tally": {
-    "built": 20,
+    "built": 22,
     "partial": 3,
-    "named": 3,
+    "named": 1,
     "missing": 44
    },
    "entries": [
@@ -2667,24 +2667,24 @@
      "rule": "701.50",
      "name": "Connive",
      "engine": "connive",
-     "status": "named",
+     "status": "built",
      "forge": "Connive",
      "top": 3,
      "all": 51,
-     "blocks": 3,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword action",
      "rule": "701.12",
      "name": "Exchange",
      "engine": "exchangeLife",
-     "status": "named",
+     "status": "built",
      "forge": "ExchangeLifeVariant, ExchangeControl",
      "top": 3,
      "all": 38,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword action",
@@ -3206,9 +3206,9 @@
   },
   "Effects": {
    "tally": {
-    "built": 64,
+    "built": 68,
     "partial": 1,
-    "named": 8,
+    "named": 4,
     "missing": 119
    },
    "entries": [
@@ -3834,7 +3834,7 @@
      "top": 14,
      "all": 132,
      "blocks": 14,
-     "alone": 2
+     "alone": 10
     },
     {
      "kind": "effect",
@@ -3978,7 +3978,7 @@
      "top": 10,
      "all": 43,
      "blocks": 8,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "effect",
@@ -4026,7 +4026,7 @@
      "top": 8,
      "all": 120,
      "blocks": 8,
-     "alone": 3
+     "alone": 6
     },
     {
      "kind": "effect",
@@ -4098,7 +4098,7 @@
      "top": 6,
      "all": 45,
      "blocks": 6,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "effect",
@@ -4117,12 +4117,12 @@
      "rule": null,
      "name": "AlterAttribute",
      "engine": "alterAttribute",
-     "status": "named",
+     "status": "built",
      "forge": "AlterAttribute",
      "top": 5,
      "all": 115,
-     "blocks": 5,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4134,7 +4134,7 @@
      "top": 5,
      "all": 57,
      "blocks": 5,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -4182,7 +4182,7 @@
      "top": 4,
      "all": 22,
      "blocks": 4,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -4213,12 +4213,12 @@
      "rule": null,
      "name": "Connive",
      "engine": "connive",
-     "status": "named",
+     "status": "built",
      "forge": "Connive",
      "top": 3,
      "all": 51,
-     "blocks": 3,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4357,12 +4357,12 @@
      "rule": null,
      "name": "ExchangeLifeVariant",
      "engine": "exchangeLife",
-     "status": "named",
+     "status": "built",
      "forge": "ExchangeLifeVariant",
      "top": 2,
      "all": 3,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4602,7 +4602,7 @@
      "top": 1,
      "all": 2,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -4753,7 +4753,7 @@
      "rule": null,
      "name": "EachDamage",
      "engine": "damageEach",
-     "status": "named",
+     "status": "built",
      "forge": "EachDamage",
      "top": 0,
      "all": 29,
@@ -5520,9 +5520,9 @@
   },
   "Triggers": {
    "tally": {
-    "built": 18,
+    "built": 20,
     "partial": 4,
-    "named": 4,
+    "named": 2,
     "missing": 112
    },
    "entries": [
@@ -5879,12 +5879,12 @@
      "rule": null,
      "name": "Blocks",
      "engine": "blocks",
-     "status": "named",
+     "status": "built",
      "forge": "Blocks",
      "top": 2,
      "all": 127,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -6263,7 +6263,7 @@
      "rule": null,
      "name": "BecomeMonstrous",
      "engine": "becomes monstrous",
-     "status": "named",
+     "status": "built",
      "forge": "BecomeMonstrous",
      "top": 0,
      "all": 19,
@@ -7186,10 +7186,10 @@
   },
   "Static abilities": {
    "tally": {
-    "built": 11,
+    "built": 14,
     "partial": 2,
     "named": 0,
-    "missing": 64
+    "missing": 61
    },
    "entries": [
     {
@@ -7352,13 +7352,13 @@
      "kind": "static",
      "rule": null,
      "name": "MustAttack",
-     "engine": null,
-     "status": "missing",
+     "engine": "rules/combat",
+     "status": "built",
      "forge": "MustAttack",
      "top": 4,
      "all": 100,
-     "blocks": 4,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "static",
@@ -7418,7 +7418,7 @@
      "top": 3,
      "all": 11,
      "blocks": 3,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "static",
@@ -7448,13 +7448,13 @@
      "kind": "static",
      "rule": null,
      "name": "CanAttackDefender",
-     "engine": null,
-     "status": "missing",
+     "engine": "rules/statics",
+     "status": "built",
      "forge": "CanAttackDefender",
      "top": 2,
      "all": 32,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "static",
@@ -7478,19 +7478,19 @@
      "top": 2,
      "all": 10,
      "blocks": 2,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "static",
      "rule": null,
      "name": "ActivateAbilityAsIfHaste",
-     "engine": null,
-     "status": "missing",
+     "engine": "keywords/timing",
+     "status": "built",
      "forge": "ActivateAbilityAsIfHaste",
      "top": 2,
      "all": 4,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "static",
@@ -8923,7 +8923,7 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 92,
+     "blocks": 89,
      "alone": 23
     },
     {
@@ -8947,8 +8947,8 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 97,
-     "alone": 25
+     "blocks": 94,
+     "alone": 26
     },
     {
      "kind": "option",
@@ -9007,7 +9007,7 @@
      "forge": "MayPlay",
      "top": 99,
      "all": 625,
-     "blocks": 72,
+     "blocks": 67,
      "alone": 17
     },
     {
@@ -9199,7 +9199,7 @@
      "forge": "Imprint",
      "top": 10,
      "all": 97,
-     "blocks": 10,
+     "blocks": 9,
      "alone": 7
     },
     {
@@ -9314,10 +9314,10 @@
   },
   "Amounts the game counts": {
    "tally": {
-    "built": 13,
+    "built": 15,
     "partial": 1,
     "named": 0,
-    "missing": 174
+    "missing": 172
    },
    "entries": [
     {
@@ -9450,7 +9450,7 @@
      "top": 12,
      "all": 139,
      "blocks": 12,
-     "alone": 7
+     "alone": 8
     },
     {
      "kind": "count",
@@ -9474,7 +9474,7 @@
      "top": 11,
      "all": 174,
      "blocks": 10,
-     "alone": 9
+     "alone": 10
     },
     {
      "kind": "count",
@@ -9594,7 +9594,7 @@
      "top": 5,
      "all": 62,
      "blocks": 5,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "count",
@@ -9605,7 +9605,7 @@
      "forge": "ValidExile",
      "top": 5,
      "all": 42,
-     "blocks": 5,
+     "blocks": 4,
      "alone": 3
     },
     {
@@ -9834,7 +9834,7 @@
      "top": 1,
      "all": 32,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "count",
@@ -9858,7 +9858,7 @@
      "top": 1,
      "all": 20,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "count",
@@ -9971,14 +9971,14 @@
     {
      "kind": "count",
      "rule": null,
-     "name": "IfCastInOwnMainPhase",
-     "engine": null,
-     "status": "missing",
+     "name": "If it was cast during its caster's main phase (\"if you cast this spell during your main phase\")",
+     "engine": "condition {cast: {mainPhase: true}}; a target spec's onlyIf (script/bind.mjs)",
+     "status": "built",
      "forge": "IfCastInOwnMainPhase",
      "top": 1,
      "all": 6,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -10086,7 +10086,7 @@
      "top": 1,
      "all": 2,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "count",
@@ -10355,9 +10355,9 @@
     {
      "kind": "count",
      "rule": null,
-     "name": "LifeYouLostThisTurn",
-     "engine": null,
-     "status": "missing",
+     "name": "Life you lost this turn",
+     "engine": "amount {lifeLostThisTurn: \"you\"} (effects/resources.mjs keeps it, rules/turn.mjs clears it); a selector's manaValue.max may be it",
+     "status": "built",
      "forge": "LifeYouLostThisTurn",
      "top": 0,
      "all": 8,
@@ -11770,23 +11770,23 @@
   },
   "Other keyword constructs": {
    "tally": {
-    "built": 7,
+    "built": 9,
     "partial": 0,
     "named": 1,
-    "missing": 8
+    "missing": 6
    },
    "entries": [
     {
      "kind": "keyword construct",
      "rule": null,
      "name": "ETBReplacement",
-     "engine": null,
-     "status": "missing",
+     "engine": "ETBReplacement",
+     "status": "built",
      "forge": "ETBReplacement",
      "top": 68,
      "all": 408,
-     "blocks": 32,
-     "alone": 9
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword construct",
@@ -11876,13 +11876,13 @@
      "kind": "keyword construct",
      "rule": null,
      "name": "AlternateAdditionalCost",
-     "engine": null,
-     "status": "missing",
+     "engine": "AlternateAdditionalCost",
+     "status": "built",
      "forge": "AlternateAdditionalCost",
      "top": 3,
      "all": 44,
-     "blocks": 3,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword construct",

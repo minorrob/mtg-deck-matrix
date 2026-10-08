@@ -19,7 +19,8 @@
  *     name, seats?: 2..4, at?: {turn, phase}, library?: [names],
  *     setup: [{seat, zone, cards, sick?}]   (a card put in the command zone is that seat's commander),
  *     steps: [ {play|tap|cast|activate|turnFaceUp: name, seat?, targets?: [{card, seat?} | {player}] | "any", ability?, mana?, x?, optional?}
- *            | {resolve: true} | {settle: true} | {pass: n} | {to: {turn, phase}} | {answer: [indices]} | {expect: [...]} ],
+ *            | {resolve: true} | {settle: true} | {pass: n} | {to: {turn, phase}} | {answer: [indices]} | {expect: [...]}
+ *            | {attack: [names], at?} | {block: [[blocker, attacker], ...]} | {choose: [labels]} ],
  *   (`targets: "any"` takes the first legal aim; `optional` skips a move the rules do not offer; `settle` answers every
  *   question with its first legal answer and resolves the stack until it is empty -- the card loader's smoke test.)
  *     expect: [ {seat, zone, cards} | {seat, zone, count} | {seat, life} | {seat, poison} | {stack} | {seat, tapped, is}
@@ -35,6 +36,7 @@ import {gameOver} from "../rules/sba.mjs";
 import {projectFor} from "../projection.mjs";
 import {createRng} from "../rng.mjs";
 import {targetName, isChoosing} from "../script/bind.mjs";
+import {meetRequirements} from "../pilots/house-pilot.mjs";
 
 export const SCENARIOS_SCHEMA = "CrankCardScenarios@1";
 
@@ -48,12 +50,14 @@ const basic = (name) => (BASIC[name]
 const ZONES = {hand: "Hand", battlefield: "Battlefield", graveyard: "Graveyard", exile: "Exile", command: "Command", library: "Library"};
 const STEP_LIMIT = 2000;
 
-/* Questions the rules ask on the way that a scenario has no view on: nobody attacks or blocks unless a step says so,
-   a player's triggers go on in the order offered, and the legend rule keeps the first (CR 704.5j). Anything else stops
-   the scenario, by name. */
+/* Questions the rules ask on the way that a scenario has no view on: nobody attacks or blocks unless a step says so -- or
+   the rules make it ("attacks each combat if able", CR 508.1d: those alone, each at its first player) -- a player's
+   triggers go on in the order offered, and the legend rule keeps the first (CR 704.5j). Anything else stops the scenario,
+   by name. */
 function routine(state) {
   const kind = state.awaiting?.kind;
-  if (kind === "declare-attackers" || kind === "declare-blockers") return resolveAwaiting(state, []);
+  if (kind === "declare-attackers") return resolveAwaiting(state, meetRequirements(awaitingChoice(state), []));
+  if (kind === "declare-blockers") return resolveAwaiting(state, []);
   if (kind === "order-triggers") return resolveAwaiting(state, awaitingChoice(state).options.map((o) => o.index));
   if (kind === "legend-rule") return resolveAwaiting(state, [0]);
   return null;
@@ -338,6 +342,18 @@ export function runScenario(scenario, cards, fixtures = {}) {
         const at = Array.isArray(step.at) ? step.at[k] : step.at;
         const option = choice.options.find((o) => (at ? o.label === `${name} → ${at}` : o.label.startsWith(`${name} → `)) && !picked.some((i) => choice.options[i].cardId === o.cardId));
         if (!option) fail(`${name} cannot attack: ${choice.options.map((o) => o.label).join(", ") || "nothing can"}`);
+        picked.push(option.index);
+      }
+      record(resolveAwaiting(state, picked));
+    } else if (step.block) {
+      /* On to the declare-blockers step, the named creatures blocking: `block` a list of [blocker, attacker] (Train B: "whenever
+         this Vehicle blocks"). Nobody blocks unless a step says so; this one says so, for the first defending player asked. */
+      for (let n = 0; n < STEP_LIMIT && state.awaiting?.kind !== "declare-blockers"; n += 1) stepOnce();
+      if (state.awaiting?.kind !== "declare-blockers") fail("the game never asked who blocks");
+      const choice = awaitingChoice(state), picked = [];
+      for (const [blocker, attacker] of step.block) {
+        const option = choice.options.find((o) => o.label === `${blocker} blocks ${attacker}` && !picked.includes(o.index));
+        if (!option) fail(`${blocker} cannot block ${attacker}: ${choice.options.map((o) => o.label).join(", ") || "nothing can"}`);
         picked.push(option.index);
       }
       record(resolveAwaiting(state, picked));

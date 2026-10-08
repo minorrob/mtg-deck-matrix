@@ -1,0 +1,89 @@
+import re, sys
+root = sys.argv[1]
+def edit(rel, pairs):
+    p = root + '/' + rel
+    s = open(p).read()
+    for old, new in pairs:
+        assert old in s, (rel, old[:60])
+        s = s.replace(old, new, 1)
+    open(p, 'w').write(s)
+
+edit('game/engine/script/effects/index.mjs', [
+    ('import {addTurn} from "./turns.mjs";\n', ''),
+    ('  exchangeLife, damageEach, moveCounters,\n} from "./resources.mjs";', '  exchangeLife, damageEach,\n} from "./resources.mjs";'),
+    ("""  /* Train B (X11): life totals exchanged (CR 701.12), damage dealt by each of a set (Forge's EachDamage), and counters moved
+     from one permanent onto another (CR 122.5). */
+  exchangeLife, damageEach, moveCounters,
+  /* And an extra turn (CR 500.7), and a designation given or taken -- monstrous (CR 701.37), prepared (CR 722.3). */
+  addTurn, alterAttribute,""", """  /* Train B (X11): life totals exchanged (CR 701.12), damage dealt by each of a set (Forge's EachDamage), and a designation
+     given or taken -- monstrous (CR 701.37), prepared (CR 722.3). */
+  exchangeLife, damageEach, alterAttribute,"""),
+])
+
+# moveCounters and the counter-kind question: unfinished (Tidus, Ichormoon), out.
+p = root + '/game/engine/script/effects/resources.mjs'
+s = open(p).read()
+a = s.index('/**\n * `moveCounters` -- CR 122.5')
+s = s[:a].rstrip() + '\n'
+s = s.replace('/* ---- exchanging life totals (CR 701.12), damage dealt by each of a set, counters moved (CR 122.5) ---- */',
+              '/* ---- exchanging life totals (CR 701.12), and damage dealt by each of a set ---- */')
+open(p, 'w').write(s)
+
+p = root + '/game/engine/script/resolution.mjs'
+s = open(p).read()
+a = s.index('    /* "MOVE A COUNTER FROM TARGET CREATURE ..."')
+b = s.index('    /* CONNIVE (CR 701.50)')
+s = s[:a] + s[b:]
+s = s.replace('import {damageQuestion, counterKindsOn, addCounters} from "./effects/resources.mjs";', 'import {damageQuestion, addCounters} from "./effects/resources.mjs";')
+open(p, 'w').write(s)
+
+p = root + '/game/engine/script/effects/asking.mjs'
+s = open(p).read()
+a = s.index('/* ---- which kind of counter (CR 122.5; Train B, X11) ----')
+b = s.index('/* ---- connive (CR 701.50; Train B, X11) ----')
+s = s[:a] + s[b:]
+s = s.replace('  counterKind, conniveWhich});', '  conniveWhich});')
+s = s.replace("""    /* "You may draw a card and proliferate. Do this only once each turn" (Tidus, Yuna's Guardian; cards/index.mjs,
+       `onceEachTurn`): a "you may" of its source's that, once taken this turn, can't be taken again -- so after that nothing
+       is left to choose, and nothing is asked. Declined, it may be taken the next time. */
+    if (params.onceEachTurn && context.source !== null && context.source !== undefined && usesThisTurn(state, context.source, params.onceEachTurn) > 0) return false;
+""", '')
+s = s.replace("""      ...(params.onceEachTurn && context.source !== null && context.source !== undefined ? {onceEachTurn: params.onceEachTurn, source: context.source} : {}),
+""", '')
+s = s.replace("""    /* Taken ("Yes", its first mode): done once this turn (`onceEachTurn`). */
+    if (awaiting.onceEachTurn && (indices ?? []).includes(0)) recordUse(state, awaiting.source, awaiting.onceEachTurn);
+""", '')
+s = s.replace('import {cardsIn, moveObject, addObject, valueCostOf, usesThisTurn, recordUse} from "../../state/index.mjs";', 'import {cardsIn, moveObject, addObject, valueCostOf} from "../../state/index.mjs";')
+open(p, 'w').write(s)
+
+edit('game/engine/cards/index.mjs', [
+    ("""      /* "DO THIS ONLY ONCE EACH TURN" (Tidus, Yuna's Guardian): `onceEachTurn` beside `optional` -- the "you may", once taken
+         this turn, can't be taken again; declined, it still may be (effects/asking.mjs, modal). The ability still triggers. */
+      if (ability.onceEachTurn !== undefined && !(ability.onceEachTurn === true && ability.optional === true))
+        problems.push(`${ability.text}: "do this only once each turn" is onceEachTurn: true, on an optional ability`);
+      const effects = ability.optional ? [{effect: "modal", title: ability.text, ...(ability.onceEachTurn === true ? {onceEachTurn: `do:${id}`} : {}),
+        modes: [{text: "Yes", effects: ability.effects}, {text: "No", effects: []}]}] : ability.effects;""",
+     """      const effects = ability.optional ? [{effect: "modal", title: ability.text, modes: [{text: "Yes", effects: ability.effects}, {text: "No", effects: []}]}] : ability.effects;"""),
+    ("""        /* A kind of counter chosen as it resolves is asked (script/resolution.mjs), which what repeats directly does not do. */
+        for (const inner of effect.effects ?? []) if (inner?.counter === "chosen") problems.push(`repeatFor: a kind of counter chosen for each is not built`);
+""", ''),
+    ("""      /* Counters moved (CR 122.5): from an object (`from`), onto `targets`. */
+      if (effect.effect === "moveCounters" && (effect.from === undefined || effect.targets === undefined)) problems.push("moveCounters: from one object (`from`) onto another (`targets`)");
+""", ''),
+])
+
+edit('game/engine/projection.mjs', [
+    ("""    /* The extra turns waiting (CR 500.7; script/effects/turns.mjs), the next first: public, as the effect that made each was. */
+    ...((state.extraTurns ?? []).length ? {extraTurns: [...state.extraTurns].reverse().map((t) => ({playerId: t.player}))} : {}),
+    /* And whether this turn is one. */
+    ...(state.extraTurn === true ? {extraTurn: true} : {}),
+""", ''),
+])
+edit('game/room/history.mjs', [
+    ("""${f.extraTurn ? " (an extra turn)" : ""}""", ''),
+    ("""    /* An extra turn added (CR 500.7): whose, said as it is made. */
+    case "GameEventExtraTurn":
+      return line(`${who(f.player.playerId)} will take an extra turn`);
+""", ''),
+])
+print('reverted')

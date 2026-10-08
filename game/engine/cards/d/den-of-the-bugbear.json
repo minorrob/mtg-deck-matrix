@@ -1,0 +1,124 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Den of the Bugbear",
+    "oracleId": "f451b8f0-1ff5-4e8d-9f30-9352d83ed687",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If you control two or more other lands, this land enters tapped.\n{T}: Add {R}.\n{3}{R}: Until end of turn, this land becomes a 3/2 red Goblin creature with \"Whenever this creature attacks, create a 1/1 red Goblin creature token that's tapped and attacking.\" It's still a land.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "If you control two or more other lands, this land enters tapped.",
+      "watches": {
+        "event": "enters",
+        "who": "self",
+        "unless": {
+          "controls": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ]
+          },
+          "max": 1
+        }
+      },
+      "change": {
+        "entersTapped": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {R}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "R": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{3}{R}: Until end of turn, this land becomes a 3/2 red Goblin creature with \"Whenever this creature attacks, create a 1/1 red Goblin creature token that's tapped and attacking.\" It's still a land.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{R}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "animate",
+          "targets": "self",
+          "power": 3,
+          "toughness": 2,
+          "subtypes": [
+            "Goblin"
+          ],
+          "colors": [
+            "R"
+          ],
+          "until": "end-of-turn"
+        },
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 0,
+          "toughness": 0,
+          "until": "end-of-turn",
+          "abilities": [
+            {
+              "kind": "triggered",
+              "text": "Whenever this creature attacks, create a 1/1 red Goblin creature token that's tapped and attacking.",
+              "trigger": {
+                "on": "attacks",
+                "who": "self"
+              },
+              "effects": [
+                {
+                  "effect": "createToken",
+                  "count": 1,
+                  "token": {
+                    "name": "Goblin",
+                    "types": [
+                      "Creature"
+                    ],
+                    "subtypes": [
+                      "Goblin"
+                    ],
+                    "colors": [
+                      "R"
+                    ],
+                    "power": 1,
+                    "toughness": 1
+                  },
+                  "tapped": true,
+                  "attacking": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Reconstruct History",
+    "oracleId": "97fad58a-8ee4-4f01-a47a-5ddc9ed845af",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Return up to one target artifact card, up to one target enchantment card, up to one target instant card, up to one target sorcery card, and up to one target planeswalker card from your graveyard to your hand.\nExile Reconstruct History.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Return up to one target artifact card, up to one target enchantment card, up to one target instant card, up to one target sorcery card, and up to one target planeswalker card from your graveyard to your hand.\nExile Reconstruct History.",
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "types": [
+            "Artifact"
+          ],
+          "count": {
+            "max": 1
+          }
+        },
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "types": [
+            "Enchantment"
+          ],
+          "count": {
+            "max": 1
+          }
+        },
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "types": [
+            "Instant"
+          ],
+          "count": {
+            "max": 1
+          }
+        },
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "types": [
+            "Sorcery"
+          ],
+          "count": {
+            "max": 1
+          }
+        },
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "types": [
+            "Planeswalker"
+          ],
+          "count": {
+            "max": 1
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        },
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 1
+          },
+          "to": "hand"
+        },
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 2
+          },
+          "to": "hand"
+        },
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 3
+          },
+          "to": "hand"
+        },
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 4
+          },
+          "to": "hand"
+        },
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "exile"
+        }
+      ]
+    }
+  ]
+}

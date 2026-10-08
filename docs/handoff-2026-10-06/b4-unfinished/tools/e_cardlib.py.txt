@@ -1,0 +1,102 @@
+EDITS = [
+('game/tools/batch/cardlib.py', [
+('''A double-faced card (a modal one, or a nonmodal one that transforms; CR 712.2-712.3) is written from its oracle faces:
+its identity and oracle text are its front face's, under the whole card's name (`lines` reads the front, `back_lines`
+the back), and `write(..., backs={name: [ability, ...]})` gives its back face, with the face's own identity. A nonmodal
+one's script says `layout: "transform"`, so the engine knows it transforms (cards/index.mjs).
+"""''',
+'''A double-faced card (a modal one, or a nonmodal one that transforms; CR 712.2-712.3) is written from its oracle faces:
+its identity and oracle text are its front face's, under the whole card's name (`lines` reads the front, `back_lines`
+the back), and `write(..., backs={name: [ability, ...]})` gives its back face, with the face's own identity. A nonmodal
+one's script says `layout: "transform"`, so the engine knows it transforms (cards/index.mjs).
+
+A preparation card (CR 722) is written the same way from its two faces, the card and its prepare spell: `lines` reads the
+card, `prepare_lines` the prepare spell, and `write(..., prepares={name: [ability, ...]})` gives the prepare spell, with
+its own identity, as the script's `prepare`. A face the oracle data gives no colors has its mana cost's (CR 202.2).
+"""'''),
+('''    def faces(self, name):
+        """A double-faced card's two faces, front first, or None for any other card."""
+        c = self.card(name)
+        return c['faces'] if c.get('layout') in self.DOUBLE and c.get('faces') else None
+
+    def front(self, name):
+        """What a definition is written from: a double-faced card's front face (CR 712.8a), any other card itself."""
+        faces = self.faces(name)
+        return faces[0] if faces else self.card(name)''',
+'''    def faces(self, name):
+        """A double-faced card's two faces, front first, or None for any other card."""
+        c = self.card(name)
+        return c['faces'] if c.get('layout') in self.DOUBLE and c.get('faces') else None
+
+    def prepared(self, name):
+        """A preparation card's two faces (CR 722.2), the card first and its prepare spell second, or None for any other card."""
+        c = self.card(name)
+        return c['faces'] if c.get('layout') == 'prepare' and c.get('faces') else None
+
+    def front(self, name):
+        """What a definition is written from: a double-faced card's front face (CR 712.8a), a preparation card's own face
+        (CR 722.2), any other card itself."""
+        faces = self.faces(name) or self.prepared(name)
+        return faces[0] if faces else self.card(name)
+
+    def prepare_lines(self, name):
+        """A preparation card's prepare spell's oracle text, a line each."""
+        return self.prepared(name)[1]['text'].split('\\n')'''),
+('''            'name': name, **({'oracleId': oracle_id} if oracle_id else {}), **({'supertypes': sup} if sup else {}), 'types': [w for w in words if w not in SUPERTYPES],
+            'subtypes': right.split() if right else [],
+            'manaCost': face['mana'] or None, 'colors': face['colors'], **({'colorIdentity': ci} if ci is not None else {}),''',
+'''            'name': name, **({'oracleId': oracle_id} if oracle_id else {}), **({'supertypes': sup} if sup else {}), 'types': [w for w in words if w not in SUPERTYPES],
+            'subtypes': right.split() if right else [],
+            'manaCost': face['mana'] or None, 'colors': face['colors'] if face['colors'] is not None else Batch._colors(face['mana']),
+            **({'colorIdentity': ci} if ci is not None else {}),'''),
+('''    def identity(self, name):
+        """The definition's identity block, from the oracle data: a double-faced card's front face, under the card's name, its
+        color identity both faces' (CR 903.4)."""
+        c = self.card(name)
+        ident = self._identity(self.front(name), c['name'], c['id'], c['ci'])
+        if not self.faces(name):
+            ident['manaCost'] = c['mana']
+        return ident''',
+'''    @staticmethod
+    def _colors(mana):
+        """A face's colors from its mana cost (CR 202.2), in WUBRG order, for a face the oracle data gives none."""
+        return [c for c in 'WUBRG' if re.search(r'\\{[^}]*' + c + r'[^}]*\\}', mana or '')]
+
+    def identity(self, name):
+        """The definition's identity block, from the oracle data: a double-faced card's front face, under the card's name, its
+        color identity both faces' (CR 903.4)."""
+        c = self.card(name)
+        ident = self._identity(self.front(name), c['name'], c['id'], c['ci'])
+        if not self.faces(name) and not self.prepared(name):
+            ident['manaCost'] = c['mana']
+        return ident
+
+    def prepare(self, name, abilities):
+        """A preparation card's prepare spell (CR 722.2): its own identity (the card's oracle id is the card's), text and abilities."""
+        face = self.prepared(name)[1]
+        return {'identity': self._identity(face, face['name']), 'oracleText': face['text'], 'abilities': abilities}'''),
+('''    def write(self, cards, scenarios, only=None, backs=None):
+        """Write each card's definition and scenarios; `only` limits it to those names; `backs` gives each double-faced
+        card's back-face abilities. Returns how many it wrote."""
+        if set(cards) != set(scenarios):
+            raise ValueError(f'cards and scenarios differ: {sorted(set(cards) ^ set(scenarios))}')
+        backs = backs or {}''',
+'''    def write(self, cards, scenarios, only=None, backs=None, prepares=None):
+        """Write each card's definition and scenarios; `only` limits it to those names; `backs` gives each double-faced
+        card's back-face abilities, `prepares` each preparation card's prepare spell's. Returns how many it wrote."""
+        if set(cards) != set(scenarios):
+            raise ValueError(f'cards and scenarios differ: {sorted(set(cards) ^ set(scenarios))}')
+        backs = backs or {}
+        prepares = prepares or {}'''),
+('''            if bool(self.faces(name)) != (name in backs):
+                raise ValueError(f'{name}: a double-faced card is written with its back face, and only one is')''',
+'''            if bool(self.faces(name)) != (name in backs):
+                raise ValueError(f'{name}: a double-faced card is written with its back face, and only one is')
+            if bool(self.prepared(name)) != (name in prepares):
+                raise ValueError(f'{name}: a preparation card is written with its prepare spell, and only one is')'''),
+('''                script['back'] = self.back(name, backs[name])''',
+'''                script['back'] = self.back(name, backs[name])
+            if name in prepares:
+                script['prepare'] = self.prepare(name, prepares[name])'''),
+]),
+]

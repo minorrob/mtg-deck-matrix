@@ -1,0 +1,99 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ichormoon Gauntlet",
+    "oracleId": "9fc7aba7-eda2-4134-9c10-31ee35201b72",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Planeswalkers you control have \"[0]: Proliferate\" and \"[−12]: Take an extra turn after this one.\"\nWhenever you cast a noncreature spell, choose a counter on target permanent. Put an additional counter of that kind on that permanent.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Planeswalkers you control have \"[0]: Proliferate\" and \"[−12]: Take an extra turn after this one.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "types": [
+          "Planeswalker"
+        ]
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "activated",
+            "text": "[0]: Proliferate",
+            "cost": [
+              {
+                "atom": "loyalty",
+                "amount": 0
+              }
+            ],
+            "effects": [
+              {
+                "effect": "proliferate"
+              }
+            ]
+          },
+          {
+            "kind": "activated",
+            "text": "[−12]: Take an extra turn after this one.",
+            "cost": [
+              {
+                "atom": "loyalty",
+                "amount": -12
+              }
+            ],
+            "effects": [
+              {
+                "effect": "addTurn",
+                "who": "you"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a noncreature spell, choose a counter on target permanent. Put an additional counter of that kind on that permanent.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "nonTypes": [
+            "Creature"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "chosen",
+          "count": 1
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent"
+        }
+      ]
+    }
+  ]
+}

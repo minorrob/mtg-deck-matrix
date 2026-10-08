@@ -1,0 +1,52 @@
+PATCHES = [
+("game/engine/script/effects/asking.mjs",
+"""import {loseLife, DAMAGING, damageQuestion} from "./resources.mjs";""",
+"""import {loseLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";"""),
+("game/engine/script/effects/asking.mjs",
+"""export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage});""",
+"""/* ---- "add one mana of any color", as an effect resolves (CR 106.1) ----
+
+   "At the beginning of your first main phase, remove all charge counters from this artifact. Add one mana of any color for
+   each charge counter removed this way" (Coalition Relic): an addMana of `anyColor` in a resolution (script/resolution.mjs
+   puts this in its place) -- what color each mana is, its controller's choice, one at a time, each its own (they may all
+   differ); added together once the last is chosen, as one mana event. None to add, and nobody is asked. A mana ability's
+   "any color" is chosen as it is activated (rules/actions.mjs), never here. */
+const MANA_COLORS = Object.freeze([["W", "White"], ["U", "Blue"], ["B", "Black"], ["R", "Red"], ["G", "Green"]]);
+export const manaColors = {
+  open(state, params, context) {
+    const count = Math.max(0, Number.isInteger(params.count) ? params.count : 1);
+    if (!count || !state.players[context.controller]) return false;
+    state.awaiting = {kind: "effect-choice", effect: "manaColors", player: context.controller, count, chosen: [], source: context.source ?? null};
+    return true;
+  },
+  choice(state, awaiting) {
+    const name = awaiting.source !== null ? state.objects[awaiting.source]?.card : null;
+    return {id: `mana-colors:${awaiting.player}:${state.turn}:${awaiting.chosen.length}`,
+      title: `${name ? `${name}: ` : ""}add one mana of any color${awaiting.count > 1 ? ` (${awaiting.chosen.length + 1} of ${awaiting.count})` : ""}`,
+      mode: "one", min: 1, max: 1, options: MANA_COLORS.map(([color, label], index) => ({index, label, color}))};
+  },
+  apply(state, awaiting, indices) {
+    const pick = (indices ?? []).length === 1 ? MANA_COLORS[indices[0]] : undefined;
+    if (!pick) throw new Error("Choose one color for the mana");
+    const chosen = [...awaiting.chosen, pick[0]];
+    if (chosen.length < awaiting.count) {
+      state.awaiting = {...awaiting, chosen};
+      return {events: [], again: true};
+    }
+    const mana = {};
+    for (const color of chosen) mana[color] = (mana[color] ?? 0) + 1;
+    return {events: addMana(state, {mana}, {controller: awaiting.player, source: awaiting.source})};
+  },
+};
+
+export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, manaColors});"""),
+("game/engine/script/resolution.mjs",
+"""    if (effect?.effect === "empowerJace") {""",
+"""    /* "ADD ONE MANA OF ANY COLOR FOR EACH ..." as an effect resolves (Coalition Relic): which colors is its controller's to
+       choose (effects/asking.mjs, manaColors), a mana at a time -- the count read now, as the effect reaches the head. */
+    if (effect?.effect === "addMana" && effect.anyColor === true && !effect.mana) {
+      resolving.queue[0] = {effect: "manaColors", count: Number.isInteger(effect.count) ? effect.count : 1};
+      continue;
+    }
+    if (effect?.effect === "empowerJace") {"""),
+]

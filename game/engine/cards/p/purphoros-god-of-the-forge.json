@@ -1,0 +1,102 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Purphoros, God of the Forge",
+    "oracleId": "4fdbbec2-e921-4b63-958d-f9ba1e417197",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "God"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 6,
+    "toughness": 5
+  },
+  "oracleText": "Indestructible\nAs long as your devotion to red is less than five, Purphoros isn't a creature.\nWhenever another creature you control enters, Purphoros deals 2 damage to each opponent.\n{2}{R}: Creatures you control get +1/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Indestructible",
+      "keyword": "indestructible"
+    },
+    {
+      "kind": "static",
+      "text": "As long as your devotion to red is less than five, Purphoros isn't a creature.",
+      "layer": 4,
+      "affects": {
+        "self": true
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "devotion": [
+              "R"
+            ]
+          },
+          "fewerThan": 5
+        }
+      },
+      "apply": {
+        "removeTypes": [
+          "Creature"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another creature you control enters, Purphoros deals 2 damage to each opponent.",
+      "trigger": {
+        "on": "enters",
+        "who": "another",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 2,
+          "who": "opponent"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{2}{R}: Creatures you control get +1/+0 until end of turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{R}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 1
+        }
+      ]
+    }
+  ]
+}

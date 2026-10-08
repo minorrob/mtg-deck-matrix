@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tree of Perdition",
+    "oracleId": "0cdece2a-0bdf-4e6d-9ddc-4a8d58b2ec29",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Plant"
+    ],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 0,
+    "toughness": 13
+  },
+  "oracleText": "Defender\n{T}: Exchange target opponent's life total with this creature's toughness.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender",
+      "keyword": "defender"
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Exchange target opponent's life total with this creature's toughness.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "exchangeLife",
+          "who": {
+            "target": 0
+          },
+          "targets": "self"
+        }
+      ]
+    }
+  ]
+}

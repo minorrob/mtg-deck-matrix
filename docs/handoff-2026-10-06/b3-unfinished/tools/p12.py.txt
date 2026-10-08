@@ -1,0 +1,111 @@
+PATCHES = [
+("game/engine/rules/statics.mjs",
+"""export function goadersOf(state, id) {""",
+"""/** "That token gains haste until end of turn and attacks this combat if able" (Legion Warboss; CR 508.1d): required to
+ * attack in this combat -- the one it was made in (`combat`, rules/turn.mjs counts them), not a later one this turn --
+ * any player or planeswalker it may; whom is its controller's choice (rules/combat.mjs, the declaration's `required`). */
+export function mustAttackThisCombat(state, id) {
+  return (state.effects ?? []).some((e) => e.rule === "must-attack" && e.defender === "any" && e.combat === (state.combatsThisTurn ?? 0) && (e.affects?.ids ?? []).includes(id));
+}
+
+export function goadersOf(state, id) {"""),
+("game/engine/script/effects/permanents.mjs",
+"""  if (params.mustAttack === "that player" && Number.isInteger(context.about?.player))""",
+"""  /* "And attacks this combat if able" (Legion Warboss; CR 508.1d): a requirement for the combat it was made in, at whomever
+     its controller chooses (rules/statics.mjs, mustAttackThisCombat; rules/combat.mjs). Made outside a combat, there is no
+     combat for it to attack in. */
+  if (params.mustAttack === "this combat" && state.combat !== undefined && (state.combatsThisTurn ?? 0) > 0)
+    pushEffect(state, {id: `must-attack-combat:${context.source ?? "effect"}:${made.join(",")}`, rule: "must-attack", affects: {ids: made}, defender: "any",
+      combat: state.combatsThisTurn, until: "end-of-turn", sourceController: controller});
+  if (params.mustAttack === "that player" && Number.isInteger(context.about?.player))"""),
+("game/engine/rules/combat.mjs",
+"""import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack, cantGainLife, attackerCaps} from "./statics.mjs";""",
+"""import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack, cantGainLife, attackerCaps, mustAttackThisCombat} from "./statics.mjs";"""),
+("game/engine/rules/combat.mjs",
+"""    const caps = Object.entries(attackerCaps(state)).filter(([pw]) => options.some((o) => o.planeswalkerId === Number(pw)));
+    const capped = caps.length ? {by: "planeswalkerId", most: Object.fromEntries(caps), why: Object.fromEntries(caps.map(([pw, most]) => [pw, capWords(state, Number(pw), most)]))} : null;""",
+"""    const caps = Object.entries(attackerCaps(state)).filter(([pw]) => options.some((o) => o.planeswalkerId === Number(pw)));
+    const capped = caps.length ? {by: "planeswalkerId", most: Object.fromEntries(caps), why: Object.fromEntries(caps.map(([pw, most]) => [pw, capWords(state, Number(pw), most)]))} : null;
+    /* "ATTACKS THIS COMBAT IF ABLE" (Legion Warboss's Goblin; CR 508.1d): each such creature that can attack someone with no
+       cost to pay must be among the attackers -- at whom is its controller's choice, so the record says which creatures
+       (`required`), every answerer is held to it by controller.mjs, and the refusal says what to do instead. */
+    const owing = [...new Set(options.filter((o) => mustAttackThisCombat(state, o.cardId) && attackTax(state, [o]) === 0).map((o) => o.cardId))];
+    const required = owing.length ? {by: "cardId", ids: owing, why: Object.fromEntries(owing.map((id) => [id, requiredWords(state, id)]))} : null;"""),
+("game/engine/rules/combat.mjs",
+"""      exclusiveBy: "cardId",
+      ...(capped ? {capped} : {}),
+      options,""",
+"""      exclusiveBy: "cardId",
+      ...(capped ? {capped} : {}),
+      ...(required ? {required} : {}),
+      options,"""),
+("game/engine/rules/combat.mjs",
+"""    /* No more creatures declared at a planeswalker than it allows (CR 508.1c; attackerCaps): refused, saying what to do. */""",
+"""    /* A creature that must attack this combat, left out while it could attack with no cost to pay (CR 508.1d): refused,
+       saying what to do -- whom it attacks is the player's to say, never the engine's. */
+    for (const id of choice.required?.ids ?? []) if (!picked.some((o) => o.cardId === id)) throw new Error(choice.required.why[id]);
+    /* No more creatures declared at a planeswalker than it allows (CR 508.1c; attackerCaps): refused, saying what to do. */"""),
+("game/engine/rules/combat.mjs",
+"""export const attackers = {""",
+"""/* The refusal for an attacker left out that must attack this combat (CR 508.1d): what is wrong, and what to do instead. */
+const requiredWords = (state, id) => `${shownName(state.objects[id])} must attack this combat if able. Declare it attacking a player or a planeswalker, along with any others.`;
+
+export const attackers = {"""),
+("game/engine/controller.mjs",
+"""  if (choice.choiceKind === "manipulate") validateManipulateOrder(choice, request);""",
+"""  /* AND SOME OPTIONS MUST BE AMONG THE ANSWER: "attacks this combat if able" (CR 508.1d) -- an option whose `by` field is each
+     of `ids` -- refused with the record's own words (`why`), which say what to do instead. */
+  if (choice.required) {
+    for (const key of choice.required.ids ?? []) {
+      if (!indices.some((n) => (choice.options ?? [])[n]?.[choice.required.by] === key)) throw new Error(choice.required.why?.[key] ?? "Invalid selection");
+    }
+  }
+  if (choice.choiceKind === "manipulate") validateManipulateOrder(choice, request);"""),
+("game/engine/pilots/house-pilot.mjs",
+"""        }).filter((plan) => plan.going.length);
+        if (!plans.length) return {indices: []};
+        const best = plans.reduce((a, b) => (b.lethal !== a.lethal ? (b.lethal ? b : a)
+          : b.through !== a.through ? (b.through > a.through ? b : a)
+          : b.p.life < a.p.life || (b.p.life === a.p.life && b.p.playerId < a.p.playerId) ? b : a));
+        const picks = best.going.map(([, o]) => o.index);
+        return {indices: firstOf(choice, picks, max)};""",
+"""        }).filter((plan) => plan.going.length);
+        /* A creature that must attack this combat (`required`, CR 508.1d) goes in whatever the plan: at the plan's defender if
+           it may, else the opponent with the lowest life it may attack -- else its first option. */
+        const owed = (picks, defender) => (choice.required?.ids ?? []).filter((id) => !picks.some((i) => options[i].cardId === id)).map((id) => {
+          const mine = options.filter((o) => o.cardId === id);
+          const at = mine.find((o) => o.defenderId === defender && o.planeswalkerId === undefined)
+            ?? mine.filter((o) => o.planeswalkerId === undefined && opponents.some((p) => p.playerId === o.defenderId)).sort((x, y) => view.players[x.defenderId].life - view.players[y.defenderId].life || x.defenderId - y.defenderId)[0]
+            ?? mine[0];
+          return at.index;
+        });
+        if (!plans.length) return {indices: owed([], null)};
+        const best = plans.reduce((a, b) => (b.lethal !== a.lethal ? (b.lethal ? b : a)
+          : b.through !== a.through ? (b.through > a.through ? b : a)
+          : b.p.life < a.p.life || (b.p.life === a.p.life && b.p.playerId < a.p.playerId) ? b : a));
+        const picks = best.going.map(([, o]) => o.index);
+        return {indices: [...firstOf(choice, picks, max), ...owed(firstOf(choice, picks, max), best.p.playerId)]};"""),
+("game/engine/pilots/random-legal.mjs",
+"""      const taken = new Map();
+      for (let i = 0; i < take && pool.length > 0; i += 1) {""",
+"""      const taken = new Map();
+      /* And `required` (a creature that must attack this combat, CR 508.1d): one of its options first, at random. */
+      for (const key of choice.required?.ids ?? []) {
+        const mine = pool.filter((index) => options[index]?.[choice.required.by] === key);
+        if (!mine.length) continue;
+        const index = mine[rng.int(mine.length)];
+        pool.splice(pool.indexOf(index), 1);
+        if (choice.exclusiveBy) used.add(options[index]?.[choice.exclusiveBy]);
+        indices.push(index);
+      }
+      for (let i = indices.length; i < take && pool.length > 0; i += 1) {"""),
+("game/engine/cards/scenario.mjs",
+"""  if (kind === "declare-attackers" || kind === "declare-blockers") return resolveAwaiting(state, []);""",
+"""  /* Nobody attacks -- but a creature that must attack this combat does (CR 508.1d; the record's `required`), at its first
+     defender. */
+  if (kind === "declare-attackers") {
+    const choice = awaitingChoice(state);
+    return resolveAwaiting(state, (choice.required?.ids ?? []).map((id) => choice.options.find((o) => o.cardId === id).index));
+  }
+  if (kind === "declare-blockers") return resolveAwaiting(state, []);"""),
+]

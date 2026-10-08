@@ -1,0 +1,37 @@
+/* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
+/* CR 707.9a, 608.2h: added abilities are copiable and bind the exiled card at creation. */
+import assert from "node:assert/strict";
+import {table, creature, put} from "./helpers/b3-table.mjs";
+import {runEffect} from "../game/engine/script/effects/index.mjs";
+import {lastKnown} from "../game/engine/rules/layers.mjs";
+import {collectTriggers, openTriggers} from "../game/engine/rules/trigger.mjs";
+import {resolveTop} from "../game/engine/rules/stack.mjs";
+import {loadCardIndex} from "../game/tools/engine-cards.mjs";
+const s = table(), original = put(s, creature("Original"), "exile"), second = put(s, creature("Other"), "exile");
+const hofri = loadCardIndex().definition("Hofri Ghostforge");
+const findCopy = (list) => list.flatMap((e) => [e, ...findCopy(e.effects ?? []), ...findCopy(e.then ?? []), ...findCopy(e.otherwise ?? [])]).filter((e) => e.effect === "copyPermanent");
+const copyEffect = hofri.abilities.flatMap((a) => findCopy(a.effects ?? []))[0];
+assert.equal(copyEffect.except.addAbilities[0].kind, "triggered", "the extra leaves ability was compiled");
+const context = {controller: 0, remembered: [original], about: {copiedAs: creature("Copied creature", {power: 6})}};
+runEffect(s, {...copyEffect, targets: [original]}, context);
+const token = s.zones.battlefield[0];
+assert.deepEqual([s.objects[token].card, s.objects[token].power, s.objects[token].token], ["Copied creature", 6, true]);
+assert.deepEqual(s.objects[token].abilities[0].effects[0].targets, [original]);
+context.remembered = [second];
+runEffect(s, {effect: "copyPermanent", targets: [token]}, {controller: 0});
+assert.deepEqual(s.objects[s.zones.battlefield[1]].abilities, s.objects[token].abilities, "a copy of the token retains its bound ability");
+collectTriggers(s, runEffect(s, {effect: "moveZone", targets: [token], to: "exile"}, {controller: 0}));
+openTriggers(s); resolveTop(s);
+assert.equal(s.zones.graveyard[0].some((id) => s.objects[id].card === "Original"), true);
+assert.equal(s.objects[second].zone, "exile", "later memories do not rebind the ability");
+const copied = put(s, creature("Printed")), model = put(s, creature("Copy", {power: 7}));
+runEffect(s, {effect: "becomeCopy", targets: [model]}, {controller: 0, source: copied});
+assert.equal(lastKnown(s, copied).copiable.power, 7);
+assert.equal(lastKnown(s, put(s, creature("Plain"))).copiable, undefined, "ordinary cards need no substituted copy values");
+const h = table(); put(h, {...hofri, card: "Hofri Ghostforge"});
+const printed = put(h, creature("Printed")), model2 = put(h, creature("Copied", {power: 7}));
+runEffect(h, {effect: "becomeCopy", targets: [model2]}, {controller: 0, source: printed});
+collectTriggers(h, runEffect(h, {effect: "moveZone", targets: [printed], to: "graveyard"}, {controller: 0}));
+openTriggers(h); resolveTop(h);
+assert.equal(h.zones.battlefield.some((id) => h.objects[id].token && h.objects[id].card === "Copied" && h.objects[id].power === 7), true, "the death event carries copy values through the trigger into resolution");
+console.log("engine-copy-memory: 9 checks passed -- compiled added ability, bound return, copied copiable values, LKI snapshot and death trigger.");

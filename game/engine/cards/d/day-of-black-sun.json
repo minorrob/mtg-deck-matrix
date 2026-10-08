@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Day of Black Sun",
+    "oracleId": "dc857129-533c-41d1-8e8b-1c0443030d69",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{X}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each creature with mana value X or less loses all abilities until end of turn. Destroy those creatures.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each creature with mana value X or less loses all abilities until end of turn. Destroy those creatures.",
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "manaValue": {
+              "max": "X"
+            }
+          },
+          "layer": 6,
+          "apply": {
+            "removeAllAbilities": true
+          },
+          "until": "end-of-turn"
+        },
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "manaValue": {
+              "max": "X"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -113,7 +113,7 @@ const look = (s, id) => { const c = characteristicsOf(s, id); return [s.objects[
   for (const a of legalActions(s, 0).filter((x) => x.kind === "activate-mana" && x.label === "Wastes")) applyAction(s, 0, legalActions(s, 0).find((x) => x.kind === "activate-mana" && x.objectId === a.objectId));
   const aims = legalActions(s, 0).filter((a) => a.kind === "activate" && a.objectId === gardens).map((a) => [a.x, a.targets?.[0]?.id === trinket]);
   eq(aims, [[2, true]], "only X = 2 has a target: the Trinket");
-  eq([missingFor({apis: ["Clone"]}).length, missingFor({keywords: ["ETBReplacement"]}).length], [0, 1], "the catalog credits Clone; ETBReplacement, entering as a copy among its forms, still not");
+  eq([missingFor({apis: ["Clone"]}), missingFor({keywords: ["ETBReplacement"]})], [[], []], "the catalog credits Clone and entering replacements, including entering as a copy");
 }
 
 console.log(`engine-become-copy: ${checks} checks passed — the copied values as they are, a copy of a copy; never counters, tapped state or effects; except a name, a supertype, a keyword or its own ability; the latest shows; end of turn and leaving end it.`);

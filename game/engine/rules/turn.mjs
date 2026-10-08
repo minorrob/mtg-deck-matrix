@@ -610,6 +610,8 @@ export function advance(state) {
     /* "Since the beginning of your last upkeep" (echo, CR 702.30a; script/condition.mjs): the turn of theirs before this one. */
     if (state.players[state.activePlayer].turnBegan > 0) state.players[state.activePlayer].previousTurnBegan = state.players[state.activePlayer].turnBegan;
     state.players[state.activePlayer].turnBegan = state.turn;   /* CR 302.6, keywords/timing.mjs */
+    /* Whom they attack in this turn, from none: "players who attacked you during their last turn" (rules/combat.mjs). */
+    if (state.players[state.activePlayer].attackedPlayers) state.players[state.activePlayer].attackedPlayers = [];
     /* Whose next turn has now begun: this player's -- and each player who has left the game and whose turn it would have been
        on the way here, since an effect lasting until that player's next turn lasts until that turn would have begun (CR
        800.4m: Reflector Mage's controller conceding does not lock a name for the rest of the game). */

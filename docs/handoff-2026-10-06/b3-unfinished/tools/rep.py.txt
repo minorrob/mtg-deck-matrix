@@ -1,0 +1,18 @@
+"""Apply exact, once-only replacements: python3 rep.py <spec.py>; spec defines PATCHES = [(relpath, old, new), ...]."""
+import os
+import runpy
+import sys
+
+spec = runpy.run_path(sys.argv[1])
+root = os.getcwd()
+for rel, old, new in spec['PATCHES']:
+    path = os.path.join(root, rel)
+    with open(path, encoding='utf-8') as f:
+        s = f.read()
+    n = s.count(old)
+    if n != 1:
+        sys.exit(f'{rel}: anchor found {n} times: {old[:100]!r}')
+    s = s.replace(old, new)
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(s)
+    print('patched', rel)

@@ -1,5 +1,42 @@
 # Who holds the work
 
+## RESUMED, 2026-10-08: the review-response session (Claude, a cloud container), on Rob's "Keep building"
+
+The review-response session paused on 2026-10-06 at 97% of the week's usage (Rob: pause at 90% and "write up a
+comprehensive handoff packet for another AI platform"). Codex on Personal-HP then picked the handoff up on 2026-10-07
+(its record below): B4, B6 and B3 landed with suites and breaks (5d068d26), 53 of the seven decks' 477 cards left
+undefined. On 2026-10-08 Rob told this session "Keep building", the week's usage read back at 1%, so the baton is back
+here, on the same branch and PR #669, building on Codex's commit. **`docs/handoff-2026-10-06.md` is still the map**, with
+`docs/train-b-proof-2026-10-07.md` and `docs/production-readiness-2026-10-07.md` beside it. Train B goes on as the
+handoff's §3 says, five workers by engine area (permissions and attack statics; effects, counts and triggers; memory;
+keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of the week's usage, pause and hand off.
+
+## The previous record: the Train B continuation, October 7, 2026 (Codex)
+
+**Holder:** Codex on Personal-HP, continuing the authorized production-readiness work on
+`claude/admiring-franklin-58cxy4` from `d8774b32`, PR #669. B4, B6 and B3 are integrated:
+25 additional definitions, 22 dedicated suites and 97 caught deliberate faults. The final
+affected aggregate passed 282 suites; check-cards passed 1,681 definitions and 2,747 scenarios.
+The exact commands, fixes and limits are in `docs/train-b-proof-2026-10-07.md`.
+The standalone ten-game CPU gate also passed after removing unnecessary controller and
+attack-cap derivations; no budget was raised. Real-deck refusal-free acceptance is still open.
+
+**Next:** complete the scan/push and ready #669 for Actions; diagnose its exact head. Then
+prove real-card games with D5 Shadrix, finish D2 Chulane's three missing cards, and continue
+library/deck integrity, human-game recovery and bounded AI acceptance as recorded in
+`docs/production-readiness-2026-10-07.md`. No production gate is declared passed.
+
+**Backup and access:** the exact October 4 live-game backup was found in the MtG project's
+AI Input folder and validated read-only with the app's checksum and model checks. No real
+library was restored or changed. The staging service-token environment variables are absent
+here, so signed-in live staging checks remain blocked. Paid AI usage waits on a concrete cap.
+Reserved access, credential, persistent-permission, history and branch-deletion actions are
+untouched. The unrelated local settings file remains untracked.
+
+## The record before: PAUSED, 2026-10-06 ~18:30 UTC
+
+The review-response session's last record before the pause; `docs/handoff-2026-10-06.md` is its handoff.
+
 | | |
 | --- | --- |
 | **Holder** | **Held: the review-response session of 2026-10-05 (Claude, a cloud container), on Rob's go to evaluate the independent review (OpenAI, report-only, of the freeze `31801daa`), update the plan, put live games in the cloud first, and execute.** The evaluation, what was done and the plan are **`docs/review-response-2026-10-05.md`** (its Phase L ahead of `docs/plan-execution-2026-10-03.md`). **Done:** #665 (F-1's tally, F-2's layer fix, slices) and #666 merged on the local gate; the staging release of 2fd4b1bd pushed and **deployed by Workers Builds** (version `88cd1fae`, 2026-10-05 18:20 UTC; Rob did not deploy, so Builds works again, D8). **Rob's answers, 2026-10-06:** #663 and #664 folded in (yes); once every person is out the game ends there (no to playing on: built as `endWhenNoPerson`); the standing decisions explained in the doc's §6.1, and how to do A3, A4, A5 and A8 in §6.2. **#667 merged** (`main` a2063d95, on the local gate); its staging release, `release/cloud-staging` fc09b4ad, **deployed by Workers Builds** as version `480fc72a` at 2026-10-06 15:07:51 UTC, its Worker byte-identical to the release's bundle. **Rob, 2026-10-06, later:** "Continue with the 28 cards still undefined, X8b/X8c, a narrowed X9, X10–X14, then gates G-B through G-F to the two sentences. We skipped the live game." On this branch since: X8c (hold priority or yield, said by the switch and in Tools), X8's captions (R12: 10px floors at 1280x720), X9 (the CPU check in `tests/engine-room-games.mjs`, seed 1's two repeated answers made once), L5 (an invitation survives Access's sign-in, an empty library offers Restore, Play leads back to your seat), **Train A** (the 28 live-deck cards, four workers merged in four commits, all 28 seated by the table), **X10** (the velocity pilot measured: 28 provisional definitions, seated nowhere) and **X8b** (a cast or ability the pool pays more than one way is offered and asks which way; `SLICE_STEPS` 100 for the heavier games that followed). check-cards: 1,614 definitions (1,586 hand-authored), 2,516 scenarios. The X10 worker pushed `claude/x10-velocity` on this session's instruction, against the one-branch rule; it is merged here and can be deleted. And Rob: **the repository is public** (D7, option C: Actions is the gate again), **A5 and A8 done** (read back from the Cloudflare API), A4's deploy fallback set as an environment variable for new sessions. |

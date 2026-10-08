@@ -1,0 +1,192 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Conspicuous Snoop",
+  "fixtures": {
+    "Goblin Scout": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A Goblin cast from the top of the library",
+      "library": [
+        "Goblin Scout"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Conspicuous Snoop",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Goblin Scout"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Conspicuous Snoop",
+            "Mountain",
+            "Goblin Scout"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A card that is not a Goblin is not cast from there, and gives nothing",
+      "library": [
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Conspicuous Snoop",
+            "Forest",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Bear"
+          },
+          "count": 0
+        },
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Conspicuous Snoop"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "With Krenko on top, the Snoop has Krenko's ability: a Goblin for each Goblin it controls",
+      "library": [
+        "Krenko, Mob Boss"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Conspicuous Snoop",
+            "Goblin Scout"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Conspicuous Snoop"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Conspicuous Snoop",
+            "Goblin Scout",
+            "Goblin",
+            "Goblin"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Conspicuous Snoop"
+        }
+      ]
+    },
+    {
+      "name": "With Skirk Prospector on top, the Snoop has its mana ability: sacrifice a Goblin, add {R}",
+      "library": [
+        "Skirk Prospector"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Conspicuous Snoop",
+            "Goblin Scout"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Conspicuous Snoop",
+          "sacrifice": "Goblin Scout"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Goblin Scout"
+          ]
+        }
+      ]
+    }
+  ]
+}

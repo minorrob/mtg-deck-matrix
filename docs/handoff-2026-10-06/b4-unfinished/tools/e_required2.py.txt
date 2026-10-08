@@ -1,0 +1,108 @@
+EDITS = [
+('game/engine/rules/combat.mjs', [
+('''import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack as restricted, cantGainLife, attackerCaps, defenderLifted} from "./statics.mjs";''',
+'''import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack as restricted, cantGainLife, attackerCaps, defenderLifted, attacksEachCombat} from "./statics.mjs";'''),
+('''export const attackers = {
+  /** Whether this step has anything to ask. Called by the turn structure as the step begins. */''',
+'''/* "ATTACKS EACH COMBAT IF ABLE" (CR 508.1d; rules/statics.mjs, attacksEachCombat): of the creatures offered, each a static
+   requires to attack, and the way it may. One that can attack someone only by paying a cost is required nothing (508.1d:
+   no player is made to pay); one that can attack a player, or a planeswalker no cap limits, for free must be declared
+   (`each`). One whose only free attacks are at planeswalkers that allow only so many (attackerCaps, 508.1c) is `tight`:
+   as many of those as can attack at once must -- the most requirements obeyed without breaking a restriction -- counted
+   by matching them to the planeswalkers' places (`most`). The declaration obeys them all or is refused, saying which. */
+function attackRequirements(state, options) {
+  const caps = attackerCaps(state);
+  const free = (o) => attackTax(state, [{defenderId: o.defenderId, ...(o.planeswalkerId !== undefined ? {planeswalkerId: o.planeswalkerId} : {})}]) === 0;
+  const each = [], tight = [];
+  for (const id of new Set(options.map((o) => o.cardId))) {
+    const sources = attacksEachCombat(state, id);
+    if (!sources.length) continue;
+    const ways = options.filter((o) => o.cardId === id && free(o));
+    if (!ways.length) continue;
+    if (ways.some((o) => o.planeswalkerId === undefined || caps[o.planeswalkerId] === undefined)) each.push({id, sources});
+    else tight.push({id, sources, at: [...new Set(ways.map((o) => o.planeswalkerId))]});
+  }
+  return {each, tight, most: placesFilled(tight, caps)};
+}
+/* How many of these can attack at once, each at a planeswalker it may, none past a planeswalker's cap: a matching of the
+   creatures to the planeswalkers' places, grown one augmenting path at a time. */
+function placesFilled(tight, caps) {
+  const places = [...new Set(tight.flatMap((t) => t.at))].flatMap((pw) => Array.from({length: caps[pw]}, () => pw));
+  const holder = places.map(() => -1);
+  const seat = (c, seen) => {
+    for (let p = 0; p < places.length; p += 1) {
+      if (seen[p] || !tight[c].at.includes(places[p])) continue;
+      seen[p] = true;
+      if (holder[p] < 0 || seat(holder[p], seen)) { holder[p] = c; return true; }
+    }
+    return false;
+  };
+  return tight.reduce((n, _, c) => n + (seat(c, places.map(() => false)) ? 1 : 0), 0);
+}
+/* The refusal, what is wrong and then what to do, naming them (AGENTS.md): the creatures, and the permanents that say so. */
+const named = (list) => (list.length <= 1 ? list.join("") : `${list.slice(0, -1).join(", ")} and ${list[list.length - 1]}`);
+function requirementWords(state, required, most = null, at = []) {
+  const names = named(required.map((r) => shownName(state.objects[r.id])));
+  const sources = named([...new Set(required.flatMap((r) => r.sources).map((s) => state.objects[s]?.card ?? "a permanent"))]);
+  if (most === null) return `${names} ${required.length === 1 ? "has" : "have"} to attack this combat: ${sources} says ${required.length === 1 ? "it attacks" : "they attack"} each combat if able. `
+    + `Declare ${required.length === 1 ? "it" : "each of them"} attacking a player or a planeswalker.`;
+  const places = named(at.map((pw) => state.objects[pw]?.card ?? "a planeswalker"));
+  return `${COUNTED[most]?.replace(/ creatures?$/, "") ?? most} of ${names} ${most === 1 ? "has" : "have"} to attack this combat: ${sources} says they attack each combat if able, and ${places} is all they can attack. `
+    + `Declare ${most === 1 ? "one of them" : `${most} of them`} attacking ${places}.`;
+}
+/* The record's `requires` (controller.mjs holds every answerer to it): at least `least` of the options naming these creatures. */
+function requiresOf(state, options) {
+  const {each, tight, most} = attackRequirements(state, options);
+  const out = [];
+  if (each.length) out.push({by: "cardId", values: each.map((r) => r.id), least: each.length, why: requirementWords(state, each)});
+  if (tight.length && most > 0) out.push({by: "cardId", values: tight.map((r) => r.id), least: most, why: requirementWords(state, tight, most, [...new Set(tight.flatMap((t) => t.at))])});
+  return out;
+}
+
+export const attackers = {
+  /** Whether this step has anything to ask. Called by the turn structure as the step begins. */'''),
+('''    const capped = caps.length ? {by: "planeswalkerId", most: Object.fromEntries(caps), why: Object.fromEntries(caps.map(([pw, most]) => [pw, capWords(state, Number(pw), most)]))} : null;
+    return {''',
+'''    const capped = caps.length ? {by: "planeswalkerId", most: Object.fromEntries(caps), why: Object.fromEntries(caps.map(([pw, most]) => [pw, capWords(state, Number(pw), most)]))} : null;
+    /* "OTHER GOBLIN CREATURES YOU CONTROL ATTACK EACH COMBAT IF ABLE" (CR 508.1d): which must be among the attackers, said in
+       the record with what to do instead -- every answerer held to it by controller.mjs, and a pilot able to keep to it. */
+    const requires = requiresOf(state, options);
+    return {'''),
+('''      ...(capped ? {capped} : {}),
+      options,
+    };
+  },
+
+  resolve(state, awaiting, indices) {''',
+'''      ...(capped ? {capped} : {}),
+      ...(requires.length ? {requires} : {}),
+      options,
+    };
+  },
+
+  resolve(state, awaiting, indices) {'''),
+('''      const owed = mustAttackOf(state, id).filter((d) => defendersFor(state, awaiting.player).includes(d) && !cantAttack(state, id, d) && attackTax(state, [{defenderId: d}]) === 0);
+      if (owed.length) picked.push({cardId: id, defenderId: owed[0]});
+    }
+    return picked;''',
+'''      const owed = mustAttackOf(state, id).filter((d) => defendersFor(state, awaiting.player).includes(d) && !cantAttack(state, id, d) && attackTax(state, [{defenderId: d}]) === 0);
+      if (owed.length) picked.push({cardId: id, defenderId: owed[0]});
+    }
+    /* "Attacks each combat if able" (CR 508.1d): a declaration that leaves out one it could have sent is not a legal one --
+       refused, saying which and what to do (the record's `requires`), and never quietly filled in for the player. */
+    for (const need of choice.requires ?? [])
+      if (new Set(picked.map((o) => o.cardId).filter((id) => need.values.includes(id))).size < need.least) throw new Error(need.why);
+    return picked;'''),
+]),
+('game/engine/controller.mjs', [
+('''  if (choice.choiceKind === "manipulate") validateManipulateOrder(choice, request);''',
+'''  /* AND SOME OPTIONS MUST BE AMONG THOSE TAKEN: "other Goblin creatures you control attack each combat if able" (CR 508.1d)
+     -- at least `least` of the options whose `by` field is one of `values`, each value once. Refused with the record's own
+     words (`why`): which, and what to do instead. */
+  for (const need of Array.isArray(choice.requires) ? choice.requires : []) {
+    const met = new Set(indices.map((n) => (choice.options ?? [])[n]?.[need.by]).filter((value) => (need.values ?? []).includes(value)));
+    if (met.size < (need.least ?? 0)) throw new Error(need.why ?? "Invalid selection");
+  }
+  if (choice.choiceKind === "manipulate") validateManipulateOrder(choice, request);'''),
+]),
+]

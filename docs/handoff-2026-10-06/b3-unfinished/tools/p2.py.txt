@@ -1,0 +1,14 @@
+PATCHES = [
+("game/engine/script/effects/zones.mjs",
+"""      const to = entry.flashback || entry.graveyardToExile || params.to === "exile" ? "exile"
+        : (params.commanderHome ?? []).includes(entry.objectId) ? "command" : params.to === "top" ? "library" : "graveyard";""",
+"""      const to = entry.flashback || entry.graveyardToExile || params.to === "exile" ? "exile"
+        : (params.commanderHome ?? []).includes(entry.objectId) ? "command" : params.to === "top" ? "library"
+        /* Cast through a permission that puts it on the bottom of its owner's library instead (Quintorius, Loremaster). */
+        : entry.graveyardToBottom === true ? "library" : "graveyard";"""),
+("game/engine/script/effects/zones.mjs",
+"""    : from === "battlefield" && object.exileIfLeaves === true ? "exile" : proposal.to;""",
+"""    : from === "battlefield" && object.exileIfLeaves === true ? "exile"
+    /* "If that spell would be put into a graveyard, put it on the bottom of its owner's library instead" (rules/actions.mjs). */
+    : leaving >= 0 && state.stack[leaving].graveyardToBottom === true && proposal.to === "graveyard" ? "library" : proposal.to;"""),
+]

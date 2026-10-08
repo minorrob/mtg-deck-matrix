@@ -1,0 +1,41 @@
+EDITS = [
+('game/engine/rules/actions.mjs', [
+('''      /* Each permanent of the set chosen, sacrificed (CR 701.21a) -- with the offer, or picked once it was taken. */
+      if (atom.atom === "sacrifice" && atom.selector && action.costChoice?.sacrifice !== undefined)
+        for (const fodder of [].concat(action.costChoice.sacrifice)) sacrificeOne(state, fodder, events);''',
+'''      /* Each permanent of the set chosen, sacrificed (CR 701.21a) -- with the offer, or picked once it was taken. "Draw cards
+         equal to the sacrificed creature's toughness" (Felothar the Steadfast): each as it last existed, kept on the ability
+         for its effects (`sacrificed`; script/amount.mjs, CR 608.2h). */
+      if (atom.atom === "sacrifice" && atom.selector && action.costChoice?.sacrifice !== undefined)
+        for (const fodder of [].concat(action.costChoice.sacrifice)) {
+          const was = lastKnown(state, fodder);
+          if (sacrificeOne(state, fodder, events) !== null && was) (entry.sacrificed ??= []).push(was);
+        }'''),
+]),
+('game/engine/rules/stack.mjs', [
+('''    ...(entry.sourceTransforms !== undefined ? {sourceTransforms: entry.sourceTransforms} : {}),
+    /* What its permanent chose as it entered: "draw a card for each creature of the chosen type". */''',
+'''    ...(entry.sourceTransforms !== undefined ? {sourceTransforms: entry.sourceTransforms} : {}),
+    /* What its cost sacrificed, as each last existed: "the sacrificed creature's toughness" (rules/actions.mjs). */
+    ...(entry.sacrificed ? {sacrificed: entry.sacrificed} : {}),
+    /* What its permanent chose as it entered: "draw a card for each creature of the chosen type". */'''),
+]),
+('game/engine/script/resolution.mjs', [
+('''      ...(context.sourceTransforms !== undefined ? {sourceTransforms: context.sourceTransforms} : {})},''',
+'''      ...(context.sourceTransforms !== undefined ? {sourceTransforms: context.sourceTransforms} : {}),
+      /* What the cost sacrificed, as it last existed ("the sacrificed creature's power"; script/amount.mjs). */
+      ...(context.sacrificed ? {sacrificed: context.sacrificed} : {})},'''),
+]),
+('game/engine/script/amount.mjs', [
+('''  } else if ("powerOf" in value) {
+    const id = objectOf(value.powerOf, context);''',
+'''  }
+  /* "Draw cards equal to the sacrificed creature's toughness, then discard cards equal to its power" (Felothar the
+     Steadfast): what the ability's cost sacrificed, as it last existed (CR 608.2h; rules/actions.mjs keeps it). */
+  else if (value.powerOf === "sacrificed" || value.toughnessOf === "sacrificed") {
+    const was = (context.sacrificed ?? [])[0];
+    n = (value.powerOf === "sacrificed" ? was?.power : was?.toughness) ?? 0;
+  } else if ("powerOf" in value) {
+    const id = objectOf(value.powerOf, context);'''),
+]),
+]

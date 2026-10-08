@@ -1,0 +1,29 @@
+PATCHES = [
+("game/engine/cards/index.mjs",
+"""  exiled: (t) => (ARRIVALS.includes(t.who ?? "self") && (t.from ?? "battlefield") === "battlefield"
+    ? {on: "GameEventCardChangeZone", from: "Battlefield", to: "Exile", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {})} : null),""",
+"""  exiled: (t) => (Array.isArray(t.from) ? exiledFrom(t)
+    : ARRIVALS.includes(t.who ?? "self") && (t.from ?? "battlefield") === "battlefield"
+    ? {on: "GameEventCardChangeZone", from: "Battlefield", to: "Exile", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {})} : null),"""),
+("game/engine/cards/index.mjs",
+"""const TRIGGERS = {
+  /* "When this enters", "whenever another creature enters", "whenever a creature you control enters": `filter` is the""",
+"""/* "WHENEVER ONE OR MORE CARDS ARE PUT INTO EXILE FROM YOUR LIBRARY AND/OR YOUR GRAVEYARD" (Laelia, the Blade Reforged):
+   `from` a list of the zones -- a library, a graveyard -- and `owner` whose they are (a card is in its owner's, CR 400.3):
+   any card put into exile from one of them, face down too (hideaway), by an effect or a cost. "One or more" is `batch`:
+   once for everything one action exiled, from either zone (rules/trigger.mjs). */
+const EXILED_FROM = {library: "Library", graveyard: "Graveyard"};
+const exiledFrom = (t) => (t.from.length && t.from.every((zone) => EXILED_FROM[zone]) && ["you", "opponent", "any"].includes(t.owner ?? "you") && !t.filter && t.who === undefined
+  ? {on: "GameEventCardChangeZone", to: "Exile", fromZones: t.from.map((zone) => EXILED_FROM[zone]), owner: t.owner ?? "you"} : null);
+
+const TRIGGERS = {
+  /* "When this enters", "whenever another creature enters", "whenever a creature you control enters": `filter` is the"""),
+("game/engine/rules/trigger.mjs",
+"""    if (condition.from && fields.from?.zoneType !== condition.from) return false;
+    if (condition.to && fields.to?.zoneType !== condition.to) return false;""",
+"""    if (condition.from && fields.from?.zoneType !== condition.from) return false;
+    if (condition.to && fields.to?.zoneType !== condition.to) return false;
+    /* "Put into exile from your library and/or your graveyard" (Laelia; cards/index.mjs, exiledFrom): from one of those zones,
+       a card its owner owns -- whose library or graveyard it was in (CR 400.3). */
+    if (condition.fromZones) return condition.fromZones.includes(fields.from?.zoneType) && whoseIs(condition.owner ?? "you", fields.card?.owner, controller);"""),
+]

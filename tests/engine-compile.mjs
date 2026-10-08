@@ -92,6 +92,8 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
   const scry2 = checkFidelity({...opt, abilities: [{...opt.abilities[0], text: opt.oracleText.replace("Scry 1.", "Scry 2.")}]});
   eq(scry2.ok, false, "and changing a word of it is still an invention");
   eq(oracleClauses("({T}: Add {W}.)"), ["{T}: Add {W}."], "unless it is the whole line, as a basic land's ability is");
+  eq(oracleClauses("Vigilance\n(Melds with Hanweir Battlements.)"), ["Vigilance"],
+    "and a meld card's reminder of its partner's ability, the whole line, claims nothing: the ability is the other card's (CR 712.4a)");
   eq(oracleClauses("Flying, double strike, vigilance"), ["Flying", "double strike", "vigilance"], "a keyword line is a clause per keyword");
 
   eq(checkReadBack({everyAbilityPresent: true, costsRight: true, targetsRight: true, zonesRight: true, effectsRight: true, problems: []}).ok, true, "a read-back of five yeses and no problem passes");
@@ -102,7 +104,7 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
   const broken = {...handOf("Night's Whisper"), abilities: [{...handOf("Night's Whisper").abilities[0], effects: [{effect: "moveZone", targets: "self", to: "nowhere"}]}]};
   const exploded = smokeTest(broken, index.definition);
   ok(!exploded.ok && /nowhere|zone/i.test(exploded.problems.join(" ")), `a script that throws in its smoke game is refused (${exploded.problems[0]})`);
-  const unbuilt = {...handOf("Night's Whisper"), abilities: [{...handOf("Night's Whisper").abilities[0], effects: [{effect: "exchangeLife"}]}]};
+  const unbuilt = {...handOf("Night's Whisper"), abilities: [{...handOf("Night's Whisper").abilities[0], effects: [{effect: "addTurn"}]}]};
   eq([smokeTest(unbuilt, index.definition).blocked, smokeTest(unbuilt, index.definition).ok], [true, false], "one using a construct the engine has not built is blocked, not refused");
   const s = {zones: {hand: [[1]], battlefield: [1]}, objects: {1: {card: "Twice", zone: "hand"}}};
   ok(zoneProblems(s).some((p) => /object 1 is in hand and battlefield/.test(p)), "the smoke game's state check finds a card in two zones");
@@ -122,7 +124,7 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
   const system = writerSystem(examples);
   ok(examples.length >= 5 && examples.every((e) => system.includes(JSON.stringify(e.abilities))), "the writer is shown finished definitions from the directory");
   ok(["dealDamage", "counterSpell", "createToken"].every((p) => system.includes(p)) && system.includes("{\"target\": n}"), "and the engine's own primitives and binding, read off the engine");
-  ok(!/exchangeLife/.test(system), "never a primitive the engine has not built (exchangeLife; surveil was the example until batch 20 built it, twoPiles until 2026-10-04)");
+  ok(!/addTurn/.test(system), "never a primitive the engine has not built (addTurn; exchangeLife until Train B built it, surveil was the example until batch 20 built it, twoPiles until 2026-10-04)");
   ok(system.includes("additionalCost") && ["Treasure", "Food", "Clue"].every((t) => system.includes(t)) && system.includes("attachedBy") && system.includes("\"Equip {N}\""),
     "the writer is told how an additional cost, a predefined token and Equip are written");
   const strict = (schema) => schema.type !== "object" || (schema.additionalProperties === false && Object.values(schema.properties).every((p) => strict(p.items ?? p)));
@@ -198,7 +200,7 @@ const job = (names, call, ledger = {cards: {}}, extra = {}) => {
   eq([r.outcome, r.stage], ["failed", "read-back"], "a read-back no refuses it");
   const boom = {...answerOf("Night's Whisper"), abilitiesJson: JSON.stringify([{...handOf("Night's Whisper").abilities[0], effects: [{effect: "moveZone", targets: "self", to: "nowhere"}]}])};
   eq((await job(["Night's Whisper"], stub({"Night's Whisper": {writer: boom}}).call).run).results[0].stage, "smoke", "a smoke game that throws refuses it");
-  const waits = {...answerOf("Night's Whisper"), abilitiesJson: JSON.stringify([{...handOf("Night's Whisper").abilities[0], effects: [{effect: "exchangeLife"}]}])};
+  const waits = {...answerOf("Night's Whisper"), abilitiesJson: JSON.stringify([{...handOf("Night's Whisper").abilities[0], effects: [{effect: "addTurn"}]}])};
   const blocked = job(["Night's Whisper"], stub({"Night's Whisper": {writer: waits}}).call);
   const rb = (await blocked.run).results[0];
   eq([rb.outcome, blocked.written[ORACLE.get("Night's Whisper").id]?.status], ["blocked", "blocked"], "a script waiting on an unbuilt construct is stored blocked, to play the day the engine builds it");

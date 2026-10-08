@@ -1,0 +1,90 @@
+EDITS = [
+('game/engine/rules/statics.mjs', [
+('''  /** "Target creature with defender can attack this turn as though it didn't have defender" (Assault Formation, Walking
+      Bulwark; CR 702.3b): combat.mjs, as attackers are offered. */
+  "attacks-despite-defender": "rules/combat.mjs",''',
+'''  /** "Target creature with defender can attack this turn as though it didn't have defender" (Assault Formation, Walking
+      Bulwark; CR 702.3b): combat.mjs, as attackers are offered. And as a permanent's static: "creatures you control can
+      attack as though they didn't have defender" (Felothar the Steadfast), "this creature can attack players who attacked
+      you during their last turn as though it didn't have defender" (Weathered Sentinels: `against: "attackedYouLastTurn"`,
+      those players only, never a planeswalker). defenderLifted, below. */
+  "attacks-despite-defender": "rules/combat.mjs",'''),
+('''/** The words `defender` may say on a `cant-attack` static. */''',
+'''/** Whom a static `attacks-despite-defender` may limit its permission to (`against`): the players who attacked its
+ *  controller during their last turn (Weathered Sentinels). */
+export const DEFENDER_LIFTED_AGAINST = Object.freeze(["attackedYouLastTurn"]);
+/* "PLAYERS WHO ATTACKED YOU DURING THEIR LAST TURN": a player is one when, in their most recent turn, a creature of theirs
+   was declared attacking you -- you, not a planeswalker of yours (CR 506.3: attacking one is not attacking its controller).
+   Kept on each player as they declare attackers, from none as each of their turns begins (rules/combat.mjs, turn.mjs). */
+const attackedYouLastTurn = (state, player, you) => (state.players[player]?.attackedPlayers ?? []).includes(you);
+
+/**
+ * WHETHER DEFENDER IS LIFTED (CR 702.3b): a creature with defender can't attack, unless something lets it attack as though
+ * it didn't have defender. `defender` the player it would attack, `planeswalker` the planeswalker of theirs, or both
+ * undefined for "anyone at all" -- the question whether it may attack at all (rules/combat.mjs, canAttack). A static of a
+ * permanent's whose `affects` takes this creature in, with its condition holding, lifts it toward anyone, or -- `against`
+ * -- only toward the players it names, and never toward a planeswalker; an effect for a while lifts it toward anyone.
+ */
+export function defenderLifted(state, id, defender = undefined, planeswalker = null) {
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static" || ability.rule !== "attacks-despite-defender") continue;
+      const context = {controller: holder.controller, source: holderId};
+      if (!conditionHolds(state, ability.condition, context) || !matchesSelector(chosenFor(ability, holder).affects, state, id, context)) continue;
+      if (ability.against === undefined) return true;
+      if (ability.against !== "attackedYouLastTurn" || planeswalker !== null) continue;
+      const toward = defender === undefined ? state.players.filter((p) => !p.lost && p.id !== holder.controller).map((p) => p.id) : [defender];
+      if (toward.some((player) => attackedYouLastTurn(state, player, holder.controller))) return true;
+    }
+  }
+  return (state.effects ?? []).some((effect) => effect.rule === "attacks-despite-defender" && staticAffects(state, effect, id, effect.sourceController));
+}
+
+/** The words `defender` may say on a `cant-attack` static. */'''),
+]),
+('game/engine/rules/combat.mjs', [
+('''import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack, cantGainLife, attackerCaps} from "./statics.mjs";''',
+'''import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack as restricted, cantGainLife, attackerCaps, defenderLifted} from "./statics.mjs";'''),
+('''/** CR 508.1a: untapped, not sick, no defender (unless it may attack as though it had none, CR 702.3b), and yours. */
+export function canAttack(state, id, player) {
+  const object = state.objects[id];
+  return isCreatureNow(state, id)
+    && controllerOf(state, id) === player
+    && !object.tapped
+    && !summoningSick(state, id)
+    && (!hasNow(state, id, "Defender") || ruleChanged(state, "attacks-despite-defender", id));
+}''',
+'''/** CR 508.1a: untapped, not sick, no defender (unless it may attack as though it had none, CR 702.3b -- someone, at
+ *  least: rules/statics.mjs, defenderLifted), and yours. */
+export function canAttack(state, id, player) {
+  const object = state.objects[id];
+  return isCreatureNow(state, id)
+    && controllerOf(state, id) === player
+    && !object.tapped
+    && !summoningSick(state, id)
+    && (!hasNow(state, id, "Defender") || defenderLifted(state, id));
+}
+
+/* A RESTRICTION ON ATTACKING THAT PLAYER, OR THAT PLANESWALKER OF THEIRS (CR 508.1c): one a static or an effect says
+   (rules/statics.mjs, cantAttack), or defender (CR 702.3b) not lifted toward them -- "can attack players who attacked you
+   during their last turn as though it didn't have defender" (Weathered Sentinels) lifts it toward those players alone. */
+const cantAttack = (state, id, defender, planeswalker = null) => restricted(state, id, defender, planeswalker)
+  || (hasNow(state, id, "Defender") && !defenderLifted(state, id, defender, planeswalker));'''),
+('''  /* "Creatures that attacked this turn", "attacks for the first time each turn": counted on each attacker. */
+  for (const attack of state.combat.attacks) recordUse(state, attack.attacker, "attacked");''',
+'''  /* "Creatures that attacked this turn", "attacks for the first time each turn": counted on each attacker. */
+  for (const attack of state.combat.attacks) recordUse(state, attack.attacker, "attacked");
+  /* And whom the attacking player attacked this turn -- players, not their planeswalkers (CR 506.3): "players who attacked
+     you during their last turn" (Weathered Sentinels; rules/statics.mjs, defenderLifted), from none as their turn began
+     (rules/turn.mjs). */
+  const attackedPlayers = (state.players[player].attackedPlayers ??= []);
+  for (const attack of state.combat.attacks) if (attack.planeswalker === undefined && !attackedPlayers.includes(attack.defender)) attackedPlayers.push(attack.defender);'''),
+]),
+('game/engine/rules/turn.mjs', [
+('''    state.players[state.activePlayer].turnBegan = state.turn;   /* CR 302.6, keywords/timing.mjs */''',
+'''    state.players[state.activePlayer].turnBegan = state.turn;   /* CR 302.6, keywords/timing.mjs */
+    /* Whom they attack in this turn, from none: "players who attacked you during their last turn" (rules/combat.mjs). */
+    if (state.players[state.activePlayer].attackedPlayers) state.players[state.activePlayer].attackedPlayers = [];'''),
+]),
+]

@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Stir Up Trouble",
+    "oracleId": "dda607bd-f419-4b7f-b052-a5ce6ce22bfe",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As an additional cost to cast this spell, sacrifice an artifact or creature or pay {4}.\nDestroy target creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "As an additional cost to cast this spell, sacrifice an artifact or creature or pay {4}.\nDestroy target creature.",
+      "additionalCost": [
+        {
+          "atom": "oneOf",
+          "options": [
+            [
+              {
+                "atom": "sacrifice",
+                "selector": {
+                  "anyOf": [
+                    {
+                      "types": [
+                        "Artifact"
+                      ]
+                    },
+                    {
+                      "types": [
+                        "Creature"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ],
+            [
+              {
+                "atom": "mana",
+                "cost": "{4}"
+              }
+            ]
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

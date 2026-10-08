@@ -1,0 +1,45 @@
+PATCHES = [
+("game/engine/script/effects/zones.mjs",
+"""export function returnExiledUntil(state, departed, events) {
+  const due = (state.exiledUntil ?? []).filter((link) => link.source === departed);""",
+"""export function returnExiledUntil(state, departed, events, leftBehind = null) {
+  if (leftBehind) keepLastKnown(state, departed, leftBehind);
+  const due = (state.exiledUntil ?? []).filter((link) => link.source === departed);"""),
+("game/engine/script/effects/zones.mjs",
+"""/** Which players an effect is aimed at. */""",
+"""/**
+ * AN ABILITY ON THE STACK OUTLIVES ITS SOURCE (CR 113.7a): once its source has left the battlefield, the ability uses the
+ * source's last known information -- "this creature's power" for mentor's target (script/filter.mjs), "cards exiled with
+ * this enchantment" for an end-step trigger whose enchantment has gone (script/filter.mjs, linkSource). `departed`, the
+ * permanent's id as it was; each of its abilities waiting on the stack that knows nothing of it yet is told.
+ */
+export function keepLastKnown(state, departed, leftBehind) {
+  for (const entry of state.stack) if (entry.objectId === null && entry.cardId === departed && !entry.lastKnown) entry.lastKnown = structuredClone(leftBehind);
+}
+
+/** Which players an effect is aimed at. */"""),
+("game/engine/script/effects/zones.mjs",
+"""  if (from === "battlefield") returnExiledUntil(state, id, events);""",
+"""  if (from === "battlefield") returnExiledUntil(state, id, events, leftBehind);"""),
+("game/engine/rules/sba.mjs",
+"""      /* What it exiled "until this Aura leaves the battlefield", back (CR 610.3; Ossification). */
+      returnExiledUntil(state, id, events);""",
+"""      /* What it exiled "until this Aura leaves the battlefield", back (CR 610.3; Ossification). */
+      returnExiledUntil(state, id, events, leftBehind);"""),
+("game/engine/rules/sba.mjs",
+"""        /* What it exiled "until this leaves the battlefield", back (CR 610.3). */
+        returnExiledUntil(state, id, events);""",
+"""        /* What it exiled "until this leaves the battlefield", back (CR 610.3). */
+        returnExiledUntil(state, id, events, leftBehind);"""),
+("game/engine/rules/sba.mjs",
+"""        to: {zoneType: ZONE_LABEL[proposal.to] ?? proposal.to, player: {playerId: object.owner}},
+      }));
+      returnExiledUntil(state, id, events);
+      acted = true;
+    }""",
+"""        to: {zoneType: ZONE_LABEL[proposal.to] ?? proposal.to, player: {playerId: object.owner}},
+      }));
+      returnExiledUntil(state, id, events, leftBehind);
+      acted = true;
+    }"""),
+]

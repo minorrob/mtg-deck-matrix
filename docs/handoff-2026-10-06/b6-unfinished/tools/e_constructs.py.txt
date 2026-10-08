@@ -1,0 +1,53 @@
+import sys
+root = sys.argv[1]
+p = root + '/game/tools/engine-constructs.mjs'
+s = open(p).read()
+
+old = """export const DECK_RULE_KEYWORDS = {Partner: "room/table.mjs", "Choose a Background": "room/table.mjs"};"""
+new = old + """
+
+/* Keywords that are a way of casting or entering, held by the rules module named (Train B, X11):
+   AlternateAdditionalCost -- "as an additional cost to cast this spell, sacrifice an artifact or discard a card" (Demand
+     Answers), "sacrifice an artifact or creature or pay {4}" (Stir Up Trouble): one additional cost of a choice of them
+     (CR 601.2b, 601.2h), each choice its own offer -- a sacrifice, a discard, a blight or mana (rules/actions.mjs,
+     additionalVariants, `{atom: "oneOf"}`). Built before it was credited (Bogslither's Embrace, Silence the Echo); no new
+     code. Named, not built: an exile or a life payment as one of the choices.
+   ETBReplacement -- "[this permanent] enters ..." and "as [this permanent] enters ..." (CR 614.1c, 614.12): tapped, with
+     counters, as a copy, with a choice made, unless a cost is paid or a card revealed, and -- new here -- prepared
+     (Goblin Glasswright, CR 722.3a; rules/replacement.mjs, script/effects/attributes.mjs). Named, not built: one that
+     enters attached to something chosen as it enters, other than an Aura's own Enchant. */
+export const CAST_RULE_KEYWORDS = {AlternateAdditionalCost: "rules/actions.mjs", ETBReplacement: "rules/replacement.mjs"};"""
+assert old in s
+s = s.replace(old, new, 1)
+
+old = """  || Boolean(ABILITY_KEYWORDS[word] && isBuilt(ABILITY_KEYWORDS[word])) || Boolean(DECK_RULE_KEYWORDS[word]) || PROTECTION_QUALITIES.test(word);"""
+new = """  || Boolean(ABILITY_KEYWORDS[word] && isBuilt(ABILITY_KEYWORDS[word])) || Boolean(DECK_RULE_KEYWORDS[word]) || Boolean(CAST_RULE_KEYWORDS[word]) || PROTECTION_QUALITIES.test(word);"""
+assert old in s
+s = s.replace(old, new, 1)
+
+old = """  LifeYouGainedThisTurn: {name: "Life you gained this turn", status: "built", engine: "amount {lifeGainedThisTurn} (effects/resources.mjs and rules/combat.mjs keep it)"},"""
+new = old + """
+  /* Train B (X11; Betor, Ancestor's Voice): "the amount of life you lost this turn" -- the amount Wound Reflection's "that
+     player" was built with, for "you"; and a mana value at most it (script/filter.mjs). */
+  LifeYouLostThisTurn: {name: "Life you lost this turn", status: "built", engine: "amount {lifeLostThisTurn: \\"you\\"} (effects/resources.mjs keeps it, rules/turn.mjs clears it); a selector's manaValue.max may be it"},
+  /* Train B (X11; Return to Dust): "if you cast this spell during your main phase" -- the cast's own record (rules/actions.mjs,
+     Addendum's condition) -- for a target the spell has only then (CR 601.2c; script/bind.mjs, `onlyIf`). */
+  IfCastInOwnMainPhase: {name: "If it was cast during its caster's main phase (\\"if you cast this spell during your main phase\\")", status: "built",
+    engine: "condition {cast: {mainPhase: true}}; a target spec's onlyIf (script/bind.mjs)"},"""
+assert old in s
+s = s.replace(old, new, 1)
+
+old = """  /* Paradigm (CR 702.192a; Germination Practicum): the spell exiled as it resolves, and the first time one of its name
+     resolves for a player, a copy cast free at each of their precombat main phases (rules/stack.mjs, play's copyOf). */
+  Paradigm: "play"};"""
+new = """  /* Paradigm (CR 702.192a; Germination Practicum): the spell exiled as it resolves, and the first time one of its name
+     resolves for a player, a copy cast free at each of their precombat main phases (rules/stack.mjs, play's copyOf). */
+  Paradigm: "play",
+  /* Monstrosity (CR 701.37a; Protector of the Wastes, Train B): "{cost}: Monstrosity N" -- if it isn't monstrous, N +1/+1
+     counters and it becomes monstrous (alterAttribute's `counters`, script/effects/attributes.mjs), "when this becomes
+     monstrous" its trigger (cards/index.mjs). */
+  Monstrosity: "alterAttribute"};"""
+assert old in s
+s = s.replace(old, new, 1)
+open(p, 'w').write(s)
+print("ok")

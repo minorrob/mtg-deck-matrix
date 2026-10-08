@@ -59,6 +59,18 @@ const VISIBILITY = {
    What it is face down IS public: a 2/2 creature with no name (CR 708.2a), and whatever effects have made of it, so the
    board draws that. What card it is, only its controller may look at (CR 708.5): `faceDownName`, in that seat's view
    alone. Everyone else learns it as it turns face up or leaves the battlefield (708.8, 708.9). */
+/* WHO MAY LOOK AT A FACE-DOWN CARD. On the battlefield, its controller (CR 708.5). In exile, nobody unless an instruction
+   allows it (CR 406.3): hideaway's "the player who controls the permanent that exiled this card may look at this card"
+   (702.75a) -- `lookers`, each player who has been allowed to, and who goes on being able to until it leaves exile (406.3)
+   -- and never its owner merely for owning it. */
+function mayLookAt(state, object, viewer, controller) {
+  if (object.zone === "battlefield") return viewer === controller;
+  if (object.zone === "exile") {
+    const by = object.exiledBy !== undefined ? state.objects[object.exiledBy] : null;
+    return (object.lookers ?? []).includes(viewer) || (by?.zone === "battlefield" && characteristicsOf(state, by.id).controller === viewer);
+  }
+  return false;
+}
 function cardFor(state, id, canSeeFace, viewer = null) {
   const object = state.objects[id];
   if (!object) return null;
@@ -72,7 +84,7 @@ function cardFor(state, id, canSeeFace, viewer = null) {
     name: named ? object.card : null,
     faceDown,
     /* CR 708.5: its controller, and nobody else, may look at it. */
-    ...(faceDown && viewer !== null && viewer === controller && object.faceDownCard?.card ? {faceDownName: object.faceDownCard.card} : {}),
+    ...(faceDown && viewer !== null && object.faceDownCard?.card && mayLookAt(state, object, viewer, controller) ? {faceDownName: object.faceDownCard.card} : {}),
     owner: object.owner,
     controller,
     tapped: object.tapped,
@@ -87,6 +99,9 @@ function cardFor(state, id, canSeeFace, viewer = null) {
     keywords: shown ? [...current.keywords] : [],
     /* A Class's level (CR 716.2a), a designation anyone can see (716.2b); none is level 1 (716.2d). */
     ...(Number.isInteger(object.level) ? {level: object.level} : {}),
+    /* Monstrous (CR 701.37b) and prepared (CR 722.3a): designations, which anyone can see (script/effects/attributes.mjs). */
+    ...(object.monstrous === true ? {monstrous: true} : {}),
+    ...(object.prepared === true ? {prepared: true} : {}),
     commander: object.commander === true,
     /* Which commander (state/index.mjs, commanderKeyOf): the key its damage is kept under in every player's
        `health.commanderDamage`, the same in every zone, so the board can say whose commander dealt it. */

@@ -1,0 +1,19 @@
+PATCHES = [
+("game/engine/script/effects/asking.mjs",
+"""import {makeCopies, afterwards, joinAttack, defendingPlayers, attachTo, createToken, effectUntil} from "./permanents.mjs";""",
+"""import {makeCopies, afterwards, joinAttack, defendingPlayers, attachTo, createToken, effectUntil, COPY_KEYS} from "./permanents.mjs";"""),
+("game/engine/script/effects/asking.mjs",
+"""    const copied = params.copyOf ? addObject(state, {...structuredClone(params.copyOf), copy: true, owner: player, controller: player}, "exile") : null;
+    const pool = copied !== null ? [copied] : from === "hand" ? cardsIn(state, "hand", player)""",
+"""    const copied = params.copyOf ? addObject(state, {...structuredClone(params.copyOf), copy: true, owner: player, controller: player}, "exile") : null;
+    /* "FOR EACH CARD EXILED THIS WAY, COPY IT, AND YOU MAY CAST THE COPY without paying its mana cost" (Mizzix's Mastery; CR
+       707.12): each card it names copied where it is -- its copiable values (CR 707.2), the copy its caster's (707.10) -- and
+       the copies are what may be cast, each chosen for itself (707.12a; `anyNumber`: one after another, in the order its
+       caster chooses, CR 608.2g). A copy not cast ceases to exist (CR 707.10a, 704.5e; rules/sba.mjs). */
+    const copies = params.copies === true ? (params.targets ?? []).filter((id) => state.objects[id] && ["exile", "graveyard", "hand", "library"].includes(state.objects[id].zone))
+      .map((id) => { const card = state.objects[id];
+        const values = Object.fromEntries(COPY_KEYS.filter((key) => card[key] !== undefined).map((key) => [key, structuredClone(card[key])]));
+        return addObject(state, {...values, ...(card.colorIdentity ? {colorIdentity: [...card.colorIdentity]} : {}), copy: true, owner: player, controller: player},
+          card.zone, card.zone === "exile" ? null : player); }) : null;
+    const pool = copied !== null ? [copied] : copies !== null ? copies : from === "hand" ? cardsIn(state, "hand", player)"""),
+]

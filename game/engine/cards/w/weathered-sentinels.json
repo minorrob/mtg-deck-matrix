@@ -1,0 +1,71 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Weathered Sentinels",
+    "oracleId": "0903b941-82f1-4d3e-9717-29ab7d0c8cef",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Wall"
+    ],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 2,
+    "toughness": 5
+  },
+  "oracleText": "Defender, reach, vigilance, trample\nThis creature can attack players who attacked you during their last turn as though it didn't have defender.\nWhenever this creature attacks, it gets +3/+3 and gains indestructible until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender",
+      "keyword": "defender"
+    },
+    {
+      "kind": "keyword",
+      "text": "reach",
+      "keyword": "reach"
+    },
+    {
+      "kind": "keyword",
+      "text": "vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "keyword",
+      "text": "trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "static",
+      "text": "This creature can attack players who attacked you during their last turn as though it didn't have defender.",
+      "rule": "attacks-despite-defender",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "against": "attackedYouLastTurn"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks, it gets +3/+3 and gains indestructible until end of turn.",
+      "trigger": {
+        "on": "attacks"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 3,
+          "toughness": 3,
+          "keywords": [
+            "Indestructible"
+          ]
+        }
+      ]
+    }
+  ]
+}

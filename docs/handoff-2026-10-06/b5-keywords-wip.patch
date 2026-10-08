@@ -1,0 +1,1395 @@
+diff --git a/game/engine/cards/index.mjs b/game/engine/cards/index.mjs
+index ef39c539..921e553f 100644
+--- a/game/engine/cards/index.mjs
++++ b/game/engine/cards/index.mjs
+@@ -30,7 +30,7 @@ import {ADDED_PHASES} from "../script/effects/permanents.mjs";
+ import {isCounted} from "../script/amount.mjs";
+ import {validateScript, SCRIPT_SCHEMA} from "../script/schema.mjs";
+ import {isBuilt, NEEDS_A_DECISION, EFFECTS, REPEAT_EACH} from "../script/effects/index.mjs";
+-import {KEYWORD_FAMILIES} from "../keywords/combat.mjs";
++import {KEYWORD_FAMILIES, landwalkWord} from "../keywords/combat.mjs";
+ import {KEYWORD_FAMILIES as TIMING_FAMILIES} from "../keywords/timing.mjs";
+ import {KEYWORD_FAMILIES as TYPE_FAMILIES} from "../keywords/types.mjs";
+ import {KEYWORD_FAMILIES as DESIGNATION_FAMILIES} from "../keywords/designations.mjs";
+@@ -68,7 +68,10 @@ function wardCost(cost) {
+ const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "triggers-again", "cant-cast", "attack-tax", "doesnt-untap", "cast-without-paying",
+   "spells-cost-more", "abilities-cost-more",
+   /* "Twice that many ... instead" at a Class level (Innkeeper's Talent, CR 716.2a; rules/statics.mjs, countersPlaced). */
+-  "more-counters"];
++  "more-counters",
++  /* "This creature can't attack or block unless you have the city's blessing" (Wayward Swordtooth): can't block while its
++     condition holds -- rules/statics.mjs, ruleChanged, reads every rule static's condition. */
++  "cant-block"];
+ 
+ /* What a flashback cost may be made of (CR 702.34a): mana, life ("Flashback--{1}{U}, Pay 3 life"), and creatures to tap
+    ("Flashback--Tap three untapped white creatures you control", Battle Screech: `tapCreature`, its `count` and `selector`). */
+@@ -465,6 +468,8 @@ export function compileScript(script) {
+   const keywords = [];
+   let spell = null;
+   let multikicker = null;
++  /* Escalate's cost (CR 702.120a), put on the spell once its modes are known (below). */
++  let escalate = null;
+ 
+   /* "ENCHANT CREATURE" (CR 702.5, 303.4): an Aura spell targets what it will enchant, and the permanent may be attached
+      only to what the same words describe. One keyword ability, `target` its selector; `hostile` when the Aura is a
+@@ -641,6 +646,146 @@ export function compileScript(script) {
+       keywords.push("Paradigm");
+       return;
+     }
++    /* ---- KEYWORD ABILITIES OF CR 702 THAT ARE A TRIGGER, A STATIC OR A COST, EACH COMPILED ONCE, HERE (the plan's X11) ---- */
++    const word = ability.kind === "keyword" ? String(ability.keyword).toLowerCase() : null;
++    /* UNEARTH (CR 702.84a): "[Cost]: Return this card from your graveyard to the battlefield. It gains haste. Exile it at the
++       beginning of the next end step. If it would leave the battlefield, exile it instead of putting it anywhere else.
++       Activate only as a sorcery." -- an activated ability of the card in its owner's graveyard (rules/actions.mjs offers it
++       there), its cost mana or energy ("Unearth--Pay eight {E}", Salvation Colossus; CR 107.14). "This card" is the card in the
++       graveyard: gone from there before it resolves, and it does nothing (CR 400.7; the card's ruling). What it gains and what
++       exiles it are the effect's, not the permanent's, so a permanent that loses its abilities is still exiled (effects/
++       permanents.mjs, afterwards; rules/replacement.mjs). */
++    if (word === "unearth") {
++      const cost = Array.isArray(ability.cost) ? ability.cost : [];
++      let paysMana = true;
++      for (const atom of cost.filter((a) => a?.atom === "mana")) {
++        let parsed = null;
++        try { parsed = parseManaCost(atom.cost ?? ""); } catch { /* refused below */ }
++        if (!parsed || parsed.variable > 0) paysMana = false;
++      }
++      if (!cost.length || !paysMana || !cost.every((atom) => atom?.atom === "mana" || (atom?.atom === "payEnergy" && Number.isInteger(atom.count) && atom.count >= 1)))
++        problems.push(`${ability.text}: an unearth cost of mana or energy ({E}), and at least one`);
++      if (!(identity.types ?? []).some((t) => ["Artifact", "Battle", "Creature", "Enchantment", "Land", "Planeswalker"].includes(t))) problems.push(`${ability.text}: unearth returns a permanent card to the battlefield`);
++      abilities.push({id, kind: "activated", zone: "graveyard", timing: "sorcery", text: ability.text, cost: structuredClone(cost), targets: [],
++        effects: [{effect: "moveZone", targets: "self", to: "battlefield", gains: ["Haste"], atEndStep: "exile", exileIfLeaves: true}]});
++      keywords.push("Unearth");
++      return;
++    }
++    /* LANDWALK (CR 702.14): "Forestwalk" -- `land` its land type, or "land" with a `qualifier` ("nonbasic", "legendary", "snow",
++       "artifact"; "snow" before a land type too) -- the keyword in that word, which keywords/combat.mjs reads as blockers are
++       declared. */
++    if (word === "landwalk") {
++      const said = landwalkWord(ability.land, ability.qualifier);
++      if (!said) problems.push(`${ability.text}: landwalk says which land: \`land\`, a land type (CR 205.3i) or "land" with a qualifier`);
++      keywords.push(said ?? "Landwalk");
++      return;
++    }
++    /* LIVING WEAPON (CR 702.92a): "When this Equipment enters, create a 0/0 black Phyrexian Germ creature token, then attach
++       this Equipment to it" -- the keyword IS that triggered ability; the token remembered, and the Equipment, still on the
++       battlefield as it resolves, attached to it (effects/permanents.mjs, attach). */
++    if (word === "living weapon") {
++      if (!(identity.subtypes ?? []).includes("Equipment")) problems.push(`${ability.text}: living weapon on a card that is not an Equipment`);
++      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.enters({who: "self"}),
++        effects: [{effect: "createToken", count: 1, remember: true, token: {name: "Phyrexian Germ", types: ["Creature"], subtypes: ["Phyrexian", "Germ"], colors: ["B"], power: 0, toughness: 0}},
++          {effect: "attach", targets: "remembered"}]});
++      keywords.push("Living Weapon");
++      return;
++    }
++    /* ESCALATE (CR 702.120a): "for each mode you choose beyond the first as you cast this spell, you pay an additional [cost]"
++       -- mana, or "tap an untapped creature you control" (Collective Effort): kept for the spell, among its additional costs
++       (below; rules/actions.mjs, additionalVariants). */
++    if (word === "escalate") {
++      const cost = Array.isArray(ability.cost) ? ability.cost : [];
++      const mana = cost.filter((a) => a?.atom === "mana"), taps = cost.filter((a) => a?.atom === "tapCreature");
++      let parsed = null;
++      try { parsed = mana.length === 1 ? parseManaCost(mana[0].cost ?? "") : null; } catch { /* refused below */ }
++      if (!cost.length || mana.length + taps.length !== cost.length || mana.length > 1 || taps.length > 1 || (mana.length === 1 && (!parsed || parsed.variable > 0))
++        || taps.some((t) => !t.selector || typeof t.selector !== "object" || !((t.count ?? 1) >= 1 && Number.isInteger(t.count ?? 1))))
++        problems.push(`${ability.text}: an escalate cost of mana, untapped creatures to tap, or both, once each`);
++      escalate = {mana: mana[0]?.cost ?? "", ...(taps.length ? {tap: {count: taps[0].count ?? 1, selector: structuredClone(taps[0].selector)}} : {})};
++      keywords.push("Escalate");
++      return;
++    }
++    /* EVOLVE (CR 702.100a): "Whenever a creature you control enters, if that creature's power is greater than this creature's
++       power and/or that creature's toughness is greater than this creature's toughness, put a +1/+1 counter on this creature"
++       -- an intervening "if" (CR 603.4; script/condition.mjs, `evolves`), asked as it triggers and as it resolves. Each
++       instance triggers separately (702.100d). */
++    if (word === "evolve") {
++      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.enters({who: "any", filter: {types: ["Creature"], controller: "you"}}),
++        condition: {evolves: true}, effects: [{effect: "putCounter", targets: "self", counter: "+1/+1", count: 1}]});
++      keywords.push("Evolve");
++      return;
++    }
++    /* BACKUP N (CR 702.165a): "When this creature enters, put N +1/+1 counters on target creature. If that's another creature,
++       it also gains the non-backup abilities of this creature printed below this one until end of turn" -- those printed
++       after it on the card (702.165c), fixed here, as the ability is (702.165d), and given as a pump's abilities are (compiled
++       below, compileGivenIn): its keywords and its triggered and activated abilities. "Another" is the condition
++       `targetIsAnother` (script/condition.mjs). */
++    if (word === "backup") {
++      if (!(Number.isInteger(ability.amount) && ability.amount >= 1)) problems.push(`${ability.text}: backup needs its number, 1 or more`);
++      const below = (script.abilities ?? []).slice(index + 1).filter((a) => !(a?.kind === "keyword" && String(a.keyword).toLowerCase() === "backup"));
++      if (!below.length) problems.push(`${ability.text}: backup gives the abilities printed below it, and none are`);
++      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.enters({who: "self"}), targets: [{what: "permanent", types: ["Creature"]}],
++        effects: [{effect: "putCounter", targets: {target: 0}, counter: "+1/+1", count: ability.amount ?? 1},
++          {effect: "pump", targets: {target: 0}, power: 0, toughness: 0, condition: {targetIsAnother: true}, abilities: structuredClone(below)}]});
++      keywords.push("Backup");
++      return;
++    }
++    /* CUMULATIVE UPKEEP [COST] (CR 702.24a): "At the beginning of your upkeep, if this permanent is on the battlefield, put an
++       age counter on this permanent. Then you may pay [cost] for each age counter on it. If you don't, sacrifice it." -- the
++       keyword IS that triggered ability: its intervening "if" (CR 603.4), an age counter, and "unless you pay" asked of its
++       controller (effects/asking.mjs, unlessPays) with the cost counted as it is asked, every age counter on it then
++       (702.24b) -- all of it or none (the card's ruling). Generic mana is paid as any generic amount is; a cost with colored
++       symbols, that cost once for each counter. A mana cost only, yet. */
++    if (word === "cumulative upkeep") {
++      const cost = Array.isArray(ability.cost) ? ability.cost : [];
++      let parsed = null;
++      try { parsed = cost.length === 1 && cost[0]?.atom === "mana" ? parseManaCost(cost[0].cost ?? "") : null; } catch { /* refused below */ }
++      if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`${ability.text}: a cumulative upkeep cost of mana, once`);
++      const generic = Boolean(parsed) && parsed.symbols.every((s) => s.kind === "generic");
++      const ages = {countersOn: "self", counter: "age"};
++      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.upkeep({}), condition: {present: {self: true}},
++        effects: [{effect: "putCounter", targets: "self", counter: "age", count: 1},
++          {effect: "unlessPays", ...(generic ? {amount: {...ages, times: parsed.generic}} : {mana: String(cost[0]?.cost ?? ""), manaTimes: ages}),
++            effects: [{effect: "moveZone", targets: "self", sacrifice: true}]}]});
++      keywords.push("Cumulative upkeep");
++      return;
++    }
++    /* FLANKING (CR 702.25a): "Whenever this creature becomes blocked by a creature without flanking, the blocking creature
++       gets -1/-1 until end of turn" -- once for each such blocker (CR 509.3d), each instance separately (702.25b); the
++       blocker read as blockers are declared (509.3f; rules/trigger.mjs, `blockedBy`). */
++    if (word === "flanking") {
++      abilities.push({id, kind: "triggered", text: ability.text, trigger: {on: "GameEventBlockersDeclared", blockedBy: true, who: "self", filter: {types: ["Creature"], nonKeywords: ["Flanking"]}},
++        effects: [{effect: "pump", targets: "that card", power: -1, toughness: -1}]});
++      keywords.push("Flanking");
++      return;
++    }
++    /* UMBRA ARMOR (CR 702.89a): "If enchanted permanent would be destroyed, instead remove all damage marked on it and destroy
++       this Aura" -- the static `umbra-armor` on the Aura, read wherever a permanent would be destroyed (effects/zones.mjs,
++       destructionReplaced). Only on an Aura. */
++    if (word === "umbra armor") {
++      if (!(identity.subtypes ?? []).includes("Aura")) problems.push(`${ability.text}: umbra armor on a card that is not an Aura`);
++      abilities.push({id, kind: "static", rule: "umbra-armor", text: ability.text, affects: {what: "permanent", self: true}});
++      keywords.push("Umbra armor");
++      return;
++    }
++    /* PROWL [COST] (CR 702.76a): "You may pay [cost] rather than pay this spell's mana cost if a player was dealt combat damage
++       this turn by a source that, at the time it dealt that damage, was under your control and had any of this spell's
++       creature types" -- an alternative cost (CR 118.9; rules/actions.mjs offers it), its condition `prowl` (script/
++       condition.mjs), the permanent it becomes marked as cast for it, for "if its prowl cost was paid" (`prowled`). */
++    if (word === "prowl") {
++      const cost = Array.isArray(ability.cost) ? ability.cost : [];
++      if (!cost.length || !cost.every((atom) => atom?.atom === "mana")) problems.push(`${ability.text}: a prowl cost of mana`);
++      abilities.push({id, kind: "static", rule: "alternative-cost", prowl: true, condition: {prowl: true}, text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
++      keywords.push("Prowl");
++      return;
++    }
++    /* ASCEND (CR 702.131): on a permanent a static ability, on an instant or sorcery a spell ability -- each read from the
++       keyword (keywords/designations.mjs; rules/stack.mjs as such a spell resolves). */
++    if (word === "ascend") {
++      keywords.push("Ascend");
++      return;
++    }
+     /* FLASHBACK (CR 702.34a): the keyword with its cost, a list of atoms -- a mana cost, and "pay 3 life" -- kept as a
+        static ability so the card carries it into its graveyard (rules/actions.mjs offers the cast there). Only on an
+        instant or sorcery: "if the resulting spell is an instant or sorcery spell". */
+@@ -964,6 +1109,10 @@ export function compileScript(script) {
+   if (enchant && spell) problems.push("an Aura's spell is its Enchant target, and it has no other");
+   /* The Aura as a spell: its one target, nothing done as it resolves -- it enters attached (stack.mjs). */
+   if (enchant) spell = {id: "enchant", text: enchant.text, targets: [enchant.target], effects: [], ...(enchant.hostile ? {hostile: true} : {})};
++  /* Escalate's (CR 702.120a), on a spell whose modes are chosen as it is cast: one more mode at most for each mode it has
++     beyond the first (rules/actions.mjs, additionalVariants and withModes). */
++  if (escalate !== null && !spell?.modal) problems.push("Escalate is on a spell whose modes are chosen as it is cast");
++  if (escalate !== null && spell?.modal) spell = {...spell, additionalCost: [...(spell.additionalCost ?? []), {atom: "escalate", ...escalate, most: Math.max(0, spell.modal.modes.length - 1)}]};
+   /* Multikicker's additional cost, on the spell -- a permanent's too, whose spell does nothing else (CR 608.3). */
+   if (multikicker !== null) spell = {...(spell ?? {id: "multikicker", text: "Multikicker", targets: [], effects: []}), additionalCost: [...(spell?.additionalCost ?? []), {atom: "multikicker", cost: multikicker}]};
+ 
+diff --git a/game/engine/keywords/combat.mjs b/game/engine/keywords/combat.mjs
+index d9631c66..dc9c7c91 100644
+--- a/game/engine/keywords/combat.mjs
++++ b/game/engine/keywords/combat.mjs
+@@ -24,26 +24,32 @@
+  * something to make its condition true.
+  *
+  * WHAT IS DEFERRED AND NAMED: protection (CR 702.16) needs a quality — "protection from black" is
+- * not a keyword, it is a keyword with an argument, and the card script has to express that;
+- * landwalk the same. Fear is here (batch 59); intimidate, shadow and horsemanship are one card each in
++ * not a keyword, it is a keyword with an argument, and the card script has to express that (rules/protection.mjs).
++ * LANDWALK (CR 702.14) carries its land in the word -- "Forestwalk" on the object, read below (landwalkLand) -- so one
++ * given until end of turn is read as one printed. Fear is here (batch 59); intimidate, shadow and horsemanship are one card each in
+  * the pool and belong with the long tail. Infect (batch 78) and wither change what damage DOES rather than who may block,
+  * and go with the counters family.
+  */
+ 
+-import {keywordsOf, characteristicsOf} from "../rules/layers.mjs";
++import {keywordsOf, characteristicsOf, controllerOf} from "../rules/layers.mjs";
+ import {toughnessOf} from "../rules/layers.mjs";
+ import {combatDamageOf, ruleChanged, cantBeBlockedBy} from "../rules/statics.mjs";
+ import {protectedFrom} from "../rules/protection.mjs";
++import {matchesSelector} from "../script/filter.mjs";
+ 
+ /** The families of §3.1, so a caller can ask what this module covers. */
+ export const KEYWORD_FAMILIES = Object.freeze({
+   /** Who may block, and whom. */
+-  evasion: Object.freeze(["Flying", "Reach", "Menace", "Fear"]),
++  /** Landwalk (CR 702.14): the generic term, each "[type]walk" read by landwalkLand below -- "Forestwalk" (Yavimaya Dryad). */
++  evasion: Object.freeze(["Flying", "Reach", "Menace", "Fear", "Landwalk"]),
+   /** What happens when damage is dealt. */
+   combat: Object.freeze(["Deathtouch", "Trample", "Lifelink", "First Strike", "Double Strike", "Vigilance", "Defender",
+     /* Infect (CR 702.90, batch 78): its damage is poison counters to a player and -1/-1 counters to a creature (rules/combat.mjs,
+        effects/resources.mjs dealDamage). */
+-    "Infect"]),
++    "Infect",
++    /* Flanking (CR 702.25a): a triggered ability, as a creature without flanking blocks this one, the blocker -1/-1 until end
++       of turn (cards/index.mjs; rules/trigger.mjs, `blockedBy`). */
++    "Flanking"]),
+   /**
+    * Keywords that stop something happening, enforced elsewhere in the engine but listed here so
+    * that "which keywords actually do something" has one answer.
+@@ -56,9 +62,52 @@ export const KEYWORD_FAMILIES = Object.freeze({
+    * Ward (CR 702.21a) counters a spell or ability an opponent aims at it unless that player pays: the keyword compiles to
+    * that triggered ability (cards/index.mjs), on GameEventBecomesTarget (rules/stack.mjs, becameTarget).
+    */
+-  protective: Object.freeze(["Indestructible", "Hexproof", "Shroud", "Ward"]),
++  /* Umbra armor (CR 702.89a): an Aura's "if enchanted permanent would be destroyed, instead remove all damage marked on it
++     and destroy this Aura" -- the static `umbra-armor` (cards/index.mjs), read wherever a permanent would be destroyed
++     (rules/replacement.mjs, destructionReplaced). */
++  protective: Object.freeze(["Indestructible", "Hexproof", "Shroud", "Ward", "Umbra armor"]),
+ });
+ 
++/* ---- LANDWALK (CR 702.14) ----
++   "[type]walk" (702.14a): each land type (CR 205.3i), which may follow "snow" ("snow swampwalk"), and the forms with a
++   supertype or card type and no land type ("nonbasic landwalk", "legendary landwalk", "snow landwalk", "artifact
++   landwalk"; 702.14c). The word is the keyword: what a permanent has -- printed, or given ("gains forestwalk") -- is read
++   off its keywords now, through the layers. Two instances of one are redundant (702.14e), and a blocker's own landwalk
++   cancels nothing (702.14d): only the attacker's is asked about. */
++export const LAND_TYPES = Object.freeze(["Cave", "Desert", "Forest", "Gate", "Island", "Lair", "Locus", "Mine", "Mountain", "Plains", "Planet",
++  "Power-Plant", "Sphere", "Swamp", "Tower", "Town", "Urza's"]);
++const LANDWALK_QUALIFIERS = Object.freeze({nonbasic: {nonSupertypes: ["Basic"]}, legendary: {supertypes: ["Legendary"]}, snow: {supertypes: ["Snow"]},
++  artifact: {types: ["Land", "Artifact"]}});
++/** What land a landwalk keyword asks the defending player to control -- a selector of permanents -- or null for a word that
++    is no landwalk. "Forestwalk" is a land with the subtype Forest; "Nonbasic landwalk", a land without the supertype Basic. */
++export function landwalkLand(word) {
++  const found = /^(?:([a-z]+) )?([a-z'-]+)walk$/i.exec(String(word ?? "").trim());
++  if (!found) return null;
++  const qualifier = found[1]?.toLowerCase(), kind = found[2].toLowerCase();
++  if (qualifier !== undefined && !LANDWALK_QUALIFIERS[qualifier]) return null;
++  const type = LAND_TYPES.find((t) => t.toLowerCase() === kind);
++  if (!type && !(kind === "land" && qualifier !== undefined)) return null;
++  return {types: ["Land"], ...(qualifier ? LANDWALK_QUALIFIERS[qualifier] : {}), ...(type ? {subtypes: [type]} : {})};
++}
++/** The keyword a script's landwalk is, from its land type (or "land") and an optional qualifier: "Forestwalk", "Snow
++    swampwalk", "Nonbasic landwalk" -- or null when they make no landwalk. */
++export function landwalkWord(land, qualifier = undefined) {
++  const type = land === "land" ? "land" : LAND_TYPES.find((t) => t === land);
++  if (!type || (qualifier !== undefined && !LANDWALK_QUALIFIERS[qualifier]) || (type === "land" && qualifier === undefined)) return null;
++  const word = qualifier ? `${qualifier.charAt(0).toUpperCase()}${qualifier.slice(1)} ${type.toLowerCase()}walk` : `${type}walk`;
++  return landwalkLand(word) ? word : null;
++}
++/* Whether a landwalk of this attacker's keeps a creature from blocking it: the defending player (CR 506.2) -- the one it
++   attacks, or whose planeswalker it attacks, and in a game of many players that one only (CR 802.2a) -- controls a land of
++   one of its kinds. */
++function landwalkStops(state, attackerId, blockerId) {
++  const lands = keywordsOf(state, attackerId).map(landwalkLand).filter(Boolean);
++  if (!lands.length) return false;
++  const defender = state.combat?.attacks?.find((a) => a.attacker === attackerId)?.defender ?? controllerOf(state, blockerId);
++  return lands.some((land) => state.zones.battlefield.some((id) => controllerOf(state, id) === defender
++    && matchesSelector({what: "permanent", ...land}, state, id, {controller: defender})));
++}
++
+ const has = (state, id, keyword) => keywordsOf(state, id).includes(keyword);
+ 
+ /**
+@@ -74,6 +123,8 @@ export function canBlockAttacker(state, blockerId, attackerId) {
+   if (cantBeBlockedBy(state, attackerId, blockerId)) return false;
+   /* Protection (CR 702.16f): not blocked by a creature with the quality. */
+   if (protectedFrom(state, {card: attackerId}, blockerId)) return false;
++  /* Landwalk (CR 702.14c): not while the defending player controls a land of the kind. */
++  if (landwalkStops(state, attackerId, blockerId)) return false;
+   /* CR 702.9b: flying can be blocked only by flying or reach (CR 702.17b). Note which way round it
+      is — flying restricts who may block IT, and does not restrict what it may block. */
+   if (has(state, attackerId, "Flying")
+diff --git a/game/engine/keywords/designations.mjs b/game/engine/keywords/designations.mjs
+index 6577643b..4e75908c 100644
+--- a/game/engine/keywords/designations.mjs
++++ b/game/engine/keywords/designations.mjs
+@@ -10,14 +10,25 @@
+  * else in the rules reads it; "as long as you have an enduring story" is the condition `enduringStory`
+  * (script/condition.mjs). A player who has it carries `enduringStory: true`; nobody else carries the key, so a game made
+  * before it hashes and replays as it did.
++ *
++ * ASCEND (CR 702.131; Wayward Swordtooth) gives the city's blessing, the same way. On a permanent it is a static ability
++ * (702.131b): any time its controller controls ten or more permanents and has no city's blessing, they get it for the rest
++ * of the game -- read as the game is checked (citysBlessings, before the state-based actions act, so a tenth permanent that
++ * a state-based action then removes was counted: the card's ruling), and by whatever asks whether a player has it, since
++ * a static ability needs no moment to apply (hasCitysBlessing). On an instant or sorcery it is a spell ability (702.131a),
++ * done as the spell resolves (rules/stack.mjs, ascendAsItResolves). Ten permanents and no ascend gives nothing. The
++ * blessing has no rules meaning of its own (702.131c), stays when the permanents go, and any number of players may have it;
++ * "unless you have the city's blessing" is the condition `citysBlessing` (script/condition.mjs). Its holder carries
++ * `citysBlessing: true`, and no one else the key. Continuous effects are reapplied after it is gained (702.131d): the layers
++ * here derive every characteristic as it is asked, so the next question already sees it.
+  */
+ import {keywordsOf, controllerOf, deriving} from "../rules/layers.mjs";
+ import {matchesSelector} from "../script/filter.mjs";
+ 
+ /** The family of §3.1, so `engine-coverage` counts these as behavior and not as words. */
+ export const KEYWORD_FAMILIES = Object.freeze({
+-  /** What a player comes to have: Storied's enduring story (CR 702.195). */
+-  designations: Object.freeze(["Storied"]),
++  /** What a player comes to have: Storied's enduring story (CR 702.195), ascend's city's blessing (CR 702.131). */
++  designations: Object.freeze(["Storied", "Ascend"]),
+ });
+ 
+ /* An artifact, a Saga or a legendary permanent, as it is now (layers 4 and its supertypes). */
+@@ -47,3 +58,53 @@ export function enduringStories(state) {
+     return events;
+   });
+ }
++
++/* ---- the city's blessing (CR 702.131) ---- */
++
++/** How many permanents a player must control for ascend to give the city's blessing (CR 702.131a-b). */
++export const ASCEND_AT = 10;
++/* Whether a player controls ten or more permanents now -- tokens and lands included, every object on the battlefield. */
++const tenPermanents = (state, player) => state.zones.battlefield.filter((id) => controllerOf(state, id) === player).length >= ASCEND_AT;
++/* Whether a player controls a permanent with ascend now: printed, or given. */
++const ascends = (state, player) => state.zones.battlefield.some((id) => controllerOf(state, id) === player && keywordsOf(state, id).includes("Ascend"));
++
++/** Whether a player has the city's blessing: gained already, or theirs this moment by a permanent's ascend (CR 702.131b). */
++export function hasCitysBlessing(state, player) {
++  const holder = state.players[player];
++  if (!holder || holder.lost) return false;
++  return holder.citysBlessing === true || deriving(state, () => ascends(state, player) && tenPermanents(state, player));
++}
++
++/**
++ * CR 702.131b: each player who controls a permanent with ascend, ten or more permanents, and no city's blessing yet, gets it
++ * now -- for the rest of the game.
++ *
++ * @returns {Array} an event for each player who gained it
++ */
++export function citysBlessings(state) {
++  if (state.players.every((player) => player.citysBlessing === true || player.lost)) return [];
++  return deriving(state, () => {
++    const events = [];
++    for (const player of state.players) {
++      if (player.citysBlessing === true || player.lost || !ascends(state, player.id) || !tenPermanents(state, player.id)) continue;
++      player.citysBlessing = true;
++      events.push({kind: "GameEventCitysBlessing", data: {turn: state.turn, phase: state.phase, fields: {player: {playerId: player.id}}}});
++    }
++    return events;
++  });
++}
++
++/**
++ * Ascend on an instant or sorcery (CR 702.131a): a spell ability of its own -- "if you control ten or more permanents and
++ * you don't have the city's blessing, you get the city's blessing for the rest of the game" -- done as the spell resolves,
++ * ahead of the rest of what it does, as it is printed first (rules/stack.mjs). Not a copy's controller alone: whoever
++ * controls the resolving spell.
++ *
++ * @returns {Array} its event, when the blessing was gained
++ */
++export function ascendAsItResolves(state, player) {
++  const holder = state.players[player];
++  if (!holder || holder.lost || holder.citysBlessing === true || !deriving(state, () => tenPermanents(state, player))) return [];
++  holder.citysBlessing = true;
++  return [{kind: "GameEventCitysBlessing", data: {turn: state.turn, phase: state.phase, fields: {player: {playerId: player}}}}];
++}
+diff --git a/game/engine/keywords/timing.mjs b/game/engine/keywords/timing.mjs
+index f9fe385a..2e268f9e 100644
+--- a/game/engine/keywords/timing.mjs
++++ b/game/engine/keywords/timing.mjs
+@@ -37,7 +37,10 @@ export const KEYWORD_FAMILIES = Object.freeze({
+       taken; what escaped is marked so (702.138b) and enters with what it "escapes with" (702.138c, rules/replacement.mjs).
+       Rebound (CR 702.88a), from exile at its caster's next upkeep: cast from its owner's hand and resolved, exiled instead
+       of going to the graveyard (rules/stack.mjs), then cast free if they choose (effects/asking.mjs, `play`). */
+-  zones: Object.freeze(["Flashback", "Escape", "Rebound"]),
++  /** Unearth (CR 702.84a), an activated ability of the card in its owner's graveyard at sorcery speed: returned with haste,
++      exiled at the next end step, and exiled instead should it leave the battlefield any other way (cards/index.mjs;
++      effects/permanents.mjs, afterwards; rules/replacement.mjs). */
++  zones: Object.freeze(["Flashback", "Escape", "Rebound", "Unearth"]),
+   /** What happens as a spell is cast: Storm (CR 702.40a), "when you cast this spell, copy it for each spell cast before
+       it this turn" -- a triggered ability of the spell (rules/actions.mjs). */
+   cast: Object.freeze(["Storm"]),
+@@ -45,7 +48,12 @@ export const KEYWORD_FAMILIES = Object.freeze({
+       offered beside the cast the pool pays, the creatures picked once it is taken (rules/actions.mjs, rules/mana.mjs).
+       Evoke (CR 702.74a), its evoke cost rather than its mana cost -- an alternative cost (rules/actions.mjs) -- and, if it
+       was paid, the permanent sacrificed as it enters (cards/index.mjs compiles both abilities). */
+-  pay: Object.freeze(["Convoke", "Evoke"]),
++  /** Overload (CR 702.96a-b), an alternative cost whose cast carries the spell's "each" effects and no targets (cards/index.mjs,
++      rules/actions.mjs, rules/stack.mjs). Prowl (CR 702.76a), an alternative cost offered once a player was dealt combat
++      damage this turn by a source of its caster's with one of its creature types (rules/combat.mjs keeps them;
++      script/condition.mjs), the permanent marked as cast for it (rules/stack.mjs). Escalate (CR 702.120a), an additional
++      cost for each mode chosen beyond the first, paid with the rest of the cost (rules/actions.mjs). */
++  pay: Object.freeze(["Convoke", "Evoke", "Overload", "Prowl", "Escalate"]),
+ });
+ 
+ /**
+diff --git a/game/engine/pilots/house-pilot.mjs b/game/engine/pilots/house-pilot.mjs
+index 1cf9977d..0bd81d1a 100644
+--- a/game/engine/pilots/house-pilot.mjs
++++ b/game/engine/pilots/house-pilot.mjs
+@@ -227,8 +227,9 @@ export function housePilot({seat, cards = () => null} = {}) {
+         const rest = options.map((o) => o.index).filter((i) => !aimed.includes(i));
+         return {indices: [...aimed.slice(0, max), ...rest].slice(0, Math.max(min, Math.min(max, aimed.length)))};
+       }
+-      /* A flashback cost's creatures to tap (Battle Screech): the weakest first -- what it would least miss in combat. */
+-      if (id.startsWith("choose-cost:") && choice.cost === "tap") {
++      /* A flashback cost's creatures to tap (Battle Screech), or escalate's (Collective Effort): the weakest first -- what it
++         would least miss in combat. */
++      if (id.startsWith("choose-cost:") && (choice.cost === "tap" || choice.cost === "escalate")) {
+         const mine = new Map(creaturesOf(self).map((c) => [c.cardId, c]));
+         const order = options.map((o, i) => i).sort((a, b) => (mine.get(options[a].cardId)?.power ?? 0) - (mine.get(options[b].cardId)?.power ?? 0) || a - b);
+         return {indices: firstOf(choice, order, min)};
+diff --git a/game/engine/rules/actions.mjs b/game/engine/rules/actions.mjs
+index 7bd9f2b8..48e062ef 100644
+--- a/game/engine/rules/actions.mjs
++++ b/game/engine/rules/actions.mjs
+@@ -280,6 +280,13 @@ function costChoice(state, awaiting) {
+   }
+   if (action.kind === "activate") return activationCostChoice(state, awaiting);
+   const name = state.objects[action.objectId]?.card ?? "That card";
++  /* Escalate (CR 702.120a): which untapped creatures to tap, one set of the cost's for each mode beyond the first. */
++  if (action.escalateTap > 0 && !Array.isArray(action.escalateTapped)) {
++    const n = action.escalateTap, tap = escalateAtom(state.objects[action.objectId])?.tap;
++    return {id: `choose-cost:${action.objectId}`, title: `${name}'s escalate: tap ${inWords(n)} untapped creature${n === 1 ? "" : "s"} you control`,
++      mode: "many", min: n, max: n, cost: "escalate",
++      options: numbered(escalateTappers(state, player, tap?.selector).map((cardId, index) => ({index, label: state.objects[cardId].card, cardId})))};
++  }
+   /* Tapped for it (castTapPlans), with more than one way: which sources. */
+   if (action.autoTap === true) {
+     const options = castTapPlans(state, player, action, TAP_CHOICES).map((plan, index) => ({index, label: tapWords(state, plan)}));
+@@ -328,7 +335,7 @@ export function resolveCastCost(state, awaiting, indices) {
+   const ids = picked.map((i) => choice.options[i].cardId);
+   const way = choice.cost === "mana" ? castTapPlans(state, awaiting.player, awaiting.action, TAP_CHOICES)[picked[0]] : null;
+   const action = {...structuredClone(awaiting.action), ...(choice.cost === "pool" ? {payWith: choice.options[picked[0]].key} : way ? {tapPlan: way.key} : choice.cost === "tap" ? {flashbackTap: ids}
+-    : choice.cost === "convoke" ? {convokeTap: ids} : choice.cost === "sacrifice" ? {sacrificeSet: ids}
++    : choice.cost === "convoke" ? {convokeTap: ids} : choice.cost === "sacrifice" ? {sacrificeSet: ids} : choice.cost === "escalate" ? {escalateTapped: ids}
+     : choice.cost === "counters" ? {counterSet: picked.map((i) => ({id: choice.options[i].cardId, counter: choice.options[i].counter}))} : {escapeExile: ids})};
+   state.awaiting = null;
+   state.priorityPlayer = awaiting.player;
+@@ -345,6 +352,24 @@ function flashbackTapped(state, player, action, tap) {
+   return [...list];
+ }
+ 
++/* ESCALATE (CR 702.120a): the spell's escalate cost, as the card compiler put it among its additional costs -- its mana per mode
++   beyond the first, and its creatures to tap per mode (`tap`: a count and a selector). */
++const escalateAtom = (object) => (object?.spell?.additionalCost ?? []).find((a) => a?.atom === "escalate") ?? null;
++/* The untapped creatures a player controls that escalate's cost may tap: each fits its selector, a summoning-sick one too --
++   tapping it is not its own {T} (CR 302.6; the card's ruling). */
++export const escalateTappers = (state, player, selector) => state.zones.battlefield.filter((id) => !state.objects[id].tapped
++  && characteristicsOf(state, id).controller === player && characteristicsOf(state, id).types.includes("Creature")
++  && compileSelector({...(selector ?? {}), what: "permanent"})(state, id, {controller: player, source: null}));
++/* The creatures escalate taps, as its caster picked them: that many, none twice, each untapped and fitting. Refused before
++   anything moves, saying what to do. */
++function escalateTapped(state, player, action) {
++  const list = action.escalateTapped, tap = escalateAtom(state.objects[action.objectId])?.tap;
++  const fitting = escalateTappers(state, player, tap?.selector);
++  if (!Array.isArray(list) || list.length !== action.escalateTap || new Set(list).size !== list.length || !list.every((id) => fitting.includes(id)))
++    throw new Error(`Those are not ${inWords(action.escalateTap)} untapped creature${action.escalateTap === 1 ? "" : "s"} you control to tap for its escalate: pick them again`);
++  return [...list];
++}
++
+ /* The cards an escape exiles, as its caster picked them: that many, none twice, each another card in their graveyard.
+    Refused before anything moves. */
+ function escapeExiled(state, player, action, way) {
+@@ -371,7 +396,9 @@ export function alternativeCosts(state, player, id) {
+       /* Impending (CR 702.176a): how many time counters it enters with. */
+       ...(Number.isInteger(ability.impending) ? {impending: ability.impending} : {}),
+       /* Overload (CR 702.96b): what the spell does cast this way, "each" in place of "target". */
+-      ...(ability.overload ? {overload: ability.overload} : {})}];
++      ...(ability.overload ? {overload: ability.overload} : {}),
++      /* Prowl (CR 702.76a): the permanent it becomes was cast for it (rules/stack.mjs). */
++      ...(ability.prowl === true ? {prowl: true} : {})}];
+   });
+ }
+ 
+@@ -388,6 +415,14 @@ const MULTIKICK_MOST = 10;
+ function additionalVariants(costs) {
+   let variants = [{atoms: [], mana: ""}];
+   for (const atom of costs ?? []) {
++    /* ESCALATE (CR 702.120a): for each mode chosen beyond the first, its cost again -- each number of extra modes its own
++       variant, its mana added that many times and its creatures to tap that many times over (`escalateTap`, picked once the
++       cast is taken: castCostChoice). The modes are then exactly that many more than one (withModes). */
++    if (atom?.atom === "escalate") {
++      variants = variants.flatMap((v) => Array.from({length: (atom.most ?? 0) + 1}, (_, k) => ({...v, mana: v.mana + (atom.mana ?? "").repeat(k), escalate: k,
++        ...(atom.tap && k > 0 ? {escalateTap: {count: atom.tap.count * k, selector: atom.tap.selector}} : {})})));
++      continue;
++    }
+     if (atom?.atom === "multikicker") {
+       variants = variants.flatMap((v) => Array.from({length: MULTIKICK_MOST + 1}, (_, k) => ({...v, mana: v.mana + (atom.cost ?? "").repeat(k), kicked: k})));
+       continue;
+@@ -427,9 +462,12 @@ function additionalChoices(state, player, spellId, costs) {
+ /* MODES CHOSEN AS IT IS CAST (CR 700.2a, 601.2b): one offer per choice of modes -- as many as it says, or up to more
+    when its condition holds now ("if you control a commander as you cast this spell, you may choose both instead") --
+    and per way to choose the chosen modes' targets (601.2c), in the order of the modes. A mode is chosen once (700.2d). */
+-function withModes(state, base, modal, context) {
+-  const least = Math.max(1, modal.choose ?? 1);
+-  const most = Math.min(modal.modes.length, modal.more && conditionHolds(state, modal.more.condition, context) ? modal.more.choose : modal.upTo ?? least);
++/* `exactly`: so many modes and no other number (escalate's variant, additionalVariants) -- none, when the spell may not have that many. */
++function withModes(state, base, modal, context, exactly = null) {
++  const fewest = Math.max(1, modal.choose ?? 1);
++  const most0 = Math.min(modal.modes.length, modal.more && conditionHolds(state, modal.more.condition, context) ? modal.more.choose : modal.upTo ?? fewest);
++  if (exactly !== null && (exactly < fewest || exactly > most0)) return [];
++  const least = exactly ?? fewest, most = exactly ?? most0;
+   const picks = [];
+   const pick = (from, chosen) => {
+     if (chosen.length >= least) picks.push(chosen);
+@@ -491,7 +529,10 @@ export const costAtomBuilt = (atom) => (COST_ATOMS_BUILT.includes(atom?.atom) &&
+   /* "Remove three counters from among other artifacts, creatures, and planeswalkers you control" (Tekuthal, Inquiry
+      Dominus): `count` counters of any kinds on the permanents `selector` describes, which ones asked once the offer is
+      taken (countersAmong). */
+-  || (atom?.atom === "removeCountersAmong" && Number.isInteger(atom.count) && atom.count >= 1 && Boolean(atom.selector) && typeof atom.selector === "object");
++  || (atom?.atom === "removeCountersAmong" && Number.isInteger(atom.count) && atom.count >= 1 && Boolean(atom.selector) && typeof atom.selector === "object")
++  /* "Pay eight {E}" (Salvation Colossus's unearth; CR 107.14): energy counters removed from the player paying, who must have
++     that many (CR 118.3, 122.1). */
++  || (atom?.atom === "payEnergy" && Number.isInteger(atom.count) && atom.count >= 1);
+ 
+ /* CREW (CR 702.122a): the sets of other untapped creatures you control whose power totals at least N -- each smallest
+    such set, so no offer taps a creature it does not need; ids ascending, and no more than CREW_OFFERS_MAX of them. A
+@@ -668,6 +709,8 @@ function costPayment(state, player, id, cost, x = 0, less = 0, key = undefined)
+     if (atom.atom === "removeCounters" && atom.count !== "X" && (object.counters?.[atom.counter] ?? 0) < (atom.count ?? 1)) return null;
+     /* Three counters from among them: there must be three there to remove (CR 118.3). */
+     if (atom.atom === "removeCountersAmong" && counterUnits(state, player, id, atom.selector).length < atom.count) return null;
++    /* Energy (CR 107.14): no more than the player has. */
++    if (atom.atom === "payEnergy" && (state.players[player].counters?.energy ?? 0) < atom.count) return null;
+   }
+   /* The increase on an ability that printed no mana: that much generic, from the pool (as its own mana would be). */
+   if (!printedMana && more > 0) {
+@@ -1000,6 +1043,8 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
+   for (const way of [null, ...alternatives]) {
+   if (way && way.life > state.players[player].life) continue;
+   for (const variant of additionalVariants([...(object.spell?.additionalCost ?? []), ...(way?.extra ?? [])])) {
++  /* Escalate's creatures to tap (CR 702.120a): that many there to tap now, or not that many modes. */
++  if (variant.escalateTap && escalateTappers(state, player, variant.escalateTap.selector).length < variant.escalateTap.count) continue;
+   for (const freely of way ? [false] : free ? (free.limited ? [false, true] : [true]) : [false]) {
+   const {cost, x} = castCost(state, player, id, tax, freely, lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : null, variant.mana);
+   /* {X} (CR 107.3, 601.2b): one offer per value the pool can pay, from nothing up; a spell without X, one. */
+@@ -1010,7 +1055,8 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
+     /* Not from the pool, but by tapping for it (castTapPlans): one offer, its sources tapped as it is cast -- with more
+        than one way to tap, the caster is asked which once it is taken (castCostChoice). */
+     let autoTap = false;
+-    if (!payment && X === null && !freely && !back && !fled && !way && ["hand", "command"].includes(from) && poolSize(pool) === 0) {
++    /* Not with creatures to tap for escalate: a creature tapped for mana could not be tapped for it as well. */
++    if (!payment && X === null && !freely && !back && !fled && !way && !variant.escalateTap && ["hand", "command"].includes(from) && poolSize(pool) === 0) {
+       const [plan] = tapPlans(tappable(), {...cost, generic: cost.generic + x}, 1);
+       if (plan) {
+         autoTap = true;
+@@ -1023,7 +1069,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
+     /* CONVOKE (CR 702.51a): the caster's creatures help pay, and the pool the rest -- one offer, beside any the pool or its
+        sources pay alone, when the pool and their untapped creatures could pay it together; which creatures, picked once it
+        is taken (castCostChoice). Not with {X}, without paying its mana cost, or with another way to pay. */
+-    const convokes = X === null && !freely && !back && !fled && !way && hasConvoke(state, id)
++    const convokes = X === null && !freely && !back && !fled && !way && !variant.escalateTap && hasConvoke(state, id)
+       && convokeCanPay(pool, {...cost, generic: cost.generic + x}, convokers(state, player));
+     if (!payment && !payWays && !convokes) continue;
+     const paysFor = variant.atoms.length ? additionalChoices(state, player, id, variant.atoms) : [null];
+@@ -1035,12 +1081,15 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
+       const base = {kind: "cast", objectId: id, label: object.card, payment: convoke || payWays ? null : payment, from, tax, ...(X !== null ? {x: X} : {}), ...(autoTap && !convoke ? {autoTap: true} : {}),
+         ...(payWays && !convoke ? {payWays: true} : {}),
+         ...(convoke ? {convoke: true} : {}), ...(variant.mana ? {extraMana: variant.mana} : {}), ...(variant.kicked ? {kicked: variant.kicked} : {}),
++        /* Escalated (CR 702.120a): how many modes beyond the first, and how many creatures that taps. */
++        ...(variant.escalate ? {escalate: variant.escalate} : {}), ...(variant.escalateTap ? {escalateTap: variant.escalateTap.count} : {}),
+         ...(costChoice ? {costChoice, costNames: Object.values(costChoice).map((c) => state.objects[c].card)} : {}),
+         ...(freely ? {free: true} : {}), ...(back ? {flashback: true} : {}), ...(fled ? {escape: fled.kind} : {}), ...(way ? {alternative: way.index} : {}),
+         ...viaOf(state, via), ...(lifeCost !== null ? {lifeInstead: lifeCost} : {}), ...ridersOffer(state, riders),
+         /* Cast as its Adventure (CR 715.3): another action than the card cast as itself. */
+         ...(adventure ? {adventure: true} : {})};
+-      actions.push(...(object.spell?.modal && !way?.overload ? withModes(state, base, object.spell.modal, {controller: player, source: id}) : withTargets(state, base, way?.overload ?? object.spell, {controller: player, source: id})));
++      actions.push(...(object.spell?.modal && !way?.overload ? withModes(state, base, object.spell.modal, {controller: player, source: id}, variant.escalate !== undefined ? variant.escalate + 1 : null)
++        : withTargets(state, base, way?.overload ?? object.spell, {controller: player, source: id})));
+     }
+   }
+   }
+@@ -1491,6 +1540,11 @@ function performOffered(state, player, action, during) {
+       state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
+       return [];
+     }
++    /* ESCALATE'S CREATURES (CR 702.120a, 601.2h): which to tap for the modes beyond the first, asked before anything is paid. */
++    if (action.kind === "cast" && action.escalateTap > 0 && !Array.isArray(action.escalateTapped)) {
++      state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
++      return [];
++    }
+     /* CONVOKE (CR 702.51a): which creatures help pay, asked before anything is tapped or paid. */
+     if (action.kind === "cast" && action.convoke === true && !Array.isArray(action.convokeTap)) {
+       state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
+@@ -1609,6 +1663,8 @@ function performOffered(state, player, action, during) {
+     const exiling = fled && !during ? escapeExiled(state, player, action, fled) : [];
+     /* A flashback cost's creatures, as its caster picked them. */
+     const tapping = back?.tap && !during ? flashbackTapped(state, player, action, back.tap) : [];
++    /* And escalate's, as its caster picked them (CR 702.120a). */
++    const escalating = action.escalateTap > 0 && !during ? escalateTapped(state, player, action) : [];
+     /* Tapped for it (castTapPlans): the way picked, or the one there is -- each source's mana ability activated, as its
+        caster would (CR 601.2g), before the cost is paid from the pool. */
+     let tappedFor = null;
+@@ -1677,7 +1733,7 @@ function performOffered(state, player, action, during) {
+        phase (Unbreakable Formation). A copy is not cast (CR 707.10) and has none. */
+     entry.cast = {from: castFrom, mainPhase: player === state.activePlayer && MAIN_PHASES.includes(state.phase),
+       /* "If this spell's additional cost was paid" (Cinder Strike): an optional one, paid -- its mana too. */
+-      ...(extraPaid.length || action.extraMana ? {additionalPaid: true} : {})};
++      ...(extraPaid.length || action.extraMana || action.escalate > 0 ? {additionalPaid: true} : {})};
+     /* Kicked that many times (multikicker, CR 702.33c): the permanent it becomes knows it as it enters (rules/stack.mjs). */
+     if (action.kicked) entry.kicked = action.kicked;
+     /* Cast as an Adventure (CR 715.3): exiled as it resolves, and castable as itself from there (rules/stack.mjs, 715.3d). */
+@@ -1692,6 +1748,8 @@ function performOffered(state, player, action, during) {
+     if (way?.impending) entry.impending = way.impending;
+     /* Overloaded (CR 702.96b): the spell's effects as they then are, carried on the stack. */
+     if (way?.overload) entry.overload = structuredClone(way.overload);
++    /* Cast for its prowl cost (CR 702.76a): "if its prowl cost was paid" asks the permanent it becomes (rules/stack.mjs). */
++    if (way?.prowl) entry.prowled = true;
+     /* "And that spell can't be countered" (Cavern of Souls): paid with mana that said so. */
+     if (paid.uncounterable) entry.uncounterable = true;
+     /* "When that mana is spent to cast a creature spell that shares a creature type with your commander, scry 1" (Path of
+@@ -1736,7 +1794,7 @@ function performOffered(state, player, action, during) {
+     /* Escape's other cards, exiled as the rest of the cost is paid (CR 601.2h). */
+     for (const id of exiling) if (state.objects[id]) moveOne(state, id, "exile", events, {owner: state.objects[id].owner});
+     /* And a flashback cost's creatures, tapped; and a convoke's (CR 702.51c: they convoked it), for no mana. */
+-    for (const id of [...tapping, ...(convoke?.ids ?? [])]) {
++    for (const id of [...tapping, ...escalating, ...(convoke?.ids ?? [])]) {
+       state.objects[id].tapped = true;
+       events.push(event("GameEventCardTapped", state, {card: cardRef(state, id), tapped: true}));
+     }
+@@ -1866,6 +1924,14 @@ function performOffered(state, player, action, during) {
+         for (const fodder of [].concat(action.costChoice.sacrifice)) sacrificeOne(state, fodder, events);
+       if (atom.atom === "sacrifice" && atom.selector && Array.isArray(action.sacrificeSet))
+         for (const fodder of action.sacrificeSet) if (state.objects[fodder]) sacrificeOne(state, fodder, events);
++      /* "Pay eight {E}": that many energy counters removed from the player (CR 107.14), said as their counters change. */
++      if (atom.atom === "payEnergy") {
++        const counters = (state.players[player].counters ??= {});
++        const before = counters.energy ?? 0;
++        if (before < atom.count) throw new Error(`${state.players[player].name} has ${before} energy, and ${object.card}'s ability costs ${atom.count}`);
++        counters.energy = before - atom.count;
++        events.push(event("GameEventPlayerCounters", state, {player: {playerId: player, name: state.players[player].name}, type: "energy", oldValue: before, newValue: counters.energy}));
++      }
+       /* Three counters from among them, each removed from the permanent it was picked on. */
+       if (atom.atom === "removeCountersAmong") for (const {id, counter} of action.counterSet ?? [])
+         state.objects[id].counters[counter] = Math.max(0, (state.objects[id].counters[counter] ?? 0) - 1);
+diff --git a/game/engine/rules/combat.mjs b/game/engine/rules/combat.mjs
+index 4e23eeee..9ea1641c 100644
+--- a/game/engine/rules/combat.mjs
++++ b/game/engine/rules/combat.mjs
+@@ -53,7 +53,8 @@
+ import {cardsIn, recordUse, shownName, eventCard} from "../state/index.mjs";
+ import {applyReplacements, hitKey, damageChoicesPossible} from "./replacement.mjs";
+ import {runFollowUps} from "../script/effects/index.mjs";
+-import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf, deriving} from "./layers.mjs";
++import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf, deriving, subtypesOf, everyCreatureTypeOf} from "./layers.mjs";
++import {isCreatureType} from "../keywords/types.mjs";
+ import {givePoison, changeLife, infects, addCounters, damagePermanent} from "../script/effects/resources.mjs";
+ import {summoningSick} from "../keywords/timing.mjs";
+ import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack, cantGainLife, attackerCaps} from "./statics.mjs";
+@@ -607,6 +608,14 @@ export const combatDamage = {
+         /* Dealt combat damage this turn, infect or not ("the number of opponents that were dealt combat damage this turn",
+            Tymna the Weaver; script/amount.mjs). turn.mjs clears it. */
+         state.players[hit.toPlayer].combatDamagedThisTurn = true;
++        /* PROWL'S RECORD (CR 702.76a): "a source that, at the time it dealt that damage, was under your control and had any
++           of this spell's creature types" -- each source that dealt combat damage to a player this turn, kept for the player
++           who controlled it, with its creature types as it dealt it (a changeling's, every one). turn.mjs clears it. */
++        if (state.objects[hit.source]) {
++          const dealer = controllerOf(state, hit.source);
++          if (state.players[dealer]) (state.players[dealer].combatDamageSources ??= []).push({types: subtypesOf(state, hit.source).filter(isCreatureType),
++            every: everyCreatureTypeOf(state, hit.source)});
++        }
+         /* The damage is a loss of life (CR 120.3a), counted as one this turn (batch 78: it was not) -- or, with infect, as
+            many poison counters. */
+         /* Whoever controls the source puts the counters (rules/statics.mjs, playerCountersPlaced). */
+diff --git a/game/engine/rules/entering.mjs b/game/engine/rules/entering.mjs
+index 9beb5e04..f2c6d756 100644
+--- a/game/engine/rules/entering.mjs
++++ b/game/engine/rules/entering.mjs
+@@ -19,7 +19,7 @@
+  */
+ 
+ import {runEffect} from "../script/effects/index.mjs";
+-import {cardsIn} from "../state/index.mjs";
++import {cardsIn, eventCard} from "../state/index.mjs";
+ import {matchesSelector} from "../script/filter.mjs";
+ import {creatureTypesInGame} from "../script/effects/asking.mjs";
+ import {copyOnto} from "../script/effects/permanents.mjs";
+@@ -42,6 +42,21 @@ export function holdArrival(state, objectId, arrival) {
+   for (const q of waiting) q.arrival = arrival;
+ }
+ 
++/**
++ * COUNTERS A PERMANENT ENTERED WITH WERE PUT ON IT (CR 122.6): "whenever a +1/+1 counter is put on this creature" sees them
++ * (Fathom Mage's ruling: once for each it entered with) -- said once it is on the battlefield, after its arrival, each kind
++ * from what it had to what it has (rules/stack.mjs, effects/zones.mjs). `counted`: each kind's count before the entering
++ * put them on.
++ *
++ * @returns {Array} the counters events
++ */
++export function enteredWith(state, id, counted) {
++  const object = state.objects[id];
++  if (!object || object.zone !== "battlefield") return [];
++  return counted.filter(({counter, before}) => (object.counters[counter] ?? 0) > before).map(({counter, before}) => ({kind: "GameEventCardCounters",
++    data: {turn: state.turn, phase: state.phase, fields: {card: eventCard(state, id), type: counter, oldValue: before, newValue: object.counters[counter], entered: true}}}));
++}
++
+ /* What it may enter as a copy of: each other permanent the selector matches, "you" its controller. */
+ const copyChoices = (state, q, object) => state.zones.battlefield.filter((id) => id !== q.objectId
+   && matchesSelector({...q.copyOf, what: "permanent"}, state, id, {controller: object.controller, source: q.objectId}));
+diff --git a/game/engine/rules/replacement.mjs b/game/engine/rules/replacement.mjs
+index 63726298..c0ee9e32 100644
+--- a/game/engine/rules/replacement.mjs
++++ b/game/engine/rules/replacement.mjs
+@@ -366,6 +366,15 @@ export function applyReplacements(state, proposal, {orders = [], askable = false
+   if (proposal.event === "damage" && protectedFrom(state, {card: current.toCard ?? null, player: current.toPlayer ?? null}, current.sourceId))
+     return {proposal: {...current, amount: 0, prevented: true}, applied: current.applied, awaiting: false};
+ 
++  /* "IF IT WOULD LEAVE THE BATTLEFIELD, EXILE IT INSTEAD OF PUTTING IT ANYWHERE ELSE" (unearth, CR 702.84a; Whip of Erebos): an
++     effect on that permanent (effects/permanents.mjs, afterwards), gone with it when it leaves (CR 400.7). Every way it would
++     leave asks here -- an effect, a sacrifice, lethal damage, an Aura's state-based action -- so it is exiled by each; one
++     already going to exile is simply exiled (the card's ruling). Applied once (CR 614.5); whatever else applies to the
++     exile then still may. */
++  if (proposal.event === "zone-change" && proposal.from === "battlefield" && proposal.to !== "exile" && state.objects[proposal.objectId]?.exileIfLeaves === true
++    && !(current.appliedBy ?? []).includes("exile-if-leaves"))
++    current = {...current, to: "exile", applied: [...current.applied, "exile-if-leaves"], appliedBy: [...(current.appliedBy ?? []), "exile-if-leaves"]};
++
+   /* Each round finds what still applies to the event AS IT NOW IS, which is what makes an effect
+      that rewrites the destination able to bring a different effect into play. Bounded by CR 614.5:
+      the applied list only grows, so this cannot run longer than there are effects. */
+diff --git a/game/engine/rules/sba.mjs b/game/engine/rules/sba.mjs
+index ca8e109c..e8759d3c 100644
+--- a/game/engine/rules/sba.mjs
++++ b/game/engine/rules/sba.mjs
+@@ -45,13 +45,13 @@
+  */
+ 
+ import {moveObject, PER_PLAYER, PUBLIC_ZONES, eventCard} from "../state/index.mjs";
+-import {applyReplacements, regenerated} from "./replacement.mjs";
++import {applyReplacements} from "./replacement.mjs";
+ import {lastKnown, toughnessOf, typesOf, keywordsOf, controllerOf, deriving} from "./layers.mjs";
+ import {matchesSelector} from "../script/filter.mjs";
+ import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./commander.mjs";
+-import {sacrificeOne, moveOne, returnExiledUntil, leavingRef} from "../script/effects/zones.mjs";
++import {sacrificeOne, moveOne, returnExiledUntil, leavingRef, destructionReplaced, destructionToAsk} from "../script/effects/zones.mjs";
+ import {changeLife} from "../script/effects/resources.mjs";
+-import {enduringStories} from "../keywords/designations.mjs";
++import {enduringStories, citysBlessings} from "../keywords/designations.mjs";
+ import {protectedFrom} from "./protection.mjs";
+ 
+ /* The capitalized zone names the projection and the telemetry use. */
+@@ -129,7 +129,8 @@ function removePlayerFromBoard(state, playerId, events) {
+ export function checkStateBasedActions(state) {
+   /* Storied (CR 702.195a): "any time" its controller has three artifacts, Sagas or legendaries -- read as the game is
+      checked, before the actions, which never add a permanent (keywords/designations.mjs). */
+-  const events = enduringStories(state);
++  /* Ascend (CR 702.131b), the same way: ten permanents, and the city's blessing for the rest of the game. */
++  const events = [...enduringStories(state), ...citysBlessings(state)];
+   /* A creature dying can put a player to zero, and that player leaving can empty a zone. Ten passes
+      is far more than any real position needs; reaching it would mean two actions were undoing each
+      other, which is a bug worth an exception rather than an infinite loop. */
+@@ -224,6 +225,12 @@ export function checkStateBasedActions(state) {
+       /* And the planeswalkers with no loyalty left (CR 704.5i), acted on below. */
+       spent: state.zones.battlefield.filter((id) => typesOf(state, id).includes("Planeswalker") && (state.objects[id].counters?.loyalty ?? 0) <= 0),
+     }));
++    /* WHICH REPLACES A DESTRUCTION, WHEN SEVERAL WOULD (CR 616.1; two Auras with umbra armor, or one and a regeneration shield):
++       asked of the creature's controller before any of these destructions happens -- they happen at once (CR 704.3) -- and
++       the whole check made again with the answer (finishDestructionChoice). Not while something else is being asked. */
++    const doomed = state.awaiting ? null : deriving(state, () => destructionToAsk(state, [...state.zones.battlefield].filter((id) => lethal.has(id) && toughnessOf(state, id) > 0),
++      state.destructionAnswers ?? {}));
++    if (doomed) { state.awaiting = {kind: "destruction-replacement", ...doomed}; break; }
+     for (const id of [...state.zones.battlefield]) {
+       if (!lethal.has(id) || !state.objects[id]) continue;
+       const object = state.objects[id];
+@@ -242,8 +249,9 @@ export function checkStateBasedActions(state) {
+          damage and all. Toughness zero or less is not destruction (704.5f), so indestructible does not save it. */
+       const destroyed = !(toughness <= 0) && (deathtouched || (object.damage > 0 && object.damage >= toughness));
+       if (destroyed && keywordsOf(state, id).includes("Indestructible")) continue;
+-      /* Or regenerated (CR 701.19a): a shield on it replaces the destruction. */
+-      if (destroyed && regenerated(state, id, events)) { acted = true; continue; }
++      /* Or regenerated (CR 701.19a): a shield on it replaces the destruction -- or an Aura's umbra armor (CR 702.89a), the one
++         its controller chose when several would (rules/sba.mjs above; effects/zones.mjs, destructionReplaced). */
++      if (destroyed && destructionReplaced(state, id, events, {chosen: takeDestructionAnswer(state, id)})) { acted = true; continue; }
+       if (toughness <= 0 || deathtouched || (object.damage > 0 && object.damage >= toughness)) {
+         /* Face down, revealed as it moves (CR 708.9). */
+         const card = leavingRef(state, id);
+@@ -380,6 +388,30 @@ export function concede(state, playerId) {
+   return events;
+ }
+ 
++/* ---- CR 616.1, which replaces a destruction ---- */
++
++/* The answer its controller gave for this creature, used up. */
++function takeDestructionAnswer(state, id) {
++  const answer = state.destructionAnswers?.[id];
++  if (answer === undefined) return undefined;
++  delete state.destructionAnswers[id];
++  if (!Object.keys(state.destructionAnswers).length) delete state.destructionAnswers;
++  return answer;
++}
++
++/**
++ * The answer to "destruction-replacement": kept for that creature, and the whole check made again, which uses it.
++ *
++ * @returns {Array} events for the caller to journal
++ */
++export function finishDestructionChoice(state, awaiting, indices) {
++  const key = Array.isArray(indices) && indices.length === 1 ? awaiting.options[indices[0]] : undefined;
++  if (key === undefined) throw new Error("Choose the one effect that replaces it");
++  (state.destructionAnswers ??= {})[awaiting.objectId] = key;
++  state.awaiting = null;
++  return checkStateBasedActions(state);
++}
++
+ /* ---- CR 704.5j, the legend rule ---- */
+ 
+ /* The first player, in turn order from the active player (CR 101.4), with two or more legendary permanents of one name:
+diff --git a/game/engine/rules/stack.mjs b/game/engine/rules/stack.mjs
+index c90b6609..5dc87176 100644
+--- a/game/engine/rules/stack.mjs
++++ b/game/engine/rules/stack.mjs
+@@ -34,7 +34,7 @@
+  * whose every target is illegal does nothing and leaves the stack with `hasFizzled`.
+  */
+ 
+-import {holdArrival} from "./entering.mjs";
++import {holdArrival, enteredWith} from "./entering.mjs";
+ import {conditionHolds} from "../script/condition.mjs";
+ import {moveObject, addObject, removeObject, eventCard} from "../state/index.mjs";
+ import {enteringModifications} from "./replacement.mjs";
+@@ -42,6 +42,7 @@ import {countersPlaced} from "./statics.mjs";
+ import {beginResolution, resolutionPending} from "../script/resolution.mjs";
+ import {delayedTrigger} from "../script/effects/permanents.mjs";
+ import {recheckTargets, factsOf, modalScript} from "../script/bind.mjs";
++import {ascendAsItResolves} from "../keywords/designations.mjs";
+ 
+ /* The projection contract (§12.1) names these zones with a capital, and the telemetry matches on
+    them by name. The engine's own zone keys are lower case. */
+@@ -243,6 +244,10 @@ export function resolveTop(state, effect = null, rng = null) {
+   const {targets, fizzles} = recheckTargets(state, script.targets, entry.targets, source === null && (entry.cardId ?? entry.lastKnown?.cardId ?? null) !== null
+     ? {...context, source: entry.cardId ?? entry.lastKnown.cardId} : context);
+   if (fizzles) return finishTop(state, entry, events, true);
++  /* ASCEND ON AN INSTANT OR SORCERY (CR 702.131a): its spell ability, first as it is printed first -- the city's blessing for
++     its controller if they control ten or more permanents now (keywords/designations.mjs). */
++  if (entry.kind === "spell" && entry.objectId !== null && (state.objects[entry.objectId]?.keywords ?? []).includes("Ascend")
++    && (state.objects[entry.objectId].types ?? []).some((t) => t === "Instant" || t === "Sorcery")) events.push(...ascendAsItResolves(state, entry.playerId));
+   /* An intervening "if" asked again as it resolves (CR 603.4): false now, and the ability does nothing. A triggered
+      ability's own condition only -- "activate only if" was asked as it was activated (CR 602.5b) and is not again. */
+   if (entry.kind === "trigger" && script.condition && !conditionHolds(state, script.condition, {controller: entry.playerId, source, about: entry.about ?? undefined,
+@@ -371,6 +376,8 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
+     if (to === "battlefield" && entry.escaped) state.objects[arrived].escaped = true;
+     /* Cast for its evoke cost, the permanent it became was evoked (CR 702.74a): its own sacrifice trigger reads this. */
+     if (to === "battlefield" && entry.evoked) state.objects[arrived].evoked = true;
++    /* And for its prowl cost (CR 702.76a): "if its prowl cost was paid" (script/condition.mjs, `prowled`). */
++    if (to === "battlefield" && entry.prowled) state.objects[arrived].prowled = true;
+     /* Cast from suspend: haste, while it is this permanent (CR 702.62a). */
+     if (to === "battlefield" && entry.fromSuspend && (state.objects[arrived].types ?? []).includes("Creature"))
+       (state.effects ??= []).push({id: `suspend-haste:${arrived}`, layer: 6, affects: {ids: [arrived]}, apply: {addKeywords: ["Haste"]}, until: null, sourceController: entry.playerId});
+@@ -388,12 +395,16 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
+        castGrants): for as long as it is this permanent (CR 611.2a, 400.7), in layer 6 (CR 613.1f). */
+     if (to === "battlefield" && (object.castGrants ?? []).length)
+       (state.effects ??= []).push({id: `cast-grants:${arrived}`, layer: 6, affects: {ids: [arrived]}, apply: {addAbilities: structuredClone(object.castGrants)}, until: null, sourceController: entry.playerId});
++    /* What it entered with, said once it has (enteredWith). */
++    const counted = [];
+     if (entering) {
+       if (entering.tapped) state.objects[arrived].tapped = true;
+       for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: arrived, ...ask});
+       /* Counters it enters with are put on it (CR 122.6) -- by its controller (122.6a): "twice that many instead" sees them. */
+       for (const [counter, count] of Object.entries(entering.counters)) {
+-        state.objects[arrived].counters[counter] = (state.objects[arrived].counters[counter] ?? 0) + countersPlaced(state, arrived, counter, count, entry.playerId);
++        const before = state.objects[arrived].counters[counter] ?? 0;
++        state.objects[arrived].counters[counter] = before + countersPlaced(state, arrived, counter, count, entry.playerId);
++        counted.push({counter, before});
+       }
+     }
+     events.push(event("GameEventCardChangeZone", state, {
+@@ -406,6 +417,7 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
+     }));
+     /* "You may have this creature enter as a copy of ...": its arrival waits for the answer (rules/entering.mjs). */
+     if (to === "battlefield") holdArrival(state, arrived, events[events.length - 1]);
++    if (to === "battlefield") events.push(...enteredWith(state, arrived, counted));
+   }
+ 
+   events.push(event("GameEventSpellResolved", state, {
+diff --git a/game/engine/rules/statics.mjs b/game/engine/rules/statics.mjs
+index 3f1a6432..67e1aae8 100644
+--- a/game/engine/rules/statics.mjs
++++ b/game/engine/rules/statics.mjs
+@@ -150,6 +150,10 @@ export const STATIC_RULES = Object.freeze({
+   /** "Target creature with defender can attack this turn as though it didn't have defender" (Assault Formation, Walking
+       Bulwark; CR 702.3b): combat.mjs, as attackers are offered. */
+   "attacks-despite-defender": "rules/combat.mjs",
++  /** Umbra armor (CR 702.89a): the keyword kept as this static on its Aura (cards/index.mjs), read wherever the permanent it
++      enchants would be destroyed -- the damage removed and the Aura destroyed instead (script/effects/zones.mjs,
++      destructionReplaced). */
++  "umbra-armor": "script/effects/zones.mjs",
+   /** "Prevent all damage that would be dealt to [them] this turn": an effect with a duration only (effectUntil), with
+       `apply` {to, by, combat}; rules/replacement.mjs. */
+   "prevent-damage": "rules/replacement.mjs",
+diff --git a/game/engine/rules/trigger.mjs b/game/engine/rules/trigger.mjs
+index e7405f32..3b97d11b 100644
+--- a/game/engine/rules/trigger.mjs
++++ b/game/engine/rules/trigger.mjs
+@@ -156,6 +156,18 @@ function subjects(state, event, condition, sourceId, controller) {
+     }
+     return [{card: spell, player: caster, ...spellWas(state, spell)}];
+   }
++  /* "WHENEVER THIS CREATURE BECOMES BLOCKED BY A CREATURE" (CR 509.3d): once for each creature that blocks it, about the
++     blocker and its controller -- flanking's "by a creature without flanking" (CR 702.25a), the blocker as it is as blockers
++     are declared (509.3f). `who` the attacker blocked, `filter` the blocker. */
++  if (condition.on === "GameEventBlockersDeclared" && condition.blockedBy) {
++    return (fields.blockers ?? []).filter((b) => fits(state, b.blocking?.cardId, {who: condition.who}, sourceId, controller)
++      && (!condition.filter || (state.objects[b.card?.cardId] && matchesSelector({what: "permanent", ...condition.filter}, state, b.card.cardId, {controller, source: sourceId}))))
++      .map((b) => ({card: b.card.cardId, player: characteristicsOf(state, b.card.cardId).controller}));
++  }
++  /* "Whenever a +1/+1 counter is put on this creature" (Fathom Mage): once for EACH counter put on it (`each`), counters it
++     enters with too (CR 122.6) -- not once however many, as "one or more" is (the card's ruling). */
++  if (condition.on === "GameEventCardCounters" && condition.counterAdded && condition.each === true)
++    return matches(state, event, condition, sourceId, controller) ? Array.from({length: Math.max(0, (fields.newValue ?? 0) - (fields.oldValue ?? 0))}, () => ({})) : [];
+   /* "Whenever this creature attacks", "whenever a creature you control attacks" (CR 508.1m): each attacker, and the
+      player it attacks. */
+   /* "Whenever you attack" ("attackers declared"): the attack as a whole, by whom, with how many, at whom. */
+@@ -460,6 +472,10 @@ export function collectTriggers(state, events) {
+      resolution is read the same way. */
+   const departed = (events ?? []).filter((e) => e.kind === "GameEventCardChangeZone" && e.data?.fields?.from?.zoneType === "Battlefield" && e.data.fields.leftBehind)
+     .map((e) => e.data.fields.leftBehind);
++  /* EVOLVE'S ARRIVAL, GONE BEFORE IT RESOLVES (CR 702.100a; the card's ruling): the evolve trigger waiting on it, here or on
++     the stack, compares it as it last existed on the battlefield (CR 608.2h). */
++  for (const gone of departed) for (const waiting of [...state.stack, ...state.pendingTriggers])
++    if (waiting.about?.card === gone.cardId && waiting.script?.condition?.evolves === true) waiting.about.lastKnown = {power: gone.power, toughness: gone.toughness};
+   /* "WHENEVER ONE OR MORE other creatures die" (`batch`): everything this action did is one event for it (CR 603.2c), so it
+      triggers once, about all of them (`about.cards`: "for each of them"). One entry per source and ability, per action. */
+   const batched = new Map();
+diff --git a/game/engine/rules/turn.mjs b/game/engine/rules/turn.mjs
+index f165f718..5b267b18 100644
+--- a/game/engine/rules/turn.mjs
++++ b/game/engine/rules/turn.mjs
+@@ -37,7 +37,8 @@
+ 
+ import {cardsIn, moveObject, eventCard} from "../state/index.mjs";
+ import {attackers, blockers, combatDamage, endCombat} from "./combat.mjs";
+-import {checkStateBasedActions, gameOver, finishCommanderReplacement, legendChoice, finishLegendRule} from "./sba.mjs";
++import {checkStateBasedActions, gameOver, finishCommanderReplacement, legendChoice, finishLegendRule, finishDestructionChoice} from "./sba.mjs";
++import {destructionChoice} from "../script/effects/zones.mjs";
+ import {commanderChoice} from "./commander.mjs";
+ import {damageOrderChoice} from "./replacement.mjs";
+ import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
+@@ -260,6 +261,8 @@ function choiceFor(state) {
+   if (awaiting.kind === "effect-choice") return resolutionChoice(state, awaiting);
+   if (awaiting.kind === "commander-replacement") return commanderChoice(state, awaiting);
+   if (awaiting.kind === "legend-rule") return legendChoice(state, awaiting);
++  /* CR 616.1: which effect replaces a creature's destruction by lethal damage, when several would (rules/sba.mjs). */
++  if (awaiting.kind === "destruction-replacement") return destructionChoice(state, awaiting);
+   if (awaiting.kind === "order-triggers") return triggerChoice(state, awaiting);
+   if (awaiting.kind === "trigger-targets") return triggerTargetsChoice(state, awaiting);
+   /* A counted target ("up to two target creatures"), a trigger's or an offer's (CR 601.2c; script/bind.mjs). */
+@@ -332,6 +335,11 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
+     grantStepPriority(state, events);
+     return events;
+   }
++  if (awaiting.kind === "destruction-replacement") {
++    const events = finishDestructionChoice(state, awaiting, indices);
++    grantStepPriority(state, events);
++    return events;
++  }
+   if (awaiting.kind === "order-triggers") {
+     const events = resolveTriggerOrder(state, awaiting, indices);
+     grantStepPriority(state, events);
+@@ -645,6 +653,8 @@ export function advance(state) {
+       if (player.enteredThisTurn) player.enteredThisTurn = [];
+       /* And whether each was dealt combat damage (rules/combat.mjs). */
+       if (player.combatDamagedThisTurn) player.combatDamagedThisTurn = false;
++      /* And the sources each controlled that dealt combat damage to a player, with their creature types (prowl, CR 702.76a). */
++      if (player.combatDamageSources) player.combatDamageSources = [];
+     }
+     next = 0;
+   }
+diff --git a/game/engine/script/condition.mjs b/game/engine/script/condition.mjs
+index 715789af..faa03e88 100644
+--- a/game/engine/script/condition.mjs
++++ b/game/engine/script/condition.mjs
+@@ -36,6 +36,21 @@
+  *   {opponentPoisonAtLeast: 3}         an opponent of its controller, still in the game, has at least that many poison
+  *                                      counters (CR 122.1f): Corrupted's "as long as an opponent has three or more poison
+  *                                      counters" (Skrelv's Hive; an ability word, CR 207.2c, with no rules meaning of its own)
++ *   {citysBlessing: true|false}        its controller has the city's blessing, or has not (CR 702.131c; ascend,
++ *                                      keywords/designations.mjs): "unless you have the city's blessing" (Wayward Swordtooth)
++ *   {evolves: true}                    evolve's "if that creature's power is greater than this creature's power and/or that
++ *                                      creature's toughness is greater than this creature's toughness" (CR 702.100a): the
++ *                                      creature the trigger is about against its own source, power to power and toughness
++ *                                      to toughness, as each now is -- the arrival gone, as it last was (rules/trigger.mjs
++ *                                      keeps it; the card's ruling); never greater than a noncreature permanent (702.100c)
++ *   {prowl: true}                      prowl's "if a player was dealt combat damage this turn by a source that, at the time
++ *                                      it dealt that damage, was under your control and had any of this spell's creature
++ *                                      types" (CR 702.76a): its own object's creature types against what rules/combat.mjs
++ *                                      kept of its controller's sources this turn
++ *   {prowled: true|false}              its own permanent was cast for its prowl cost, or was not (CR 702.76a; rules/stack.mjs):
++ *                                      "if its prowl cost was paid" (Latchkey Faerie)
++ *   {targetIsAnother: true}            its first target is still there and is another object than its source: backup's "if
++ *                                      that's another creature" (CR 702.165a) -- its source gone, any target still there is
+  *
+  * The keys are closed, like every other grammar here: an unknown one is refused at the schema rather than read as true.
+  */
+@@ -43,9 +58,15 @@
+ import {cardsIn} from "../state/index.mjs";
+ import {matchesSelector, compileSelector, matchesLastKnown} from "./filter.mjs";
+ import {amountOf, amountProblems} from "./amount.mjs";
++import {characteristicsOf} from "../rules/layers.mjs";
++import {hasCitysBlessing} from "../keywords/designations.mjs";
++import {isCreatureType} from "../keywords/types.mjs";
+ 
+ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "spent", "enduringStory", "loyaltyThisTurn", "impending",
+-  "cameFrom", "sinceYourLastUpkeep", "level", "opponentPoisonAtLeast"];
++  "cameFrom", "sinceYourLastUpkeep", "level", "opponentPoisonAtLeast",
++  /* Ascend's city's blessing, evolve's comparison, prowl's damage and its cost paid, backup's other creature (CR 702.131,
++     702.100, 702.76, 702.165). */
++  "citysBlessing", "evolves", "prowl", "prowled", "targetIsAnother"];
+ /* Where a permanent may have come from, for `cameFrom`: a library (effects/zones.mjs and rules/stack.mjs record it). */
+ const CAME_FROM = ["library"];
+ /* The mana a condition may ask was spent to cast its object: the five colors and colorless (CR 106.1). */
+@@ -82,6 +103,35 @@ function namedIs(state, id, selector, context, was = null) {
+   return compileSelector({...selector, what, ...(what === "card" ? {zone: object.zone} : {})})(state, id, context);
+ }
+ 
++/* EVOLVE (CR 702.100a): the creature that entered -- on the battlefield and still a creature, as it now is; gone, as it last
++   was there (`about.lastKnown`, rules/trigger.mjs) -- against the creature with evolve, which must still be one: a creature
++   can't have a greater power or toughness than a noncreature permanent (702.100c). Power to power, toughness to toughness
++   (the card's ruling), either greater. */
++function evolves(state, source, about) {
++  const self = source !== null && source !== undefined ? state.objects[source] : null;
++  if (!self || self.zone !== "battlefield") return false;
++  const mine = characteristicsOf(state, source);
++  if (!mine.types.includes("Creature")) return false;
++  const id = about?.card;
++  const there = id !== undefined && id !== null && state.objects[id]?.zone === "battlefield" ? characteristicsOf(state, id) : null;
++  const it = there ? (there.types.includes("Creature") ? there : null) : about?.lastKnown ?? null;
++  if (!it || it.power === null || it.power === undefined) return false;
++  return it.power > (mine.power ?? 0) || (it.toughness ?? 0) > (mine.toughness ?? 0);
++}
++
++/* PROWL (CR 702.76a): a creature type of this object's -- every one, for a changeling (CR 702.73a) -- among those of a source
++   that dealt combat damage to a player this turn under its controller's control, as that source was as it dealt it
++   (rules/combat.mjs, `combatDamageSources`). An object with no creature type has nothing to share. */
++function prowlable(state, controller, source) {
++  const object = source !== null && source !== undefined ? state.objects[source] : null;
++  if (!object) return false;
++  const every = (object.keywords ?? []).includes("Changeling");
++  const types = (object.subtypes ?? []).filter(isCreatureType);
++  if (!every && !types.length) return false;
++  return (state.players[controller]?.combatDamageSources ?? []).some((dealt) => (every ? dealt.every || dealt.types.length > 0
++    : dealt.every || dealt.types.some((t) => types.includes(t))));
++}
++
+ /* HOW A SPELL WAS CAST (batch 70; rules/actions.mjs records it on the stack entry): "if this spell was cast from a
+    graveyard" (Sevinne's Reclamation: `from`, the zone), and Addendum's "if you cast this spell during your main phase"
+    (Unbreakable Formation: `mainPhase`). A copy was not cast (CR 707.10), and neither was an ability: no record, and
+@@ -181,6 +231,20 @@ export function conditionHolds(state, condition, {controller, source = null, abo
+   /* "As long as you have an enduring story" (Storied, CR 702.195b), or "unless you have one": the player's designation
+      (keywords/designations.mjs). */
+   if (condition.enduringStory !== undefined && (state.players[controller]?.enduringStory === true) !== condition.enduringStory) return false;
++  /* "Unless you have the city's blessing" (Wayward Swordtooth; CR 702.131c): its controller's designation, or theirs this
++     moment by a permanent's ascend (keywords/designations.mjs). */
++  if (condition.citysBlessing !== undefined && hasCitysBlessing(state, controller) !== condition.citysBlessing) return false;
++  /* "If its prowl cost was paid" (CR 702.76a): whether its own permanent was cast for it (rules/stack.mjs). */
++  if (condition.prowled !== undefined && ((source !== null && state.objects[source]?.prowled === true) !== condition.prowled)) return false;
++  /* Prowl's cost may be paid (CR 702.76a): asked of the card as its cast is offered (rules/actions.mjs, alternativeCosts). */
++  if (condition.prowl === true && !prowlable(state, controller, source)) return false;
++  /* Evolve's comparison (CR 702.100a): as it triggers, and again as it resolves (CR 603.4). */
++  if (condition.evolves === true && !evolves(state, source, about)) return false;
++  /* Backup's "if that's another creature" (CR 702.165a): its first target, still legal, and not its source. */
++  if (condition.targetIsAnother === true) {
++    const chosen = [].concat(targets?.[0] ?? [])[0];
++    if (!chosen || chosen.kind !== "object" || !state.objects[chosen.id] || chosen.id === source) return false;
++  }
+   /* "If you've activated a loyalty ability this turn" (Kiora of Salt and Sand): its controller has (rules/actions.mjs). */
+   if (condition.loyaltyThisTurn === true && !((state.players[controller]?.loyaltyThisTurn ?? 0) > 0)) return false;
+   /* "Activate only during your turn" (Humble Defector). */
+@@ -221,6 +285,9 @@ export function conditionProblems(condition) {
+   if ("enduringStory" in condition && typeof condition.enduringStory !== "boolean") problems.push("enduringStory is true or false");
+   if ("notYourTurn" in condition && condition.notYourTurn !== true) problems.push("notYourTurn is true");
+   if ("loyaltyThisTurn" in condition && condition.loyaltyThisTurn !== true) problems.push("loyaltyThisTurn is true");
++  if ("citysBlessing" in condition && typeof condition.citysBlessing !== "boolean") problems.push("citysBlessing is true or false");
++  if ("prowled" in condition && typeof condition.prowled !== "boolean") problems.push("prowled is true or false");
++  for (const key of ["evolves", "prowl", "targetIsAnother"]) if (key in condition && condition[key] !== true) problems.push(`${key} is true`);
+   if ("opponentPoisonAtLeast" in condition && !(Number.isInteger(condition.opponentPoisonAtLeast) && condition.opponentPoisonAtLeast >= 1))
+     problems.push("opponentPoisonAtLeast is a whole number of poison counters, 1 or more");
+   if ("graveyardTypes" in condition && !(Number.isInteger(condition.graveyardTypes) && condition.graveyardTypes >= 1)) problems.push("graveyardTypes is a whole number of card types, 1 or more");
+diff --git a/game/engine/script/effects/asking.mjs b/game/engine/script/effects/asking.mjs
+index 63b8a529..1780b2ef 100644
+--- a/game/engine/script/effects/asking.mjs
++++ b/game/engine/script/effects/asking.mjs
+@@ -28,7 +28,7 @@
+ 
+ import {cardsIn, moveObject, addObject, valueCostOf} from "../../state/index.mjs";
+ import {compileSelector} from "../filter.mjs";
+-import {event, cardRef, moveOne, playersFor, sacrificeOne} from "./zones.mjs";
++import {event, cardRef, moveOne, playersFor, sacrificeOne, destroy, destroyAll, destructionQuestion, destructionChoice} from "./zones.mjs";
+ import {proliferate as giveEachAnother, addCounters} from "./resources.mjs";
+ import {makeCopies, afterwards, joinAttack, defendingPlayers, attachTo, createToken, effectUntil} from "./permanents.mjs";
+ import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits, unlessPlans, planWords, payPlan} from "../../rules/mana.mjs";
+@@ -778,7 +778,9 @@ export const unlessPays = {
+        nothing happens. */
+     if (params.ifPaid && !params.life && !params.discard && !params.sacrifice && !canPayGeneric(state, payer, Math.max(0, params.amount ?? 0))) return false;
+     state.awaiting = {kind: "effect-choice", effect: "unlessPays", player: payer, amount: Math.max(0, params.amount ?? 0),
+-      ...(typeof params.mana === "string" && params.mana ? {mana: params.mana} : {}),
++      /* "For each age counter on it" (cumulative upkeep with colored symbols, CR 702.24a): the cost that many times, counted now. */
++      ...(typeof params.mana === "string" && params.mana && (params.manaTimes === undefined || amountOf(state, params.manaTimes, context) > 0)
++        ? {mana: params.manaTimes === undefined ? params.mana : params.mana.repeat(amountOf(state, params.manaTimes, context))} : {}),
+       ...(params.life !== undefined ? {life: params.life} : {}), ...(params.discard ? {discard: params.discard} : {}), ...(params.sacrifice ? {sacrifice: structuredClone(params.sacrifice)} : {}),
+       ...(params.sacrificeCount ? {sacrificeCount: params.sacrificeCount} : {}),
+       effects: structuredClone(params.effects ?? []), source: context.source ?? null,
+@@ -1362,4 +1364,26 @@ export const orderDamage = {
+   },
+ };
+ 
+-export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage});
++/* ---- orderDestruction (CR 616.1): a destroy whose destruction of one permanent two or more effects would replace, ending
++   differently -- two Auras with umbra armor, or one and a regeneration shield -- asks that permanent's controller which,
++   before anything is destroyed (effects/zones.mjs, destructionQuestion); then the destroy again, with the answer, asking the
++   next such permanent's controller or destroying. ---- */
++export const orderDestruction = {
++  open(state, params, context) {
++    const question = destructionQuestion(state, params.destroy, context);
++    if (!question) return {events: (params.destroy.effect === "destroy" ? destroy : destroyAll)(state, params.destroy, context)};
++    state.awaiting = {kind: "effect-choice", effect: "orderDestruction", ...question, destroy: params.destroy};
++    return true;
++  },
++  choice(state, awaiting) {
++    return destructionChoice(state, awaiting);
++  },
++  apply(state, awaiting, indices) {
++    const key = Array.isArray(indices) && indices.length === 1 ? awaiting.options[indices[0]] : undefined;
++    if (key === undefined) throw new Error("Invalid selection");
++    return {events: [], splice: [{...awaiting.destroy, destructionAnswers: {...(awaiting.destroy.destructionAnswers ?? {}), [awaiting.objectId]: key}}]};
++  },
++};
++
++export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage,
++  orderDestruction});
+diff --git a/game/engine/script/effects/zones.mjs b/game/engine/script/effects/zones.mjs
+index 6ef6de89..c69377a0 100644
+--- a/game/engine/script/effects/zones.mjs
++++ b/game/engine/script/effects/zones.mjs
+@@ -17,12 +17,12 @@
+  * behave differently later.
+  */
+ 
+-import {holdArrival} from "../../rules/entering.mjs";
++import {holdArrival, enteredWith} from "../../rules/entering.mjs";
+ import {afterwards, delayedTrigger, enchantable, enchantOnArrival} from "./permanents.mjs";
+ import {typesOf} from "../../rules/layers.mjs";
+ import {moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard} from "../../state/index.mjs";
+ import {lastKnown} from "../../rules/layers.mjs";
+-import {keywordsOf, controllerOf} from "../../rules/layers.mjs";
++import {keywordsOf, controllerOf, abilitiesOf} from "../../rules/layers.mjs";
+ import {selectMatching, compileSelector} from "../filter.mjs";
+ import {applyReplacements, enteringModifications, regenerated} from "../../rules/replacement.mjs";
+ import {cantBeCountered, entersUntapped, countersPlaced} from "../../rules/statics.mjs";
+@@ -110,6 +110,8 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false, fa
+      read by the condition `cameFrom` (script/condition.mjs). A library only; rules/stack.mjs records a cast from one. */
+   if (destination === "battlefield" && from === "library" && state.objects[moved]) state.objects[moved].cameFrom = {zone: "library", owner: object.zonePlayer ?? object.owner};
+   if (hosts) enchantOnArrival(state, moved, hosts, state.objects[moved].controller);
++  /* What it entered with, said once it has (rules/stack.mjs, enteredWith). */
++  const counted = [];
+   if (entering) {
+     /* Tapped by its own "enters tapped", or by the effect that put it there ("onto the battlefield tapped"): before the
+        event, which says how it entered. */
+@@ -118,7 +120,9 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false, fa
+     for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: moved, ...ask});
+     /* Counters it enters with are put on it (CR 122.6) -- by its controller (122.6a): "twice that many instead" sees them. */
+     for (const [counter, count] of Object.entries(entering.counters)) {
+-      state.objects[moved].counters[counter] = (state.objects[moved].counters[counter] ?? 0) + countersPlaced(state, moved, counter, count, state.objects[moved].controller);
++      const before = state.objects[moved].counters[counter] ?? 0;
++      state.objects[moved].counters[counter] = before + countersPlaced(state, moved, counter, count, state.objects[moved].controller);
++      counted.push({counter, before});
+     }
+   }
+   events.push(event("GameEventCardChangeZone", state, {
+@@ -135,6 +139,7 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false, fa
+   }));
+   /* "You may have this creature enter as a copy of ...": its arrival waits for the answer (rules/entering.mjs). */
+   if (destination === "battlefield") holdArrival(state, moved, events[events.length - 1]);
++  if (destination === "battlefield") events.push(...enteredWith(state, moved, counted));
+   /* What it exiled "until this leaves the battlefield", back now (CR 610.3). */
+   if (from === "battlefield") returnExiledUntil(state, id, events);
+   return moved;
+@@ -446,6 +451,98 @@ export function draw(state, params, context) {
+   return events;
+ }
+ 
++/**
++ * WHAT WOULD REPLACE A DESTRUCTION (CR 701.8, 614.1a): a permanent about to be destroyed -- by an effect that says "destroy",
++ * or by lethal damage or deathtouch's damage (CR 704.5g-h) -- and each effect instead of which it is not, by its `key`:
++ *   "regenerate": a regeneration shield on it (CR 701.19a), unless "it can't be regenerated" (`noRegenerate`);
++ *   "umbra:<id>": an Aura attached to it with umbra armor (CR 702.89a) -- "instead remove all damage marked on it and destroy
++ *     this Aura" -- each Aura its own effect, the Aura's ability as it now is (a lost ability is no shield), and "can't be
++ *     regenerated" no bar to it (the card's ruling).
++ * Never for what is put into a graveyard otherwise -- a sacrifice, the legend rule, toughness 0 or less (CR 704.5f) -- and the
++ * callers ask indestructible first: an indestructible permanent is not destroyed, and nothing need replace it (CR 702.12b).
++ */
++export function destructionReplacements(state, id, {noRegenerate = false} = {}) {
++  const object = state.objects[id];
++  if (!object || object.zone !== "battlefield") return [];
++  const found = [];
++  if (!noRegenerate && (state.effects ?? []).some((e) => e.rule === "regeneration" && (e.affects?.ids ?? []).includes(id))) found.push({key: "regenerate"});
++  for (const aura of object.attachments ?? []) {
++    if (state.objects[aura]?.zone !== "battlefield" || state.objects[aura].attachedTo !== id) continue;
++    if (abilitiesOf(state, aura).some((a) => a.kind === "static" && a.rule === "umbra-armor")) found.push({key: `umbra:${aura}`, aura});
++  }
++  return found;
++}
++
++/* One of them, in words, for the choice: what it does instead. */
++const replacementWords = (state, id, key) => {
++  const name = state.objects[id]?.card ?? "It";
++  if (key === "regenerate") return `Regenerate ${name}: remove all damage from it, tap it, and remove it from combat`;
++  const aura = Number(String(key).split(":")[1]);
++  return `${state.objects[aura]?.card ?? "Its Aura"}'s umbra armor: remove all damage from ${name} and destroy ${state.objects[aura]?.card ?? "that Aura"}`;
++};
++
++/**
++ * WHICH REPLACES IT, WHEN SEVERAL WOULD (CR 616.1): two Auras with umbra armor, or one and a regeneration shield -- each ends
++ * the destruction another way, and the permanent's controller chooses which applies; the others then have nothing left to
++ * replace (the card's ruling: one of those Auras is destroyed, only one). The question about the first such permanent among
++ * `ids` whose answer `answers` does not hold yet, or null: `{player, objectId, options}`, the options its keys.
++ */
++export function destructionToAsk(state, ids, answers = {}, {noRegenerate = false} = {}) {
++  for (const id of ids) {
++    if (answers[id] !== undefined || !state.objects[id] || keywordsOf(state, id).includes("Indestructible")) continue;
++    const candidates = destructionReplacements(state, id, {noRegenerate});
++    if (candidates.length > 1) return {player: controllerOf(state, id), objectId: id, options: candidates.map((c) => c.key)};
++  }
++  return null;
++}
++/** The question (§12.1), from what destructionToAsk found: its keys, each said as what it does. */
++export function destructionChoice(state, awaiting) {
++  const name = state.objects[awaiting.objectId]?.card ?? "That permanent";
++  return {id: `destruction-replacement:${state.turn}:${awaiting.objectId}`, title: `${name} would be destroyed: which replaces it?`, mode: "one", min: 1, max: 1,
++    options: awaiting.options.map((key, index) => ({index, label: replacementWords(state, awaiting.objectId, key), cardId: key === "regenerate" ? awaiting.objectId : Number(key.split(":")[1])}))};
++}
++/* What a destroy effect would destroy now, before any of it is: its targets, or what its selector matches, standing and not
++   indestructible -- in the order it destroys them (destroyAll). */
++function wouldDestroy(state, params, context) {
++  if (params.effect === "destroy") return (params.targets ?? []).filter((id) => state.objects[id]?.zone === "battlefield" && !keywordsOf(state, id).includes("Indestructible"));
++  const spared = params.except === "remembered" ? new Set(context.remembered ?? []) : null;
++  return replacedFirst(state, [...selectMatching(state, params.selector ?? {what: "permanent"}, context)]
++    .filter((id) => !spared?.has(id) && state.objects[id]?.zone === "battlefield" && !keywordsOf(state, id).includes("Indestructible")), params);
++}
++/** The question a resolving destroy must ask before it destroys anything (script/resolution.mjs), or null. */
++export function destructionQuestion(state, effect, context) {
++  if (effect?.effect !== "destroy" && effect?.effect !== "destroyAll") return null;
++  return destructionToAsk(state, wouldDestroy(state, effect, context), effect.destructionAnswers ?? {}, {noRegenerate: effect.noRegenerate === true});
++}
++/* Of what a board wipe destroys, those something would replace the destruction of first: an Aura with umbra armor destroyed in
++   the same wipe as its creature still saves it, and the wipe destroys the Aura either way (the card's ruling). */
++const replacedFirst = (state, ids, params) => [...ids.filter((id) => destructionReplacements(state, id, {noRegenerate: params.noRegenerate === true}).length),
++  ...ids.filter((id) => !destructionReplacements(state, id, {noRegenerate: params.noRegenerate === true}).length)];
++
++/**
++ * A DESTRUCTION REPLACED, OR NOT (CR 614.1a): with one effect that would replace it, that one; with several, the one its
++ * controller chose (`chosen`, its key; asked before -- effects/asking.mjs orderDestruction, rules/sba.mjs) -- or, where
++ * nothing could stop to ask (an effect run directly), the first found: the shield, then the Auras in the order they were
++ * attached. A regeneration shield used is rules/replacement.mjs's. Umbra armor (CR 702.89a): all damage removed from the
++ * permanent -- and deathtouch's mark with it, the damage that brought it -- and the Aura destroyed instead, the destruction
++ * the spell's, ability's or rules' own (the card's ruling): indestructible, the Aura stays, and the permanent is saved all the
++ * same; and something may replace the Aura's destruction in turn. Not regeneration: it is not tapped, and stays in combat.
++ *
++ * @returns {boolean} whether the destruction was replaced
++ */
++export function destructionReplaced(state, id, events, {noRegenerate = false, chosen = undefined} = {}) {
++  const candidates = destructionReplacements(state, id, {noRegenerate});
++  if (!candidates.length) return false;
++  const pick = candidates.length === 1 ? candidates[0] : candidates.find((c) => c.key === chosen) ?? candidates[0];
++  if (pick.key === "regenerate") return regenerated(state, id, events);
++  const object = state.objects[id];
++  object.damage = 0;
++  object.deathtouched = false;
++  events.push(event("GameEventUmbraArmor", state, {card: cardRef(state, id), aura: cardRef(state, pick.aura)}));
++  if (state.objects[pick.aura] && !keywordsOf(state, pick.aura).includes("Indestructible") && !destructionReplaced(state, pick.aura, events)) moveOne(state, pick.aura, "graveyard", events);
++  return true;
++}
++
+ /**
+  * `destroy` — CR 701.8.
+  *
+@@ -458,8 +555,9 @@ export function destroy(state, params, context) {
+   for (const id of params.targets ?? []) {
+     if (!state.objects[id]) continue;
+     if (keywordsOf(state, id).includes("Indestructible")) continue;
+-    /* A regeneration shield replaces the destruction (CR 701.19a), unless "it can't be regenerated" (`noRegenerate`). */
+-    if (params.noRegenerate !== true && regenerated(state, id, events)) continue;
++    /* A regeneration shield replaces the destruction (CR 701.19a), unless "it can't be regenerated" (`noRegenerate`); an Aura's
++       umbra armor does (CR 702.89a) -- the one its controller chose, when several would (destructionReplaced). */
++    if (destructionReplaced(state, id, events, {noRegenerate: params.noRegenerate === true, chosen: params.destructionAnswers?.[id]})) continue;
+     moveOne(state, id, "graveyard", events);
+   }
+   void context;
+@@ -480,11 +578,13 @@ export function destroyAll(state, params, context) {
+   const events = [];
+   const spared = params.except === "remembered" ? new Set(context.remembered ?? []) : null;
+   const matched = [...selectMatching(state, params.selector ?? {what: "permanent"}, context)].filter((id) => !spared?.has(id));
+-  const doomed = matched.filter((id) => state.objects[id]?.zone === "battlefield" && !keywordsOf(state, id).includes("Indestructible"));
+-  /* Each regenerated one stays (CR 701.19a), unless the card says "they can't be regenerated" (`noRegenerate`). */
++  const doomed = replacedFirst(state, matched.filter((id) => state.objects[id]?.zone === "battlefield" && !keywordsOf(state, id).includes("Indestructible")), params);
++  /* Each regenerated one stays (CR 701.19a), unless the card says "they can't be regenerated" (`noRegenerate`); and each an
++     Aura's umbra armor saves (CR 702.89a), the Aura destroyed in its place -- one in this wipe too is gone already. */
+   const destroyed = [];
+   for (const id of doomed) {
+-    if (params.noRegenerate !== true && regenerated(state, id, events)) continue;
++    if (!state.objects[id]) continue;
++    if (destructionReplaced(state, id, events, {noRegenerate: params.noRegenerate === true, chosen: params.destructionAnswers?.[id]})) continue;
+     const moved = moveOne(state, id, "graveyard", events);
+     if (moved !== null) destroyed.push(moved);
+   }
+diff --git a/game/engine/script/filter.mjs b/game/engine/script/filter.mjs
+index d2ea3382..1b261003 100644
+--- a/game/engine/script/filter.mjs
++++ b/game/engine/script/filter.mjs
+@@ -47,6 +47,9 @@ export const SELECTOR_KEYS = Object.freeze([
+   "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander", "nonColors", "owner", "enteredThisTurn", "toughnessOverPower",
+   "unblocked", "singleTarget", "goaded", "uniqueName", "sharesCreatureType", "multicolored", "sharesColor",
+   "sharesCreatureTypeWithCommander",
++  /* "Creatures your opponents control without flying or reach" (Sidar Kondo of Jamuraa), "a creature without flanking"
++     (CR 702.25a): none of these keywords, through the layers. */
++  "nonKeywords",
+ ]);
+ 
+ /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
+@@ -107,8 +110,12 @@ function assertGrammar(selector) {
+     throw new Error("A selector's types are a list, because 'artifact creature' is two of them");
+   if (selector.subtypes !== undefined && !Array.isArray(selector.subtypes))
+     throw new Error("A selector's subtypes are a list: 'Mountain Plains' is two of them");
+-  for (const key of ["supertypes", "nonTypes", "nonSubtypes"])
++  for (const key of ["supertypes", "nonTypes", "nonSubtypes", "nonKeywords"])
+     if (selector[key] !== undefined && !Array.isArray(selector[key])) throw new Error(`A selector's ${key} are a list`);
++  /* A mana value at most a number, "X", or this source's power (`{powerOf: "self"}`). */
++  const max = selector.manaValue?.max;
++  if (max !== undefined && !(Number.isInteger(max) || max === "X" || (max && typeof max === "object" && Object.keys(max).length === 1 && max.powerOf === "self")))
++    throw new Error("A selector's manaValue.max is a number, \"X\", or {powerOf: \"self\"}");
+   /* What it shares a creature type with: a selector of permanents, held to the same grammar. */
+   if (selector.sharesCreatureType !== undefined) compileSelector({...selector.sharesCreatureType, what: "permanent"});
+   if (selector.multicolored !== undefined && selector.multicolored !== true) throw new Error("A selector's multicolored is true: two or more colors");
+@@ -151,8 +158,13 @@ function matchesManaValue(state, id, rule, context = {}) {
+   /* "With even mana values" (Void Winnower): zero is even. */
+   if (rule.even !== undefined && (value % 2 === 0) !== rule.even) return false;
+   if (rule.min !== undefined && value < rule.min) return false;
+-  /* "With mana value X or less" (Rally the Ancestors): the X paid, as `exactly` reads it. */
+-  if (rule.max !== undefined && value > (rule.max === "X" ? context.x ?? 0 : rule.max)) return false;
++  /* "With mana value X or less" (Rally the Ancestors): the X paid, as `exactly` reads it. "Where X is this creature's power"
++     (Guardian Scalelord): `{powerOf: "self"}`, its source's power now, through the layers -- its source gone, nothing has
++     a mana value that is X or less of a power no one can read, and the target is illegal (CR 608.2b). */
++  if (rule.max !== null && typeof rule.max === "object") {
++    const source = context.source !== null && context.source !== undefined ? state.objects[context.source] : null;
++    if (rule.max.powerOf !== "self" || source?.zone !== "battlefield" || value > (characteristicsOf(state, context.source).power ?? 0)) return false;
++  } else if (rule.max !== undefined && value > (rule.max === "X" ? context.x ?? 0 : rule.max)) return false;
+   return true;
+ }
+ 
+@@ -355,6 +367,8 @@ export function compileSelector(selector) {
+     if (selector.self === true && id !== context.source) return false;
+     /* "A creature with flying": its keywords now, through the layers (CR 702). */
+     if (selector.keywords && !selector.keywords.every((word) => keywordsOf(state, id).includes(word))) return false;
++    /* "Without flying or reach": none of them (Sidar Kondo of Jamuraa). */
++    if (selector.nonKeywords && selector.nonKeywords.some((word) => keywordsOf(state, id).includes(word))) return false;
+     if (selector.target === true && !canBeTargetedBy(state, id, chooser, context.source ?? null)) return false;
+ 
+     return true;
+diff --git a/game/engine/script/resolution.mjs b/game/engine/script/resolution.mjs
+index 98166189..68527dc6 100644
+--- a/game/engine/script/resolution.mjs
++++ b/game/engine/script/resolution.mjs
+@@ -22,6 +22,7 @@
+ import {runEffect, eachOf} from "./effects/index.mjs";
+ import {ASKING, commandersGoingHome} from "./effects/asking.mjs";
+ import {damageQuestion} from "./effects/resources.mjs";
++import {destructionQuestion} from "./effects/zones.mjs";
+ import {bindEffect} from "./bind.mjs";
+ import {countEffect} from "./amount.mjs";
+ import {conditionHolds} from "./condition.mjs";
+@@ -150,6 +151,9 @@ export function runResolution(state, rng = null) {
+        chooses which applies first, before any of it is dealt (effects/asking.mjs, orderDamage). */
+     else if (damageQuestion(state, effect, resolving.context, effect?.damageOrders ?? {}))
+       resolving.queue[0] = {effect: "orderDamage", damage: effect, answers: effect.damageOrders ?? {}};
++    /* CR 616.1: a destruction two or more effects would replace, ending differently (umbra armor; effects/zones.mjs) -- the
++       permanent's controller chooses which, before anything is destroyed (effects/asking.mjs, orderDestruction). */
++    else if (destructionQuestion(state, effect, resolving.context)) resolving.queue[0] = {effect: "orderDestruction", destroy: effect};
+     const head = resolving.queue[0];
+     const asking = ASKING[head?.effect];
+ 

@@ -1,0 +1,124 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Advanced Reconstruction",
+    "oracleId": "f00bc101-8082-4459-b987-f0c4b7a12344",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Class"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "(Gain the next level as a sorcery to add its ability.)\nAt the beginning of your first main phase, mill a card, then exile a card from your graveyard at random. You may play the exiled card this turn.\n{1}{R}: Level 2\nWhenever one or more cards leave your graveyard, this Class deals 2 damage to each opponent.\n{1}{R}: Level 3\nSpells you cast from anywhere other than your hand cost {2} less to cast.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your first main phase, mill a card, then exile a card from your graveyard at random. You may play the exiled card this turn.",
+      "trigger": {
+        "on": "step",
+        "step": "MAIN1"
+      },
+      "effects": [
+        {
+          "effect": "mill",
+          "count": 1
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "graveyard",
+          "random": true,
+          "count": 1,
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "mayPlay",
+          "targets": "remembered",
+          "until": "end-of-turn"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{1}{R}: Level 2",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{R}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "setState",
+          "targets": "self",
+          "level": 2
+        }
+      ],
+      "timing": "sorcery",
+      "condition": {
+        "level": {
+          "exactly": 1
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever one or more cards leave your graveyard, this Class deals 2 damage to each opponent.",
+      "trigger": {
+        "on": "left graveyard",
+        "batch": true
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 2,
+          "who": "opponent"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "kind": "activated",
+      "text": "{1}{R}: Level 3",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{R}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "setState",
+          "targets": "self",
+          "level": 3
+        }
+      ],
+      "timing": "sorcery",
+      "condition": {
+        "level": {
+          "exactly": 2
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Spells you cast from anywhere other than your hand cost {2} less to cast.",
+      "rule": "spells-cost-less",
+      "level": 3,
+      "amount": 2,
+      "affects": {},
+      "fromAnywhereButHand": true
+    }
+  ]
+}

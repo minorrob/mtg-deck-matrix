@@ -1,0 +1,30 @@
+PATCHES = [
+("game/engine/script/effects/permanents.mjs",
+"""  if (params.mustAttack === "this combat" && String(state.phase ?? "").startsWith("COMBAT") && (state.combatsThisTurn ?? 0) > 0)""",
+"""  if (params.mustAttack === "this combat" && state.combat !== undefined && (state.combatsThisTurn ?? 0) > 0)"""),
+("game/engine/script/effects/zones.mjs",
+"""    ...(params.spellsOnly === true ? {spellsOnly: true} : {}), until: params.until ?? "end-of-turn", madeOnTurn: state.turn, sourceController: player,
+    /* "You may cast that card this turn WITHOUT PAYING ITS MANA COST" (Quintorius, Loremaster; rules/statics.mjs, freeCast):
+       cast that way, or not at all. */
+    ...(params.free === true ? {free: true, spellsOnly: true} : {}),
+    /* "If that spell would be put into a graveyard, put it on the bottom of its owner's library instead" (CR 614.1a): on the
+       spell cast through this permission (rules/actions.mjs), wherever it would go to a graveyard from the stack. */
+    ...(params.graveyardToBottom === true ? {graveyardToBottom: true} : {})});""",
+"""    ...(params.spellsOnly === true ? {spellsOnly: true} : {}), until: params.until ?? "end-of-turn", madeOnTurn: state.turn, sourceController: player});"""),
+("game/engine/rules/actions.mjs",
+"""    if (permission?.ability.graveyardToExile) entry.graveyardToExile = true;
+    /* "If that spell would be put into a graveyard, put it on the bottom of its owner's library instead" (Quintorius,
+       Loremaster): the permission an effect gave to cast it from where it was, which says so (effects/zones.mjs, mayPlay) --
+       countered or resolved, wherever it would go to a graveyard (rules/stack.mjs, effects/zones.mjs). */
+    if (castFrom !== "hand" && (state.effects ?? []).some((e) => e.rule === "may-play" && e.graveyardToBottom === true && e.player === player && (e.affects?.ids ?? []).includes(action.objectId)))
+      entry.graveyardToBottom = true;""",
+"""    if (permission?.ability.graveyardToExile) entry.graveyardToExile = true;"""),
+("game/engine/rules/statics.mjs",
+"""  /* "Choose target card exiled with Quintorius. You may cast that card this turn without paying its mana cost" (CR 601.2b,
+     118.9): a permission an effect gave (effects/zones.mjs, mayPlay's `free`) to cast that card, while it is still that
+     card (CR 400.7) -- and only that way: it is no permission to cast it for its mana cost. */
+  const permit = (state.effects ?? []).find((e) => e.rule === "may-play" && e.free === true && e.player === player && (e.affects?.ids ?? []).includes(cardId));
+  if (permit && !["battlefield", "stack"].includes(object.zone)) return {source: null, abilityId: permit.id, limited: false, mayPlay: true};
+  return null;""",
+"""  return null;"""),
+]

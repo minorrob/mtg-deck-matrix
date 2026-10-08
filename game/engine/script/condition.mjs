@@ -45,7 +45,7 @@ import {matchesSelector, compileSelector, matchesLastKnown} from "./filter.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
 
 const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "spent", "enduringStory", "loyaltyThisTurn", "impending",
-  "cameFrom", "sinceYourLastUpkeep", "level", "opponentPoisonAtLeast"];
+  "cameFrom", "sinceYourLastUpkeep", "level", "opponentPoisonAtLeast", "searched"];
 /* Where a permanent may have come from, for `cameFrom`: a library (effects/zones.mjs and rules/stack.mjs record it). */
 const CAME_FROM = ["library"];
 /* The mana a condition may ask was spent to cast its object: the five colors and colorless (CR 106.1). */
@@ -61,7 +61,10 @@ const COMPARE_KEYS = ["count", "atLeast", "atMost", "moreThan", "fewerThan"];
    damage to (Marauding Raptor), the token it made (Yenna) -- so `is: {}` asks only that there is one. "That spell"
    (Toph's "if that spell is a Lesson", Nalfeshnee's "if it's a permanent spell") is read as it last existed on the stack
    once it has left it (CR 608.2h): `about.was`, taken as the trigger was (rules/trigger.mjs). */
-const NAMED = ["remembered", "that card", "target"];
+/* "IF A PIRATE WAS EXILED THIS WAY" (Siren's Ruse): "moved" -- what the effect before it moved from the battlefield to where
+   it sent it, as each last existed there (CR 608.2h; effects/zones.mjs, moveZone's `movedWas`): one of them is enough, and
+   none moved is none. Not the card that came back, which is a new object (CR 400.7). */
+const NAMED = ["remembered", "that card", "target", "moved"];
 function namedObject(about, {remembered, targets, about: subject}) {
   if (about === "remembered") return remembered?.[0] ?? null;
   if (about === "that card") return subject?.card ?? null;
@@ -98,8 +101,11 @@ function castHolds(rule, cast) {
 }
 
 /** Whether a condition holds now, for an ability controlled by `controller` on object `source`. No condition holds. */
-export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined, excessDamage = undefined, rememberedControllers = undefined} = {}) {
+export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined, excessDamage = undefined, rememberedControllers = undefined,
+  movedWas = undefined, searched = undefined, lastKnown = undefined} = {}) {
   if (!condition) return true;
+  /* "If you search your library this way" (Claim Jumper): a search made earlier in this resolution (script/resolution.mjs). */
+  if (condition.searched === true && searched !== true) return false;
   if (condition.cast !== undefined && !castHolds(condition.cast, cast)) return false;
   /* "Khans -- ...": what its permanent chose as it entered (the Sieges). */
   if (condition.chosen !== undefined && (source === null || state.objects[source]?.chosen !== condition.chosen)) return false;
@@ -140,7 +146,11 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   }
   /* "12+ | Flying" (a station symbol, CR 721.2a): as long as its own object has that many counters of the kind. */
   if (condition.selfCounters !== undefined && (source === null ? 0 : state.objects[source]?.counters?.[condition.selfCounters.counter] ?? 0) < condition.selfCounters.atLeast) return false;
-  if (condition.about !== undefined && !namedIs(state, namedObject(condition.about, {remembered, targets, about}), condition.is ?? {}, {controller, source},
+  if (condition.about === "moved") {
+    let fits = false;
+    try { fits = (movedWas ?? []).some((was) => matchesLastKnown(condition.is ?? {}, was, {controller, source})); } catch { fits = false; }
+    if (!fits) return false;
+  } else if (condition.about !== undefined && !namedIs(state, namedObject(condition.about, {remembered, targets, about}), condition.is ?? {}, {controller, source},
     condition.about === "that card" ? about?.was ?? null : null)) return false;
   if (condition.notTheirTurn === true && (about?.player === undefined || about.player === state.activePlayer)) return false;
   if (condition.handEmpty === true && cardsIn(state, "hand", controller).length > 0) return false;
@@ -168,6 +178,9 @@ export function conditionHolds(state, condition, {controller, source = null, abo
     /* And "if you do" counted ("you may discard two cards. If you do", Thrilling Discovery): what the effect before it
        remembered (`rememberedCount`). */
     const counted = {controller, source, ...(about ? {about} : {}), ...(x !== undefined ? {x} : {}), ...(remembered ? {remembered} : {}),
+      /* The source as it last was, gone since its ability triggered (CR 113.7a): "if there are cards exiled with this
+         enchantment" still counts what its other ability exiled (script/filter.mjs, linkSource). */
+      ...(lastKnown ? {lastKnown} : {}),
       /* "If excess damage was dealt this way" (Violent Echoes): what the damage before it left (script/resolution.mjs). */
       ...(excessDamage !== undefined ? {excessDamage} : {}),
       /* "For each creature exiled this way, its controller ..." (Winds of Abandon): who controlled what was remembered. */
@@ -230,6 +243,7 @@ export function conditionProblems(condition) {
   if ("impending" in condition && typeof condition.impending !== "boolean") problems.push("impending is true or false");
   if ("cameFrom" in condition && !CAME_FROM.includes(condition.cameFrom)) problems.push(`cameFrom is the zone the permanent came from: ${CAME_FROM.join(", ")}`);
   if ("sinceYourLastUpkeep" in condition && condition.sinceYourLastUpkeep !== true) problems.push("sinceYourLastUpkeep is true");
+  if ("searched" in condition && condition.searched !== true) problems.push("searched is true: a library was searched earlier in this resolution");
   if ("spent" in condition) {
     const spent = condition.spent;
     if (!spent || typeof spent !== "object" || Array.isArray(spent) || !Object.keys(spent).length
