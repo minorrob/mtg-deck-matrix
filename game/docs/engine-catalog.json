@@ -11,14 +11,14 @@
   "cards": 3238,
   "defined": 1195,
   "provisional": 28,
-  "everyRule": 2525
+  "everyRule": 2529
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 42,
+    "built": 43,
     "partial": 0,
-    "named": 16,
+    "named": 15,
     "missing": 136
    },
    "entries": [
@@ -470,13 +470,13 @@
      "kind": "keyword ability",
      "rule": "702.14",
      "name": "Landwalk",
-     "engine": null,
-     "status": "named",
+     "engine": "Landwalk",
+     "status": "built",
      "forge": "Landwalk",
      "top": 5,
      "all": 131,
-     "blocks": 5,
-     "alone": 4
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
