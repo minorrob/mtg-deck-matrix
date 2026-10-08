@@ -27,7 +27,8 @@ import {readFileSync} from "node:fs";
 import {createState, addObject, moveObject} from "../game/engine/state/index.mjs";
 import {beginGame} from "../game/engine/rules/turn.mjs";
 import {effectUntil, copyOnto} from "../game/engine/script/effects/permanents.mjs";
-import {createJournal, EVENT_SCHEMA} from "../game/engine/journal.mjs";
+import {createJournal, EVENT_SCHEMA, hashState} from "../game/engine/journal.mjs";
+import {beginResolution, runResolution} from "../game/engine/script/resolution.mjs";
 import {createRng} from "../game/engine/rng.mjs";
 import {memoryStorage, createMatchStore} from "../game/engine/storage.mjs";
 import {secretsFor, leaksIn, gameTerms, checkLeaks, leakMemory, shownBy, playGame, verdict, decksFromBackup} from "../tools/fuzz-live.mjs";
@@ -112,10 +113,10 @@ const card = (name, owner, extra = {}) => ({card: name, types: ["Creature"], pow
 
   /* What the game has shown everyone, from its journal: a card once public may be named after it is gone. */
   const zone = (name, from, to, faceDown = false) => ({kind: "GameEventCardChangeZone", data: {fields: {card: {name, faceDown}, from: {zoneType: from}, to: {zoneType: to}}}});
-  eq([zone("Drawn", "Library", "Hand"), zone("Played", "Hand", "Battlefield"), zone("Bounced", "Battlefield", "Hand"), zone(null, "Library", "Exile", true),
+  eq([zone("Drawn", "Library", "Hand"), zone("Played", "Hand", "Battlefield"), zone("Bounced", "Battlefield", "Hand"), zone("Hidden", "Library", "Exile", true),
     {kind: "GameEventCardRevealed", data: {fields: {card: {name: "Shown"}}}}, {kind: "GameEventScried", data: {fields: {card: {name: "Scried"}}}}].map(shownBy),
     [null, "Played", "Bounced", null, "Shown", null],
-    "the journal shows a card entering or leaving a public zone face up, or revealed -- never a draw, a face-down move or a scry");
+    "the journal shows a card entering or leaving a public zone face up, or revealed -- never a draw, a face-down move (even one that named its card) or a scry");
   addObject(s, card("Gone Card", 1), "library", 1);
   await store.appendEvents([{schema: EVENT_SCHEMA, sequence: 1, kind: "GameEventCardChangeZone", matchId: "m", data: {fields: {card: {name: "Gone Card", faceDown: false}, from: {zoneType: "Battlefield"}, to: {zoneType: "Graveyard"}}}}]);
   await store.saveCheckpoint({...createJournal({matchId: "m", seed: "s"}).checkpoint(s, createRng("s").checkpoint()), matchId: "m"});
@@ -163,6 +164,23 @@ const card = (name, owner, extra = {}) => ({card: name, types: ["Creature"], pow
   const woken = (await store.latestCheckpoint()).state;
   const moved = [s, woken].map((state) => { const id = moveObject(state, bear, "graveyard", 0); const o = state.objects[id]; return [o.card, o.supertypes ?? []]; });
   eq(moved, [["Bear", []], ["Bear", []]], "it leaves the battlefield as a Bear, not legendary (CR 400.7) -- in memory and woken from its checkpoint alike");
+}
+
+/* ---- Saved: a question paused mid-resolution reads back -- a discard that names no one, a repeat whose steps ask ---- */
+{
+  const readsBack = (state) => hashState(JSON.parse(JSON.stringify(state))) === hashState(state);
+  const dealt = () => { const s = started(); for (let p = 0; p < 4; p += 1) addObject(s, card(`Card ${p}`, p), "hand", p); return s; };
+  const one = dealt();
+  beginResolution(one, [{effect: "discard", count: 1}], {controller: 0, source: null});
+  runResolution(one, createRng("d"));
+  ok(one.awaiting?.effect === "discard" && !Object.hasOwn(one.awaiting, "who") && readsBack(one),
+    "\"discard a card\": its question waits with no `who` key at all, and the paused game reads back as itself");
+  const each = dealt();
+  beginResolution(each, [{effect: "repeatFor", each: "player", effects: [{effect: "discard", count: 1, who: "that player"}]}], {controller: 0, source: null});
+  runResolution(each, createRng("e"));
+  const mark = each.resolving.queue.at(-1);
+  ok(each.awaiting?.effect === "discard" && mark?.effect === "__about" && !Object.hasOwn(mark, "about") && readsBack(each),
+    "\"each player discards a card\": the mark that restores the resolution's subject -- it had none -- holds no `about` key, and the paused game reads back");
 }
 
 console.log(`room-g1-terms: ${checks} checks passed -- what each seat may know of a card read off the state, a name found only where it names a card, a whole game of Rob's decks with nothing leaked and an identical replay, and an effect's checkpoint that reads back.`);
