@@ -1,11 +1,14 @@
 # Who holds the work
 
-## PAUSED, 2026-10-06 ~18:30 UTC: read `docs/handoff-2026-10-06.md` first
+## RESUMED, 2026-10-08: the same session, on Rob's "Keep building"
 
-The review-response session paused at 97% of the week's usage (Rob: pause at 90% and "write up a comprehensive handoff
-packet for another AI platform"). **`docs/handoff-2026-10-06.md` is the handoff**: the gates and where each stands, what
-is on `main` (2ad84eb0, PR #668), Train B's state branch by branch and what every undefined card needs, the order to
-done, how to work and verify here, and Rob's open items. The record below is the session's last before the pause.
+The review-response session paused on 2026-10-06 at 97% of the week's usage (Rob: pause at 90% and "write up a
+comprehensive handoff packet for another AI platform") and resumed on 2026-10-08, the week's usage read back at 1%.
+**`docs/handoff-2026-10-06.md` is still the map**: the gates, what is on `main` (2ad84eb0, PR #668), Train B's state and
+what every undefined card needs, the order to done, how to work here, and Rob's open items. Train B goes on as §3 says:
+78 of the seven decks' 477 cards were undefined at the resume, split among five workers by engine area (permissions and
+attack statics; effects, counts and triggers; memory; keywords; costs and filters), each finishing its saved patch with
+suites and breaks first, merged here in turn (PR #669). Rob's rule stands: at 90% of the week's usage, pause and hand off.
 
 
 | | |
