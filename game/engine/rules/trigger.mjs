@@ -156,6 +156,14 @@ function subjects(state, event, condition, sourceId, controller) {
     }
     return [{card: spell, player: caster, ...spellWas(state, spell)}];
   }
+  /* "WHENEVER THIS CREATURE BECOMES BLOCKED BY A CREATURE" (CR 509.3d): once for each creature that blocks it, about the
+     blocker -- flanking's "by a creature without flanking" (CR 702.25a), the blocker as it is as blockers
+     are declared (509.3f). `who` the attacker blocked, `filter` the blocker. */
+  if (condition.on === "GameEventBlockersDeclared" && condition.blockedBy) {
+    return (fields.blockers ?? []).filter((b) => fits(state, b.blocking?.cardId, {who: condition.who}, sourceId, controller)
+      && (!condition.filter || (state.objects[b.card?.cardId] && matchesSelector({what: "permanent", ...condition.filter}, state, b.card.cardId, {controller, source: sourceId}))))
+      .map((b) => ({card: b.card.cardId}));
+  }
   /* "Whenever this creature attacks", "whenever a creature you control attacks" (CR 508.1m): each attacker, and the
      player it attacks. */
   /* "Whenever you attack" ("attackers declared"): the attack as a whole, by whom, with how many, at whom. */

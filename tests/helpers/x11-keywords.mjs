@@ -33,12 +33,13 @@ export function play(setup, steps = [], more = {}, fixtures = {}) {
 }
 
 /** The game moved on as the room moves it -- priority passed, steps advanced -- until `until` holds; a question on the way
-    that `answer` does not answer stops it. */
+    that `answer` does not answer stops it, but the order of triggers put on the stack at once, which goes as offered. */
 export function drive(state, until, {answer = () => null, rng = createRng("x11")} = {}) {
   for (let n = 0; n < 3000; n += 1) {
     if (until(state)) return state;
     if (state.awaiting) {
-      const indices = answer(state, awaitingChoice(state));
+      const choice = awaitingChoice(state);
+      const indices = answer(state, choice) ?? (state.awaiting.kind === "order-triggers" ? choice.options.map((o) => o.index) : null);
       if (indices === null) throw new Error(`asked ${state.awaiting.kind} on the way`);
       resolveAwaiting(state, indices, null, rng);
       continue;

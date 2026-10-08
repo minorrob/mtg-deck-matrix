@@ -683,6 +683,15 @@ export function compileScript(script) {
       keywords.push(said ?? "Landwalk");
       return;
     }
+    /* FLANKING (CR 702.25a): "Whenever this creature becomes blocked by a creature without flanking, the blocking creature
+       gets -1/-1 until end of turn" -- once for each such blocker (CR 509.3d), each instance separately (702.25b); the
+       blocker read as blockers are declared (509.3f; rules/trigger.mjs, `blockedBy`). */
+    if (word === "flanking") {
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: {on: "GameEventBlockersDeclared", blockedBy: true, who: "self", filter: {types: ["Creature"], nonKeywords: ["Flanking"]}},
+        effects: [{effect: "pump", targets: "that card", power: -1, toughness: -1}]});
+      keywords.push("Flanking");
+      return;
+    }
     /* FLASHBACK (CR 702.34a): the keyword with its cost, a list of atoms -- a mana cost, and "pay 3 life" -- kept as a
        static ability so the card carries it into its graveyard (rules/actions.mjs offers the cast there). Only on an
        instant or sorcery: "if the resulting spell is an instant or sorcery spell". */

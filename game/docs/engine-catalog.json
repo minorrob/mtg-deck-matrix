@@ -16,9 +16,9 @@
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 43,
+    "built": 44,
     "partial": 0,
-    "named": 15,
+    "named": 14,
     "missing": 136
    },
    "entries": [
@@ -1490,8 +1490,8 @@
      "kind": "keyword ability",
      "rule": "702.25",
      "name": "Flanking",
-     "engine": null,
-     "status": "named",
+     "engine": "Flanking",
+     "status": "built",
      "forge": "Flanking",
      "top": 0,
      "all": 30,

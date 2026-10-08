@@ -46,7 +46,10 @@ export const KEYWORD_FAMILIES = Object.freeze({
   combat: Object.freeze(["Deathtouch", "Trample", "Lifelink", "First Strike", "Double Strike", "Vigilance", "Defender",
     /* Infect (CR 702.90, batch 78): its damage is poison counters to a player and -1/-1 counters to a creature (rules/combat.mjs,
        effects/resources.mjs dealDamage). */
-    "Infect"]),
+    "Infect",
+    /* Flanking (CR 702.25a): a triggered ability, as a creature without flanking blocks this one, the blocker -1/-1 until end
+       of turn (cards/index.mjs; rules/trigger.mjs, `blockedBy`). */
+    "Flanking"]),
   /**
    * Keywords that stop something happening, enforced elsewhere in the engine but listed here so
    * that "which keywords actually do something" has one answer.
