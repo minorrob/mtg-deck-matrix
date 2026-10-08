@@ -50,6 +50,8 @@ export const SELECTOR_KEYS = Object.freeze([
   "sharesCreatureTypeWithCommander",
   /* "A card exiled with this artifact" (CR 607.2a, 406.6): what this source's linked ability exiled, still in exile. */
   "exiledWith",
+  /* "Whose power and toughness aren't equal" (Gilt-Leaf Winnower), and "each equipped creature" (Hemlock Vial). */
+  "unequalPowerToughness", "equipped",
 ]);
 
 /* THE SOURCE A LINK IS KEPT AGAINST (CR 607.2a; effects/zones.mjs, `link`): the ability's source -- or, gone from the
@@ -133,6 +135,8 @@ function assertGrammar(selector) {
   const most = selector.manaValue?.max;
   if (most !== null && typeof most === "object" && amountProblems(most).length) throw new Error(`A selector's manaValue.max: ${amountProblems(most).join("; ")}`);
   if (selector.exiledWith !== undefined && selector.exiledWith !== "self") throw new Error("A selector's exiledWith is \"self\": a card this source's linked ability exiled");
+  if (selector.unequalPowerToughness !== undefined && selector.unequalPowerToughness !== true) throw new Error("A selector's unequalPowerToughness is true: power and toughness aren't equal");
+  if (selector.equipped !== undefined && selector.equipped !== true) throw new Error("A selector's equipped is true: an Equipment is attached to it");
   /* "With power less than this creature's power" (mentor, CR 702.134a): `power.lessThan` "self". */
   if (selector.power?.lessThan !== undefined && selector.power.lessThan !== "self") throw new Error("A selector's power.lessThan is \"self\": less than its source's power");
 }
@@ -346,6 +350,11 @@ export function compileSelector(selector) {
     if (selector.enteredThisTurn === true && !(object.zone === "battlefield" && object.arrivedTurn === state.turn)) return false;
     /* "With toughness greater than its power" (Bedrock Tortoise), through the layers. */
     if (selector.toughnessOverPower === true) { const c = characteristicsOf(state, id); if (!((c.toughness ?? 0) > (c.power ?? 0))) return false; }
+    /* "Whose power and toughness aren't equal" (Gilt-Leaf Winnower), through the layers: a 2/2 pumped to 3/2 is one. */
+    if (selector.unequalPowerToughness === true) { const c = characteristicsOf(state, id); if ((c.power ?? 0) === (c.toughness ?? 0)) return false; }
+    /* "Each equipped creature" (Hemlock Vial; CR 301.5a): an Equipment attached to it -- an Aura is not one -- and still there:
+       one that has left the battlefield is a new object, the old one gone (CR 400.7). */
+    if (selector.equipped === true && !(object.attachments ?? []).some((other) => state.objects[other] && subtypesOf(state, other).includes("Equipment"))) return false;
     /* "Permanents you don't own" (Agent of Treachery): whose it is, not who controls it (CR 108.3). */
     if (selector.owner === "you" && object.owner !== chooser) return false;
     if (selector.owner === "opponent" && object.owner === chooser) return false;

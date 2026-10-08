@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gilt-Leaf Winnower",
+    "oracleId": "53b99846-3f80-4e9d-ad3c-52a4906b8823",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Warrior"
+    ],
+    "manaCost": "{3}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "Menace (This creature can't be blocked except by two or more creatures.)\nWhen this creature enters, you may destroy target non-Elf creature whose power and toughness aren't equal.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Menace (This creature can't be blocked except by two or more creatures.)",
+      "keyword": "menace"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, you may destroy target non-Elf creature whose power and toughness aren't equal.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "nonSubtypes": [
+            "Elf"
+          ],
+          "unequalPowerToughness": true
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

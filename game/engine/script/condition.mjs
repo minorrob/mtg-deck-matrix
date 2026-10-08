@@ -33,6 +33,9 @@
  *                                      cast from it (Fblthp, the Lost)
  *   {sinceYourLastUpkeep: true}        its own permanent came under its controller's control since the beginning of
  *                                      their last upkeep (echo, CR 702.30a)
+ *   {nameUnshared: [selector, ...]}    the permanent the trigger is about doesn't have the same name as another object one
+ *                                      of the selectors describes -- "another creature you control or a creature card in
+ *                                      your graveyard" (Guardian Project)
  *   {opponentPoisonAtLeast: 3}         an opponent of its controller, still in the game, has at least that many poison
  *                                      counters (CR 122.1f): Corrupted's "as long as an opponent has three or more poison
  *                                      counters" (Skrelv's Hive; an ability word, CR 207.2c, with no rules meaning of its own)
@@ -41,11 +44,11 @@
  */
 
 import {cardsIn} from "../state/index.mjs";
-import {matchesSelector, compileSelector, matchesLastKnown} from "./filter.mjs";
+import {matchesSelector, compileSelector, matchesLastKnown, selectMatching} from "./filter.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
 
 const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "spent", "enduringStory", "loyaltyThisTurn", "impending",
-  "cameFrom", "sinceYourLastUpkeep", "level", "opponentPoisonAtLeast", "searched"];
+  "cameFrom", "sinceYourLastUpkeep", "level", "opponentPoisonAtLeast", "searched", "nameUnshared"];
 /* Where a permanent may have come from, for `cameFrom`: a library (effects/zones.mjs and rules/stack.mjs record it). */
 const CAME_FROM = ["library"];
 /* The mana a condition may ask was spent to cast its object: the five colors and colorless (CR 106.1). */
@@ -153,6 +156,17 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   } else if (condition.about !== undefined && !namedIs(state, namedObject(condition.about, {remembered, targets, about}), condition.is ?? {}, {controller, source},
     condition.about === "that card" ? about?.was ?? null : null)) return false;
   if (condition.notTheirTurn === true && (about?.player === undefined || about.player === state.activePlayer)) return false;
+  /* "If it doesn't have the same name as another creature you control or a creature card in your graveyard" (Guardian
+     Project; an intervening "if", CR 603.4): the name of what the trigger is about, read where it is -- or, gone before it
+     resolves, the name it entered with (rules/trigger.mjs keeps it; CR 608.2h) -- against every other object the
+     selectors describe now. A card it became elsewhere is another object (CR 400.7): one it became in the graveyard is a
+     creature card there with its name. A face-down permanent has no name (CR 708.2a) and shares none. */
+  if (condition.nameUnshared !== undefined) {
+    const id = about?.card ?? null;
+    const name = id !== null && state.objects[id] ? state.objects[id].card : about?.name ?? null;
+    if (name !== null && name !== undefined && condition.nameUnshared.some((selector) => selectMatching(state, selector, {controller, source})
+      .some((other) => other !== id && state.objects[other].card === name))) return false;
+  }
   if (condition.handEmpty === true && cardsIn(state, "hand", controller).length > 0) return false;
   if (condition.handEmpty === false && cardsIn(state, "hand", controller).length === 0) return false;
   /* How many permanents the selector finds now (Forge's PresentCompare): at least `atLeast` ("five or more lands", one
@@ -244,6 +258,10 @@ export function conditionProblems(condition) {
   if ("cameFrom" in condition && !CAME_FROM.includes(condition.cameFrom)) problems.push(`cameFrom is the zone the permanent came from: ${CAME_FROM.join(", ")}`);
   if ("sinceYourLastUpkeep" in condition && condition.sinceYourLastUpkeep !== true) problems.push("sinceYourLastUpkeep is true");
   if ("searched" in condition && condition.searched !== true) problems.push("searched is true: a library was searched earlier in this resolution");
+  if ("nameUnshared" in condition) {
+    if (!Array.isArray(condition.nameUnshared) || !condition.nameUnshared.length) problems.push("nameUnshared is a list of selectors: what it must not share a name with");
+    else for (const selector of condition.nameUnshared) try { compileSelector(selector); } catch (error) { problems.push(`nameUnshared: ${error.message}`); }
+  }
   if ("spent" in condition) {
     const spent = condition.spent;
     if (!spent || typeof spent !== "object" || Array.isArray(spent) || !Object.keys(spent).length

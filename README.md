@@ -718,6 +718,10 @@ any number of untapped creatures you control" (one offer, asked once taken, neve
 discards, the mana abilities that tap another creature (Jaspera Sentinel, Saruli Caretaker) or exile a card from the
 graveyard (Rubble Rouser, with its "when you do"), and Lorehold Excavation's creature card exiled; four players, both
 pilots' answers, the refusals, and no payer ever choosing the creature or the card for the player.
+`engine-x11-filters` holds the selector keys and the condition X11's costs worker built: "whose power and toughness aren't
+equal" through the layers (Gilt-Leaf Winnower), "each equipped creature" an Equipment attached and not an Aura (Hemlock
+Vial, its set fixed as it resolves), and Guardian Project's "if it doesn't have the same name as another creature you
+control or a creature card in your graveyard", asked again as it resolves and kept by name when the creature is gone.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -836,7 +840,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 361 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 362 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1170,6 +1174,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-enter-transformed` - `tests/engine-enter-transformed.mjs`
 - `engine-power-comparison` - `tests/engine-power-comparison.mjs`
 - `engine-x11-costs` - `tests/engine-x11-costs.mjs`
+- `engine-x11-filters` - `tests/engine-x11-filters.mjs`
 
 ## Design and execution record
 
