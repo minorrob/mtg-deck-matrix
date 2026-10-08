@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,200 defined and playable today; 2,545 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,201 defined and playable today; 2,551 with every
 mechanic built, so only their definitions are left to write; 28 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 51 | 0 | 7 | 136 |
+| Keyword abilities (CR 702) | 194 | 52 | 0 | 6 | 136 |
 | Keyword actions (CR 701) | 70 | 22 | 3 | 1 | 44 |
 | Effects | 192 | 68 | 1 | 4 | 119 |
 | Triggers | 138 | 20 | 4 | 2 | 112 |
@@ -37,7 +37,7 @@ The things that alone hold back the most of the most-played cards.
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 26 | 94 |
-| option | Remembering what an effect moved | — | missing | 24 | 89 |
+| option | Remembering what an effect moved | — | missing | 25 | 89 |
 | option | You may play or cast a card from another zone | — | missing | 17 | 67 |
 | effect | ChooseColor | — | missing | 10 | 14 |
 | count | What entered or died this turn | — | missing | 10 | 10 |
@@ -48,9 +48,9 @@ The things that alone hold back the most of the most-played cards.
 | trigger | CounterAddedOnce | counter added once | named | 6 | 10 |
 | effect | ChangeTargets | — | missing | 6 | 8 |
 | effect | ChoosePlayer | — | missing | 6 | 8 |
-| keyword ability | Overload | — | named | 6 | 7 |
 | effect | Discover | discover | named | 6 | 6 |
 | effect | AddTurn | addTurn | named | 5 | 10 |
+| count | How many things an effect remembered | — | missing | 5 | 8 |
 
 ## Keyword abilities (CR 702)
 
@@ -84,7 +84,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.164 | Toxic | Toxic | built | 7 | 44 | 0 | 0 |
 | 702.40 | Storm | Storm | built | 7 | 37 | 0 | 0 |
 | 702.185 | Warp | — | missing | 7 | 37 | 7 | 5 |
-| 702.96 | Overload | — | named | 7 | 28 | 7 | 6 |
+| 702.96 | Overload | Overload | built | 7 | 28 | 0 | 0 |
 | 702.86 | Annihilator | Annihilator | built | 7 | 14 | 0 | 0 |
 | 702.124 | Partner | Partner | built | 6 | 78 | 0 | 0 |
 | 702.16 | Protection | — | named | 6 | 58 | 6 | 4 |
@@ -826,7 +826,7 @@ The things that alone hold back the most of the most-played cards.
 | You may, decided by a named player | modal (Yes / No) | partial | 176 | 1499 | 0 | 0 |
 | An effect's condition: if a permanent is present | an effect's condition {present ...} | built | 142 | 1292 | 0 | 0 |
 | Fewer targets than the most ("up to", "any number of") | a target's count {min, max} (script/bind.mjs), picked as a pick-several | built | 126 | 1672 | 0 | 0 |
-| Remembering what an effect moved | — | missing | 124 | 1168 | 89 | 24 |
+| Remembering what an effect moved | — | missing | 124 | 1168 | 89 | 25 |
 | More than one target of a kind ("up to N") | a target's count {min, max} (script/bind.mjs); a count that is X is not built | partial | 123 | 1664 | 0 | 0 |
 | Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 94 | 26 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |

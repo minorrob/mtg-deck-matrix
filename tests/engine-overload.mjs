@@ -16,6 +16,7 @@ import {loadCardIndex} from "../game/tools/engine-cards.mjs";
 import {runEffect} from "../game/engine/script/effects/index.mjs";
 import {amountOf} from "../game/engine/script/amount.mjs";
 import {compileScript} from "../game/engine/cards/index.mjs";
+import {missing, keywordBuilt} from "./helpers/x11-keywords.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -66,4 +67,21 @@ const casts = (s) => legalActions(s, 0).filter((a) => a.kind === "cast" && s.obj
 }
 ok(index.resolve(WA)?.playable === true, `${WA} is defined and playable`);
 
-console.log(`engine-overload: ${checks} checks passed -- overload offered beside the mana cost, with no target; a repetition that asks, each player in turn; each search by the creature's controller as it left.`);
+/* THE CREDIT (Train B X11): overload's forms -- the alternative cost, and the spell's text with "each" for "target", written
+   out as its effects -- built, with two more of Rob's cards: Mizzium Mortars (4 damage to each creature you don't control)
+   and Vandalblast (destroy each artifact you don't control). */
+ok(keywordBuilt("Overload"), "Overload is built (keywords/timing.mjs, the pay family)");
+for (const name of ["Mizzium Mortars", "Vandalblast"]) {
+  eq(missing(name), [], `${name} needs nothing the engine lacks`);
+  ok(index.resolve(name)?.playable === true, `${name} is defined and playable`);
+}
+{
+  const VB = "Vandalblast", RELIC = {types: ["Artifact"], manaCost: "{1}", colors: []};
+  const s = runScenario({name: "vandalblast", seats: 4, setup: [at(0, "battlefield", "Mountain", "Wastes", "Wastes", "Wastes", "Wastes", "Relic"), at(0, "hand", VB),
+    at(1, "battlefield", "Relic"), at(3, "battlefield", "Relic")], steps: ["Mountain", "Wastes", "Wastes", "Wastes", "Wastes"].map((l) => ({tap: l}))}, index.definition, {Relic: RELIC}).state;
+  const ways = legalActions(s, 0).filter((a) => a.kind === "cast" && s.objects[a.objectId].card === VB);
+  eq(ways.map((a) => [a.alternative ?? "mana cost", (a.targets ?? []).map((t) => s.objects[t.id].controller)]).sort((a, b) => String(a).localeCompare(String(b))),
+    [[0, []], ["mana cost", [1]], ["mana cost", [3]]], "{4}{R} in the pool, four players: overloaded with no target, or for {R} at Maya's or Sam's Relic -- never Rob's own");
+}
+
+console.log(`engine-overload: ${checks} checks passed -- overload offered beside the mana cost, with no target; a repetition that asks, each player in turn; each search by the creature's controller as it left; the keyword credited, with Mizzium Mortars and Vandalblast.`);

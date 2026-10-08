@@ -633,7 +633,8 @@ creatures; and an emblem (Ajani Resolute), an effect with no source and no end, 
 cast so, one removed at its controller's end step, and none of it when cast for its mana cost; and "cards with
 different names" (Gifts Ungiven), one of each name offered.
 `engine-overload` holds overload (Winds of Abandon): offered beside the mana cost, with no target; a repetition that
-asks, each player in turn; and each search by the creature's controller as it left the battlefield.
+asks, each player in turn; and each search by the creature's controller as it left the battlefield. The keyword is
+credited as built, with Mizzium Mortars and Vandalblast (Train B X11).
 `engine-discover` holds discover (Quintorius Kand), written with what was built: past what doesn't fit, the rest under,
 cast free from exile or put into hand; each opponent dealt 2 for a spell cast from exile; and mana for each card exiled.
 `engine-eminence` holds eminence (The Ur-Sphinx), from the command zone and its owner's other Sphinxes only; "that many"
