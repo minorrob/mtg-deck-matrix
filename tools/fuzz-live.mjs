@@ -16,6 +16,12 @@
  * pilots, answered inside the room. A person's wait is how long one of their answers took to come back as their next
  * question: everything the AI seats did in between.
  *
+ * A person's answer the rules refuse -- creatures that cannot pay for a convoke, picked at random -- is refused by the room
+ * with nothing changed (422, game/room/room.mjs `act`), and the person answers the same question again, as one reading the
+ * refusal would. Each is kept (`personRefused`: the turn, the seat, the question and the rules' words) and said, but does
+ * not make a game unclean: the room did its job. A question refused PERSON_TRIES times running is a person who cannot
+ * go on, and the room's last refusal is thrown.
+ *
  *   node tools/fuzz-live.mjs --backup <crankmagic-backup.json> --decks "<deck 1>|<deck 2>|<deck 3>|<deck 4>"
  *        [--humans 0,1] [--seeds 1-50] [--json <out.json>]
  *
@@ -24,12 +30,13 @@
 import {readFileSync, writeFileSync} from "node:fs";
 import {randomUUID} from "node:crypto";
 import {fileURLToPath} from "node:url";
-import {startRoom, openRoom} from "../game/room/room.mjs";
+import {startRoom, openRoom, RoomError} from "../game/room/room.mjs";
 import {memoryStorage} from "../game/engine/storage.mjs";
 import {createRng} from "../game/engine/rng.mjs";
 import {randomLegalPilot} from "../game/engine/pilots/random-legal.mjs";
 
 const NAMES = ["Rob", "Friend", "AI 2", "AI 3"];
+export const PERSON_TRIES = 50;
 
 /** The decks of a crankmagic-backup file, by name, as the table takes them (crankmagic-table.js `deckForTable`). */
 export function decksFromBackup(backup, names) {
@@ -50,7 +57,7 @@ export function decksFromBackup(backup, names) {
 }
 
 /* A person at the table: answers what they are shown, from a stream of their own. */
-function person(seed) {
+export function person(seed) {
   const pilot = randomLegalPilot(createRng(seed));
   return (decision) => {
     const a = pilot.answer(decision);
@@ -61,29 +68,38 @@ function person(seed) {
 /**
  * One seeded game, played to its end. `decks` are table decks ({name, commander, cards}); `humans` the seat indices
  * a person sits in; `reopenEvery`, when set, puts the room away and wakes it from its storage after that many of the
- * people's answers, as an evicted Durable Object is. Returns what the game was, never its state: how it ended, its
- * length, the people's longest wait and the room's tally of refused AI answers.
+ * people's answers, as an evicted Durable Object is; `people`, who answers for a person (a seed to an answering function,
+ * `person` unless a suite says otherwise). Returns what the game was, never its state: how it ended, its length, the
+ * people's longest wait, their answers the rules refused, and the room's tally of refused AI answers.
  */
-export async function playGame({decks, seed, cards, humans = [], matchId = `fuzz-${seed}`, pilot, storage = memoryStorage(), turnLimit = 400, reopenEvery = 0}) {
+export async function playGame({decks, seed, cards, humans = [], matchId = `fuzz-${seed}`, pilot, storage = memoryStorage(), turnLimit = 400, reopenEvery = 0, people: answerer = person}) {
   const pod = {passEmpty: true, seats: decks.map((d, i) => ({seatId: `s${i}`, name: NAMES[i] || `Seat ${i + 1}`, pilot: humans.includes(i) ? "human" : "house", commander: d.commander, cards: d.cards}))};
-  const people = Object.fromEntries(humans.map((i) => [`s${i}`, person(`person-${seed}-${i}`)]));
+  const people = Object.fromEntries(humans.map((i) => [`s${i}`, answerer(`person-${seed}-${i}`)]));
   const started = Date.now();
   let room = await startRoom({storage, matchId, ...(cards ? {cards} : {}), pod, seed: `seed-${seed}`, ...(pilot ? {pilot} : {})});
   let decisions = 0, reopened = 0, longest = {ms: 0, turn: null};
+  const personRefused = [];
   for (;;) {
     const who = room.waitingOn;
     if (!who || room.status === "finished") break;
     const view = room.view(who);
     if (view.state.turn > turnLimit) break;
     const asked = Date.now();
-    await room.act(who, {actionId: randomUUID(), revision: view.revision, ...people[who](view.decision)});
+    for (let tries = 1; ; tries += 1) {
+      try {await room.act(who, {actionId: randomUUID(), revision: view.revision, ...people[who](view.decision)}); break;}
+      catch (error) {
+        if (!(error instanceof RoomError) || error.status !== 422 || tries >= PERSON_TRIES) throw error;
+        personRefused.push({turn: view.state.turn, seatId: who, question: view.decision.title, reason: error.message});
+      }
+    }
     const waited = Date.now() - asked;
     decisions += 1;
     if (waited > longest.ms) longest = {ms: waited, turn: room.view(who).state.turn};
     if (reopenEvery && decisions % reopenEvery === 0) {room = await openRoom({storage, matchId, ...(cards ? {cards} : {}), ...(pilot ? {pilot} : {})}); reopened += 1;}
   }
   const last = room.view(pod.seats[0].seatId);
-  return {seed, status: room.status, result: last.result, turns: last.state.turn, decisions, reopened, ms: Date.now() - started, longestWait: longest, refusals: room.refusals, room};
+  return {seed, status: room.status, result: last.result, turns: last.state.turn, decisions, reopened, ms: Date.now() - started, longestWait: longest, refusals: room.refusals,
+    personRefused, room};
 }
 
 /** Whether a game counts as clean, and why not when it does not. */
@@ -103,7 +119,9 @@ export function verdict(game) {
 export function describe(game) {
   const v = verdict(game), end = game.result ? `${game.result.winner ?? "no one"}, ${game.result.reason}` : "unfinished";
   const wait = game.longestWait.turn === null ? "0 ms (no person)" : `${game.longestWait.ms} ms (turn ${game.longestWait.turn})`;
-  return `seed ${game.seed}: ${game.status} (${end}), ${game.turns} turns, ${game.decisions} decisions, ${(game.ms / 1000).toFixed(1)} s, longest wait for a person ${wait}, ${game.refusals?.total ?? "?"} refused over the whole match${v.clean ? "" : ` -- NOT CLEAN: ${v.problems.join("; ")}`}`;
+  const first = game.personRefused?.[0];
+  const people = first ? `, ${game.personRefused.length} of the people's answers refused by the rules and given again (first: turn ${first.turn}, ${first.seatId}, "${first.question}": ${first.reason})` : "";
+  return `seed ${game.seed}: ${game.status} (${end}), ${game.turns} turns, ${game.decisions} decisions, ${(game.ms / 1000).toFixed(1)} s, longest wait for a person ${wait}, ${game.refusals?.total ?? "?"} refused over the whole match${people}${v.clean ? "" : ` -- NOT CLEAN: ${v.problems.join("; ")}`}`;
 }
 
 const seedsFrom = (spec) => spec.split(",").flatMap((part) => {
@@ -126,7 +144,8 @@ async function main(argv) {
   for (const seed of seeds) {
     const game = await playGame({decks, seed, cards: tableCards, humans});
     console.log(describe(game));
-    rows.push({seed, status: game.status, result: game.result, turns: game.turns, decisions: game.decisions, ms: game.ms, longestWait: game.longestWait, refusals: game.refusals, clean: verdict(game).clean});
+    rows.push({seed, status: game.status, result: game.result, turns: game.turns, decisions: game.decisions, ms: game.ms, longestWait: game.longestWait, refusals: game.refusals,
+      personRefused: game.personRefused.length, clean: verdict(game).clean});
   }
   const clean = rows.filter((r) => r.clean).length;
   console.log(`${clean} of ${rows.length} games clean (finished, refusals counted from the match's start, none refused)`);
