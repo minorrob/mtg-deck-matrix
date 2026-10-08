@@ -1,0 +1,131 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Excava, the Risen Past",
+    "oracleId": "77216636-f76d-4c5e-b1ac-ab1844753f05",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit",
+      "Horse"
+    ],
+    "manaCost": "{2}{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Flying, haste\nWhenever Excava attacks, return up to one target artifact, creature, or non-Aura enchantment card with mana value 3 or less from your graveyard to the battlefield with a finality counter on it. It's a 1/1 Spirit creature with flying in addition to its other types. (If a creature with a finality counter on it would die, exile it instead.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "haste",
+      "keyword": "haste"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Excava attacks, return up to one target artifact, creature, or non-Aura enchantment card with mana value 3 or less from your graveyard to the battlefield with a finality counter on it. It's a 1/1 Spirit creature with flying in addition to its other types. (If a creature with a finality counter on it would die, exile it instead.)",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "battlefield",
+          "withCounters": {
+            "finality": 1
+          },
+          "remember": true
+        },
+        {
+          "effect": "animate",
+          "targets": "remembered",
+          "addTypes": [
+            "Creature"
+          ],
+          "subtypes": [
+            "Spirit"
+          ],
+          "power": 1,
+          "toughness": 1
+        },
+        {
+          "effect": "effectUntil",
+          "targets": "remembered",
+          "layer": 6,
+          "apply": {
+            "addKeywords": [
+              "Flying"
+            ]
+          },
+          "until": "ever"
+        }
+      ],
+      "targets": [
+        {
+          "count": {
+            "max": 1
+          },
+          "anyOf": [
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "owner": "you",
+              "manaValue": {
+                "max": 3
+              },
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "owner": "you",
+              "manaValue": {
+                "max": 3
+              },
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "owner": "you",
+              "manaValue": {
+                "max": 3
+              },
+              "types": [
+                "Enchantment"
+              ],
+              "nonSubtypes": [
+                "Aura"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

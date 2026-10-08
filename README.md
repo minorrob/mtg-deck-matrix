@@ -725,6 +725,9 @@ Equipment attached and still there, not an Aura; only what the Vial's controller
 the Strong's "creatures with total power 4 or less", each player asked in turn with the question's budget, refused past
 it, all sacrificed at once; and Tragic Arrogance's caster choosing one of each type for every player, asked only where
 there is a choice; four players, both pilots' answers, a planeswalker and an artifact land.
+`engine-x11-finality` holds finality counters (CR 122.1h): a permanent with one exiled instead of put into a graveyard from
+the battlefield, destroyed, sacrificed or dead to damage, any kind of permanent, beside another "exile it instead" without
+a question, to a hand untouched; moveZone's "with a finality counter on it"; and Excava, the Risen Past at four players.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -843,7 +846,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 363 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 364 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1179,6 +1182,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-x11-costs` - `tests/engine-x11-costs.mjs`
 - `engine-x11-filters` - `tests/engine-x11-filters.mjs`
 - `engine-x11-keep` - `tests/engine-x11-keep.mjs`
+- `engine-x11-finality` - `tests/engine-x11-finality.mjs`
 
 ## Design and execution record
 
