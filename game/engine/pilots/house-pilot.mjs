@@ -288,6 +288,9 @@ export function housePilot({seat, cards = () => null} = {}) {
         const order = options.map((o, i) => i).sort((a, b) => (mine.get(options[a].cardId)?.power ?? 0) - (mine.get(options[b].cardId)?.power ?? 0) || a - b);
         return {indices: firstOf(choice, order, min)};
       }
+      /* Creatures tapped as an additional cost, any number of them ("three times the number of creatures tapped this way",
+         Burn at the Stake): every one it is offered, for the most the spell can do. */
+      if (id.startsWith("choose-cost:") && choice.cost === "tapAny") return {indices: options.map((o) => o.index).slice(0, max)};
       /* What a cast taps for itself (rules/actions.mjs, castTapPlans): the first way, the least flexible sources tapped,
          keeping the most colors for later. */
       if (id.startsWith("choose-cost:") && choice.cost === "mana") return {indices: [0]};

@@ -1,0 +1,104 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lorehold Excavation",
+    "oracleId": "0ed2a07c-a7a5-4910-a63c-e72803947afb",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "At the beginning of your end step, mill a card. If a land card was milled this way, you gain 1 life. Otherwise, this enchantment deals 1 damage to each opponent. (To mill a card, put the top card of your library into your graveyard.)\n{5}, Exile a creature card from your graveyard: Create a tapped 3/2 red and white Spirit creature token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, mill a card. If a land card was milled this way, you gain 1 life. Otherwise, this enchantment deals 1 damage to each opponent. (To mill a card, put the top card of your library into your graveyard.)",
+      "trigger": {
+        "on": "end step",
+        "yours": true
+      },
+      "effects": [
+        {
+          "effect": "mill",
+          "count": 1,
+          "remember": true
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "about": "remembered",
+            "is": {
+              "types": [
+                "Land"
+              ]
+            }
+          },
+          "then": [
+            {
+              "effect": "gainLife",
+              "amount": 1
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "dealDamage",
+              "amount": 1,
+              "who": "opponent"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{5}, Exile a creature card from your graveyard: Create a tapped 3/2 red and white Spirit creature token.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{5}"
+        },
+        {
+          "atom": "exileFromGraveyard",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "tapped": true,
+          "token": {
+            "name": "Spirit",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Spirit"
+            ],
+            "colors": [
+              "R",
+              "W"
+            ],
+            "power": 3,
+            "toughness": 2
+          }
+        }
+      ]
+    }
+  ]
+}
