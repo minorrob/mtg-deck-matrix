@@ -341,7 +341,7 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
       if (steps >= slice) {continuing = true; pendingSeat = null; pendingActions = null; return;}
       driven += 1;
       if (state.stepIndex !== undefined && leaving.length) {
-        for (const seat of leaving) if (!state.players[seat].lost) write(concede(state, seat));
+        for (const seat of leaving) if (!state.players[seat].lost) write(concede(state, seat, rng));
         leaving = [];
         continue;
       }

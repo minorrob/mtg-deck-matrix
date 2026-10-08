@@ -219,6 +219,9 @@ export function runResolution(state, rng = null) {
       const opened = asking.open(state, head, resolving.context, rng);
       if (opened === true) {
         state.awaiting.resolution = true;
+        /* Asked of a player who has left the game -- "its controller may draw up to two cards" (Arcane Denial), its
+           controller gone before the upkeep: answered as the rules answer it (answerDeparted, below). */
+        if (departedAsked(state)) return answerDeparted(state, rng);
         return {status: "waiting", events: unreported(resolving)};
       }
       if (opened && Array.isArray(opened.events)) resolving.events.push(...opened.events);
@@ -251,15 +254,44 @@ export function answerResolution(state, indices, extra = {}, rng = null) {
 
   /* The game's random stream, for an answer that shuffles a library (a search); a generator is not state, so it is
      handed in, as the mulligan's is. */
-  const outcome = asking.apply(state, awaiting, indices, extra, rng);
+  return carryOn(state, asking.apply(state, awaiting, indices, extra, rng), rng);
+}
+
+/* Whether the question the resolution is asking is asked of a player no longer in the game. */
+const departedAsked = (state) => state.players[state.awaiting.player].lost === true;
+
+/**
+ * The question this resolution is asking, of a player who has left the game (CR 800.4a): answered for them as the rules
+ * say, and the resolution carried on (rules/sba.mjs, concede; and above, a question asked after they left). What was
+ * theirs to choose among left with them: a discard from their hand, a sacrifice, a search of their library is no choice,
+ * and the next player is asked (each primitive's `left`, effects/asking.mjs). A cost they would pay, or choose whether to
+ * pay, is not paid (800.4f). Any other choice is made by another player the spell's or ability's controller chooses --
+ * another opponent, since the one who left was an opponent (800.4g): with one opponent left that one, and with more the
+ * controller is asked which (effects/asking.mjs, chooseInstead).
+ */
+export function answerDeparted(state, rng = null) {
+  const awaiting = state.awaiting;
+  const outcome = ASKING[awaiting.effect].left(state, awaiting);
+  if (!outcome.another) return carryOn(state, outcome, rng);
+  const controller = state.resolving.context.controller;
+  const players = state.players.filter((p) => !p.lost && p.id !== controller).map((p) => p.id);
+  state.awaiting = players.length === 1 ? {...outcome.another, player: players[0]}
+    : {kind: "effect-choice", effect: "chooseInstead", player: controller, departed: awaiting.player, players, question: outcome.another};
+  return carryOn(state, {events: [], again: true}, rng);
+}
+
+/* What an answer did, and the resolution carried on from it. */
+function carryOn(state, outcome, rng) {
   const events = Array.isArray(outcome) ? outcome : outcome.events ?? [];
   state.resolving?.events.push(...events);
 
   /* `again` means the same effect has another player to ask — "each opponent discards a card" is
      one effect and several questions. The effect stays at the head of the queue and `open` is not
-     called again, because `apply` has already set up the next question. */
+     called again, because `apply` has already set up the next question. One for a player who has left the game since is
+     answered for them. */
   if (!Array.isArray(outcome) && outcome.again === true) {
     state.awaiting.resolution = true;
+    if (departedAsked(state)) return answerDeparted(state, rng);
     return {status: "waiting", events: state.resolving ? unreported(state.resolving) : events};
   }
 

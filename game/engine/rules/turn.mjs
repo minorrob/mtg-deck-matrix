@@ -41,15 +41,16 @@ import {checkStateBasedActions, gameOver, finishCommanderReplacement, legendChoi
 import {commanderChoice} from "./commander.mjs";
 import {damageOrderChoice} from "./replacement.mjs";
 import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
-import {answerResolution, resolutionChoice} from "../script/resolution.mjs";
+import {answerResolution, answerDeparted, resolutionChoice} from "../script/resolution.mjs";
 import {finishResolving} from "./stack.mjs";
+import {priorityOrder} from "./priority.mjs";
 import {playerRuleChanged, untapsDuringOthers, ruleChanged} from "./statics.mjs";
 import {emptyRestricted} from "./restricted-mana.mjs";
 import {endCopies, phaseIn, endControlChange, nextRecord} from "../script/effects/permanents.mjs";
 import {untapOne} from "../script/effects/resources.mjs";
 import {runEffect} from "../script/effects/index.mjs";
 import {askEntering, enteringChoice, resolveEnteringChoice} from "./entering.mjs";
-import {collectTriggers, openTriggers, triggerChoice, resolveTriggerOrder, triggerTargetsChoice, resolveTriggerTargets, triggerCountedChoice, resolveTriggerCounted} from "./trigger.mjs";
+import {collectTriggers, openTriggers, askTriggerTargets, triggerChoice, resolveTriggerOrder, triggerTargetsChoice, resolveTriggerTargets, triggerCountedChoice, resolveTriggerCounted} from "./trigger.mjs";
 import {chooseTargetsChoice, resolveChooseTargets, castCostChoice, resolveCastCost} from "./actions.mjs";
 import {deriving} from "./layers.mjs";
 
@@ -300,6 +301,50 @@ function choiceFor(state) {
   throw new Error(`No choice is defined for the turn-based action ${awaiting.kind}`);
 }
 
+/* A card effect that stopped to ask, answered: a spell that stopped to ask leaves the stack once its last effect has run
+   (stack.mjs), and only then does anyone receive priority -- after state-based actions and triggers, as after any
+   resolution (CR 117.5). */
+function resolutionAnswered(state, outcome) {
+  const finished = outcome.status === "done" ? finishResolving(state) : [];
+  const events = [...outcome.events, ...finished];
+  /* Each event is handed back once, as it happened; what triggers reads the whole resolution once it is done, the
+     events before its questions too -- they triggered then, and wait for a player to receive priority (CR 603.2,
+     603.3): the life Uro gained before asking for a land still triggers "whenever you gain life". */
+  grantStepPriority(state, events, outcome.status === "done" ? [...(outcome.all ?? outcome.events), ...finished] : events);
+  return events;
+}
+
+/**
+ * A question a resolution is asking of a player who has just left the game, answered as the rules answer it (CR 800.4f-g;
+ * script/resolution.mjs, answerDeparted), and the resolution carried on as after any answer (rules/sba.mjs, concede).
+ *
+ * @returns {Array} events for the caller to journal
+ */
+export function answerForDeparted(state, rng = null) {
+  return resolutionAnswered(state, answerDeparted(state, rng));
+}
+
+/**
+ * The game going on after a player has left it with nobody holding priority (rules/sba.mjs, concede): their own spell or
+ * ability gone in the middle of resolving, or a question of theirs withdrawn -- and what that question was part of carries
+ * on without them, as it would have from their answer. The next defending player declares blockers; the rest of a combat
+ * damage step is dealt, none of it to them (CR 800.4e); the next trigger is aimed, or the next player's triggers put on the
+ * stack in APNAP order (CR 603.3b), theirs never (800.4d). Then priority, as when a player would receive it (CR 117.3b,
+ * 800.4j).
+ *
+ * @param {?object} withdrawn  the question they were being asked, if any
+ * @returns {Array} events for the caller to journal
+ */
+export function goOnWithout(state, withdrawn) {
+  const events = [];
+  if (withdrawn?.kind === "declare-blockers") blockers.open(state, withdrawn.player);
+  if (withdrawn?.kind === "order-damage") events.push(...combatDamage.deal(state, {step: withdrawn.step}));
+  /* Their trigger, being aimed, has gone (rules/sba.mjs, removePlayerFromBoard): the next still waiting for targets. */
+  if (withdrawn?.kind === "trigger-targets" || withdrawn?.kind === "choose-targets") askTriggerTargets(state);
+  grantStepPriority(state, events);
+  return events;
+}
+
 /**
  * Apply the answer to the pending turn-based action.
  *
@@ -318,18 +363,7 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
 
   /* A card effect that stopped half way through. `extra` carries what generic indices cannot --
      scry's `toBottom`, for instance -- and the choice record says which fields it expects. */
-  if (awaiting.kind === "effect-choice") {
-    const outcome = answerResolution(state, indices, extra, rng);
-    /* A spell that stopped to ask leaves the stack once its last effect has run (stack.mjs), and only then does
-       anyone receive priority -- after state-based actions and triggers, as after any resolution (CR 117.5). */
-    const finished = outcome.status === "done" ? finishResolving(state) : [];
-    const events = [...outcome.events, ...finished];
-    /* Each event is handed back once, as it happened; what triggers reads the whole resolution once it is done, the
-       events before its questions too -- they triggered then, and wait for a player to receive priority (CR 603.2,
-       603.3): the life Uro gained before asking for a land still triggers "whenever you gain life". */
-    grantStepPriority(state, events, outcome.status === "done" ? [...(outcome.all ?? outcome.events), ...finished] : events);
-    return events;
-  }
+  if (awaiting.kind === "effect-choice") return resolutionAnswered(state, answerResolution(state, indices, extra, rng));
 
   if (awaiting.kind === "commander-replacement") {
     const events = finishCommanderReplacement(state, awaiting, indices);
@@ -530,11 +564,12 @@ function grantStepPriority(state, events = [], triggering = events) {
       if (!state.awaiting) openTriggers(state);
     }
   }
-  /* Re-read after the above: a player can lose during their own turn, and ordering triggers can
-     have set a new wait. Either way priority goes to nobody. */
-  const active = state.players[state.activePlayer];
-  state.priorityPlayer = (hasPriority(state) || (state.phase === "CLEANUP" && state.cleanupAgain === true)) && !state.awaiting && active && !active.lost
-    ? state.activePlayer : null;
+  /* Re-read after the above: ordering triggers can have set a new wait, and then priority goes to nobody. A player can
+     lose during their own turn: the turn goes on without them, and the next player in turn order still in the game
+     receives priority in their place (CR 800.4j). */
+  const [first] = priorityOrder(state);
+  state.priorityPlayer = (hasPriority(state) || (state.phase === "CLEANUP" && state.cleanupAgain === true)) && !state.awaiting && first !== undefined
+    ? first : null;
   return events;
 }
 

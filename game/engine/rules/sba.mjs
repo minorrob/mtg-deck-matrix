@@ -55,6 +55,7 @@ import {enduringStories} from "../keywords/designations.mjs";
 import {preparedCopyStays} from "../script/effects/attributes.mjs";
 import {endControlChange, nextRecord} from "../script/effects/permanents.mjs";
 import {protectedFrom} from "./protection.mjs";
+import {answerForDeparted, goOnWithout} from "./turn.mjs";
 
 /* The capitalized zone names the projection and the telemetry use. */
 const ZONE_LABEL = {
@@ -403,27 +404,41 @@ export function checkStateBasedActions(state) {
  * them from then on.
  *
  * WHAT THEY WERE DOING GOES WITH THEM. A decision they were being asked is withdrawn: a player who has left
- * has no discard to make and no attack to declare. If they held priority it passes to the next player still
- * in the game, and the round of passes starts again (CR 117.4 counts passes in succession, and the player
- * who would have passed is gone).
+ * has no discard to make and no attack to declare -- and what it was part of goes on without them: the next
+ * defending player declares blockers, the next player's triggers go on the stack. If they held priority it
+ * passes to the next player still in the game, and the round of passes starts again (CR 117.4 counts passes
+ * in succession, and the player who would have passed is gone).
+ *
+ * BUT ANOTHER PLAYER'S RESOLUTION GOES ON. Asked as someone else's spell or ability resolved -- their discard in "each
+ * player discards", whether they pay for an "unless", the opponent's choice of Gifts Ungiven -- the question is answered as
+ * the rules answer it once they have gone (CR 800.4f-g; rules/turn.mjs, answerForDeparted), and the resolution finishes
+ * and priority goes on as after any (CR 117.3b). `rng`, the game's random stream, for what the rest of it does.
  *
  * @returns {Array} events for the caller to journal
  */
-export function concede(state, playerId) {
+export function concede(state, playerId, rng = null) {
   const player = state.players[playerId];
   if (!player) throw new Error("There is no such player to concede");
   if (player.lost) throw new Error("That player has already left the game");
   player.conceded = true;
-  if (state.awaiting && state.awaiting.player === playerId) state.awaiting = null;
+  /* What a resolution is asking them waits until they have gone, to be answered then (below); anything else is withdrawn. */
+  const withdrawn = state.awaiting?.player === playerId && state.awaiting.kind !== "effect-choice" ? state.awaiting : null;
+  if (withdrawn) state.awaiting = null;
+  /* Asked what to pay or aim at, they were casting a spell or activating an ability, holding priority (CR 601.2, 602.2):
+     it passes on (below), and nothing of the spell or ability is there yet. */
+  if (withdrawn?.kind === "choose-cost" || (withdrawn?.kind === "choose-targets" && withdrawn.stackId === undefined)) state.priorityPlayer = playerId;
   const resolving = Boolean(state.resolving);
   const events = checkStateBasedActions(state);
-  /* Their own spell or ability was resolving and has gone with them (removePlayerFromBoard): priority goes on as after any
-     resolution, to the active player -- or, the active player gone, the next in turn order still in the game (CR 117.3b,
-     800.4j). */
-  if (resolving && !state.resolving && !gameOver(state)) {
-    const count = state.players.length;
-    state.priorityPlayer = [...Array(count).keys()].map((k) => (state.activePlayer + k) % count).find((at) => !state.players[at].lost);
-    state.passes = 0;
+  /* The game is over: nothing more is asked of them. */
+  if (gameOver(state)) {
+    if (state.awaiting?.player === playerId) state.awaiting = null;
+  /* Another player's spell or ability was asking them, and goes on without them. */
+  } else if (state.resolving && state.awaiting?.kind === "effect-choice" && state.players[state.awaiting.player].lost) {
+    events.push(...answerForDeparted(state, rng));
+  /* Their own spell or ability was resolving and has gone with them (removePlayerFromBoard), or what they were asked while
+     nobody held priority is withdrawn: the game goes on as it would have, and priority with it (rules/turn.mjs). */
+  } else if ((resolving && !state.resolving) || (withdrawn && state.priorityPlayer === null)) {
+    events.push(...goOnWithout(state, withdrawn));
   }
   if (state.priorityPlayer === playerId) {
     const count = state.players.length;

@@ -194,6 +194,11 @@ export const twoPiles = {
       for (const id of pile) if (state.objects[id]?.zone === "library") moveOne(state, id, to, events, {owner: state.objects[id].owner});
     return events;
   },
+
+  /* The opponent separating has left the game: another opponent separates the cards (CR 800.4g). */
+  left(state, awaiting) {
+    return {another: awaiting};
+  },
 };
 
 /* ---- surveil ---- */
@@ -462,13 +467,20 @@ export const discard = {
       state.awaiting = {...awaiting, player: next[0], remaining: next.slice(1), decided};
       return {events, again: true};
     }
-    /* What the effect's controller discarded, as the cards it became. */
+    /* What the effect's controller discarded, as the cards it became. A player who chose and has since left the game
+       discards nothing: their hand left with them (CR 800.4a). */
     let remembering = awaiting.remembering;
-    for (const {player, ids} of decided) {
+    for (const {player, ids} of decided.filter((d) => !state.players[d.player].lost)) {
       const gone = ids.map((id) => discardOne(state, id, player, events));
       if (remembering && player === awaiting.controller) remembering = [...remembering, ...gone];
     }
     return remembering ? {events, remembered: remembering} : events;
+  },
+
+  /* LEFT THE GAME WHILE ASKED (CR 800.4a; script/resolution.mjs, answerDeparted): their hand left with them, so they
+     discard nothing, and the next player is asked -- or, theirs the last answer, everyone's discards are made. */
+  left(state, awaiting) {
+    return discard.apply(state, awaiting, []);
   },
 };
 
@@ -522,6 +534,12 @@ export const modal = {
     /* Taken: done once this turn ("do this only once each turn"). */
     if (awaiting.onceOf && chosen.some((mode) => mode.once === true)) recordUse(state, awaiting.onceOf.source, awaiting.onceOf.key);
     return {events: [], splice: chosen.flatMap((mode) => mode.effects)};
+  },
+
+  /* Its chooser has left the game ("target opponent may draw a card", Tataru Taru): a choice other than paying, so another
+     player makes it (CR 800.4g). */
+  left(state, awaiting) {
+    return {another: awaiting};
   },
 };
 
@@ -752,6 +770,12 @@ export const sacrifice = {
     }
     return remembering ? {events, remembered: remembering} : events;
   },
+
+  /* Left the game while asked (CR 800.4a): what they controlled left or was exiled with them, so they sacrifice nothing,
+     and the next player is asked -- or, theirs the last answer, everyone's sacrifices are made. */
+  left(state, awaiting) {
+    return sacrifice.apply(state, awaiting, []);
+  },
 };
 
 /* ---- populate (CR 701.30): create a token that's a copy of a creature token you control -- which one is the player's
@@ -887,6 +911,8 @@ function payOptions(state, awaiting) {
   }
   return [{label: `Pay ${paid || `{${amount}}`}`, pay: true}];
 }
+/* Not paid: what follows then, if anything -- the effects of "unless", none of "you may pay. If you do". */
+const unpaid = (awaiting) => (awaiting.ifPaid ? [] : {events: [], splice: structuredClone(awaiting.effects)});
 export const unlessPays = {
   open(state, params, context) {
     const [payer] = playersFor(state, params.who, context.controller);
@@ -953,7 +979,7 @@ export const unlessPays = {
       state.awaiting = {...awaiting, sacrificing: {option}};
       return {events: [], again: true};
     }
-    if (!option.pay) return awaiting.ifPaid ? [] : {events: [], splice: structuredClone(awaiting.effects)};
+    if (!option.pay) return unpaid(awaiting);
     /* The X chosen is the amount paid. */
     if (option.x !== undefined) return unlessPays.paid(state, {...awaiting, amount: option.x}, option);
     return unlessPays.paid(state, awaiting, option);
@@ -981,6 +1007,10 @@ export const unlessPays = {
       events.push(...(Array.isArray(paid) ? paid : paid?.events ?? []));
     }
     return unlessPaid(state, awaiting, option, events);
+  },
+  /* Its payer has left the game, deciding or choosing how to pay: the cost is not paid (CR 800.4f). */
+  left(state, awaiting) {
+    return unpaid(awaiting);
   },
 };
 /* What paying an "unless" cost is besides its mana -- life, a discard, a sacrifice -- and what follows it. */
@@ -1190,6 +1220,11 @@ export const attackWhom = {
     if (rest.length) { state.awaiting = {...awaiting, tokens: rest}; return {events: [], again: true}; }
     return {events: []};
   },
+  /* Their controller has left the game, and they left or were exiled with them (CR 800.4a): nothing is left to put into
+     the attack. */
+  left() {
+    return [];
+  },
 };
 
 /* ---- enchantWhat: an Aura entering the battlefield without being cast, with more than one thing it could enchant
@@ -1209,6 +1244,10 @@ export const enchantWhat = {
     if (!option) throw new Error("Invalid selection");
     attachTo(state, awaiting.aura, option.cardId);
     return {events: []};
+  },
+  /* Its controller has left the game, and the Aura left or was exiled with them (CR 800.4a): there is nothing to attach. */
+  left() {
+    return [];
   },
 };
 
@@ -1378,6 +1417,13 @@ export const chooseCard = {
     if (splice.length) return {events, splice, ...searched, ...(awaiting.remember ? {remembered: [...found, ...tops], ...adds} : {})};
     return awaiting.remember || awaiting.zone === "library" ? {events, ...searched, ...(awaiting.remember ? {remembered: [...found, ...tops], ...adds} : {})} : events;
   },
+
+  /* The chooser has left the game. Their own cards went with them (CR 800.4a) -- a search of their library, a choice from
+     their hand -- so nothing is chosen and nothing searched. Another player's cards, still there ("target opponent chooses
+     two of those cards", Gifts Ungiven), are a choice another player makes (CR 800.4g). */
+  left(state, awaiting) {
+    return awaiting.cards.some((id) => state.objects[id]?.zone === awaiting.zone) ? {another: awaiting} : [];
+  },
 };
 
 /* ---- play: "you may cast a spell with mana value 5 or less from your hand without paying its mana cost" (Forge's Play) ----
@@ -1531,6 +1577,10 @@ export const commanderHome = {
     }
     return {events: [], splice: [{...awaiting.move, commandersAsked: true, ...(home.length ? {commanderHome: home} : {})}]};
   },
+  /* Its owner has left the game, and the commander with them (CR 800.4a): it goes nowhere, and the next owner is asked. */
+  left(state, awaiting) {
+    return commanderHome.apply(state, awaiting, [1]);
+  },
 };
 
 /* ---- the order of the effects that change damage (CR 616.1) ----
@@ -1560,6 +1610,12 @@ export const orderDamage = {
     const answers = {...awaiting.answers, [awaiting.key]: [...(awaiting.answers[awaiting.key] ?? []), chosen]};
     return {events: [], splice: [{...awaiting.damage, damageOrders: answers}]};
   },
+  /* The player it would be dealt to, or the controller of the permanent, has left the game: the effect again as it now
+     stands, without this order -- what would have hit them hits nothing that left with them, and the rest is asked about
+     and dealt as before (CR 800.4a, 616.1). */
+  left(state, awaiting) {
+    return {events: [], splice: [{...awaiting.damage, damageOrders: awaiting.answers}]};
+  },
 };
 
 /* ---- connive (CR 701.50; Train B, X11) ----
@@ -1585,6 +1641,11 @@ export const conniveWhich = {
     if (!chosen) throw new Error("Invalid selection");
     const rest = [...awaiting.theirs.filter((c) => c !== chosen), ...awaiting.rest];
     return {events: [], splice: [{effect: "connive", one: chosen, count: awaiting.n}, ...(rest.length ? [{effect: "connive", conniving: rest, count: awaiting.n}] : [])]};
+  },
+  /* Their controller has left the game: the conniving goes on without them, whose draw and discard there is no one to make
+     (CR 800.4a; script/resolution.mjs, connive, leaves out a player no longer in the game). */
+  left(state, awaiting) {
+    return {events: [], splice: [{effect: "connive", conniving: [...awaiting.theirs, ...awaiting.rest], count: awaiting.n}]};
   },
 };
 
@@ -1621,5 +1682,24 @@ export const counterKind = {
   },
 };
 
+/* ---- who makes a choice in place of a player who has left the game (CR 800.4g) ----
+
+   A spell or ability asked a player for a choice other than whether to pay, and they have left the game: its controller
+   chooses another player to make it -- another opponent, the one who left having been an opponent -- and that player is
+   asked the same question. Put here by the resolution when there are two or more to choose between (script/resolution.mjs,
+   answerDeparted); never written in a card script. */
+export const chooseInstead = {
+  choice(state, awaiting) {
+    return {id: `choose-instead:${awaiting.departed}:${state.turn}`, title: `${state.players[awaiting.departed].name} has left the game: choose who makes their choice`,
+      mode: "one", min: 1, max: 1, options: awaiting.players.map((p, index) => ({index, label: state.players[p].name, playerId: p}))};
+  },
+  apply(state, awaiting, indices) {
+    const player = Array.isArray(indices) && indices.length === 1 ? awaiting.players[indices[0]] : undefined;
+    if (player === undefined) throw new Error("Invalid selection");
+    state.awaiting = {...awaiting.question, player};
+    return {events: [], again: true};
+  },
+};
+
 export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage,
-  conniveWhich, manaColors, counterKind});
+  conniveWhich, manaColors, counterKind, chooseInstead});
