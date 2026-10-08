@@ -191,6 +191,9 @@ const FACE_DOWN = Object.freeze({card: null, types: ["Creature"], subtypes: [], 
 const FACE_DOWN_EXILED = Object.freeze({card: null, types: [], subtypes: [], supertypes: [], manaCost: null, colors: [], power: null, toughness: null, keywords: [], abilities: []});
 /* What the card is, kept beside a face-down permanent's own (`faceDownCard`): seen by its controller (CR 708.5,
    projection.mjs), and what it becomes as it is turned face up (708.8) or leaves the battlefield (708.9). */
+/* A permanent's copiable values (CR 707.2): what a copy effect writes onto it (effects/permanents.mjs, becomeCopy), its own
+   kept beside them as `uncopied` -- only the values it has, so it is the same object woken from storage as in memory. */
+export const COPY_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "spell", "enchant"]);
 const CARD_KEYS = ["card", "types", "subtypes", "supertypes", "manaCost", "colors", "power", "toughness", "loyalty", "keywords", "abilities", "spell", "enchant", "mdfc", "preparation"];
 
 /**
@@ -408,8 +411,9 @@ export function moveObject(state, id, zone, player = null, {faceDown = false, tr
   if (!current) throw new Error(`There is no object ${id} to move`);
   /* A face-down permanent leaving is revealed, and moves as the card it is (CR 708.9). */
   const revealed = current.faceDown === true ? {...current, ...current.faceDownCard} : current;
-  /* A permanent that became a copy moves as itself (CR 400.7; effects/permanents.mjs, becomeCopy). */
-  const from = revealed.uncopied ? {...revealed, ...revealed.uncopied} : revealed;
+  /* A permanent that became a copy moves as itself (CR 400.7; effects/permanents.mjs, becomeCopy): every copiable value
+     its own, and one it never had -- absent from `uncopied` -- none, not the copy's. */
+  const from = revealed.uncopied ? {...revealed, ...Object.fromEntries(COPY_KEYS.map((key) => [key, revealed.uncopied[key]]))} : revealed;
   assertZone(state, zone, player);
 
   const fromList = listFor(state, from.zone, from.zonePlayer);

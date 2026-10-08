@@ -67,6 +67,19 @@ export function memoryStorage() {
   };
 }
 
+/* Where a value would not survive JSON: a key holding undefined (dropped), a number that is not finite (null). */
+function lostIn(value, path) {
+  if (typeof value === "number" && !Number.isFinite(value)) return `${path} is ${value}`;
+  if (!value || typeof value !== "object") return null;
+  for (const [key, v] of Object.entries(value)) {
+    const at = `${path}.${key}`;
+    if (v === undefined) return `${at} is undefined`;
+    const lost = lostIn(v, at);
+    if (lost) return lost;
+  }
+  return null;
+}
+
 /* Sequence numbers are written fixed-width so the store's ascending key order is the journal's order. */
 const pad = (n) => String(n).padStart(10, "0");
 
@@ -140,7 +153,13 @@ export function createMatchStore(storage, matchId) {
     /** A checkpoint from the engine's `journal.checkpoint(state, rng)`, verified, then made the latest. */
     async saveCheckpoint(point) {
       verified(point, "saveCheckpoint");
-      await write(`${root}/checkpoint/${pad(point.sequence)}`, point);
+      /* WRITTEN AS IT WILL BE READ. JSON drops a key whose value is undefined and writes NaN as null, and the hash keeps
+         both apart (journal.mjs `canonical`), so such a checkpoint would be refused as it is read back: the room could not
+         wake (G1, 2026-10-08: a layer-6 effect's `sublayer: undefined`, from any effect without a sublayer). Refused here
+         instead, naming the field, while the game that made it is still in memory. */
+      const text = JSON.stringify(point);
+      if (hashState(JSON.parse(text).state) !== point.hash) throw new Error(`saveCheckpoint: the state would not read back as the game it is (${lostIn(point.state, "state")}), so a room could not wake from it`);
+      await storage.put(`${root}/checkpoint/${pad(point.sequence)}`, text);
       await write(`${root}/checkpoint/latest`, {sequence: point.sequence});
     },
     /** The newest checkpoint, verified; null when the match has none yet. */

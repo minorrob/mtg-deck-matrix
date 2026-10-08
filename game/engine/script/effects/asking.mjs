@@ -428,7 +428,7 @@ export const discard = {
       kind: "effect-choice", effect: "discard", player: asked[0], remaining: asked.slice(1),
       /* Whose discards are remembered: this effect's controller's, or the player a connive is for (`rememberOf`, script/
          resolution.mjs), whose permanent the counter goes on. */
-      count: params.count ?? 1, who: params.who, controller: Number.isInteger(params.rememberOf) ? params.rememberOf : context.controller,
+      count: params.count ?? 1, ...(params.who !== undefined ? {who: params.who} : {}), controller: Number.isInteger(params.rememberOf) ? params.rememberOf : context.controller,
       ...(params.remember ? {remembering: []} : {}),
       /* "You may discard UP TO two cards. If you do, draw that many cards" (Fable of the Mirror-Breaker, chapter II): how many,
          from none to that many, is the discarder's to say (CR 701.9a, 701.9b); "that many" counts what they discarded

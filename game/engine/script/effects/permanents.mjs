@@ -17,7 +17,7 @@
  * true` and nothing else here treats it specially.
  */
 
-import {addObject, transformObject, rememberExileLooker} from "../../state/index.mjs";
+import {addObject, transformObject, rememberExileLooker, COPY_KEYS} from "../../state/index.mjs";
 import {selectMatching, compileSelector} from "../filter.mjs";
 import {bindEffect, rememberNow} from "../bind.mjs";
 import {amountOf} from "../amount.mjs";
@@ -296,8 +296,10 @@ export function copyPermanent(state, params, context) {
  * it shows again, and with none left the permanent is its own again. Leaving the battlefield ends them all: a card moves
  * as itself (state/index.mjs, moveObject; CR 400.7).
  */
-export const COPY_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "spell", "enchant"]);
-const ownValues = (object) => Object.fromEntries(COPY_KEYS.map((key) => [key, object[key] === undefined ? undefined : structuredClone(object[key])]));
+export {COPY_KEYS};
+/* Its own values, only those it has: a key holding undefined would not survive the room's storage (JSON drops it), and a
+   value it never had is read as none (showCopy; state/index.mjs, moveObject). */
+const ownValues = (object) => Object.fromEntries(COPY_KEYS.filter((key) => object[key] !== undefined).map((key) => [key, structuredClone(object[key])]));
 function showCopy(object) {
   const latest = (object.copyEffects ?? []).at(-1);
   const values = latest ? latest.values : object.uncopied;
@@ -564,7 +566,7 @@ export function effectUntil(state, params, context) {
   pushEffect(state, {
     id: params.id ?? `effect:${context.source ?? "effect"}`,
     /* A rule changed for a while ("can't be blocked this turn", rules/statics.mjs), or a characteristic, in a layer. */
-    ...(params.rule ? {rule: params.rule} : {layer: params.layer ?? 6, sublayer: params.sublayer}),
+    ...(params.rule ? {rule: params.rule} : {layer: params.layer ?? 6, ...(params.sublayer !== undefined ? {sublayer: params.sublayer} : {})}),
     /* `selector`: what it affects, fixed as it resolves (CR 611.2c) -- "each instant and sorcery card in your graveyard
        gains flashback until end of turn" does not reach a card put there later. A choice (`anyOf`) is each of them. */
     affects: params.targets ? {ids: params.targets} : params.selector ? {ids: fixedAt(state, params.selector, context)}

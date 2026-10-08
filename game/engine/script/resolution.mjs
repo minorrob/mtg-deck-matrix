@@ -118,7 +118,7 @@ export function runResolution(state, rng = null) {
       resolving.queue.shift();
       const before = resolving.context.about;
       const spliced = eachOf(state, effect.each, resolving.context).flatMap((about) => [{effect: "__about", about: {...(before ?? {}), ...about}}, ...structuredClone(effect.effects ?? [])]);
-      resolving.queue.unshift(...spliced, {effect: "__about", about: before});
+      resolving.queue.unshift(...spliced, {effect: "__about", ...(before !== undefined ? {about: before} : {})});
       continue;
     }
     if (effect?.effect === "__about") {
