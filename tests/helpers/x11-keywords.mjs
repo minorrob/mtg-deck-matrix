@@ -14,6 +14,8 @@ import {missingFor, keywordBuilt} from "../../game/tools/engine-constructs.mjs";
 import {housePilot} from "../../game/engine/pilots/house-pilot.mjs";
 import {randomLegalPilot} from "../../game/engine/pilots/random-legal.mjs";
 import {projectFor} from "../../game/engine/projection.mjs";
+import {runEffect} from "../../game/engine/script/effects/index.mjs";
+import {collectTriggers} from "../../game/engine/rules/trigger.mjs";
 
 export {assert};
 export const index = loadCardIndex();
@@ -52,6 +54,13 @@ export function drive(state, until, {answer = () => null, rng = createRng("x11")
   throw new Error("never got there");
 }
 export const asked = (kind) => (state) => state.awaiting?.kind === kind;
+/** An effect done as a resolving spell would do it, its events read for triggers as the rules read an action's
+    (rules/trigger.mjs): what triggers on it waits for the next priority. */
+export function happen(state, effect, context = {controller: 0, source: null}) {
+  const events = runEffect(state, effect, context, createRng("x11"));
+  collectTriggers(state, events);
+  return events;
+}
 /** The labels of what is being asked. */
 export const labels = (state) => awaitingChoice(state).options.map((o) => o.label);
 /** An answer by label. */

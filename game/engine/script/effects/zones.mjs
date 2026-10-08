@@ -17,7 +17,7 @@
  * behave differently later.
  */
 
-import {holdArrival} from "../../rules/entering.mjs";
+import {holdArrival, enteredWith} from "../../rules/entering.mjs";
 import {prepare} from "./attributes.mjs";
 import {afterwards, delayedTrigger, enchantable, enchantOnArrival} from "./permanents.mjs";
 import {typesOf} from "../../rules/layers.mjs";
@@ -159,6 +159,8 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false, fa
   if (destination === "battlefield") holdArrival(state, moved, events[events.length - 1]);
   /* "Enters prepared" (CR 614.1c, 722.3a): the designation it entered with, and its prepare spell's copy in exile (722.3c). */
   if ((entering?.designations ?? []).includes("prepared")) prepare(state, moved, events);
+  /* What it entered with, said once it has (rules/entering.mjs, enteredWith). */
+  if (destination === "battlefield") events.push(...enteredWith(state, moved, entering));
   /* What it exiled "until this leaves the battlefield", back now (CR 610.3). */
   if (from === "battlefield") returnExiledUntil(state, id, events, leftBehind);
   return moved;

@@ -205,7 +205,9 @@ const TRIGGERS = {
     ...(t.targets ? {targets: t.targets} : {})}),
   /* "Whenever one or more +1/+1 counters are put on Berta" (CR 122.1): counters of `counter` put on this permanent, once
      for each time they are put on, however many. */
-  "counter added": (t) => ((t.who ?? "self") === "self" && typeof t.counter === "string" ? {on: "GameEventCardCounters", counterAdded: true, counter: t.counter} : null),
+  "counter added": (t) => ((t.who ?? "self") === "self" && typeof t.counter === "string" ? {on: "GameEventCardCounters", counterAdded: true, counter: t.counter,
+    /* "Whenever a +1/+1 counter is put on this creature" (Fathom Mage): once for each counter (`each`), not for each time. */
+    ...(t.each === true ? {each: true} : {})} : null),
   /* "Whenever you scry or surveil" (Proft, Consulting Detective; CR 701.22a, 701.25a): once each is done, by `scrier`. */
   scried: (t) => ({on: "GameEventScried", scrier: t.scrier ?? "you"}),
   /* "Whenever you activate a loyalty ability" (Ajani Unrelenting; CR 606, 602.2): a loyalty ability put on the stack by
@@ -702,6 +704,16 @@ export function compileScript(script) {
         effects: [{effect: "createToken", count: 1, remember: true, token: {name: "Phyrexian Germ", types: ["Creature"], subtypes: ["Phyrexian", "Germ"], colors: ["B"], power: 0, toughness: 0}},
           {effect: "attach", targets: "remembered"}]});
       keywords.push("Living Weapon");
+      return;
+    }
+    /* EVOLVE (CR 702.100a): "Whenever a creature you control enters, if that creature's power is greater than this creature's
+       power and/or that creature's toughness is greater than this creature's toughness, put a +1/+1 counter on this creature"
+       -- an intervening "if" (CR 603.4; script/condition.mjs, `evolves`), asked as it triggers and as it resolves. Each
+       instance triggers separately (702.100d). */
+    if (word === "evolve") {
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.enters({who: "any", filter: {types: ["Creature"], controller: "you"}}),
+        condition: {evolves: true}, effects: [{effect: "putCounter", targets: "self", counter: "+1/+1", count: 1}]});
+      keywords.push("Evolve");
       return;
     }
     /* FLASHBACK (CR 702.34a): the keyword with its cost, a list of atoms -- a mana cost, and "pay 3 life" -- kept as a

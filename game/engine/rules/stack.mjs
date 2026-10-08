@@ -34,7 +34,7 @@
  * whose every target is illegal does nothing and leaves the stack with `hasFizzled`.
  */
 
-import {holdArrival} from "./entering.mjs";
+import {holdArrival, enteredWith} from "./entering.mjs";
 import {conditionHolds} from "../script/condition.mjs";
 import {moveObject, addObject, removeObject, eventCard} from "../state/index.mjs";
 import {enteringModifications} from "./replacement.mjs";
@@ -411,6 +411,8 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     if (to === "battlefield") holdArrival(state, arrived, events[events.length - 1]);
     /* "Enters prepared" (CR 614.1c, 722.3a): the designation it entered with, and its prepare spell's copy in exile (722.3c). */
     if ((entering?.designations ?? []).includes("prepared")) prepare(state, arrived, events);
+    /* What it entered with, said once it has (rules/entering.mjs, enteredWith). */
+    if (to === "battlefield") events.push(...enteredWith(state, arrived, entering));
   }
 
   events.push(event("GameEventSpellResolved", state, {

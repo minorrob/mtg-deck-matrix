@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,196 defined and playable today; 2,531 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,197 defined and playable today; 2,534 with every
 mechanic built, so only their definitions are left to write; 28 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 45 | 0 | 13 | 136 |
+| Keyword abilities (CR 702) | 194 | 46 | 0 | 12 | 136 |
 | Keyword actions (CR 701) | 70 | 22 | 3 | 1 | 44 |
 | Effects | 192 | 68 | 1 | 4 | 119 |
 | Triggers | 138 | 20 | 4 | 2 | 112 |
@@ -45,12 +45,12 @@ The things that alone hold back the most of the most-played cards.
 | count | Spells cast this turn | — | missing | 8 | 12 |
 | effect | RingTemptsYou | — | missing | 8 | 11 |
 | option | Imprint (a card exiled with this) | — | missing | 7 | 9 |
+| trigger | CounterAddedOnce | counter added once | named | 6 | 10 |
 | effect | ChangeTargets | — | missing | 6 | 8 |
 | effect | ChoosePlayer | — | missing | 6 | 8 |
 | keyword ability | Overload | — | named | 6 | 7 |
 | effect | Discover | discover | named | 6 | 6 |
 | effect | AddTurn | addTurn | named | 5 | 10 |
-| trigger | CounterAddedOnce | counter added once | named | 5 | 10 |
 
 ## Keyword abilities (CR 702)
 
@@ -101,7 +101,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.143 | Foretell | — | missing | 4 | 55 | 4 | 2 |
 | 702.90 | Infect | Infect | built | 4 | 45 | 0 | 0 |
 | 702.79 | Persist | — | missing | 4 | 24 | 4 | 3 |
-| 702.100 | Evolve | — | named | 4 | 23 | 4 | 3 |
+| 702.100 | Evolve | Evolve | built | 4 | 23 | 0 | 0 |
 | 702.61 | Split Second | — | missing | 4 | 22 | 4 | 3 |
 | 702.175 | Offspring | — | missing | 4 | 21 | 4 | 4 |
 | 702.75 | Hideaway | Hideaway | built | 4 | 15 | 0 | 0 |
@@ -540,7 +540,7 @@ The things that alone hold back the most of the most-played cards.
 | TapsForMana | tapped for mana | built | 18 | 64 | 0 | 0 |
 | Sacrificed | sacrificed | built | 17 | 114 | 0 | 0 |
 | Discarded | discarded | built | 17 | 76 | 0 | 0 |
-| CounterAddedOnce | counter added once | named | 10 | 47 | 10 | 5 |
+| CounterAddedOnce | counter added once | named | 10 | 47 | 10 | 6 |
 | AttackersDeclaredOneTarget | attackers declared | built | 8 | 32 | 0 | 0 |
 | SpellCastOrCopy | — | missing | 6 | 31 | 6 | 4 |
 | LifeLost | life lost | built | 6 | 20 | 0 | 0 |

@@ -9,7 +9,7 @@
  */
 import {runEffect} from "../game/engine/script/effects/index.mjs";
 import {characteristicsOf} from "../game/engine/rules/layers.mjs";
-import {play, drive, at, compiled, missing, keywordBuilt, index, checks} from "./helpers/x11-keywords.mjs";
+import {play, drive, happen, at, compiled, missing, keywordBuilt, index, checks} from "./helpers/x11-keywords.mjs";
 
 const {eq, ok, done} = checks("engine-x11-living-weapon");
 const BT = "Bitterthorn, Nissa's Animus", GERM = "Phyrexian Germ";
@@ -53,7 +53,7 @@ const CAST = [{tap: "Wastes"}, {tap: "Wastes"}, {tap: "Wastes"}, {cast: BT}, {re
   /* Only its own entering: a land played, or a creature cast, beside it makes no Germ. */
   const s = play([at(0, "battlefield", "Wastes", "Wastes", "Wastes"), at(0, "hand", BT, "Forest", "Bear")], [...CAST, {resolve: true}, {play: "Forest"}]);
   const bear = s.zones.hand[0].find((id) => s.objects[id].card === "Bear");
-  runEffect(s, {effect: "moveZone", targets: [bear], to: "battlefield"}, {controller: 0, source: null});
+  happen(s, {effect: "moveZone", targets: [bear], to: "battlefield"});
   drive(s, (st) => st.stack.length === 0 && !(st.pendingTriggers ?? []).length && st.priorityPlayer !== null);
   eq(germs(s).length, 1, "a land and a Bear entered after it: still the one Germ");
 }

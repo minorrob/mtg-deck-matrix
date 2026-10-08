@@ -33,6 +33,11 @@
  *                                      cast from it (Fblthp, the Lost)
  *   {sinceYourLastUpkeep: true}        its own permanent came under its controller's control since the beginning of
  *                                      their last upkeep (echo, CR 702.30a)
+ *   {evolves: true}                    evolve's "if that creature's power is greater than this creature's power and/or that
+ *                                      creature's toughness is greater than this creature's toughness" (CR 702.100a): the
+ *                                      creature the trigger is about against its own source, power to power and toughness
+ *                                      to toughness, as each now is -- the arrival gone, as it last was (rules/trigger.mjs
+ *                                      keeps it, CR 608.2h); never greater than a noncreature permanent (702.100c)
  *   {opponentPoisonAtLeast: 3}         an opponent of its controller, still in the game, has at least that many poison
  *                                      counters (CR 122.1f): Corrupted's "as long as an opponent has three or more poison
  *                                      counters" (Skrelv's Hive; an ability word, CR 207.2c, with no rules meaning of its own)
@@ -43,9 +48,12 @@
 import {cardsIn} from "../state/index.mjs";
 import {matchesSelector, compileSelector, matchesLastKnown} from "./filter.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
+import {characteristicsOf} from "../rules/layers.mjs";
 
 const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "spent", "enduringStory", "loyaltyThisTurn", "impending",
-  "cameFrom", "sinceYourLastUpkeep", "level", "opponentPoisonAtLeast", "searched"];
+  "cameFrom", "sinceYourLastUpkeep", "level", "opponentPoisonAtLeast", "searched",
+  /* Evolve's comparison (CR 702.100a). */
+  "evolves"];
 /* Where a permanent may have come from, for `cameFrom`: a library (effects/zones.mjs and rules/stack.mjs record it). */
 const CAME_FROM = ["library"];
 /* The mana a condition may ask was spent to cast its object: the five colors and colorless (CR 106.1). */
@@ -83,6 +91,21 @@ function namedIs(state, id, selector, context, was = null) {
   if (!object) { try { return was ? matchesLastKnown(selector, was, context) : false; } catch { return false; } }
   const what = object.zone === "battlefield" ? "permanent" : object.zone === "stack" ? "spell" : "card";
   return compileSelector({...selector, what, ...(what === "card" ? {zone: object.zone} : {})})(state, id, context);
+}
+
+/* EVOLVE (CR 702.100a): the creature that entered -- on the battlefield and still a creature, as it now is; gone, as it last
+   was there (`about.lastKnown`, rules/trigger.mjs; CR 608.2h) -- against the creature with evolve, which must still be one: a
+   creature can't have a greater power or toughness than a noncreature permanent (702.100c). Power to power, toughness to
+   toughness, either greater. */
+function evolves(state, source, about) {
+  if (source === null || source === undefined || state.objects[source]?.zone !== "battlefield") return false;
+  const mine = characteristicsOf(state, source);
+  if (!mine.types.includes("Creature")) return false;
+  const id = about?.card;
+  const there = state.objects[id]?.zone === "battlefield" ? characteristicsOf(state, id) : null;
+  const it = there ? (there.types.includes("Creature") ? there : null) : about?.lastKnown ?? null;
+  if (!it) return false;
+  return (it.power ?? 0) > (mine.power ?? 0) || (it.toughness ?? 0) > (mine.toughness ?? 0);
 }
 
 /* HOW A SPELL WAS CAST (batch 70; rules/actions.mjs records it on the stack entry): "if this spell was cast from a
@@ -194,6 +217,8 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   /* "As long as you have an enduring story" (Storied, CR 702.195b), or "unless you have one": the player's designation
      (keywords/designations.mjs). */
   if (condition.enduringStory !== undefined && (state.players[controller]?.enduringStory === true) !== condition.enduringStory) return false;
+  /* Evolve's comparison (CR 702.100a): as it triggers, and again as it resolves (CR 603.4). */
+  if (condition.evolves === true && !evolves(state, source, about)) return false;
   /* "If you've activated a loyalty ability this turn" (Kiora of Salt and Sand): its controller has (rules/actions.mjs). */
   if (condition.loyaltyThisTurn === true && !((state.players[controller]?.loyaltyThisTurn ?? 0) > 0)) return false;
   /* "Activate only during your turn" (Humble Defector). */
@@ -234,6 +259,7 @@ export function conditionProblems(condition) {
   if ("enduringStory" in condition && typeof condition.enduringStory !== "boolean") problems.push("enduringStory is true or false");
   if ("notYourTurn" in condition && condition.notYourTurn !== true) problems.push("notYourTurn is true");
   if ("loyaltyThisTurn" in condition && condition.loyaltyThisTurn !== true) problems.push("loyaltyThisTurn is true");
+  if ("evolves" in condition && condition.evolves !== true) problems.push("evolves is true");
   if ("opponentPoisonAtLeast" in condition && !(Number.isInteger(condition.opponentPoisonAtLeast) && condition.opponentPoisonAtLeast >= 1))
     problems.push("opponentPoisonAtLeast is a whole number of poison counters, 1 or more");
   if ("graveyardTypes" in condition && !(Number.isInteger(condition.graveyardTypes) && condition.graveyardTypes >= 1)) problems.push("graveyardTypes is a whole number of card types, 1 or more");
