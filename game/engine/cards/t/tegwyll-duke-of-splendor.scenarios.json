@@ -1,0 +1,1574 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Tegwyll, Duke of Splendor",
+  "fixtures": {
+    "Pixie": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Faerie"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Sprite": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Faerie"
+      ],
+      "manaCost": "{1}{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5,
+      "keywords": [
+        "Reach"
+      ]
+    },
+    "Mimic": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Shapeshifter"
+      ],
+      "manaCost": "{2}",
+      "colors": [],
+      "power": 1,
+      "toughness": 1,
+      "keywords": [
+        "Changeling"
+      ]
+    },
+    "Faerie Ward": {
+      "types": [
+        "Kindred",
+        "Enchantment"
+      ],
+      "subtypes": [
+        "Faerie"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ]
+    },
+    "Kill": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Shatter Ward": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target enchantment.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Enchantment"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Banish": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Exile target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "moveZone",
+            "targets": {
+              "target": 0
+            },
+            "to": "exile"
+          }
+        ]
+      }
+    },
+    "Wrath": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy all creatures.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "destroyAll",
+            "selector": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "The anthem: Rob's other Faeries, a changeling among them, are +1/+1; Tegwyll itself, his Bear and Maya's Faerie are not; the kindred Faerie enchantment has no power to raise",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tegwyll, Duke of Splendor",
+            "Pixie",
+            "Mimic",
+            "Bear",
+            "Faerie Ward"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Pixie"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Pixie",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Mimic",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Tegwyll, Duke of Splendor",
+            "power": 2,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Pixie",
+            "power": 1,
+            "toughness": 1
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Faerie Ward",
+            "power": null,
+            "toughness": null
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Tegwyll, Duke of Splendor",
+            "has": [
+              "Flying",
+              "Deathtouch"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rob's Faerie dies to Maya's Kill: the trigger waits on the stack, then Rob draws a card and loses 1 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tegwyll, Duke of Splendor",
+            "Pixie"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Kill"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 1
+        },
+        {
+          "cast": "Kill",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Pixie"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            },
+            {
+              "seat": 0,
+              "zone": "hand",
+              "count": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Pixie"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Not for Rob's Bear (no Faerie), nor Maya's Faerie, nor Tegwyll's own death",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tegwyll, Duke of Splendor",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Pixie",
+            "Swamp",
+            "Swamp",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Kill",
+            "Kill",
+            "Kill"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 1
+        },
+        {
+          "cast": "Kill",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 1
+        },
+        {
+          "cast": "Kill",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Pixie"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 1
+        },
+        {
+          "cast": "Kill",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Tegwyll, Duke of Splendor"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Tegwyll, Duke of Splendor"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Pixie",
+            "Kill",
+            "Kill",
+            "Kill"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A wipe kills Tegwyll with two Faeries and a changeling: it looks back and sees all three (CR 603.10a), three cards and 3 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tegwyll, Duke of Splendor",
+            "Pixie",
+            "Sprite",
+            "Mimic",
+            "Bear",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wrath"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Wrath"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0
+              }
+            }
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 37
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 3
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Tegwyll, Duke of Splendor",
+            "Pixie",
+            "Sprite",
+            "Mimic",
+            "Bear",
+            "Wrath"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The kindred Faerie enchantment is a Faerie too: destroyed, it dies (CR 700.4), a card and 1 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tegwyll, Duke of Splendor",
+            "Faerie Ward"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Shatter Ward"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "cast": "Shatter Ward",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Faerie Ward"
+            }
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Faerie Ward"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Deathtouch: Tegwyll attacks, Maya's 5/5 Giant with reach blocks it, and Tegwyll's 2 damage destroys the Giant",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tegwyll, Duke of Splendor"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Giant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Tegwyll, Duke of Splendor"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Giant",
+              "Tegwyll, Duke of Splendor"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Giant"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Tegwyll, Duke of Splendor"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Rob's Sower of Temptation takes Maya's Faerie: under Rob it is 2/2, and when it dies -- into Maya's graveyard -- Rob draws and loses 1 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tegwyll, Duke of Splendor",
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sower of Temptation"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Pixie",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Kill"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Sower of Temptation"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Pixie"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Tegwyll, Duke of Splendor",
+                "Sower of Temptation",
+                "Pixie",
+                "Island",
+                "Island",
+                "Wastes",
+                "Wastes"
+              ]
+            },
+            {
+              "seat": 1,
+              "stats": {
+                "card": "Pixie",
+                "power": 2,
+                "toughness": 2
+              }
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Sower of Temptation",
+                "power": 3,
+                "toughness": 3
+              }
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 1
+        },
+        {
+          "cast": "Kill",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Pixie"
+            }
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Pixie",
+            "Kill"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Maya's Sower takes Rob's Faerie: it is hers, 1/1, and when Rob kills it Tegwyll does not trigger -- it was not a Faerie Rob controlled",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tegwyll, Duke of Splendor",
+            "Pixie",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Kill"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Sower of Temptation"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Sower of Temptation",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Pixie"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "controls": [
+                "Sower of Temptation",
+                "Pixie",
+                "Island",
+                "Island",
+                "Wastes",
+                "Wastes"
+              ]
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Pixie",
+                "power": 1,
+                "toughness": 1
+              }
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 0
+        },
+        {
+          "cast": "Kill",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Pixie"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Pixie",
+            "Kill"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Rob's Faerie commander dies and he puts it into the command zone (CR 903.9a): it died first, so Rob draws and loses 1 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tegwyll, Duke of Splendor",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "Pixie"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Kill"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Pixie"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 1
+        },
+        {
+          "cast": "Kill",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Pixie"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Put it into the command zone"
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "Pixie"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "A Faerie token from Faerie Formation dies: a card and 1 life, as any Faerie (CR 700.4)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tegwyll, Duke of Splendor",
+            "Faerie Formation",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Kill"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Faerie Formation"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Faerie",
+                "power": 2,
+                "toughness": 2
+              }
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Faerie Formation",
+                "power": 6,
+                "toughness": 5
+              }
+            },
+            {
+              "seat": 0,
+              "zone": "hand",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 1
+        },
+        {
+          "cast": "Kill",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Faerie"
+            }
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Tegwyll, Duke of Splendor",
+            "Faerie Formation",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Day of Black Sun for X=2: Rob's two small Faeries lose their abilities and die; Tegwyll, mana value 3, keeps its own and sees both",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tegwyll, Duke of Splendor",
+            "Pixie",
+            "Sprite",
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Day of Black Sun"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Day of Black Sun",
+          "x": 2
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Pixie",
+            "Sprite",
+            "Day of Black Sun"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Day of Black Sun for X=3: Tegwyll loses its abilities too before they die, so looking back it has no trigger to see them with (CR 603.10)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tegwyll, Duke of Splendor",
+            "Pixie",
+            "Sprite",
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Day of Black Sun"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Day of Black Sun",
+          "x": 3
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Tegwyll, Duke of Splendor",
+            "Pixie",
+            "Sprite",
+            "Day of Black Sun"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Exiled is not dies: Maya exiles Rob's Faerie and Tegwyll does not trigger",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tegwyll, Duke of Splendor",
+            "Pixie"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Banish"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Plains",
+          "seat": 1
+        },
+        {
+          "cast": "Banish",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Pixie"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Pixie"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A wipe takes Rob's Sower with the Faerie it stole: looking back, the Faerie was Rob's, so Tegwyll sees both die (CR 603.10a)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tegwyll, Duke of Splendor",
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sower of Temptation",
+            "Wrath"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Pixie"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Sower of Temptation"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Pixie"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Wrath"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Pixie"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The legend rule: a second Tegwyll arrives, Rob keeps the first, and it sees the other -- another Faerie -- die (CR 704.5j, 700.4)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tegwyll, Duke of Splendor",
+            "Island",
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tegwyll, Duke of Splendor"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Tegwyll, Duke of Splendor"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Tegwyll, Duke of Splendor"
+          ]
+        }
+      ]
+    }
+  ]
+}

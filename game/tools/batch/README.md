@@ -30,7 +30,11 @@ first on `PATH` (on Personal-HP: `C:/Users/robmi/CrankMagic/workbench/node22/nod
 4. **Define the cards** with a generator in your own scratch space, importing `cardlib.py` (its docstring has the
    shape). The grammar is in the definitions already written (`game/engine/cards/`), `game/engine/cards/index.mjs`
    (`TRIGGERS`), `game/engine/script/filter.mjs` (`SELECTOR_KEYS`) and `game/engine/script/amount.mjs`. Each card needs
-   scenarios. Then `node --stack-size=4000 game/tools/batch/check-cards.mjs` until it says 0 failed.
+   scenarios. Then `node --stack-size=4000 game/tools/batch/check-cards.mjs` until it says 0 failed. A card with a
+   learned definition stored provisional (`data/engine/scripts`, seated at no table) is confirmed the same way: written
+   here by hand with its scenarios, then its stored record and its entry in `tests/fixtures/learned-scenarios.json`
+   withdrawn, and its row in `data/engine/onboarding-ledger.json` set to `confirmed`, naming the definition
+   (`tests/engine-learned.mjs` holds the two to each other; Tegwyll, Duke of Splendor was the first).
 5. **Write the batch's suite**, `tests/engine-<topic>.mjs` -- check the name is free first (`ls`), since the Write tool
    overwrites silently -- for what the scenarios cannot reach: three or four players, the edges, the catalog's credit.
 6. **Regenerate** the measured documents, and the data inventory if a file under `data/` gained a reader:
