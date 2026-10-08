@@ -466,24 +466,46 @@ export function build({source, profileName = "pages", origin = "", domain = ""})
 /* Commit the build to release/pages with plumbing and a private index: the working tree, the
    checked-out branch and the real index are never touched. */
 export const releaseBranch = (profileName) => ["pages", "cloud-production", "cloud-production-standby"].includes(profileName) ? RELEASE_BRANCH : `release/${profileName}`;
-export function commitRelease(built, {commit, version, profileName}) {
+
+/* ONCE THE TABLE CLASS IS ON A WORKER, EVERY LATER RELEASE KEEPS IT. A release whose profile binds the GameTable Durable
+   Object (`tables`) registers the class on the Worker with its migration (tables-v1). Cloudflare then refuses to deploy a
+   script that no longer exports the class -- the only way to drop it is a delete migration, which erases every table it
+   stored -- and cannot roll back across the migration that made it. So a release without tables (production's `pages`)
+   committed on top of one with them would be undeployable for good. Refused here, with what to build instead, the way a
+   move that would break the game is refused (AGENTS.md). `previous` is the profile the branch's head was built with. */
+export function refuseDropTables(previous, profileName) {
+  if (!previous || !PROFILES[previous]?.tables || PROFILES[profileName]?.tables) return null;
+  return `${releaseBranch(profileName)} already holds a ${previous} release, which registered the GameTable Durable Object on its Worker; ` +
+    `a ${profileName} release has no table class, so Cloudflare could never deploy it over that one (dropping the class erases every stored table). ` +
+    `Build cloud-production-standby (Play closed, the tables kept) or cloud-production instead.`;
+}
+/* The profile a release commit was built with: its version.json's (build, above). */
+function profileOf(root, ref) {
+  const read = spawnSync("git", ["-C", root, "show", `${ref}:version.json`], {encoding: "utf8"});
+  if (read.status !== 0) return null;
+  try { return JSON.parse(read.stdout).profile ?? null; } catch { return null; }
+}
+
+export function commitRelease(built, {commit, version, profileName, root = ROOT}) {
   const RELEASE_BRANCH = releaseBranch(profileName);
   const tmp = mkdtempSync(path.join(os.tmpdir(), "release-index-"));
   try {
     const env = {...process.env, GIT_INDEX_FILE: path.join(tmp, "index")};
     const lines = [];
     for (const [f, body] of [...built].sort(([a], [b]) => a.localeCompare(b))) {
-      const oid = execFileSync("git", ["-C", ROOT, "hash-object", "-w", "--stdin"], {input: body}).toString().trim();
+      const oid = execFileSync("git", ["-C", root, "hash-object", "-w", "--stdin"], {input: body}).toString().trim();
       lines.push(`100644 ${oid}\t${f}`);
     }
-    execFileSync("git", ["-C", ROOT, "update-index", "--add", "--index-info"], {input: lines.join("\n") + "\n", env});
-    const tree = execFileSync("git", ["-C", ROOT, "write-tree"], {env}).toString().trim();
-    const parent = spawnSync("git", ["-C", ROOT, "rev-parse", "--verify", "-q", `refs/heads/${RELEASE_BRANCH}`], {encoding: "utf8"}).stdout.trim()
-      || spawnSync("git", ["-C", ROOT, "rev-parse", "--verify", "-q", `refs/remotes/origin/${RELEASE_BRANCH}`], {encoding: "utf8"}).stdout.trim();
-    if (parent && git("rev-parse", `${parent}^{tree}`) === tree) return {commit: parent, tree, unchanged: true, branch: RELEASE_BRANCH};
+    execFileSync("git", ["-C", root, "update-index", "--add", "--index-info"], {input: lines.join("\n") + "\n", env});
+    const tree = execFileSync("git", ["-C", root, "write-tree"], {env}).toString().trim();
+    const parent = spawnSync("git", ["-C", root, "rev-parse", "--verify", "-q", `refs/heads/${RELEASE_BRANCH}`], {encoding: "utf8"}).stdout.trim()
+      || spawnSync("git", ["-C", root, "rev-parse", "--verify", "-q", `refs/remotes/origin/${RELEASE_BRANCH}`], {encoding: "utf8"}).stdout.trim();
+    if (parent && execFileSync("git", ["-C", root, "rev-parse", `${parent}^{tree}`], {encoding: "utf8"}).trim() === tree) return {commit: parent, tree, unchanged: true, branch: RELEASE_BRANCH};
+    const refusal = parent ? refuseDropTables(profileOf(root, parent), profileName) : null;
+    if (refusal) throw new Error(refusal);
     const message = `Release ${version} (${profileName}): main ${commit}\n\nBuilt by tools/release-pages.mjs from ${commit}. The web app; Play ${PROFILES[profileName].play === "cloud" ? "is in the cloud" : "says Coming Soon"}${PROFILES[profileName].accounts === "on" ? "; accounts on, with the API Worker" : ""}.\n`;
-    const next = execFileSync("git", ["-C", ROOT, "commit-tree", tree, ...(parent ? ["-p", parent] : []), "-F", "-"], {input: message}).toString().trim();
-    execFileSync("git", ["-C", ROOT, "update-ref", `refs/heads/${RELEASE_BRANCH}`, next, ...(parent ? [parent] : [])]);
+    const next = execFileSync("git", ["-C", root, "commit-tree", tree, ...(parent ? ["-p", parent] : []), "-F", "-"], {input: message}).toString().trim();
+    execFileSync("git", ["-C", root, "update-ref", `refs/heads/${RELEASE_BRANCH}`, next, ...(parent ? [parent] : [])]);
     return {commit: next, tree, parent, unchanged: false, branch: RELEASE_BRANCH};
   } finally {
     rmSync(tmp, {recursive: true, force: true});

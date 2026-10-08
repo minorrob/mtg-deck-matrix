@@ -28,6 +28,13 @@ into `main` as they are built, behind a build switch. So `main` holds everything
 3. **The build refuses rather than guesses.** A page that is not what it expects (no `<meta charset>`), a
    file the service worker lists but the release lacks, a Play module that got in, a leaked tool — it stops
    and names the file.
+4. **Once a release carries the table class, every later one does.** `cloud-production-standby` and
+   `cloud-production` register the `GameTable` Durable Object on production's Worker (migration `tables-v1`).
+   Cloudflare then refuses any deploy whose script lacks the class; the only way to drop it is a delete migration,
+   which erases every table it stored, and it cannot roll back across the migration that made it. So after the first
+   standby or Play release, `pages` is never committed to `release/pages` again: `--commit` refuses it, naming the
+   release that is there and what to build instead (`refuseDropTables`; tests/release-pages.mjs proves it on a
+   repository of its own). The guard reads `release/pages`' head; a deploy made from anywhere else is outside it.
 
 ## Releasing, step by step
 

@@ -8,8 +8,11 @@
  * that forgot to say Coming Soon, a tool that leaked -- each must be named.
  */
 import assert from "node:assert/strict";
-import {readFileSync} from "node:fs";
-import {build, worktreeSource, verify, releaseBranch, transform, referencesOf, workerModules, PROFILES, NEVER, PAGES, FIRST_PUBLIC, RETIRED_PUBLIC, PLAY_WORKER} from "../tools/release-pages.mjs";
+import {readFileSync, mkdtempSync, rmSync} from "node:fs";
+import {execFileSync} from "node:child_process";
+import os from "node:os";
+import path from "node:path";
+import {build, worktreeSource, verify, releaseBranch, refuseDropTables, commitRelease, transform, referencesOf, workerModules, PROFILES, NEVER, PAGES, FIRST_PUBLIC, RETIRED_PUBLIC, PLAY_WORKER} from "../tools/release-pages.mjs";
 
 let checks = 0;
 const ok = (value, message) => {assert.ok(value, message); checks++;};
@@ -221,5 +224,36 @@ for (const name of ["cloud-production", "cloud-production-standby"]) {
   ]) ok(verify(playConfig(b, x => {mutate(x);return x;}),p).some(v=>v.includes(message)), `${name} refuses ${label}`);
 }
 eq(releaseBranch("cloud-staging"), "release/cloud-staging", "staging keeps its separate release record");
+
+/* ONCE THE TABLE CLASS IS ON PRODUCTION'S WORKER, NO RELEASE DROPS IT (tools/release-pages.mjs, refuseDropTables). A
+   standby or Play release registers GameTable on crankmagic; a pages release committed after it could never deploy. */
+eq([refuseDropTables(null, "pages"), refuseDropTables("pages", "pages"), refuseDropTables("cloud-production-standby", "cloud-production"),
+  refuseDropTables("cloud-production", "cloud-production-standby"), refuseDropTables("cloud-production-standby", "cloud-production-standby")],
+  [null, null, null, null, null], "pages after pages, and any release with tables after one with them, is never refused");
+for (const previous of ["cloud-production-standby", "cloud-production"]) {
+  const refusal = refuseDropTables(previous, "pages");
+  ok(typeof refusal === "string" && refusal.includes(`a ${previous} release`) && /Build cloud-production-standby .* or cloud-production instead/.test(refusal),
+    `pages after ${previous} is refused, saying what is there and what to build instead`);
+}
+{
+  /* The real commit path, in a repository of its own: a standby release, then pages on top of it. */
+  const root = mkdtempSync(path.join(os.tmpdir(), "release-guard-"));
+  try {
+    const g = (...args) => execFileSync("git", ["-C", root, ...args], {encoding: "utf8"}).trim();
+    g("init", "-q"); g("config", "user.name", "release-guard"); g("config", "user.email", "release-guard@example.invalid");
+    const release = (profile) => new Map([["version.json", Buffer.from(JSON.stringify({commit: "0".repeat(40), profile}))], ["index.html", Buffer.from(profile)]]);
+    const standby = commitRelease(release("cloud-production-standby"), {commit: "0".repeat(40), version: "v1", profileName: "cloud-production-standby", root});
+    eq([standby.branch, standby.unchanged, g("rev-parse", "refs/heads/release/pages")], ["release/pages", false, standby.commit], "a standby release commits to release/pages");
+    let refused = null;
+    try { commitRelease(release("pages"), {commit: "0".repeat(40), version: "v2", profileName: "pages", root}); } catch (error) { refused = error.message; }
+    ok(refused?.includes("registered the GameTable Durable Object"), "and pages on top of it is refused by the commit itself");
+    eq(g("rev-parse", "refs/heads/release/pages"), standby.commit, "leaving release/pages where it was");
+    const play = commitRelease(release("cloud-production"), {commit: "0".repeat(40), version: "v3", profileName: "cloud-production", root});
+    eq(g("rev-parse", "refs/heads/release/pages^"), standby.commit, "while a cloud-production release commits on top of the standby");
+    ok(play.unchanged === false, "as a new release");
+  } finally {
+    rmSync(root, {recursive: true, force: true});
+  }
+}
 
 console.log(`release-pages: ${checks} checks passed — ${files.length} files, Play out, Coming Soon in, nothing that never ships.`);
