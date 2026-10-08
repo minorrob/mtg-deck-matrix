@@ -731,6 +731,26 @@ export function compileScript(script) {
       keywords.push("Backup");
       return;
     }
+    /* CUMULATIVE UPKEEP [COST] (CR 702.24a): "At the beginning of your upkeep, if this permanent is on the battlefield, put an
+       age counter on this permanent. Then you may pay [cost] for each age counter on it. If you don't, sacrifice it." -- the
+       keyword IS that triggered ability: its intervening "if" (CR 603.4), an age counter, and "unless you pay" asked of its
+       controller (effects/asking.mjs, unlessPays) with the cost counted as it is asked, every age counter on it then
+       (702.24b), all of it or none. Generic mana is paid as any generic amount is; a cost with colored symbols, that cost once
+       for each counter. A mana cost only, yet. */
+    if (word === "cumulative upkeep") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      let parsed = null;
+      try { parsed = cost.length === 1 && cost[0]?.atom === "mana" ? parseManaCost(cost[0].cost ?? "") : null; } catch { /* refused below */ }
+      if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`${ability.text}: a cumulative upkeep cost of mana, once`);
+      const generic = Boolean(parsed) && parsed.symbols.every((s) => s.kind === "generic");
+      const ages = {countersOn: "self", counter: "age"};
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.upkeep({}), condition: {present: {self: true}},
+        effects: [{effect: "putCounter", targets: "self", counter: "age", count: 1},
+          {effect: "unlessPays", ...(generic ? {amount: {...ages, times: parsed.generic}} : {mana: String(cost[0]?.cost ?? ""), manaTimes: ages}),
+            effects: [{effect: "moveZone", targets: "self", sacrifice: true}]}]});
+      keywords.push("Cumulative upkeep");
+      return;
+    }
     /* FLASHBACK (CR 702.34a): the keyword with its cost, a list of atoms -- a mana cost, and "pay 3 life" -- kept as a
        static ability so the card carries it into its graveyard (rules/actions.mjs offers the cast there). Only on an
        instant or sorcery: "if the resulting spell is an instant or sorcery spell". */

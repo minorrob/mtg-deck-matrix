@@ -804,7 +804,8 @@ export const unlessPays = {
        nothing happens. */
     if (params.ifPaid && !params.life && !params.discard && !params.sacrifice && !params.returnToHand && !canPayGeneric(state, payer, Math.max(0, params.amount ?? 0))) return false;
     state.awaiting = {kind: "effect-choice", effect: "unlessPays", player: payer, amount: Math.max(0, params.amount ?? 0),
-      ...(typeof params.mana === "string" && params.mana ? {mana: params.mana} : {}),
+      /* "For each age counter on it" (cumulative upkeep with colored symbols, CR 702.24a): the cost that many times, counted now. */
+      ...(typeof params.mana === "string" && params.mana ? {mana: params.manaTimes === undefined ? params.mana : params.mana.repeat(amountOf(state, params.manaTimes, context))} : {}),
       ...(params.life !== undefined ? {life: params.life} : {}), ...(params.discard ? {discard: params.discard} : {}), ...(params.sacrifice ? {sacrifice: structuredClone(params.sacrifice)} : {}),
       ...(params.sacrificeCount ? {sacrificeCount: params.sacrificeCount} : {}),
       ...(params.returnToHand ? {returnToHand: structuredClone(params.returnToHand)} : {}),

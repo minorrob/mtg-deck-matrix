@@ -205,7 +205,11 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   Evolve: "putCounter",
   /* Backup N (CR 702.165a; Guardian Scalelord, Train B X11): the enters trigger, N +1/+1 counters on target creature, and
      another creature given the abilities printed below until end of turn (cards/index.mjs). */
-  Backup: "putCounter"};
+  Backup: "putCounter",
+  /* Cumulative upkeep (CR 702.24a; Mystic Remora, Train B X11): the upkeep trigger, its intervening "if", an age counter,
+     and "sacrifice it unless you pay" its mana cost once for each age counter, generic or colored (cards/index.mjs,
+     effects/asking.mjs). Named, not built: a cost that is not mana (life, a sacrifice, a discard). */
+  "Cumulative upkeep": "unlessPays"};
 
 /* "PROTECTION FROM [QUALITY]" printed as a keyword (CR 702.16a; Karmic Guide's "protection from black"): built for the
    qualities rules/protection.mjs reads -- a color, a card type, everything -- compiled from the keyword (cards/index.mjs).

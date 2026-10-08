@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1197,
+  "defined": 1198,
   "provisional": 28,
-  "everyRule": 2534
+  "everyRule": 2535
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -1015,8 +1015,8 @@
      "forge": "Cumulative upkeep",
      "top": 1,
      "all": 80,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
