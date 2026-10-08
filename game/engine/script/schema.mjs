@@ -41,6 +41,7 @@ import {amountProblems, AMOUNT_PARAMS} from "./amount.mjs";
 import {conditionProblems} from "./condition.mjs";
 import {isCreatureType} from "../keywords/types.mjs";
 import {parseManaCost} from "../rules/mana.mjs";
+import {CONTROL_DURATIONS} from "./effects/permanents.mjs";
 
 /* The facts about a target an effect may name where it takes a number (script/bind.mjs). */
 const FACT_KEYS = ["powerOf", "manaValueOf", "controllerOf"];
@@ -106,6 +107,14 @@ function checkEffect(effect, path, errors) {
     for (const n of targetRefs(effect.effects ?? []))
       if (n < 0 || n >= (effect.targets ?? []).length) errors.push({path: `${path}.effects`, message: `A reflexive trigger's effect names target ${n}, and it declares ${(effect.targets ?? []).length}`});
   }
+  /* What a permanent put onto the battlefield is required to attack (CR 508.1d): "that opponent this turn" (encore), or
+     anyone "this combat" (Legion Warboss) -- effects/permanents.mjs, afterwards. */
+  if (effect.mustAttack !== undefined && !["that player", "this combat"].includes(effect.mustAttack))
+    errors.push({path: `${path}.mustAttack`, message: "What it must attack is \"that player\" (this turn) or anyone \"this combat\""});
+  /* Control for the turn, or "for as long as this creature remains on the battlefield" (CR 611.2b; Sower of Temptation),
+     or for good when unsaid (effects/permanents.mjs). */
+  if (name === "gainControl" && effect.until !== undefined && !CONTROL_DURATIONS.includes(effect.until))
+    errors.push({path: `${path}.until`, message: `Control is gained for good, or until ${CONTROL_DURATIONS.join(" or ")}`});
   /* "Exile ... until this leaves the battlefield" (CR 610.3): the one "until" the engine returns from. */
   if (name === "exileUntil" && effect.until !== "this leaves")
     errors.push({path: `${path}.until`, message: "exileUntil returns what it exiled when its source leaves the battlefield: `until: \"this leaves\"`"});

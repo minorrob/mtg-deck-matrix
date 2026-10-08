@@ -9,16 +9,16 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1195,
+  "defined": 1196,
   "provisional": 28,
-  "everyRule": 2525
+  "everyRule": 2527
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 42,
+    "built": 43,
     "partial": 0,
-    "named": 16,
+    "named": 15,
     "missing": 136
    },
    "entries": [
@@ -878,13 +878,13 @@
      "kind": "keyword ability",
      "rule": "702.134",
      "name": "Mentor",
-     "engine": null,
-     "status": "named",
+     "engine": "Mentor",
+     "status": "built",
      "forge": "Mentor",
      "top": 2,
      "all": 19,
-     "blocks": 2,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -8947,7 +8947,7 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 94,
+     "blocks": 93,
      "alone": 26
     },
     {
@@ -9314,10 +9314,10 @@
   },
   "Amounts the game counts": {
    "tally": {
-    "built": 15,
+    "built": 16,
     "partial": 1,
     "named": 0,
-    "missing": 172
+    "missing": 171
    },
    "entries": [
     {
@@ -10331,10 +10331,10 @@
     {
      "kind": "count",
      "rule": null,
-     "name": "LastStateBattlefieldWithFallback",
-     "engine": null,
-     "status": "missing",
-     "forge": "LastStateBattlefieldWithFallback",
+     "name": "Cards that left your graveyard this turn",
+     "engine": "amount {cardsLeftGraveyardThisTurn: \"you\" | \"that player\"} (state/index.mjs keeps it, rules/turn.mjs clears it)",
+     "status": "built",
+     "forge": "LeftGraveyardThisTurn",
      "top": 0,
      "all": 8,
      "blocks": 0,
@@ -10343,10 +10343,10 @@
     {
      "kind": "count",
      "rule": null,
-     "name": "LeftGraveyardThisTurn",
+     "name": "LastStateBattlefieldWithFallback",
      "engine": null,
      "status": "missing",
-     "forge": "LeftGraveyardThisTurn",
+     "forge": "LastStateBattlefieldWithFallback",
      "top": 0,
      "all": 8,
      "blocks": 0,

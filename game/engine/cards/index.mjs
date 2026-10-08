@@ -589,6 +589,17 @@ export function compileScript(script) {
       keywords.push("Prowess");
       return;
     }
+    /* MENTOR (CR 702.134a; Legion Warboss): "Whenever this creature attacks, put a +1/+1 counter on target attacking creature
+       with lesser power" -- the keyword IS that triggered ability; "lesser power" is less than this creature's power as it
+       resolves, or as it last was if it has left (script/filter.mjs, `power.lessThan: "self"`; CR 608.2b). Instances
+       trigger separately (702.134b). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "mentor") {
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.attacks({who: "self"}),
+        targets: [{what: "permanent", types: ["Creature"], attacking: true, power: {lessThan: "self"}}],
+        effects: [{effect: "putCounter", targets: {target: 0}, counter: "+1/+1", count: 1}]});
+      keywords.push("Mentor");
+      return;
+    }
     /* INCREMENT (the live-game plan of 2026-10-04; Berta, Wise Extrapolator): "Whenever you cast a spell, if the amount of
        mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature" -- the
        keyword IS that triggered ability, its "if" an intervening one (CR 603.4): the mana spent on that spell (CR 601.2h),
