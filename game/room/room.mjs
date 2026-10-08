@@ -455,9 +455,9 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
 
   /* Everything since the last save, then the checkpoint, then the room's own record (which names it). */
   async function persist() {
-    const events = journal.events();
-    await store.appendEvents(events.slice(saved));
-    saved = events.length;
+    const fresh = journal.events(saved);
+    await store.appendEvents(fresh);
+    saved += fresh.length;
     await store.appendTape(unsaved);
     unsaved = [];
     const point = journal.checkpoint(state, rng.checkpoint());

@@ -669,9 +669,11 @@ export const nextRecord = (state, fits) => (state.effects ?? []).find((e) => e.r
  * now, wherever it went (CR 400.7). Called with every departure (effects/zones.mjs, returnExiledUntil).
  */
 export function controlSourceLeft(state, departed, events = []) {
-  for (let record; (record = nextRecord(state, (e) => e.until === "this leaves" && e.source === departed));) endControlChange(state, record, events);
+  /* Its own records first: a Sower that took itself (its trigger's only target) has one it is both the source and the
+     subject of, and nothing is left to give back (G1, 2026-10-08). */
   if (state.effects?.some((e) => e.rule === "control-returns" && e.affects.ids[0] === departed))
     state.effects = state.effects.filter((e) => !(e.rule === "control-returns" && e.affects.ids[0] === departed));
+  for (let record; (record = nextRecord(state, (e) => e.until === "this leaves" && e.source === departed));) endControlChange(state, record, events);
 }
 
 /**
