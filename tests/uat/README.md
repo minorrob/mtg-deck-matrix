@@ -11,10 +11,11 @@ quota abort, backup/restore, construction, graph, offline and mobile) and `tour-
 `play-journeys.mjs` is Play's journey through the real UI (Part 7's G-B, `docs/plan-to-done-2026-09-30.md`): two
 four-seat tables, Rob at a desk and Maya on a phone held sideways with two AIs, through New table, the invite link,
 decks from the library by name (all seven of Rob's decks take a seat), the countdown, the game played through the
-board's own buttons, every view at 1280, 1400, 1920 and 2560, the Coach, End game and the record, with the hidden
-information read from every frame. It serves itself (no port) and plays the cards as the engine's vanilla versions
-of themselves until M4 and G1; `UAT_SHOTS=<dir>` writes each view at each size, and `JOURNEY_TURNS` sets how far each
-table plays (6). It runs only when asked, like the release journeys.
+board's own controls with the decks' own cards, every view at 1280, 1400, 1920 and 2560, the Coach, End game and the
+record, with the hidden information read from every frame and each person's wait timed. It serves itself (no port);
+`UAT_SHOTS=<dir>` writes each view at each size, and `JOURNEY_TURNS` sets how far each table plays (12). It runs only
+when asked, like the release journeys. A person's seat is answered through the board by `board-person.mjs`, as the
+house pilot would answer it, which `real-deck-game.mjs` (a whole game of D2 or D5 to its natural end) shares.
 
 `crankmagic-recovery.mjs` and `legacy-journeys.mjs` were removed with the pages they
 walked. matrix.html, legacy-decks.html and legacy-graph.html are retired; a journey

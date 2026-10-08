@@ -27,7 +27,26 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 
 **The two that did not finish -- Rob's call (pod 5, D6 in the person's seat, seeds 54 and 90).** Krenko, Mob Boss with Intruder Alarm is a legal infinite combo, and four activations a turn on every player's turn still compound: by turn 50, 4,000 Goblins and 7,059 triggers on the stack. Every trigger resolving asks the person a question, and every answer saves the whole game; at a thousand permanents each resolution is about 0.2 s, and it grows with the board. Rob can do this with his own deck, and a Durable Object has 30 s of CPU per request, so a real game would stall the same way. The options: (1) a shortcut -- "pass until the stack is empty" or "repeat N times" (CR 732.2a), one decision for a thousand identical triggers, as the digital games have it; recommended. (2) A cap on the board's size. (3) Deeper engine work (incremental saves, cheaper derivations), which helps but cannot keep up with doubling alone. G1 is clean except these two, and closes when one of these is chosen and built. #679 merged on main 8787d103 on green Actions.
 
-**G-C again, 8787d103:** released to `release/cloud-staging` f903322f (release-acceptance 22, play-e2e 35); deployed at 20:17:26 UTC as version e00791d2, byte-identical to the release's dry-run bundle (2,420,554 bytes, sha256 21d7b7ee…). The first attempt was held back by the script itself: play-e2e's two-people step timed out on a Pass button the board had just redrawn away (isEnabled on a vanished element waits its 30 s); the walk now reads a vanished control as "not now" (PR #680), and walked clean, 35 checks.
+**G-C again, 8787d103:** released to `release/cloud-staging` f903322f (release-acceptance 22, play-e2e 35); deployed at 20:17:26 UTC as version e00791d2, byte-identical to the release's dry-run bundle (2,420,554 bytes, sha256 21d7b7ee…). The first attempt was held back by the script itself: play-e2e's two-people step timed out on a Pass button the board had just redrawn away (isEnabled on a vanished element waits its 30 s); the walk now reads a vanished control as "not now" (PR #680), and walked clean, 35 checks. #680 merged on main 9c5fb728 on green Actions.
+
+**X14, `play-journeys` on the seven real decks (PR #681, 2026-10-08).** G-B's Play journey played vanilla stand-ins
+of every card; it now plays the decks' own cards (`tableCards`, all 477 defined). A person's seat is answered through
+the board's own controls as the house pilot would answer it, a target, mode, payment or order included
+(`tests/uat/board-person.mjs`, shared with `real-deck-game.mjs`), and the table's slices are carried on by its alarm,
+as the Worker's are. Two four-seat tables, D1-D4 and D5-D7 with D1, Rob at a desk and Maya on a phone held sideways,
+to turn 12: **58 checks** -- 172 answers through the board, no AI answer refused, the decks' own abilities and triggers
+on the stack, no other seat's hand or library named in any frame, every view at 1280, 1400, 1920 and 2560 and the
+phone, the phone's hand, a concession from the phone's settings with the game going on, the Coach, End game and the
+record. **The person's waits, in this process: median 292 ms, the longest 1.0 s** (1.9 s with two other browser runs
+sharing the four cores; from a click to the room's next question to a person; over the network it still needs a
+browser on a real network, Rob's or Grok Bot's). D5's whole
+game through two browsers on the shared helper: 13 checks, a natural end, none refused. The harness note for Grok Bot
+(`docs/playtest-harness.md`) now names the controls a real card's questions use, says what a refusal looks like, and
+points at `board-person.mjs` as the worked example; `tests/playtest-harness.mjs` (new, 139 checks) holds every control,
+id, class, attribute and file the note names to the page and the repository, and every control and id to a test that
+uses it. It found four the note named and no test pressed: Copy link and Withdraw now in `table-lobby` (71 checks:
+the clipboard holds the link; a withdrawn link no longer works), the phone's hand and Concede in `play-journeys`.
+Breaks: 3 of 3 in `play-journeys`, 7 of 7 in `playtest-harness`.
 
 ## Cloud production Play preparation, October 7, 2026
 

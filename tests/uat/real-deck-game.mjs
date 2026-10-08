@@ -19,7 +19,6 @@
  * REAL_DECKS_REQUIRED=1 refuses a missing browser; UAT_SHOTS=<dir> saves each end screen.
  * This deliberate full-game acceptance run is outside the regular suite inventory.
  */
-import {housePilot} from "../../game/engine/pilots/house-pilot.mjs";
 import assert from "node:assert/strict";
 import {readFileSync, mkdirSync} from "node:fs";
 import path from "node:path";
@@ -28,6 +27,7 @@ import {basicCards} from "../../game/room/room.mjs";
 import {GameTable, tableCards} from "../../cloud/game-room.mjs";
 import {build, worktreeSource} from "../../tools/release-pages.mjs";
 import {joinLocation} from "../../cloud/worker.mjs";
+import {boardPerson} from "./board-person.mjs";
 
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1; console.log(`  ok  ${m}`);};
@@ -168,59 +168,12 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
 
   const alarm = setInterval(() => {if(tableFor(id).room?.continuing) serial(() => tableFor(id).alarm());}, 50);
   alarms.push(alarm);
-  const pilots = [0,1].map(seat => housePilot({seat, cards: tableCards}));
-  let actions = 0, reloaded = false;
   const current = person => viewsAt(person.email, id).at(-1);
-  async function visible(page, selector) {
-    const items = page.locator(selector);
-    for (let i=0; i<await items.count(); i++) if(await items.nth(i).isVisible()) return items.nth(i);
-    return null;
-  }
-  async function click(page, selector) {
-    const element = await visible(page, selector);
-    assert.ok(element, `visible control ${selector}`);
-    await element.click({timeout:10000});
-  }
+  const people = [[rob,0],[maya,1]].map(([person,seat]) => boardPerson({page: person.page, seat, cards: tableCards, current: () => current(person)}));
+  let actions = 0, reloaded = false;
   async function answer(person, seat) {
-    const v=current(person), d=v?.decision, page=person.page;
-    if (!d || v.status==='finished') return false;
-    const closed = await visible(page, '[data-action=board-went-close]');
-    if(closed) await closed.click();
-    if (d.kind==='draw') await click(page,'[data-action=board-draw]:not([disabled])');
-    else if (d.kind==='priority') {
-      const options=d.options.map(o=>({kind:o.act,objectId:o.cardId,label:o.label,option:o}));
-      const chosen=pilots[seat].choose(v.state,options).option;
-      if(chosen.act==='pass') await click(page,'[data-action=board-pass]:not([disabled])');
-      else {
-        if(!await visible(page, `#cm-board-decision [data-action=board-option][data-index="${chosen.index}"]`)) {
-          const also=await visible(page,'[data-action=board-also]');
-          if(also) await also.click();
-        }
-        const exact=await visible(page,`[data-action=board-option][data-index="${chosen.index}"]`);
-        if(exact) await exact.click();
-        else {
-          const chooser=await visible(page,`[data-action=board-choose][data-card="${chosen.cardId}"]`);
-          if(chooser) {await chooser.click(); await click(page,`[data-action=board-zoom-do][data-index="${chosen.index}"]`);}
-          else {
-            const grouped=d.options.find(o=>o.act===chosen.act&&o.label===chosen.label);
-            await click(page,`[data-action=board-option][data-index="${grouped.index}"]`);
-          }
-        }
-      }
-    } else {
-      const picked=pilots[seat].answer(v.state,d);
-      if(picked.amounts) {
-        for(let i=0;i<picked.amounts.length;i++) {
-          const field=await visible(page,`[data-board-amount="${i}"]`);
-          assert.ok(field,`amount input ${i}`); await field.fill(String(picked.amounts[i])); await field.press('Tab');
-        }
-      } else for(const i of picked.indices??[]) await click(page,`[data-action=board-option][data-index="${i}"]`);
-      if(['many','order','ack','damage','amount'].includes(d.mode)) await click(page,'[data-action=board-confirm]:not([disabled])');
-    }
+    if (!await people[seat]()) return false;
     actions++;
-    const began=Date.now();
-    while(current(person)?.revision===v.revision && Date.now()-began<15000) await page.waitForTimeout(20);
-    assert.notEqual(current(person)?.revision,v.revision,`action advances ${d.title}`);
     if(actions%25===0) console.log(`${DECK_ID} browser: ${actions} actions, turn ${current(person).state.turn}`);
     return true;
   }
