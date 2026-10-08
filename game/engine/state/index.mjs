@@ -117,7 +117,9 @@ function assertZone(state, zone, player) {
   }
 }
 
-const listFor = (state, zone, player) => (PER_PLAYER.includes(zone) ? state.zones[zone][player] : state.zones[zone]);
+/* A phased-out permanent's list is `phasedOut` (effects/permanents.mjs, phaseOut): it is in no zone a player sees (CR 702.26b),
+   and still leaves one when its owner leaves the game or it is exiled (CR 702.26k, 800.4a). */
+const listFor = (state, zone, player) => (PER_PLAYER.includes(zone) ? state.zones[zone][player] : zone === "phased" ? state.phasedOut : state.zones[zone]);
 
 /**
  * Put a new object into a zone. Returns its id.

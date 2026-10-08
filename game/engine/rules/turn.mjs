@@ -634,7 +634,10 @@ export function advance(state) {
        on the way here, since an effect lasting until that player's next turn lasts until that turn would have begun (CR
        800.4m: Reflector Mage's controller conceding does not lock a name for the rest of the game). */
     /* An extra turn passes over nobody's seat: no turn of anyone else's would have begun before it (CR 500.7). */
-    const reached = [...(extra ? [] : skippedSeats(state, orderFrom, state.activePlayer)), state.activePlayer];
+    const passed = extra ? [] : skippedSeats(state, orderFrom, state.activePlayer), reached = [...passed, state.activePlayer];
+    /* A permanent that phased out under a player who has since left the game phases in during the untap step after their
+       next turn would have begun: this turn's (CR 702.26n). */
+    for (const id of state.phasedOut ?? []) if (passed.includes(state.objects[id].phasedOut.player)) state.objects[id].phasedOut.player = state.activePlayer;
     /* "Until your next turn" (goad, CR 701.15a): over as that player's turn begins. */
     state.effects = (state.effects ?? []).filter((e) => !(e.until === "your-next-turn" && reached.includes(e.sourceController)));
     /* And "until that player's next turn" (Teferi's Reproach): over as that player's turn begins. */

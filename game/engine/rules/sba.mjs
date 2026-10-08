@@ -44,7 +44,7 @@
  * implemented is worse than a missing one.
  */
 
-import {moveObject, PER_PLAYER, PUBLIC_ZONES, eventCard, rememberExileLooker} from "../state/index.mjs";
+import {moveObject, removeObject, PER_PLAYER, PUBLIC_ZONES, eventCard, rememberExileLooker} from "../state/index.mjs";
 import {applyReplacements, regenerated} from "./replacement.mjs";
 import {lastKnown, toughnessOf, typesOf, keywordsOf, controllerOf, deriving} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
@@ -103,7 +103,9 @@ function lossReason(state, player) {
 
 /* CR 800.4a: when a player leaves the game, their permanents, spells and cards leave with it. A
    board that keeps a dead player's creatures is a board nobody can read, and every later rule that
-   counts permanents would count theirs. */
+   counts permanents would count theirs. In order: everything they own leaves -- every zone, the stack and
+   phasing included -- and every effect giving them control ends; then what they control on the stack that
+   no card of theirs represents ceases to exist; then whatever they still control is exiled. */
 function removePlayerFromBoard(state, playerId, events) {
   for (const id of [...state.zones.battlefield]) {
     if (state.objects[id]?.owner !== playerId) continue;
@@ -121,6 +123,24 @@ function removePlayerFromBoard(state, playerId, events) {
     /* It left the battlefield: what it exiled "until this leaves the battlefield" comes back (CR 610.3). */
     returnExiledUntil(state, id, events);
   }
+  /* Their phased-out permanents too, and no zone-change ability triggers (CR 702.26k): treated as though they do not exist
+     (702.26b), they leave the game unseen. */
+  for (const id of (state.phasedOut ?? []).filter((x) => state.objects[x].owner === playerId)) removeObject(state, id);
+  /* And every card of theirs anywhere else: their hand, library, graveyard and command zone, which hold their cards alone
+     (CR 400.3), and what of theirs is in exile. Leaving the game is no move to a zone, so nothing is said of each -- a
+     hand and a library stay hidden as they go (the history names none of it; projection.mjs shows the zones empty). */
+  for (const zone of PER_PLAYER) for (const id of [...state.zones[zone][playerId]]) removeObject(state, id);
+  for (const id of state.zones.exile.filter((x) => state.objects[x].owner === playerId)) removeObject(state, id);
+  /* The stack: a spell whose card is theirs -- a copy is its controller's, CR 707.10 -- leaves with them, and an ability
+     they control, which no card represents, ceases to exist. One that was resolving takes the rest of its resolution with
+     it, and whatever it was asking (concede, below, passes priority on). */
+  for (const entry of [...state.stack]) {
+    const object = entry.objectId === null ? null : state.objects[entry.objectId];
+    if (!(object ? object.owner === playerId : entry.playerId === playerId)) continue;
+    state.stack.splice(state.stack.indexOf(entry), 1);
+    if (object) removeObject(state, entry.objectId);
+    if (entry.stage === "resolving") cutShort(state);
+  }
   /* And every effect that gives them control of an object ends -- for good, for the turn, for as long as -- each spliced out
      of its permanent's changes in timestamp order (effects/permanents.mjs, endControlChange): the permanent goes back to
      its owner, or to whoever a change still in effect gives it (CR 800.4a, 613.7). */
@@ -128,6 +148,19 @@ function removePlayerFromBoard(state, playerId, events) {
   /* Then whatever they control still -- a permanent of someone else's that entered under their control, with no effect to
      end -- is exiled (CR 800.4a). */
   for (const id of state.zones.battlefield.filter((x) => state.objects[x].controller === playerId)) moveOne(state, id, "exile", events);
+  /* A phased-out one, unseen as it goes (CR 702.26b, 702.26n). */
+  for (const id of (state.phasedOut ?? []).filter((x) => state.objects[x].controller === playerId)) moveObject(state, id, "exile");
+  /* And a spell they control whose card is another's -- one they were let cast from someone's exile. */
+  for (const entry of state.stack.filter((e) => e.playerId === playerId)) {
+    if (entry.stage === "resolving") cutShort(state);
+    moveOne(state, entry.objectId, "exile", events);
+  }
+}
+/* A spell or ability that was resolving has left the stack with the player who left (800.4a): nothing is left of it to
+   resolve, and a question it was asking anyone is withdrawn. */
+function cutShort(state) {
+  state.resolving = null;
+  if (state.awaiting?.kind === "effect-choice") state.awaiting = null;
 }
 
 /**
@@ -382,7 +415,16 @@ export function concede(state, playerId) {
   if (player.lost) throw new Error("That player has already left the game");
   player.conceded = true;
   if (state.awaiting && state.awaiting.player === playerId) state.awaiting = null;
+  const resolving = Boolean(state.resolving);
   const events = checkStateBasedActions(state);
+  /* Their own spell or ability was resolving and has gone with them (removePlayerFromBoard): priority goes on as after any
+     resolution, to the active player -- or, the active player gone, the next in turn order still in the game (CR 117.3b,
+     800.4j). */
+  if (resolving && !state.resolving && !gameOver(state)) {
+    const count = state.players.length;
+    state.priorityPlayer = [...Array(count).keys()].map((k) => (state.activePlayer + k) % count).find((at) => !state.players[at].lost);
+    state.passes = 0;
+  }
   if (state.priorityPlayer === playerId) {
     const count = state.players.length;
     let next = null;
