@@ -805,10 +805,6 @@ export function compileScript(script) {
 
     if (ability.kind === "spell") {
       if (spell) problems.push("a second spell ability: one card, one spell");
-      /* What an alternative cost (CR 118.9) may be made of: mana or none, life, a card exiled from the hand, a sacrifice. */
-      for (const alt of (script.abilities ?? []).filter((a) => a?.kind === "static" && a.rule === "alternative-cost"))
-        for (const atom of alt.cost ?? []) if (!["mana", "payLife", "exileFromHand", "sacrifice"].includes(atom?.atom) || (atom.atom === "sacrifice" && !atom.selector))
-          problems.push(`${alt.text}: an alternative cost of ${atom?.atom ?? "something"} nothing pays yet`);
       for (const atom of ability.additionalCost ?? []) {
         /* "Blight 1 or pay {3}" (Bogslither's Embrace): a choice between two or more additional costs, each a list of the atoms
            below or mana, each choice its own offer (rules/actions.mjs, additionalVariants). */
@@ -984,6 +980,16 @@ export function compileScript(script) {
        for it), its cost the cards to exile. */
     if (ability.kind === "static" && ability.rule === "escape")
       problems.push(...escapeCostProblems(ability.cost, {given: true}).map((problem) => `${ability.text}: ${problem}`));
+    /* What an alternative cost (CR 118.9) may be made of, on any card: mana or none, life, a card exiled from the hand, a
+       sacrifice -- and, cast from the graveyard (`zone: "graveyard"`: "you may cast this card from your graveyard by paying
+       {3}{R} and exiling four other cards from your graveyard", Squee, Dubious Monarch), other cards of it to exile, a number
+       (rules/actions.mjs, alternativeCosts). */
+    if (ability.kind === "static" && ability.rule === "alternative-cost") {
+      for (const atom of ability.cost ?? []) if (!["mana", "payLife", "exileFromHand", "sacrifice"].includes(atom?.atom) || (atom.atom === "sacrifice" && !atom.selector))
+        if (!(ability.zone === "graveyard" && atom?.atom === "exileFromGraveyard" && atom.self !== true && Number.isInteger(atom.count) && atom.count >= 1))
+          problems.push(`${ability.text}: an alternative cost of ${atom?.atom ?? "something"} nothing pays yet`);
+      if (ability.zone !== undefined && ability.zone !== "graveyard") problems.push(`${ability.text}: an alternative cost is cast from where it is, or from the graveyard (\`zone: "graveyard"\`)`);
+    }
     /* What follows a prevention is done at once, inside the damage event (CR 615.5): nothing in it may stop to ask. */
     if (ability.kind === "replacement") for (const effect of ability.change?.then ?? [])
       if (!EFFECTS[effect?.effect]) problems.push(`${ability.text}: ${effect?.effect} follows a prevention, and it asks a question or is not built`);

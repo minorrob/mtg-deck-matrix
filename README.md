@@ -716,8 +716,9 @@ two ways to make {W}, one only for a legendary spell; Purphoros an attacker only
 `engine-x11-costs` holds the costs X11's costs worker built, each paid with what the player picks: Burn at the Stake's "tap
 any number of untapped creatures you control" (one offer, asked once taken, never tapped for), Cathartic Reunion's two
 discards, the mana abilities that tap another creature (Jaspera Sentinel, Saruli Caretaker) or exile a card from the
-graveyard (Rubble Rouser, with its "when you do"), and Lorehold Excavation's creature card exiled; four players, both
-pilots' answers, the refusals, and no payer ever choosing the creature or the card for the player.
+graveyard (Rubble Rouser, with its "when you do"), Lorehold Excavation's creature card exiled, and Squee, Dubious
+Monarch's alternative cost from the graveyard, four other cards exiled (no escape); four players, both pilots' answers, the
+refusals, and no payer ever choosing the creature or the card for the player.
 `engine-x11-filters` holds the selector keys and the condition X11's costs worker built: "whose power and toughness aren't
 equal" through the layers (Gilt-Leaf Winnower), "each equipped creature" an Equipment attached and not an Aura (Hemlock
 Vial, its set fixed as it resolves), and Guardian Project's "if it doesn't have the same name as another creature you

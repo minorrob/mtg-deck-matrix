@@ -314,6 +314,13 @@ function costChoice(state, awaiting) {
     return {id: `choose-cost:${action.objectId}`, title: `${name}: tap creatures to convoke it`, mode: "many", min: alone ? 0 : 1, max: Math.min(creatures.length, symbols),
       cost: "convoke", options: named(creatures.map((c) => c.id))};
   }
+  /* A graveyard alternative cost's other cards (Squee, Dubious Monarch): exactly that many of the rest of the graveyard. */
+  const graveWay = action.alternative !== undefined ? alternativeCosts(state, player, action.objectId).find((w) => w.index === action.alternative) : null;
+  if (graveWay?.exileOthers && !Array.isArray(action.othersExiled)) {
+    const n = graveWay.exileOthers;
+    return {id: `choose-cost:${action.objectId}`, title: `${name}: exile ${inWords(n)} other card${n === 1 ? "" : "s"} from your graveyard`, mode: "many", min: n, max: n,
+      cost: "exileOthers", options: named(cardsIn(state, "graveyard", player).filter((id) => id !== action.objectId))};
+  }
   if (action.escape === undefined) {
     const tap = flashbackCost(state, player, action.objectId)?.tap ?? {count: 0, selector: {}};
     return {id: `choose-cost:${action.objectId}`, title: `${name}'s flashback: tap ${tappersInWords(tap)}`, mode: "many", min: tap.count, max: tap.count, cost: "tap",
@@ -335,7 +342,7 @@ export function resolveCastCost(state, awaiting, indices) {
   const ids = picked.map((i) => choice.options[i].cardId);
   const way = choice.cost === "mana" ? castTapPlans(state, awaiting.player, awaiting.action, TAP_CHOICES)[picked[0]] : null;
   const action = {...structuredClone(awaiting.action), ...(choice.cost === "pool" ? {payWith: choice.options[picked[0]].key} : way ? {tapPlan: way.key} : choice.cost === "tap" ? {flashbackTap: ids}
-    : choice.cost === "convoke" ? {convokeTap: ids} : choice.cost === "tapAny" ? {tapChosen: ids} : choice.cost === "sacrifice" ? {sacrificeSet: ids}
+    : choice.cost === "convoke" ? {convokeTap: ids} : choice.cost === "tapAny" ? {tapChosen: ids} : choice.cost === "exileOthers" ? {othersExiled: ids} : choice.cost === "sacrifice" ? {sacrificeSet: ids}
     : choice.cost === "counters" ? {counterSet: picked.map((i) => ({id: choice.options[i].cardId, counter: choice.options[i].counter}))} : {escapeExile: ids})};
   state.awaiting = null;
   state.priorityPlayer = awaiting.player;
@@ -366,6 +373,11 @@ function escapeExiled(state, player, action, way) {
  * ALTERNATIVE COSTS (CR 118.9): the card's own "rather than pay this spell's mana cost" statics whose condition holds now
  * for this player -- each as `{index, mana, life, extra, evoke}`: the mana paid instead ("" for none), the life, the atoms
  * chosen as it is cast (a card exiled from the hand, a permanent sacrificed), and whether it is an evoke cost (CR 702.74a).
+ * One that says `zone: "graveyard"` -- "you may cast this card from your graveyard by paying {3}{R} and exiling four other
+ * cards from your graveyard rather than paying its mana cost" (Squee, Dubious Monarch) -- is `fromGraveyard`, while that
+ * many other cards are in its player's graveyard to exile (`exileOthers`, CR 118.3; which ones, asked once the cast is
+ * taken): offered only for the card in its owner's graveyard (offers, castOffers), and the card's other ways never there.
+ * It is no escape (CR 702.138): what it casts has not escaped.
  */
 export function alternativeCosts(state, player, id) {
   const object = state.objects[id];
@@ -373,13 +385,26 @@ export function alternativeCosts(state, player, id) {
     if (ability.kind !== "static" || ability.rule !== "alternative-cost") return [];
     if (!conditionHolds(state, ability.condition, {controller: player, source: id})) return [];
     const cost = ability.cost ?? [];
+    const others = cost.filter((a) => a.atom === "exileFromGraveyard").reduce((n, a) => n + (a.count ?? 1), 0);
+    if (ability.zone === "graveyard" && cardsIn(state, "graveyard", player).filter((c) => c !== id).length < others) return [];
     return [{index, mana: cost.find((a) => a.atom === "mana")?.cost ?? "", life: cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0),
       extra: cost.filter((a) => a.atom === "exileFromHand" || a.atom === "sacrifice"), evoke: ability.evoke === true,
       /* Impending (CR 702.176a): how many time counters it enters with. */
       ...(Number.isInteger(ability.impending) ? {impending: ability.impending} : {}),
       /* Overload (CR 702.96b): what the spell does cast this way, "each" in place of "target". */
-      ...(ability.overload ? {overload: ability.overload} : {})}];
+      ...(ability.overload ? {overload: ability.overload} : {}),
+      ...(ability.zone === "graveyard" ? {fromGraveyard: true, exileOthers: others} : {})}];
   });
+}
+
+/* The other cards of the graveyard a graveyard alternative cost exiles, as its caster picked them: that many, none twice,
+   each another card in their graveyard. Refused before anything moves, saying what to do instead. */
+function othersPicked(state, player, action, way) {
+  const list = action.othersExiled;
+  const others = cardsIn(state, "graveyard", player).filter((id) => id !== action.objectId);
+  if (!Array.isArray(list) || list.length !== way.exileOthers || new Set(list).size !== list.length || !list.every((id) => others.includes(id)))
+    throw new Error(`Those are not ${inWords(way.exileOthers)} other cards in your graveyard: pick the cards to exile for ${state.objects[action.objectId]?.card ?? "that spell"} again`);
+  return [...list];
 }
 
 /* A spell's additional cost (CR 601.2b, 601.2h): "As an additional cost to cast this spell, discard a card" or
@@ -1026,7 +1051,9 @@ function adventureFrom(state, player, id, from) {
 /* THE WAYS TO CAST ONE CARD NOW (CR 601.2): from where it is (`from`), for which cost -- its mana cost, flashback's, escape's,
    an alternative cost, without paying it -- each an offer, with its targets or modes. `adventure`: as its Adventure (CR 715.3),
    the card shown as one by the caller (withAdventure), so every rule weighs only the Adventure's characteristics (715.3a). */
-function castOffers(state, player, {id, from, flashback, escape, via = null, adventure = false}, tappable) {
+/* `graveyardCost`: cast from the graveyard for an alternative cost that says so (Squee, Dubious Monarch) -- that cost only,
+   never its mana cost, which nothing lets it be cast for from there. */
+function castOffers(state, player, {id, from, flashback, escape, via = null, adventure = false, graveyardCost = false}, tappable) {
   const actions = [];
   const object = state.objects[id];
   /* "If you cast a spell this way, pay life equal to its mana value rather than pay its mana cost" (Bolas's Citadel): the
@@ -1053,7 +1080,8 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
   if (back && !flashbackPayable(state, player, back)) return actions;
   /* The escape cost's mana instead of the mana cost (CR 702.138a); its cards are picked once the offer is taken. */
   const fled = escape ? escapeWays(state, player, id).find((w) => w.kind === escape) ?? null : null;
-  for (const way of [null, ...alternatives]) {
+  /* Cast from the graveyard by its own alternative cost, that cost alone; otherwise the mana cost and every other one. */
+  for (const way of graveyardCost ? alternatives.filter((w) => w.fromGraveyard) : [null, ...alternatives.filter((w) => !w.fromGraveyard)]) {
   if (way && way.life > state.players[player].life) continue;
   for (const variant of additionalVariants([...(object.spell?.additionalCost ?? []), ...(way?.extra ?? [])])) {
   /* Creatures tapped as an additional cost (tapAnyAtom): asked once the cast is taken, and paid from the pool -- never tapped
@@ -1180,6 +1208,8 @@ function offers(state, player) {
     /* Escape (CR 702.138a): from the graveyard, for an escape cost -- each way one offer, its other cards picked once it is
        taken (`castCostChoice`), never one offer per set of them. */
     ...cardsIn(state, "graveyard", player).flatMap((id) => escapeWays(state, player, id).map((way) => ({id, from: "graveyard", escape: way.kind}))),
+    /* And by its own alternative cost from the graveyard (CR 118.9; Squee, Dubious Monarch): its other cards picked once taken. */
+    ...cardsIn(state, "graveyard", player).filter((id) => alternativeCosts(state, player, id).some((w) => w.fromGraveyard)).map((id) => ({id, from: "graveyard", graveyardCost: true})),
   ];
   for (const entry of castable) {
     actions.push(...castOffers(state, player, entry, tappable));
@@ -1354,7 +1384,9 @@ function idle(state, player, actions) {
     const object = state.objects[id];
     if (sorcerySpeed(object) && !hasFlash(state, id) && !flashGranted(state, player, id) && !mainNow) return false;
     const back = flashbackCost(state, player, id);
-    const costs = [back && flashbackPayable(state, player, back) ? back.mana : null, ...escapeWays(state, player, id).map((way) => way.mana)].filter((m) => typeof m === "string");
+    const costs = [back && flashbackPayable(state, player, back) ? back.mana : null, ...escapeWays(state, player, id).map((way) => way.mana),
+      /* And its own alternative cost there (Squee, Dubious Monarch). */
+      ...alternativeCosts(state, player, id).filter((way) => way.fromGraveyard).map((way) => way.mana)].filter((m) => typeof m === "string");
     return costs.some((m) => manaValue(parseManaCost(m)) <= mana);
   });
   if (fromGraveyard) return false;
@@ -1551,6 +1583,12 @@ function performOffered(state, player, action, during) {
       state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
       return [];
     }
+    /* A GRAVEYARD ALTERNATIVE COST'S OTHER CARDS (Squee, Dubious Monarch): the same -- which, asked before anything is paid. */
+    if (action.kind === "cast" && action.alternative !== undefined && !Array.isArray(action.othersExiled)
+      && alternativeCosts(state, player, action.objectId).find((w) => w.index === action.alternative)?.exileOthers) {
+      state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
+      return [];
+    }
     /* A FLASHBACK COST THAT TAPS CREATURES (Battle Screech): the same -- which ones, asked before anything is paid. */
     if (action.kind === "cast" && action.flashback === true && !Array.isArray(action.flashbackTap) && flashbackCost(state, player, action.objectId)?.tap) {
       state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
@@ -1695,6 +1733,8 @@ function performOffered(state, player, action, during) {
     if (action.alternative !== undefined && !way) throw new Error(`${object.card} cannot be cast that way now`);
     if (action.escape !== undefined && !fled) throw new Error(`${object.card} cannot escape now`);
     const exiling = fled && !during ? escapeExiled(state, player, action, fled) : [];
+    /* A graveyard alternative cost's other cards, as its caster picked them (othersPicked). */
+    const othersExiling = way?.exileOthers && !during ? othersPicked(state, player, action, way) : [];
     /* A flashback cost's creatures, as its caster picked them. */
     const tapping = back?.tap && !during ? flashbackTapped(state, player, action, back.tap) : [];
     /* And "tap any number of untapped creatures you control", as its caster picked them (tapAnyPicked). */
@@ -1834,8 +1874,8 @@ function performOffered(state, player, action, during) {
       const paid = kind === "sacrifice" ? sacrificeOne(state, id, events) : moveOne(state, id, kind === "exile" ? "exile" : "graveyard", events, {owner: state.objects[id].owner});
       if (kind === "discard" && paid !== null) events[events.length - 1].data.fields.discarded = true;
     }
-    /* Escape's other cards, exiled as the rest of the cost is paid (CR 601.2h). */
-    for (const id of exiling) if (state.objects[id]) moveOne(state, id, "exile", events, {owner: state.objects[id].owner});
+    /* Escape's other cards, and a graveyard alternative cost's, exiled as the rest of the cost is paid (CR 601.2h). */
+    for (const id of [...exiling, ...othersExiling]) if (state.objects[id]) moveOne(state, id, "exile", events, {owner: state.objects[id].owner});
     /* And a flashback cost's creatures, tapped; and a convoke's (CR 702.51c: they convoked it), for no mana; and the creatures
        an additional cost taps. */
     for (const id of [...tapping, ...(convoke?.ids ?? []), ...tappedAny]) {

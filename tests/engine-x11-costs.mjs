@@ -18,7 +18,7 @@ import {runScenario} from "../game/engine/cards/scenario.mjs";
 import {loadCardIndex, loadCardScripts} from "../game/tools/engine-cards.mjs";
 import {smokeTest} from "../game/engine/cards/compile.mjs";
 import {compileScript} from "../game/engine/cards/index.mjs";
-import {legalActions, applyAction, tapUnits} from "../game/engine/rules/actions.mjs";
+import {legalActions, applyAction, tapUnits, nothingToDo} from "../game/engine/rules/actions.mjs";
 import {awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {passPriority} from "../game/engine/rules/priority.mjs";
 import {canPayGeneric, paymentUnits} from "../game/engine/rules/mana.mjs";
@@ -203,6 +203,61 @@ eq(manaCard([{atom: "{T}"}, {atom: "exileFromGraveyard", selector: {}}]).definit
     oracleText: "x", source: "hand", abilities: [{kind: "activated", text: "x", cost, effects: [{effect: "draw", count: 1}]}]}).problems;
   eq(activated([{atom: "mana", cost: "{5}"}, {atom: "exileFromGraveyard", selector: {types: ["Creature"]}}]), [], "an ability exiling a creature card compiles");
   ok(activated([{atom: "exileFromGraveyard", count: 2, selector: {types: ["Creature"]}}]).length > 0, "and one exiling two is refused");
+}
+
+/* ---- Squee, Dubious Monarch: cast from the graveyard by its own alternative cost, four other cards of it exiled ---- */
+const SQUEE = "Squee, Dubious Monarch", SQ_LANDS = ["Mountain", "Wastes", "Wastes", "Wastes"];
+{
+  const s = table([at(0, "battlefield", ...SQ_LANDS), at(0, "graveyard", SQUEE, "Plains", "Island", "Bear", "Ogre", "Swamp"), at(1, "graveyard", SQUEE, "Elf", "Bear", "Ogre", "Plains")], 4);
+  /* Not tapped for, as an alternative cost never is: the mana first. Then the one offer, Rob's own. */
+  eq(offersOf(s, "cast", SQUEE).length, 0, "with its mana still in the lands it is not offered: an alternative cost is never tapped for");
+  tapFor(s, SQ_LANDS);
+  const casts = offersOf(s, "cast", SQUEE);
+  eq([casts.length, casts[0].from, s.objects[casts[0].objectId].owner, offersOf(s, "cast", SQUEE, 1).length], [1, "graveyard", 0, 0], "one offer, of Rob's own Squee; Maya, without priority, none");
+  const pool = {...s.players[0].manaPool};
+  throws(() => applyAction(s, 0, {...casts[0], othersExiled: cardsIn(s, "graveyard", 0).slice(0, 4)}), /not four other cards in your graveyard: pick the cards to exile for Squee, Dubious Monarch again/,
+    "Squee itself among the four is refused, saying what to do");
+  throws(() => applyAction(s, 0, {...casts[0], othersExiled: [...cardsIn(s, "graveyard", 0).slice(1, 4), cardsIn(s, "graveyard", 1)[1]]}), /not four other cards/, "and one of Maya's cards");
+  throws(() => applyAction(s, 0, {...casts[0], othersExiled: cardsIn(s, "graveyard", 0).slice(1, 4)}), /not four other cards/, "and three");
+  throws(() => applyAction(s, 0, {...casts[0], othersExiled: [...cardsIn(s, "graveyard", 0).slice(1, 4), cardsIn(s, "graveyard", 0)[1]]}), /not four other cards/, "and one card twice");
+  eq([s.stack.length, s.players[0].manaPool, cardsIn(s, "graveyard", 0).length], [0, pool, 6], "and nothing was paid or moved");
+  applyAction(s, 0, casts[0]);
+  const q = awaitingChoice(s);
+  eq([q.cost, q.mode, q.min, q.max, q.options.map((o) => o.label)], ["exileOthers", "many", 4, 4, ["Plains", "Island", "Bear", "Ogre", "Swamp"]],
+    "asked: exactly four of the other cards of his own graveyard");
+  /* The pilots: the house pilot the lands first, then the cheapest; the random one any four of them. */
+  eq(housePilot({seat: 0}).answer(projectFor(s, 0), q).indices.map((i) => q.options[i].label).sort(), ["Bear", "Island", "Plains", "Swamp"], "the house pilot keeps the costliest card, the Ogre");
+  for (let k = 0; k < 8; k += 1) {
+    const {indices} = randomLegalPilot(createRng(`squee-${k}`)).answer(q);
+    ok(indices.length === 4 && new Set(indices).size === 4 && indices.every((i) => q.options[i]), `the random pilot's ${JSON.stringify(indices)} is four of them`);
+  }
+  resolveAwaiting(s, [0, 1, 2, 4]);
+  const entry = s.stack[0];
+  eq([entry.cast?.from, cardsIn(s, "graveyard", 0).map((id) => s.objects[id].card), cardsIn(s, "exile").filter((id) => s.objects[id].owner === 0).length], ["graveyard", ["Ogre"], 4],
+    "cast from the graveyard, the four exiled as it was");
+  resolveAll(s);
+  const squee = idOf(s, SQUEE);
+  eq([s.objects[squee]?.zone, s.objects[squee]?.escaped === true], ["battlefield", false], "on the battlefield, and not escaped: this is no escape (CR 702.138)");
+}
+{
+  /* Two players, so Rob has drawn no land to play: his lands could pay for Squee from his graveyard, and that is something
+     to do -- his priority is not passed for him (nothingToDo). */
+  const s = table([at(0, "battlefield", ...SQ_LANDS), at(0, "graveyard", SQUEE, "Plains", "Island", "Bear", "Ogre")]);
+  eq([cardsIn(s, "hand", 0).length, offersOf(s, "cast", SQUEE).length, nothingToDo(s, 0)], [0, 0, false], "four other cards and the lands to pay: something to do");
+}
+{
+  /* Three other cards: no way to cast it from there, and nothing to do. */
+  const s = table([at(0, "battlefield", ...SQ_LANDS), at(0, "graveyard", SQUEE, "Plains", "Island", "Bear")]);
+  eq([offersOf(s, "cast", SQUEE).length, nothingToDo(s, 0)], [0, true], "three other cards in the graveyard: neither an offer nor anything to do");
+}
+{
+  const alt = (zone, cost) => compileScript({schema: "CrankCardScript@1",
+    identity: {name: "Odd Monarch", oracleId: "x", types: ["Creature"], subtypes: ["Goblin"], manaCost: "{2}{R}", colors: ["R"], colorIdentity: ["R"], power: 2, toughness: 2},
+    oracleText: "x", source: "hand", abilities: [{kind: "static", text: "x", rule: "alternative-cost", ...(zone ? {zone} : {}), affects: {what: "card", self: true}, cost}]}).problems;
+  eq(alt("graveyard", [{atom: "mana", cost: "{3}{R}"}, {atom: "exileFromGraveyard", count: 4}]), [], "from the graveyard, mana and four other cards compiles");
+  ok(alt(undefined, [{atom: "mana", cost: "{3}{R}"}, {atom: "exileFromGraveyard", count: 4}]).some((p) => p.includes("nothing pays yet")), "the other cards are a graveyard cost's alone");
+  ok(alt("graveyard", [{atom: "mana", cost: "{3}{R}"}, {atom: "exileFromGraveyard", count: 0}]).some((p) => p.includes("nothing pays yet")), "and a number, 1 or more");
+  ok(alt("library", [{atom: "mana", cost: "{3}{R}"}]).some((p) => p.includes("or from the graveyard")), "and a zone other than the graveyard is refused");
 }
 
 console.log(`engine-x11-costs: ${checks} checks passed`);
