@@ -326,6 +326,10 @@ try {
       ok(true, "the host starts; both people's boards open on the game");
 
       /* Both play the first turns: keep, draw, pass, and the first answer to anything else. */
+      /* Whether a control is there and enabled now: the board redraws as each question arrives, so one counted a moment
+         ago may be gone -- asked of a vanished element, isEnabled waits its whole 30 s for it to come back (the staging
+         walk of 8787d103, 2026-10-08). Gone is "not now"; `until` asks again. */
+      const enabled = (l) => l.isEnabled({timeout: 2000}).catch(() => false);
       const act = async (p) => {
         const went = p.locator("[data-action=board-went-close]");
         if (await went.count()) {await went.first().click(); return;}
@@ -334,14 +338,14 @@ try {
           assert.ok(!/cannot answer/.test((await d.textContent()) || ""), "the board can answer what it is asked");
           const confirm = d.locator("[data-action=board-confirm]"), opts = d.locator("[data-action=board-option]");
           if (await confirm.count()) {
-            for (let i = 0; i < await opts.count() && !(await confirm.isEnabled()); i++) await opts.nth(i).click();
-            if (await confirm.isEnabled()) await confirm.click();
+            for (let i = 0; i < await opts.count() && !(await enabled(confirm)); i++) await opts.nth(i).click();
+            if (await enabled(confirm)) await confirm.click();
           } else if (await opts.count()) await opts.first().click();
           return;
         }
         for (const action of ["board-draw", "board-pass"]) {
           const b = p.locator(`[data-action=${action}]`).first();
-          if (await b.count() && await b.isEnabled()) {await b.click(); return;}
+          if (await b.count() && await enabled(b)) {await b.click(); return;}
         }
       };
       const turnOf = async (p) => Number((/Turn (\d+)/.exec((await p.locator(".cm-board-turn").first().textContent().catch(() => "")) || "") || [0, 0])[1]);
