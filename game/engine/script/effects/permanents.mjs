@@ -564,7 +564,7 @@ export function effectUntil(state, params, context) {
   pushEffect(state, {
     id: params.id ?? `effect:${context.source ?? "effect"}`,
     /* A rule changed for a while ("can't be blocked this turn", rules/statics.mjs), or a characteristic, in a layer. */
-    ...(params.rule ? {rule: params.rule} : {layer: params.layer ?? 6, sublayer: params.sublayer}),
+    ...(params.rule ? {rule: params.rule} : {layer: params.layer ?? 6, ...(params.sublayer !== undefined ? {sublayer: params.sublayer} : {})}),
     /* `selector`: what it affects, fixed as it resolves (CR 611.2c) -- "each instant and sorcery card in your graveyard
        gains flashback until end of turn" does not reach a card put there later. A choice (`anyOf`) is each of them. */
     affects: params.targets ? {ids: params.targets} : params.selector ? {ids: fixedAt(state, params.selector, context)}
