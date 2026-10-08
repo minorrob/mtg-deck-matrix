@@ -220,7 +220,12 @@ const adventureSide = (adventurer, shown) => Object.fromEntries(FACE_KEYS.map((k
 export function showAdventure(state, id, shown) {
   const object = state.objects[id];
   if (!object?.adventurer) return;
-  Object.assign(object, adventureSide(object.adventurer, shown));
+  /* A characteristic the side shown has not (a creature's spell, an Adventure's power) is absent, not present as nothing:
+     shown and put back for an offer, the card is exactly as it was -- asking what may be done changes no state. */
+  for (const [key, value] of Object.entries(adventureSide(object.adventurer, shown))) {
+    if (value === undefined) delete object[key];
+    else object[key] = value;
+  }
   if (shown) object.face = "adventure"; else delete object.face;
 }
 

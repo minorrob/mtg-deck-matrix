@@ -159,6 +159,12 @@ function checkEffect(effect, path, errors) {
     if (effect.to === undefined && effect.targets === undefined && effect.who === undefined) errors.push({path, message: "damageEach deals its damage to itself, or to targets or players"});
     if (effect.selector !== undefined) checkSelector(effect.selector, `${path}.selector`, errors, {choice: true});
   }
+  /* "Put each creature card exiled with this artifact onto the battlefield" (Ghost Vacuum): of a linked move's cards, those a
+     selector fits (`linkedOnly`) -- only beside `linked`. */
+  if (name === "moveZone" && effect.linkedOnly !== undefined) {
+    if (effect.linked !== true) errors.push({path: `${path}.linkedOnly`, message: "linkedOnly narrows a linked move: it goes with `linked: true`"});
+    checkSelector(effect.linkedOnly, `${path}.linkedOnly`, errors);
+  }
   /* A designation (alterAttribute, script/effects/attributes.mjs): monstrous or prepared. */
   if (name === "alterAttribute" && !["monstrous", "prepared"].includes(effect.attribute))
     errors.push({path: `${path}.attribute`, message: "alterAttribute gives or takes a designation: \"monstrous\" or \"prepared\""});

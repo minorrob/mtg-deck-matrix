@@ -30,11 +30,11 @@ import {cardsIn, moveObject, addObject, valueCostOf, rememberExileLooker} from "
 import {compileSelector} from "../filter.mjs";
 import {event, cardRef, moveOne, playersFor, sacrificeOne} from "./zones.mjs";
 import {proliferate as giveEachAnother, addCounters} from "./resources.mjs";
-import {makeCopies, afterwards, joinAttack, defendingPlayers, attachTo, createToken, effectUntil} from "./permanents.mjs";
+import {makeCopies, afterwards, joinAttack, defendingPlayers, attachTo, createToken, effectUntil, COPY_KEYS} from "./permanents.mjs";
 import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits, unlessPlans, planWords, payPlan} from "../../rules/mana.mjs";
 import {typesOf, characteristicsOf, everyCreatureTypeOf, controllerOf} from "../../rules/layers.mjs";
 import {pushCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
-import {loseLife, DAMAGING, damageQuestion} from "./resources.mjs";
+import {loseLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";
 import {damageOrderChoice} from "../../rules/replacement.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
 import {commanderTax} from "../../rules/commander.mjs";
@@ -425,6 +425,10 @@ export const discard = {
          resolution.mjs), whose permanent the counter goes on. */
       count: params.count ?? 1, who: params.who, controller: Number.isInteger(params.rememberOf) ? params.rememberOf : context.controller,
       ...(params.remember ? {remembering: []} : {}),
+      /* "You may discard UP TO two cards. If you do, draw that many cards" (Fable of the Mirror-Breaker, chapter II): how many,
+         from none to that many, is the discarder's to say (CR 701.9a, 701.9b); "that many" counts what they discarded
+         (`remember`, then `rememberedCount`). */
+      ...(params.upTo === true ? {upTo: true} : {}),
     };
     return true;
   },
@@ -434,9 +438,9 @@ export const discard = {
     const count = Math.min(awaiting.count, hand.length);
     return {
       id: `discard:${awaiting.player}:${state.turn}`,
-      title: `Discard ${count} card${count === 1 ? "" : "s"}`,
-      mode: count === 1 ? "one" : "many",
-      min: count,
+      title: `Discard ${awaiting.upTo ? "up to " : ""}${count} card${count === 1 ? "" : "s"}`,
+      mode: count === 1 && !awaiting.upTo ? "one" : "many",
+      min: awaiting.upTo ? 0 : count,
       max: count,
       options: cardOptions(state, hand),
     };
@@ -448,6 +452,9 @@ export const discard = {
     /* Resolved to ids before anything moves, because each move makes a new object and rewrites the
        hand underneath the positions the player answered with. */
     const chosen = (indices ?? []).map((index) => hand[index]).filter((id) => id !== undefined);
+    /* Each a card in that hand, once, and no more than it says -- fewer only when it says "up to". */
+    const most = Math.min(awaiting.count, hand.length);
+    if (new Set(chosen).size !== chosen.length || chosen.length > most || (!awaiting.upTo && chosen.length < most)) throw new Error("Invalid selection");
     /* CR 101.4: chosen now, discarded when the last player has chosen -- every player's at the same time. */
     const decided = [...(awaiting.decided ?? []), {player: awaiting.player, ids: chosen}];
     const next = (awaiting.remaining ?? []).filter((player) => cardsIn(state, "hand", player).length > 0);
@@ -929,6 +936,42 @@ export const chooseType = {
   },
 };
 
+/* ---- manaColors: "add one mana of any color" as an effect resolves (CR 106.1a, 106.3) ----
+
+   "At the beginning of your first main phase, remove all charge counters from this artifact. Add one mana of any color for
+   each charge counter removed this way" (Coalition Relic): an ability that is not a mana ability adding mana of any color
+   (script/resolution.mjs puts this in an `addMana` of `anyColor`'s place). Which color each mana is, its controller's
+   choice -- one mana at a time, so each may differ -- and all of it added together once the last is chosen, as one mana
+   event. None to add, and nobody is asked. A mana ability's color is chosen as it is activated (rules/actions.mjs), never
+   here. */
+const MANA_COLORS = Object.freeze([["W", "White"], ["U", "Blue"], ["B", "Black"], ["R", "Red"], ["G", "Green"]]);
+export const manaColors = {
+  open(state, params, context) {
+    const count = Math.max(0, Number.isInteger(params.count) ? params.count : 1);
+    if (count === 0 || !state.players[context.controller]) return false;
+    state.awaiting = {kind: "effect-choice", effect: "manaColors", player: context.controller, count, chosen: [], source: context.source ?? null};
+    return true;
+  },
+  choice(state, awaiting) {
+    const name = awaiting.source !== null ? state.objects[awaiting.source]?.card : null;
+    return {id: `manaColors:${awaiting.player}:${state.turn}:${awaiting.chosen.length}`,
+      title: `${name ? `${name}: a` : "A"}dd one mana of any color${awaiting.count > 1 ? ` (${awaiting.chosen.length + 1} of ${awaiting.count})` : ""}`,
+      mode: "one", min: 1, max: 1, options: MANA_COLORS.map(([, label], index) => ({index, label}))};
+  },
+  apply(state, awaiting, indices) {
+    const picked = (indices ?? []).length === 1 ? MANA_COLORS[indices[0]] : undefined;
+    if (!picked) throw new Error("Choose one color for the mana");
+    const chosen = [...awaiting.chosen, picked[0]];
+    if (chosen.length < awaiting.count) {
+      state.awaiting = {...awaiting, chosen};
+      return {events: [], again: true};
+    }
+    const mana = {};
+    for (const color of chosen) mana[color] = (mana[color] ?? 0) + 1;
+    return {events: addMana(state, {mana}, {controller: awaiting.player, source: awaiting.source})};
+  },
+};
+
 /* ---- copySpell (CR 707.10): "copy target instant or sorcery spell. You may choose new targets for the copy." ----
 
    `spells` are the spells copied, by their objects on the stack (a target, or "that card" -- the spell a trigger is
@@ -1288,7 +1331,17 @@ export const play = {
        rules/stack.mjs): the copy is made first, whatever is chosen, and is the one card that may be cast (CR 707.12). Not
        cast, it ceases to exist as a copy of a card outside the stack does (CR 704.5e, rules/sba.mjs). */
     const copied = params.copyOf ? addObject(state, {...structuredClone(params.copyOf), copy: true, owner: player, controller: player}, "exile") : null;
-    const pool = copied !== null ? [copied] : from === "hand" ? cardsIn(state, "hand", player)
+    /* "FOR EACH CARD EXILED THIS WAY, COPY IT, AND YOU MAY CAST THE COPY without paying its mana cost" (Mizzix's Mastery; CR
+       707.12): each card it names copied in the zone it is in -- its copiable values (CR 707.2), the copy its caster's -- and
+       the copies are what may be cast, each chosen for itself (707.12a; with `anyNumber`, one after another in the order
+       its caster chooses, CR 608.2g). A copy not cast ceases to exist (CR 707.10a, 704.5e; rules/sba.mjs). */
+    const copies = params.copies === true ? (params.targets ?? []).filter((id) => state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone))
+      .map((id) => {
+        const card = state.objects[id];
+        const values = Object.fromEntries(COPY_KEYS.filter((key) => card[key] !== undefined).map((key) => [key, structuredClone(card[key])]));
+        return addObject(state, {...values, copy: true, owner: player, controller: player}, card.zone, card.zone === "exile" ? null : player);
+      }) : null;
+    const pool = copied !== null ? [copied] : copies !== null ? copies : from === "hand" ? cardsIn(state, "hand", player)
       : from === "command" ? cardsIn(state, "command", player).filter((id) => state.objects[id].commander === true)
       : (params.targets ?? []).filter((id) => state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone)
         /* "For each player, you may cast a card that player milled this way" (The Ur-Sphinx): `ownedBy` "that player". */
@@ -1447,4 +1500,4 @@ export const conniveWhich = {
 };
 
 export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage,
-  conniveWhich});
+  conniveWhich, manaColors});

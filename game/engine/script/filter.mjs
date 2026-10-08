@@ -317,7 +317,8 @@ export function compileSelector(selector) {
       const others = selectMatching(state, {what: "permanent", ...selector.sharesCreatureType}, context).filter((other) => other !== id);
       /* A changeling shares every creature type (CR 702.73a): with anything that has one. */
       const shares = (other) => {
-        const theirs = [...typesOf(state, other), ...(state.objects[other].subtypes ?? [])], theirsAll = characteristicsOf(state, other).everyCreatureType;
+        /* Its subtypes through the layers, as the keys above read them: a land made a Bear creature is a Bear (CR 205.1b). */
+        const theirs = [...typesOf(state, other), ...subtypesOf(state, other)], theirsAll = characteristicsOf(state, other).everyCreatureType;
         if (mineAll) return theirsAll || theirs.some(isCreatureType);
         if (theirsAll) return [...mine].some(isCreatureType);
         return theirs.some((t) => mine.has(t));

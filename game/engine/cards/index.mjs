@@ -150,6 +150,14 @@ const damageDealt = (t) => (t.to === "self" ? {on: "GameEventCardDamaged", to: "
          too, about its controller (rules/trigger.mjs). */
       ...(t.planeswalkers === true ? {planeswalkers: true} : {})} : null);
 
+/* "WHENEVER ONE OR MORE CARDS ARE PUT INTO EXILE FROM YOUR LIBRARY AND/OR YOUR GRAVEYARD" (Laelia, the Blade Reforged):
+   `from` a list of those zones, `owner` whose they are -- a card is only ever in its owner's library or graveyard (CR
+   400.3) -- any card put into exile from one of them, face down too, by an effect or a cost. "One or more" is `batch`: once
+   for everything one action exiled, from either zone (rules/trigger.mjs). No `who` and no `filter` yet. */
+const EXILED_FROM = Object.freeze({library: "Library", graveyard: "Graveyard"});
+const exiledFrom = (t) => (t.from.length > 0 && t.from.every((zone) => EXILED_FROM[zone]) && ["you", "opponent", "any"].includes(t.owner ?? "you") && !t.filter && t.who === undefined
+  ? {on: "GameEventCardChangeZone", to: "Exile", fromZones: t.from.map((zone) => EXILED_FROM[zone]), owner: t.owner ?? "you"} : null);
+
 const TRIGGERS = {
   /* "When this enters", "whenever another creature enters", "whenever a creature you control enters": `filter` is the
      selector the arrival must match. */
@@ -179,7 +187,8 @@ const TRIGGERS = {
      and `filter` read as it last existed -- a leaves-the-battlefield ability, so it looks back (CR 603.10a): a creature
      exiled with this one is seen, and so is this one. One whose owner then puts it in the command zone was exiled first
      (CR 903.9a; the card's ruling). From the battlefield only, yet. */
-  exiled: (t) => (ARRIVALS.includes(t.who ?? "self") && (t.from ?? "battlefield") === "battlefield"
+  exiled: (t) => (Array.isArray(t.from) ? exiledFrom(t)
+    : ARRIVALS.includes(t.who ?? "self") && (t.from ?? "battlefield") === "battlefield"
     ? {on: "GameEventCardChangeZone", from: "Battlefield", to: "Exile", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {})} : null),
   /* "Whenever one or more permanent cards are put into your graveyard from anywhere" (Moonshadow): a card arriving in a
      graveyard, from any zone, read as the card it became there -- a token is no card (CR 108.2b) -- `owner` whose

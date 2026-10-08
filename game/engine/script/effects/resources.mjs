@@ -408,24 +408,29 @@ export function multiplyCounters(state, params, context) {
 }
 
 /** `removeCounter` — the other direction, and never below zero. "Remove all counters from target creature" (Perfect
-    Intimidation): `counter: "all"`, every kind it has, all of each. */
+    Intimidation): `counter: "all"`, every kind it has, all of each. "Remove all charge counters from this artifact"
+    (Coalition Relic): `all: true`, every counter of the kind named. And how many it removed, for "for each charge counter
+    removed this way" after it (`countersRemoved`, read by the amount `countersRemovedThisWay`, script/amount.mjs): none
+    removed is 0 (CR 122.1, 608.2c). */
 export function removeCounter(state, params, context) {
   const events = [];
+  let removed = 0;
   for (const id of params.targets ?? []) {
     const object = state.objects[id];
     if (!object) continue;
     const kinds = params.counter === "all" ? Object.keys(object.counters ?? {}) : [params.counter ?? "+1/+1"];
     for (const kind of kinds) {
       const before = object.counters[kind] ?? 0;
-      const after = params.counter === "all" ? 0 : Math.max(0, before - (params.count ?? 1));
+      const after = params.counter === "all" || params.all === true ? 0 : Math.max(0, before - (params.count ?? 1));
       if (after === before) continue;
       object.counters[kind] = after;
+      removed += before - after;
       events.push(event("GameEventCardCounters", state, {
         card: cardRef(state, id), type: kind, oldValue: before, newValue: after,
       }));
     }
   }
-  void context;
+  if (context) context.countersRemoved = removed;
   return events;
 }
 

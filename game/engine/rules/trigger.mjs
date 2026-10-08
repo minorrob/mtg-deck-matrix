@@ -336,6 +336,9 @@ function matches(state, event, condition, sourceId, controller) {
     if (condition.discarded && fields.discarded !== true) return false;
     if (condition.from && fields.from?.zoneType !== condition.from) return false;
     if (condition.to && fields.to?.zoneType !== condition.to) return false;
+    /* "Put into exile from your library and/or your graveyard" (Laelia; cards/index.mjs, exiledFrom): from one of those
+       zones, a card of the owner it names -- the library or graveyard was its owner's (CR 400.3). */
+    if (condition.fromZones) return condition.fromZones.includes(fields.from?.zoneType) && whoseIs(condition.owner ?? "you", fields.card?.owner, controller);
     /* "Put into your graveyard from anywhere" (Moonshadow): the card it became there, read where it now is -- a token is no
        card (CR 108.2b) -- in the graveyard of its owner (CR 400.3). */
     if (condition.intoGraveyard) {

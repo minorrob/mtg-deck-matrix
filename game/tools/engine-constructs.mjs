@@ -148,8 +148,12 @@ export const DECK_RULE_KEYWORDS = {Partner: "room/table.mjs", "Choose a Backgrou
    ETBReplacement -- "[this permanent] enters ..." and "as [this permanent] enters ..." (CR 614.1c, 614.12): tapped, with
      counters, as a copy, with a choice made, unless a cost is paid or a card revealed, and -- new here -- prepared
      (Goblin Glasswright, CR 722.3a; rules/replacement.mjs, script/effects/attributes.mjs). Named, not built: one that
-     enters attached to something chosen as it enters, other than an Aura's own Enchant. */
-export const CAST_RULE_KEYWORDS = {AlternateAdditionalCost: "rules/actions.mjs", ETBReplacement: "rules/replacement.mjs"};
+     enters attached to something chosen as it enters, other than an Aura's own Enchant.
+   Overload -- "you may cast this spell for its overload cost. If you do, change 'target' in its text to 'each'" (CR 702.96a):
+     an alternative cost offered beside the mana cost (rules/actions.mjs), the spell then with no targets (702.96b) and the
+     effects its card writes for "each" (702.96c; cards/index.mjs compiles the keyword). Built for Winds of Abandon and
+     credited with Mizzix's Mastery (Train B, X11), whose overloaded copies are cast one by one; no new code for the keyword. */
+export const CAST_RULE_KEYWORDS = {AlternateAdditionalCost: "rules/actions.mjs", ETBReplacement: "rules/replacement.mjs", Overload: "rules/actions.mjs"};
 
 export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: "chooseCard", Enchant: "attach",
   /* Hideaway (Train B, CR 702.75a): dig links a face-down exile, shuffles the rest to the bottom,
