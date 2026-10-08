@@ -187,20 +187,29 @@ function convokeCost(state, player, action) {
 }
 /* A cast's own question, or what it costs, weighed as the card is cast: as its Adventure, when it is cast as one (CR 715.3a). */
 const asCast = (state, action, fn) => (action?.adventure === true ? withAdventure(state, action.objectId, fn) : fn());
-/* The creatures a convoke picked, and what the pool pays besides: each untapped and the caster's, none twice, and one way
-   for the pool to pay the rest. Refused before anything is tapped, saying what to do instead. */
-function convoked(state, player, action, cost) {
+/* The ways the pool pays the rest once the creatures a convoke picked have paid their part (rules/mana.mjs,
+   convokePayments): each untapped and the caster's, none twice -- refused otherwise, before anything is tapped, saying what
+   to do instead. `cost` is the total cost, as the payment reckons it; the question reckons it as convokeCost does. */
+function convokeWays(state, player, action, cost = convokeCost(state, player, action)) {
   const name = state.objects[action.objectId]?.card ?? "That spell";
   const list = action.convokeTap;
   const fitting = new Map(convokers(state, player).map((c) => [c.id, c]));
   if (!Array.isArray(list) || new Set(list).size !== list.length || !list.every((id) => fitting.has(id)))
     throw new Error(`Those are not untapped creatures you control: pick the creatures to tap for ${name} again`);
-  const ways = convokePayments(poolFor(state, player, {spell: action.objectId}), cost, list.map((id) => fitting.get(id)), {life: state.players[player].life});
+  return convokePayments(poolFor(state, player, {spell: action.objectId}), cost, list.map((id) => fitting.get(id)), {life: state.players[player].life});
+}
+/* The creatures a convoke picked, and what the pool pays besides: the one way there is, or -- the pool paying the rest
+   more than one way -- the way its caster chose (`payWith`, X8b; asked once the creatures are picked, performOffered),
+   still a way now. Refused before anything is tapped, saying what to do instead. */
+function convoked(state, player, action, cost) {
+  const name = state.objects[action.objectId]?.card ?? "That spell";
+  const ways = convokeWays(state, player, action, cost);
   if (ways.length === 0)
     throw new Error(`Those creatures and the mana in your pool cannot pay for ${name}: each creature pays {1} or one mana of its color. Pick other creatures, or add mana first`);
-  if (ways.length > 1)
-    throw new Error(`With those creatures, your pool could pay the rest of ${name} more than one way: pick creatures that leave one way, or spend the mana it should not use first`);
-  return {ids: [...list], payment: ways[0]};
+  const payment = action.payWith === undefined && ways.length === 1 ? ways[0] : ways.find((way) => paymentKey(way) === action.payWith);
+  if (!payment)
+    throw new Error(`That mana no longer pays the rest of ${name} with those creatures: cast it again, and choose which mana pays from what is in your pool now`);
+  return {ids: [...action.convokeTap], payment};
 }
 
 /* Options naming objects, two that read alike numbered: "Wastes (1)", "Wastes (2)". */
@@ -315,6 +324,15 @@ function costChoice(state, awaiting) {
   /* Convoke (CR 702.51a): which of the caster's untapped creatures help pay -- as many as there are symbols they could pay,
      and none when the pool can pay it all. */
   if (action.convoke === true) {
+    /* Then, the creatures picked and the pool paying the rest more than one way (convokeWays): which mana pays it, each way in
+       words and named by its key -- the X8b question, asked as it is for a cast the pool pays alone (CR 601.2g-h: the caster
+       pays the total cost, choosing the mana; 702.51a: each creature tapped pays {1} or one mana of its color). Its own id,
+       so a board that kept the creatures' picks does not carry them into it. */
+    if (Array.isArray(action.convokeTap)) {
+      const ways = convokeWays(state, player, action);
+      return {id: `choose-cost:${action.objectId}:pool`, title: `${name}: which mana pays the rest`, mode: "one", min: 1, max: 1, cost: "pool",
+        options: ways.map((way, index) => ({index, label: paymentWords(way), key: paymentKey(way)}))};
+    }
     const cost = convokeCost(state, player, action), creatures = convokers(state, player);
     const symbols = cost.generic + cost.symbols.filter((s) => (s.kind === "colored" && s.color !== "C") || s.kind === "hybrid").length;
     const alone = automaticPayment(poolFor(state, player, {spell: action.objectId}), cost, {life: state.players[player].life}) !== null;
@@ -1687,6 +1705,13 @@ function performOffered(state, player, action, during) {
     }
     /* CONVOKE (CR 702.51a): which creatures help pay, asked before anything is tapped or paid. */
     if (action.kind === "cast" && action.convoke === true && !Array.isArray(action.convokeTap)) {
+      state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
+      return [];
+    }
+    /* And with them picked, the pool paying the rest more than one way (convokeWays): which mana pays it, asked before
+       anything is tapped or paid (CR 601.2g-h; X8b), never decided for the caster. Picks that are not untapped creatures of
+       theirs are refused here, as they would be when it is paid. */
+    if (action.kind === "cast" && action.convoke === true && action.payWith === undefined && convokeWays(state, player, action).length > 1) {
       state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
       return [];
     }

@@ -16,7 +16,8 @@
  *   POST /start               {matchId, seed, pod}  -> 201 {matchId, seats}; 422 names any card it cannot play
  *   GET  /view                one seat's view, for a reconnect without a socket
  *   GET  /connect             Upgrade: websocket -> 101, then {type:"view"} at once
- *   ws   {type:"act", ...}    the §12.1 action envelope -> {type:"receipt"} to the sender, {type:"view"} to all
+ *   ws   {type:"act", ...}    the §12.1 action envelope -> {type:"receipt"} to the sender, {type:"view"} to all; or,
+ *                             refused with nothing changed, {type:"refused", status, error, view} to the sender alone
  *   ws   {type:"view"}        the sender's view again
  */
 import {startRoom, openRoom, RoomError, basicCards} from "../game/room/room.mjs";
@@ -121,7 +122,9 @@ export class GameRoom {
       if (changed) {this.broadcast(); await this.schedule();}
     } catch (error) {
       if (!(error instanceof RoomError)) throw error;
-      send({type: "refused", actionId: request.actionId ?? null, error: error.message, view: room.view(seatId)});
+      /* Refused, nothing changed: why, in the room's words (an answer the rules refuse is the rules' own, 422), and the
+         sender's view, which still asks them the same question (game/room/room.mjs, act). */
+      send({type: "refused", actionId: request.actionId ?? null, status: error.status, error: error.message, view: room.view(seatId)});
     }
   }
 

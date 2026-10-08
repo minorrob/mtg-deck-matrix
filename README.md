@@ -475,6 +475,11 @@ every reopening and in its replay, and `tools/fuzz-live.mjs`, the seeded-games h
 any game with one. `room-slices` holds the room played in slices where a request's CPU is capped (a Durable Object's
 30 s): the AI seats stop after a step budget with nobody asked and the object's alarm plays on, the sliced game the
 same game as one played in one go and as its replay, leaving and ending refused with instructions until they stop.
+`room-refused-answer` holds a person's answer the rules refuse (the live fuzz found one): refused, 422, in the rules'
+words, with nothing changed -- storage key for key, the game, the view, no tape entry and no receipt -- and the same
+question still pending; the valid answer after it taken, the room reopened playing on and its tape replaying; a priority
+action the engine refuses likewise; an engine failure after an answer or a seat leaving undone with a 500 that says so;
+the refused frame over the Durable Object; and `tools/fuzz-live.mjs`'s random person answering a refused question again.
 `engine-derive-once` holds the layers' memo: each object derived once per question and guard level, the same answers as
 without it on a board where the guard levels differ, a question that only reads changing nothing, and the work linear in
 the board. `engine-targets-up-to`
@@ -877,7 +882,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 385 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 386 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1065,6 +1070,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `game-room` — `tests/game-room.mjs`
 - `room-refusals` — `tests/room-refusals.mjs`
 - `room-slices` — `tests/room-slices.mjs`
+- `room-refused-answer` — `tests/room-refused-answer.mjs`
 - `game-table` — `tests/game-table.mjs`
 - `game-leave` — `tests/game-leave.mjs`
 - `table-lobby` — `tests/table-lobby.mjs`
