@@ -37,7 +37,8 @@
 
 import {cardsIn, moveObject, eventCard} from "../state/index.mjs";
 import {attackers, blockers, combatDamage, endCombat} from "./combat.mjs";
-import {checkStateBasedActions, gameOver, finishCommanderReplacement, legendChoice, finishLegendRule} from "./sba.mjs";
+import {checkStateBasedActions, gameOver, finishCommanderReplacement, legendChoice, finishLegendRule, finishDestructionChoice} from "./sba.mjs";
+import {destructionChoice} from "../script/effects/zones.mjs";
 import {commanderChoice} from "./commander.mjs";
 import {damageOrderChoice} from "./replacement.mjs";
 import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
@@ -260,6 +261,8 @@ function choiceFor(state) {
   if (awaiting.kind === "effect-choice") return resolutionChoice(state, awaiting);
   if (awaiting.kind === "commander-replacement") return commanderChoice(state, awaiting);
   if (awaiting.kind === "legend-rule") return legendChoice(state, awaiting);
+  /* CR 616.1: which effect replaces a creature's destruction by lethal damage, when several would (rules/sba.mjs). */
+  if (awaiting.kind === "destruction-replacement") return destructionChoice(state, awaiting);
   if (awaiting.kind === "order-triggers") return triggerChoice(state, awaiting);
   if (awaiting.kind === "trigger-targets") return triggerTargetsChoice(state, awaiting);
   /* A counted target ("up to two target creatures"), a trigger's or an offer's (CR 601.2c; script/bind.mjs). */
@@ -329,6 +332,11 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
   }
   if (awaiting.kind === "legend-rule") {
     const events = finishLegendRule(state, awaiting, indices);
+    grantStepPriority(state, events);
+    return events;
+  }
+  if (awaiting.kind === "destruction-replacement") {
+    const events = finishDestructionChoice(state, awaiting, indices);
     grantStepPriority(state, events);
     return events;
   }

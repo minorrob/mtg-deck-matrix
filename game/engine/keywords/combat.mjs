@@ -62,7 +62,10 @@ export const KEYWORD_FAMILIES = Object.freeze({
    * Ward (CR 702.21a) counters a spell or ability an opponent aims at it unless that player pays: the keyword compiles to
    * that triggered ability (cards/index.mjs), on GameEventBecomesTarget (rules/stack.mjs, becameTarget).
    */
-  protective: Object.freeze(["Indestructible", "Hexproof", "Shroud", "Ward"]),
+  /* Umbra armor (CR 702.89a): an Aura's "if enchanted permanent would be destroyed, instead remove all damage marked on it
+     and destroy this Aura" -- the static `umbra-armor` (cards/index.mjs), read wherever a permanent would be destroyed
+     (script/effects/zones.mjs, destructionReplaced). */
+  protective: Object.freeze(["Indestructible", "Hexproof", "Shroud", "Ward", "Umbra armor"]),
 });
 
 /* ---- LANDWALK (CR 702.14) ----

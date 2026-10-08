@@ -153,6 +153,10 @@ export const STATIC_RULES = Object.freeze({
       you during their last turn as though it didn't have defender" (Weathered Sentinels: `against: "attackedYouLastTurn"`,
       those players only, never a planeswalker). defenderLifted, below. */
   "attacks-despite-defender": "rules/combat.mjs",
+  /** Umbra armor (CR 702.89a): the keyword kept as this static on its Aura (cards/index.mjs), read wherever the permanent it
+      enchants would be destroyed -- the damage removed and the Aura destroyed instead (script/effects/zones.mjs,
+      destructionReplaced). */
+  "umbra-armor": "script/effects/zones.mjs",
   /** "Prevent all damage that would be dealt to [them] this turn": an effect with a duration only (effectUntil), with
       `apply` {to, by, combat}; rules/replacement.mjs. */
   "prevent-damage": "rules/replacement.mjs",

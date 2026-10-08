@@ -45,11 +45,11 @@
  */
 
 import {moveObject, PER_PLAYER, PUBLIC_ZONES, eventCard, rememberExileLooker} from "../state/index.mjs";
-import {applyReplacements, regenerated} from "./replacement.mjs";
+import {applyReplacements} from "./replacement.mjs";
 import {lastKnown, toughnessOf, typesOf, keywordsOf, controllerOf, deriving} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./commander.mjs";
-import {sacrificeOne, moveOne, returnExiledUntil, leavingRef} from "../script/effects/zones.mjs";
+import {sacrificeOne, moveOne, returnExiledUntil, leavingRef, destructionReplaced, destructionAsks} from "../script/effects/zones.mjs";
 import {changeLife} from "../script/effects/resources.mjs";
 import {enduringStories} from "../keywords/designations.mjs";
 import {preparedCopyStays} from "../script/effects/attributes.mjs";
@@ -222,16 +222,26 @@ export function checkStateBasedActions(state) {
        damage is read once for the whole board, every object derived once (rules/layers.mjs, deriving) -- asking it again
        for each creature derived the board once per creature. Each one found is asked again below as it is acted on; one
        that only a death in this pass brings down dies in the next check. */
-    const {lethal, spent} = deriving(state, () => ({
-      lethal: new Set(state.zones.battlefield.filter((id) => {
+    const {lethal, spent, asks} = deriving(state, () => {
+      const lethal = new Set(state.zones.battlefield.filter((id) => {
         const object = state.objects[id];
         if (!typesOf(state, id).includes("Creature")) return false;
         const toughness = toughnessOf(state, id);
         return toughness <= 0 || (object.deathtouched === true && toughness > 0) || (object.damage > 0 && object.damage >= toughness);
-      })),
-      /* And the planeswalkers with no loyalty left (CR 704.5i), acted on below. */
-      spent: state.zones.battlefield.filter((id) => typesOf(state, id).includes("Planeswalker") && (state.objects[id].counters?.loyalty ?? 0) <= 0),
-    }));
+      }));
+      return {lethal,
+        /* And the planeswalkers with no loyalty left (CR 704.5i), acted on below. */
+        spent: state.zones.battlefield.filter((id) => typesOf(state, id).includes("Planeswalker") && (state.objects[id].counters?.loyalty ?? 0) <= 0),
+        /* WHICH REPLACES A DESTRUCTION, WHEN SEVERAL WOULD (CR 616.1; two Auras with umbra armor, or one and a regeneration
+           shield): asked of the creature's controller before any of these destructions happens -- they happen at once (CR
+           704.3) -- and the whole check made again with the answer (finishDestructionChoice). Read in the same question, every
+           object derived once. */
+        asks: destructionAsks(state, [...lethal].filter((id) => toughnessOf(state, id) > 0), state.destructionAnswers ?? {})};
+    });
+    /* While something else is being asked (a player conceding mid-question), the choice is not made for its controller: that
+       creature waits for the next check, which asks. */
+    if (asks.length && !state.awaiting) { state.awaiting = {kind: "destruction-replacement", ...asks[0]}; break; }
+    const undecided = new Set(asks.map((ask) => ask.objectId));
     for (const id of [...state.zones.battlefield]) {
       if (!lethal.has(id) || !state.objects[id]) continue;
       const object = state.objects[id];
@@ -250,8 +260,10 @@ export function checkStateBasedActions(state) {
          damage and all. Toughness zero or less is not destruction (704.5f), so indestructible does not save it. */
       const destroyed = !(toughness <= 0) && (deathtouched || (object.damage > 0 && object.damage >= toughness));
       if (destroyed && keywordsOf(state, id).includes("Indestructible")) continue;
-      /* Or regenerated (CR 701.19a): a shield on it replaces the destruction. */
-      if (destroyed && regenerated(state, id, events)) { acted = true; continue; }
+      if (destroyed && undecided.has(id)) continue;
+      /* Or regenerated (CR 701.19a): a shield on it replaces the destruction -- or an Aura's umbra armor (CR 702.89a), the one
+         its controller chose when several would (above; effects/zones.mjs, destructionReplaced). */
+      if (destroyed && destructionReplaced(state, id, events, {chosen: takeDestructionAnswer(state, id)})) { acted = true; continue; }
       if (toughness <= 0 || deathtouched || (object.damage > 0 && object.damage >= toughness)) {
         /* Face down, revealed as it moves (CR 708.9). */
         const card = leavingRef(state, id);
@@ -386,6 +398,30 @@ export function concede(state, playerId) {
     state.passes = 0;
   }
   return events;
+}
+
+/* ---- CR 616.1, which replaces a destruction ---- */
+
+/* The answer its controller gave for this creature, used up. */
+function takeDestructionAnswer(state, id) {
+  const answer = state.destructionAnswers?.[id];
+  if (answer === undefined) return undefined;
+  delete state.destructionAnswers[id];
+  if (!Object.keys(state.destructionAnswers).length) delete state.destructionAnswers;
+  return answer;
+}
+
+/**
+ * The answer to "destruction-replacement": kept for that creature, and the whole check made again, which uses it.
+ *
+ * @returns {Array} events for the caller to journal
+ */
+export function finishDestructionChoice(state, awaiting, indices) {
+  const key = Array.isArray(indices) && indices.length === 1 ? awaiting.options[indices[0]] : undefined;
+  if (key === undefined) throw new Error("Choose the one effect that replaces it");
+  (state.destructionAnswers ??= {})[awaiting.objectId] = key;
+  state.awaiting = null;
+  return checkStateBasedActions(state);
 }
 
 /* ---- CR 704.5j, the legend rule ---- */

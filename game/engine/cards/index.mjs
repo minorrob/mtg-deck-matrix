@@ -692,6 +692,15 @@ export function compileScript(script) {
       keywords.push("Flanking");
       return;
     }
+    /* UMBRA ARMOR (CR 702.89a): "If enchanted permanent would be destroyed, instead remove all damage marked on it and destroy
+       this Aura" -- the static `umbra-armor` on the Aura, read wherever a permanent would be destroyed (effects/zones.mjs,
+       destructionReplaced). Only on an Aura. */
+    if (word === "umbra armor") {
+      if (!(identity.subtypes ?? []).includes("Aura")) problems.push(`${ability.text}: umbra armor on a card that is not an Aura`);
+      abilities.push({id, kind: "static", rule: "umbra-armor", text: ability.text, affects: {what: "permanent", self: true}});
+      keywords.push("Umbra armor");
+      return;
+    }
     /* FLASHBACK (CR 702.34a): the keyword with its cost, a list of atoms -- a mana cost, and "pay 3 life" -- kept as a
        static ability so the card carries it into its graveyard (rules/actions.mjs offers the cast there). Only on an
        instant or sorcery: "if the resulting spell is an instant or sorcery spell". */

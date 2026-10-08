@@ -11,14 +11,14 @@
   "cards": 3238,
   "defined": 1195,
   "provisional": 28,
-  "everyRule": 2529
+  "everyRule": 2532
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 44,
+    "built": 45,
     "partial": 0,
-    "named": 14,
+    "named": 13,
     "missing": 136
    },
    "entries": [
@@ -734,13 +734,13 @@
      "kind": "keyword ability",
      "rule": "702.89",
      "name": "Umbra Armor",
-     "engine": null,
-     "status": "named",
+     "engine": "Umbra Armor",
+     "status": "built",
      "forge": "Umbra armor",
      "top": 3,
      "all": 15,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",

@@ -23,6 +23,7 @@ import {runEffect, eachOf} from "./effects/index.mjs";
 import {ASKING, commandersGoingHome} from "./effects/asking.mjs";
 import {damageQuestion, addCounters} from "./effects/resources.mjs";
 import {controllerOf} from "../rules/layers.mjs";
+import {destructionQuestion} from "./effects/zones.mjs";
 import {bindEffect} from "./bind.mjs";
 import {countEffect} from "./amount.mjs";
 import {conditionHolds} from "./condition.mjs";
@@ -196,6 +197,9 @@ export function runResolution(state, rng = null) {
        chooses which applies first, before any of it is dealt (effects/asking.mjs, orderDamage). */
     else if (damageQuestion(state, effect, resolving.context, effect?.damageOrders ?? {}))
       resolving.queue[0] = {effect: "orderDamage", damage: effect, answers: effect.damageOrders ?? {}};
+    /* CR 616.1: a destruction two or more effects would replace, ending differently (umbra armor; effects/zones.mjs) -- the
+       permanent's controller chooses which, before anything is destroyed (effects/asking.mjs, orderDestruction). */
+    else if (destructionQuestion(state, effect, resolving.context)) resolving.queue[0] = {effect: "orderDestruction", destroy: effect};
     const head = resolving.queue[0];
     const asking = ASKING[head?.effect];
 

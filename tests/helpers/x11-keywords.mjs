@@ -11,6 +11,9 @@ import {passPriority} from "../../game/engine/rules/priority.mjs";
 import {createRng} from "../../game/engine/rng.mjs";
 import {compileScript} from "../../game/engine/cards/index.mjs";
 import {missingFor, keywordBuilt} from "../../game/tools/engine-constructs.mjs";
+import {housePilot} from "../../game/engine/pilots/house-pilot.mjs";
+import {randomLegalPilot} from "../../game/engine/pilots/random-legal.mjs";
+import {projectFor} from "../../game/engine/projection.mjs";
 
 export {assert};
 export const index = loadCardIndex();
@@ -59,6 +62,16 @@ export const choose = (state, ...wanted) => resolveAwaiting(state, wanted.map((w
   if (!option) throw new Error(`no option ${w}: ${labels(state).join(", ")}`);
   return option.index;
 }), null, createRng("x11"));
+/** Both pilots the room seats (the house pilot, and random-legal) answer the question being asked, and the rules take each
+    answer: the state each leaves, played on a copy. */
+export function pilotsAnswer(state) {
+  const choice = awaitingChoice(state), seat = state.awaiting.player;
+  return [housePilot({seat}).answer(projectFor(state, seat), choice), randomLegalPilot(createRng("x11-pilot")).answer(choice)].map((answer) => {
+    const copy = structuredClone(state);
+    resolveAwaiting(copy, answer.indices ?? [], answer.amounts ?? null, createRng("x11"));
+    return copy;
+  });
+}
 export const idOf = (state, name, seat = undefined) => Object.keys(state.objects).map(Number)
   .find((id) => state.objects[id].card === name && state.objects[id].zone === "battlefield" && (seat === undefined || state.objects[id].controller === seat));
 

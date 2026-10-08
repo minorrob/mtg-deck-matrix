@@ -28,7 +28,7 @@
 
 import {cardsIn, moveObject, addObject, valueCostOf, rememberExileLooker} from "../../state/index.mjs";
 import {compileSelector} from "../filter.mjs";
-import {event, cardRef, moveOne, playersFor, sacrificeOne} from "./zones.mjs";
+import {event, cardRef, moveOne, playersFor, sacrificeOne, destructionQuestion, destructionChoice} from "./zones.mjs";
 import {proliferate as giveEachAnother, addCounters} from "./resources.mjs";
 import {makeCopies, afterwards, joinAttack, defendingPlayers, attachTo, createToken, effectUntil} from "./permanents.mjs";
 import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits, unlessPlans, planWords, payPlan} from "../../rules/mana.mjs";
@@ -1446,5 +1446,25 @@ export const conniveWhich = {
   },
 };
 
+/* ---- orderDestruction (CR 616.1): a destroy whose destruction of one permanent two or more effects would replace, ending
+   differently -- two Auras with umbra armor, or one and a regeneration shield -- asks that permanent's controller which,
+   before anything is destroyed (effects/zones.mjs, destructionQuestion; script/resolution.mjs puts this in the destroy's place
+   only when there is one); then the destroy again, with the answer, asking the next such permanent's controller or
+   destroying. ---- */
+export const orderDestruction = {
+  open(state, params, context) {
+    state.awaiting = {kind: "effect-choice", effect: "orderDestruction", ...destructionQuestion(state, params.destroy, context), destroy: params.destroy};
+    return true;
+  },
+  choice(state, awaiting) {
+    return destructionChoice(state, awaiting);
+  },
+  apply(state, awaiting, indices) {
+    const key = Array.isArray(indices) && indices.length === 1 ? awaiting.options[indices[0]] : undefined;
+    if (key === undefined) throw new Error("Invalid selection");
+    return {events: [], splice: [{...awaiting.destroy, destructionAnswers: {...(awaiting.destroy.destructionAnswers ?? {}), [awaiting.objectId]: key}}]};
+  },
+};
+
 export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage,
-  conniveWhich});
+  conniveWhich, orderDestruction});
