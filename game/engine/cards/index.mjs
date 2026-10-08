@@ -701,6 +701,18 @@ export function compileScript(script) {
       keywords.push("Umbra armor");
       return;
     }
+    /* LIVING WEAPON (CR 702.92a): "When this Equipment enters, create a 0/0 black Phyrexian Germ creature token, then attach
+       this Equipment to it" -- the keyword IS that triggered ability; the token remembered, and the Equipment, still on the
+       battlefield as it resolves, attached to it (effects/permanents.mjs, attach). Gone by then, nothing is attached, and the
+       0/0 Germ is put into its owner's graveyard (CR 704.5f). */
+    if (word === "living weapon") {
+      if (!(identity.subtypes ?? []).includes("Equipment")) problems.push(`${ability.text}: living weapon on a card that is not an Equipment`);
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.enters({who: "self"}),
+        effects: [{effect: "createToken", count: 1, remember: true, token: {name: "Phyrexian Germ", types: ["Creature"], subtypes: ["Phyrexian", "Germ"], colors: ["B"], power: 0, toughness: 0}},
+          {effect: "attach", targets: "remembered"}]});
+      keywords.push("Living Weapon");
+      return;
+    }
     /* FLASHBACK (CR 702.34a): the keyword with its cost, a list of atoms -- a mana cost, and "pay 3 life" -- kept as a
        static ability so the card carries it into its graveyard (rules/actions.mjs offers the cast there). Only on an
        instant or sorcery: "if the resulting spell is an instant or sorcery spell". */

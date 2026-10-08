@@ -196,7 +196,10 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   /* Monstrosity (CR 701.37a; Protector of the Wastes, Train B): "{cost}: Monstrosity N" -- if it isn't monstrous, N +1/+1
      counters and it becomes monstrous (alterAttribute's `counters`, script/effects/attributes.mjs), "when this becomes
      monstrous" its trigger (cards/index.mjs). */
-  Monstrosity: "alterAttribute"};
+  Monstrosity: "alterAttribute",
+  /* Living weapon (CR 702.92a; Bitterthorn, Nissa's Animus, Train B X11): the Equipment's enters trigger, a 0/0 black
+     Phyrexian Germ token and the Equipment attached to it (cards/index.mjs). */
+  "Living Weapon": "createToken"};
 
 /* "PROTECTION FROM [QUALITY]" printed as a keyword (CR 702.16a; Karmic Guide's "protection from black"): built for the
    qualities rules/protection.mjs reads -- a color, a card type, everything -- compiled from the keyword (cards/index.mjs).

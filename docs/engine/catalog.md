@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,195 defined and playable today; 2,532 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,196 defined and playable today; 2,535 with every
 mechanic built, so only their definitions are left to write; 28 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 45 | 0 | 13 | 136 |
+| Keyword abilities (CR 702) | 194 | 46 | 0 | 12 | 136 |
 | Keyword actions (CR 701) | 70 | 22 | 3 | 1 | 44 |
 | Effects | 192 | 68 | 1 | 4 | 119 |
 | Triggers | 138 | 20 | 4 | 2 | 112 |
@@ -112,7 +112,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.189 | Firebending | — | missing | 3 | 26 | 3 | 2 |
 | 702.126 | Improvise | — | missing | 3 | 24 | 3 | 2 |
 | 702.151 | Reconfigure | — | missing | 3 | 21 | 3 | 1 |
-| 702.92 | Living Weapon | — | named | 3 | 19 | 3 | 3 |
+| 702.92 | Living Weapon | Living Weapon | built | 3 | 19 | 0 | 0 |
 | 702.94 | Miracle | — | missing | 3 | 17 | 3 | 2 |
 | 702.181 | Mobilize | — | missing | 3 | 15 | 3 | 3 |
 | 702.89 | Umbra Armor | Umbra Armor | built | 3 | 15 | 0 | 0 |

@@ -9,16 +9,16 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1195,
+  "defined": 1196,
   "provisional": 28,
-  "everyRule": 2532
+  "everyRule": 2535
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 45,
+    "built": 46,
     "partial": 0,
-    "named": 13,
+    "named": 12,
     "missing": 136
    },
    "entries": [
@@ -698,13 +698,13 @@
      "kind": "keyword ability",
      "rule": "702.92",
      "name": "Living Weapon",
-     "engine": null,
-     "status": "named",
+     "engine": "Living Weapon",
+     "status": "built",
      "forge": "Living Weapon",
      "top": 3,
      "all": 19,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
