@@ -34,7 +34,8 @@
  * whose every target is illegal does nothing and leaves the stack with `hasFizzled`.
  */
 
-import {holdArrival} from "./entering.mjs";
+import {holdArrival, enteredWith} from "./entering.mjs";
+import {ascendAsItResolves} from "../keywords/designations.mjs";
 import {conditionHolds} from "../script/condition.mjs";
 import {moveObject, addObject, removeObject, eventCard} from "../state/index.mjs";
 import {enteringModifications} from "./replacement.mjs";
@@ -246,6 +247,11 @@ export function resolveTop(state, effect = null, rng = null) {
   const {targets, fizzles} = recheckTargets(state, script.targets, entry.targets, source === null && (entry.cardId ?? entry.lastKnown?.cardId ?? null) !== null
     ? {...context, source: entry.cardId ?? entry.lastKnown.cardId} : context);
   if (fizzles) return finishTop(state, entry, events, true);
+  /* ASCEND ON AN INSTANT OR SORCERY (CR 702.131a): its spell ability, first as it is printed first -- the city's blessing for
+     its controller if they control ten or more permanents now (keywords/designations.mjs). An ability on the stack has no
+     object of its own (pushAbility), and a permanent spell with ascend has no script and was finished above -- its ascend
+     is the permanent's (rules/sba.mjs) -- so only such a spell reads here. */
+  if ((state.objects[entry.objectId]?.keywords ?? []).includes("Ascend")) events.push(...ascendAsItResolves(state, entry.playerId));
   /* An intervening "if" asked again as it resolves (CR 603.4): false now, and the ability does nothing. A triggered
      ability's own condition only -- "activate only if" was asked as it was activated (CR 602.5b) and is not again. */
   if (entry.kind === "trigger" && script.condition && !conditionHolds(state, script.condition, {controller: entry.playerId, source, about: entry.about ?? undefined,
@@ -374,6 +380,8 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     if (to === "battlefield" && entry.escaped) state.objects[arrived].escaped = true;
     /* Cast for its evoke cost, the permanent it became was evoked (CR 702.74a): its own sacrifice trigger reads this. */
     if (to === "battlefield" && entry.evoked) state.objects[arrived].evoked = true;
+    /* And for its prowl cost (CR 702.76a): "if its prowl cost was paid" (script/condition.mjs, `prowled`). */
+    if (to === "battlefield" && entry.prowled) state.objects[arrived].prowled = true;
     /* Cast from suspend: haste, while it is this permanent (CR 702.62a). */
     if (to === "battlefield" && entry.fromSuspend && (state.objects[arrived].types ?? []).includes("Creature"))
       (state.effects ??= []).push({id: `suspend-haste:${arrived}`, layer: 6, affects: {ids: [arrived]}, apply: {addKeywords: ["Haste"]}, until: null, sourceController: entry.playerId});
@@ -411,6 +419,8 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     if (to === "battlefield") holdArrival(state, arrived, events[events.length - 1]);
     /* "Enters prepared" (CR 614.1c, 722.3a): the designation it entered with, and its prepare spell's copy in exile (722.3c). */
     if ((entering?.designations ?? []).includes("prepared")) prepare(state, arrived, events);
+    /* What it entered with, said once it has (rules/entering.mjs, enteredWith). */
+    if (to === "battlefield") events.push(...enteredWith(state, arrived, entering));
   }
 
   events.push(event("GameEventSpellResolved", state, {

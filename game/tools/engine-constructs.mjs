@@ -203,7 +203,20 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   /* Monstrosity (CR 701.37a; Protector of the Wastes, Train B): "{cost}: Monstrosity N" -- if it isn't monstrous, N +1/+1
      counters and it becomes monstrous (alterAttribute's `counters`, script/effects/attributes.mjs), "when this becomes
      monstrous" its trigger (cards/index.mjs). */
-  Monstrosity: "alterAttribute"};
+  Monstrosity: "alterAttribute",
+  /* Living weapon (CR 702.92a; Bitterthorn, Nissa's Animus, Train B X11): the Equipment's enters trigger, a 0/0 black
+     Phyrexian Germ token and the Equipment attached to it (cards/index.mjs). */
+  "Living Weapon": "createToken",
+  /* Evolve (CR 702.100a; Fathom Mage, Train B X11): the trigger as a creature you control enters, its intervening "if" the
+     comparison of power and toughness, and a +1/+1 counter (cards/index.mjs, script/condition.mjs). */
+  Evolve: "putCounter",
+  /* Backup N (CR 702.165a; Guardian Scalelord, Train B X11): the enters trigger, N +1/+1 counters on target creature, and
+     another creature given the abilities printed below until end of turn (cards/index.mjs). */
+  Backup: "putCounter",
+  /* Cumulative upkeep (CR 702.24a; Mystic Remora, Train B X11): the upkeep trigger, its intervening "if", an age counter,
+     and "sacrifice it unless you pay" its mana cost once for each age counter, generic or colored (cards/index.mjs,
+     effects/asking.mjs). Named, not built: a cost that is not mana (life, a sacrifice, a discard). */
+  "Cumulative upkeep": "unlessPays"};
 
 /* "PROTECTION FROM [QUALITY]" printed as a keyword (CR 702.16a; Karmic Guide's "protection from black"): built for the
    qualities rules/protection.mjs reads -- a color, a card type, everything -- compiled from the keyword (cards/index.mjs).
@@ -323,6 +336,9 @@ export const FORGE_COUNTS = Object.freeze({
   /* Fblthp, the Lost (AI 1's deck): "if it entered from your library or was cast from your library". */
   wasCastFromYourLibrary: {name: "It entered from, or was cast from, your library", status: "built", engine: "condition {cameFrom: \"library\"} (script/condition.mjs)"},
   Threshold: {name: "Threshold (seven cards in your graveyard)", status: "missing"},
+  /* Train B (X11; Wayward Swordtooth): "unless you have the city's blessing" -- ascend's designation (CR 702.131;
+     keywords/designations.mjs). */
+  Blessing: {name: "The city's blessing (ascend)", status: "built", engine: "condition {citysBlessing} (script/condition.mjs)"},
   Morbid: {name: "Morbid (a creature died this turn)", status: "missing"},
   UrzaLands: {name: "The Urza lands", status: "missing"},
   Monarch: {name: "The monarch", status: "missing"},

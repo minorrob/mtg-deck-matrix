@@ -214,7 +214,9 @@ const TRIGGERS = {
     ...(t.targets ? {targets: t.targets} : {})}),
   /* "Whenever one or more +1/+1 counters are put on Berta" (CR 122.1): counters of `counter` put on this permanent, once
      for each time they are put on, however many. */
-  "counter added": (t) => ((t.who ?? "self") === "self" && typeof t.counter === "string" ? {on: "GameEventCardCounters", counterAdded: true, counter: t.counter} : null),
+  "counter added": (t) => ((t.who ?? "self") === "self" && typeof t.counter === "string" ? {on: "GameEventCardCounters", counterAdded: true, counter: t.counter,
+    /* "Whenever a +1/+1 counter is put on this creature" (Fathom Mage): once for each counter (`each`), not for each time. */
+    ...(t.each === true ? {each: true} : {})} : null),
   /* "Whenever you scry or surveil" (Proft, Consulting Detective; CR 701.22a, 701.25a): once each is done, by `scrier`. */
   scried: (t) => ({on: "GameEventScried", scrier: t.scrier ?? "you"}),
   /* "Whenever you activate a loyalty ability" (Ajani Unrelenting; CR 606, 602.2): a loyalty ability put on the stack by
@@ -503,6 +505,8 @@ export function compileScript(script) {
   const keywords = [];
   let spell = null;
   let multikicker = null;
+  /* Escalate's cost (CR 702.120a), put on the spell once its modes are known (below). */
+  let escalate = null;
 
   /* "ENCHANT CREATURE" (CR 702.5, 303.4): an Aura spell targets what it will enchant, and the permanent may be attached
      only to what the same words describe. One keyword ability, `target` its selector; `hostile` when the Aura is a
@@ -700,6 +704,132 @@ export function compileScript(script) {
       if (!(identity.types ?? []).some((t) => t === "Instant" || t === "Sorcery")) problems.push(`${ability.text}: paradigm on a card that is not an instant or sorcery`);
       abilities.push({id, kind: "static", rule: "paradigm", text: ability.text, affects: {what: "card", self: true}});
       keywords.push("Paradigm");
+      return;
+    }
+    /* ---- KEYWORD ABILITIES OF CR 702 THAT ARE A TRIGGER, A STATIC OR A COST, EACH COMPILED ONCE, HERE (Train B, X11) ---- */
+    const word = ability.kind === "keyword" ? String(ability.keyword).toLowerCase() : null;
+    /* FLANKING (CR 702.25a): "Whenever this creature becomes blocked by a creature without flanking, the blocking creature
+       gets -1/-1 until end of turn" -- once for each such blocker (CR 509.3d), each instance separately (702.25b); the
+       blocker read as blockers are declared (509.3f; rules/trigger.mjs, `blockedBy`). */
+    if (word === "flanking") {
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: {on: "GameEventBlockersDeclared", blockedBy: true, who: "self", filter: {types: ["Creature"], nonKeywords: ["Flanking"]}},
+        effects: [{effect: "pump", targets: "that card", power: -1, toughness: -1}]});
+      keywords.push("Flanking");
+      return;
+    }
+    /* UMBRA ARMOR (CR 702.89a): "If enchanted permanent would be destroyed, instead remove all damage marked on it and destroy
+       this Aura" -- the static `umbra-armor` on the Aura, read wherever a permanent would be destroyed (effects/zones.mjs,
+       destructionReplaced). Only on an Aura. */
+    if (word === "umbra armor") {
+      if (!(identity.subtypes ?? []).includes("Aura")) problems.push(`${ability.text}: umbra armor on a card that is not an Aura`);
+      abilities.push({id, kind: "static", rule: "umbra-armor", text: ability.text, affects: {what: "permanent", self: true}});
+      keywords.push("Umbra armor");
+      return;
+    }
+    /* LIVING WEAPON (CR 702.92a): "When this Equipment enters, create a 0/0 black Phyrexian Germ creature token, then attach
+       this Equipment to it" -- the keyword IS that triggered ability; the token remembered, and the Equipment, still on the
+       battlefield as it resolves, attached to it (effects/permanents.mjs, attach). Gone by then, nothing is attached, and the
+       0/0 Germ is put into its owner's graveyard (CR 704.5f). */
+    if (word === "living weapon") {
+      if (!(identity.subtypes ?? []).includes("Equipment")) problems.push(`${ability.text}: living weapon on a card that is not an Equipment`);
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.enters({who: "self"}),
+        effects: [{effect: "createToken", count: 1, remember: true, token: {name: "Phyrexian Germ", types: ["Creature"], subtypes: ["Phyrexian", "Germ"], colors: ["B"], power: 0, toughness: 0}},
+          {effect: "attach", targets: "remembered"}]});
+      keywords.push("Living Weapon");
+      return;
+    }
+    /* EVOLVE (CR 702.100a): "Whenever a creature you control enters, if that creature's power is greater than this creature's
+       power and/or that creature's toughness is greater than this creature's toughness, put a +1/+1 counter on this creature"
+       -- an intervening "if" (CR 603.4; script/condition.mjs, `evolves`), asked as it triggers and as it resolves. Each
+       instance triggers separately (702.100d). */
+    if (word === "evolve") {
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.enters({who: "any", filter: {types: ["Creature"], controller: "you"}}),
+        condition: {evolves: true}, effects: [{effect: "putCounter", targets: "self", counter: "+1/+1", count: 1}]});
+      keywords.push("Evolve");
+      return;
+    }
+    /* BACKUP N (CR 702.165a): "When this creature enters, put N +1/+1 counters on target creature. If that's another creature,
+       it also gains the non-backup abilities of this creature printed below this one until end of turn" -- those printed
+       after it on the card, its own and no others (702.165c), fixed here as the card is compiled (702.165d), and given as a
+       pump's abilities are (compileGivenIn, below): its keywords and its triggered and activated abilities. "That's another
+       creature" is the effect's condition on its target ({about: "target", is: {another: true}}, script/condition.mjs). */
+    if (word === "backup") {
+      if (!(Number.isInteger(ability.amount) && ability.amount >= 1)) problems.push(`${ability.text}: backup needs its number, 1 or more`);
+      const below = (script.abilities ?? []).slice(index + 1).filter((a) => !(a?.kind === "keyword" && String(a.keyword).toLowerCase() === "backup"));
+      if (!below.length) problems.push(`${ability.text}: backup gives the abilities printed below it, and none are`);
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.enters({who: "self"}), targets: [{what: "permanent", types: ["Creature"]}],
+        effects: [{effect: "putCounter", targets: {target: 0}, counter: "+1/+1", count: ability.amount ?? 1},
+          {effect: "pump", targets: {target: 0}, power: 0, toughness: 0, condition: {about: "target", is: {another: true}}, abilities: structuredClone(below)}]});
+      keywords.push("Backup");
+      return;
+    }
+    /* CUMULATIVE UPKEEP [COST] (CR 702.24a): "At the beginning of your upkeep, if this permanent is on the battlefield, put an
+       age counter on this permanent. Then you may pay [cost] for each age counter on it. If you don't, sacrifice it." -- the
+       keyword IS that triggered ability: its intervening "if" (CR 603.4), an age counter, and "unless you pay" asked of its
+       controller (effects/asking.mjs, unlessPays) with the cost counted as it is asked, every age counter on it then
+       (702.24b), all of it or none. Generic mana is paid as any generic amount is; a cost with colored symbols, that cost once
+       for each counter. A mana cost only, yet. */
+    if (word === "cumulative upkeep") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      let parsed = null;
+      try { parsed = cost.length === 1 && cost[0]?.atom === "mana" ? parseManaCost(cost[0].cost ?? "") : null; } catch { /* refused below */ }
+      if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`${ability.text}: a cumulative upkeep cost of mana, once`);
+      const generic = Boolean(parsed) && parsed.symbols.every((s) => s.kind === "generic");
+      const ages = {countersOn: "self", counter: "age"};
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.upkeep({}), condition: {present: {self: true}},
+        effects: [{effect: "putCounter", targets: "self", counter: "age", count: 1},
+          {effect: "unlessPays", ...(generic ? {amount: {...ages, times: parsed.generic}} : {mana: String(cost[0]?.cost ?? ""), manaTimes: ages}),
+            effects: [{effect: "moveZone", targets: "self", sacrifice: true}]}]});
+      keywords.push("Cumulative upkeep");
+      return;
+    }
+    /* PROWL [COST] (CR 702.76a): "You may pay [cost] rather than pay this spell's mana cost if a player was dealt combat damage
+       this turn by a source that, at the time it dealt that damage, was under your control and had any of this spell's
+       creature types" -- an alternative cost (CR 118.9; rules/actions.mjs offers it), its condition `prowl` (script/
+       condition.mjs), the permanent it becomes marked as cast for it, for "if its prowl cost was paid" (`prowled`). */
+    if (word === "prowl") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      if (!cost.length || !cost.every((atom) => atom?.atom === "mana")) problems.push(`${ability.text}: a prowl cost of mana`);
+      abilities.push({id, kind: "static", rule: "alternative-cost", prowl: true, condition: {prowl: true}, text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
+      keywords.push("Prowl");
+      return;
+    }
+    /* ESCALATE (CR 702.120a): "for each mode you choose beyond the first as you cast this spell, you pay an additional [cost]"
+       -- mana, "tap an untapped creature you control" (Collective Effort), or both: kept for the spell, among its additional
+       costs (below; rules/actions.mjs, additionalVariants). */
+    if (word === "escalate") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      const mana = cost.filter((a) => a?.atom === "mana"), taps = cost.filter((a) => a?.atom === "tapCreature");
+      let parsed = null;
+      try { parsed = mana.length === 1 ? parseManaCost(mana[0].cost ?? "") : null; } catch { /* refused below */ }
+      if (!cost.length || mana.length + taps.length !== cost.length || mana.length > 1 || taps.length > 1 || (mana.length === 1 && (!parsed || !parsed.symbols.length || parsed.variable > 0))
+        || taps.some((t) => !t.selector || typeof t.selector !== "object" || !(Number.isInteger(t.count ?? 1) && (t.count ?? 1) >= 1)))
+        problems.push(`${ability.text}: an escalate cost of mana, untapped creatures to tap, or both, once each`);
+      escalate = {mana: mana[0]?.cost ?? "", ...(taps.length ? {tap: {count: taps[0].count ?? 1, selector: structuredClone(taps[0].selector ?? {})}} : {})};
+      keywords.push("Escalate");
+      return;
+    }
+    /* UNEARTH (CR 702.84a): "[Cost]: Return this card from your graveyard to the battlefield. It gains haste. Exile it at the
+       beginning of the next end step. If it would leave the battlefield, exile it instead of putting it anywhere else.
+       Activate only as a sorcery." -- an activated ability of the card in its owner's graveyard (rules/actions.mjs offers it
+       there), its cost mana, or energy ("Unearth--Pay eight {E}", Salvation Colossus; CR 107.14). "This card" is the card in
+       the graveyard: gone from there before it resolves, it is a new object and nothing returns (CR 400.7). What it gains and
+       what exiles it are the effect's, not the permanent's (effects/permanents.mjs, afterwards; rules/replacement.mjs). */
+    if (word === "unearth") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      const manaOk = (atom) => { try { const parsed = parseManaCost(atom.cost ?? ""); return parsed.symbols.length > 0 && parsed.variable === 0; } catch { return false; } };
+      if (!cost.length || !cost.every((atom) => (atom?.atom === "mana" && manaOk(atom)) || (atom?.atom === "payEnergy" && Number.isInteger(atom.count) && atom.count >= 1)))
+        problems.push(`${ability.text}: an unearth cost of mana or energy ({E}), and at least one`);
+      if (!(identity.types ?? []).some((t) => ["Artifact", "Battle", "Creature", "Enchantment", "Land", "Planeswalker"].includes(t))) problems.push(`${ability.text}: unearth returns a permanent card to the battlefield`);
+      abilities.push({id, kind: "activated", zone: "graveyard", timing: "sorcery", text: ability.text, cost: structuredClone(cost), targets: [],
+        effects: [{effect: "moveZone", targets: "self", to: "battlefield", gains: ["Haste"], atEndStep: "exile", exileIfLeaves: true}]});
+      keywords.push("Unearth");
+      return;
+    }
+    /* ASCEND (CR 702.131): on a permanent a static ability, on an instant or sorcery a spell ability -- each read from the
+       keyword (keywords/designations.mjs; rules/stack.mjs as such a spell resolves). */
+    if (word === "ascend") {
+      keywords.push("Ascend");
       return;
     }
     /* FLASHBACK (CR 702.34a): the keyword with its cost, a list of atoms -- a mana cost, and "pay 3 life" -- kept as a
@@ -1061,6 +1191,11 @@ export function compileScript(script) {
   if (enchant && spell) problems.push("an Aura's spell is its Enchant target, and it has no other");
   /* The Aura as a spell: its one target, nothing done as it resolves -- it enters attached (stack.mjs). */
   if (enchant) spell = {id: "enchant", text: enchant.text, targets: [enchant.target], effects: [], ...(enchant.hostile ? {hostile: true} : {})};
+  /* Escalate's (CR 702.120a), on a spell whose modes are chosen as it is cast, "choose one or more": its cost once for each mode
+     beyond the first, as many as the spell allows (rules/actions.mjs, additionalVariants and withModes). */
+  const oneOrMore = Boolean(spell?.modal) && (spell.modal.choose ?? 1) === 1 && (spell.modal.upTo ?? 1) > 1;
+  if (escalate !== null && !oneOrMore) problems.push("Escalate is on a spell whose modes are chosen as it is cast, one or more of them");
+  if (escalate !== null && oneOrMore) spell = {...spell, additionalCost: [...(spell.additionalCost ?? []), {atom: "escalate", ...escalate, most: Math.min(spell.modal.upTo, spell.modal.modes.length) - 1}]};
   /* Multikicker's additional cost, on the spell -- a permanent's too, whose spell does nothing else (CR 608.3). */
   if (multikicker !== null) spell = {...(spell ?? {id: "multikicker", text: "Multikicker", targets: [], effects: []}), additionalCost: [...(spell?.additionalCost ?? []), {atom: "multikicker", cost: multikicker}]};
 

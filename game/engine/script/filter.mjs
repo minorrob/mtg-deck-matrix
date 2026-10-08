@@ -57,6 +57,9 @@ export const SELECTOR_KEYS = Object.freeze([
   "otherThan", "sharesCreatureTypeWith",
   /* "Each equipped creature" (Hemlock Vial). */
   "equipped",
+  /* "Creatures your opponents control without flying or reach" (Sidar Kondo of Jamuraa), "a creature without flanking"
+     (CR 702.25a): none of these keywords, through the layers. */
+  "nonKeywords",
 ]);
 
 /* THE SOURCE A LINK IS KEPT AGAINST (CR 607.2a; effects/zones.mjs, `link`): the ability's source -- or, gone from the
@@ -128,7 +131,7 @@ function assertGrammar(selector) {
     throw new Error("A selector's types are a list, because 'artifact creature' is two of them");
   if (selector.subtypes !== undefined && !Array.isArray(selector.subtypes))
     throw new Error("A selector's subtypes are a list: 'Mountain Plains' is two of them");
-  for (const key of ["supertypes", "nonTypes", "nonSubtypes"])
+  for (const key of ["supertypes", "nonTypes", "nonSubtypes", "nonKeywords"])
     if (selector[key] !== undefined && !Array.isArray(selector[key])) throw new Error(`A selector's ${key} are a list`);
   /* What it shares a creature type with: a selector of permanents, held to the same grammar. */
   if (selector.sharesCreatureType !== undefined) compileSelector({...selector.sharesCreatureType, what: "permanent"});
@@ -422,6 +425,8 @@ export function compileSelector(selector) {
     if (selector.exiledWith === "self" && !exiledWithSource(state, linkSource(context)).includes(id)) return false;
     /* "A creature with flying": its keywords now, through the layers (CR 702). */
     if (selector.keywords && !selector.keywords.every((word) => keywordsOf(state, id).includes(word))) return false;
+    /* "Without flying or reach": none of them (Sidar Kondo of Jamuraa). */
+    if (selector.nonKeywords && selector.nonKeywords.some((word) => keywordsOf(state, id).includes(word))) return false;
     if (selector.target === true && !canBeTargetedBy(state, id, chooser, context.source ?? null)) return false;
 
     return true;

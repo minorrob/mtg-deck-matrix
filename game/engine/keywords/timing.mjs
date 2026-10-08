@@ -38,7 +38,10 @@ export const KEYWORD_FAMILIES = Object.freeze({
       taken; what escaped is marked so (702.138b) and enters with what it "escapes with" (702.138c, rules/replacement.mjs).
       Rebound (CR 702.88a), from exile at its caster's next upkeep: cast from its owner's hand and resolved, exiled instead
       of going to the graveyard (rules/stack.mjs), then cast free if they choose (effects/asking.mjs, `play`). */
-  zones: Object.freeze(["Flashback", "Escape", "Rebound"]),
+  /** Unearth (CR 702.84a), an activated ability of the card in its owner's graveyard at sorcery speed: returned with haste,
+      exiled at the next end step, and exiled instead should it leave the battlefield any other way (cards/index.mjs;
+      effects/permanents.mjs, afterwards; rules/replacement.mjs). */
+  zones: Object.freeze(["Flashback", "Escape", "Rebound", "Unearth"]),
   /** What happens as a spell is cast: Storm (CR 702.40a), "when you cast this spell, copy it for each spell cast before
       it this turn" -- a triggered ability of the spell (rules/actions.mjs). */
   cast: Object.freeze(["Storm"]),
@@ -46,7 +49,13 @@ export const KEYWORD_FAMILIES = Object.freeze({
       offered beside the cast the pool pays, the creatures picked once it is taken (rules/actions.mjs, rules/mana.mjs).
       Evoke (CR 702.74a), its evoke cost rather than its mana cost -- an alternative cost (rules/actions.mjs) -- and, if it
       was paid, the permanent sacrificed as it enters (cards/index.mjs compiles both abilities). */
-  pay: Object.freeze(["Convoke", "Evoke"]),
+  /** Prowl (CR 702.76a), an alternative cost offered once a player was dealt combat damage this turn by a source of its
+      caster's with one of its creature types (rules/combat.mjs keeps them; script/condition.mjs), the permanent marked as
+      cast for it (rules/stack.mjs). Escalate (CR 702.120a), an additional cost for each mode chosen beyond the first, paid with
+      the rest of the cost (rules/actions.mjs). Overload (CR 702.96a-b), an alternative cost whose cast carries the spell's
+      "each" effects, written out by the card, and no targets (cards/index.mjs, rules/actions.mjs, rules/stack.mjs): built
+      for Winds of Abandon, credited with Mizzium Mortars and Vandalblast. */
+  pay: Object.freeze(["Convoke", "Evoke", "Prowl", "Escalate", "Overload"]),
 });
 
 /**

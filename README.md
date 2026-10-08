@@ -633,7 +633,8 @@ creatures; and an emblem (Ajani Resolute), an effect with no source and no end, 
 cast so, one removed at its controller's end step, and none of it when cast for its mana cost; and "cards with
 different names" (Gifts Ungiven), one of each name offered.
 `engine-overload` holds overload (Winds of Abandon): offered beside the mana cost, with no target; a repetition that
-asks, each player in turn; and each search by the creature's controller as it left the battlefield.
+asks, each player in turn; and each search by the creature's controller as it left the battlefield. The keyword is
+credited as built, with Mizzium Mortars and Vandalblast (Train B X11).
 `engine-discover` holds discover (Quintorius Kand), written with what was built: past what doesn't fit, the rest under,
 cast free from exile or put into hand; each opponent dealt 2 for a spell cast from exile; and mana for each card exiled.
 `engine-eminence` holds eminence (The Ur-Sphinx), from the command zone and its owner's other Sphinxes only; "that many"
@@ -870,7 +871,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 370 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 380 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1213,6 +1214,16 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-x11-keep` - `tests/engine-x11-keep.mjs`
 - `engine-x11-finality` - `tests/engine-x11-finality.mjs`
 - `engine-x11-pay-x` - `tests/engine-x11-pay-x.mjs`
+- `engine-x11-flanking` - `tests/engine-x11-flanking.mjs`: flanking (Sidar Kondo of Jamuraa), once per blocker without it, and a selector's "without" a keyword
+- `engine-x11-umbra-armor` - `tests/engine-x11-umbra-armor.mjs`: umbra armor (Treefolk Umbra) wherever a permanent would be destroyed, and the CR 616.1 choice between two ways out
+- `engine-x11-living-weapon` - `tests/engine-x11-living-weapon.mjs`: living weapon (Bitterthorn, Nissa's Animus), the Germ made and equipped, its controller's
+- `engine-x11-evolve` - `tests/engine-x11-evolve.mjs`: evolve (Fathom Mage), its comparison as it triggers and resolves, and a trigger for each counter, entered with or put on
+- `engine-x11-backup` - `tests/engine-x11-backup.mjs`: backup (Guardian Scalelord), its counter, and the abilities printed below it given to another creature until end of turn
+- `engine-x11-cumulative-upkeep` - `tests/engine-x11-cumulative-upkeep.mjs`: cumulative upkeep (Mystic Remora), an age counter each upkeep and its cost for every one, or sacrificed
+- `engine-x11-prowl` - `tests/engine-x11-prowl.mjs`: prowl (Latchkey Faerie), after combat damage by a source of the caster's sharing a creature type, this turn
+- `engine-x11-escalate` - `tests/engine-x11-escalate.mjs`: escalate (Collective Effort), its cost for each mode beyond the first, the creatures to tap asked of the caster
+- `engine-x11-unearth` - `tests/engine-x11-unearth.mjs`: unearth (Salvation Colossus), from the graveyard at sorcery speed for mana or energy, and exiled at the end step or instead of leaving any other way
+- `engine-x11-ascend` - `tests/engine-x11-ascend.mjs`: ascend (Wayward Swordtooth), the city's blessing at ten permanents for the rest of the game, a permanent's and a spell's, and "unless you have the city's blessing"
 
 ## Design and execution record
 

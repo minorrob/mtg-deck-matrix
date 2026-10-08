@@ -156,6 +156,18 @@ function subjects(state, event, condition, sourceId, controller) {
     }
     return [{card: spell, player: caster, ...spellWas(state, spell)}];
   }
+  /* "WHENEVER THIS CREATURE BECOMES BLOCKED BY A CREATURE" (CR 509.3d): once for each creature that blocks it, about the
+     blocker -- flanking's "by a creature without flanking" (CR 702.25a), the blocker as it is as blockers
+     are declared (509.3f). `who` the attacker blocked, `filter` the blocker. */
+  if (condition.on === "GameEventBlockersDeclared" && condition.blockedBy) {
+    return (fields.blockers ?? []).filter((b) => fits(state, b.blocking?.cardId, {who: condition.who}, sourceId, controller)
+      && (!condition.filter || (state.objects[b.card?.cardId] && matchesSelector({what: "permanent", ...condition.filter}, state, b.card.cardId, {controller, source: sourceId}))))
+      .map((b) => ({card: b.card.cardId}));
+  }
+  /* "Whenever a +1/+1 counter is put on this creature" (Fathom Mage): once for EACH counter put on it (`each`), counters it
+     enters with too (CR 122.6; rules/entering.mjs, enteredWith) -- not once however many, as "one or more" is. */
+  if (condition.on === "GameEventCardCounters" && condition.counterAdded && condition.each === true)
+    return matches(state, event, condition, sourceId, controller) ? Array.from({length: Math.max(0, (fields.newValue ?? 0) - (fields.oldValue ?? 0))}, () => ({})) : [];
   /* "Whenever this creature attacks", "whenever a creature you control attacks" (CR 508.1m): each attacker, and the
      player it attacks. */
   /* "Whenever you attack" ("attackers declared"): the attack as a whole, by whom, with how many, at whom. */
@@ -483,6 +495,10 @@ export function collectTriggers(state, events) {
      resolution is read the same way. */
   const departed = (events ?? []).filter((e) => e.kind === "GameEventCardChangeZone" && e.data?.fields?.from?.zoneType === "Battlefield" && e.data.fields.leftBehind)
     .map((e) => e.data.fields.leftBehind);
+  /* EVOLVE'S ARRIVAL, GONE BEFORE IT RESOLVES (CR 702.100a): the evolve trigger waiting on it, here or on the stack, compares
+     it as it last existed on the battlefield (CR 608.2h; script/condition.mjs, `evolves`). */
+  for (const gone of departed) for (const waiting of [...state.stack, ...(state.pendingTriggers ?? [])])
+    if (waiting.about?.card === gone.cardId && waiting.script?.condition?.evolves === true) waiting.about.lastKnown = {power: gone.power, toughness: gone.toughness};
   /* "WHENEVER ONE OR MORE other creatures die" (`batch`): everything this action did is one event for it (CR 603.2c), so it
      triggers once, about all of them (`about.cards`: "for each of them"). One entry per source and ability, per action. */
   const batched = new Map();

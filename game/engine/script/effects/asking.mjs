@@ -28,7 +28,7 @@
 
 import {cardsIn, moveObject, addObject, valueCostOf, rememberExileLooker, usesThisTurn, recordUse} from "../../state/index.mjs";
 import {compileSelector} from "../filter.mjs";
-import {event, cardRef, moveOne, playersFor, sacrificeOne} from "./zones.mjs";
+import {event, cardRef, moveOne, playersFor, sacrificeOne, destructionQuestion, destructionChoice} from "./zones.mjs";
 import {proliferate as giveEachAnother, addCounters, putCounter, moveCounters} from "./resources.mjs";
 import {makeCopies, afterwards, joinAttack, defendingPlayers, attachTo, createToken, effectUntil, COPY_KEYS} from "./permanents.mjs";
 import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits, unlessPlans, planWords, payPlan} from "../../rules/mana.mjs";
@@ -895,7 +895,8 @@ export const unlessPays = {
        nothing happens. */
     if (params.ifPaid && !params.life && !params.discard && !params.sacrifice && !params.returnToHand && !canPayGeneric(state, payer, Math.max(0, params.amount ?? 0))) return false;
     state.awaiting = {kind: "effect-choice", effect: "unlessPays", player: payer, ...(params.amountX === true ? {} : {amount: Math.max(0, params.amount ?? 0)}),
-      ...(typeof params.mana === "string" && params.mana ? {mana: params.mana} : {}),
+      /* "For each age counter on it" (cumulative upkeep with colored symbols, CR 702.24a): the cost that many times, counted now. */
+      ...(typeof params.mana === "string" && params.mana ? {mana: params.manaTimes === undefined ? params.mana : params.mana.repeat(amountOf(state, params.manaTimes, context))} : {}),
       ...(params.life !== undefined ? {life: params.life} : {}), ...(params.discard ? {discard: params.discard} : {}), ...(params.sacrifice ? {sacrifice: structuredClone(params.sacrifice)} : {}),
       ...(params.sacrificeCount ? {sacrificeCount: params.sacrificeCount} : {}),
       ...(params.returnToHand ? {returnToHand: structuredClone(params.returnToHand)} : {}),
@@ -1621,5 +1622,25 @@ export const counterKind = {
   },
 };
 
+/* ---- orderDestruction (CR 616.1): a destroy whose destruction of one permanent two or more effects would replace, ending
+   differently -- two Auras with umbra armor, or one and a regeneration shield -- asks that permanent's controller which,
+   before anything is destroyed (effects/zones.mjs, destructionQuestion; script/resolution.mjs puts this in the destroy's place
+   only when there is one); then the destroy again, with the answer, asking the next such permanent's controller or
+   destroying. ---- */
+export const orderDestruction = {
+  open(state, params, context) {
+    state.awaiting = {kind: "effect-choice", effect: "orderDestruction", ...destructionQuestion(state, params.destroy, context), destroy: params.destroy};
+    return true;
+  },
+  choice(state, awaiting) {
+    return destructionChoice(state, awaiting);
+  },
+  apply(state, awaiting, indices) {
+    const key = Array.isArray(indices) && indices.length === 1 ? awaiting.options[indices[0]] : undefined;
+    if (key === undefined) throw new Error("Invalid selection");
+    return {events: [], splice: [{...awaiting.destroy, destructionAnswers: {...(awaiting.destroy.destructionAnswers ?? {}), [awaiting.objectId]: key}}]};
+  },
+};
+
 export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage,
-  conniveWhich, manaColors, counterKind});
+  conniveWhich, manaColors, counterKind, orderDestruction});

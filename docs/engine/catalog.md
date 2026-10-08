@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,205 defined and playable today; 2,547 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,211 defined and playable today; 2,567 with every
 mechanic built, so only their definitions are left to write; 28 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 44 | 0 | 14 | 136 |
+| Keyword abilities (CR 702) | 194 | 53 | 0 | 5 | 136 |
 | Keyword actions (CR 701) | 70 | 22 | 3 | 1 | 44 |
 | Effects | 192 | 70 | 1 | 2 | 119 |
 | Triggers | 138 | 20 | 4 | 2 | 112 |
@@ -26,7 +26,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Replacement effects | 34 | 0 | 5 | 0 | 29 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
 | Options and conditions | 37 | 23 | 5 | 0 | 9 |
-| Amounts the game counts | 188 | 16 | 1 | 0 | 171 |
+| Amounts the game counts | 188 | 17 | 1 | 0 | 170 |
 | Choices | 15 | 12 | 0 | 0 | 3 |
 | Other keyword constructs | 16 | 9 | 0 | 1 | 6 |
 
@@ -37,18 +37,18 @@ The things that alone hold back the most of the most-played cards.
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 26 | 92 |
-| option | Remembering what an effect moved | — | missing | 22 | 86 |
+| option | Remembering what an effect moved | — | missing | 23 | 86 |
 | option | You may play or cast a card from another zone | — | missing | 17 | 66 |
 | effect | ChooseColor | — | missing | 10 | 14 |
 | count | What entered or died this turn | — | missing | 10 | 10 |
 | count | Cards in a library | — | missing | 9 | 13 |
 | count | Spells cast this turn | — | missing | 8 | 12 |
 | effect | RingTemptsYou | — | missing | 8 | 11 |
+| trigger | CounterAddedOnce | counter added once | named | 6 | 10 |
 | effect | ChangeTargets | — | missing | 6 | 8 |
 | effect | ChoosePlayer | — | missing | 6 | 8 |
 | option | Imprint (a card exiled with this) | — | missing | 6 | 8 |
 | effect | Discover | discover | named | 6 | 6 |
-| trigger | CounterAddedOnce | counter added once | named | 5 | 10 |
 | count | How many things an effect remembered | — | missing | 5 | 8 |
 | keyword ability | Warp | — | missing | 5 | 7 |
 
@@ -89,7 +89,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.124 | Partner | Partner | built | 6 | 78 | 0 | 0 |
 | 702.16 | Protection | — | named | 6 | 58 | 6 | 4 |
 | 702.74 | Evoke | Evoke | built | 6 | 36 | 0 | 0 |
-| 702.131 | Ascend | — | named | 6 | 30 | 6 | 4 |
+| 702.131 | Ascend | Ascend | built | 6 | 30 | 0 | 0 |
 | 702.174 | Gift | — | missing | 6 | 27 | 6 | 2 |
 | 702.172 | Spree | — | missing | 6 | 21 | 6 | 4 |
 | 702.33 | Kicker | — | missing | 5 | 239 | 5 | 1 |
@@ -101,21 +101,21 @@ The things that alone hold back the most of the most-played cards.
 | 702.143 | Foretell | — | missing | 4 | 55 | 4 | 2 |
 | 702.90 | Infect | Infect | built | 4 | 45 | 0 | 0 |
 | 702.79 | Persist | — | missing | 4 | 24 | 4 | 3 |
-| 702.100 | Evolve | — | named | 4 | 23 | 4 | 3 |
+| 702.100 | Evolve | Evolve | built | 4 | 23 | 0 | 0 |
 | 702.61 | Split Second | — | missing | 4 | 22 | 4 | 3 |
 | 702.175 | Offspring | — | missing | 4 | 21 | 4 | 4 |
 | 702.75 | Hideaway | Hideaway | built | 4 | 15 | 0 | 0 |
 | 702.62 | Suspend | — | missing | 3 | 72 | 3 | 3 |
 | 702.35 | Madness | — | missing | 3 | 62 | 3 | 2 |
-| 702.84 | Unearth | — | named | 3 | 58 | 3 | 3 |
+| 702.84 | Unearth | Unearth | built | 3 | 58 | 0 | 0 |
 | 702.88 | Rebound | Rebound | built | 3 | 35 | 0 | 0 |
 | 702.189 | Firebending | — | missing | 3 | 26 | 3 | 2 |
 | 702.126 | Improvise | — | missing | 3 | 24 | 3 | 2 |
 | 702.151 | Reconfigure | — | missing | 3 | 21 | 3 | 1 |
-| 702.92 | Living Weapon | — | named | 3 | 19 | 3 | 3 |
+| 702.92 | Living Weapon | Living Weapon | built | 3 | 19 | 0 | 0 |
 | 702.94 | Miracle | — | missing | 3 | 17 | 3 | 3 |
 | 702.181 | Mobilize | — | missing | 3 | 15 | 3 | 3 |
-| 702.89 | Umbra Armor | — | named | 3 | 15 | 3 | 3 |
+| 702.89 | Umbra Armor | Umbra Armor | built | 3 | 15 | 0 | 0 |
 | 702.52 | Dredge | — | missing | 3 | 14 | 3 | 3 |
 | 702.37 | Morph | — | missing | 2 | 153 | 2 | 1 |
 | 702.30 | Echo | Echo | built | 2 | 52 | 0 | 0 |
@@ -137,8 +137,8 @@ The things that alone hold back the most of the most-played cards.
 | 702.130 | Afflict | — | missing | 2 | 10 | 2 | 1 |
 | 702.139 | Companion | — | missing | 2 | 10 | 2 | 1 |
 | 702.105 | Dethrone | — | missing | 2 | 9 | 2 | 2 |
-| 702.120 | Escalate | — | named | 2 | 9 | 2 | 2 |
-| 702.24 | Cumulative Upkeep | — | named | 1 | 80 | 1 | 1 |
+| 702.120 | Escalate | Escalate | built | 2 | 9 | 0 | 0 |
+| 702.24 | Cumulative Upkeep | — | named | 1 | 80 | 0 | 0 |
 | 702.27 | Buyback | — | missing | 1 | 40 | 1 | 0 |
 | 702.36 | Fear | Fear | built | 1 | 40 | 0 | 0 |
 | 702.170 | Plot | — | missing | 1 | 33 | 1 | 1 |
@@ -166,7 +166,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.180 | Harmonize | — | missing | 1 | 12 | 1 | 0 |
 | 702.156 | Ravenous | — | missing | 1 | 12 | 1 | 1 |
 | 702.137 | Spectacle | — | missing | 1 | 11 | 1 | 0 |
-| 702.76 | Prowl | — | named | 1 | 10 | 1 | 0 |
+| 702.76 | Prowl | Prowl | built | 1 | 10 | 0 | 0 |
 | 702.150 | Compleated | — | missing | 1 | 7 | 1 | 1 |
 | 702.183 | Tiered | — | missing | 1 | 7 | 1 | 1 |
 | 702.176 | Impending | — | named | 1 | 6 | 1 | 1 |
@@ -178,10 +178,10 @@ The things that alone hold back the most of the most-played cards.
 | 702.146 | Disturb | — | missing | 0 | 32 | 0 | 0 |
 | 702.42 | Entwine | — | missing | 0 | 32 | 0 | 0 |
 | 702.171 | Saddle | — | missing | 0 | 32 | 0 | 0 |
-| 702.25 | Flanking | — | named | 0 | 30 | 0 | 0 |
+| 702.25 | Flanking | Flanking | built | 0 | 30 | 0 | 0 |
 | 702.31 | Horsemanship | — | missing | 0 | 29 | 0 | 0 |
 | 702.190 | Sneak | — | missing | 0 | 27 | 0 | 0 |
-| 702.165 | Backup | — | named | 0 | 26 | 0 | 0 |
+| 702.165 | Backup | Backup | built | 0 | 26 | 0 | 0 |
 | 702.87 | Level Up | — | missing | 0 | 26 | 0 | 0 |
 | 702.46 | Soulshift | — | missing | 0 | 26 | 0 | 0 |
 | 702.22 | Banding | — | missing | 0 | 24 | 0 | 0 |
@@ -540,7 +540,7 @@ The things that alone hold back the most of the most-played cards.
 | TapsForMana | tapped for mana | built | 18 | 64 | 0 | 0 |
 | Sacrificed | sacrificed | built | 17 | 114 | 0 | 0 |
 | Discarded | discarded | built | 17 | 76 | 0 | 0 |
-| CounterAddedOnce | counter added once | named | 10 | 47 | 10 | 5 |
+| CounterAddedOnce | counter added once | named | 10 | 47 | 10 | 6 |
 | AttackersDeclaredOneTarget | attackers declared | built | 8 | 32 | 0 | 0 |
 | SpellCastOrCopy | — | missing | 6 | 31 | 6 | 4 |
 | LifeLost | life lost | built | 6 | 20 | 0 | 0 |
@@ -826,7 +826,7 @@ The things that alone hold back the most of the most-played cards.
 | You may, decided by a named player | modal (Yes / No) | partial | 176 | 1499 | 0 | 0 |
 | An effect's condition: if a permanent is present | an effect's condition {present ...} | built | 142 | 1292 | 0 | 0 |
 | Fewer targets than the most ("up to", "any number of") | a target's count {min, max} (script/bind.mjs), picked as a pick-several | built | 126 | 1672 | 0 | 0 |
-| Remembering what an effect moved | — | missing | 124 | 1168 | 86 | 22 |
+| Remembering what an effect moved | — | missing | 124 | 1168 | 86 | 23 |
 | More than one target of a kind ("up to N") | a target's count {min, max} (script/bind.mjs); a count that is X is not built | partial | 123 | 1664 | 0 | 0 |
 | Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 92 | 26 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
@@ -912,7 +912,7 @@ The things that alone hold back the most of the most-played cards.
 | — | Mana of a color spent to cast it (adamant; "if {G}{G} was spent to cast it") | condition {spent: {color: n}} (script/condition.mjs) | built | 1 | 19 | 0 | 0 |
 | — | TotalCommanderCastFromCommandZone | — | missing | 1 | 16 | 1 | 1 |
 | — | YourTurns | — | missing | 1 | 11 | 1 | 1 |
-| — | Blessing | — | missing | 1 | 10 | 1 | 0 |
+| — | The city's blessing (ascend) | condition {citysBlessing} (script/condition.mjs) | built | 1 | 10 | 0 | 0 |
 | — | Delirium | — | missing | 1 | 9 | 1 | 1 |
 | — | AltCost | — | missing | 1 | 8 | 1 | 0 |
 | — | CreaturesAttackedThisTurn | — | missing | 1 | 7 | 1 | 0 |
@@ -928,7 +928,7 @@ The things that alone hold back the most of the most-played cards.
 | — | CardBasePower | — | missing | 1 | 2 | 1 | 1 |
 | — | HasPropertyHasCardsInHand | — | missing | 1 | 2 | 1 | 1 |
 | — | MaxOppDamageThisTurn | — | missing | 1 | 2 | 1 | 1 |
-| — | BloodthirstAmount | — | missing | 1 | 1 | 1 | 0 |
+| — | BloodthirstAmount | — | missing | 1 | 1 | 1 | 1 |
 | — | CardNumAttacksThisTurn | — | missing | 1 | 1 | 1 | 1 |
 | — | Colors in your commanders' identity | — | missing | 1 | 1 | 1 | 1 |
 | — | FinishedEndOfTurnsThisTurn | — | missing | 1 | 1 | 1 | 0 |
