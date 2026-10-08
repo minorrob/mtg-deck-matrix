@@ -13,9 +13,9 @@ names the file and writes; **tests** are the suites that read it.
 
 | | |
 |---|---|
-| Artifacts | 77 (66 JSON, 11 workbooks and documents) · 79.2 MB |
+| Artifacts | 76 (65 JSON, 11 workbooks and documents) · 79.2 MB |
 | Served to the app | 17 · 45.0 MB (7.0 MB precached by the worker, 37.4 MB cached on demand) |
-| Tool inputs | 38 |
+| Tool inputs | 37 |
 | Source workbooks and documents | 11 |
 | Archive (already, or should be) | 10 |
 | Review: no reader found | 0 |
@@ -59,7 +59,6 @@ names the file and writes; **tests** are the suites that read it.
 | `data/engine/scripts/77/777b8ec4-a783-4297-96b7-4f200d0eb734.json` | 2 KB | {schema, name, oracleId, oracleHash, status, script, …} | schema CrankCompiledCard@1 | 2026-10-06 | game/tools/engine-ingest.mjs (declared), game/tools/engine-compile.mjs (declared) | — |  | — | — | — | **tool input** | a learned definition or its ledger: the card directory reads the folder (game/tools/engine-cards.mjs); seated at no table until confirmed (D5) |
 | `data/engine/scripts/7b/7b0767b8-b504-456e-93bd-218502f73b3d.json` | 1 KB | {schema, name, oracleId, oracleHash, status, script, …} | schema CrankCompiledCard@1 | 2026-10-06 | game/tools/engine-ingest.mjs (declared), game/tools/engine-compile.mjs (declared) | — |  | — | — | — | **tool input** | a learned definition or its ledger: the card directory reads the folder (game/tools/engine-cards.mjs); seated at no table until confirmed (D5) |
 | `data/engine/scripts/80/80686908-abb5-4728-a5f6-71baca27f467.json` | 2 KB | {schema, name, oracleId, oracleHash, status, script, …} | schema CrankCompiledCard@1 | 2026-10-06 | game/tools/engine-ingest.mjs (declared), game/tools/engine-compile.mjs (declared) | — |  | — | — | — | **tool input** | a learned definition or its ledger: the card directory reads the folder (game/tools/engine-cards.mjs); seated at no table until confirmed (D5) |
-| `data/engine/scripts/86/868f0a0a-ca9e-4baf-8295-6b228aa834e5.json` | 2 KB | {schema, name, oracleId, oracleHash, status, script, …} | schema CrankCompiledCard@1 | 2026-10-06 | game/tools/engine-ingest.mjs (declared), game/tools/engine-compile.mjs (declared) | — |  | — | — | — | **tool input** | a learned definition or its ledger: the card directory reads the folder (game/tools/engine-cards.mjs); seated at no table until confirmed (D5) |
 | `data/engine/scripts/8e/8e7b31eb-7a91-4992-b24a-d81173e1dbc8.json` | 2 KB | {schema, name, oracleId, oracleHash, status, script, …} | schema CrankCompiledCard@1 | 2026-10-06 | game/tools/engine-ingest.mjs (declared), game/tools/engine-compile.mjs (declared) | — |  | — | — | — | **tool input** | a learned definition or its ledger: the card directory reads the folder (game/tools/engine-cards.mjs); seated at no table until confirmed (D5) |
 | `data/engine/scripts/92/92301066-8904-41bc-84bd-4aa286cbab9c.json` | 4 KB | {schema, name, oracleId, oracleHash, status, script, …} | schema CrankCompiledCard@1 | 2026-10-06 | game/tools/engine-ingest.mjs (declared), game/tools/engine-compile.mjs (declared) | — |  | — | — | — | **tool input** | a learned definition or its ledger: the card directory reads the folder (game/tools/engine-cards.mjs); seated at no table until confirmed (D5) |
 | `data/engine/scripts/99/99c2d3ef-e5b4-48cd-b3f5-de9b02c7c36a.json` | 3 KB | {schema, name, oracleId, oracleHash, status, script, …} | schema CrankCompiledCard@1 | 2026-10-06 | game/tools/engine-ingest.mjs (declared), game/tools/engine-compile.mjs (declared) | — |  | — | — | — | **tool input** | a learned definition or its ledger: the card directory reads the folder (game/tools/engine-cards.mjs); seated at no table until confirmed (D5) |
