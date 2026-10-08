@@ -827,12 +827,21 @@ const noun = (selector) => (selector?.subtypes?.length ? `a ${selector.subtypes[
 /* "Another creature you control" (Faerie Impostor): `another` read against the "unless" ability's own source. */
 const otherNoun = (selector) => (selector?.another === true ? noun(selector).replace(/^a /, "another ") : noun(selector));
 function costWords(awaiting) {
+  if (awaiting.amountX) return "pay {X}";
   const paid = [awaiting.mana ?? null, awaiting.amount > 0 ? `{${awaiting.amount}}` : null, lifeAsked(awaiting) ? `${awaiting.life} life` : null].filter(Boolean);
   const other = awaiting.discard ? "discard a card" : awaiting.sacrificeCount ? `sacrifice ${awaiting.sacrificeCount} permanents` : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}`
     : awaiting.returnToHand ? `return ${otherNoun(awaiting.returnToHand)} you control to its owner's hand` : null;
   return [other, paid.length ? `pay ${paid.join(" and ")}` : null].filter(Boolean).join(" and ") || `pay {${awaiting.amount}}`;
 }
+/* "YOU MAY PAY {X}" (Halo Forager; `amountX`, CR 107.3f): X is the payer's to choose as it resolves -- each amount their pool
+   and plain mana sources could pay, from {0}, its own option -- and what follows knows it (`paidX`, script/resolution.mjs). */
+function xOptions(state, player) {
+  const options = [];
+  for (let x = 0; canPayGeneric(state, player, x); x += 1) options.push({label: `Pay {${x}}`, pay: true, x});
+  return options;
+}
 function payOptions(state, awaiting) {
+  if (awaiting.amountX && awaiting.amount === undefined) return xOptions(state, awaiting.player);
   const {player} = awaiting, amount = awaiting.amount ?? 0, life = awaiting.life ?? 0;
   if (amount > 0 && !canPayGeneric(state, player, amount)) return [];
   if (awaiting.mana && !unlessPlans(state, player, awaiting.mana, 1).plans.length) return [];
@@ -869,11 +878,12 @@ export const unlessPays = {
     /* "You may pay {4}. If you do, ..." (Mana Vault), mana alone, by a player who cannot pay it: no choice to make, and
        nothing happens. */
     if (params.ifPaid && !params.life && !params.discard && !params.sacrifice && !params.returnToHand && !canPayGeneric(state, payer, Math.max(0, params.amount ?? 0))) return false;
-    state.awaiting = {kind: "effect-choice", effect: "unlessPays", player: payer, amount: Math.max(0, params.amount ?? 0),
+    state.awaiting = {kind: "effect-choice", effect: "unlessPays", player: payer, ...(params.amountX === true ? {} : {amount: Math.max(0, params.amount ?? 0)}),
       ...(typeof params.mana === "string" && params.mana ? {mana: params.mana} : {}),
       ...(params.life !== undefined ? {life: params.life} : {}), ...(params.discard ? {discard: params.discard} : {}), ...(params.sacrifice ? {sacrifice: structuredClone(params.sacrifice)} : {}),
       ...(params.sacrificeCount ? {sacrificeCount: params.sacrificeCount} : {}),
       ...(params.returnToHand ? {returnToHand: structuredClone(params.returnToHand)} : {}),
+      ...(params.amountX === true ? {amountX: true} : {}),
       effects: structuredClone(params.effects ?? []), source: context.source ?? null,
       /* "You may pay {1}. If you do, ...": the effects when it is paid, not when it is not. */
       ...(params.ifPaid ? {ifPaid: true} : {}),
@@ -897,7 +907,7 @@ export const unlessPays = {
       min: awaiting.sacrificeCount, max: awaiting.sacrificeCount, options: payOptions(state, awaiting).map((option, index) => ({index, ...option}))};
     const source = awaiting.source !== null ? state.objects[awaiting.source]?.card : null;
     const pays = payOptions(state, awaiting).map((option, index) => ({index, ...option}));
-    return {id: `unless:${awaiting.player}:${state.turn}:${awaiting.amount}`, title: `${source ? `${source}: ` : ""}${costWords(awaiting)}?`, mode: "one", min: 1, max: 1,
+    return {id: `unless:${awaiting.player}:${state.turn}:${awaiting.amount ?? "X"}`, title: `${source ? `${source}: ` : ""}${costWords(awaiting)}?`, mode: "one", min: 1, max: 1,
       options: [...pays, {index: pays.length, label: "Don't pay", pay: false}]};
   },
   apply(state, awaiting, indices) {
@@ -928,6 +938,8 @@ export const unlessPays = {
       return {events: [], again: true};
     }
     if (!option.pay) return awaiting.ifPaid ? [] : {events: [], splice: structuredClone(awaiting.effects)};
+    /* The X chosen is the amount paid. */
+    if (option.x !== undefined) return unlessPays.paid(state, {...awaiting, amount: option.x}, option);
     return unlessPays.paid(state, awaiting, option);
   },
   /* Paying, with the option chosen: its mana, then the rest. `spent`, what a mana cost with colors was already paid with. */
@@ -968,7 +980,7 @@ function unlessPaid(state, awaiting, option, events) {
     if (state.objects[option.bounce]?.zone !== "battlefield" || controllerOf(state, option.bounce) !== awaiting.player) throw new Error("That permanent can no longer be returned to its owner's hand");
     moveOne(state, option.bounce, "hand", events);
   }
-  if (awaiting.ifPaid) return {events, splice: structuredClone(awaiting.effects)};
+  if (awaiting.ifPaid) return {events, splice: structuredClone(awaiting.effects), ...(awaiting.amountX ? {paidX: awaiting.amount} : {})};
   /* "If they do, you create a Lander token" (Divert Disaster): what paying leads to. */
   return awaiting.whenPaid ? {events, splice: structuredClone(awaiting.whenPaid)} : events;
 }
@@ -1360,11 +1372,13 @@ export const play = {
         /* "For each player, you may cast a card that player milled this way" (The Ur-Sphinx): `ownedBy` "that player". */
         && (params.ownedBy !== "that player" || state.objects[id].owner === context.about?.player));
     const terms = {most, free: params.free === true, anyMana: params.anyMana === true};
+    /* "If that spell would be put into a graveyard, exile it instead" (Halo Forager): the spell cast, so marked (rules/actions.mjs). */
+    const exileInstead = params.exileInstead === true ? {exileInstead: true} : {};
     const choices = playable(state, player, pool, terms);
     if (!choices.length) return false;
     /* For `anyNumber`, what may still be cast and on what terms, to ask again (a number, not Infinity: state is JSON). */
     state.awaiting = {kind: "effect-choice", effect: "play", player, choices,
-      ...(params.anyNumber === true ? {again: {pool, ...terms, most: Number.isFinite(most) ? most : null}, cast: 0} : {})};
+      ...(params.anyNumber === true ? {again: {pool, ...terms, most: Number.isFinite(most) ? most : null}, cast: 0} : {}), ...exileInstead};
     return true;
   },
   choice(state, awaiting) {
@@ -1393,7 +1407,7 @@ export const play = {
     }
     const action = {...chosen};
     delete action.owed;
-    events.push(...castNow(state, awaiting.player, action));
+    events.push(...castNow(state, awaiting.player, action, awaiting.exileInstead ? {graveyardToExile: true} : {}));
     /* Any number: asked again, of what is still there to cast. */
     if (awaiting.again) {
       const {pool, most, free, anyMana} = awaiting.again;

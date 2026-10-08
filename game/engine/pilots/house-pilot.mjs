@@ -315,6 +315,13 @@ export function housePilot({seat, cards = () => null} = {}) {
         const lifeless = options.find((o) => /\|0$/.test(o.key ?? ""));
         return {indices: [(lifeless ?? options[0]).index]};
       }
+      /* "You may pay {X}" (Halo Forager): the most it can pay that is the mana value of an instant or sorcery card in a
+         graveyard -- what that X is for -- or nothing. */
+      if (id.startsWith("unless:") && options.some((o) => o.x !== undefined)) {
+        const values = new Set(view.players.flatMap((p) => zone(p, "Graveyard")).filter((c) => (known(c.name)?.types ?? []).some((t) => t === "Instant" || t === "Sorcery")).map((c) => manaValue(c.name)));
+        const best = options.filter((o) => o.x !== undefined && values.has(o.x)).reduce((top, o) => (!top || o.x > top.x ? o : top), null);
+        return {indices: [(best ?? options.find((o) => o.pay === false)).index]};
+      }
       /* Escape's other cards (CR 702.138a): the lands first, then the cheapest -- what it is least likely to want back. */
       if (id.startsWith("choose-cost:")) {
         const yard = new Map(zone(self, "Graveyard").map((c) => [c.cardId, c]));

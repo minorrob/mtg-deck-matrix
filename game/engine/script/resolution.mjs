@@ -262,6 +262,9 @@ export function answerResolution(state, indices, extra = {}, rng = null) {
   if (!Array.isArray(outcome) && outcome.searched === true) state.resolving.context.searched = true;
   /* "Choose a creature type": the type, for the effects after it ("$chosen", script/bind.mjs). */
   if (!Array.isArray(outcome) && typeof outcome.chosen === "string") state.resolving.context.chosen = outcome.chosen;
+  /* "You may pay {X}" (Halo Forager; CR 107.3f): the X its payer chose and paid, for what follows -- "when you do, ... with
+     mana value X". */
+  if (!Array.isArray(outcome) && Number.isInteger(outcome.paidX)) state.resolving.context.x = outcome.paidX;
 
   /* The effect that asked is finished. A modal hands back the chosen modes' effects, which go in
      front of whatever was already queued. */

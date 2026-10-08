@@ -1327,8 +1327,9 @@ function offers(state, player) {
  * Cast a card as an effect resolves (CR 608.2g; effects/asking.mjs, `play`): one of `castChoicesNow`'s, what it costs
  * already the effect's to have paid. No priority is needed, nor a sorcery's timing.
  */
-export function castNow(state, player, action) {
-  return perform(state, player, action, {paid: true});
+/* `terms.graveyardToExile`: "if that spell would be put into a graveyard, exile it instead" (Halo Forager). */
+export function castNow(state, player, action, terms = {}) {
+  return perform(state, player, action, {paid: true, ...(terms.graveyardToExile === true ? {graveyardToExile: true} : {})});
 }
 
 /** The ways to cast this card now as an effect lets it be cast: its targets or modes. Not a land, an Aura, or a spell with an additional cost to choose. */
@@ -1851,7 +1852,7 @@ function performOffered(state, player, action, during) {
     const next = (state.effects ?? []).findIndex((e) => e.rule === "next-spell-uncounterable" && e.sourceController === player);
     if (next >= 0) { entry.uncounterable = true; state.effects.splice(next, 1); }
     /* "If a spell cast this way would be put into your graveyard, exile it instead" (Kess): to exile, if to a graveyard. */
-    if (permission?.ability.graveyardToExile) entry.graveyardToExile = true;
+    if (permission?.ability.graveyardToExile || during?.graveyardToExile) entry.graveyardToExile = true;
     /* On the spell as it now is: moving to the stack made a new object (CR 400.7). */
     if (gains.length && state.objects[entry.objectId]) state.objects[entry.objectId].castGains = gains;
     if (grants.length && state.objects[entry.objectId]) state.objects[entry.objectId].castGrants = grants;

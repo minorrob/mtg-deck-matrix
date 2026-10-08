@@ -756,6 +756,9 @@ export function immediateTrigger(state, params, context) {
   (state.pendingTriggers ??= []).push({abilityId: "reflexive", text: params.text ?? "When you do", controller: context.controller,
     source: {cardId: source, name: source !== null ? state.objects[source]?.card ?? null : null}, cause: null, optional: false,
     ...(context.about ? {about: structuredClone(context.about)} : {}),
+    /* And the X of the resolution that made it (Halo Forager's "you may pay {X}. When you do, ... with mana value X"):
+       what its targets and effects read as X (rules/trigger.mjs). */
+    ...(Number.isInteger(context.x) ? {x: context.x} : {}),
     script: {targets: structuredClone(params.targets ?? []), effects: structuredClone(params.effects ?? [])}});
   return [];
 }
