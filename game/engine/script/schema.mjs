@@ -150,6 +150,13 @@ function checkEffect(effect, path, errors) {
     if (effect.to === undefined && effect.targets === undefined && effect.who === undefined) errors.push({path, message: "damageEach deals its damage to itself, or to targets or players"});
     if (effect.selector !== undefined) checkSelector(effect.selector, `${path}.selector`, errors, {choice: true});
   }
+  /* Counters moved (moveCounters, CR 122.5; script/effects/resources.mjs): from one object onto another, of a kind named --
+     or "chosen", its controller's choice among the kinds there (effects/asking.mjs, counterKind). */
+  if (name === "moveCounters") {
+    if (effect.from === undefined) errors.push({path: `${path}.from`, message: "moveCounters says what it moves counters from: `from`, an object"});
+    if (effect.targets === undefined) errors.push({path: `${path}.targets`, message: "moveCounters says what it moves them onto: `targets`, an object"});
+    if (typeof effect.counter !== "string") errors.push({path: `${path}.counter`, message: "moveCounters names the kind of counter it moves, or \"chosen\" for its controller's choice"});
+  }
   /* A designation (alterAttribute, script/effects/attributes.mjs): monstrous or prepared. */
   if (name === "alterAttribute" && !["monstrous", "prepared"].includes(effect.attribute))
     errors.push({path: `${path}.attribute`, message: "alterAttribute gives or takes a designation: \"monstrous\" or \"prepared\""});

@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1195,
+  "defined": 1198,
   "provisional": 28,
-  "everyRule": 2525
+  "everyRule": 2535
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -440,7 +440,7 @@
      "top": 6,
      "all": 27,
      "blocks": 6,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -716,7 +716,7 @@
      "top": 3,
      "all": 17,
      "blocks": 3,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -3206,9 +3206,9 @@
   },
   "Effects": {
    "tally": {
-    "built": 68,
+    "built": 70,
     "partial": 1,
-    "named": 4,
+    "named": 2,
     "missing": 119
    },
    "entries": [
@@ -3949,12 +3949,12 @@
      "rule": null,
      "name": "AddTurn",
      "engine": "addTurn",
-     "status": "named",
+     "status": "built",
      "forge": "AddTurn",
      "top": 10,
      "all": 65,
-     "blocks": 10,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4098,7 +4098,7 @@
      "top": 6,
      "all": 45,
      "blocks": 6,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -4153,12 +4153,12 @@
      "rule": null,
      "name": "MoveCounter",
      "engine": "moveCounters",
-     "status": "named",
+     "status": "built",
      "forge": "MoveCounter",
      "top": 5,
      "all": 32,
-     "blocks": 5,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",

@@ -317,8 +317,9 @@ export function smokeTest(script, cards) {
     const bad = zoneProblems(state);
     /* Whether the card was actually played: a counterspell with nothing to counter stays in hand, which is the
        fixture's limit and not the script's fault -- so it is reported, not refused. */
-    /* A double-faced card's events name the face that was cast or played. */
-    const names = script.back !== undefined || script.adventure !== undefined ? String(script.identity.name).split(" // ") : [script.identity.name];
+    /* A double-faced card's events name the face that was cast or played -- and a preparation card's its own name, the
+       only one it has in every zone (CR 722.4): "Goblin Glasswright", never the pair. */
+    const names = script.back !== undefined || script.adventure !== undefined || script.prepare !== undefined ? String(script.identity.name).split(" // ") : [script.identity.name];
     const played = (!(script.identity.types ?? []).includes("Land") && !script.identity.manaCost)
       || events.some((e) => (e.kind === "GameEventLandPlayed" && names.includes(e.data.fields.land?.name))
         || (e.kind === "GameEventSpellAbilityCast" && e.data.fields.sa?.isSpell && names.includes(e.data.fields.card?.name)));

@@ -50,6 +50,11 @@ export const SELECTOR_KEYS = Object.freeze([
   "sharesCreatureTypeWithCommander",
   /* "A card exiled with this artifact" (CR 607.2a, 406.6): what this source's linked ability exiled, still in exile. */
   "exiledWith",
+  /* "Target creature that was dealt damage this turn" (Mirrodin Avenged; CR 120.3). */
+  "dealtDamageThisTurn",
+  /* "Each other attacking creature that shares a creature type with it" (Shared Animosity): relative to the creature a
+     trigger is about -- not it, and sharing one of its creature types. */
+  "otherThan", "sharesCreatureTypeWith",
 ]);
 
 /* THE SOURCE A LINK IS KEPT AGAINST (CR 607.2a; effects/zones.mjs, `link`): the ability's source -- or, gone from the
@@ -133,6 +138,9 @@ function assertGrammar(selector) {
   const most = selector.manaValue?.max;
   if (most !== null && typeof most === "object" && amountProblems(most).length) throw new Error(`A selector's manaValue.max: ${amountProblems(most).join("; ")}`);
   if (selector.exiledWith !== undefined && selector.exiledWith !== "self") throw new Error("A selector's exiledWith is \"self\": a card this source's linked ability exiled");
+  if (selector.dealtDamageThisTurn !== undefined && typeof selector.dealtDamageThisTurn !== "boolean") throw new Error("A selector's dealtDamageThisTurn is true or false");
+  for (const key of ["otherThan", "sharesCreatureTypeWith"])
+    if (selector[key] !== undefined && selector[key] !== "that card") throw new Error(`A selector's ${key} is "that card": the object a trigger is about`);
   /* "With power less than this creature's power" (mentor, CR 702.134a): `power.lessThan` "self". */
   if (selector.power?.lessThan !== undefined && selector.power.lessThan !== "self") throw new Error("A selector's power.lessThan is \"self\": less than its source's power");
 }
@@ -351,6 +359,10 @@ export function compileSelector(selector) {
     if (selector.owner === "opponent" && object.owner === chooser) return false;
     /* "If you control a commander" (CR 903.3): a card designated a commander. */
     if (selector.commander === true && object.commander !== true) return false;
+    /* "Target creature that was dealt damage this turn" (Mirrodin Avenged; CR 120.3): any damage, by anything, since this
+       turn began -- still so once the damage is gone (regenerated, CR 701.19a), never so for damage before this object was
+       (CR 400.7) or before this turn (effects/resources.mjs, damagePermanent). */
+    if (selector.dealtDamageThisTurn !== undefined && (usesThisTurn(state, id, "dealt damage") > 0) !== selector.dealtDamageThisTurn) return false;
     /* "Untap all creatures that attacked this turn" (Relentless Assault): declared as an attacker in a combat this turn. */
     if (selector.attackedThisTurn === true && usesThisTurn(state, id, "attacked") === 0) return false;
     /* "Four or more +1/+1 counters on it": a number of counters of a kind. */
@@ -385,6 +397,19 @@ export function compileSelector(selector) {
       if (selector.toughness.max !== undefined && toughness > selector.toughness.max) return false;
     }
     if (selector.self === true && id !== context.source) return false;
+    /* RELATIVE TO WHAT A TRIGGER IS ABOUT: "it gets +1/+0 until end of turn for each other attacking creature that shares a
+       creature type with it" (Shared Animosity) -- "it" the attacking creature the trigger is about (`about.card`, rules/
+       trigger.mjs). `otherThan`: not that one (CR 109.5's "other", of it rather than the source). `sharesCreatureTypeWith`:
+       one of its creature types is one of that creature's, through the layers (CR 205.3m), a changeling having every one
+       (CR 702.73a). Nothing the trigger is about, or it gone, and nothing shares a type with it. */
+    if (selector.otherThan === "that card" && id === context.about?.card) return false;
+    if (selector.sharesCreatureTypeWith === "that card") {
+      const other = context.about?.card;
+      if (other === undefined || other === null || !state.objects[other]) return false;
+      const mine = creatureTypesOf(state, id), theirs = creatureTypesOf(state, other);
+      const shares = mine.every ? theirs.every || theirs.types.length > 0 : theirs.every ? mine.types.length > 0 : mine.types.some((t) => theirs.types.includes(t));
+      if (!shares) return false;
+    }
     /* "A card exiled with this artifact", "target card exiled with Quintorius" (CR 607.2a, 406.6): one this source's linked
        ability exiled, still that card in exile. */
     if (selector.exiledWith === "self" && !exiledWithSource(state, linkSource(context)).includes(id)) return false;

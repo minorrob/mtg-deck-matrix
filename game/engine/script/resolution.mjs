@@ -196,6 +196,12 @@ export function runResolution(state, rng = null) {
        chooses which applies first, before any of it is dealt (effects/asking.mjs, orderDamage). */
     else if (damageQuestion(state, effect, resolving.context, effect?.damageOrders ?? {}))
       resolving.queue[0] = {effect: "orderDamage", damage: effect, answers: effect.damageOrders ?? {}};
+    /* "Choose a counter on target permanent. Put an additional counter of that kind on that permanent" (Ichormoon Gauntlet),
+       "move a counter from target creature you control onto a second target creature" (Tidus): a kind of counter its
+       controller chooses (`counter: "chosen"`), asked before it is done, among the kinds there (effects/asking.mjs,
+       counterKind). */
+    else if ((effect?.effect === "putCounter" || effect?.effect === "moveCounters") && effect.counter === "chosen")
+      resolving.queue[0] = {effect: "counterKind", then: effect};
     const head = resolving.queue[0];
     const asking = ASKING[head?.effect];
 

@@ -525,15 +525,20 @@ export function destroyAll(state, params, context) {
   const matched = [...selectMatching(state, params.selector ?? {what: "permanent"}, context)].filter((id) => !spared?.has(id));
   const doomed = matched.filter((id) => state.objects[id]?.zone === "battlefield" && !keywordsOf(state, id).includes("Indestructible"));
   /* Each regenerated one stays (CR 701.19a), unless the card says "they can't be regenerated" (`noRegenerate`). */
-  const destroyed = [];
+  const destroyed = [], destroyedWas = [];
   for (const id of doomed) {
     if (params.noRegenerate !== true && regenerated(state, id, events)) continue;
+    /* What it was as it left the battlefield (CR 608.2h), for `remember`: read before it moves. */
+    const before = params.remember ? lastKnown(state, id) : null;
     const moved = moveOne(state, id, "graveyard", events);
-    if (moved !== null) destroyed.push(moved);
+    if (moved !== null) { destroyed.push(moved); if (before) destroyedWas.push(before); }
   }
   /* "You gain 1 life for each creature destroyed this way" (Ob Nixilis, the Ascended): `remember`, what it destroyed --
-     neither the indestructible nor the regenerated -- for the effects after it ({rememberedCount: true}). */
-  if (params.remember) context.remembered = destroyed;
+     neither the indestructible nor the regenerated -- for the effects after it ({rememberedCount: true}). And each of them
+     as it last existed on the battlefield (`movedWas`): "for each nontoken creature you controlled that was destroyed this
+     way" (Ceaseless Conflict; script/amount.mjs, movedCount) asks who controlled it then, and whether it was a token -- one
+     a token has ceased to exist since (CR 704.5d), the other a card in its owner's graveyard. */
+  if (params.remember) { context.remembered = destroyed; context.movedWas = destroyedWas; }
   return events;
 }
 
