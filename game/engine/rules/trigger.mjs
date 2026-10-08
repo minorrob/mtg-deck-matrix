@@ -49,7 +49,7 @@ import {pushAbility, becameTarget} from "./stack.mjs";
 import {cardsIn, usesThisTurn, recordUse} from "../state/index.mjs";
 import {playerStatics} from "./statics.mjs";
 import {matchesSelector, matchesLastKnown} from "../script/filter.mjs";
-import {abilitiesOf, characteristicsOf} from "./layers.mjs";
+import {abilitiesOf, abilitiesReader, characteristicsOf} from "./layers.mjs";
 import {chosenFor} from "../script/chosen.mjs";
 import {targetChoices, targetName, isHostile, isChoosing, targetCandidates, countedChoice, modalScript, differentControllersProblem} from "../script/bind.mjs";
 
@@ -517,6 +517,8 @@ export function collectTriggers(state, events) {
     const entry = state.pendingTriggers[state.pendingTriggers.length - 1];
     entry.about = {...(entry.about ?? {}), cards: about.card !== undefined ? [about.card] : []};
   };
+  /* The board does not change while this reads it: each permanent's abilities are read once, for every event. */
+  const abilitiesNow = abilitiesReader(state);
   for (const event of events ?? []) {
     /* An arrival waiting to be told what it is a copy of triggers once it is (rules/entering.mjs). */
     if (event.data?.fields?.awaitingCopy === true) continue;
@@ -531,7 +533,7 @@ export function collectTriggers(state, events) {
       for (const id of zone === "cycled" ? wentTo : zone === "cast" ? justCast : state.zones[zone]) {
         const object = state.objects[id];
         /* A permanent's abilities now, the ones given it included (layers.mjs); a card's elsewhere. */
-        for (const own of abilitiesOf(state, id)) {
+        for (const own of abilitiesNow(id)) {
           /* "Whenever you cast a creature spell of the chosen type": read with its permanent's choice. */
           const ability = chosenFor(own, object);
           /* A triggered mana ability happened with the mana ability that triggered it (manaTriggered). */

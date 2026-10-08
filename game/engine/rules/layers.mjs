@@ -585,6 +585,20 @@ export function abilitiesOf(state, id) {
   return heldAbilities(object, characteristicsOf(state, id));
 }
 
+/** Permanents' abilities for one look at a board that does not change while it is read (rules/trigger.mjs, collectTriggers):
+    whether any effect may give or take abilities is asked once, not once a permanent, and each permanent's abilities are
+    read once. With a thousand Goblin tokens on the battlefield (Krenko, Mob Boss and Intruder Alarm; G1, 2026-10-08)
+    asking it for each was a million reads for every trigger that resolved. */
+export function abilitiesReader(state) {
+  const change = abilitiesChange(state), read = new Map();
+  return (id) => {
+    const object = state.objects[id];
+    if (object.zone !== "battlefield" || !change) return object.abilities ?? [];
+    if (!read.has(id)) read.set(id, heldAbilities(object, characteristicsOf(state, id)));
+    return read.get(id);
+  };
+}
+
 /**
  * LAST KNOWN INFORMATION (CR 113.7a) — everything about an object, captured before it leaves.
  *
