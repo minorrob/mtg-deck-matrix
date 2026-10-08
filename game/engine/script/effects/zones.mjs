@@ -85,10 +85,8 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false, fa
      Cast with flashback, it is exiled instead of going anywhere else (CR 702.34a). */
   const leaving = from === "stack" ? state.stack.findIndex((entry) => entry.objectId === id) : -1;
   /* Cast "this way" by Kess: to exile only instead of a graveyard. */
-  const destination = leaving >= 0 && (state.stack[leaving].flashback || (state.stack[leaving].graveyardToExile && proposal.to === "graveyard")) ? "exile"
-    /* "If it would leave the battlefield, exile it instead of putting it anywhere else" (Whip of Erebos): on the permanent
-       (effects/permanents.mjs, afterwards), gone with it when it leaves (CR 400.7). */
-    : from === "battlefield" && object.exileIfLeaves === true ? "exile" : proposal.to;
+  /* "If it would leave the battlefield, exile it instead" (unearth, Whip of Erebos) is a replacement (rules/replacement.mjs). */
+  const destination = leaving >= 0 && (state.stack[leaving].flashback || (state.stack[leaving].graveyardToExile && proposal.to === "graveyard")) ? "exile" : proposal.to;
   const holder = owner ?? object.owner;
 
   /* A modal double-faced card told to enter with its front face up, when that face is no permanent's (CR 712.14b): it

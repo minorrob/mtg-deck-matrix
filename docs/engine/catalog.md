@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,199 defined and playable today; 2,537 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,199 defined and playable today; 2,540 with every
 mechanic built, so only their definitions are left to write; 28 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 49 | 0 | 9 | 136 |
+| Keyword abilities (CR 702) | 194 | 50 | 0 | 8 | 136 |
 | Keyword actions (CR 701) | 70 | 22 | 3 | 1 | 44 |
 | Effects | 192 | 68 | 1 | 4 | 119 |
 | Triggers | 138 | 20 | 4 | 2 | 112 |
@@ -107,7 +107,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.75 | Hideaway | Hideaway | built | 4 | 15 | 0 | 0 |
 | 702.62 | Suspend | — | missing | 3 | 72 | 3 | 3 |
 | 702.35 | Madness | — | missing | 3 | 62 | 3 | 2 |
-| 702.84 | Unearth | — | named | 3 | 58 | 3 | 3 |
+| 702.84 | Unearth | Unearth | built | 3 | 58 | 0 | 0 |
 | 702.88 | Rebound | Rebound | built | 3 | 35 | 0 | 0 |
 | 702.189 | Firebending | — | missing | 3 | 26 | 3 | 2 |
 | 702.126 | Improvise | — | missing | 3 | 24 | 3 | 2 |

@@ -779,6 +779,23 @@ export function compileScript(script) {
       keywords.push("Escalate");
       return;
     }
+    /* UNEARTH (CR 702.84a): "[Cost]: Return this card from your graveyard to the battlefield. It gains haste. Exile it at the
+       beginning of the next end step. If it would leave the battlefield, exile it instead of putting it anywhere else.
+       Activate only as a sorcery." -- an activated ability of the card in its owner's graveyard (rules/actions.mjs offers it
+       there), its cost mana, or energy ("Unearth--Pay eight {E}", Salvation Colossus; CR 107.14). "This card" is the card in
+       the graveyard: gone from there before it resolves, it is a new object and nothing returns (CR 400.7). What it gains and
+       what exiles it are the effect's, not the permanent's (effects/permanents.mjs, afterwards; rules/replacement.mjs). */
+    if (word === "unearth") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      const manaOk = (atom) => { try { const parsed = parseManaCost(atom.cost ?? ""); return parsed.symbols.length > 0 && parsed.variable === 0; } catch { return false; } };
+      if (!cost.length || !cost.every((atom) => (atom?.atom === "mana" && manaOk(atom)) || (atom?.atom === "payEnergy" && Number.isInteger(atom.count) && atom.count >= 1)))
+        problems.push(`${ability.text}: an unearth cost of mana or energy ({E}), and at least one`);
+      if (!(identity.types ?? []).some((t) => ["Artifact", "Battle", "Creature", "Enchantment", "Land", "Planeswalker"].includes(t))) problems.push(`${ability.text}: unearth returns a permanent card to the battlefield`);
+      abilities.push({id, kind: "activated", zone: "graveyard", timing: "sorcery", text: ability.text, cost: structuredClone(cost), targets: [],
+        effects: [{effect: "moveZone", targets: "self", to: "battlefield", gains: ["Haste"], atEndStep: "exile", exileIfLeaves: true}]});
+      keywords.push("Unearth");
+      return;
+    }
     /* FLASHBACK (CR 702.34a): the keyword with its cost, a list of atoms -- a mana cost, and "pay 3 life" -- kept as a
        static ability so the card carries it into its graveyard (rules/actions.mjs offers the cast there). Only on an
        instant or sorcery: "if the resulting spell is an instant or sorcery spell". */

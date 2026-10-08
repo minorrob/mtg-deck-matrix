@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Salvation Colossus",
+    "oracleId": "8b5c6754-36bd-44ac-b0c0-5a3cd2d9f2c3",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Construct"
+    ],
+    "manaCost": "{6}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 9,
+    "toughness": 9
+  },
+  "oracleText": "Flying, vigilance, trample\nWhenever you attack, other creatures you control get +2/+2 and gain indestructible until end of turn.\nUnearth—Pay eight {E}. (Pay eight energy counters: Return this card from your graveyard to the battlefield. It gains haste. Exile it at the beginning of the next end step or if it would leave the battlefield. Unearth only as a sorcery.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "keyword",
+      "text": "trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you attack, other creatures you control get +2/+2 and gain indestructible until end of turn.",
+      "trigger": {
+        "on": "attackers declared",
+        "attacker": "you"
+      },
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "another": true
+          },
+          "power": 2,
+          "toughness": 2,
+          "keywords": [
+            "Indestructible"
+          ],
+          "until": "end-of-turn"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Unearth—Pay eight {E}. (Pay eight energy counters: Return this card from your graveyard to the battlefield. It gains haste. Exile it at the beginning of the next end step or if it would leave the battlefield. Unearth only as a sorcery.)",
+      "keyword": "unearth",
+      "cost": [
+        {
+          "atom": "payEnergy",
+          "count": 8
+        }
+      ]
+    }
+  ]
+}

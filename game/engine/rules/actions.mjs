@@ -524,7 +524,9 @@ export const costAtomBuilt = (atom) => (COST_ATOMS_BUILT.includes(atom?.atom) &&
   /* "Remove three counters from among other artifacts, creatures, and planeswalkers you control" (Tekuthal, Inquiry
      Dominus): `count` counters of any kinds on the permanents `selector` describes, which ones asked once the offer is
      taken (countersAmong). */
-  || (atom?.atom === "removeCountersAmong" && Number.isInteger(atom.count) && atom.count >= 1 && Boolean(atom.selector) && typeof atom.selector === "object");
+  || (atom?.atom === "removeCountersAmong" && Number.isInteger(atom.count) && atom.count >= 1 && Boolean(atom.selector) && typeof atom.selector === "object")
+  /* "Pay eight {E}" (Salvation Colossus's unearth; CR 107.14): that many energy counters removed from the player paying. */
+  || (atom?.atom === "payEnergy" && Number.isInteger(atom.count) && atom.count >= 1);
 
 /* CREW (CR 702.122a): the sets of other untapped creatures you control whose power totals at least N -- each smallest
    such set, so no offer taps a creature it does not need; ids ascending, and no more than CREW_OFFERS_MAX of them. A
@@ -702,6 +704,8 @@ function costPayment(state, player, id, cost, x = 0, less = 0, key = undefined) 
     if (atom.atom === "removeCounters" && atom.count !== "X" && (object.counters?.[atom.counter] ?? 0) < (atom.count ?? 1)) return null;
     /* Three counters from among them: there must be three there to remove (CR 118.3). */
     if (atom.atom === "removeCountersAmong" && counterUnits(state, player, id, atom.selector).length < atom.count) return null;
+    /* Energy (CR 107.14): no more than the player has (CR 118.3). */
+    if (atom.atom === "payEnergy" && (state.players[player].counters?.energy ?? 0) < atom.count) return null;
   }
   /* The increase on an ability that printed no mana: that much generic, from the pool (as its own mana would be). */
   if (!printedMana && more > 0) {
@@ -1943,6 +1947,9 @@ function performOffered(state, player, action, during) {
         }
       if (atom.atom === "sacrifice" && atom.selector && Array.isArray(action.sacrificeSet))
         for (const fodder of action.sacrificeSet) if (state.objects[fodder]) sacrificeOne(state, fodder, events);
+      /* "Pay eight {E}": that many energy counters removed from the player (CR 107.14) -- as many as they have, or it was not
+         offered (costPayment). The board shows a player's counters. */
+      if (atom.atom === "payEnergy") state.players[player].counters.energy -= atom.count;
       /* Three counters from among them, each removed from the permanent it was picked on. */
       if (atom.atom === "removeCountersAmong") for (const {id, counter} of action.counterSet ?? [])
         state.objects[id].counters[counter] = Math.max(0, (state.objects[id].counters[counter] ?? 0) - 1);

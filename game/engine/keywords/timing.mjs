@@ -38,7 +38,10 @@ export const KEYWORD_FAMILIES = Object.freeze({
       taken; what escaped is marked so (702.138b) and enters with what it "escapes with" (702.138c, rules/replacement.mjs).
       Rebound (CR 702.88a), from exile at its caster's next upkeep: cast from its owner's hand and resolved, exiled instead
       of going to the graveyard (rules/stack.mjs), then cast free if they choose (effects/asking.mjs, `play`). */
-  zones: Object.freeze(["Flashback", "Escape", "Rebound"]),
+  /** Unearth (CR 702.84a), an activated ability of the card in its owner's graveyard at sorcery speed: returned with haste,
+      exiled at the next end step, and exiled instead should it leave the battlefield any other way (cards/index.mjs;
+      effects/permanents.mjs, afterwards; rules/replacement.mjs). */
+  zones: Object.freeze(["Flashback", "Escape", "Rebound", "Unearth"]),
   /** What happens as a spell is cast: Storm (CR 702.40a), "when you cast this spell, copy it for each spell cast before
       it this turn" -- a triggered ability of the spell (rules/actions.mjs). */
   cast: Object.freeze(["Storm"]),
