@@ -27,10 +27,10 @@ import {readFileSync} from "node:fs";
 import {createState, addObject, moveObject} from "../game/engine/state/index.mjs";
 import {beginGame} from "../game/engine/rules/turn.mjs";
 import {effectUntil, copyOnto} from "../game/engine/script/effects/permanents.mjs";
-import {createJournal} from "../game/engine/journal.mjs";
+import {createJournal, EVENT_SCHEMA} from "../game/engine/journal.mjs";
 import {createRng} from "../game/engine/rng.mjs";
 import {memoryStorage, createMatchStore} from "../game/engine/storage.mjs";
-import {secretsFor, leaksIn, gameTerms, checkLeaks, playGame, verdict, decksFromBackup} from "../tools/fuzz-live.mjs";
+import {secretsFor, leaksIn, gameTerms, checkLeaks, leakMemory, shownBy, playGame, verdict, decksFromBackup} from "../tools/fuzz-live.mjs";
 import {tableCards} from "../cloud/game-room.mjs";
 
 let checks = 0;
@@ -107,8 +107,21 @@ const card = (name, owner, extra = {}) => ({card: name, types: ["Creature"], pow
   const storage = memoryStorage(), store = createMatchStore(storage, "m");
   await store.saveCheckpoint({...createJournal({matchId: "m", seed: "s"}).checkpoint(s, createRng("s").checkpoint()), matchId: "m"});
   const room = {seats: [{seatId: "s0"}, {seatId: "s1"}], view: (seatId) => ({seatId, cards: [{name: "Maya's Secret"}]})};
-  eq((await checkLeaks(room, storage, "m", [new Set(), new Set()], 4)).map((l) => [l.turn, l.seatId, l.name]), [[4, "s0", "Maya's Secret"]],
+  eq((await checkLeaks(room, storage, "m", leakMemory(2), 4)).map((l) => [l.turn, l.seatId, l.name]), [[4, "s0", "Maya's Secret"]],
     "Rob's view holding the card in Maya's hand is a leak, at that turn; Maya's own view holding it is not");
+
+  /* What the game has shown everyone, from its journal: a card once public may be named after it is gone. */
+  const zone = (name, from, to, faceDown = false) => ({kind: "GameEventCardChangeZone", data: {fields: {card: {name, faceDown}, from: {zoneType: from}, to: {zoneType: to}}}});
+  eq([zone("Drawn", "Library", "Hand"), zone("Played", "Hand", "Battlefield"), zone("Bounced", "Battlefield", "Hand"), zone(null, "Library", "Exile", true),
+    {kind: "GameEventCardRevealed", data: {fields: {card: {name: "Shown"}}}}, {kind: "GameEventScried", data: {fields: {card: {name: "Scried"}}}}].map(shownBy),
+    [null, "Played", "Bounced", null, "Shown", null],
+    "the journal shows a card entering or leaving a public zone face up, or revealed -- never a draw, a face-down move or a scry");
+  addObject(s, card("Gone Card", 1), "library", 1);
+  await store.appendEvents([{schema: EVENT_SCHEMA, sequence: 1, kind: "GameEventCardChangeZone", matchId: "m", data: {fields: {card: {name: "Gone Card", faceDown: false}, from: {zoneType: "Battlefield"}, to: {zoneType: "Graveyard"}}}}]);
+  await store.saveCheckpoint({...createJournal({matchId: "m", seed: "s"}).checkpoint(s, createRng("s").checkpoint()), matchId: "m"});
+  const told = {seats: [{seatId: "s0"}], view: () => ({history: [{text: "Maya cast Gone Card."}, {text: "Maya holds Maya's Secret."}]})};
+  eq((await checkLeaks(told, storage, "m", leakMemory(1), 9)).map((l) => l.name), ["Maya's Secret"],
+    "a history line naming a card the journal once showed is no leak, though another copy is in a library now; one naming a card never shown is");
 }
 
 /* ---- Judged: a whole game of Rob's decks ---- */

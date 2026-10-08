@@ -171,13 +171,37 @@ export function leaksIn(view, secrets, terms = new Set()) {
   return found;
 }
 
-/** Every seat's view read for leaks (`leaksIn` of `secretsFor`), the engine's state taken from the room's own storage. */
-export async function checkLeaks(room, storage, matchId, seen, turn) {
+/* WHAT THE GAME HAS SHOWN EVERYONE, read off its journal: a card face up as it entered or left a public zone, was cast,
+   played, revealed (CR 701.20a), turned face up or transformed. A history line written then stays true after the card is
+   gone -- a player who loses takes their cards out of the game (CR 800.4a) -- and the AI seats play many turns between two
+   of the people's questions, so what a check happens to see is not enough. A card moved face down is journaled without
+   its name (effects/zones.mjs), so it is never counted here. */
+const PUBLIC_ZONE_TYPES = new Set(["Battlefield", "Graveyard", "Exile", "Stack", "Command"]);
+const SHOWING = new Set(["GameEventSpellAbilityCast", "GameEventLandPlayed", "GameEventCardRevealed", "GameEventCardTurnedFaceUp", "GameEventSpellResolved", "GameEventSpellCopied", "GameEventCardTransformed"]);
+export function shownBy(event) {
+  const fields = event?.data?.fields ?? {}, card = fields.card ?? fields.land;
+  if (!card?.name || card.faceDown === true) return null;
+  if (event.kind === "GameEventCardChangeZone") return PUBLIC_ZONE_TYPES.has(fields.from?.zoneType) || PUBLIC_ZONE_TYPES.has(fields.to?.zoneType) ? card.name : null;
+  return SHOWING.has(event.kind) ? card.name : null;
+}
+
+/** A game's leak-check memory: per seat, the names no longer secret from it; and how far into the journal it has read. */
+export const leakMemory = (seats) => ({seen: Array.from({length: seats}, () => new Set()), read: 0});
+
+/** Every seat's view read for leaks (`leaksIn` of `secretsFor`), the engine's state and journal taken from the room's own
+    storage. */
+export async function checkLeaks(room, storage, matchId, memory, turn) {
   const point = await createMatchStore(storage, matchId).latestCheckpoint();
+  const keys = await storage.list(`match/${matchId}/journal/`);
+  for (const key of keys.slice(memory.read)) {
+    const name = shownBy(JSON.parse(await storage.get(key)));
+    if (name) for (const seen of memory.seen) seen.add(name);
+  }
+  memory.read = keys.length;
   const found = [];
   const terms = gameTerms(point.state);
   room.seats.forEach((s, seat) => {
-    for (const leak of leaksIn(room.view(s.seatId), secretsFor(point.state, seat, seen[seat]), terms)) found.push({turn, seatId: s.seatId, ...leak});
+    for (const leak of leaksIn(room.view(s.seatId), secretsFor(point.state, seat, memory.seen[seat]), terms)) found.push({turn, seatId: s.seatId, ...leak});
   });
   return found;
 }
@@ -199,14 +223,14 @@ export async function playGame({decks, seed, cards, humans = [], matchId = `fuzz
   const started = Date.now();
   let room = await startRoom({storage, matchId, ...(cards ? {cards} : {}), pod, seed: `seed-${seed}`, ...(pilot ? {pilot} : {})});
   let decisions = 0, reopened = 0, longest = {ms: 0, turn: null};
-  const personRefused = [], leaked = [], seen = pod.seats.map(() => new Set());
+  const personRefused = [], leaked = [], memory = leakMemory(pod.seats.length);
   let leakChecks = 0;
   for (;;) {
     const who = room.waitingOn;
     if (!who || room.status === "finished") break;
     const view = room.view(who);
     if (view.state.turn > turnLimit) break;
-    if (leaks) {leaked.push(...await checkLeaks(room, storage, matchId, seen, view.state.turn)); leakChecks += 1;}
+    if (leaks) {leaked.push(...await checkLeaks(room, storage, matchId, memory, view.state.turn)); leakChecks += 1;}
     const asked = Date.now();
     for (let tries = 1; ; tries += 1) {
       try {await room.act(who, {actionId: randomUUID(), revision: view.revision, ...people[who](view.decision)}); break;}
@@ -220,7 +244,7 @@ export async function playGame({decks, seed, cards, humans = [], matchId = `fuzz
     if (waited > longest.ms) longest = {ms: waited, turn: room.view(who).state.turn};
     if (reopenEvery && decisions % reopenEvery === 0) {room = await openRoom({storage, matchId, ...(cards ? {cards} : {}), ...(pilot ? {pilot} : {})}); reopened += 1;}
   }
-  if (leaks && room.status === "finished") {leaked.push(...await checkLeaks(room, storage, matchId, seen, room.view(pod.seats[0].seatId).state.turn)); leakChecks += 1;}
+  if (leaks && room.status === "finished") {leaked.push(...await checkLeaks(room, storage, matchId, memory, room.view(pod.seats[0].seatId).state.turn)); leakChecks += 1;}
   const last = room.view(pod.seats[0].seatId);
   const ms = Date.now() - started;
   return {seed, status: room.status, result: last.result, turns: last.state.turn, decisions, reopened, ms, longestWait: longest, refusals: room.refusals,
