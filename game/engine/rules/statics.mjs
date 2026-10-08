@@ -543,6 +543,9 @@ export function costReduction(state, player, cardId) {
       if (caster === "opponent" && player === holder.controller) continue;
       const selector = {...(ability.affects ?? {}), what: "card", zone: object.zone};
       if (!matchesSelector(selector, state, cardId, {controller: holder.controller, source: holderId})) continue;
+      /* "Spells you cast from anywhere other than your hand cost {2} less to cast" (Advanced Reconstruction, level 3): where
+         the card is cast from (CR 601.2a, 601.2f) -- a graveyard, exile, a library, the command zone -- never a hand. */
+      if (ability.fromAnywhereButHand === true && object.zone === "hand") continue;
       /* "During your turn, spells you cast cost {1} less for each creature you control with power 4 or greater" (Temur
          Battlecrier): its condition, and its amount counted now. */
       if (!conditionHolds(state, ability.condition, {controller: holder.controller, source: holderId})) continue;

@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,195 defined and playable today; 2,525 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,199 defined and playable today; 2,535 with every
 mechanic built, so only their definitions are left to write; 28 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 42 | 0 | 16 | 136 |
+| Keyword abilities (CR 702) | 194 | 43 | 0 | 15 | 136 |
 | Keyword actions (CR 701) | 70 | 22 | 3 | 1 | 44 |
 | Effects | 192 | 68 | 1 | 4 | 119 |
 | Triggers | 138 | 20 | 4 | 2 | 112 |
@@ -36,21 +36,21 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 26 | 94 |
-| option | Remembering what an effect moved | — | missing | 23 | 89 |
-| option | You may play or cast a card from another zone | — | missing | 17 | 67 |
+| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 26 | 93 |
+| option | Remembering what an effect moved | — | missing | 22 | 86 |
+| option | You may play or cast a card from another zone | — | missing | 17 | 66 |
 | effect | ChooseColor | — | missing | 10 | 14 |
 | count | What entered or died this turn | — | missing | 10 | 10 |
 | count | Cards in a library | — | missing | 9 | 13 |
 | count | Spells cast this turn | — | missing | 8 | 12 |
 | effect | RingTemptsYou | — | missing | 8 | 11 |
-| option | Imprint (a card exiled with this) | — | missing | 7 | 9 |
 | effect | ChangeTargets | — | missing | 6 | 8 |
 | effect | ChoosePlayer | — | missing | 6 | 8 |
-| keyword ability | Overload | — | named | 6 | 7 |
+| option | Imprint (a card exiled with this) | — | missing | 6 | 8 |
 | effect | Discover | discover | named | 6 | 6 |
 | effect | AddTurn | addTurn | named | 5 | 10 |
 | trigger | CounterAddedOnce | counter added once | named | 5 | 10 |
+| count | How many things an effect remembered | — | missing | 5 | 8 |
 
 ## Keyword abilities (CR 702)
 
@@ -84,7 +84,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.164 | Toxic | Toxic | built | 7 | 44 | 0 | 0 |
 | 702.40 | Storm | Storm | built | 7 | 37 | 0 | 0 |
 | 702.185 | Warp | — | missing | 7 | 37 | 7 | 5 |
-| 702.96 | Overload | — | named | 7 | 28 | 7 | 6 |
+| 702.96 | Overload | Overload | built | 7 | 28 | 0 | 0 |
 | 702.86 | Annihilator | Annihilator | built | 7 | 14 | 0 | 0 |
 | 702.124 | Partner | Partner | built | 6 | 78 | 0 | 0 |
 | 702.16 | Protection | — | named | 6 | 58 | 6 | 4 |
@@ -826,14 +826,14 @@ The things that alone hold back the most of the most-played cards.
 | You may, decided by a named player | modal (Yes / No) | partial | 176 | 1499 | 0 | 0 |
 | An effect's condition: if a permanent is present | an effect's condition {present ...} | built | 142 | 1292 | 0 | 0 |
 | Fewer targets than the most ("up to", "any number of") | a target's count {min, max} (script/bind.mjs), picked as a pick-several | built | 126 | 1672 | 0 | 0 |
-| Remembering what an effect moved | — | missing | 124 | 1168 | 89 | 23 |
+| Remembering what an effect moved | — | missing | 124 | 1168 | 86 | 22 |
 | More than one target of a kind ("up to N") | a target's count {min, max} (script/bind.mjs); a count that is X is not built | partial | 123 | 1664 | 0 | 0 |
-| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 94 | 26 |
+| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 93 | 26 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost} | built | 104 | 684 | 0 | 0 |
 | You may (an optional effect, CR 603.5) | modal (Yes / No) | built | 101 | 1094 | 0 | 0 |
-| You may play or cast a card from another zone | — | missing | 99 | 625 | 67 | 17 |
+| You may play or cast a card from another zone | — | missing | 99 | 625 | 66 | 17 |
 | An intervening "if" or "activate only if": a counted value | condition {compare} | built | 79 | 974 | 0 | 0 |
 | An effect's condition: a counted value | condition {compare: {count, atLeast / atMost / moreThan / fewerThan}} | built | 75 | 603 | 0 | 0 |
 | Unless a player pays | unlessPays, by kind | partial | 66 | 677 | 0 | 0 |
@@ -849,7 +849,7 @@ The things that alone hold back the most of the most-played cards.
 | Unless a player pays mana ("unless that player pays {1}") | unlessPays (generic mana) | built | 16 | 287 | 0 | 0 |
 | A token that enters tapped and attacking | `attacking` on createToken and copyPermanent: that player, or the one its controller chooses (batch 67) | built | 16 | 88 | 0 | 0 |
 | It gains a keyword until end of turn (a token made this way) | gainsUntilEndOfTurn | built | 16 | 67 | 0 | 0 |
-| Imprint (a card exiled with this) | — | missing | 10 | 97 | 9 | 7 |
+| Imprint (a card exiled with this) | — | missing | 10 | 97 | 8 | 6 |
 | Except it isn't legendary (a copy) | except.nonLegendary | built | 10 | 43 | 0 | 0 |
 | Unless a player reveals a card ("reveal an Island or Swamp card") | unlessReveal, as it enters | built | 10 | 22 | 0 | 0 |
 | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 9 | 160 | 8 | 4 |

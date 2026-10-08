@@ -28,6 +28,8 @@
  *   {rememberedCount: true}              how many things the effect before it remembered -- "each player shuffles the cards
  *                                        from their hand into their library, then draws that many cards" (batch 80)
  *   {excessDamage: true}                 the excess damage the damage before it in this resolution dealt (CR 120.4a)
+ *   {countersRemovedThisWay: true}       how many counters the removeCounter before it in this resolution removed ("add one
+ *                                        mana of any color for each charge counter removed this way", Coalition Relic)
  *   {lesserOf: [amount, amount]}         the least of them: "greater than this creature's power or toughness" (increment)
  *
  * and any of them may say `atMost` ("{1} less IF you control a creature with flying": the count, at most 1), `times` and
@@ -53,7 +55,7 @@ import {valueCostOf, commanderKeyOf} from "../state/index.mjs";
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
 export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "toughnessOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
   "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn", "playersDealtCombatDamage", "cardTypesAmong", "manaSpent",
-  "permanentsEnteredThisTurn", "excessDamage", "lesserOf", "kicked", "differentPowers", "commanderCasts"]);
+  "permanentsEnteredThisTurn", "excessDamage", "lesserOf", "kicked", "differentPowers", "commanderCasts", "countersRemovedThisWay"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "filter", "controlledBy"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -79,6 +81,7 @@ export function amountProblems(value) {
   if ("cardTypesAmong" in value && value.cardTypesAmong !== "remembered") problems.push('cardTypesAmong is "remembered"');
   if ("manaSpent" in value && !["that card", "self"].includes(value.manaSpent)) problems.push('manaSpent is "that card" or "self"');
   if ("commanderCasts" in value && value.commanderCasts !== "that card") problems.push('commanderCasts is "that card"');
+  if ("countersRemovedThisWay" in value && value.countersRemovedThisWay !== true) problems.push("countersRemovedThisWay is true");
   if ("controlledBy" in value && !("rememberedCount" in value && value.controlledBy === "that player")) problems.push('controlledBy is "that player", of a rememberedCount');
   if ("lesserOf" in value && !(Array.isArray(value.lesserOf) && value.lesserOf.length >= 2)) problems.push("lesserOf is two or more amounts");
   else if ("lesserOf" in value) for (const one of value.lesserOf) problems.push(...amountProblems(one).map((p) => `lesserOf: ${p}`));
@@ -200,6 +203,9 @@ export function amountOf(state, value, context = {}) {
     : (context.remembered ?? []).length;
   /* "Empower Jace X, where X is that excess damage" (Violent Echoes): the excess the damage before it dealt (effects/resources.mjs). */
   else if ("excessDamage" in value) n = context.excessDamage ?? 0;
+  /* "For each charge counter removed this way" (Coalition Relic): what the removeCounter before it removed
+     (effects/resources.mjs) -- none removed, or none removed yet, is 0. */
+  else if ("countersRemovedThisWay" in value) n = context.countersRemoved ?? 0;
   /* "For each card type among cards discarded this way" (Occult Epiphany): the card types (CR 205.2a) the remembered
      cards have between them, as they are now -- an artifact creature is two. */
   else if ("cardTypesAmong" in value) n = new Set((context.remembered ?? []).flatMap((id) => state.objects[id]?.types ?? [])).size;

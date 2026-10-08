@@ -24,7 +24,7 @@ import {typesOf} from "../../rules/layers.mjs";
 import {moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard, rememberExileLooker} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf, controllerOf} from "../../rules/layers.mjs";
-import {selectMatching, compileSelector} from "../filter.mjs";
+import {selectMatching, compileSelector, matchesSelector} from "../filter.mjs";
 import {applyReplacements, enteringModifications, regenerated} from "../../rules/replacement.mjs";
 import {cantBeCountered, entersUntapped, countersPlaced} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
@@ -321,6 +321,16 @@ export function peekAndReveal(state, params, context) {
 /* The source a link is kept against: this ability's, or -- one that left the battlefield to trigger it -- as it last was. */
 const linkOf = (context) => context.source ?? context.lastKnown?.cardId ?? null;
 
+/* What a linked move moves (CR 607.2a): the cards this source's other ability exiled -- "put EACH CREATURE CARD exiled with
+   this artifact onto the battlefield" (Ghost Vacuum): `linkedOnly`, of those, the ones a selector fits as they are in exile
+   (a card exiled face down has no characteristics there, CR 406.3a, and fits none with a quality). */
+function linkedMoving(state, params, context) {
+  const source = linkOf(context);
+  const linked = (state.links?.[source] ?? []).filter((id) => state.objects[id]);
+  if (!params.linkedOnly) return linked;
+  return linked.filter((id) => matchesSelector({...params.linkedOnly, what: "card", zone: state.objects[id].zone}, state, id, {controller: context.controller, source}));
+}
+
 export function moveZone(state, params, context, rng = null) {
   const events = [];
   const arrived = [], became = [];
@@ -339,7 +349,7 @@ export function moveZone(state, params, context, rng = null) {
     /* LINKED ABILITIES (CR 607.2a): "return the exiled card to the battlefield" (Oblivion Ring) -- what this permanent's
        other ability exiled (`link`, below), while it is still that card in exile (CR 400.7: gone from there, it is a new
        object, and nothing returns). */
-    : params.linked === true ? [...(state.links?.[linkOf(context)] ?? [])]
+    : params.linked === true ? linkedMoving(state, params, context)
     : params.targets ?? [];
   if (params.reveal) for (const id of moving) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: state.objects[id].owner}}));
   /* "Put the rest on the bottom of your library in a random order" (Sunbird's Invocation; batch 80, `random`). */
@@ -400,7 +410,12 @@ export function moveZone(state, params, context, rng = null) {
     const links = (state.links ??= {});
     links[context.source] = [...(links[context.source] ?? []), ...became.filter((id) => state.objects[id])];
   }
-  if (params.linked === true && state.links) delete state.links[linkOf(context)];
+  if (params.linked === true && state.links) {
+    /* Only some of them (`linkedOnly`): the others are still exiled with it (CR 607.2a). */
+    const left = params.linkedOnly ? (state.links[linkOf(context)] ?? []).filter((id) => state.objects[id] && !moving.includes(id)) : [];
+    if (left.length) state.links[linkOf(context)] = left;
+    else delete state.links[linkOf(context)];
+  }
   /* Teferi's Time Twist: "if it enters as a creature, it enters with an additional +1/+1 counter on it". */
   /* Put on it as it enters (CR 122.6), by its controller (122.6a): "twice that many instead" sees it. */
   if (params.withCounter) for (const id of arrived) if (typesOf(state, id).includes("Creature"))

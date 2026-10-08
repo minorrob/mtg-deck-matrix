@@ -136,6 +136,12 @@ export function runResolution(state, rng = null) {
         continue;
       }
     }
+    /* "ADD ONE MANA OF ANY COLOR FOR EACH ..." as an effect resolves (Coalition Relic; CR 106.3): which color each is, its
+       controller's to say (effects/asking.mjs, manaColors) -- how many counted now, as the effect reaches the head. */
+    if (effect?.effect === "addMana" && effect.anyColor === true && effect.mana === undefined) {
+      resolving.queue[0] = {effect: "manaColors", count: Number.isInteger(effect.count) ? effect.count : 1};
+      continue;
+    }
     if (effect?.effect === "empowerJace") {
       const jace = {what: "permanent", token: true, subtypes: ["Jace"], controller: "you"};
       const count = Math.max(0, effect.count ?? 0);

@@ -1,0 +1,90 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ghost Vacuum",
+    "oracleId": "4ef583ab-e0a0-4e4b-bd65-af766038b1fd",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Exile target card from a graveyard.\n{6}, {T}, Sacrifice this artifact: Put each creature card exiled with this artifact onto the battlefield under your control with a flying counter on it. Each of them is a 1/1 Spirit in addition to its other types. Activate only as a sorcery.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Exile target card from a graveyard.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "link": true
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{6}, {T}, Sacrifice this artifact: Put each creature card exiled with this artifact onto the battlefield under your control with a flying counter on it. Each of them is a 1/1 Spirit in addition to its other types. Activate only as a sorcery.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{6}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "linked": true,
+          "linkedOnly": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "to": "battlefield",
+          "controller": "you",
+          "withCounter": "flying",
+          "remember": true
+        },
+        {
+          "effect": "animate",
+          "targets": "remembered",
+          "addTypes": [
+            "Creature"
+          ],
+          "subtypes": [
+            "Spirit"
+          ],
+          "power": 1,
+          "toughness": 1
+        }
+      ],
+      "timing": "sorcery"
+    }
+  ]
+}

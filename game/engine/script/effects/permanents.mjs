@@ -422,7 +422,9 @@ export function animate(state, params, context) {
   pushEffect(state, {
     id: `animate:${context.source ?? "effect"}`,
     layer: 4, affects,
-    apply: {addTypes: params.addTypes ?? ["Creature"], ...(params.subtypes ? {addTypes: [...(params.addTypes ?? ["Creature"]), ...params.subtypes]} : {}),
+    /* "Becomes a 0/0 Elemental creature", "each of them is a 1/1 Spirit in addition to its other types" (Ghost Vacuum): its
+       subtypes added beside its own, in the same layer (CR 205.1b, 613.1d) -- creature types, never card types. */
+    apply: {addTypes: params.addTypes ?? ["Creature"], ...(params.subtypes ? {addSubtypes: [...params.subtypes]} : {}),
       /* "And gain all creature types" (Mirror Entity, batch 74): in the same layer (rules/layers.mjs). */
       ...(params.allCreatureTypes === true ? {allCreatureTypes: true} : {})},
     until: params.until ?? null,
