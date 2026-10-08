@@ -326,6 +326,9 @@ export const FORGE_COUNTS = Object.freeze({
   /* Fblthp, the Lost (AI 1's deck): "if it entered from your library or was cast from your library". */
   wasCastFromYourLibrary: {name: "It entered from, or was cast from, your library", status: "built", engine: "condition {cameFrom: \"library\"} (script/condition.mjs)"},
   Threshold: {name: "Threshold (seven cards in your graveyard)", status: "missing"},
+  /* Train B (X11; Wayward Swordtooth): "unless you have the city's blessing" -- ascend's designation (CR 702.131;
+     keywords/designations.mjs). */
+  Blessing: {name: "The city's blessing (ascend)", status: "built", engine: "condition {citysBlessing} (script/condition.mjs)"},
   Morbid: {name: "Morbid (a creature died this turn)", status: "missing"},
   UrzaLands: {name: "The Urza lands", status: "missing"},
   Monarch: {name: "The monarch", status: "missing"},

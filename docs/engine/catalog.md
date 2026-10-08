@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,199 defined and playable today; 2,540 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,200 defined and playable today; 2,545 with every
 mechanic built, so only their definitions are left to write; 28 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 50 | 0 | 8 | 136 |
+| Keyword abilities (CR 702) | 194 | 51 | 0 | 7 | 136 |
 | Keyword actions (CR 701) | 70 | 22 | 3 | 1 | 44 |
 | Effects | 192 | 68 | 1 | 4 | 119 |
 | Triggers | 138 | 20 | 4 | 2 | 112 |
@@ -26,7 +26,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Replacement effects | 34 | 0 | 5 | 0 | 29 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
 | Options and conditions | 37 | 23 | 5 | 0 | 9 |
-| Amounts the game counts | 188 | 15 | 1 | 0 | 172 |
+| Amounts the game counts | 188 | 16 | 1 | 0 | 171 |
 | Choices | 15 | 12 | 0 | 0 | 3 |
 | Other keyword constructs | 16 | 9 | 0 | 1 | 6 |
 
@@ -37,7 +37,7 @@ The things that alone hold back the most of the most-played cards.
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 26 | 94 |
-| option | Remembering what an effect moved | — | missing | 23 | 89 |
+| option | Remembering what an effect moved | — | missing | 24 | 89 |
 | option | You may play or cast a card from another zone | — | missing | 17 | 67 |
 | effect | ChooseColor | — | missing | 10 | 14 |
 | count | What entered or died this turn | — | missing | 10 | 10 |
@@ -89,7 +89,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.124 | Partner | Partner | built | 6 | 78 | 0 | 0 |
 | 702.16 | Protection | — | named | 6 | 58 | 6 | 4 |
 | 702.74 | Evoke | Evoke | built | 6 | 36 | 0 | 0 |
-| 702.131 | Ascend | — | named | 6 | 30 | 6 | 4 |
+| 702.131 | Ascend | Ascend | built | 6 | 30 | 0 | 0 |
 | 702.174 | Gift | — | missing | 6 | 27 | 6 | 1 |
 | 702.172 | Spree | — | missing | 6 | 21 | 6 | 4 |
 | 702.33 | Kicker | — | missing | 5 | 239 | 5 | 1 |
@@ -826,7 +826,7 @@ The things that alone hold back the most of the most-played cards.
 | You may, decided by a named player | modal (Yes / No) | partial | 176 | 1499 | 0 | 0 |
 | An effect's condition: if a permanent is present | an effect's condition {present ...} | built | 142 | 1292 | 0 | 0 |
 | Fewer targets than the most ("up to", "any number of") | a target's count {min, max} (script/bind.mjs), picked as a pick-several | built | 126 | 1672 | 0 | 0 |
-| Remembering what an effect moved | — | missing | 124 | 1168 | 89 | 23 |
+| Remembering what an effect moved | — | missing | 124 | 1168 | 89 | 24 |
 | More than one target of a kind ("up to N") | a target's count {min, max} (script/bind.mjs); a count that is X is not built | partial | 123 | 1664 | 0 | 0 |
 | Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 94 | 26 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
@@ -912,7 +912,7 @@ The things that alone hold back the most of the most-played cards.
 | — | Mana of a color spent to cast it (adamant; "if {G}{G} was spent to cast it") | condition {spent: {color: n}} (script/condition.mjs) | built | 1 | 19 | 0 | 0 |
 | — | TotalCommanderCastFromCommandZone | — | missing | 1 | 16 | 1 | 1 |
 | — | YourTurns | — | missing | 1 | 11 | 1 | 1 |
-| — | Blessing | — | missing | 1 | 10 | 1 | 0 |
+| — | The city's blessing (ascend) | condition {citysBlessing} (script/condition.mjs) | built | 1 | 10 | 0 | 0 |
 | — | Delirium | — | missing | 1 | 9 | 1 | 1 |
 | — | AltCost | — | missing | 1 | 8 | 1 | 0 |
 | — | CreaturesAttackedThisTurn | — | missing | 1 | 7 | 1 | 0 |

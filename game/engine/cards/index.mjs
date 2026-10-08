@@ -796,6 +796,12 @@ export function compileScript(script) {
       keywords.push("Unearth");
       return;
     }
+    /* ASCEND (CR 702.131): on a permanent a static ability, on an instant or sorcery a spell ability -- each read from the
+       keyword (keywords/designations.mjs; rules/stack.mjs as such a spell resolves). */
+    if (word === "ascend") {
+      keywords.push("Ascend");
+      return;
+    }
     /* FLASHBACK (CR 702.34a): the keyword with its cost, a list of atoms -- a mana cost, and "pay 3 life" -- kept as a
        static ability so the card carries it into its graveyard (rules/actions.mjs offers the cast there). Only on an
        instant or sorcery: "if the resulting spell is an instant or sorcery spell". */

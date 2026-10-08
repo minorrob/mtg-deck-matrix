@@ -38,6 +38,8 @@
  *                                      creature the trigger is about against its own source, power to power and toughness
  *                                      to toughness, as each now is -- the arrival gone, as it last was (rules/trigger.mjs
  *                                      keeps it, CR 608.2h); never greater than a noncreature permanent (702.100c)
+ *   {citysBlessing: true|false}        its controller has the city's blessing, or has not (CR 702.131c; ascend,
+ *                                      keywords/designations.mjs): "unless you have the city's blessing" (Wayward Swordtooth)
  *   {prowl: true}                      prowl's "if a player was dealt combat damage this turn by a source that, at the time
  *                                      it dealt that damage, was under your control and had any of this spell's creature
  *                                      types" (CR 702.76a): its own object's creature types against what rules/combat.mjs
@@ -56,11 +58,14 @@ import {matchesSelector, compileSelector, matchesLastKnown} from "./filter.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
 import {characteristicsOf, subtypesOf, everyCreatureTypeOf} from "../rules/layers.mjs";
 import {isCreatureType} from "../keywords/types.mjs";
+import {hasCitysBlessing} from "../keywords/designations.mjs";
 
 const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "spent", "enduringStory", "loyaltyThisTurn", "impending",
   "cameFrom", "sinceYourLastUpkeep", "level", "opponentPoisonAtLeast", "searched",
   /* Evolve's comparison (CR 702.100a); prowl's damage, and its cost paid (CR 702.76a). */
-  "evolves", "prowl", "prowled"];
+  "evolves", "prowl", "prowled",
+  /* Ascend's city's blessing (CR 702.131). */
+  "citysBlessing"];
 /* Where a permanent may have come from, for `cameFrom`: a library (effects/zones.mjs and rules/stack.mjs record it). */
 const CAME_FROM = ["library"];
 /* The mana a condition may ask was spent to cast its object: the five colors and colorless (CR 106.1). */
@@ -234,6 +239,9 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   /* "As long as you have an enduring story" (Storied, CR 702.195b), or "unless you have one": the player's designation
      (keywords/designations.mjs). */
   if (condition.enduringStory !== undefined && (state.players[controller]?.enduringStory === true) !== condition.enduringStory) return false;
+  /* "Unless you have the city's blessing" (Wayward Swordtooth; CR 702.131c): its controller's designation, or theirs this
+     moment by a permanent's ascend (keywords/designations.mjs). */
+  if (condition.citysBlessing !== undefined && hasCitysBlessing(state, controller) !== condition.citysBlessing) return false;
   /* Prowl's cost may be paid (CR 702.76a): asked of the card as its cast is offered (rules/actions.mjs, alternativeCosts). */
   if (condition.prowl === true && !prowlable(state, controller, source)) return false;
   /* "If its prowl cost was paid" (CR 702.76a): whether its own permanent was cast for it (rules/stack.mjs). */
@@ -278,6 +286,7 @@ export function conditionProblems(condition) {
   if ("firstCombat" in condition && condition.firstCombat !== true) problems.push("firstCombat is true");
   if ("yourTurn" in condition && condition.yourTurn !== true) problems.push("yourTurn is true");
   if ("enduringStory" in condition && typeof condition.enduringStory !== "boolean") problems.push("enduringStory is true or false");
+  if ("citysBlessing" in condition && typeof condition.citysBlessing !== "boolean") problems.push("citysBlessing is true or false");
   if ("notYourTurn" in condition && condition.notYourTurn !== true) problems.push("notYourTurn is true");
   if ("loyaltyThisTurn" in condition && condition.loyaltyThisTurn !== true) problems.push("loyaltyThisTurn is true");
   if ("evolves" in condition && condition.evolves !== true) problems.push("evolves is true");

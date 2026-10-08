@@ -9,16 +9,16 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1199,
+  "defined": 1200,
   "provisional": 28,
-  "everyRule": 2540
+  "everyRule": 2545
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 50,
+    "built": 51,
     "partial": 0,
-    "named": 8,
+    "named": 7,
     "missing": 136
    },
    "entries": [
@@ -422,13 +422,13 @@
      "kind": "keyword ability",
      "rule": "702.131",
      "name": "Ascend",
-     "engine": null,
-     "status": "named",
+     "engine": "Ascend",
+     "status": "built",
      "forge": "Ascend",
      "top": 6,
      "all": 30,
-     "blocks": 6,
-     "alone": 4
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -8924,7 +8924,7 @@
      "top": 124,
      "all": 1168,
      "blocks": 89,
-     "alone": 23
+     "alone": 24
     },
     {
      "kind": "option",
@@ -9314,10 +9314,10 @@
   },
   "Amounts the game counts": {
    "tally": {
-    "built": 15,
+    "built": 16,
     "partial": 1,
     "named": 0,
-    "missing": 172
+    "missing": 171
    },
    "entries": [
     {
@@ -9899,13 +9899,13 @@
     {
      "kind": "count",
      "rule": null,
-     "name": "Blessing",
-     "engine": null,
-     "status": "missing",
+     "name": "The city's blessing (ascend)",
+     "engine": "condition {citysBlessing} (script/condition.mjs)",
+     "status": "built",
      "forge": "Blessing",
      "top": 1,
      "all": 10,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {

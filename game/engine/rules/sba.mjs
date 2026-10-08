@@ -51,7 +51,7 @@ import {matchesSelector} from "../script/filter.mjs";
 import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./commander.mjs";
 import {sacrificeOne, moveOne, returnExiledUntil, leavingRef, destructionReplaced, destructionAsks} from "../script/effects/zones.mjs";
 import {changeLife} from "../script/effects/resources.mjs";
-import {enduringStories} from "../keywords/designations.mjs";
+import {enduringStories, citysBlessings} from "../keywords/designations.mjs";
 import {preparedCopyStays} from "../script/effects/attributes.mjs";
 import {protectedFrom} from "./protection.mjs";
 
@@ -134,8 +134,9 @@ export function checkStateBasedActions(state) {
     .map((id) => state.objects[id].exiledBy).filter((id) => state.objects[id]?.zone === "battlefield")))
     rememberExileLooker(state, source, controllerOf(state, source));
   /* Storied (CR 702.195a): "any time" its controller has three artifacts, Sagas or legendaries -- read as the game is
-     checked, before the actions, which never add a permanent (keywords/designations.mjs). */
-  const events = enduringStories(state);
+     checked, before the actions, which never add a permanent (keywords/designations.mjs). Ascend (CR 702.131b) the same
+     way: ten permanents, and the city's blessing for the rest of the game. Both in one question, every object derived once. */
+  const events = deriving(state, () => [...enduringStories(state), ...citysBlessings(state)]);
   /* A creature dying can put a player to zero, and that player leaving can empty a zone. Ten passes
      is far more than any real position needs; reaching it would mean two actions were undoing each
      other, which is a bug worth an exception rather than an infinite loop. */

@@ -35,6 +35,7 @@
  */
 
 import {holdArrival, enteredWith} from "./entering.mjs";
+import {ascendAsItResolves} from "../keywords/designations.mjs";
 import {conditionHolds} from "../script/condition.mjs";
 import {moveObject, addObject, removeObject, eventCard} from "../state/index.mjs";
 import {enteringModifications} from "./replacement.mjs";
@@ -246,6 +247,11 @@ export function resolveTop(state, effect = null, rng = null) {
   const {targets, fizzles} = recheckTargets(state, script.targets, entry.targets, source === null && (entry.cardId ?? entry.lastKnown?.cardId ?? null) !== null
     ? {...context, source: entry.cardId ?? entry.lastKnown.cardId} : context);
   if (fizzles) return finishTop(state, entry, events, true);
+  /* ASCEND ON AN INSTANT OR SORCERY (CR 702.131a): its spell ability, first as it is printed first -- the city's blessing for
+     its controller if they control ten or more permanents now (keywords/designations.mjs). An ability on the stack has no
+     object of its own (pushAbility), and a permanent spell with ascend has no script and was finished above -- its ascend
+     is the permanent's (rules/sba.mjs) -- so only such a spell reads here. */
+  if ((state.objects[entry.objectId]?.keywords ?? []).includes("Ascend")) events.push(...ascendAsItResolves(state, entry.playerId));
   /* An intervening "if" asked again as it resolves (CR 603.4): false now, and the ability does nothing. A triggered
      ability's own condition only -- "activate only if" was asked as it was activated (CR 602.5b) and is not again. */
   if (entry.kind === "trigger" && script.condition && !conditionHolds(state, script.condition, {controller: entry.playerId, source, about: entry.about ?? undefined,
