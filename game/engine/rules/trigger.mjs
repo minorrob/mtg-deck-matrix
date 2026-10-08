@@ -309,6 +309,8 @@ function subjects(state, event, condition, sourceId, controller) {
   /* "Whenever you draw a card", "whenever an opponent draws a card" (CR 121.1): the drawer. */
   if (condition.on === "GameEventCardChangeZone" && condition.drawn) {
     if (fields.drawn !== true) return [];
+    /* Faerie Mastermind: the second draw itself, even if several draws resolve together. */
+    if (condition.nthThisTurn !== undefined && fields.drawNumber !== condition.nthThisTurn) return [];
     const drawer = fields.to?.player?.playerId;
     return whoseIs(condition.drawer ?? "you", drawer, controller) ? [{player: drawer}] : [];
   }

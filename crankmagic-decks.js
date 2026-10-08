@@ -977,13 +977,13 @@ function popMenu(el,html,width=250){
 }
 /* THE MORE MENU, IN THE DESIGN'S ORDER (r3, 29-deck-more-menu; R3.5). What you do with this deck first --
    Measure, Trace in Explore, Guide & SWOT, Export, Compare with -- then renaming, archiving and deleting,
-   with Delete in red and only on an archived deck. Everything the menu carried before the redesign stays,
+   with a reviewed Delete action in red. Everything the menu carried before the redesign stays,
    below those (INTAKE §3): the collection group, reserving, locking, upgrades, the role lens, the status
    ladder and the insight entries. The design also draws Duplicate; there is no way to duplicate a deck yet,
    so it is not drawn until there is. */
 actions['deck-more-menu']=el=>{const d=M.deck(C.state,el.dataset.deck),g=attached(d),ladder=C.statusLadder||[],upgrades=d.slots.filter(r=>r.purpose!=='main').length,hasCards=d.slots.some(r=>r.purpose==='main');
   popMenu(el,`<p>This deck</p>${!d.archived&&hasCards?b('Measure','measure-deck',{deck:d.id}):''}${d.archived?'':b('Trace in Explore','deck-trace',{deck:d.id})}${b('Guide & SWOT','deck-guide',{deck:d.id})}${b('Export / print','deck-export',{deck:d.id})}${b('Compare with…','compare-with',{deck:d.id})}`
-    +`<hr>${b('Rename & edit definition','edit-deck',{deck:d.id})}${d.archived?b('Restore as draft','restore-deck',{deck:d.id})+`<button type="button" data-action="delete-deck" data-deck="${e(d.id)}" class="cm-danger">Delete deck…</button>`:b('Archive','archive',{deck:d.id})}`
+    +`<hr>${b('Rename & edit definition','edit-deck',{deck:d.id})}${d.archived?b('Restore as draft','restore-deck',{deck:d.id}):b('Change commander','change-commander',{deck:d.id})+b('Archive','archive',{deck:d.id})}<button type="button" data-action="delete-deck" data-deck="${e(d.id)}" class="cm-danger">Delete deck…</button>`
     +`<hr><p>Collection</p>${g?b('View the collection group','deck-group',{group:g.id}):''}${b(g?'Change the collection group':'Attach a collection group','attach-group',{deck:d.id})}${b('Reserve available copies','fulfill',{deck:d.id})}${d.status==='final'?b(d.locked?'Unlock deck':'Lock deck','lock',{deck:d.id}):''}${b(`Upgrades (${upgrades})`,'deck-upgrades',{deck:d.id})}${b('Role lens (Explore)','deck-lens',{deck:d.id})}${d.status==='draft'?b(`Draft list (${M.draftShort(C.state,d).reduce((n,x)=>n+x.quantity,0)})`,'deck-cards',{deck:d.id}):''}`
     +`${d.archived?'':`<hr><p>Every card still owed becomes</p>${ladder.map(([id,label,why])=>`<button type="button" class="cm-rung" aria-label="${e(label)}" data-action="deck-status" data-deck="${e(d.id)}" data-source="${id}"><span class="cm-rung-label">${e(label)}</span><small>${e(why)}</small></button>`).join('')}`}<hr><p>Insight</p>${b('Recommendations','deck-suggestions',{deck:d.id})}${b('Reports & advice','deck-evidence',{deck:d.id})}${b(C.termsOn()?'Hide term definitions':'Show term definitions','toggle-terms')}<button type="button" data-action="page-help" data-help="deck">About this page</button>`,290);};
 /* Compare with…: this deck is ticked, and Decks says to tick the other. */
@@ -1008,18 +1008,29 @@ actions['group-menu']=el=>{
     :`<p>No collection group attached</p>${b('Attach a collection group','attach-group',{deck:d.id})}`);
 };
 actions['deck-menu']=el=>{const d=M.deck(C.state,el.dataset.deck);document.querySelectorAll('.cm-tile-menu').forEach(m=>m.remove());const menu=document.createElement('div');menu.className='cm-menu cm-tile-menu';menu.setAttribute('popover','auto');
-  menu.innerHTML=`<p>${e(d.name)}</p>${b('Open deck','deck',{deck:d.id})}${b('View deck cards','deck-cards',{deck:d.id})}<hr>${d.archived?b('Restore as draft','restore-deck',{deck:d.id})+`<button data-action="delete-deck" data-deck="${e(d.id)}" class="cm-danger">Delete permanently</button>`:b('Archive deck','archive',{deck:d.id})}`;
+  menu.innerHTML=`<p>${e(d.name)}</p>${b('Open deck','deck',{deck:d.id})}${b('View deck cards','deck-cards',{deck:d.id})}<hr>${d.archived?b('Restore as draft','restore-deck',{deck:d.id}):b('Change commander','change-commander',{deck:d.id})+b('Archive deck','archive',{deck:d.id})}<button data-action="delete-deck" data-deck="${e(d.id)}" class="cm-danger">Delete deck…</button>`;
   document.body.appendChild(menu);const r=el.getBoundingClientRect();menu.style.left=Math.max(8,Math.min(r.left,window.innerWidth-230))+'px';menu.style.top=Math.min(r.bottom+6,window.innerHeight-260)+'px';menu.showPopover();menu.addEventListener('toggle',ev=>{if(ev.newState==='closed')menu.remove();});
   /* Choosing an entry closes the menu, as popMenu's do; Open deck used to leave it standing over the deck page it opened. */
   menu.addEventListener('click',ev=>{if(ev.target.closest('[data-action]'))menu.hidePopover();});};
-actions['delete-deck']=el=>{const d=M.deck(C.state,el.dataset.deck);if(!d.archived)throw Error('Archive the deck first. Delete permanently is offered on archived decks only.');
+actions['change-commander']=el=>{const d=M.deck(C.state,el.dataset.deck);
+  const choose=previous=>C.cardPicker('Change commander',c=>{
+    const current=M.deck(C.state,d.id),inList=current.slots.some(r=>r.purpose==='main'&&r.cardId===c.id);
+    return C.review('Change commander',note(`${C.card(previous).name} → ${c.name}. ${inList?'The former commander stays in the main list.':'The new commander replaces the former commander in the list.'} Owned cards and physical locations stay the same. The deck becomes a draft for legality review.`),{type:'changeCommander',deckId:d.id,previous,cardId:c.id,cards:[c]});
+  },{commander:true});
+  if(d.commanders.length===1)return choose(d.commanders[0]);
+  return form('Change commander',s('Commander to replace','previous',d.commanders.map(id=>[id,C.card(id).name]),d.commanders[0]),v=>choose(v.previous),'Choose replacement');};
+actions['delete-deck']=el=>{const d=M.deck(C.state,el.dataset.deck);
   const games=C.state.games.filter(g=>g.deckId===d.id).length,reports=C.state.reports.filter(r=>r.deckId===d.id).length;
+  const remove=async()=>{const result=await commit({type:'deleteDeck',deckId:d.id,confirmed:true},{renderView:false});
+    // Navigation clears ordinary notices. Show this receipt afterward so Undo remains reachable.
+    if(location.hash!=='#decks'){addEventListener('hashchange',()=>C.notice(result.summary),{once:true});go('decks');}
+    else{await C.render();C.notice(result.summary);}};
   /* The deck's own name is what is typed (r3, 74-confirm-delete): it proves the reader is deleting
      the deck they think they are, which a fixed word did not. The typing goes with the message: a reader who has turned the warning off has
-     said they know what this does, and asking them to type it anyway is theater. What is
-     never skipped is that it only applies to archived decks. */
-  if(C.skipping('deleteDeck'))return commit({type:'deleteDeck',deckId:d.id,confirmed:true}).then(()=>{C.notice('Deleted permanently. You turned this confirmation off; User Functions → Confirmations turns it back on.');go('decks');});
-  form('Delete '+d.name+' permanently',`<div class="cm-full">${note(`This removes the deck plan, ${reports} report${reports===1?'':'s'} and ${games} logged game${games===1?'':'s'}. Copies physically in it return to the Bench. Your owned cards are not deleted. Only the Undo offered straight after can bring it back.`,true)}${f('Type the deck name to confirm','confirm','',`required autocomplete="off" placeholder="${e(d.name)}"`)}<label class="cm-checkbox cm-full"><input type="checkbox" name="skipNext">Don’t show this message again</label></div>`,async v=>{if(v.confirm.trim()!==d.name.trim())throw Error(`Type the deck name exactly: ${d.name}`);if(v.skipNext)await C.setSkip('deleteDeck',true);await commit({type:'deleteDeck',deckId:d.id,confirmed:true});go('decks');},'Delete permanently').classList.add('cm-destructive');};
+     said they know what this does, and asking them to type it anyway is theater. Owned copies survive even when the plan is deleted. */
+  // A prior opt-out covered archived decks only; active decks always require review.
+  if(d.archived&&C.skipping('deleteDeck'))return remove();
+  form('Delete '+d.name+' permanently',`<div class="cm-full">${note(`This removes the deck plan, ${reports} report${reports===1?'':'s'} and ${games} logged game${games===1?'':'s'}. Copies physically in it return to the Bench. Your owned cards are not deleted. Only the Undo offered straight after can bring it back.`,true)}${f('Type the deck name to confirm','confirm','',`required autocomplete="off" placeholder="${e(d.name)}"`)}${d.archived?'<label class="cm-checkbox cm-full"><input type="checkbox" name="skipNext">Don’t show this message again for archived decks</label>':''}</div>`,async v=>{if(v.confirm.trim()!==d.name.trim())throw Error(`Type the deck name exactly: ${d.name}`);if(v.skipNext)await C.setSkip('deleteDeck',true);await remove();},'Delete permanently').classList.add('cm-destructive');};
 /* Straight through when the reader has said so, with a toast that names what happened and
    where the confirmation went, so a silent archive is never a mystery. */
 actions.archive=el=>C.skipping('archive')

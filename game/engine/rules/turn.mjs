@@ -35,7 +35,7 @@
  *   CR 500.4: mana pools empty at the end of every step and phase, not at end of turn.
  */
 
-import {cardsIn, moveObject, eventCard} from "../state/index.mjs";
+import {cardsIn, moveObject, eventCard, recordDraw} from "../state/index.mjs";
 import {attackers, blockers, combatDamage, endCombat} from "./combat.mjs";
 import {checkStateBasedActions, gameOver, finishCommanderReplacement, legendChoice, finishLegendRule, finishDestructionChoice} from "./sba.mjs";
 import {destructionChoice} from "../script/effects/zones.mjs";
@@ -184,7 +184,7 @@ export function draw(state, player, events) {
     from: {zoneType: ZONE_LABEL.library, player: {playerId: player}},
     to: {zoneType: ZONE_LABEL.hand, player: {playerId: player}},
     /* A draw (CR 121.1), as "whenever you draw a card" watches for; a search that puts a card into a hand is not one. */
-    drawn: true,
+    drawn: true, drawNumber: recordDraw(state, player),
   }));
   return moved;
 }
@@ -666,6 +666,7 @@ export function advance(state) {
     state.combatsThisTurn = 0;
     for (const player of state.players) {
       if (player.lostThisTurn) player.lostThisTurn = 0;
+      if (player.drawnThisTurn) player.drawnThisTurn = 0;
       /* And the loyalty abilities each activated (rules/actions.mjs). */
       if (player.loyaltyThisTurn) player.loyaltyThisTurn = 0;
       /* And what each gained and made this turn (script/amount.mjs, lifeGainedThisTurn, tokensCreatedThisTurn). */

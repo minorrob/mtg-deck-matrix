@@ -13,7 +13,10 @@ CrankMagic today as a production release."*
 
 **Why a build, not a branch someone edits.** Rob chose (2026-09-24) that Account Cloud and Play merge
 into `main` as they are built, behind a build switch. So `main` holds everything, and the builder's
-**profile** decides what reaches users. Today there is one profile, `pages`; Stages 2 and 3 add theirs.
+**profile** decides what reaches users. `pages` is still the closed-Play default;
+`cloud-staging` carries staging Play. The explicit production candidates
+`cloud-production` and `cloud-production-standby` are described in
+`docs/production-play-profile-2026-10-07.md`. Building them is not release approval.
 
 ## The rules
 

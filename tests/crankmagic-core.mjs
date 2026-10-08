@@ -194,8 +194,7 @@ const full=await client.named('Test full facts',{exact:true});eq(full.power,'4')
  ok(d.lots.find(l=>l.id==='boxed').location.kind==='deck');
  step('game',{deckId:'gone',outcome:'win',turns:9,opponents:'',notes:''});
  step('preferences',{values:{comparisonPicks:['gone'],lastLabRun:{deckId:'gone',method:'x',issues:[],at:'now'}}});
- assert.throws(()=>step('deleteDeck',{deckId:'gone',confirmed:true}),/Archive the deck first/);checks++;
- step('archive',{deckId:'gone'});
+ // A live deck can be deleted directly, in one confirmed transaction.
  assert.throws(()=>step('deleteDeck',{deckId:'gone'}),/Confirm permanent deletion/);checks++;
  step('deleteDeck',{deckId:'gone',confirmed:true});
  eq(d.decks.length,0);eq(d.games.length,0);eq(d.preferences.comparisonPicks,[]);eq(d.preferences.lastLabRun,undefined);

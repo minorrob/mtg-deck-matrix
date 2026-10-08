@@ -1,0 +1,161 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Maralen, Fae Ascendant",
+  "scenarios": [
+    {
+      "name": "Arrival exiles two opposing cards",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Swamp",
+            "Forest",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Maralen, Fae Ascendant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Maralen, Fae Ascendant"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Maya"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "exile",
+          "count": 2
+        },
+        {
+          "seat": 1,
+          "zone": "library",
+          "count": 18
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Cast an opposing exiled artifact for free",
+      "library": [
+        "Sol Ring",
+        "Wastes"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Swamp",
+            "Forest",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Maralen, Fae Ascendant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Maralen, Fae Ascendant"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Maya"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "cast": "Sol Ring"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Wastes",
+            "Wastes",
+            "Swamp",
+            "Forest",
+            "Island",
+            "Maralen, Fae Ascendant",
+            "Sol Ring"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "exile",
+          "count": 1
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

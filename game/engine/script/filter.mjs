@@ -49,7 +49,7 @@ export const SELECTOR_KEYS = Object.freeze([
   "unblocked", "singleTarget", "goaded", "uniqueName", "sharesCreatureType", "multicolored", "sharesColor",
   "sharesCreatureTypeWithCommander",
   /* "A card exiled with this artifact" (CR 607.2a, 406.6): what this source's linked ability exiled, still in exile. */
-  "exiledWith",
+  "exiledWith", "exiledThisTurn", "unequalPowerToughness",
   /* "Target creature that was dealt damage this turn" (Mirrodin Avenged; CR 120.3). */
   "dealtDamageThisTurn",
   /* "Each other attacking creature that shares a creature type with it" (Shared Animosity): relative to the creature a
@@ -142,6 +142,8 @@ function assertGrammar(selector) {
   /* A mana value's most may be an amount counted (Betor): one of the amount grammar's (script/amount.mjs). */
   const most = selector.manaValue?.max;
   if (most !== null && typeof most === "object" && amountProblems(most).length) throw new Error(`A selector's manaValue.max: ${amountProblems(most).join("; ")}`);
+  if (selector.unequalPowerToughness !== undefined && selector.unequalPowerToughness !== true) throw new Error("unequalPowerToughness is true");
+  if (selector.exiledThisTurn !== undefined && selector.exiledThisTurn !== true) throw new Error("exiledThisTurn is true");
   if (selector.exiledWith !== undefined && selector.exiledWith !== "self") throw new Error("A selector's exiledWith is \"self\": a card this source's linked ability exiled");
   if (selector.dealtDamageThisTurn !== undefined && typeof selector.dealtDamageThisTurn !== "boolean") throw new Error("A selector's dealtDamageThisTurn is true or false");
   for (const key of ["otherThan", "sharesCreatureTypeWith"])
@@ -179,7 +181,9 @@ function canBeTargetedBy(state, id, chooser, source = null) {
 function matchesManaValue(state, id, rule, context = {}) {
   /* A transformed permanent's is its front face's (CR 202.3b; state/index.mjs, valueCostOf). */
   const cost = valueCostOf(state.objects[id]);
-  const value = cost ? manaValue(parseManaCost(cost)) : 0;
+  /* CR 202.3e: X has its chosen value on the stack, and zero elsewhere. */
+  const x = state.objects[id]?.zone === "stack" ? state.stack.find(e => e.objectId === id)?.x ?? 0 : 0;
+  const value = cost ? manaValue(parseManaCost(cost), {x}) : 0;
   /* "With mana value X" (Likeness Looter): the X paid, as it is targeted and as it resolves. */
   if (rule.exactly !== undefined) return value === (rule.exactly === "X" ? context.x ?? 0 : rule.exactly);
   /* "With even mana values" (Void Winnower): zero is even. */
@@ -359,6 +363,11 @@ export function compileSelector(selector) {
       : (object.counters?.[selector.counters] ?? 0) > 0)) return false;
     /* "Creatures that entered this turn" (Force of Despair): on the battlefield since this turn. */
     if (selector.enteredThisTurn === true && !(object.zone === "battlefield" && object.arrivedTurn === state.turn)) return false;
+    /* Gilt-Leaf Winnower: either direction of inequality, through current layers. */
+    if (selector.unequalPowerToughness === true) {
+      const c = characteristicsOf(state, id);
+      if ((c.power ?? 0) === (c.toughness ?? 0)) return false;
+    }
     /* "With toughness greater than its power" (Bedrock Tortoise), through the layers. */
     if (selector.toughnessOverPower === true) { const c = characteristicsOf(state, id); if (!((c.toughness ?? 0) > (c.power ?? 0))) return false; }
     /* "Each equipped creature" (Hemlock Vial; CR 301.5a): an Equipment attached to it -- an Aura is not one -- and still there:
@@ -422,6 +431,7 @@ export function compileSelector(selector) {
     }
     /* "A card exiled with this artifact", "target card exiled with Quintorius" (CR 607.2a, 406.6): one this source's linked
        ability exiled, still that card in exile. */
+    if (selector.exiledThisTurn === true && !(object.zone === "exile" && object.exiledTurn === state.turn)) return false;
     if (selector.exiledWith === "self" && !exiledWithSource(state, linkSource(context)).includes(id)) return false;
     /* "A creature with flying": its keywords now, through the layers (CR 702). */
     if (selector.keywords && !selector.keywords.every((word) => keywordsOf(state, id).includes(word))) return false;

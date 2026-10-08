@@ -1346,11 +1346,9 @@ export const chooseCard = {
       /* "Put a -1/-1 counter on a creature you control" (blight, CR 701.68a): a permanent chosen where it is, and left there --
          remembered for what follows ("the blighted creature", 701.68c). */
       if (where.to === "stay") { found.push(id); return; }
-      const moved = moveOne(state, id, where.to, events, {owner: state.objects[id].owner, tapped: where.tapped === true});
+      const moved = moveOne(state, id, where.to, events, {owner: state.objects[id].owner, controller: awaiting.controller, tapped: where.tapped === true});
       if (moved !== null && state.objects[moved]) found.push(moved);
       if (moved !== null && state.objects[moved] && where.to === "battlefield") {
-        /* "Under your control": the searcher's, when the card is another player's own (it never is from a library). */
-        if (awaiting.controller !== null && awaiting.controller !== undefined) state.objects[moved].controller = awaiting.controller;
         arrivedHere.push(moved);
       }
     });
@@ -1500,14 +1498,17 @@ export function commandersGoingHome(state, params) {
   /* "Counter target spell. If that spell is countered this way, put it on top of its owner's library instead" (Memory
      Lapse): a commander spell, unless it can't be countered or would be exiled instead (CR 702.34a). */
   if (params.effect === "counterSpell") {
-    if (params.to !== "top") return [];
     return (params.spells ?? []).filter((id) => {
       const entry = state.stack.find((e) => e.objectId === id);
-      return state.objects[id]?.commander === true && entry && !entry.flashback && !entry.graveyardToExile && !cantBeCountered(state, id);
+      const library = params.to === "top" || ([undefined, "graveyard"].includes(params.to) && entry?.graveyardToLibraryBottom);
+      return library && state.objects[id]?.commander === true && entry && !entry.flashback && !entry.graveyardToExile && !cantBeCountered(state, id);
     });
   }
-  if (!["hand", "library"].includes(params.to) || params.sacrifice === true || params.fromTop !== undefined) return [];
-  return (params.targets ?? []).filter((id) => state.objects[id]?.commander === true && state.objects[id].zone !== params.to);
+  if (params.sacrifice === true || params.fromTop !== undefined) return [];
+  return (params.targets ?? []).filter((id) => {
+    const bottom = params.to === "graveyard" && state.stack.some(e => e.objectId === id && e.graveyardToLibraryBottom && !e.flashback && !e.graveyardToExile);
+    return (["hand", "library"].includes(params.to) || bottom) && state.objects[id]?.commander === true && state.objects[id].zone !== params.to;
+  });
 }
 export const commanderHome = {
   open(state, params) {
@@ -1520,7 +1521,7 @@ export const commanderHome = {
   choice(state, awaiting) {
     return {id: `commander-home:${state.turn}:${awaiting.objectId}`, title: `Put ${state.objects[awaiting.objectId]?.card ?? "your commander"} into the command zone instead?`,
       mode: "boolean", min: 1, max: 1,
-      options: [{index: 0, label: "Put it into the command zone"}, {index: 1, label: `Let it go to your ${awaiting.move.to === "top" ? "library" : awaiting.move.to}`}]};
+      options: [{index: 0, label: "Put it into the command zone"}, {index: 1, label: `Let it go to your ${awaiting.move.to === "top" || ([undefined, "graveyard"].includes(awaiting.move.to) && state.stack.some(e => e.objectId === awaiting.objectId && e.graveyardToLibraryBottom)) ? "library" : awaiting.move.to}`}]};
   },
   apply(state, awaiting, indices) {
     if (!Array.isArray(indices) || indices.length !== 1 || ![0, 1].includes(indices[0])) throw new Error("Answer yes or no");

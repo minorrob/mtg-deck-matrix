@@ -104,23 +104,23 @@ try {
   ok(true, "a saved dark reads as Brass & Slate, light as Felt & Cream, and Match system as Moss & Iron");
   await page.evaluate(async () => { await globalThis.__cmCommit({type: "preferences", values: {theme: "moss-iron"}}); });
 
-  /* Retry: only for a failure that may pass. A deck that is not archived cannot be deleted -- a rule,
+  /* Retry: only for a failure that may pass. A missing deck cannot be deleted -- a rule,
      so no Retry. Offline, the same press is offered Retry, and Retry runs it again. */
   const live = await page.evaluate(() => document.querySelector('[data-action="deck"][data-deck]')?.dataset.deck || "");
   ok(live, "the restored library has a deck");
-  await press(page, "delete-deck", {deck: live});
+  await press(page, "delete-deck", {deck: "deck:missing"});
   await page.waitForFunction(() => document.getElementById("cm-notice").classList.contains("error"));
   const rule = await toast(page);
-  ok(/Archive the deck first/.test(rule.text) && rule.action === null, `a rule's error offers no Retry: ${JSON.stringify(rule)}`);
+  ok(/Deck not found/.test(rule.text) && rule.action === null, `a rule's error offers no Retry: ${JSON.stringify(rule)}`);
   await context.setOffline(true);
-  await press(page, "delete-deck", {deck: live});
+  await press(page, "delete-deck", {deck: "deck:missing"});
   await page.waitForFunction(() => document.querySelector("#cm-notice .cm-toast-action")?.textContent === "Retry");
   ok((await toast(page)).error, "offline, the same failure is offered Retry");
   await context.setOffline(false);
   await page.evaluate(() => { document.getElementById("cm-notice").dataset.seen = "before"; });
   await page.locator("#cm-notice .cm-toast-action").click();
   await page.waitForFunction(() => { const el = document.getElementById("cm-notice"); return !el.hidden && !el.querySelector(".cm-toast-action"); });
-  ok(/Archive the deck first/.test((await toast(page)).text), "Retry ran the action again, which, back online, fails as a rule with no Retry");
+  ok(/Deck not found/.test((await toast(page)).text), "Retry ran the action again, which, back online, fails as a rule with no Retry");
 
   /* 4. Help slides in from the right, with the page beside it. */
   await page.locator('#cm-main [data-action="page-help"]').first().click();
@@ -149,7 +149,7 @@ try {
   await page.keyboard.press("Escape");
   await panel.waitFor({state: "hidden"});
 
-  /* 5. Deleting a deck asks for its name. It is offered on archived decks only, so archive first. */
+  /* 5. Deleting a deck asks for its name. Archived decks keep the same name-confirmation and Undo path. */
   await press(page, "archive", {deck: live});
   await page.getByRole("button", {name: "Confirm change"}).click();
   await page.waitForFunction(() => !document.getElementById("cm-dialog").open);

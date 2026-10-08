@@ -262,7 +262,9 @@ const TRIGGERS = {
      damage" (Forge's DamageDoneOnce): the same, once for everything one action did -- per player dealt it (trigger.mjs). */
   "damage dealt once": (t) => { const once = damageDealt(t); return once ? {...once, batch: true} : null; },
   /* "Whenever you draw a card", "whenever an opponent draws a card" (CR 121.1): `drawer`. */
-  drawn: (t) => ({on: "GameEventCardChangeZone", from: "Library", to: "Hand", drawn: true, drawer: t.drawer ?? "you"}),
+  drawn: (t) => t.nthThisTurn === undefined || (Number.isInteger(t.nthThisTurn) && t.nthThisTurn >= 1)
+    ? {on: "GameEventCardChangeZone", from: "Library", to: "Hand", drawn: true, drawer: t.drawer ?? "you",
+      ...(t.nthThisTurn !== undefined ? {nthThisTurn: t.nthThisTurn} : {})} : null,
   /* "Whenever you gain life" (CR 119.9): `gainer` you, opponent or any. */
   "life gained": (t) => ({on: "GameEventPlayerLivesChanged", gainer: t.gainer ?? "you"}),
   /* "Whenever an opponent loses life", "whenever you lose life" (CR 119.3, batch 78): `loser` you, opponent or any; about
@@ -945,7 +947,10 @@ export function compileScript(script) {
       /* An added phase is a combat, a main or a beginning phase (effects/permanents.mjs). */
       if (effect.effect === "addPhase" && !(effect.phases ?? ["combat"]).every((kind) => ADDED_PHASES.includes(kind))) problems.push(`addPhase: a phase of ${ADDED_PHASES.join(", ")}`);
       /* "You may play that card" until a time (effects/zones.mjs): this turn, or the end of its controller's next turn. */
-      if (effect.effect === "mayPlay" && !MAY_PLAY_UNTIL.includes(effect.until ?? "end-of-turn")) problems.push(`mayPlay: until ${MAY_PLAY_UNTIL.join(" or ")}`);
+      if (effect.effect === "mayPlay") {
+        if (!MAY_PLAY_UNTIL.includes(effect.until ?? "end-of-turn")) problems.push(`mayPlay: until ${MAY_PLAY_UNTIL.join(" or ")}`);
+        for (const key of ["free", "graveyardToLibraryBottom"]) if (effect[key] !== undefined && effect[key] !== true) problems.push(`mayPlay: ${key} is true`);
+      }
       /* "Return ... to the battlefield with a finality counter on it" (Excava, the Risen Past): onto the battlefield only, each
          kind of counter a whole number, 1 or more (effects/zones.mjs, moveOne's `counters`). */
       if (effect.effect === "moveZone" && effect.withCounters !== undefined && !(effect.to === "battlefield" && effect.withCounters && typeof effect.withCounters === "object"

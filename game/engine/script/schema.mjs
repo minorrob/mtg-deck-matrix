@@ -332,6 +332,12 @@ function checkAbility(ability, path, errors) {
     /* A rule is read through the whole selector grammar (rules/statics.mjs), a choice of selectors included: "creatures you
        control with power or toughness 1 or less". A layer's `affects` is the layers' narrower matcher, and is not. */
     else checkSelector(ability.affects, `${path}.affects`, errors, {choice: ability.rule !== undefined});
+    if (ability.rule === "play-from") {
+      if (!["graveyard", "library-top", "exile"].includes(ability.zone)) errors.push({path: `${path}.zone`, message: "play-from zone is graveyard, library-top or exile"});
+      for (const key of ["free", "graveyardToLibraryBottom"]) if (ability[key] !== undefined && ability[key] !== true)
+        errors.push({path: `${path}.${key}`, message: `${key} is true`});
+      if (ability.spells && typeof ability.spells === "object") checkSelector(ability.spells, `${path}.spells`, errors, {choice: true});
+    }
     /* What causes a trigger to trigger again: an arrival, a death, an attack (rules/trigger.mjs). */
     if (ability.rule === "triggers-again" && ability.cause !== undefined && !["enters", "dies", "attacks"].includes(ability.cause?.event))
       errors.push({path: `${path}.cause`, message: "What causes it to trigger again is an event: enters, dies or attacks"});

@@ -21,7 +21,7 @@ import {holdArrival, enteredWith} from "../../rules/entering.mjs";
 import {prepare} from "./attributes.mjs";
 import {afterwards, delayedTrigger, enchantable, enchantOnArrival, controlSourceLeft} from "./permanents.mjs";
 import {typesOf} from "../../rules/layers.mjs";
-import {moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard, rememberExileLooker} from "../../state/index.mjs";
+import {moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard, rememberExileLooker, recordDraw} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf, controllerOf, abilitiesOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector, matchesSelector} from "../filter.mjs";
@@ -69,7 +69,7 @@ const PERMANENT_TYPES = ["Artifact", "Battle", "Creature", "Enchantment", "Land"
    transforms stays where it is. */
 /* `counters`: what the effect putting it onto the battlefield says it enters with -- "with a finality counter on it" (Excava,
    the Risen Past; CR 122.6) -- put on as it arrives, by its controller (122.6a), whatever kind of permanent it is. */
-export function moveOne(state, id, to, events, {owner = null, tapped = false, faceDown = false, lookers = null, exiledBy = null, transformed = false, counters = null} = {}) {
+export function moveOne(state, id, to, events, {owner = null, controller = null, tapped = false, faceDown = false, lookers = null, exiledBy = null, transformed = false, counters = null} = {}) {
   const object = state.objects[id];
   if (!object) return null;
   const from = object.zone;
@@ -88,8 +88,10 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false, fa
   const leaving = from === "stack" ? state.stack.findIndex((entry) => entry.objectId === id) : -1;
   /* Cast "this way" by Kess: to exile only instead of a graveyard. */
   /* "If it would leave the battlefield, exile it instead" (unearth, Whip of Erebos) is a replacement (rules/replacement.mjs). */
-  const destination = leaving >= 0 && (state.stack[leaving].flashback || (state.stack[leaving].graveyardToExile && proposal.to === "graveyard")) ? "exile" : proposal.to;
+  const destination = leaving >= 0 && (state.stack[leaving].flashback || (state.stack[leaving].graveyardToExile && proposal.to === "graveyard")) ? "exile"
+    : leaving >= 0 && state.stack[leaving].graveyardToLibraryBottom && proposal.to === "graveyard" ? "library" : proposal.to;
   const holder = owner ?? object.owner;
+  const enteringController = controller ?? object.owner;
 
   /* A modal double-faced card told to enter with its front face up, when that face is no permanent's (CR 712.14b): it
      stays where it is. */
@@ -104,13 +106,13 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false, fa
      counter is not put on the creature it becomes. */
   const face = backUp ? object.mdfc.back : object;
   const entering = destination === "battlefield"
-    ? enteringModifications(state, {objectId: id, player: object.controller, types: asDown ? ["Creature"] : face.types, abilities: asDown ? [] : face.abilities})
+    ? enteringModifications(state, {objectId: id, player: enteringController, types: asDown ? ["Creature"] : face.types, abilities: asDown ? [] : face.abilities})
     : null;
 
   /* An Aura put onto the battlefield by an effect, not resolving as a spell (CR 303.4f; Sun Titan returning one): it
      enchants what its controller chooses as it enters, and with nothing to enchant it stays where it is -- or, from the
      stack, goes to its owner's graveyard (CR 303.4g). */
-  const hosts = destination === "battlefield" && object.enchant && !asDown ? enchantable(state, object.enchant, object.owner) : null;
+  const hosts = destination === "battlefield" && object.enchant && !asDown ? enchantable(state, object.enchant, enteringController) : null;
   if (hosts && !hosts.length) {
     if (from !== "stack") return null;
     return moveOne(state, id, "graveyard", events, {owner: object.owner});
@@ -121,6 +123,8 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false, fa
   const hidden = faceDown === true && to === "exile" && destination === "exile";
   if (faceDown === true && !asDown && !hidden) card = leavingRef(state, id);
   const moved = moveObject(state, id, destination, PER_PLAYER.includes(destination) ? holder : null, {faceDown: asDown || hidden, transformed: backUp});
+  // CR 110.2a, 614.12: the effect's recipient controls it as it enters, before entry effects.
+  if (destination === "battlefield" && state.objects[moved]) state.objects[moved].controller = enteringController;
   /* "The player who controls the permanent that exiled this card may look at this card in the exile zone" (CR 702.75a), and
      goes on being able to until it leaves exile (406.3). */
   if (hidden && state.objects[moved]) {
@@ -153,7 +157,7 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false, fa
     /* And what it became wherever it went, when that zone is public (CR 400.7e): "that card" in a dies trigger. */
     ...(PUBLIC_ZONES.includes(destination) ? {becomes: moved} : {}),
     from: {zoneType: ZONE_LABEL[from] ?? from, player: {playerId: object.controller}},
-    to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: holder}},
+    to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: destination === "battlefield" ? enteringController : holder}},
   }));
   /* "You may have this creature enter as a copy of ...": its arrival waits for the answer (rules/entering.mjs). */
   if (destination === "battlefield") holdArrival(state, moved, events[events.length - 1]);
@@ -228,6 +232,9 @@ export function returnExiledUntil(state, departed, events, leftBehind = null) {
  * permanent's id as it was; each of its abilities waiting on the stack that knows nothing of it yet is told.
  */
 export function keepLastKnown(state, departed, leftBehind) {
+  // A trigger's subject can leave too (Guardian Project); remember its final name, not its arrival name.
+  for (const entry of [...state.stack, ...(state.pendingTriggers ?? [])])
+    if (entry.about?.card === departed) entry.about.was = structuredClone(leftBehind);
   for (const entry of state.stack) if (entry.objectId === null && entry.cardId === departed && !entry.lastKnown) entry.lastKnown = structuredClone(leftBehind);
 }
 
@@ -411,9 +418,11 @@ export function moveZone(state, params, context, rng = null) {
   /* "Exile another target nonland permanent" (Oblivion Ring, `link`): what it exiled, kept against this source for the
      ability linked to it (CR 607.2a); used, the link is spent. Each time the ability exiles adds to what it exiled -- the
      same trigger twice (Panharmonicon) is "the exiled cards", both (Skyclave Apparition's ruling of 2020-09-25). */
-  if (params.link === true && context.source !== null && context.source !== undefined) {
-    const links = (state.links ??= {});
-    links[context.source] = [...(links[context.source] ?? []), ...became.filter((id) => state.objects[id])];
+  if (params.link === true && linkOf(context) !== null) {
+    const links = (state.links ??= {}), source = linkOf(context);
+    const linked = became.filter(id => state.objects[id]?.zone === "exile");
+    for (const id of linked) state.objects[id].exiledTurn = state.turn;
+    links[source] = [...(links[source] ?? []), ...linked];
   }
   if (params.linked === true && state.links) {
     /* Only some of them (`linkedOnly`): the others are still exiled with it (CR 607.2a). */
@@ -465,7 +474,13 @@ export function mayPlay(state, params, context) {
   const ids = (params.targets ?? []).filter((id) => state.objects[id]);
   const player = context.controller;
   if (!ids.length || !state.players[player]) return [];
-  (state.effects ??= []).push({id: `may-play:${ids.join(",")}:${state.effects.length}`, rule: "may-play", affects: {ids}, player,
+  const effects = (state.effects ??= []);
+  let serial = effects.length, id;
+  do { id = `may-play:${ids.join(",")}:${serial++}`; } while (effects.some(e => e.id === id));
+  effects.push({id, rule: "may-play", affects: {ids}, player,
+    name: state.objects[context.source]?.card ?? context.lastKnown?.name ?? "Effect",
+    ...(params.free === true ? {free: true} : {}),
+    ...(params.graveyardToLibraryBottom === true ? {graveyardToLibraryBottom: true} : {}),
     ...(params.spellsOnly === true ? {spellsOnly: true} : {}), until: params.until ?? "end-of-turn", madeOnTurn: state.turn, sourceController: player});
   return [];
 }
@@ -503,7 +518,12 @@ export function draw(state, params, context) {
     for (let i = 0; i < count; i += 1) {
       const library = cardsIn(state, "library", player);
       if (library.length === 0) { state.players[player].drewFromEmpty = true; break; }
-      if (moveOne(state, library[0], "hand", events, {owner: player}) !== null) events[events.length - 1].data.fields.drawn = true;
+      const moved = moveOne(state, library[0], "hand", events, {owner: player});
+      if (moved !== null && state.objects[moved]?.zone === "hand") {
+        const fields = events[events.length - 1].data.fields;
+        fields.drawn = true;
+        fields.drawNumber = recordDraw(state, player);
+      }
     }
   }
   return events;
@@ -765,14 +785,14 @@ export function counterSpell(state, params, context) {
          chose so, the command zone (CR 903.9b; effects/asking.mjs, commandersGoingHome). */
       const owner = state.objects[entry.objectId].owner;
       const to = entry.flashback || entry.graveyardToExile || params.to === "exile" ? "exile"
-        : (params.commanderHome ?? []).includes(entry.objectId) ? "command" : params.to === "top" ? "library" : "graveyard";
+        : (params.commanderHome ?? []).includes(entry.objectId) ? "command" : params.to === "top" || entry.graveyardToLibraryBottom ? "library" : "graveyard";
       const moved = moveOne(state, entry.objectId, to, events, {owner});
       /* "Exile it with three time counters on it ... it gains suspend" (Delay; CR 702.62): in exile, suspended. */
       if (to === "exile" && moved !== null && state.objects[moved] && Number.isInteger(params.timeCounters)) {
         state.objects[moved].counters.time = (state.objects[moved].counters.time ?? 0) + params.timeCounters;
         if (params.suspend === true) state.objects[moved].suspended = true;
       }
-      if (to === "library" && moved !== null && state.objects[moved]) {
+      if (to === "library" && params.to === "top" && moved !== null && state.objects[moved]) {
         const library = state.zones.library[owner];
         library.splice(library.indexOf(moved), 1);
         library.unshift(moved);
