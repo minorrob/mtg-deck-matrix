@@ -123,6 +123,17 @@ function skippedSeats(state, from, to) {
   return skipped;
 }
 
+/* THE NEXT EXTRA TURN (CR 500.7): the most recently created one whose player is still in the game -- each is added
+   directly after the turn it was made in, so the last made is the next taken -- or null. One of a player who has left the
+   game is dropped as it would be reached (CR 800.4a: nothing of theirs happens). */
+function takeExtraTurn(state) {
+  while ((state.extraTurns ?? []).length) {
+    const extra = state.extraTurns.pop();
+    if (state.players[extra.player] && !state.players[extra.player].lost) return extra;
+  }
+  return null;
+}
+
 /* ---- events, in the envelope the existing readers expect ---- */
 
 /* `ForgeProbe.java` nests everything under `data.fields` and puts the turn on `data`, and
@@ -448,6 +459,8 @@ function arrive(state, events) {
   events.push(event("GameEventTurnPhase", state, {
     phase: state.phase,
     playerTurn: {playerId: state.activePlayer, name: state.players[state.activePlayer].name},
+    /* An extra turn (CR 500.7) says so as it begins, for the table's history (room/history.mjs). */
+    ...(state.phase === "UNTAP" && state.extraTurn === true ? {extraTurn: true} : {}),
   }));
   if (state.phase === "UNTAP") untap(state, events);
   if (state.phase === "DRAW" && !skipsFirstDraw(state) && !state.players[state.activePlayer].lost) {
@@ -601,10 +614,17 @@ export function advance(state) {
   }
 
   if (next >= STEPS.length) {
-    /* CR 500.7 extra turns and CR 500.8 extra phases arrive in 1.6 with the triggers that grant
-       them; until then a turn is followed by the next living player's. */
+    /* A turn is followed by the next living player's -- unless an extra turn was added after it (CR 500.7; script/effects/
+       turns.mjs, addTurn): the most recently created first, so one made during an extra turn comes before those already
+       waiting. Nobody chooses any of this: the rules order it (CR 500.7), so it is never a question. Extra turns are added
+       directly after a turn, and the turns that would have followed it still follow (500.7): the order goes on from the
+       last turn that was not an extra one (`orderFrom`) -- Maya's extra turn after Rob's is followed by Maya's own, not by
+       the player after her. */
     const previous = state.activePlayer;
-    state.activePlayer = nextLivingPlayer(state, state.activePlayer);
+    const orderFrom = state.extraTurn === true && Number.isInteger(state.orderFrom) ? state.orderFrom : previous;
+    const extra = takeExtraTurn(state);
+    if (extra) { state.activePlayer = extra.player; state.extraTurn = true; state.orderFrom = orderFrom; }
+    else { state.activePlayer = nextLivingPlayer(state, orderFrom); delete state.extraTurn; delete state.orderFrom; }
     state.turn += 1;
     /* "Since the beginning of your last upkeep" (echo, CR 702.30a; script/condition.mjs): the turn of theirs before this one. */
     if (state.players[state.activePlayer].turnBegan > 0) state.players[state.activePlayer].previousTurnBegan = state.players[state.activePlayer].turnBegan;
@@ -614,7 +634,8 @@ export function advance(state) {
     /* Whose next turn has now begun: this player's -- and each player who has left the game and whose turn it would have been
        on the way here, since an effect lasting until that player's next turn lasts until that turn would have begun (CR
        800.4m: Reflector Mage's controller conceding does not lock a name for the rest of the game). */
-    const reached = [...skippedSeats(state, previous, state.activePlayer), state.activePlayer];
+    /* An extra turn passes over nobody's seat: no turn of anyone else's would have begun before it (CR 500.7). */
+    const reached = [...(extra ? [] : skippedSeats(state, orderFrom, state.activePlayer)), state.activePlayer];
     /* "Until your next turn" (goad, CR 701.15a): over as that player's turn begins. */
     state.effects = (state.effects ?? []).filter((e) => !(e.until === "your-next-turn" && reached.includes(e.sourceController)));
     /* And "until that player's next turn" (Teferi's Reproach): over as that player's turn begins. */

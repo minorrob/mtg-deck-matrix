@@ -938,7 +938,15 @@ export function compileScript(script) {
       /* "YOU MAY" (CR 603.5): an optional triggered ability goes on the stack like any other, and as it resolves its
          controller chooses whether to do it -- the card's sentence, Yes or No. Declining does nothing at all, a search
          and its shuffle included. */
-      const effects = ability.optional ? [{effect: "modal", title: ability.text, modes: [{text: "Yes", effects: ability.effects}, {text: "No", effects: []}]}] : ability.effects;
+      /* "DO THIS ONLY ONCE EACH TURN" (Tidus, Yuna's Guardian's Cheer; `onceEachTurn`): the "you may" taken once a turn -- the
+         ability still triggers and resolves each time, and once its "Yes" has been taken this turn only "No" is left
+         (effects/asking.mjs, modal's `onceEachTurn`). A limit on doing it, never on triggering (that is `limit`, "this
+         ability triggers only once each turn"); so it says so only of a "you may". */
+      if (ability.onceEachTurn !== undefined && !(ability.onceEachTurn === true && ability.optional === true))
+        problems.push(`${ability.text}: "do this only once each turn" is onceEachTurn: true, on a "you may" (optional) triggered ability`);
+      const once = ability.onceEachTurn === true && ability.optional === true;
+      const effects = ability.optional ? [{effect: "modal", title: ability.text, ...(once ? {onceEachTurn: id} : {}),
+        modes: [{text: "Yes", effects: ability.effects, ...(once ? {once: true} : {})}, {text: "No", effects: []}]}] : ability.effects;
       /* A TRIGGERED MANA ABILITY (CR 605.1b): one that triggers on a mana ability and adds mana -- a fixed amount, or "one
          mana of any type that land produced" -- with no target. It is not put on the stack (rules/trigger.mjs, manaTriggered). */
       const [adds] = effects ?? [];

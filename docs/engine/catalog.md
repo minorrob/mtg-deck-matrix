@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,200 defined and playable today; 2,537 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,203 defined and playable today; 2,547 with every
 mechanic built, so only their definitions are left to write; 28 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -20,7 +20,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 44 | 0 | 14 | 136 |
 | Keyword actions (CR 701) | 70 | 22 | 3 | 1 | 44 |
-| Effects | 192 | 68 | 1 | 4 | 119 |
+| Effects | 192 | 70 | 1 | 2 | 119 |
 | Triggers | 138 | 20 | 4 | 2 | 112 |
 | Static abilities | 77 | 14 | 2 | 0 | 61 |
 | Replacement effects | 34 | 0 | 5 | 0 | 29 |
@@ -48,9 +48,9 @@ The things that alone hold back the most of the most-played cards.
 | effect | ChoosePlayer | — | missing | 6 | 8 |
 | option | Imprint (a card exiled with this) | — | missing | 6 | 8 |
 | effect | Discover | discover | named | 6 | 6 |
-| effect | AddTurn | addTurn | named | 5 | 10 |
 | trigger | CounterAddedOnce | counter added once | named | 5 | 10 |
 | count | How many things an effect remembered | — | missing | 5 | 8 |
+| keyword ability | Warp | — | missing | 5 | 7 |
 
 ## Keyword abilities (CR 702)
 
@@ -90,7 +90,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.16 | Protection | — | named | 6 | 58 | 6 | 4 |
 | 702.74 | Evoke | Evoke | built | 6 | 36 | 0 | 0 |
 | 702.131 | Ascend | — | named | 6 | 30 | 6 | 4 |
-| 702.174 | Gift | — | missing | 6 | 27 | 6 | 1 |
+| 702.174 | Gift | — | missing | 6 | 27 | 6 | 2 |
 | 702.172 | Spree | — | missing | 6 | 21 | 6 | 4 |
 | 702.33 | Kicker | — | missing | 5 | 239 | 5 | 1 |
 | 702.14 | Landwalk | — | named | 5 | 131 | 5 | 4 |
@@ -113,7 +113,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.126 | Improvise | — | missing | 3 | 24 | 3 | 2 |
 | 702.151 | Reconfigure | — | missing | 3 | 21 | 3 | 1 |
 | 702.92 | Living Weapon | — | named | 3 | 19 | 3 | 3 |
-| 702.94 | Miracle | — | missing | 3 | 17 | 3 | 2 |
+| 702.94 | Miracle | — | missing | 3 | 17 | 3 | 3 |
 | 702.181 | Mobilize | — | missing | 3 | 15 | 3 | 3 |
 | 702.89 | Umbra Armor | — | named | 3 | 15 | 3 | 3 |
 | 702.52 | Dredge | — | missing | 3 | 14 | 3 | 3 |
@@ -391,7 +391,7 @@ The things that alone hold back the most of the most-played cards.
 | Goad | goad | built | 11 | 67 | 0 | 0 |
 | RingTemptsYou | — | missing | 11 | 49 | 11 | 8 |
 | Poison | poison | built | 11 | 36 | 0 | 0 |
-| AddTurn | addTurn | named | 10 | 65 | 10 | 5 |
+| AddTurn | addTurn | built | 10 | 65 | 0 | 0 |
 | BecomeMonarch | — | missing | 10 | 62 | 10 | 3 |
 | ChangeTargets | — | missing | 10 | 43 | 8 | 6 |
 | Earthbend | earthbend | built | 10 | 36 | 0 | 0 |
@@ -403,12 +403,12 @@ The things that alone hold back the most of the most-played cards.
 | Amass | amass | built | 7 | 72 | 0 | 0 |
 | StoreSVar | — | missing | 6 | 68 | 6 | 2 |
 | Shuffle | shuffle | built | 6 | 66 | 0 | 0 |
-| LosesGame | — | missing | 6 | 45 | 6 | 4 |
+| LosesGame | — | missing | 6 | 45 | 6 | 5 |
 | Discover | discover | named | 6 | 35 | 6 | 6 |
 | AlterAttribute | alterAttribute | built | 5 | 115 | 0 | 0 |
 | ChooseNumber | — | missing | 5 | 57 | 5 | 1 |
 | Protection | — | missing | 5 | 53 | 5 | 5 |
-| MoveCounter | moveCounters | named | 5 | 32 | 5 | 5 |
+| MoveCounter | moveCounters | built | 5 | 32 | 0 | 0 |
 | Fog | — | missing | 4 | 34 | 4 | 3 |
 | Radiation | — | missing | 4 | 22 | 4 | 2 |
 | Airbend | — | missing | 4 | 13 | 4 | 3 |

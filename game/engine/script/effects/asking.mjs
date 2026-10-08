@@ -26,10 +26,10 @@
  * unwind across the pause and rebuild itself.
  */
 
-import {cardsIn, moveObject, addObject, valueCostOf, rememberExileLooker} from "../../state/index.mjs";
+import {cardsIn, moveObject, addObject, valueCostOf, rememberExileLooker, usesThisTurn, recordUse} from "../../state/index.mjs";
 import {compileSelector} from "../filter.mjs";
 import {event, cardRef, moveOne, playersFor, sacrificeOne} from "./zones.mjs";
-import {proliferate as giveEachAnother, addCounters} from "./resources.mjs";
+import {proliferate as giveEachAnother, addCounters, putCounter, moveCounters} from "./resources.mjs";
 import {makeCopies, afterwards, joinAttack, defendingPlayers, attachTo, createToken, effectUntil, COPY_KEYS} from "./permanents.mjs";
 import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits, unlessPlans, planWords, payPlan} from "../../rules/mana.mjs";
 import {typesOf, characteristicsOf, everyCreatureTypeOf, controllerOf} from "../../rules/layers.mjs";
@@ -474,18 +474,25 @@ export const discard = {
 
 /* ---- modal ---- */
 
+/* "Do this only once each turn" (Tidus, Yuna's Guardian; cards/index.mjs, `onceEachTurn`): what this permanent's ability has
+   done this turn, kept on the permanent as its uses are (state/index.mjs) -- so a new object may again (CR 400.7). */
+const onceKey = (params, context) => (params.onceEachTurn !== undefined && Number.isInteger(context.source) ? `once:${params.onceEachTurn}` : null);
 export const modal = {
   open(state, params, context) {
-    const modes = params.modes ?? [];
-    if (modes.length === 0) return false;
+    const key = onceKey(params, context);
+    /* Done once this turn: the mode that does it (`once`) is gone, and only "No" is left -- no choice, so nothing is asked. */
+    const done = key !== null && usesThisTurn(state, context.source, key) > 0;
+    const modes = (params.modes ?? []).filter((mode) => !(done && mode.once === true));
+    if (modes.length === 0 || (done && modes.every((mode) => !(mode.effects ?? []).length))) return false;
     const choose = Math.min(params.choose ?? 1, modes.length);
     state.awaiting = {
       /* Usually the controller's; "its controller may draw up to two cards" is that player's (`chooser`, bound to them). */
       kind: "effect-choice", effect: "modal", player: Number.isInteger(params.chooser) ? params.chooser : context.controller,
-      modes: modes.map((mode) => ({text: mode.text ?? "", effects: structuredClone(mode.effects ?? [])})),
+      modes: modes.map((mode) => ({text: mode.text ?? "", effects: structuredClone(mode.effects ?? []), ...(mode.once === true ? {once: true} : {})})),
       choose,
       /* A "you may" asks in the card's own words (cards/index.mjs): its sentence, then Yes or No. */
       ...(params.title ? {title: String(params.title)} : {}),
+      ...(key !== null ? {onceOf: {source: context.source, key}} : {}),
     };
     return true;
   },
@@ -512,6 +519,8 @@ export const modal = {
    */
   apply(state, awaiting, indices) {
     const chosen = (indices ?? []).map((index) => awaiting.modes[index]).filter(Boolean);
+    /* Taken: done once this turn ("do this only once each turn"). */
+    if (awaiting.onceOf && chosen.some((mode) => mode.once === true)) recordUse(state, awaiting.onceOf.source, awaiting.onceOf.key);
     return {events: [], splice: chosen.flatMap((mode) => mode.effects)};
   },
 };
@@ -1499,5 +1508,38 @@ export const conniveWhich = {
   },
 };
 
+/* ---- which kind of counter (CR 122.1; Train B, X11) ----
+
+   "Choose a counter on target permanent. Put an additional counter of that kind on that permanent" (Ichormoon Gauntlet),
+   "move a counter from target creature you control onto a second target creature you control" (Tidus, Yuna's Guardian): a
+   putCounter or moveCounters whose kind of counter is its controller's to choose (`counter: "chosen"`), put here by the
+   resolution before it is done (script/resolution.mjs). The options are the kinds of counter on the object it is read
+   from -- the moveCounters' `from`, the putCounter's target -- since counters of one kind are alike; the effect follows
+   with the kind chosen. One kind there, and the rules leave no choice: it is that one, and nobody is asked. None, or the
+   object gone from the battlefield, and there is no counter to choose: the effect does nothing (CR 122.5, for a move). */
+const COUNTER_KIND_EFFECTS = {putCounter, moveCounters};
+const countersOn = (state, id) => (id !== undefined && state.objects[id]?.zone === "battlefield"
+  ? Object.entries(state.objects[id].counters ?? {}).filter(([, n]) => n > 0).map(([kind, n]) => ({kind, n})) : []);
+export const counterKind = {
+  open(state, params, context) {
+    const then = params.then;
+    const [on] = (then.effect === "moveCounters" ? then.from : then.targets) ?? [];
+    const kinds = countersOn(state, on);
+    if (kinds.length < 2) return {events: kinds.length ? COUNTER_KIND_EFFECTS[then.effect](state, {...then, counter: kinds[0].kind}, context) : []};
+    state.awaiting = {kind: "effect-choice", effect: "counterKind", player: context.controller, on, kinds, then};
+    return true;
+  },
+  choice(state, awaiting) {
+    const name = state.objects[awaiting.on]?.card ?? "that permanent";
+    return {id: `counterKind:${awaiting.player}:${state.turn}:${awaiting.on}`, title: `Choose a kind of counter on ${name}`, mode: "one", min: 1, max: 1,
+      options: awaiting.kinds.map((k, index) => ({index, label: `${k.kind} counter (${k.n} on ${name})`, cardId: awaiting.on}))};
+  },
+  apply(state, awaiting, indices) {
+    const chosen = Array.isArray(indices) && indices.length === 1 ? awaiting.kinds[indices[0]] : undefined;
+    if (!chosen) throw new Error("Invalid selection");
+    return {events: COUNTER_KIND_EFFECTS[awaiting.then.effect](state, {...awaiting.then, counter: chosen.kind}, {controller: awaiting.player})};
+  },
+};
+
 export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage,
-  conniveWhich, manaColors});
+  conniveWhich, manaColors, counterKind});

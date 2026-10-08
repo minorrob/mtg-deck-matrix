@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shared Animosity",
+    "oracleId": "a27445db-33f2-4571-98b5-83206b797484",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever a creature you control attacks, it gets +1/+0 until end of turn for each other attacking creature that shares a creature type with it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature you control attacks, it gets +1/+0 until end of turn for each other attacking creature that shares a creature type with it.",
+      "trigger": {
+        "on": "attacks",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "that card",
+          "power": {
+            "count": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "attacking": true,
+              "otherThan": "that card",
+              "sharesCreatureTypeWith": "that card"
+            }
+          },
+          "toughness": 0,
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

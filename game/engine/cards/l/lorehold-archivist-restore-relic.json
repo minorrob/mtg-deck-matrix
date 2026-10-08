@@ -1,0 +1,131 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lorehold Archivist // Restore Relic",
+    "oracleId": "a371d035-488e-4b3d-81de-ee7859452c0e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dwarf",
+      "Artificer"
+    ],
+    "manaCost": "{1}{R}{W}",
+    "colors": [
+      "W",
+      "R"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "First strike\nAt the beginning of your upkeep, if there are three or more artifact and/or creature cards in your graveyard, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "First strike",
+      "keyword": "first strike"
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, if there are three or more artifact and/or creature cards in your graveyard, this creature becomes prepared.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "alterAttribute",
+          "targets": "self",
+          "attribute": "prepared"
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "count": {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "anyOf": [
+                {
+                  "types": [
+                    "Artifact"
+                  ]
+                },
+                {
+                  "types": [
+                    "Creature"
+                  ]
+                }
+              ]
+            }
+          },
+          "atLeast": 3
+        }
+      }
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Restore Relic",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{2}{R}{W}",
+      "colors": [
+        "W",
+        "R"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Exile target artifact or creature card from your graveyard. Create a token that's a copy of it.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Exile target artifact or creature card from your graveyard. Create a token that's a copy of it.",
+        "targets": [
+          {
+            "anyOf": [
+              {
+                "what": "card",
+                "zone": "graveyard",
+                "controller": "you",
+                "types": [
+                  "Artifact"
+                ]
+              },
+              {
+                "what": "card",
+                "zone": "graveyard",
+                "controller": "you",
+                "types": [
+                  "Creature"
+                ]
+              }
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "moveZone",
+            "targets": {
+              "target": 0
+            },
+            "to": "exile",
+            "remember": true
+          },
+          {
+            "effect": "copyPermanent",
+            "targets": "remembered"
+          }
+        ]
+      }
+    ]
+  }
+}

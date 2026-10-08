@@ -723,6 +723,11 @@ mentor's lesser power as it resolves; four players, and the credits.
 anywhere but the hand (Advanced Reconstruction); copies cast (Mizzix's Mastery) and Overload credited; each creature card
 exiled with it, a 1/1 Spirit in addition to its other types (Ghost Vacuum); Getaway Barrel, Settle the Wreckage and
 Currency Converter at the edges the scenarios cannot reach; and an adventurer card's offer leaving the card as it was.
+`engine-x11-counts-triggers` holds the counts and triggers of the effects axis's last cards: a creature dealt damage this
+turn (Mirrodin Avenged), the other attackers sharing a creature type with one (Shared Animosity), the nontoken creatures
+you controlled that were destroyed (Ceaseless Conflict), a mana value capped by a count (Venerable Warsinger), and a
+preparation card cast. `engine-x11-turns-counters` holds extra turns (Ichormoon Gauntlet: the newest first, turn order
+resumed after them, a departed player's dropped), counters moved and the kind asked, and "only once each turn" (Tidus).
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -841,7 +846,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 362 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 364 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1176,6 +1181,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-power-comparison` - `tests/engine-power-comparison.mjs`
 - `engine-x11-permissions` - `tests/engine-x11-permissions.mjs`
 - `engine-x11-memory` - `tests/engine-x11-memory.mjs`
+- `engine-x11-counts-triggers` - `tests/engine-x11-counts-triggers.mjs`
+- `engine-x11-turns-counters` - `tests/engine-x11-turns-counters.mjs`
 
 ## Design and execution record
 

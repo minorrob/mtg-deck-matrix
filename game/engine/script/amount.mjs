@@ -27,6 +27,9 @@
  *                                        Spirit for each card type among cards discarded this way" (Occult Epiphany)
  *   {rememberedCount: true}              how many things the effect before it remembered -- "each player shuffles the cards
  *                                        from their hand into their library, then draws that many cards" (batch 80)
+ *   {movedCount: filter}                 how many of what the effect before it moved from the battlefield were, as each
+ *                                        last existed there, what the filter says -- "for each nontoken creature you
+ *                                        controlled that was destroyed this way" (Ceaseless Conflict)
  *   {excessDamage: true}                 the excess damage the damage before it in this resolution dealt (CR 120.4a)
  *   {countersRemovedThisWay: true}       how many counters the removeCounter before it in this resolution removed ("add one
  *                                        mana of any color for each charge counter removed this way", Coalition Relic)
@@ -56,7 +59,7 @@ import {valueCostOf, commanderKeyOf} from "../state/index.mjs";
 export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "toughnessOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
   "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn", "playersDealtCombatDamage", "cardTypesAmong", "manaSpent",
   "permanentsEnteredThisTurn", "excessDamage", "lesserOf", "kicked", "differentPowers", "commanderCasts", "cardsLeftGraveyardThisTurn",
-  "countersRemovedThisWay"]);
+  "countersRemovedThisWay", "movedCount"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "filter", "controlledBy"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -78,6 +81,8 @@ export function amountProblems(value) {
     if (!("permanentsEnteredThisTurn" in value)) problems.push("Only permanentsEnteredThisTurn takes a filter");
     else try { matchesLastKnown(value.filter, {}, {}); } catch (error) { problems.push(`What permanentsEnteredThisTurn counts: ${error.message}`); }
   }
+  /* What was moved, as it last was: a filter of what a last known snapshot answers (script/filter.mjs, matchesLastKnown). */
+  if ("movedCount" in value) try { matchesLastKnown(value.movedCount ?? {}, {}, {}); } catch (error) { problems.push(`What movedCount counts: ${error.message}`); }
   if ("playersDealtCombatDamage" in value && !["opponent", "any"].includes(value.playersDealtCombatDamage)) problems.push('playersDealtCombatDamage is "opponent" or "any"');
   if ("cardTypesAmong" in value && value.cardTypesAmong !== "remembered") problems.push('cardTypesAmong is "remembered"');
   if ("manaSpent" in value && !["that card", "self"].includes(value.manaSpent)) problems.push('manaSpent is "that card" or "self"');
@@ -202,6 +207,11 @@ export function amountOf(state, value, context = {}) {
   else if ("rememberedCount" in value) n = value.controlledBy === "that player"
     ? (context.remembered ?? []).filter((id) => (context.rememberedControllers ?? {})[id] === context.about?.player).length
     : (context.remembered ?? []).length;
+  /* "For each nontoken creature you controlled that was destroyed this way" (Ceaseless Conflict): of what the effect before
+     it moved from the battlefield (`movedWas`: effects/zones.mjs, destroyAll's and moveZone's `remember`), those that were,
+     as each last existed there (CR 608.2h), what the filter says -- "you" the player who controlled it then, `token` whether
+     it was one. */
+  else if ("movedCount" in value) n = (context.movedWas ?? []).filter((was) => matchesLastKnown(value.movedCount, was, {controller: context.controller, source: context.source})).length;
   /* "Empower Jace X, where X is that excess damage" (Violent Echoes): the excess the damage before it dealt (effects/resources.mjs). */
   else if ("excessDamage" in value) n = context.excessDamage ?? 0;
   /* "For each charge counter removed this way" (Coalition Relic): what the removeCounter before it removed
