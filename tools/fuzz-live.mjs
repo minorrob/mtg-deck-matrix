@@ -70,12 +70,30 @@ export function decksFromBackup(backup, names) {
 }
 
 /* A person at the table: answers what they are shown, from a stream of their own. */
+/* A PERSON STOPS GOING ROUND A LOOP. The random-legal pilot picks among what it is offered with nothing between one
+   choice and the next, so offered "activate it again" after every untap -- Krenko, Mob Boss with Intruder Alarm: a Goblin
+   for each Goblin, and every creature untapped as each one enters -- it doubles the board for as long as the coin keeps
+   landing that way: in G1's 1,400 games, two games to thousands of Goblins, every step slower than the last (2026-10-08).
+   A person going round a loop of optional actions picks how many times (CR 732.2a: a shortcut "may be ... a loop that
+   repeats a specified number of times") and then does something else; this one goes round with one activated ability
+   at most LOOP_LIMIT times a turn, then passes, and says how often it did (`stopped`). */
+export const LOOP_LIMIT = 4;
 export function person(seed) {
   const pilot = randomLegalPilot(createRng(seed));
-  return (decision) => {
-    const a = pilot.answer(decision);
+  let turn = null, taken = new Map();
+  const answer = (decision, now) => {
+    if (now !== turn) {turn = now; taken = new Map();}
+    let a = pilot.answer(decision);
+    const [one] = a.indices ?? [], option = decision.kind === "priority" && a.indices?.length === 1 ? decision.options?.[one] : null;
+    if (option?.act === "activate") {
+      const key = `${option.cardId}:${option.label}`, pass = decision.options.find((o) => o.act === "pass");
+      if ((taken.get(key) ?? 0) >= LOOP_LIMIT && pass) {a = {indices: [pass.index]}; answer.stopped += 1;}
+      else taken.set(key, (taken.get(key) ?? 0) + 1);
+    }
     return {kind: "answer", choiceId: decision.id, ...(a.indices ? {indices: a.indices} : {}), ...(a.amounts ? {amounts: a.amounts} : {}), ...(a.value !== undefined ? {value: a.value} : {})};
   };
+  answer.stopped = 0;
+  return answer;
 }
 
 /* WHAT A SEAT MAY KNOW OF A CARD'S NAME, read off the state alone (never off game/engine/projection.mjs, which is what
@@ -207,7 +225,7 @@ export function shownBy(event) {
 }
 
 /** A game's leak-check memory: per seat, the names no longer secret from it; and how far into the journal it has read. */
-export const leakMemory = (seats) => ({seen: Array.from({length: seats}, () => new Set()), read: 0});
+export const leakMemory = (seats) => ({seen: Array.from({length: seats}, () => new Set()), read: 0, names: new Set()});
 
 /** Every seat's view read for leaks (`leaksIn` of `secretsFor`), the engine's state and journal taken from the room's own
     storage. */
@@ -217,10 +235,13 @@ export async function checkLeaks(room, storage, matchId, memory, turn) {
   for (const key of keys.slice(memory.read)) {
     const name = shownBy(JSON.parse(await storage.get(key)));
     if (name) for (const seen of memory.seen) seen.add(name);
+    if (name) memory.names.add(name);
   }
   memory.read = keys.length;
   const found = [];
-  const terms = gameTerms(point.state), names = new Set(Object.values(point.state.objects).map(nameOf).filter(Boolean));
+  /* Every card name the game has had: a history line names a card that has since left it (CR 800.4a) as well as one in it. */
+  for (const o of Object.values(point.state.objects)) if (nameOf(o)) memory.names.add(nameOf(o));
+  const terms = gameTerms(point.state), names = memory.names;
   room.seats.forEach((s, seat) => {
     for (const leak of leaksIn(room.view(s.seatId), secretsFor(point.state, seat, memory.seen[seat]), terms, names)) found.push({turn, seatId: s.seatId, ...leak});
   });
@@ -254,7 +275,7 @@ export async function playGame({decks, seed, cards, humans = [], matchId = `fuzz
     if (leaks) {leaked.push(...await checkLeaks(room, storage, matchId, memory, view.state.turn)); leakChecks += 1;}
     const asked = Date.now();
     for (let tries = 1; ; tries += 1) {
-      try {await room.act(who, {actionId: randomUUID(), revision: view.revision, ...people[who](view.decision)}); break;}
+      try {await room.act(who, {actionId: randomUUID(), revision: view.revision, ...people[who](view.decision, view.state.turn)}); break;}
       catch (error) {
         if (!(error instanceof RoomError) || error.status !== 422 || tries >= PERSON_TRIES) throw error;
         personRefused.push({turn: view.state.turn, seatId: who, question: view.decision.title, reason: error.message});
@@ -269,7 +290,7 @@ export async function playGame({decks, seed, cards, humans = [], matchId = `fuzz
   const last = room.view(pod.seats[0].seatId);
   const ms = Date.now() - started;
   return {seed, status: room.status, result: last.result, turns: last.state.turn, decisions, reopened, ms, longestWait: longest, refusals: room.refusals,
-    personRefused, room, ...(leaks ? {leaks: leaked, leakChecks} : {}),
+    personRefused, loopsStopped: Object.values(people).reduce((n, p) => n + (p.stopped ?? 0), 0), room, ...(leaks ? {leaks: leaked, leakChecks} : {}),
     ...(replay ? {replay: await replayMatch({storage, matchId, ...(cards ? {cards} : {}), ...(pilot ? {pilot} : {})})} : {})};
 }
 
@@ -294,7 +315,8 @@ export function describe(game) {
   const wait = game.longestWait.turn === null ? "0 ms (no person)" : `${game.longestWait.ms} ms (turn ${game.longestWait.turn})`;
   const first = game.personRefused?.[0];
   const people = first ? `, ${game.personRefused.length} of the people's answers refused by the rules and given again (first: turn ${first.turn}, ${first.seatId}, "${first.question}": ${first.reason})` : "";
-  const judged = [game.replay ? `replay ${game.replay.same ? "identical" : "DIFFERENT"}` : "", game.leaks ? `${game.leaks.length} leaks in ${game.leakChecks} checks of every seat's view` : ""].filter(Boolean).join(", ");
+  const judged = [game.replay ? `replay ${game.replay.same ? "identical" : "DIFFERENT"}` : "", game.leaks ? `${game.leaks.length} leaks in ${game.leakChecks} checks of every seat's view` : "",
+    game.loopsStopped ? `the person stopped going round a loop ${game.loopsStopped} time${game.loopsStopped === 1 ? "" : "s"}` : ""].filter(Boolean).join(", ");
   return `seed ${game.seed}: ${game.status} (${end}), ${game.turns} turns, ${game.decisions} decisions, ${(game.ms / 1000).toFixed(1)} s, longest wait for a person ${wait}, ${game.refusals?.total ?? "?"} refused over the whole match${people}${judged ? `, ${judged}` : ""}${v.clean ? "" : ` -- NOT CLEAN: ${v.problems.join("; ")}`}`;
 }
 
@@ -319,7 +341,7 @@ async function main(argv) {
     const game = await playGame({decks, seed, cards: tableCards, humans, replay: argv.includes("--replay"), leaks: argv.includes("--leaks")});
     console.log(describe(game));
     rows.push({seed, status: game.status, result: game.result, turns: game.turns, decisions: game.decisions, ms: game.ms, longestWait: game.longestWait, refusals: game.refusals,
-      personRefused: game.personRefused.length, ...(game.replay ? {replaySame: game.replay.same} : {}), ...(game.leaks ? {leaks: game.leaks, leakChecks: game.leakChecks} : {}),
+      personRefused: game.personRefused.length, loopsStopped: game.loopsStopped, ...(game.replay ? {replaySame: game.replay.same} : {}), ...(game.leaks ? {leaks: game.leaks, leakChecks: game.leakChecks} : {}),
       clean: verdict(game).clean});
   }
   const clean = rows.filter((r) => r.clean).length;
