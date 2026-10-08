@@ -37,6 +37,7 @@ import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCre
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {hasSubtype, isCreatureType} from "../keywords/types.mjs";
 import {protectedFrom} from "../rules/protection.mjs";
+import {amountOf, amountProblems} from "./amount.mjs";
 
 /* The steps after blockers are declared, in which an attacker is blocked or unblocked (CR 509.1h). */
 const BLOCKERS_DECLARED = ["COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAGE", "COMBAT_DAMAGE", "COMBAT_END"];
@@ -47,12 +48,34 @@ export const SELECTOR_KEYS = Object.freeze([
   "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander", "nonColors", "owner", "enteredThisTurn", "toughnessOverPower",
   "unblocked", "singleTarget", "goaded", "uniqueName", "sharesCreatureType", "multicolored", "sharesColor",
   "sharesCreatureTypeWithCommander",
+  /* "A card exiled with this artifact" (CR 607.2a, 406.6): what this source's linked ability exiled, still in exile. */
+  "exiledWith", "exiledThisTurn", "unequalPowerToughness",
+  /* "Target creature that was dealt damage this turn" (Mirrodin Avenged; CR 120.3). */
+  "dealtDamageThisTurn",
+  /* "Each other attacking creature that shares a creature type with it" (Shared Animosity): relative to the creature a
+     trigger is about -- not it, and sharing one of its creature types. */
+  "otherThan", "sharesCreatureTypeWith",
+  /* "Each equipped creature" (Hemlock Vial). */
+  "equipped",
+  /* "Creatures your opponents control without flying or reach" (Sidar Kondo of Jamuraa), "a creature without flanking"
+     (CR 702.25a): none of these keywords, through the layers. */
+  "nonKeywords",
 ]);
+
+/* THE SOURCE A LINK IS KEPT AGAINST (CR 607.2a; effects/zones.mjs, `link`): the ability's source -- or, gone from the
+   battlefield since its ability was put on the stack, that object as it last was (CR 113.7a): "if there are cards exiled
+   with this enchantment" still finds what its other ability exiled. */
+export const linkSource = (context) => context?.source ?? context?.lastKnown?.cardId ?? null;
+/** The cards in exile a source's linked ability put there (CR 607.2a), each still the object it exiled (CR 400.7). */
+export const exiledWithSource = (state, source) => (source === null || source === undefined ? []
+  : (state.links?.[source] ?? []).filter((id) => state.objects[id]?.zone === "exile"));
 
 /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
    asks what the thing was and whose, and by then it is a new object in a graveyard (CR 400.7): only the snapshot taken
    as it left (rules/layers.mjs, lastKnown) still knows. These are the keys a departure's filter may use. */
-const LAST_KNOWN_KEYS = ["what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "controller", "token", "another", "attachedBy", "anyOf"];
+/* `self` (Rundvelt Hordemaster): "whenever this creature or another Goblin you control dies" -- the source itself, as it
+   last was, whatever it then was (`anyOf: [{self: true}, {subtypes, controller}]`). */
+const LAST_KNOWN_KEYS = ["what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "controller", "token", "another", "attachedBy", "anyOf", "self"];
 export function matchesLastKnown(selector, lki, context = {}) {
   if (!lki) return false;
   const s = selector ?? {};
@@ -71,6 +94,7 @@ export function matchesLastKnown(selector, lki, context = {}) {
   if (s.controller === "opponent" && lki.controller === context.controller) return false;
   if (s.token !== undefined && (lki.token === true) !== s.token) return false;
   if (s.another === true && lki.cardId === context.source) return false;
+  if (s.self === true && lki.cardId !== context.source) return false;
   /* "Equipped creature dies": the Equipment was attached to it as it died. */
   if (s.attachedBy === "self" && !(lki.attachments ?? []).includes(context.source)) return false;
   return true;
@@ -107,7 +131,7 @@ function assertGrammar(selector) {
     throw new Error("A selector's types are a list, because 'artifact creature' is two of them");
   if (selector.subtypes !== undefined && !Array.isArray(selector.subtypes))
     throw new Error("A selector's subtypes are a list: 'Mountain Plains' is two of them");
-  for (const key of ["supertypes", "nonTypes", "nonSubtypes"])
+  for (const key of ["supertypes", "nonTypes", "nonSubtypes", "nonKeywords"])
     if (selector[key] !== undefined && !Array.isArray(selector[key])) throw new Error(`A selector's ${key} are a list`);
   /* What it shares a creature type with: a selector of permanents, held to the same grammar. */
   if (selector.sharesCreatureType !== undefined) compileSelector({...selector.sharesCreatureType, what: "permanent"});
@@ -115,6 +139,18 @@ function assertGrammar(selector) {
   if (selector.sharesColor !== undefined && selector.sharesColor !== "self") throw new Error("A selector's sharesColor is \"self\": a color of its source's");
   if (selector.sharesCreatureTypeWithCommander !== undefined && selector.sharesCreatureTypeWithCommander !== true)
     throw new Error("A selector's sharesCreatureTypeWithCommander is true: a creature type of a commander of yours");
+  /* A mana value's most may be an amount counted (Betor): one of the amount grammar's (script/amount.mjs). */
+  const most = selector.manaValue?.max;
+  if (most !== null && typeof most === "object" && amountProblems(most).length) throw new Error(`A selector's manaValue.max: ${amountProblems(most).join("; ")}`);
+  if (selector.unequalPowerToughness !== undefined && selector.unequalPowerToughness !== true) throw new Error("unequalPowerToughness is true");
+  if (selector.exiledThisTurn !== undefined && selector.exiledThisTurn !== true) throw new Error("exiledThisTurn is true");
+  if (selector.exiledWith !== undefined && selector.exiledWith !== "self") throw new Error("A selector's exiledWith is \"self\": a card this source's linked ability exiled");
+  if (selector.dealtDamageThisTurn !== undefined && typeof selector.dealtDamageThisTurn !== "boolean") throw new Error("A selector's dealtDamageThisTurn is true or false");
+  for (const key of ["otherThan", "sharesCreatureTypeWith"])
+    if (selector[key] !== undefined && selector[key] !== "that card") throw new Error(`A selector's ${key} is "that card": the object a trigger is about`);
+  if (selector.equipped !== undefined && selector.equipped !== true) throw new Error("A selector's equipped is true: an Equipment is attached to it");
+  /* "With power less than this creature's power" (mentor, CR 702.134a): `power.lessThan` "self". */
+  if (selector.power?.lessThan !== undefined && selector.power.lessThan !== "self") throw new Error("A selector's power.lessThan is \"self\": less than its source's power");
 }
 
 /* AN OBJECT'S CREATURE TYPES (CR 205.3m): the subtypes of a creature or a kindred card, through the layers on the
@@ -145,14 +181,19 @@ function canBeTargetedBy(state, id, chooser, source = null) {
 function matchesManaValue(state, id, rule, context = {}) {
   /* A transformed permanent's is its front face's (CR 202.3b; state/index.mjs, valueCostOf). */
   const cost = valueCostOf(state.objects[id]);
-  const value = cost ? manaValue(parseManaCost(cost)) : 0;
+  /* CR 202.3e: X has its chosen value on the stack, and zero elsewhere. */
+  const x = state.objects[id]?.zone === "stack" ? state.stack.find(e => e.objectId === id)?.x ?? 0 : 0;
+  const value = cost ? manaValue(parseManaCost(cost), {x}) : 0;
   /* "With mana value X" (Likeness Looter): the X paid, as it is targeted and as it resolves. */
   if (rule.exactly !== undefined) return value === (rule.exactly === "X" ? context.x ?? 0 : rule.exactly);
   /* "With even mana values" (Void Winnower): zero is even. */
   if (rule.even !== undefined && (value % 2 === 0) !== rule.even) return false;
   if (rule.min !== undefined && value < rule.min) return false;
-  /* "With mana value X or less" (Rally the Ancestors): the X paid, as `exactly` reads it. */
-  if (rule.max !== undefined && value > (rule.max === "X" ? context.x ?? 0 : rule.max)) return false;
+  /* "With mana value X or less" (Rally the Ancestors): the X paid, as `exactly` reads it. "Less than or equal to the amount
+     of life you lost this turn" (Betor, Ancestor's Voice): an amount counted as the selector is asked (script/amount.mjs) --
+     as the target is chosen, and again as it resolves (CR 608.2b). */
+  const most = rule.max === "X" ? context.x ?? 0 : rule.max !== null && typeof rule.max === "object" ? amountOf(state, rule.max, context) : rule.max;
+  if (rule.max !== undefined && value > most) return false;
   return true;
 }
 
@@ -294,7 +335,8 @@ export function compileSelector(selector) {
       const others = selectMatching(state, {what: "permanent", ...selector.sharesCreatureType}, context).filter((other) => other !== id);
       /* A changeling shares every creature type (CR 702.73a): with anything that has one. */
       const shares = (other) => {
-        const theirs = [...typesOf(state, other), ...(state.objects[other].subtypes ?? [])], theirsAll = characteristicsOf(state, other).everyCreatureType;
+        /* Its subtypes through the layers, as the keys above read them: a land made a Bear creature is a Bear (CR 205.1b). */
+        const theirs = [...typesOf(state, other), ...subtypesOf(state, other)], theirsAll = characteristicsOf(state, other).everyCreatureType;
         if (mineAll) return theirsAll || theirs.some(isCreatureType);
         if (theirsAll) return [...mine].some(isCreatureType);
         return theirs.some((t) => mine.has(t));
@@ -321,13 +363,25 @@ export function compileSelector(selector) {
       : (object.counters?.[selector.counters] ?? 0) > 0)) return false;
     /* "Creatures that entered this turn" (Force of Despair): on the battlefield since this turn. */
     if (selector.enteredThisTurn === true && !(object.zone === "battlefield" && object.arrivedTurn === state.turn)) return false;
+    /* Gilt-Leaf Winnower: either direction of inequality, through current layers. */
+    if (selector.unequalPowerToughness === true) {
+      const c = characteristicsOf(state, id);
+      if ((c.power ?? 0) === (c.toughness ?? 0)) return false;
+    }
     /* "With toughness greater than its power" (Bedrock Tortoise), through the layers. */
     if (selector.toughnessOverPower === true) { const c = characteristicsOf(state, id); if (!((c.toughness ?? 0) > (c.power ?? 0))) return false; }
+    /* "Each equipped creature" (Hemlock Vial; CR 301.5a): an Equipment attached to it -- an Aura is not one -- and still there:
+       one that has left the battlefield is a new object, the old one gone (CR 400.7). */
+    if (selector.equipped === true && !(object.attachments ?? []).some((other) => state.objects[other] && subtypesOf(state, other).includes("Equipment"))) return false;
     /* "Permanents you don't own" (Agent of Treachery): whose it is, not who controls it (CR 108.3). */
     if (selector.owner === "you" && object.owner !== chooser) return false;
     if (selector.owner === "opponent" && object.owner === chooser) return false;
     /* "If you control a commander" (CR 903.3): a card designated a commander. */
     if (selector.commander === true && object.commander !== true) return false;
+    /* "Target creature that was dealt damage this turn" (Mirrodin Avenged; CR 120.3): any damage, by anything, since this
+       turn began -- still so once the damage is gone (regenerated, CR 701.19a), never so for damage before this object was
+       (CR 400.7) or before this turn (effects/resources.mjs, damagePermanent). */
+    if (selector.dealtDamageThisTurn !== undefined && (usesThisTurn(state, id, "dealt damage") > 0) !== selector.dealtDamageThisTurn) return false;
     /* "Untap all creatures that attacked this turn" (Relentless Assault): declared as an attacker in a combat this turn. */
     if (selector.attackedThisTurn === true && usesThisTurn(state, id, "attacked") === 0) return false;
     /* "Four or more +1/+1 counters on it": a number of counters of a kind. */
@@ -345,6 +399,15 @@ export function compileSelector(selector) {
          as the effect resolves (script/bind.mjs). Unbound -- a fact never read, or its target gone -- it matches nothing:
          greater than a power nobody knows is no creature, never every one. */
       if (selector.power.moreThan !== undefined && !(Number.isInteger(selector.power.moreThan) && power > selector.power.moreThan)) return false;
+      /* "Target attacking creature with power less than this creature's power" (mentor, CR 702.134a): its source's power now,
+         through the layers -- or, gone from the battlefield, as it last was (CR 113.7a, 608.2h). No source to compare with,
+         and nothing is less. */
+      if (selector.power.lessThan === "self") {
+        const source = context.source;
+        const theirs = source !== null && source !== undefined && state.objects[source]?.zone === "battlefield" ? characteristicsOf(state, source).power ?? 0
+          : context.lastKnown && (source === null || source === undefined || context.lastKnown.cardId === source) ? context.lastKnown.power : null;
+        if (!(Number.isInteger(theirs) && power < theirs)) return false;
+      }
     }
     /* "Power or toughness 1 or less" (Tetsuko Umezawa): toughness the same way, through the layers. */
     if (selector.toughness) {
@@ -353,8 +416,27 @@ export function compileSelector(selector) {
       if (selector.toughness.max !== undefined && toughness > selector.toughness.max) return false;
     }
     if (selector.self === true && id !== context.source) return false;
+    /* RELATIVE TO WHAT A TRIGGER IS ABOUT: "it gets +1/+0 until end of turn for each other attacking creature that shares a
+       creature type with it" (Shared Animosity) -- "it" the attacking creature the trigger is about (`about.card`, rules/
+       trigger.mjs). `otherThan`: not that one (CR 109.5's "other", of it rather than the source). `sharesCreatureTypeWith`:
+       one of its creature types is one of that creature's, through the layers (CR 205.3m), a changeling having every one
+       (CR 702.73a). Nothing the trigger is about, or it gone, and nothing shares a type with it. */
+    if (selector.otherThan === "that card" && id === context.about?.card) return false;
+    if (selector.sharesCreatureTypeWith === "that card") {
+      const other = context.about?.card;
+      if (other === undefined || other === null || !state.objects[other]) return false;
+      const mine = creatureTypesOf(state, id), theirs = creatureTypesOf(state, other);
+      const shares = mine.every ? theirs.every || theirs.types.length > 0 : theirs.every ? mine.types.length > 0 : mine.types.some((t) => theirs.types.includes(t));
+      if (!shares) return false;
+    }
+    /* "A card exiled with this artifact", "target card exiled with Quintorius" (CR 607.2a, 406.6): one this source's linked
+       ability exiled, still that card in exile. */
+    if (selector.exiledThisTurn === true && !(object.zone === "exile" && object.exiledTurn === state.turn)) return false;
+    if (selector.exiledWith === "self" && !exiledWithSource(state, linkSource(context)).includes(id)) return false;
     /* "A creature with flying": its keywords now, through the layers (CR 702). */
     if (selector.keywords && !selector.keywords.every((word) => keywordsOf(state, id).includes(word))) return false;
+    /* "Without flying or reach": none of them (Sidar Kondo of Jamuraa). */
+    if (selector.nonKeywords && selector.nonKeywords.some((word) => keywordsOf(state, id).includes(word))) return false;
     if (selector.target === true && !canBeTargetedBy(state, id, chooser, context.source ?? null)) return false;
 
     return true;

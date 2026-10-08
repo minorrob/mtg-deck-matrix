@@ -33,6 +33,14 @@ export const ZONES = [...PER_PLAYER, ...SHARED];
 
 const STARTING_LIFE = 40;
 
+/** A successful draw's ordinal this turn (CR 121.2): each card of a multi-card draw is separate.
+ * Stored on the event as well as the player so later draws in one resolution cannot change it. */
+export function recordDraw(state, player) {
+  const who = state.players[player];
+  who.drawnThisTurn = (who.drawnThisTurn ?? 0) + 1;
+  return who.drawnThisTurn;
+}
+
 /**
  * A new game state.
  *
@@ -117,7 +125,9 @@ function assertZone(state, zone, player) {
   }
 }
 
-const listFor = (state, zone, player) => (PER_PLAYER.includes(zone) ? state.zones[zone][player] : state.zones[zone]);
+/* A phased-out permanent's list is `phasedOut` (effects/permanents.mjs, phaseOut): it is in no zone a player sees (CR 702.26b),
+   and still leaves one when its owner leaves the game or it is exiled (CR 702.26k, 800.4a). */
+const listFor = (state, zone, player) => (PER_PLAYER.includes(zone) ? state.zones[zone][player] : zone === "phased" ? state.phasedOut : state.zones[zone]);
 
 /**
  * Put a new object into a zone. Returns its id.
@@ -177,9 +187,14 @@ export function valueCostOf(object) {
 /* A FACE-DOWN PERMANENT'S CHARACTERISTICS (CR 708.2a, 701.40a): a nameless 2/2 creature, textless, without subtypes or a
    mana cost -- and so colorless, with no supertype -- its copiable values while it is face down. */
 const FACE_DOWN = Object.freeze({card: null, types: ["Creature"], subtypes: [], supertypes: [], manaCost: null, colors: [], power: 2, toughness: 2, keywords: [], abilities: []});
+/* A CARD EXILED FACE DOWN (CR 406.3a): no characteristics at all -- no name, no types, no cost, nothing. */
+const FACE_DOWN_EXILED = Object.freeze({card: null, types: [], subtypes: [], supertypes: [], manaCost: null, colors: [], power: null, toughness: null, keywords: [], abilities: []});
 /* What the card is, kept beside a face-down permanent's own (`faceDownCard`): seen by its controller (CR 708.5,
    projection.mjs), and what it becomes as it is turned face up (708.8) or leaves the battlefield (708.9). */
-const CARD_KEYS = ["card", "types", "subtypes", "supertypes", "manaCost", "colors", "power", "toughness", "loyalty", "keywords", "abilities", "spell", "enchant", "mdfc"];
+/* A permanent's copiable values (CR 707.2): what a copy effect writes onto it (effects/permanents.mjs, becomeCopy), its own
+   kept beside them as `uncopied` -- only the values it has, so it is the same object woken from storage as in memory. */
+export const COPY_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "spell", "enchant"]);
+const CARD_KEYS = ["card", "types", "subtypes", "supertypes", "manaCost", "colors", "power", "toughness", "loyalty", "keywords", "abilities", "spell", "enchant", "mdfc", "preparation"];
 
 /**
  * TO TURN A FACE-DOWN PERMANENT FACE UP (CR 708.8): its copiable values go back to the card's own -- a double-faced card's
@@ -214,11 +229,17 @@ export function showFace(state, id, face) {
 const adventureSide = (adventurer, shown) => Object.fromEntries(FACE_KEYS.map((key) => [key, (shown ? adventurer.adventure : adventurer.main)[key]]));
 
 /** Show an adventurer card as its Adventure (`shown`), or as itself again: what is weighed as it is cast as an Adventure
-    (CR 715.3a) -- rules/actions.mjs shows it for the offer and the cast, and puts it back unless the cast moved it. */
+    (CR 715.3a) -- rules/actions.mjs shows it for the offer and the cast, and puts it back unless the cast moved it. What
+    the side shown lacks, the object lacks too, so a look leaves it as it was. */
 export function showAdventure(state, id, shown) {
   const object = state.objects[id];
   if (!object?.adventurer) return;
-  Object.assign(object, adventureSide(object.adventurer, shown));
+  /* A characteristic the side shown has not (a creature's spell, an Adventure's power) is absent, not present as nothing:
+     shown and put back for an offer, the card is exactly as it was -- asking what may be done changes no state. */
+  for (const [key, value] of Object.entries(adventureSide(object.adventurer, shown))) {
+    if (value === undefined) delete object[key];
+    else object[key] = value;
+  }
   if (shown) object.face = "adventure"; else delete object.face;
 }
 
@@ -236,7 +257,8 @@ export function addObject(state, object, zone, player = null) {
   const owner = Number.isInteger(object.owner) ? object.owner : player;
   state.objects[id] = {
     id,
-    card: object.card ?? null,
+    /* A preparation card is called by its own name alone, in every zone (CR 722.4): "Goblin Glasswright", not the pair. */
+    card: object.preparation?.of ?? object.card ?? null,
     /* The card's PRINTED types (CR 109.3). What an object's types currently are is the layer
        system's answer (CR 613, phase 1.8); this is the base it starts from, and it comes from the
        card definition once the directory exists in phase 2. */
@@ -302,6 +324,9 @@ export function addObject(state, object, zone, player = null) {
     ...(Array.isArray(object.colors) && object.colors.length ? {colors: [...object.colors]} : {}),
     ...(object.mdfc ? {mdfc: structuredClone(object.mdfc), ...(object.face === "back" ? {face: "back"} : {})} : {}),
     ...(object.adventurer ? {adventurer: structuredClone(object.adventurer), ...(adventuring ? {face: "adventure"} : {})} : {}),
+    /* A preparation card's prepare spell (CR 722.2): alternative characteristics it has in every zone and never uses there
+       (722.4) -- the characteristics of the copy it makes in exile as it becomes prepared (722.3c; effects/attributes.mjs). */
+    ...(object.preparation ? {preparation: structuredClone(object.preparation)} : {}),
     /* Face down (CR 708.2): what the card is, beside the face-down characteristics it has (moveObject). */
     ...(object.faceDown === true ? {faceDown: true, faceDownCard: structuredClone(object.faceDownCard ?? {})} : {}),
   };
@@ -320,7 +345,18 @@ export function eventCard(state, id) {
 
 /** What a player is shown as an object's name in a choice: its name -- or, face down and with none (CR 708.2a), that it is
     face down, the same for every seat (its controller learns more from their own view, projection.mjs). */
-export const shownName = (object) => object?.card ?? (object?.faceDown === true ? "A face-down permanent" : "");
+export const shownName = (object) => object?.card ?? (object?.faceDown === true ? (object.zone === "exile" ? "A face-down card" : "A face-down permanent") : "");
+
+/* Hideaway's later controllers retain permission to look after losing control or the source leaving (CR 406.3,
+   702.75a). Record entitlement at state transitions, never while projecting a viewer's read-only state. */
+export function rememberExileLooker(state, source, controller) {
+  if (!Number.isInteger(controller)) return;
+  for (const id of state.zones.exile) {
+    const card = state.objects[id];
+    if (card?.faceDown === true && card.exiledBy === source)
+      card.lookers = [...new Set([...(card.lookers ?? []), controller])];
+  }
+}
 
 /** Which commander an object is (CR 903.3): the key its tax and its damage are kept under, the same in every zone. */
 export function commanderKeyOf(object) {
@@ -369,13 +405,15 @@ export function recordUse(state, id, key) {
   object.used.counts[key] = (object.used.counts[key] ?? 0) + 1;
 }
 
-export function moveObject(state, id, zone, player = null, {faceDown = false} = {}) {
+/* `transformed` (CR 712.14a): a double-faced card put onto the battlefield with its back face up. */
+export function moveObject(state, id, zone, player = null, {faceDown = false, transformed = false} = {}) {
   const current = state.objects[id];
   if (!current) throw new Error(`There is no object ${id} to move`);
   /* A face-down permanent leaving is revealed, and moves as the card it is (CR 708.9). */
   const revealed = current.faceDown === true ? {...current, ...current.faceDownCard} : current;
-  /* A permanent that became a copy moves as itself (CR 400.7; effects/permanents.mjs, becomeCopy). */
-  const from = revealed.uncopied ? {...revealed, ...revealed.uncopied} : revealed;
+  /* A permanent that became a copy moves as itself (CR 400.7; effects/permanents.mjs, becomeCopy): every copiable value
+     its own, and one it never had -- absent from `uncopied` -- none, not the copy's. */
+  const from = revealed.uncopied ? {...revealed, ...Object.fromEntries(COPY_KEYS.map((key) => [key, revealed.uncopied[key]]))} : revealed;
   assertZone(state, zone, player);
 
   const fromList = listFor(state, from.zone, from.zonePlayer);
@@ -386,6 +424,10 @@ export function moveObject(state, id, zone, player = null, {faceDown = false} = 
      controller as it left -- every departure moves through here (script/amount.mjs, permanentsLeftThisTurn; cleared as a
      turn begins, rules/turn.mjs). */
   if (from.zone === "battlefield" && state.players[from.controller]) state.players[from.controller].leftThisTurn = (state.players[from.controller].leftThisTurn ?? 0) + 1;
+  /* "If a card left your graveyard this turn" (Primary Research, Relic Retriever): counted for the player whose graveyard it
+     left, wherever it went -- a card only, never a token (CR 108.2b) -- as revolt's count is (script/amount.mjs,
+     cardsLeftGraveyardThisTurn; cleared as a turn begins, rules/turn.mjs). */
+  if (from.zone === "graveyard" && from.token !== true) state.players[from.zonePlayer].leftGraveyardThisTurn = (state.players[from.zonePlayer].leftGraveyardThisTurn ?? 0) + 1;
 
   /* Only what the CARD says survives the move: its identity, its printed types and its owner. The
      owner does (CR 108.3): a card goes to its OWNER's graveyard however long someone else
@@ -399,13 +441,23 @@ export function moveObject(state, id, zone, player = null, {faceDown = false} = 
     const faceDownCard = Object.fromEntries(CARD_KEYS.filter((key) => from[key] !== undefined).map((key) => [key, from[key]]));
     return addObject(state, {...FACE_DOWN, ...kept, faceDown: true, faceDownCard}, zone, player);
   }
+  /* EXILED FACE DOWN (hideaway, CR 702.75a): a card with no characteristics there (406.3a) -- not even a face-down
+     permanent's 2/2 -- what it is kept beside it, as onto the battlefield; as it leaves exile it moves as the card it is
+     (above). */
+  if (faceDown && zone === "exile") {
+    const faceDownCard = Object.fromEntries(CARD_KEYS.filter((key) => from[key] !== undefined).map((key) => [key, from[key]]));
+    return addObject(state, {...FACE_DOWN_EXILED, ...kept, faceDown: true, faceDownCard}, zone, player);
+  }
   return addObject(state, {
     /* A double-faced card keeps the face that was up only onto the battlefield, where it was put that way; anywhere else
        it is its front (CR 712.8a). */
-    ...(from.mdfc ? {mdfc: from.mdfc, face: zone === "battlefield" && from.face === "back" ? "back" : undefined} : {}),
+    ...(from.mdfc ? {mdfc: from.mdfc, face: zone === "battlefield" && (from.face === "back" || transformed === true) ? "back" : undefined} : {}),
     /* An adventurer card goes to the stack as its Adventure when it was shown as one to be cast (CR 715.3b), and leaves it --
        countered, resolved, wherever it goes -- as itself (715.4). */
     ...(from.adventurer ? {adventurer: from.adventurer, face: zone === "stack" && from.face === "adventure" ? "adventure" : undefined} : {}),
+    /* A prepare spell is part of the card wherever it goes (CR 722.2a); being prepared is not -- a designation of the
+       permanent, gone with it (CR 400.7). */
+    ...(from.preparation ? {preparation: from.preparation} : {}),
     card: from.card, types: from.types, manaCost: from.manaCost, abilities: from.abilities,
     power: from.power, toughness: from.toughness, loyalty: from.loyalty, keywords: from.keywords,
     ...kept,

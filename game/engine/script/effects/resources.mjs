@@ -25,6 +25,8 @@ import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
 import {typesOf, powerOf, toughnessOf, keywordsOf, isKeywordCounter, controllerOf} from "../../rules/layers.mjs";
 import {cantGainLife, countersPlaced, playerCountersPlaced} from "../../rules/statics.mjs";
 import {playerRuled} from "../../rules/sba.mjs";
+import {amountOf} from "../amount.mjs";
+import {recordUse} from "../../state/index.mjs";
 
 /** `addMana` — into the controller's pool, which empties at the end of the step (CR 500.4). */
 export function addMana(state, params, context) {
@@ -259,6 +261,10 @@ export function damageAll(state, params, context) {
 export function damagePermanent(state, id, amount, events, {infect = false, by = null} = {}) {
   const types = typesOf(state, id);
   const object = state.objects[id];
+  /* "Target creature that was dealt damage this turn" (Mirrodin Avenged; CR 120.3): this object was dealt damage -- combat
+     or not, marked, loyalty removed or -1/-1 counters from infect, all damage dealt (120.3c-d) -- counted for this turn
+     only (state/index.mjs, usesThisTurn), and for this object only: one that leaves and returns is a new one (CR 400.7). */
+  recordUse(state, id, "dealt damage");
   if (types.includes("Planeswalker")) {
     const before = object.counters.loyalty ?? 0;
     object.counters.loyalty = Math.max(0, before - amount);
@@ -311,11 +317,13 @@ export function fight(state, params, context) {
 
    The damage effects a resolution can stop to ask about (script/resolution.mjs; effects/asking.mjs, orderDamage), each
    as the dealDamage calls it makes -- so the question and the dealing see the same hits. */
-export const DAMAGING = Object.freeze({dealDamage, damageAll, fight});
+/* And each of a set dealing its own (damageEach, below). */
+export const DAMAGING = Object.freeze({dealDamage, damageAll, fight, damageEach});
 function damageCalls(state, effect, context) {
   if (effect.effect === "dealDamage") return [[effect, context]];
   if (effect.effect === "damageAll") return [damageAllCall(state, effect, context)];
   if (effect.effect === "fight") return fightCalls(state, effect, context);
+  if (effect.effect === "damageEach") return damageEachCalls(state, effect, context);
   return [];
 }
 
@@ -374,6 +382,9 @@ export function winGame(state, params, context) {
 /** `putCounter` — CR 121. */
 export function putCounter(state, params, context) {
   const events = [];
+  /* A kind of counter its controller chooses (`counter: "chosen"`) is asked first, as it resolves (effects/asking.mjs,
+     counterKind) -- never decided here, and never put on as a counter named "chosen". */
+  if (params.counter === "chosen") throw new Error("putCounter with a chosen kind of counter asks its controller which: run it through resolution.mjs");
   for (const id of params.targets ?? []) addCounters(state, id, params.counter ?? "+1/+1", params.count ?? 1, events, context.controller);
   return events;
 }
@@ -405,24 +416,53 @@ export function multiplyCounters(state, params, context) {
 }
 
 /** `removeCounter` — the other direction, and never below zero. "Remove all counters from target creature" (Perfect
-    Intimidation): `counter: "all"`, every kind it has, all of each. */
+    Intimidation): `counter: "all"`, every kind it has, all of each. "Remove all charge counters from this artifact"
+    (Coalition Relic): `all: true`, every counter of the kind named. And how many it removed, for "for each charge counter
+    removed this way" after it (`countersRemoved`, read by the amount `countersRemovedThisWay`, script/amount.mjs): none
+    removed is 0 (CR 122.1, 608.2c). */
 export function removeCounter(state, params, context) {
   const events = [];
+  let removed = 0;
   for (const id of params.targets ?? []) {
     const object = state.objects[id];
     if (!object) continue;
     const kinds = params.counter === "all" ? Object.keys(object.counters ?? {}) : [params.counter ?? "+1/+1"];
     for (const kind of kinds) {
       const before = object.counters[kind] ?? 0;
-      const after = params.counter === "all" ? 0 : Math.max(0, before - (params.count ?? 1));
+      const after = params.counter === "all" || params.all === true ? 0 : Math.max(0, before - (params.count ?? 1));
       if (after === before) continue;
       object.counters[kind] = after;
+      removed += before - after;
       events.push(event("GameEventCardCounters", state, {
         card: cardRef(state, id), type: kind, oldValue: before, newValue: after,
       }));
     }
   }
-  void context;
+  if (context) context.countersRemoved = removed;
+  return events;
+}
+
+/**
+ * `moveCounters` -- CR 122.5: "you may move a counter from target creature you control onto a second target creature you
+ * control" (Tidus, Yuna's Guardian). `count` counters of the kind `counter` taken off `from` (an object, bound as a target
+ * is) and put on the effect's `targets` (the second object). All or nothing (122.5): nothing moves when the two are the
+ * same object, when the first has fewer than that many of that kind, or when either is no longer on the battlefield. They
+ * are put on as any counters are (addCounters): what watches for counters being put on sees them (CR 122.6), and "twice
+ * that many instead" applies. Which kind, when the card leaves it to its controller (`counter: "chosen"`), is asked first
+ * (script/resolution.mjs; effects/asking.mjs, counterKind) -- never here.
+ */
+export function moveCounters(state, params, context) {
+  const events = [];
+  if (params.counter === "chosen") throw new Error("moveCounters with a chosen kind of counter asks its controller which: run it through resolution.mjs");
+  const [from] = params.from ?? [], [to] = params.targets ?? [];
+  const kind = params.counter ?? "+1/+1", n = Math.max(0, params.count ?? 1);
+  if (from === undefined || to === undefined || from === to || n === 0) return events;
+  const source = state.objects[from], destination = state.objects[to];
+  if (source?.zone !== "battlefield" || destination?.zone !== "battlefield" || (source.counters?.[kind] ?? 0) < n) return events;
+  const before = source.counters[kind];
+  source.counters[kind] = before - n;
+  events.push(event("GameEventCardCounters", state, {card: cardRef(state, from), type: kind, oldValue: before, newValue: source.counters[kind]}));
+  addCounters(state, to, kind, n, events, context.controller);
   return events;
 }
 
@@ -457,4 +497,79 @@ export function proliferate(state, params, context) {
     }
   }
   return events;
+}
+
+/* ---- exchanging life totals (CR 701.12), and damage dealt by each of a set ---- */
+
+/* Whether a player's life total may become `value` (CR 701.12c, 701.12g, 119.7-8): no higher for a player who can't gain
+   life, and no other at all while their life total can't change (Teferi's Reproach). */
+function lifeMayBecome(state, player, value) {
+  const life = state.players[player].life;
+  if (value === life) return true;
+  if ((state.effects ?? []).some((e) => e.rule === "life-cant-change" && (e.players ?? []).includes(player))) return false;
+  return !(value > life && cantGainLife(state, player));
+}
+
+/**
+ * `exchangeLife` -- CR 701.12 (Forge's ExchangeLifeVariant): "exchange your life total with this creature's toughness" (Tree
+ * of Redemption), "exchange target opponent's life total with this creature's toughness" (Tree of Perdition), and "exchange
+ * life totals with target opponent" (701.12c). `who` the player whose life total it is (bound: "you", a target); then
+ * either `targets`, the creature whose toughness it is exchanged with, or `toPlayer`, the other player.
+ *
+ * ALL OR NOTHING (701.12a): if the entire exchange can't be completed, no part of it happens -- the creature no longer on
+ * the battlefield, or no longer a creature (the card's ruling: the Tree gone before its ability resolves exchanges
+ * nothing); a player who has left the game; a player who can't gain life given a higher total, or one whose life total
+ * can't change given another (701.12c, 119.7-8). A player's side is life gained or lost -- whatever watches for that sees
+ * it (701.12c, 701.12g). The creature's side is a continuous effect setting its toughness to the player's previous life
+ * total (701.12g, 613.4b: layer 7b), for as long as it is that object (CR 611.2a, 400.7) -- so a +1/+1 counter still adds
+ * to it (7d), and damage already marked on it is still marked (a Tree dealt 5 that takes a life total of 4 dies, CR
+ * 704.5g). Its toughness is read through the layers as the exchange happens (CR 608.2h).
+ */
+export function exchangeLife(state, params, context) {
+  const events = [];
+  const [player] = playersFor(state, params.who ?? "you", context.controller);
+  if (player === undefined) return events;
+  if (params.toPlayer !== undefined) {
+    const other = params.toPlayer;
+    if (!state.players[other] || state.players[other].lost || other === player) return events;
+    const mine = state.players[player].life, theirs = state.players[other].life;
+    if (!lifeMayBecome(state, player, theirs) || !lifeMayBecome(state, other, mine)) return events;
+    changeLife(state, player, theirs - mine, events);
+    changeLife(state, other, mine - theirs, events);
+    return events;
+  }
+  const [creature] = params.targets ?? [];
+  if (creature === undefined || state.objects[creature]?.zone !== "battlefield" || !typesOf(state, creature).includes("Creature")) return events;
+  const toughness = toughnessOf(state, creature), life = state.players[player].life;
+  if (!lifeMayBecome(state, player, toughness)) return events;
+  changeLife(state, player, toughness - life, events);
+  (state.effects ??= []).push({id: `exchange:${creature}:${state.nextTimestamp}`, layer: 7, sublayer: "b", affects: {ids: [creature]},
+    apply: {setToughness: life}, until: null, sourceController: context.controller, timestamp: state.nextTimestamp});
+  state.nextTimestamp += 1;
+  return events;
+}
+
+/**
+ * `damageEach` -- Forge's EachDamage: "each creature deals damage to itself equal to its power" (Wave of Reckoning). Each
+ * permanent `selector` matches as it resolves is a source of its own (CR 120.1), dealing `dealt` -- an amount counted for it,
+ * "that card" being the one dealing it (its power, through the layers, CR 208.1) -- to itself (`to: "itself"`), or to the
+ * effect's `targets` and players (`who`). Every amount is read before any damage is dealt, and the damage is dealt at once
+ * (CR 120.3), the dying state-based, afterwards (CR 704.5g): a 0/0 dealing 0 deals nothing (120.8), and each source's own
+ * deathtouch, lifelink and infect are its own (CR 702.2b, 702.15b, 702.90b) -- a lifelinking creature dealing damage to
+ * itself still gains its controller that life. Through replacement and prevention, as all damage is (dealDamage).
+ */
+function damageEachCalls(state, params, context) {
+  const {anyOf, ...shared} = params.selector ?? {what: "permanent", types: ["Creature"]};
+  const dealers = Array.isArray(anyOf) ? [...new Set(anyOf.flatMap((one) => selectMatching(state, {...shared, ...one}, context)))] : selectMatching(state, shared, context);
+  const calls = [];
+  for (const id of dealers) {
+    const about = {...(context.about ?? {}), card: id, player: controllerOf(state, id)};
+    const amount = Math.max(0, amountOf(state, params.dealt ?? 0, {...context, about}));
+    const to = params.to === "itself" ? {targets: [id]} : {targets: params.targets ?? [], ...(params.who !== undefined ? {who: params.who} : {})};
+    calls.push([{amount, ...to, from: [id], ...(params.damageOrders ? {damageOrders: params.damageOrders} : {})}, context]);
+  }
+  return calls;
+}
+export function damageEach(state, params, context) {
+  return damageEachCalls(state, params, context).flatMap(([deal, ctx]) => dealDamage(state, deal, ctx));
 }

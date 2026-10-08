@@ -341,7 +341,7 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
       if (steps >= slice) {continuing = true; pendingSeat = null; pendingActions = null; return;}
       driven += 1;
       if (state.stepIndex !== undefined && leaving.length) {
-        for (const seat of leaving) if (!state.players[seat].lost) write(concede(state, seat));
+        for (const seat of leaving) if (!state.players[seat].lost) write(concede(state, seat, rng));
         leaving = [];
         continue;
       }
@@ -389,15 +389,54 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
     pendingSeat = null; pendingActions = null;
   }
   /* A person's answer applied: a priority action by its index, or the awaited decision resolved. Shared by `act`
-     and by a replay of the tape, so the two cannot drift apart. */
+     and by a replay of the tape, so the two cannot drift apart.
+     AN ANSWER THE RULES REFUSE IS THE PERSON'S TO GIVE AGAIN (AGENTS.md, "refused, with instructions"). The envelope
+     (the controller) checks an answer's shape; the rules check what it means -- creatures that cannot pay for a convoke
+     (rules/actions.mjs, convoked), a target the spell can no longer have -- and say what is wrong and what to do
+     instead. That refusal is the person's, a RoomError (422) in the engine's own words; the caller puts the room back
+     as it was (`act`, `restore`). */
   function answerWith(seat, answer) {
-    if (pendingActions) {
-      const action = pendingActions[answer.indices[0]];
-      pendingActions = null;
-      apply(seat, action);
-    } else {step.acted = true; write(resolveAwaiting(state, answer.indices, answer.amounts, rng, answer));}
+    try {
+      if (pendingActions) {
+        const action = pendingActions[answer.indices[0]];
+        pendingActions = null;
+        apply(seat, action);
+      } else {step.acted = true; write(resolveAwaiting(state, answer.indices, answer.amounts, rng, answer));}
+    } catch (error) {
+      if (error instanceof RoomError) throw error;
+      throw new RoomError(422, error.message, {refused: true});
+    }
     pendingSeat = null;
     drive();
+  }
+  /* THE ROOM PUT BACK AS IT WAS SAVED (its own checkpoint, `persist`; its own restore, `open`). Every call that changes the
+     game saves before it returns, so what storage holds when a person's input arrives is the room as it stood: an input
+     that fails part-way -- an answer the rules refuse, an engine failure in the AI seats' play after it -- is undone by
+     reading that back. Nothing of it stays: not the state, the journal's events, the history's lines, the tape entry or
+     the receipt; the question is pending again, at the revision the person answered. */
+  async function restore() {
+    const record = JSON.parse(await storage.get(ROOM_KEY) || "null");
+    if (!record || record.schema !== ROOM_SCHEMA) throw new RoomError(404, "There is no game at this table.");
+    const point = await store.latestCheckpoint();
+    if (!point || point.sequence !== record.sequence) throw new RoomError(500, "This table's saved game does not match its record, so it was not resumed.");
+    passEmpty = record.passEmpty === true; step = record.step || {key: null, quiet: false, acted: false};
+    seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; history = record.history || [];
+    refusals = record.refusals || {total: 0, since: point.sequence, first: []};
+    continuing = record.continuing === true; driven = record.driven || 0; endWhenNoPerson = record.endWhenNoPerson === true;
+    state = structuredClone(point.state);
+    rng = createRng(point.seed, point.rng);
+    journal = createJournal({matchId, seed: point.seed}, point);
+    controller = createController(record.controller);
+    pilots = seats.map((s, seat) => (s.pilot === "house" ? makePilot({seat, cards: facts}) : null));
+    saved = 0; unsaved = [];
+    tapeN = (await store.readTape()).length;
+  }
+  /* A person's input that failed part-way, undone (`restore`) and refused: the rules' refusal as they said it, and any other
+     failure -- the engine's, in the play that followed -- as the room's, with what the person can still do. */
+  async function undone(error) {
+    await restore();
+    if (error instanceof RoomError) return error;
+    return new RoomError(500, `The rules engine failed after that (${error.message}), so it was not taken: nothing changed, and the game is where it was. Try another choice, or end the game.`);
   }
   /* `by`: a person, the house pilot, or the room passing for a person with nothing to do (item 11). */
   function apply(seat, action, by = "person") {
@@ -467,21 +506,7 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
     },
 
     async open() {
-      const record = JSON.parse(await storage.get(ROOM_KEY) || "null");
-      if (!record || record.schema !== ROOM_SCHEMA) throw new RoomError(404, "There is no game at this table.");
-      const point = await store.latestCheckpoint();
-      if (!point || point.sequence !== record.sequence) throw new RoomError(500, "This table's saved game does not match its record, so it was not resumed.");
-      passEmpty = record.passEmpty === true; step = record.step || {key: null, quiet: false, acted: false};
-      seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; history = record.history || [];
-      refusals = record.refusals || {total: 0, since: point.sequence, first: []};
-      continuing = record.continuing === true; driven = record.driven || 0; endWhenNoPerson = record.endWhenNoPerson === true;
-      state = structuredClone(point.state);
-      rng = createRng(point.seed, point.rng);
-      journal = createJournal({matchId, seed: point.seed}, point);
-      controller = createController(record.controller);
-      pilots = seats.map((s, seat) => (s.pilot === "house" ? makePilot({seat, cards: facts}) : null));
-      saved = 0;
-      tapeN = (await store.readTape()).length;
+      await restore();
       return api;
     },
 
@@ -559,7 +584,8 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
       tape({kind: "leave", seat: seatId, why});
       note(why === "timed-out" ? `${seats[seat].name} ran out of time · not finished` : `${seats[seat].name} conceded`);
       leaving = [...leaving, seat];
-      drive();
+      /* Conceded in the engine, and the AI seats play on: should that fail, they have not left, and nothing changed. */
+      try {drive();} catch (error) {throw await undone(error);}
       await persist();
       return api;
     },
@@ -581,7 +607,8 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
 
     /**
      * A seat's answer to the decision it was asked: `{actionId, revision, kind, choiceId, indices?, ...}`, the
-     * §12.1 action envelope. A retry with the same action id returns the same receipt and applies nothing.
+     * §12.1 action envelope. A retry with the same action id returns the same receipt and applies nothing. An answer
+     * the rules refuse is refused (422, in the rules' words) with nothing changed, and may be given again otherwise.
      */
     async act(seatId, request) {
       const seat = seatIndex(seatId);
@@ -604,7 +631,9 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
       receipts = [...receipts, {actionId, seatId, body, receipt}].slice(-RECEIPTS);
       const answer = controller.take();
       tape({kind: "answer", seat: seatId, answer});
-      answerWith(seat, answer);
+      /* Refused by the rules, or failed in the play after it: undone -- no receipt, no tape entry, the same question still
+         theirs -- and refused, saying why. A saved tape so never holds an answer that cannot be applied again. */
+      try {answerWith(seat, answer);} catch (error) {throw await undone(error);}
       await persist();
       return {receipt, changed: true};
     },

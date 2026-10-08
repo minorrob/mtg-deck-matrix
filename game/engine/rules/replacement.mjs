@@ -71,8 +71,12 @@ function unlessHolds(state, unless, player) {
   const alternatives = Array.isArray(unless.controls?.anyOf) ? unless.controls.anyOf : [unless.controls ?? {}];
   const matchers = alternatives.map((selector) => compileSelector({...selector, controller: "you"}));
   const count = state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player}))).length;
-  return count >= (unless.min ?? 1) && (unless.max === undefined || count <= unless.max);
+  /* "Unless you control two or fewer other lands" (a fast land) holds with none at all: a `max` alone has no least. */
+  return count >= (unless.min ?? (unless.max !== undefined ? 0 : 1)) && (unless.max === undefined || count <= unless.max);
 }
+
+/* The replacement effect finality counters make (CR 122.1h): the counted permanent's own, never an ability it could lose. */
+const FINALITY = Object.freeze({id: "finality-counter", kind: "replacement", watches: {event: "zone-change", from: "battlefield", to: "graveyard"}, change: {to: "exile"}});
 
 /** Where an effect has to be for it to act on the battlefield (CR 113.6). */
 const ACTING_ZONES = ["battlefield"];
@@ -201,6 +205,11 @@ function applicable(state, proposal) {
   }
   /* The copied card's own, alone (ownEntering): the others' applied as it entered. */
   if (proposal.ownOnly) return found;
+  /* A FINALITY COUNTER (CR 122.1h): one or more on a permanent make one replacement effect, "if this permanent would be put
+     into a graveyard from the battlefield, exile it instead" (Excava, the Risen Past) -- its own, ordered with the others
+     that apply as any is (CR 616.1). */
+  const moving = proposal.event === "zone-change" ? state.objects[proposal.objectId] : null;
+  if ((moving?.counters?.finality ?? 0) > 0 && applies(state, FINALITY, moving, proposal)) found.push({holderId: proposal.objectId, ability: FINALITY});
   for (const zone of ACTING_ZONES) {
     for (const id of state.zones[zone]) {
       const holder = state.objects[id];
@@ -288,6 +297,9 @@ function applyOne(state, {holderId, ability}, proposal, dry = false) {
      once it is there, its arrival waiting for the answer (rules/entering.mjs) -- "except", "until end of turn", "tapped". */
   if (ability.change?.copyOf) next.asks = [...(next.asks ?? []), {copyOf: structuredClone(ability.change.copyOf),
     copy: {except: structuredClone(ability.change.except ?? {}), keep: [...(ability.change.keep ?? [])], until: ability.change.until ?? null, tapped: ability.change.tapped === true}}];
+  /* "This creature enters prepared" (Goblin Glasswright; CR 614.1c, 722.3a): a designation it enters with, given as it
+     arrives (effects/attributes.mjs, prepare) -- and with it the copy of its prepare spell in exile (722.3c). */
+  if (ability.change?.entersPrepared === true) next.designations = [...new Set([...(next.designations ?? []), "prepared"])];
   if (ability.change?.entersWithCounters) {
     const {counter, count} = ability.change.entersWithCounters;
     /* "With X +1/+1 counters on it" (CR 107.3m: the X paid to cast it), "a +1/+1 counter for each Zombie card in your
@@ -366,6 +378,13 @@ export function applyReplacements(state, proposal, {orders = [], askable = false
   if (proposal.event === "damage" && protectedFrom(state, {card: current.toCard ?? null, player: current.toPlayer ?? null}, current.sourceId))
     return {proposal: {...current, amount: 0, prevented: true}, applied: current.applied, awaiting: false};
 
+  /* "IF IT WOULD LEAVE THE BATTLEFIELD, EXILE IT INSTEAD OF PUTTING IT ANYWHERE ELSE" (unearth, CR 702.84a; Whip of Erebos): an
+     effect on that permanent (effects/permanents.mjs, afterwards), gone with it when it leaves (CR 400.7) -- so any zone change
+     of what carries it is its leaving the battlefield. Every way it would leave asks here -- an effect, a sacrifice, lethal
+     damage or another state-based action -- so it is exiled by each. */
+  if (proposal.event === "zone-change" && state.objects[proposal.objectId]?.exileIfLeaves === true)
+    current = {...current, to: "exile"};
+
   /* Each round finds what still applies to the event AS IT NOW IS, which is what makes an effect
      that rewrites the destination able to bring a different effect into play. Bounded by CR 614.5:
      the applied list only grows, so this cannot run longer than there are effects. */
@@ -420,7 +439,7 @@ export function enteringModifications(state, {objectId, player, types, abilities
      planeswalker has. */
   const counters = {...(proposal.counters ?? {})}, loyalty = state.objects[objectId]?.loyalty;
   if ((types ?? []).includes("Planeswalker") && Number.isInteger(loyalty)) counters.loyalty = (counters.loyalty ?? 0) + loyalty;
-  return {tapped: proposal.tapped === true, counters, asks: proposal.asks ?? []};
+  return {tapped: proposal.tapped === true, counters, asks: proposal.asks ?? [], designations: proposal.designations ?? []};
 }
 
 /**
@@ -439,7 +458,7 @@ export function ownEntering(state, {objectId, player, types, abilities}) {
 /* How an event ends under every order of the effects that apply to it (CR 616.1f: each applied, then what still applies),
    and whether that is one way. Tried dry, so trying each order spends nothing. A damage event ends in how much, to whom,
    and how much a prevention that counts it stopped ("mills that many"). */
-const endOf = (p) => JSON.stringify({to: p.to ?? null, tapped: p.tapped === true, counters: p.counters ?? {}, asks: p.asks ?? [],
+const endOf = (p) => JSON.stringify({to: p.to ?? null, tapped: p.tapped === true, counters: p.counters ?? {}, asks: p.asks ?? [], designations: p.designations ?? [],
   amount: p.amount ?? null, toPlayer: p.toPlayer ?? null, toCard: p.toCard ?? null, counted: (p.followUps ?? []).map((f) => f.context.about?.amount ?? null)});
 function ends(state, proposal, out = new Set(), depth = 0) {
   const candidates = depth < 8 ? applicable(state, proposal) : [];

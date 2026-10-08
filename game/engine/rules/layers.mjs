@@ -153,6 +153,8 @@ function applyEffect(current, effect) {
   if (Number.isInteger(change.controller)) current.controller = change.controller;
   /* CR 613.1d: "in addition to its other types" adds; setTypes replaces. */
   if (change.addTypes) for (const type of change.addTypes) if (!current.types.includes(type)) current.types.push(type);
+  /* And subtypes "in addition to its other types" (CR 205.1b; effects/permanents.mjs, animate's `subtypes`). */
+  if (change.addSubtypes) for (const subtype of change.addSubtypes) if (!current.subtypes.includes(subtype)) current.subtypes.push(subtype);
   if (change.setTypes) current.types = [...change.setTypes];
   /* "Enchanted permanent is a colorless Forest land" (Song of the Dryads): its subtypes set, every other one lost (CR 205.1b). */
   if (change.setSubtypes) { current.subtypes = [...change.setSubtypes]; current.everyCreatureType = false; }
@@ -209,6 +211,20 @@ function allEffects(state) {
   if (key !== null) memo.effects.set(key, found);
   return found;
 }
+/* "AS LONG AS THE TOP CARD OF YOUR LIBRARY IS A GOBLIN CARD, THIS CREATURE HAS ALL ACTIVATED ABILITIES OF THAT CARD"
+   (Conspicuous Snoop; CR 613.1f, layer 6): `apply.topCardAbilities`, what that card must be (its subtypes, a changeling's
+   every creature type among them, CR 702.73a) -- read from the holder's controller's library as it now is, so the
+   abilities change as the top card does. Its activated abilities, mana abilities among them (CR 605.1a), given as granted
+   abilities are; none, and the static gives nothing. */
+function topCardGrant(state, holder, ability) {
+  const top = state.zones.library?.[holder.controller]?.[0];
+  const card = top === undefined ? null : state.objects[top];
+  const wanted = ability.apply.topCardAbilities?.subtypes ?? [];
+  if (!card || !wanted.every((t) => hasSubtype(card.subtypes ?? [], everyCreatureType(card.keywords), t))) return null;
+  const {topCardAbilities: _top, ...rest} = ability.apply;
+  return {...ability, apply: {...rest, addAbilities: (card.abilities ?? []).filter((a) => a.kind === "activated" || a.kind === "mana")}};
+}
+
 function gatherEffects(state) {
   const found = [];
   for (const graveyard of state.zones.graveyard ?? []) for (const id of graveyard) {
@@ -226,9 +242,11 @@ function gatherEffects(state) {
       /* One that works from a graveyard does not work here (CR 113.6). */
       if (ability.worksFrom === "graveyard") continue;
       if (!holdsNow(state, ability.condition, {controller: holder.controller, source: id})) continue;
+      const given = ability.apply?.topCardAbilities !== undefined ? topCardGrant(state, holder, ability) : ability;
+      if (given === null) continue;
       found.push({
         /* "Creatures you control of the chosen type get +1/+1", "this creature is the chosen type": its own choice. */
-        ...chosenFor(ability, holder),
+        ...chosenFor(given, holder),
         sourceId: id,
         sourceController: holder.controller,
         /* A static ability's timestamp is its permanent's (CR 613.7d). */
@@ -287,7 +305,85 @@ const canonical = (current) => JSON.stringify({
    ability's script, four per pair (by structuredClone, then a plain copy), was most of a whole game's CPU
    (engine-room-games seed 11, 2026-10-05: the review's F-2). */
 const trial = (c) => ({...c, types: [...c.types], subtypes: [...c.subtypes], colors: [...c.colors], keywords: [...c.keywords], granted: [...c.granted]});
+
+/* WHETHER A CAN DEPEND ON B AT ALL, without a trial. dependsOn below finds a dependency in one of two ways: B changes
+   whether A applies, or the two applied in either order come out different. The first needs B to write a field A's
+   `affects` reads (affects, above: types, subtypes, controller, colors, keywords -- the rest it reads off the game, which
+   a trial does not change); the second needs both to write one field with operations whose order matters (a set, a
+   removal, a switch, or a push onto a list `canonical` does not sort: subtypes, granted abilities). Neither, and every
+   trial would answer no, so none is made: a crowded board's layer 7 -- a dozen +1/+1 statics, none reading power --
+   spent most of a game's CPU proving that (the G1 pass of 2026-10-08, D4-D7 seed 3: 20 s of one person's wait). The
+   answer is the same either way; `pruneCheck` makes the trial anyway and throws if the two disagree (the suites). */
+const READS = {types: ["types"], subtypes: ["types", "subtypes"], controller: ["controller"], colors: ["colors"], colorless: ["colors"], keywords: ["keywords"]};
+const WRITES = {controller: "controller", addTypes: "types", setTypes: "types", removeTypes: "types", addSubtypes: "subtypes", setSubtypes: "subtypes",
+  allCreatureTypes: "subtypes", setColors: "colors", removeAllAbilities: "abilities", addAbilities: "abilities", addKeywords: "abilities", setPower: "pt",
+  setToughness: "pt", power: "pt", toughness: "pt", switchPT: "pt"};
+/* Operations on one field that give the same result in either order (canonical sorts types and keywords). */
+const COMMUTING = {types: ["addTypes"], abilities: ["addKeywords"], pt: ["power", "toughness"], subtypes: ["allCreatureTypes"]};
+function readsOf(rule = {}) {
+  const fields = new Set();
+  for (const [key, value] of Object.entries(rule)) {
+    if (key === "anyOf" && Array.isArray(value)) for (const one of value) for (const f of readsOf(one)) fields.add(f);
+    for (const f of READS[key] ?? []) fields.add(f);
+  }
+  /* "Has flying" read off keywords, which "loses all abilities" and a keyword grant both write (as "abilities"). */
+  if (fields.has("keywords")) fields.add("abilities");
+  return fields;
+}
+/* An effect's reads and writes, made once per effect object (the effects are gathered once a memo). An `apply` key this
+   does not know (one applyEffect learns later) is assumed to matter: `known` false, and the trial is made. */
+const profiles = new WeakMap();
+function profileOf(effect) {
+  let profile = profiles.get(effect);
+  if (profile) return profile;
+  const writes = new Map();
+  let known = true;
+  for (const key of Object.keys(effect.apply ?? {})) {
+    const field = WRITES[key];
+    if (!field) { known = false; continue; }
+    writes.set(field, [...(writes.get(field) ?? []), key]);
+  }
+  profile = {known, reads: readsOf(effect.affects), writes};
+  profiles.set(effect, profile);
+  return profile;
+}
+const commute = (field, ops) => ops.every((op) => (COMMUTING[field] ?? []).includes(op));
+function mayDepend(a, b) {
+  const pa = profileOf(a), pb = profileOf(b);
+  if (!pa.known || !pb.known) return true;
+  for (const field of pa.reads) if (pb.writes.has(field)) return true;
+  for (const [field, opsA] of pa.writes) {
+    const opsB = pb.writes.get(field);
+    if (opsB && !commute(field, [...opsA, ...opsB])) return true;
+  }
+  return false;
+}
+/* Whether no effect in a layer can depend on another (each pair as mayDepend asks it, all at once): no effect reads a
+   field another writes, and every field two or more write is written by operations that commute. Then timestamp order is
+   the order (CR 613.7), with no pair asked. */
+function independent(effects) {
+  const writers = new Map();
+  for (const effect of effects) {
+    const profile = profileOf(effect);
+    if (!profile.known) return false;
+    for (const [field, ops] of profile.writes) writers.set(field, [...(writers.get(field) ?? []), {effect, ops}]);
+  }
+  for (const effect of effects) for (const field of profileOf(effect).reads)
+    if ((writers.get(field) ?? []).some((w) => w.effect !== effect)) return false;
+  for (const [field, list] of writers) if (list.length > 1 && !commute(field, list.flatMap((w) => w.ops))) return false;
+  return true;
+}
+let pruneCheck = false;
+
 function dependsOn(state, a, b, base, sourceOf) {
+  if (!mayDepend(a, b)) {
+    if (!pruneCheck) return false;
+    if (trialDependsOn(state, a, b, base, sourceOf)) throw new Error(`layers: mayDepend said ${a.id ?? "an effect"} cannot depend on ${b.id ?? "another"}, and a trial says it does`);
+    return false;
+  }
+  return trialDependsOn(state, a, b, base, sourceOf);
+}
+function trialDependsOn(state, a, b, base, sourceOf) {
   trials += 1;
   const withoutB = applyEffect(trial(base), a);
   const afterB = applyEffect(trial(base), b);
@@ -309,6 +405,7 @@ function dependsOn(state, a, b, base, sourceOf) {
    spent seconds there (the review's F-2). */
 function orderWithin(state, effects, base, sourceOf) {
   const byTime = [...effects].sort((x, y) => (x.timestamp ?? 0) - (y.timestamp ?? 0));
+  if (byTime.length < 2 || (!pruneCheck && independent(byTime))) return byTime;
   const out = [];
   const remaining = [...byTime];
   const index = new Map(byTime.map((effect, i) => [effect, i])), asked = new Map();
@@ -317,8 +414,10 @@ function orderWithin(state, effects, base, sourceOf) {
     if (!asked.has(key)) asked.set(key, dependsOn(state, x, y, base, sourceOf));
     return asked.get(key);
   };
+  /* Each pass places one effect at least, so a pass for each is enough. (A fixed 64 stopped there, and a layer of more
+     than 64 effects lost the rest without a word.) */
   let guard = 0;
-  while (remaining.length > 0 && guard < 64) {
+  while (remaining.length > 0 && guard <= byTime.length) {
     guard += 1;
     /* The first effect that does not depend on anything still waiting. */
     const at = remaining.findIndex((candidate) =>
@@ -366,7 +465,9 @@ export function derivingAfresh(state, fn) {
 }
 /** For the suites: turn the memo off (to compare), and how many derivations -- and dependency trials (CR 613.8a,
     `dependsOn`) -- were made since `reset`. */
-export const deriveMemo = {off(value = true) { memoOff = value; }, count() { return derivations; }, trials() { return trials; }, reset() { derivations = 0; trials = 0; }};
+export const deriveMemo = {off(value = true) { memoOff = value; }, count() { return derivations; }, trials() { return trials; }, reset() { derivations = 0; trials = 0; },
+  /* Make every trial mayDepend skips, and throw where the two would disagree (the suites; the answer is the same). */
+  checkPrune(value = true) { pruneCheck = value; }};
 const copy = (v) => (Array.isArray(v) ? v.map(copy) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, copy(x)])) : v);
 
 /**
@@ -468,7 +569,7 @@ const heldAbilities = (object, current) => [...(current.lostAbilities ? [] : obj
    graveyard (where one may work from, allEffects): when none does, a permanent's abilities are its own, and nothing need
    be derived to read them. */
 function abilitiesChange(state) {
-  const changes = (apply) => Boolean(apply && (apply.addAbilities || apply.removeAllAbilities));
+  const changes = (apply) => Boolean(apply && (apply.addAbilities || apply.removeAllAbilities || apply.topCardAbilities));
   if ((state.effects ?? []).some((effect) => changes(effect.apply))) return true;
   const holders = [...state.zones.battlefield, ...(state.zones.graveyard ?? []).flat()];
   return holders.some((id) => (state.objects[id].abilities ?? []).some((ability) => ability.kind === "static" && changes(ability.apply)));
@@ -537,5 +638,11 @@ export function lastKnown(state, id) {
     commander: object.commander === true,
     /* Its abilities as it last was, the ones given it included: "when this creature dies" given by Feign Death. */
     abilities: structuredClone(heldAbilities(object, current)),
+    /* Its copiable values (CR 707.2), when they were not its card's own -- a copy of something else, or face down (708.2a) --
+       for "create a token that's a copy of that creature" (Hofri Ghostforge; effects/permanents.mjs, `asItLastWas`). */
+    ...(object.uncopied || object.faceDown === true ? {copiable: Object.fromEntries(COPIED_KEYS.filter((key) => object[key] !== undefined).map((key) => [key, structuredClone(object[key])]))} : {}),
   };
 }
+/* The copiable values a permanent shows (effects/permanents.mjs, COPY_KEYS: the same list, kept here to keep the layers free
+   of the effects). */
+const COPIED_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "spell", "enchant"]);

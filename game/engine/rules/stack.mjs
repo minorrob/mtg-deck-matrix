@@ -34,13 +34,15 @@
  * whose every target is illegal does nothing and leaves the stack with `hasFizzled`.
  */
 
-import {holdArrival} from "./entering.mjs";
+import {holdArrival, enteredWith} from "./entering.mjs";
+import {ascendAsItResolves} from "../keywords/designations.mjs";
 import {conditionHolds} from "../script/condition.mjs";
 import {moveObject, addObject, removeObject, eventCard} from "../state/index.mjs";
 import {enteringModifications} from "./replacement.mjs";
 import {countersPlaced} from "./statics.mjs";
 import {beginResolution, resolutionPending} from "../script/resolution.mjs";
 import {delayedTrigger} from "../script/effects/permanents.mjs";
+import {prepare} from "../script/effects/attributes.mjs";
 import {recheckTargets, factsOf, modalScript} from "../script/bind.mjs";
 
 /* The projection contract (§12.1) names these zones with a capital, and the telemetry matches on
@@ -236,6 +238,8 @@ export function resolveTop(state, effect = null, rng = null) {
     /* How the spell was cast, for its own conditions ("if this spell was cast from a graveyard"; rules/actions.mjs). */
     ...(entry.cast ? {cast: entry.cast} : {}),
     ...(entry.sourceTransforms !== undefined ? {sourceTransforms: entry.sourceTransforms} : {}),
+    /* What its cost sacrificed, as each last existed: "the sacrificed creature's toughness" (rules/actions.mjs). */
+    ...(entry.sacrificed ? {sacrificed: entry.sacrificed} : {}),
     /* What its permanent chose as it entered: "draw a card for each creature of the chosen type". */
     ...(source !== null && state.objects[source]?.chosen !== undefined ? {chosen: state.objects[source].chosen} : {})};
   /* "Another target" asked again with its source gone (Oblivion Ring destroyed with its trigger waiting): another than the
@@ -243,10 +247,15 @@ export function resolveTop(state, effect = null, rng = null) {
   const {targets, fizzles} = recheckTargets(state, script.targets, entry.targets, source === null && (entry.cardId ?? entry.lastKnown?.cardId ?? null) !== null
     ? {...context, source: entry.cardId ?? entry.lastKnown.cardId} : context);
   if (fizzles) return finishTop(state, entry, events, true);
+  /* ASCEND ON AN INSTANT OR SORCERY (CR 702.131a): its spell ability, first as it is printed first -- the city's blessing for
+     its controller if they control ten or more permanents now (keywords/designations.mjs). An ability on the stack has no
+     object of its own (pushAbility), and a permanent spell with ascend has no script and was finished above -- its ascend
+     is the permanent's (rules/sba.mjs) -- so only such a spell reads here. */
+  if ((state.objects[entry.objectId]?.keywords ?? []).includes("Ascend")) events.push(...ascendAsItResolves(state, entry.playerId));
   /* An intervening "if" asked again as it resolves (CR 603.4): false now, and the ability does nothing. A triggered
      ability's own condition only -- "activate only if" was asked as it was activated (CR 602.5b) and is not again. */
   if (entry.kind === "trigger" && script.condition && !conditionHolds(state, script.condition, {controller: entry.playerId, source, about: entry.about ?? undefined,
-    ...(entry.spent ? {spent: entry.spent} : {})})) return finishTop(state, entry, events, false);
+    ...(entry.spent ? {spent: entry.spent} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {})})) return finishTop(state, entry, events, false);
   /* What its effects need to know about their targets, read once, now (CR 608.2h). */
   const outcome = beginResolution(state, script.effects, {...context, targets, facts: factsOf(state, targets)}, rng);
   events.push(...outcome.events);
@@ -263,6 +272,11 @@ export function resolveTop(state, effect = null, rng = null) {
  * @returns {Array} events, or none when the top was not waiting on its own resolution
  */
 export function finishResolving(state) {
+  if (state.finishingSpell && !resolutionPending(state)) {
+    const {entry, fizzled} = state.finishingSpell;
+    delete state.finishingSpell;
+    return finishTop(state, entry, [], fizzled);
+  }
   /* The one resolving, wherever it is: what it put on the stack as it resolved -- a copy -- is above it now. */
   const entry = state.stack.findLast((e) => e.stage === "resolving") ?? null;
   if (!entry || entry.stage !== "resolving" || resolutionPending(state)) return [];
@@ -331,16 +345,28 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
        graveyard -- one that did not resolve goes where any spell would. */
     const adventured = entry.adventure === true && !fizzled;
     /* "Exile this spell" (paradigm, CR 702.192a): it resolved, and is exiled as the last of it. */
-    const to = entry.permanent && !fizzled ? "battlefield" : entry.flashback || entry.graveyardToExile || rebound || adventured || exiles ? "exile" : "graveyard";
+    const to = entry.permanent && !fizzled ? "battlefield" : entry.flashback || entry.graveyardToExile || rebound || adventured || exiles ? "exile" : entry.graveyardToLibraryBottom ? "library" : "graveyard";
     /* CR 614.12, asked before the move: a permanent coming off the stack enters tapped or with
        counters as ONE event, and the abilities that say so are on the spell, not on anything that
        is on the battlefield yet. */
     const object = state.objects[entry.objectId];
+    /* Quintorius can send even a commander spell to its owner's library (CR 903.9b).
+       Ask its owner before moving it; the saved continuation emits resolution only after the answer. */
+    if (to === "library" && object.commander === true) {
+      entry.stage = "resolving";
+      if (at >= 0) state.stack.splice(at, 0, entry);
+      state.finishingSpell = {entry, fizzled};
+      const outcome = beginResolution(state, [{effect: "moveZone", targets: [entry.objectId], to: "library"}], {controller: entry.playerId});
+      events.push(...outcome.events);
+      if (outcome.status === "waiting") return events;
+      events.push(...finishResolving(state));
+      return events;
+    }
     const entering = to === "battlefield"
       ? enteringModifications(state, {objectId: entry.objectId, player: entry.playerId,
         types: object.types, abilities: object.abilities, x: entry.x ?? 0, escaped: entry.escaped === true, kicked: entry.kicked ?? 0})
       : null;
-    const arrived = moveObject(state, entry.objectId, to, to === "graveyard" ? owner : null);
+    const arrived = moveObject(state, entry.objectId, to, ["graveyard", "library"].includes(to) ? owner : null);
     /* Rebound's delayed trigger (CR 702.88a, 603.7d: its controller the spell's): at the beginning of THEIR next upkeep, the
        card in exile -- the object it now is, so one that leaves exile meanwhile is not cast (CR 400.7) -- may be cast
        without paying its mana cost, as the trigger resolves (CR 608.2g; effects/asking.mjs, `play`), or left there for good. */
@@ -371,6 +397,8 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     if (to === "battlefield" && entry.escaped) state.objects[arrived].escaped = true;
     /* Cast for its evoke cost, the permanent it became was evoked (CR 702.74a): its own sacrifice trigger reads this. */
     if (to === "battlefield" && entry.evoked) state.objects[arrived].evoked = true;
+    /* And for its prowl cost (CR 702.76a): "if its prowl cost was paid" (script/condition.mjs, `prowled`). */
+    if (to === "battlefield" && entry.prowled) state.objects[arrived].prowled = true;
     /* Cast from suspend: haste, while it is this permanent (CR 702.62a). */
     if (to === "battlefield" && entry.fromSuspend && (state.objects[arrived].types ?? []).includes("Creature"))
       (state.effects ??= []).push({id: `suspend-haste:${arrived}`, layer: 6, affects: {ids: [arrived]}, apply: {addKeywords: ["Haste"]}, until: null, sourceController: entry.playerId});
@@ -402,10 +430,14 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
       /* What it became, on the battlefield or in the graveyard -- both public (CR 400.7e). */
       becomes: arrived,
       from: {zoneType: ZONE_LABEL.stack, player: {playerId: entry.playerId}},
-      to: {zoneType: ZONE_LABEL[to], player: {playerId: to === "graveyard" ? owner : entry.playerId}},
+      to: {zoneType: ZONE_LABEL[to], player: {playerId: ["graveyard", "library"].includes(to) ? owner : entry.playerId}},
     }));
     /* "You may have this creature enter as a copy of ...": its arrival waits for the answer (rules/entering.mjs). */
     if (to === "battlefield") holdArrival(state, arrived, events[events.length - 1]);
+    /* "Enters prepared" (CR 614.1c, 722.3a): the designation it entered with, and its prepare spell's copy in exile (722.3c). */
+    if ((entering?.designations ?? []).includes("prepared")) prepare(state, arrived, events);
+    /* What it entered with, said once it has (rules/entering.mjs, enteredWith). */
+    if (to === "battlefield") events.push(...enteredWith(state, arrived, entering));
   }
 
   events.push(event("GameEventSpellResolved", state, {

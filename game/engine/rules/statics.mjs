@@ -148,8 +148,15 @@ export const STATIC_RULES = Object.freeze({
       rules/actions.mjs offers it beside the paid cast. */
   "alternative-cost": "rules/actions.mjs",
   /** "Target creature with defender can attack this turn as though it didn't have defender" (Assault Formation, Walking
-      Bulwark; CR 702.3b): combat.mjs, as attackers are offered. */
+      Bulwark; CR 702.3b): combat.mjs, as attackers are offered. And as a permanent's static: "creatures you control can
+      attack as though they didn't have defender" (Felothar the Steadfast), "this creature can attack players who attacked
+      you during their last turn as though it didn't have defender" (Weathered Sentinels: `against: "attackedYouLastTurn"`,
+      those players only, never a planeswalker). defenderLifted, below. */
   "attacks-despite-defender": "rules/combat.mjs",
+  /** Umbra armor (CR 702.89a): the keyword kept as this static on its Aura (cards/index.mjs), read wherever the permanent it
+      enchants would be destroyed -- the damage removed and the Aura destroyed instead (script/effects/zones.mjs,
+      destructionReplaced). */
+  "umbra-armor": "script/effects/zones.mjs",
   /** "Prevent all damage that would be dealt to [them] this turn": an effect with a duration only (effectUntil), with
       `apply` {to, by, combat}; rules/replacement.mjs. */
   "prevent-damage": "rules/replacement.mjs",
@@ -172,6 +179,14 @@ export const STATIC_RULES = Object.freeze({
       players whose proliferating it replaces (a player selector, "you" its controller). script/resolution.mjs, as a
       proliferate reaches the head of a resolution (proliferateTimes). */
   "proliferate-twice": "script/resolution.mjs",
+  /** CR 702.10c by permission: "You may activate abilities of creatures you control as though those creatures had haste"
+      (Thousand-Year Elixir): `affects` the creatures, "you" its controller. Their {T} abilities are not held back by CR
+      302.6; their attack still is. keywords/timing.mjs, sickForAbilities. */
+  "activate-as-though-haste": "keywords/timing.mjs",
+  /** A requirement on attacking (CR 508.1d): "Other Goblin creatures you control attack each combat if able" (Goblin
+      Rabblemaster): `affects` the creatures, "you" its controller. Required of each that can attack someone with no cost to
+      pay; a declaration leaving out one it could have is refused, saying which (attacksEachCombat, below; rules/combat.mjs). */
+  "attacks-each-combat": "rules/combat.mjs",
 });
 
 /**
@@ -356,6 +371,59 @@ export function attackerCaps(state) {
   return caps;
 }
 
+/** Whom a static `attacks-despite-defender` may limit its permission to (`against`): the players who attacked its
+ *  controller during their last turn (Weathered Sentinels). */
+export const DEFENDER_LIFTED_AGAINST = Object.freeze(["attackedYouLastTurn"]);
+/* "PLAYERS WHO ATTACKED YOU DURING THEIR LAST TURN": a player is one when, in their most recent turn, a creature of theirs
+   was declared attacking you -- you, not a planeswalker of yours (CR 506.3: attacking one is not attacking its controller).
+   Kept on each player as they declare attackers, from none as each of their turns begins (rules/combat.mjs, turn.mjs). */
+const attackedYouLastTurn = (state, player, you) => (state.players[player]?.attackedPlayers ?? []).includes(you);
+
+/**
+ * WHETHER DEFENDER IS LIFTED (CR 702.3b): a creature with defender can't attack, unless something lets it attack as though
+ * it didn't have defender. `defender` the player it would attack, `planeswalker` the planeswalker of theirs, or both
+ * undefined for "anyone at all" -- the question whether it may attack at all (rules/combat.mjs, canAttack). A static of a
+ * permanent's whose `affects` takes this creature in, with its condition holding, lifts it toward anyone, or -- `against`
+ * -- only toward the players it names, and never toward a planeswalker; an effect for a while lifts it toward anyone.
+ */
+export function defenderLifted(state, id, defender = undefined, planeswalker = null) {
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static" || ability.rule !== "attacks-despite-defender") continue;
+      const context = {controller: holder.controller, source: holderId};
+      if (!conditionHolds(state, ability.condition, context) || !matchesSelector(chosenFor(ability, holder).affects, state, id, context)) continue;
+      if (ability.against === undefined) return true;
+      if (ability.against !== "attackedYouLastTurn" || planeswalker !== null) continue;
+      const toward = defender === undefined ? state.players.filter((p) => !p.lost && p.id !== holder.controller).map((p) => p.id) : [defender];
+      if (toward.some((player) => attackedYouLastTurn(state, player, holder.controller))) return true;
+    }
+  }
+  return (state.effects ?? []).some((effect) => effect.rule === "attacks-despite-defender" && staticAffects(state, effect, id, effect.sourceController));
+}
+
+/**
+ * "ATTACKS EACH COMBAT IF ABLE" (CR 508.1d): the permanents whose static `attacks-each-combat` takes this creature in, as
+ * it is now, with its condition holding -- each a requirement on it, said by name when a declaration breaks it. Empty, and
+ * nothing is required of it by a static.
+ */
+export function attacksEachCombat(state, id) {
+  const sources = [];
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static" || ability.rule !== "attacks-each-combat") continue;
+      const context = {controller: holder.controller, source: holderId};
+      if (conditionHolds(state, ability.condition, context) && matchesSelector(chosenFor(ability, holder).affects, state, id, context)) sources.push(holderId);
+    }
+  }
+  /* And "attacks this combat if able" (Legion Warboss's token; effects/permanents.mjs, afterwards): an effect on the very
+     creature, for the one combat phase it names -- its source named, as a static's holder is, gone or not. */
+  for (const effect of state.effects ?? [])
+    if (effect.rule === "attacks-each-combat" && effect.combat === (state.combatsThisTurn ?? 0) && effect.affects.ids.includes(id)) sources.push(effect.sourceId);
+  return sources;
+}
+
 /** The words `defender` may say on a `cant-attack` static. */
 export const CANT_ATTACK_DEFENDERS = Object.freeze(["you", "owner", "attacked"]);
 
@@ -483,6 +551,9 @@ export function costReduction(state, player, cardId) {
       if (caster === "opponent" && player === holder.controller) continue;
       const selector = {...(ability.affects ?? {}), what: "card", zone: object.zone};
       if (!matchesSelector(selector, state, cardId, {controller: holder.controller, source: holderId})) continue;
+      /* "Spells you cast from anywhere other than your hand cost {2} less to cast" (Advanced Reconstruction, level 3): where
+         the card is cast from (CR 601.2a, 601.2f) -- a graveyard, exile, a library, the command zone -- never a hand. */
+      if (ability.fromAnywhereButHand === true && object.zone === "hand") continue;
       /* "During your turn, spells you cast cost {1} less for each creature you control with power 4 or greater" (Temur
          Battlecrier): its condition, and its amount counted now. */
       if (!conditionHolds(state, ability.condition, {controller: holder.controller, source: holderId})) continue;

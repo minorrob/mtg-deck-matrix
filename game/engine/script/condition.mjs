@@ -33,6 +33,19 @@
  *                                      cast from it (Fblthp, the Lost)
  *   {sinceYourLastUpkeep: true}        its own permanent came under its controller's control since the beginning of
  *                                      their last upkeep (echo, CR 702.30a)
+ *   {evolves: true}                    evolve's "if that creature's power is greater than this creature's power and/or that
+ *                                      creature's toughness is greater than this creature's toughness" (CR 702.100a): the
+ *                                      creature the trigger is about against its own source, power to power and toughness
+ *                                      to toughness, as each now is -- the arrival gone, as it last was (rules/trigger.mjs
+ *                                      keeps it, CR 608.2h); never greater than a noncreature permanent (702.100c)
+ *   {citysBlessing: true|false}        its controller has the city's blessing, or has not (CR 702.131c; ascend,
+ *                                      keywords/designations.mjs): "unless you have the city's blessing" (Wayward Swordtooth)
+ *   {prowl: true}                      prowl's "if a player was dealt combat damage this turn by a source that, at the time
+ *                                      it dealt that damage, was under your control and had any of this spell's creature
+ *                                      types" (CR 702.76a): its own object's creature types against what rules/combat.mjs
+ *                                      kept of its controller's sources this turn
+ *   {prowled: true|false}              its own permanent was cast for its prowl cost, or was not (CR 702.76a; rules/stack.mjs):
+ *                                      "if its prowl cost was paid" (Latchkey Faerie)
  *   {opponentPoisonAtLeast: 3}         an opponent of its controller, still in the game, has at least that many poison
  *                                      counters (CR 122.1f): Corrupted's "as long as an opponent has three or more poison
  *                                      counters" (Skrelv's Hive; an ability word, CR 207.2c, with no rules meaning of its own)
@@ -40,12 +53,20 @@
  * The keys are closed, like every other grammar here: an unknown one is refused at the schema rather than read as true.
  */
 
+import {controllerOf, typesOf} from "../rules/layers.mjs";
 import {cardsIn} from "../state/index.mjs";
 import {matchesSelector, compileSelector, matchesLastKnown} from "./filter.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
+import {characteristicsOf, subtypesOf, everyCreatureTypeOf} from "../rules/layers.mjs";
+import {isCreatureType} from "../keywords/types.mjs";
+import {hasCitysBlessing} from "../keywords/designations.mjs";
 
 const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "spent", "enduringStory", "loyaltyThisTurn", "impending",
-  "cameFrom", "sinceYourLastUpkeep", "level", "opponentPoisonAtLeast"];
+  "uniqueCreatureName", "cameFrom", "sinceYourLastUpkeep", "level", "opponentPoisonAtLeast", "searched",
+  /* Evolve's comparison (CR 702.100a); prowl's damage, and its cost paid (CR 702.76a). */
+  "evolves", "prowl", "prowled",
+  /* Ascend's city's blessing (CR 702.131). */
+  "citysBlessing"];
 /* Where a permanent may have come from, for `cameFrom`: a library (effects/zones.mjs and rules/stack.mjs record it). */
 const CAME_FROM = ["library"];
 /* The mana a condition may ask was spent to cast its object: the five colors and colorless (CR 106.1). */
@@ -61,7 +82,10 @@ const COMPARE_KEYS = ["count", "atLeast", "atMost", "moreThan", "fewerThan"];
    damage to (Marauding Raptor), the token it made (Yenna) -- so `is: {}` asks only that there is one. "That spell"
    (Toph's "if that spell is a Lesson", Nalfeshnee's "if it's a permanent spell") is read as it last existed on the stack
    once it has left it (CR 608.2h): `about.was`, taken as the trigger was (rules/trigger.mjs). */
-const NAMED = ["remembered", "that card", "target"];
+/* "IF A PIRATE WAS EXILED THIS WAY" (Siren's Ruse): "moved" -- what the effect before it moved from the battlefield to where
+   it sent it, as each last existed there (CR 608.2h; effects/zones.mjs, moveZone's `movedWas`): one of them is enough, and
+   none moved is none. Not the card that came back, which is a new object (CR 400.7). */
+const NAMED = ["remembered", "that card", "target", "moved"];
 function namedObject(about, {remembered, targets, about: subject}) {
   if (about === "remembered") return remembered?.[0] ?? null;
   if (about === "that card") return subject?.card ?? null;
@@ -82,6 +106,31 @@ function namedIs(state, id, selector, context, was = null) {
   return compileSelector({...selector, what, ...(what === "card" ? {zone: object.zone} : {})})(state, id, context);
 }
 
+/* EVOLVE (CR 702.100a): the creature that entered -- on the battlefield and still a creature, as it now is; gone, as it last
+   was there (`about.lastKnown`, rules/trigger.mjs; CR 608.2h) -- against the creature with evolve, which must still be one: a
+   creature can't have a greater power or toughness than a noncreature permanent (702.100c). Power to power, toughness to
+   toughness, either greater. */
+function evolves(state, source, about) {
+  if (source === null || source === undefined || state.objects[source]?.zone !== "battlefield") return false;
+  const mine = characteristicsOf(state, source);
+  if (!mine.types.includes("Creature")) return false;
+  const id = about?.card;
+  const there = state.objects[id]?.zone === "battlefield" ? characteristicsOf(state, id) : null;
+  const it = there ? (there.types.includes("Creature") ? there : null) : about?.lastKnown ?? null;
+  if (!it) return false;
+  return (it.power ?? 0) > (mine.power ?? 0) || (it.toughness ?? 0) > (mine.toughness ?? 0);
+}
+
+/* PROWL (CR 702.76a): a creature type of this object's -- every one, for a changeling (CR 702.73a) -- among those of a source
+   that dealt combat damage to a player this turn under its controller's control, as that source was as it dealt it
+   (rules/combat.mjs, `combatDamageSources`). An object with no creature type has nothing to share. */
+function prowlable(state, controller, source) {
+  if (source === null || source === undefined || !state.objects[source]) return false;
+  const every = everyCreatureTypeOf(state, source), types = subtypesOf(state, source).filter(isCreatureType);
+  return (state.players[controller]?.combatDamageSources ?? []).some((dealt) => (every ? dealt.every || dealt.types.length > 0
+    : dealt.every ? types.length > 0 : dealt.types.some((t) => types.includes(t))));
+}
+
 /* HOW A SPELL WAS CAST (batch 70; rules/actions.mjs records it on the stack entry): "if this spell was cast from a
    graveyard" (Sevinne's Reclamation: `from`, the zone), and Addendum's "if you cast this spell during your main phase"
    (Unbreakable Formation: `mainPhase`). A copy was not cast (CR 707.10), and neither was an ability: no record, and
@@ -98,8 +147,26 @@ function castHolds(rule, cast) {
 }
 
 /** Whether a condition holds now, for an ability controlled by `controller` on object `source`. No condition holds. */
-export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined, excessDamage = undefined, rememberedControllers = undefined} = {}) {
+export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined, excessDamage = undefined, rememberedControllers = undefined,
+  movedWas = undefined, searched = undefined, lastKnown = undefined} = {}) {
   if (!condition) return true;
+  /* "If you search your library this way" (Claim Jumper): a search made earlier in this resolution (script/resolution.mjs). */
+  if (condition.searched === true && searched !== true) return false;
+  /* Guardian Project (CR 603.4, 201.2a): compare the entering creature's current name,
+     or its last known name after it leaves (CR 608.2h), against creatures YOU control
+     and creature cards in YOUR graveyard. Tokens count as other creatures; nameless
+     objects share a name with nothing. Control, ownership and card type are distinct. */
+  if (condition.uniqueCreatureName === true) {
+    const id = about?.card, object = state.objects[id];
+    const name = object ? object.card : about?.was?.name;
+    if (name === undefined) return false;
+    if (name !== null) {
+      if (state.zones.battlefield.some(other => other !== id && state.objects[other].card === name
+          && controllerOf(state, other) === controller && typesOf(state, other).includes("Creature"))) return false;
+      if (cardsIn(state, "graveyard", controller).some(other => state.objects[other].card === name
+          && !state.objects[other].token && state.objects[other].types.includes("Creature"))) return false;
+    }
+  }
   if (condition.cast !== undefined && !castHolds(condition.cast, cast)) return false;
   /* "Khans -- ...": what its permanent chose as it entered (the Sieges). */
   if (condition.chosen !== undefined && (source === null || state.objects[source]?.chosen !== condition.chosen)) return false;
@@ -140,7 +207,11 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   }
   /* "12+ | Flying" (a station symbol, CR 721.2a): as long as its own object has that many counters of the kind. */
   if (condition.selfCounters !== undefined && (source === null ? 0 : state.objects[source]?.counters?.[condition.selfCounters.counter] ?? 0) < condition.selfCounters.atLeast) return false;
-  if (condition.about !== undefined && !namedIs(state, namedObject(condition.about, {remembered, targets, about}), condition.is ?? {}, {controller, source},
+  if (condition.about === "moved") {
+    let fits = false;
+    try { fits = (movedWas ?? []).some((was) => matchesLastKnown(condition.is ?? {}, was, {controller, source})); } catch { fits = false; }
+    if (!fits) return false;
+  } else if (condition.about !== undefined && !namedIs(state, namedObject(condition.about, {remembered, targets, about}), condition.is ?? {}, {controller, source},
     condition.about === "that card" ? about?.was ?? null : null)) return false;
   if (condition.notTheirTurn === true && (about?.player === undefined || about.player === state.activePlayer)) return false;
   if (condition.handEmpty === true && cardsIn(state, "hand", controller).length > 0) return false;
@@ -168,6 +239,9 @@ export function conditionHolds(state, condition, {controller, source = null, abo
     /* And "if you do" counted ("you may discard two cards. If you do", Thrilling Discovery): what the effect before it
        remembered (`rememberedCount`). */
     const counted = {controller, source, ...(about ? {about} : {}), ...(x !== undefined ? {x} : {}), ...(remembered ? {remembered} : {}),
+      /* The source as it last was, gone since its ability triggered (CR 113.7a): "if there are cards exiled with this
+         enchantment" still counts what its other ability exiled (script/filter.mjs, linkSource). */
+      ...(lastKnown ? {lastKnown} : {}),
       /* "If excess damage was dealt this way" (Violent Echoes): what the damage before it left (script/resolution.mjs). */
       ...(excessDamage !== undefined ? {excessDamage} : {}),
       /* "For each creature exiled this way, its controller ..." (Winds of Abandon): who controlled what was remembered. */
@@ -181,6 +255,15 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   /* "As long as you have an enduring story" (Storied, CR 702.195b), or "unless you have one": the player's designation
      (keywords/designations.mjs). */
   if (condition.enduringStory !== undefined && (state.players[controller]?.enduringStory === true) !== condition.enduringStory) return false;
+  /* "Unless you have the city's blessing" (Wayward Swordtooth; CR 702.131c): its controller's designation, or theirs this
+     moment by a permanent's ascend (keywords/designations.mjs). */
+  if (condition.citysBlessing !== undefined && hasCitysBlessing(state, controller) !== condition.citysBlessing) return false;
+  /* Prowl's cost may be paid (CR 702.76a): asked of the card as its cast is offered (rules/actions.mjs, alternativeCosts). */
+  if (condition.prowl === true && !prowlable(state, controller, source)) return false;
+  /* "If its prowl cost was paid" (CR 702.76a): whether its own permanent was cast for it (rules/stack.mjs). */
+  if (condition.prowled !== undefined && (state.objects[source]?.prowled === true) !== condition.prowled) return false;
+  /* Evolve's comparison (CR 702.100a): as it triggers, and again as it resolves (CR 603.4). */
+  if (condition.evolves === true && !evolves(state, source, about)) return false;
   /* "If you've activated a loyalty ability this turn" (Kiora of Salt and Sand): its controller has (rules/actions.mjs). */
   if (condition.loyaltyThisTurn === true && !((state.players[controller]?.loyaltyThisTurn ?? 0) > 0)) return false;
   /* "Activate only during your turn" (Humble Defector). */
@@ -219,8 +302,12 @@ export function conditionProblems(condition) {
   if ("firstCombat" in condition && condition.firstCombat !== true) problems.push("firstCombat is true");
   if ("yourTurn" in condition && condition.yourTurn !== true) problems.push("yourTurn is true");
   if ("enduringStory" in condition && typeof condition.enduringStory !== "boolean") problems.push("enduringStory is true or false");
+  if ("citysBlessing" in condition && typeof condition.citysBlessing !== "boolean") problems.push("citysBlessing is true or false");
   if ("notYourTurn" in condition && condition.notYourTurn !== true) problems.push("notYourTurn is true");
   if ("loyaltyThisTurn" in condition && condition.loyaltyThisTurn !== true) problems.push("loyaltyThisTurn is true");
+  if ("evolves" in condition && condition.evolves !== true) problems.push("evolves is true");
+  if ("prowl" in condition && condition.prowl !== true) problems.push("prowl is true");
+  if ("prowled" in condition && typeof condition.prowled !== "boolean") problems.push("prowled is true or false");
   if ("opponentPoisonAtLeast" in condition && !(Number.isInteger(condition.opponentPoisonAtLeast) && condition.opponentPoisonAtLeast >= 1))
     problems.push("opponentPoisonAtLeast is a whole number of poison counters, 1 or more");
   if ("graveyardTypes" in condition && !(Number.isInteger(condition.graveyardTypes) && condition.graveyardTypes >= 1)) problems.push("graveyardTypes is a whole number of card types, 1 or more");
@@ -230,6 +317,8 @@ export function conditionProblems(condition) {
   if ("impending" in condition && typeof condition.impending !== "boolean") problems.push("impending is true or false");
   if ("cameFrom" in condition && !CAME_FROM.includes(condition.cameFrom)) problems.push(`cameFrom is the zone the permanent came from: ${CAME_FROM.join(", ")}`);
   if ("sinceYourLastUpkeep" in condition && condition.sinceYourLastUpkeep !== true) problems.push("sinceYourLastUpkeep is true");
+  if ("uniqueCreatureName" in condition && condition.uniqueCreatureName !== true) problems.push("uniqueCreatureName is true");
+  if ("searched" in condition && condition.searched !== true) problems.push("searched is true: a library was searched earlier in this resolution");
   if ("spent" in condition) {
     const spent = condition.spent;
     if (!spent || typeof spent !== "object" || Array.isArray(spent) || !Object.keys(spent).length

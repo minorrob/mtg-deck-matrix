@@ -32,6 +32,54 @@
 
 export const HOUSE_PILOT_ID = "house-pilot";
 
+/**
+ * A CHOICE'S REQUIREMENTS, MET (CR 508.1d: "other Goblin creatures you control attack each combat if able"): `indices`, with
+ * as few options added as the record's `requires` asks -- for each, at least `least` of the options whose `by` value is
+ * one of `values`, each value once -- keeping to `exclusiveBy` and to `capped` (no more at a planeswalker than it allows).
+ * A player the answerer prefers (`prefer`, the house pilot's defender) is tried first, then players before planeswalkers.
+ * Pure, over the record alone: the house pilot imports nothing, and the random pilot and the card scenarios use this one.
+ */
+export function meetRequirements(choice, indices, prefer = null) {
+  const options = choice.options ?? [];
+  const requirements = Array.isArray(choice.requires) ? choice.requires : [];
+  const room = (list, option) => option.planeswalkerId === undefined || choice.capped?.most?.[option.planeswalkerId] === undefined
+    || list.filter((i) => options[i]?.planeswalkerId === option.planeswalkerId).length < choice.capped.most[option.planeswalkerId];
+  const rank = (o) => (o.planeswalkerId === undefined ? (prefer !== null && o.defenderId === prefer ? 0 : 1) : 2);
+  /* CR 508.1c-d: satisfy the requirements together. An attacker with an uncapped alternative may need to leave a capped
+     planeswalker's place for another required attacker. Backtracking only within one group would strand the later group. */
+  const solve = (n, selected) => {
+    if (n >= requirements.length) return selected;
+    const need = requirements[n];
+    const taken = new Set(selected.map((i) => options[i]?.[need.by]));
+    const missing = (need.values ?? []).filter((value) => !taken.has(value));
+    const short = (need.least ?? 0) - ((need.values ?? []).length - missing.length);
+    /* The first way that fits, depth first, a value left out only when the rest can still make up the number. */
+    const fill = (k, list, left) => {
+      if (left <= 0) return solve(n + 1, list);
+      if (missing.length - k < left) return null;
+      const ways = options.filter((o) => o[need.by] === missing[k] && room(list, o)).sort((a, b) => rank(a) - rank(b) || a.index - b.index);
+      for (const way of ways) {
+        const rest = fill(k + 1, [...list, way.index], left - 1);
+        if (rest) return rest;
+      }
+      return fill(k + 1, list, left);
+    };
+    return fill(0, selected, short);
+  };
+  const preserved = solve(0, [...indices]);
+  if (preserved !== null) return preserved;
+  /* An optional attack may already occupy the only place a required attacker can use. Start with the requirements in
+     that case, then retain every original pick that still fits; replacing the optional attack is necessary for legality. */
+  const out = solve(0, []);
+  if (out === null) throw new Error("The attack requirements cannot be met by the offered choices");
+  for (const index of indices) {
+    const option = options[index];
+    const by = choice.exclusiveBy ?? "cardId";
+    if (option && !out.some((i) => options[i]?.[by] === option[by]) && room(out, option) && out.length < (choice.max ?? Infinity)) out.push(index);
+  }
+  return out;
+}
+
 const MAIN = ["MAIN1", "MAIN2"];
 const isLand = (card) => (card?.types ?? []).includes("Land");
 const isCreature = (card) => (card?.types ?? []).includes("Creature");
@@ -67,14 +115,18 @@ export function housePilot({seat, cards = () => null} = {}) {
     return n + (theirs === (action.hostile === true) ? 1 : 0);
   }, 0);
 
-  /* The first `count` options, honoring `exclusiveBy` the way the controller does. */
+  /* The first `count` options, honoring `exclusiveBy` and `capped` the way the controller does -- `capped`: no more of a value
+     than it allows ("controlled by different players", one of each player's). */
   function firstOf(choice, preferred, count) {
-    const used = new Set(), out = [];
+    const used = new Set(), out = [], taken = new Map();
     for (const index of preferred) {
       if (out.length >= count) break;
       const option = choice.options[index];
       const key = choice.exclusiveBy ? option?.[choice.exclusiveBy] : undefined;
       if (key !== undefined && used.has(key)) continue;
+      const cap = choice.capped ? option?.[choice.capped.by] : undefined;
+      if (cap !== undefined && choice.capped.most?.[cap] !== undefined && (taken.get(cap) ?? 0) >= choice.capped.most[cap]) continue;
+      if (cap !== undefined) taken.set(cap, (taken.get(cap) ?? 0) + 1);
       if (key !== undefined) used.add(key);
       out.push(index);
     }
@@ -160,6 +212,21 @@ export function housePilot({seat, cards = () => null} = {}) {
         const order = options.map((o, i) => i).sort((a, b) => rank(options[b]) - rank(options[a]) || a - b);
         return {indices: firstOf(choice, order, min)};
       }
+      /* A choice held to a budget ("any number of creatures with total power 4 or less", Slaughter the Strong): the strongest
+         first while they fit, so the most power is kept. */
+      if (choice.budget) {
+        const by = choice.budget.by, order = options.map((o) => o.index).sort((a, b) => (options[b][by] ?? 0) - (options[a][by] ?? 0) || a - b);
+        const kept = [];
+        let total = 0;
+        for (const index of order) if (kept.length < max && total + (options[index][by] ?? 0) <= choice.budget.most) { kept.push(index); total += options[index][by] ?? 0; }
+        return {indices: kept};
+      }
+      /* Which permanent of a type a player keeps, chosen by this seat for each player (Tragic Arrogance): its own costliest,
+         another player's cheapest. */
+      if (id.startsWith("sacrifice-keep-type:") && options.length) {
+        const own = options[0].keeper === seat, value = (o) => manaValue(o.label);
+        return {indices: [options.reduce((best, o) => ((own ? value(o) > value(best) : value(o) < value(best)) ? o : best)).index]};
+      }
       if (id.startsWith("sacrifice:")) {
         const rank = (o) => (o.token ? -1 : manaValue(o.label));
         const order = options.map((o, i) => i).sort((a, b) => rank(options[a]) - rank(options[b]) || a - b);
@@ -190,12 +257,13 @@ export function housePilot({seat, cards = () => null} = {}) {
           const through = powers.slice(0, Math.max(0, powers.length - walls.length)).reduce((n, x) => n + x, 0);
           return {p, going, through, lethal: through >= p.life};
         }).filter((plan) => plan.going.length);
-        if (!plans.length) return {indices: []};
+        /* And every creature the rules make attack (CR 508.1d, the record's `requires`): sent at the same player, if it can. */
+        if (!plans.length) return {indices: meetRequirements(choice, [])};
         const best = plans.reduce((a, b) => (b.lethal !== a.lethal ? (b.lethal ? b : a)
           : b.through !== a.through ? (b.through > a.through ? b : a)
           : b.p.life < a.p.life || (b.p.life === a.p.life && b.p.playerId < a.p.playerId) ? b : a));
         const picks = best.going.map(([, o]) => o.index);
-        return {indices: firstOf(choice, picks, max)};
+        return {indices: meetRequirements(choice, firstOf(choice, picks, max), best.p.playerId)};
       }
       if (id.startsWith("declare-blockers:")) {
         const attacks = view.combat?.attacks.filter((a) => a.defender === seat) ?? [];
@@ -225,14 +293,20 @@ export function housePilot({seat, cards = () => null} = {}) {
       if (id.startsWith("choose-targets:")) {
         const aimed = options.filter((o) => aim(view, o) > 0).map((o) => o.index);
         const rest = options.map((o) => o.index).filter((i) => !aimed.includes(i));
-        return {indices: [...aimed.slice(0, max), ...rest].slice(0, Math.max(min, Math.min(max, aimed.length)))};
+        /* Kept to a cap the choice carries ("controlled by different players"): the first of each it may take. */
+        const fit = firstOf(choice, [...aimed, ...rest], max);
+        return {indices: fit.slice(0, Math.max(min, Math.min(max, fit.filter((i) => aimed.includes(i)).length)))};
       }
-      /* A flashback cost's creatures to tap (Battle Screech): the weakest first -- what it would least miss in combat. */
-      if (id.startsWith("choose-cost:") && choice.cost === "tap") {
+      /* A flashback cost's creatures to tap (Battle Screech), or escalate's (Collective Effort): the weakest first -- what it
+         would least miss in combat. */
+      if (id.startsWith("choose-cost:") && (choice.cost === "tap" || choice.cost === "escalate")) {
         const mine = new Map(creaturesOf(self).map((c) => [c.cardId, c]));
         const order = options.map((o, i) => i).sort((a, b) => (mine.get(options[a].cardId)?.power ?? 0) - (mine.get(options[b].cardId)?.power ?? 0) || a - b);
         return {indices: firstOf(choice, order, min)};
       }
+      /* Creatures tapped as an additional cost, any number of them ("three times the number of creatures tapped this way",
+         Burn at the Stake): every one it is offered, for the most the spell can do. */
+      if (id.startsWith("choose-cost:") && choice.cost === "tapAny") return {indices: options.map((o) => o.index).slice(0, max)};
       /* What a cast taps for itself (rules/actions.mjs, castTapPlans): the first way, the least flexible sources tapped,
          keeping the most colors for later. */
       if (id.startsWith("choose-cost:") && choice.cost === "mana") return {indices: [0]};
@@ -241,6 +315,13 @@ export function housePilot({seat, cards = () => null} = {}) {
       if (id.startsWith("choose-cost:") && choice.cost === "pool") {
         const lifeless = options.find((o) => /\|0$/.test(o.key ?? ""));
         return {indices: [(lifeless ?? options[0]).index]};
+      }
+      /* "You may pay {X}" (Halo Forager): the most it can pay that is the mana value of an instant or sorcery card in a
+         graveyard -- what that X is for -- or nothing. */
+      if (id.startsWith("unless:") && options.some((o) => o.x !== undefined)) {
+        const values = new Set(view.players.flatMap((p) => zone(p, "Graveyard")).filter((c) => (known(c.name)?.types ?? []).some((t) => t === "Instant" || t === "Sorcery")).map((c) => manaValue(c.name)));
+        const best = options.filter((o) => o.x !== undefined && values.has(o.x)).reduce((top, o) => (!top || o.x > top.x ? o : top), null);
+        return {indices: [(best ?? options.find((o) => o.pay === false)).index]};
       }
       /* Escape's other cards (CR 702.138a): the lands first, then the cheapest -- what it is least likely to want back. */
       if (id.startsWith("choose-cost:")) {

@@ -30,7 +30,7 @@
 
 export const COLORS = Object.freeze(["W", "U", "B", "R", "G"]);
 import {eventCard} from "../state/index.mjs";
-import {summoningSick} from "../keywords/timing.mjs";
+import {sickForAbilities} from "../keywords/timing.mjs";
 import {abilitiesOf} from "./layers.mjs";
 
 /** The pool's keys: the five colors plus colorless. */
@@ -386,20 +386,22 @@ export function convokeCanPay(pool, cost, creatures) {
 
 /**
  * What the pool pays once exactly these creatures have each paid one symbol of `cost`: every way they could have been
- * assigned, and every way the pool could then pay the rest, told apart by the mana it spends. One answer is the payment;
- * none, and they cannot pay; more than one, and which mana stays in the pool is the caster's to decide -- the payment
- * question (the plan's X8b), not built, so it is refused rather than decided for them.
+ * assigned, and every way the pool could then pay the rest, told apart by the mana it spends (paymentKey), up to `limit`
+ * of them. One answer is the payment; none, and they cannot pay; more than one, and which mana stays in the pool is the
+ * caster's to decide -- the payment question (the plan's X8b), asked as it is for a cast the pool alone pays (rules/
+ * actions.mjs, costChoice): {W} and {U} in the pool, a white creature among those tapped for Appeal to Eirdu, and the
+ * {1} left is paid with the {W} or the {U}.
  *
  * @returns {Array<{mana: object, life: number}>}
  */
-export function convokePayments(pool, cost, creatures, options = {}) {
+export function convokePayments(pool, cost, creatures, options = {}, limit = PAY_CHOICES) {
   const needs = cost.symbols.map((s, i) => [s, i]).filter(([s]) => convokable(s));
   const found = new Map();
   /* Each creature pays one of the symbols left that it can, or generic. */
   const assign = (k, paid, generic) => {
-    if (found.size > 1) return;
+    if (found.size >= limit) return;
     if (k === creatures.length) {
-      for (const way of payments(pool, leftOf(cost, paid, generic), options, 2)) found.set(JSON.stringify(way.mana) + `|${way.life}`, way);
+      for (const way of payments(pool, leftOf(cost, paid, generic), options, limit)) if (found.size < limit) found.set(paymentKey(way), way);
       return;
     }
     const colors = creatures[k].colors.filter((c) => c !== "C");
@@ -422,10 +424,13 @@ function plainSources(state, player) {
   for (const id of state.zones.battlefield) {
     const object = state.objects[id];
     if (object.controller !== player || object.tapped) continue;
-    /* CR 302.6: a creature's {T} waits until it has been theirs since their turn began. */
-    if (summoningSick(state, id)) continue;
+    /* CR 302.6: a creature's {T} waits until it has been theirs since their turn began (or "as though it had haste",
+       CR 702.10c: keywords/timing.mjs). */
+    if (sickForAbilities(state, id)) continue;
+    /* Not one that taps another creature too (Jaspera Sentinel), or exiles a card from the graveyard (Rubble Rouser): which
+       creature, or which card, is the payer's to choose (rules/actions.mjs). */
     const ability = abilitiesOf(state, id).find((a) => a.kind === "mana" && a.tapSelf && !a.cost && !a.payLife && !a.sacrifice && !a.sacrificeSelf && !a.condition && !a.spendOnly
-      && (a.produces || a.anyColor === true));
+      && !a.tapCreature && !a.exileFromGraveyard && (a.produces || a.anyColor === true));
     if (ability) out.push({id, ability});
   }
   return out;
