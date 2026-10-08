@@ -97,11 +97,11 @@ export function createMatchStore(storage, matchId) {
   const read = async (key) => { const text = await storage.get(key); return text === null ? null : JSON.parse(text); };
   const write = (key, value) => storage.put(key, JSON.stringify(value));
 
-  function verified(point, where) {
+  function verified(point, where, {hash = true} = {}) {
     if (!point || point.schema !== CHECKPOINT_SCHEMA) throw new Error(`${where}: not a ${CHECKPOINT_SCHEMA}`);
     if (point.matchId !== matchId) throw new Error(`${where}: the checkpoint is for match ${point.matchId}, not ${matchId}`);
     if (!Number.isInteger(point.sequence) || point.sequence < 0) throw new Error(`${where}: the checkpoint has no journal position`);
-    if (hashState(point.state) !== point.hash) throw new Error(`${where}: the state does not match its hash, so it is not the game that was saved; refusing to resume it`);
+    if (hash && hashState(point.state) !== point.hash) throw new Error(`${where}: the state does not match its hash, so it is not the game that was saved; refusing to resume it`);
     return point;
   }
 
@@ -152,13 +152,17 @@ export function createMatchStore(storage, matchId) {
 
     /** A checkpoint from the engine's `journal.checkpoint(state, rng)`, verified, then made the latest. */
     async saveCheckpoint(point) {
-      verified(point, "saveCheckpoint");
+      verified(point, "saveCheckpoint", {hash: false});
       /* WRITTEN AS IT WILL BE READ. JSON drops a key whose value is undefined and writes NaN as null, and the hash keeps
          both apart (journal.mjs `canonical`), so such a checkpoint would be refused as it is read back: the room could not
          wake (G1, 2026-10-08: a layer-6 effect's `sublayer: undefined`, from any effect without a sublayer). Refused here
          instead, naming the field, while the game that made it is still in memory. */
       const text = JSON.stringify(point);
-      if (hashState(JSON.parse(text).state) !== point.hash) throw new Error(`saveCheckpoint: the state would not read back as the game it is (${lostIn(point.state, "state")}), so a room could not wake from it`);
+      /* One hash, of the state as it reads back; only when it differs, the live state's too, to say which it is. */
+      if (hashState(JSON.parse(text).state) !== point.hash) {
+        if (hashState(point.state) !== point.hash) throw new Error("saveCheckpoint: the state does not match its hash, so it is not the game that was saved; refusing to resume it");
+        throw new Error(`saveCheckpoint: the state would not read back as the game it is (${lostIn(point.state, "state")}), so a room could not wake from it`);
+      }
       await storage.put(`${root}/checkpoint/${pad(point.sequence)}`, text);
       await write(`${root}/checkpoint/latest`, {sequence: point.sequence});
     },

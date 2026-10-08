@@ -31,7 +31,7 @@ import {createJournal, EVENT_SCHEMA, hashState} from "../game/engine/journal.mjs
 import {beginResolution, runResolution} from "../game/engine/script/resolution.mjs";
 import {createRng} from "../game/engine/rng.mjs";
 import {memoryStorage, createMatchStore} from "../game/engine/storage.mjs";
-import {secretsFor, leaksIn, gameTerms, checkLeaks, leakMemory, shownBy, playGame, verdict, decksFromBackup} from "../tools/fuzz-live.mjs";
+import {secretsFor, leaksIn, gameTerms, checkLeaks, leakMemory, shownBy, playGame, verdict, decksFromBackup, person, LOOP_LIMIT} from "../tools/fuzz-live.mjs";
 import {tableCards} from "../cloud/game-room.mjs";
 
 let checks = 0;
@@ -151,6 +151,24 @@ const card = (name, owner, extra = {}) => ({card: name, types: ["Creature"], pow
   await save();
   eq((await checkLeaks(told, storage, "n", memory, 36)).map((l) => l.name), [], "the history's Mirkwood Nurturer, its card gone from the game, is still that card, not a Mirkwood");
   eq((await checkLeaks(told, storage, "n", leakMemory(2), 36)).map((l) => l.name), ["Mirkwood"], "and only because the check remembers the names the game has had");
+  /* And one that came and went between two of the person's questions, never in a state a check read: the journal has it. */
+  const brief = createMatchStore(storage, "b"), only = started();
+  addObject(only, card("Mirkwood", 1), "library", 1);
+  await brief.appendEvents([{schema: EVENT_SCHEMA, sequence: 1, kind: "GameEventSpellAbilityCast", matchId: "b", data: {fields: {card: {name: "Mirkwood Nurturer", faceDown: false}}}}]);
+  await brief.saveCheckpoint({...createJournal({matchId: "b", seed: "s"}).checkpoint(only, createRng("s").checkpoint()), matchId: "b"});
+  eq((await checkLeaks(told, storage, "b", leakMemory(2), 12)).map((l) => l.name), [], "a Mirkwood Nurturer the journal saw cast, though no check ever saw it, is that card too");
+}
+
+/* ---- The harness's person goes round a loop a few times a turn and stops (CR 732.2a), as a person does ---- */
+{
+  const offer = (act) => ({id: "c", kind: "priority", title: "Your priority", mode: "one", min: 1, max: 1,
+    options: [{index: 0, label: "Pass priority", act: "pass"}, {index: 1, label: "Krenko, Mob Boss", act, cardId: 7}]});
+  const answer = person("loop");
+  const taken = (turn, act) => Array.from({length: 60}, () => answer(offer(act), turn).indices[0]).filter((i) => i === 1).length;
+  eq(taken(33, "activate"), LOOP_LIMIT, `offered Krenko again and again in one turn, the person activates it ${LOOP_LIMIT} times and then passes`);
+  ok(answer.stopped > 0, "and says it stopped going round");
+  eq(taken(34, "activate"), LOOP_LIMIT, "a new turn, a new count");
+  ok(taken(34, "activate-mana") > LOOP_LIMIT, "a mana ability is never what it stops: one land is tapped once anyway");
 }
 
 /* ---- Judged: a whole game of Rob's decks ---- */

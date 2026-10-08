@@ -111,9 +111,10 @@ export function createJournal({matchId, seed}, resume = null) {
       return eventId;
     },
 
-    /** Everything written, as copies. */
-    events() {
-      return structuredClone(events);
+    /** Everything written, as copies -- or everything from `from` on: what a room saves after each decision is only
+        what is new, and copying the whole journal every time made a long game's saves grow with its length. */
+    events(from = 0) {
+      return structuredClone(from > 0 ? events.slice(from) : events);
     },
 
     /**
