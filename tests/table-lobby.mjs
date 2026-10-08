@@ -321,17 +321,35 @@ try {
   /* INVITE: link, QR, email. */
   await rob.page.click(".cm-lobby-seat[data-seat='1'] [data-action=table-invite]");
   await rob.page.locator("#cm-table-link").waitFor();
-  const link = await rob.page.inputValue("#cm-table-link");
+  let link = await rob.page.inputValue("#cm-table-link");
   ok(/^https?:\/\/[^/]+\/api\/join\/table\d+\/[A-Za-z0-9_-]{40,}$/.test(link), `the invite dialog gives the seat's link, a path Access's sign-in keeps (a fragment it drops): ${link.replace(/\/[^/]+$/, "/…")}`);
   ok(await rob.page.locator("#cm-dialog .cm-qr-code svg").count() === 1, "a QR of it, to scan across the room");
   ok((await rob.page.getAttribute("#cm-table-mail", "href")).includes(encodeURIComponent(link)), "and an email that carries it");
   await shot(rob.page, "invite-1400");
+  await rob.context.grantPermissions(["clipboard-read", "clipboard-write"], {origin: base});
+  await rob.page.click("#cm-dialog [data-action=table-copy-link]");
+  await waitText(rob.page, "#cm-notice", /Link copied/);
+  eq(await rob.page.evaluate(() => navigator.clipboard.readText()), link, "Copy link puts the seat's link on the clipboard, and says so");
   await rob.page.keyboard.press("Escape");
   await waitText(rob.page, ".cm-lobby-seat[data-seat='1'] header", /Invite sent/);
   ok(true, "the seat now says the invitation is out");
+  /* WITHDRAW: the invitation taken back; its link no longer works, and a new one is sent. */
+  await rob.page.click(".cm-lobby-seat[data-seat='1'] [data-action=table-uninvite]");
+  await rob.page.waitForFunction(() => !/Invite sent/.test(document.querySelector(".cm-lobby-seat[data-seat='1'] header")?.textContent || ""), null, {timeout: 10000});
+  ok(await rob.page.locator(".cm-lobby-seat[data-seat='1'] [data-action=table-invite]").count() === 1, "Withdraw takes the invitation back, and the seat can be invited again");
+  const withdrawn = link;
+  await rob.page.click(".cm-lobby-seat[data-seat='1'] [data-action=table-invite]");
+  await rob.page.locator("#cm-table-link").waitFor();
+  link = await rob.page.inputValue("#cm-table-link");
+  ok(link !== withdrawn && /\/api\/join\/table\d+\/[A-Za-z0-9_-]{40,}$/.test(link), "inviting again gives a new link");
+  await rob.page.keyboard.press("Escape");
+  await waitText(rob.page, ".cm-lobby-seat[data-seat='1'] header", /Invite sent/);
 
-  /* JOIN: Maya opens the link on her phone. A made-up code first. */
+  /* JOIN: Maya opens the link on her phone. The withdrawn link, and a made-up code, first. */
   const id = /\/api\/join\/(table\d+)\//.exec(link)[1];
+  await maya.page.goto(joinLocation(new URL(withdrawn.replace(/^https?:\/\/[^/]+/, base))));
+  await maya.page.locator("#cm-table-refused").waitFor({timeout: 30000});
+  ok(/no longer works/.test(await pageText(maya.page, "#cm-table-refused")), "the withdrawn link is refused: it no longer works");
   await maya.page.goto(`${base}/index.html#table/${id}/${"x".repeat(43)}`);
   await maya.page.locator("#cm-table-refused").waitFor({timeout: 30000});
   ok(/no longer works/.test(await pageText(maya.page, "#cm-table-refused")) && /Ask the host for a new link/.test(await pageText(maya.page, "#cm-table-refused")), "a made-up or spent link is refused, and says to ask the host for a new one");

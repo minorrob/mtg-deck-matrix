@@ -54,10 +54,21 @@ The countdown ends on the table's alarm, and the page hands itself to the board.
 A step where you have nothing to do passes by itself, and the history says so (*Upkeep, Draw step: nothing to do*),
 so an agent does not have to click through empty steps.
 
+**When the room says no.** An answer the rules refuse is not taken: the game is as it was, the room says why, and the
+same question is asked again. While the AI players are still taking their turns, End game and Leave are refused for a
+few seconds (*The AI players are still taking their turns*); try again when the table waits on a person.
+
 **Deciding:**
 
 - **With priority,** a card you can use now is lit (`.cm-bcard.is-bright`); click it to do its one thing.
 - **Anything else the room asks** (Keep, attackers, blockers, an order, a number) floats as `#cm-board-decision`. It has `data-action=board-option` buttons, and `data-action=board-confirm` where several are picked. Its `h3` is the question.
+- **A card with more than one way to use it** (a spell with two modes, a cost the pool pays more than one way) is
+  offered under *You can also* as `data-action=board-choose` (*Cast Zap · 2 ways*). It opens the card with one
+  `data-action=board-zoom-do` button per way (`.cm-board-choices`, *Choose one:*), each with `data-index`.
+- **A question of numbers** (combat damage among blockers, a split, an X) has one `input[data-board-amount=<n>]` per row
+  (`label.cm-board-amount`). Fill each, then `data-action=board-confirm`.
+- **Turns that went by while you waited** float as `section.cm-board-went` (`role=status`, named *Turns 3–5 went by*), a
+  few lines a turn, the History holding the rest. `data-action=board-went-close` (*OK*) puts it away.
 - **Cards** are `button.cm-bcard`. `aria-label` is the name, then its state as the card shows it (*tapped*, power/toughness such as *2/2*, *3 damage*, *1 +1/+1 counter*), then, after a colon, what it can do now: `Llanowar Elves, tapped, 1/1` or `Forest: Play Forest`. A hidden card is a `div` labeled *A hidden card*. `data-card` is the object id, which changes when the card moves (CR 400.7).
 
 **Your hand** (`section[aria-label="Your hand"]`):
@@ -96,6 +107,14 @@ so an agent does not have to click through empty steps.
 
 **Sound** starts at the first click on the board and not before. An agent that listens will hear a bed and effects;
 one that does not can ignore it.
+
+## A worked example
+
+`tests/uat/board-person.mjs` answers one seat through exactly these hooks, as the house pilot would answer it: the
+draw, Pass, an option by `data-index` (under *You can also* when it is not in the panel, through `board-choose` and
+`board-zoom-do` when the card has several ways), the amount fields, then Confirm, and it times each answer.
+`tests/uat/play-journeys.mjs` plays two four-seat tables of Rob's seven decks with it, every card the deck's own, a
+person on a desk and one on a phone held sideways; `tests/uat/real-deck-game.mjs` plays a whole game to its end.
 
 ## The record
 
