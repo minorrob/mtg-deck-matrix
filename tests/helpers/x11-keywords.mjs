@@ -26,8 +26,6 @@ export const FIXTURES = {
   Spider: creature(["Spider"], 1, 3, {keywords: ["Reach"]}),
   Relic: {types: ["Artifact"], manaCost: "{1}", colors: []},
   "Charm Ward": {types: ["Enchantment"], manaCost: "{1}{W}", colors: ["W"]},
-  "Snow Swamp": {types: ["Land"], supertypes: ["Basic", "Snow"], subtypes: ["Swamp"], abilities: [{id: "t-b", kind: "mana", tapSelf: true, produces: {B: 1}}]},
-  "Bog Grove": {types: ["Land"], subtypes: ["Swamp", "Forest"], abilities: [{id: "t-b", kind: "mana", tapSelf: true, produces: {B: 1}}]},
 };
 
 /** A scenario's position and steps played through the rules (cards/scenario.mjs): the state it ends in. */

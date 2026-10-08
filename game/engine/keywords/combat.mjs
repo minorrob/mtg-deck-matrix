@@ -24,24 +24,21 @@
  * something to make its condition true.
  *
  * WHAT IS DEFERRED AND NAMED: protection (CR 702.16) needs a quality — "protection from black" is
- * not a keyword, it is a keyword with an argument, and the card script has to express that (rules/protection.mjs).
- * LANDWALK (CR 702.14) carries its land in the word -- "Forestwalk" on the object, read below (landwalkLand) -- so one
- * given until end of turn is read as one printed. Fear is here (batch 59); intimidate, shadow and horsemanship are one card each in
+ * not a keyword, it is a keyword with an argument, and the card script has to express that;
+ * landwalk the same. Fear is here (batch 59); intimidate, shadow and horsemanship are one card each in
  * the pool and belong with the long tail. Infect (batch 78) and wither change what damage DOES rather than who may block,
  * and go with the counters family.
  */
 
-import {keywordsOf, characteristicsOf, controllerOf} from "../rules/layers.mjs";
+import {keywordsOf, characteristicsOf} from "../rules/layers.mjs";
 import {toughnessOf} from "../rules/layers.mjs";
 import {combatDamageOf, ruleChanged, cantBeBlockedBy} from "../rules/statics.mjs";
 import {protectedFrom} from "../rules/protection.mjs";
-import {matchesSelector} from "../script/filter.mjs";
 
 /** The families of §3.1, so a caller can ask what this module covers. */
 export const KEYWORD_FAMILIES = Object.freeze({
   /** Who may block, and whom. */
-  /** Landwalk (CR 702.14): the generic term, each "[type]walk" read by landwalkLand below -- "Forestwalk" (Yavimaya Dryad). */
-  evasion: Object.freeze(["Flying", "Reach", "Menace", "Fear", "Landwalk"]),
+  evasion: Object.freeze(["Flying", "Reach", "Menace", "Fear"]),
   /** What happens when damage is dealt. */
   combat: Object.freeze(["Deathtouch", "Trample", "Lifelink", "First Strike", "Double Strike", "Vigilance", "Defender",
     /* Infect (CR 702.90, batch 78): its damage is poison counters to a player and -1/-1 counters to a creature (rules/combat.mjs,
@@ -68,46 +65,6 @@ export const KEYWORD_FAMILIES = Object.freeze({
   protective: Object.freeze(["Indestructible", "Hexproof", "Shroud", "Ward", "Umbra armor"]),
 });
 
-/* ---- LANDWALK (CR 702.14) ----
-   "[type]walk" (702.14a): each land type (CR 205.3i), which may follow "snow" ("snow swampwalk"), and the forms with a
-   supertype or card type and no land type ("nonbasic landwalk", "legendary landwalk", "snow landwalk", "artifact
-   landwalk"; 702.14c). The word is the keyword: what a permanent has -- printed, or given ("gains forestwalk") -- is read
-   off its keywords now, through the layers. Two instances of one are redundant (702.14e), and a blocker's own landwalk
-   cancels nothing (702.14d): only the attacker's is asked about. */
-export const LAND_TYPES = Object.freeze(["Cave", "Desert", "Forest", "Gate", "Island", "Lair", "Locus", "Mine", "Mountain", "Plains", "Planet",
-  "Power-Plant", "Sphere", "Swamp", "Tower", "Town", "Urza's"]);
-const LANDWALK_QUALIFIERS = Object.freeze({nonbasic: {nonSupertypes: ["Basic"]}, legendary: {supertypes: ["Legendary"]}, snow: {supertypes: ["Snow"]},
-  artifact: {types: ["Land", "Artifact"]}});
-/** What land a landwalk keyword asks the defending player to control -- a selector of permanents -- or null for a word that
-    is no landwalk. "Forestwalk" is a land with the subtype Forest; "Nonbasic landwalk", a land without the supertype Basic. */
-export function landwalkLand(word) {
-  const found = /^(?:([a-z]+) )?([a-z'-]+)walk$/i.exec(String(word ?? "").trim());
-  if (!found) return null;
-  const qualifier = found[1]?.toLowerCase(), kind = found[2].toLowerCase();
-  if (qualifier !== undefined && !LANDWALK_QUALIFIERS[qualifier]) return null;
-  const type = LAND_TYPES.find((t) => t.toLowerCase() === kind);
-  if (!type && !(kind === "land" && qualifier !== undefined)) return null;
-  return {types: ["Land"], ...(qualifier ? LANDWALK_QUALIFIERS[qualifier] : {}), ...(type ? {subtypes: [type]} : {})};
-}
-/** The keyword a script's landwalk is, from its land type (or "land") and an optional qualifier: "Forestwalk", "Snow
-    swampwalk", "Nonbasic landwalk" -- or null when they make no landwalk. */
-export function landwalkWord(land, qualifier = undefined) {
-  /* A land type as CR 205.3i spells it, or "land"; the word made is then held to landwalkLand, which refuses the rest. */
-  const type = land === "land" ? "land" : LAND_TYPES.find((t) => t === land) ?? "";
-  const word = `${qualifier ? `${String(qualifier).charAt(0).toUpperCase()}${String(qualifier).slice(1)} ${type.toLowerCase()}` : type}walk`;
-  return landwalkLand(word) ? word : null;
-}
-/* Whether a landwalk of this attacker's keeps a creature from blocking it: the defending player (CR 506.2) -- the one it
-   attacks, or whose planeswalker it attacks, and in a game of many players that one only (CR 802.2a) -- controls a land of
-   one of its kinds. Asked only as blockers are declared, of an attacking creature (rules/combat.mjs). */
-function landwalkStops(state, attackerId) {
-  const lands = keywordsOf(state, attackerId).map(landwalkLand).filter(Boolean);
-  if (!lands.length) return false;
-  const defender = state.combat?.attacks?.find((a) => a.attacker === attackerId)?.defender;
-  return lands.some((land) => state.zones.battlefield.some((id) => controllerOf(state, id) === defender
-    && matchesSelector({what: "permanent", ...land}, state, id, {controller: defender})));
-}
-
 const has = (state, id, keyword) => keywordsOf(state, id).includes(keyword);
 
 /**
@@ -123,8 +80,6 @@ export function canBlockAttacker(state, blockerId, attackerId) {
   if (cantBeBlockedBy(state, attackerId, blockerId)) return false;
   /* Protection (CR 702.16f): not blocked by a creature with the quality. */
   if (protectedFrom(state, {card: attackerId}, blockerId)) return false;
-  /* Landwalk (CR 702.14c): not while the defending player controls a land of the kind. */
-  if (landwalkStops(state, attackerId)) return false;
   /* CR 702.9b: flying can be blocked only by flying or reach (CR 702.17b). Note which way round it
      is — flying restricts who may block IT, and does not restrict what it may block. */
   if (has(state, attackerId, "Flying")

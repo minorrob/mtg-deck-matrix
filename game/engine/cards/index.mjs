@@ -30,7 +30,7 @@ import {ADDED_PHASES} from "../script/effects/permanents.mjs";
 import {isCounted} from "../script/amount.mjs";
 import {validateScript, SCRIPT_SCHEMA} from "../script/schema.mjs";
 import {isBuilt, NEEDS_A_DECISION, EFFECTS, REPEAT_EACH} from "../script/effects/index.mjs";
-import {KEYWORD_FAMILIES, landwalkWord} from "../keywords/combat.mjs";
+import {KEYWORD_FAMILIES} from "../keywords/combat.mjs";
 import {KEYWORD_FAMILIES as TIMING_FAMILIES} from "../keywords/timing.mjs";
 import {KEYWORD_FAMILIES as TYPE_FAMILIES} from "../keywords/types.mjs";
 import {KEYWORD_FAMILIES as DESIGNATION_FAMILIES} from "../keywords/designations.mjs";
@@ -674,15 +674,6 @@ export function compileScript(script) {
     }
     /* ---- KEYWORD ABILITIES OF CR 702 THAT ARE A TRIGGER, A STATIC OR A COST, EACH COMPILED ONCE, HERE (Train B, X11) ---- */
     const word = ability.kind === "keyword" ? String(ability.keyword).toLowerCase() : null;
-    /* LANDWALK (CR 702.14): "Forestwalk" -- `land` its land type, or "land" with a `qualifier` ("nonbasic", "legendary", "snow",
-       "artifact"; "snow" before a land type too) -- the keyword in that word, which keywords/combat.mjs reads as blockers are
-       declared. */
-    if (word === "landwalk") {
-      const said = landwalkWord(ability.land, ability.qualifier);
-      if (!said) problems.push(`${ability.text}: landwalk says which land: \`land\`, a land type (CR 205.3i) or "land" with a qualifier`);
-      keywords.push(said ?? "Landwalk");
-      return;
-    }
     /* FLANKING (CR 702.25a): "Whenever this creature becomes blocked by a creature without flanking, the blocking creature
        gets -1/-1 until end of turn" -- once for each such blocker (CR 509.3d), each instance separately (702.25b); the
        blocker read as blockers are declared (509.3f; rules/trigger.mjs, `blockedBy`). */
