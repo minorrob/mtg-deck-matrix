@@ -212,6 +212,21 @@ export function housePilot({seat, cards = () => null} = {}) {
         const order = options.map((o, i) => i).sort((a, b) => rank(options[b]) - rank(options[a]) || a - b);
         return {indices: firstOf(choice, order, min)};
       }
+      /* A choice held to a budget ("any number of creatures with total power 4 or less", Slaughter the Strong): the strongest
+         first while they fit, so the most power is kept. */
+      if (choice.budget) {
+        const by = choice.budget.by, order = options.map((o) => o.index).sort((a, b) => (options[b][by] ?? 0) - (options[a][by] ?? 0) || a - b);
+        const kept = [];
+        let total = 0;
+        for (const index of order) if (kept.length < max && total + (options[index][by] ?? 0) <= choice.budget.most) { kept.push(index); total += options[index][by] ?? 0; }
+        return {indices: kept};
+      }
+      /* Which permanent of a type a player keeps, chosen by this seat for each player (Tragic Arrogance): its own costliest,
+         another player's cheapest. */
+      if (id.startsWith("sacrifice-keep-type:") && options.length) {
+        const own = options[0].keeper === seat, value = (o) => manaValue(o.label);
+        return {indices: [options.reduce((best, o) => ((own ? value(o) > value(best) : value(o) < value(best)) ? o : best)).index]};
+      }
       if (id.startsWith("sacrifice:")) {
         const rank = (o) => (o.token ? -1 : manaValue(o.label));
         const order = options.map((o, i) => i).sort((a, b) => rank(options[a]) - rank(options[b]) || a - b);

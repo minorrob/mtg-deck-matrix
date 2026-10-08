@@ -582,6 +582,36 @@ const mustSacrifice = (state, player, awaiting) => offeredToSacrifice(state, pla
    player with no more than that many keeps them all and is not asked; the counters go on first, then every sacrifice at
    once (CR 101.4, 608.2c). */
 const keeping = (params) => params.keepExactly === true || params.keptCounter !== undefined || params.rememberKept === true;
+/* "EACH PLAYER CHOOSES ANY NUMBER OF CREATURES THEY CONTROL WITH TOTAL POWER 4 OR LESS, THEN SACRIFICES ALL OTHER CREATURES
+   THEY CONTROL" (Slaughter the Strong; `keepPowerAtMost`): asked of each player with any creature -- keeping fewer is theirs
+   to choose too -- in turn order from the active player (CR 101.4), their powers read as they choose (through the layers),
+   the total held to the most (`budget` on the question, for whoever answers it); then every player's rest sacrificed at once. */
+const keepsChosen = (awaiting) => awaiting.keep !== undefined || awaiting.keepPowerAtMost !== undefined;
+const powerOf = (state, id) => characteristicsOf(state, id).power ?? 0;
+/* "FOR EACH PLAYER, YOU CHOOSE FROM AMONG THE PERMANENTS THAT PLAYER CONTROLS AN ARTIFACT, A CREATURE, AN ENCHANTMENT, AND A
+   PLANESWALKER. THEN EACH PLAYER SACRIFICES ALL OTHER NONLAND PERMANENTS THEY CONTROL" (Tragic Arrogance; `keepTypes`): the
+   effect's controller makes every choice (CR 608.2d), player by player in turn order from the active player and type by
+   type in the card's order -- one permanent of that type that player controls, which must be chosen if there is one, and
+   may be the one already chosen for another type (an artifact creature). Where only one could be, it is kept without
+   asking, the rules leaving no choice. Then every player sacrifices at once the rest the selector describes (CR 608.2c). */
+const keepCandidates = (state, player, type) => state.zones.battlefield.filter((id) => controllerOf(state, id) === player && typesOf(state, id).includes(type));
+function nextKeepType(state, awaiting) {
+  const kept = structuredClone(awaiting.kept);
+  let at = awaiting.at;
+  for (; at < awaiting.steps.length; at += 1) {
+    const {player, type} = awaiting.steps[at];
+    const candidates = keepCandidates(state, player, type);
+    if (candidates.length > 1) break;
+    if (candidates.length === 1) kept[player] = [...new Set([...(kept[player] ?? []), candidates[0]])];
+  }
+  return {...awaiting, kept, at};
+}
+function sacrificeUnkept(state, awaiting) {
+  const events = [];
+  const going = awaiting.everyone.flatMap((player) => sacrificeable(state, player, awaiting.selector, awaiting.source).filter((id) => !(awaiting.kept[player] ?? []).includes(id)));
+  for (const id of going) sacrificeOne(state, id, events);
+  return events;
+}
 function finishKeeping(state, awaiting, decided, events) {
   const kept = [];
   for (const player of awaiting.everyone) {
@@ -604,6 +634,15 @@ export const sacrifice = {
        remembered for the effects after it -- nothing, until they do. */
     if (params.remember || params.rememberKept) context.remembered = [];
     const everyone = playersFor(state, params.who, context.controller).sort((a, b) => apnap(a) - apnap(b));
+    if (params.keepPowerAtMost !== undefined) asked.keepPowerAtMost = params.keepPowerAtMost;
+    /* The effect's controller chooses what each player keeps, by type (Tragic Arrogance). */
+    if (Array.isArray(params.keepTypes)) {
+      const begun = nextKeepType(state, {kind: "effect-choice", effect: "sacrifice", player: context.controller, selector: asked.selector, source: asked.source,
+        keepTypes: [...params.keepTypes], everyone, steps: everyone.flatMap((player) => params.keepTypes.map((type) => ({player, type}))), at: 0, kept: {}});
+      if (begun.at >= begun.steps.length) return {events: sacrificeUnkept(state, begun)};
+      state.awaiting = begun;
+      return true;
+    }
     const queue = everyone.filter((p) => mustSacrifice(state, p, asked));
     if (keeping(params) && params.keep !== undefined) asked.everyone = everyone;
     if (queue.length === 0) {
@@ -620,8 +659,18 @@ export const sacrifice = {
   },
 
   choice(state, awaiting) {
+    if (awaiting.keepTypes) {
+      const {player, type} = awaiting.steps[awaiting.at];
+      const source = awaiting.source !== null ? state.objects[awaiting.source]?.card : null;
+      const noun = `${["Artifact", "Enchantment"].includes(type) ? "an" : "a"} ${type.toLowerCase()}`;
+      return {id: `sacrifice-keep-type:${player}:${type}:${state.turn}`, title: `${source ? `${source}: ` : ""}choose ${noun} ${state.players[player].name} keeps`, mode: "one", min: 1, max: 1,
+        options: keepCandidates(state, player, type).map((id, index) => ({index, label: state.objects[id].card, cardId: id, keeper: player}))};
+    }
     const mine = offeredToSacrifice(state, awaiting.player, awaiting);
     const option = (id, index) => ({index, label: state.objects[id].card, cardId: id, ...(state.objects[id].token ? {token: true} : {})});
+    if (awaiting.keepPowerAtMost !== undefined) return {id: `sacrifice-keep:${awaiting.player}:${state.turn}`,
+      title: `Choose any number to keep with total power ${awaiting.keepPowerAtMost} or less; the rest are sacrificed`, mode: "many", min: 0, max: mine.length,
+      budget: {by: "power", most: awaiting.keepPowerAtMost}, options: mine.map((id, index) => ({...option(id, index), power: powerOf(state, id)}))};
     if (awaiting.keep !== undefined) {
       const keep = Math.min(awaiting.keep, mine.length);
       if (awaiting.keepExactly) return {id: `sacrifice-keep:${awaiting.player}:${state.turn}`,
@@ -642,15 +691,32 @@ export const sacrifice = {
   },
 
   apply(state, awaiting, indices) {
+    if (awaiting.keepTypes) {
+      const {player, type} = awaiting.steps[awaiting.at];
+      const kept = keepCandidates(state, player, type)[(indices ?? [])[0]];
+      if ((indices ?? []).length !== 1 || kept === undefined) throw new Error("Invalid selection");
+      const next = nextKeepType(state, {...awaiting, kept: {...awaiting.kept, [player]: [...new Set([...(awaiting.kept[player] ?? []), kept])]}, at: awaiting.at + 1});
+      if (next.at < next.steps.length) {
+        state.awaiting = next;
+        return {events: [], again: true};
+      }
+      return sacrificeUnkept(state, next);
+    }
     const events = [];
     const mine = offeredToSacrifice(state, awaiting.player, awaiting);
     const chosen = (indices ?? []).map((i) => mine[i]).filter((id) => id !== undefined);
+    /* "Total power 4 or less": the creatures kept, their powers as they are now, held to it -- refused, saying what to do. */
+    if (awaiting.keepPowerAtMost !== undefined) {
+      const total = chosen.reduce((n, id) => n + powerOf(state, id), 0);
+      if (total > awaiting.keepPowerAtMost)
+        throw new Error(`Those creatures' total power is ${total}: choose creatures with total power ${awaiting.keepPowerAtMost} or less to keep`);
+    }
     if (awaiting.keep !== undefined && chosen.length > awaiting.keep) throw new Error("Invalid selection");
     /* "A creature": exactly that many kept (Promise of Loyalty), however many a player has above it. */
     if ((awaiting.keepExactly && chosen.length !== Math.min(awaiting.keep, mine.length)) || new Set(chosen).size !== chosen.length) throw new Error("Invalid selection");
     /* Kept: the rest go. Otherwise: the ones chosen. CR 101.4: chosen now, sacrificed when the last player has chosen --
        every player's at the same time, so nothing the first gave up is gone while the next decides. */
-    const going = awaiting.keep !== undefined ? mine.filter((id) => !chosen.includes(id)) : chosen;
+    const going = keepsChosen(awaiting) ? mine.filter((id) => !chosen.includes(id)) : chosen;
     const decided = [...(awaiting.decided ?? []), {player: awaiting.player, ids: going, kept: chosen}];
     const next = (awaiting.remaining ?? []).filter((p) => mustSacrifice(state, p, awaiting));
     if (next.length > 0) {

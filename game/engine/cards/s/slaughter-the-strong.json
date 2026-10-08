@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Slaughter the Strong",
+    "oracleId": "7a3569a0-a55f-40c9-9588-92db35e26567",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each player chooses any number of creatures they control with total power 4 or less, then sacrifices all other creatures they control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each player chooses any number of creatures they control with total power 4 or less, then sacrifices all other creatures they control.",
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "who": "each",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "keepPowerAtMost": 4
+        }
+      ]
+    }
+  ]
+}

@@ -101,14 +101,18 @@ export function randomLegalPilot(rng) {
         if (cap !== undefined) taken.set(cap, (taken.get(cap) ?? 0) + 1);
       }
       for (const index of indices) pool.splice(pool.indexOf(index), 1);
+      /* And `budget` ("total power 4 or less", Slaughter the Strong): no option that would take the total past it. */
+      let spent = 0;
       for (let i = indices.length; i < take && pool.length > 0; i += 1) {
         const [index] = pool.splice(rng.int(pool.length), 1);
+        if (choice.budget && spent + (options[index]?.[choice.budget.by] ?? 0) > choice.budget.most) continue;
         const key = choice.exclusiveBy ? options[index]?.[choice.exclusiveBy] : undefined;
         if (key !== undefined && used.has(key)) continue;
         const cap = choice.capped ? options[index]?.[choice.capped.by] : undefined;
         if (cap !== undefined && choice.capped.most?.[cap] !== undefined && (taken.get(cap) ?? 0) >= choice.capped.most[cap]) continue;
         if (cap !== undefined) taken.set(cap, (taken.get(cap) ?? 0) + 1);
         if (key !== undefined) used.add(key);
+        if (choice.budget) spent += options[index]?.[choice.budget.by] ?? 0;
         indices.push(index);
       }
       return {indices};
