@@ -216,11 +216,15 @@ export function showFace(state, id, face) {
 const adventureSide = (adventurer, shown) => Object.fromEntries(FACE_KEYS.map((key) => [key, (shown ? adventurer.adventure : adventurer.main)[key]]));
 
 /** Show an adventurer card as its Adventure (`shown`), or as itself again: what is weighed as it is cast as an Adventure
-    (CR 715.3a) -- rules/actions.mjs shows it for the offer and the cast, and puts it back unless the cast moved it. */
+    (CR 715.3a) -- rules/actions.mjs shows it for the offer and the cast, and puts it back unless the cast moved it. What
+    the side shown lacks, the object lacks too, so a look leaves it as it was. */
 export function showAdventure(state, id, shown) {
   const object = state.objects[id];
   if (!object?.adventurer) return;
-  Object.assign(object, adventureSide(object.adventurer, shown));
+  for (const [key, value] of Object.entries(adventureSide(object.adventurer, shown))) {
+    if (value === undefined) delete object[key];
+    else object[key] = value;
+  }
   if (shown) object.face = "adventure"; else delete object.face;
 }
 
