@@ -831,7 +831,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 367 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 368 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1171,6 +1171,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-x11-backup` - `tests/engine-x11-backup.mjs`: backup (Guardian Scalelord), its counter, and the abilities printed below it given to another creature until end of turn
 - `engine-x11-cumulative-upkeep` - `tests/engine-x11-cumulative-upkeep.mjs`: cumulative upkeep (Mystic Remora), an age counter each upkeep and its cost for every one, or sacrificed
 - `engine-x11-prowl` - `tests/engine-x11-prowl.mjs`: prowl (Latchkey Faerie), after combat damage by a source of the caster's sharing a creature type, this turn
+- `engine-x11-escalate` - `tests/engine-x11-escalate.mjs`: escalate (Collective Effort), its cost for each mode beyond the first, the creatures to tap asked of the caster
 
 ## Design and execution record
 

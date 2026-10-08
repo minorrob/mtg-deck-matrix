@@ -48,8 +48,9 @@ export const KEYWORD_FAMILIES = Object.freeze({
       was paid, the permanent sacrificed as it enters (cards/index.mjs compiles both abilities). */
   /** Prowl (CR 702.76a), an alternative cost offered once a player was dealt combat damage this turn by a source of its
       caster's with one of its creature types (rules/combat.mjs keeps them; script/condition.mjs), the permanent marked as
-      cast for it (rules/stack.mjs). */
-  pay: Object.freeze(["Convoke", "Evoke", "Prowl"]),
+      cast for it (rules/stack.mjs). Escalate (CR 702.120a), an additional cost for each mode chosen beyond the first, paid with
+      the rest of the cost (rules/actions.mjs). */
+  pay: Object.freeze(["Convoke", "Evoke", "Prowl", "Escalate"]),
 });
 
 /**

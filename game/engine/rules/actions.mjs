@@ -281,6 +281,13 @@ function costChoice(state, awaiting) {
   }
   if (action.kind === "activate") return activationCostChoice(state, awaiting);
   const name = state.objects[action.objectId]?.card ?? "That card";
+  /* Escalate (CR 702.120a): which untapped creatures to tap, the cost's count again for each mode chosen beyond the first --
+     the creatures a flashback cost's tap may take (flashbackTappers), the same words. */
+  if (action.escalateTap > 0 && !Array.isArray(action.escalateTapped)) {
+    const tap = {count: action.escalateTap, selector: escalateAtom(state.objects[action.objectId])?.tap?.selector ?? {}};
+    return {id: `choose-cost:${action.objectId}`, title: `${name}'s escalate: tap ${tappersInWords(tap)}`, mode: "many", min: tap.count, max: tap.count, cost: "escalate",
+      options: numbered(flashbackTappers(state, player, tap).map((cardId, index) => ({index, label: state.objects[cardId].card, cardId})))};
+  }
   /* Tapped for it (castTapPlans), with more than one way: which sources. */
   if (action.autoTap === true) {
     const options = castTapPlans(state, player, action, TAP_CHOICES).map((plan, index) => ({index, label: tapWords(state, plan)}));
@@ -329,7 +336,7 @@ export function resolveCastCost(state, awaiting, indices) {
   const ids = picked.map((i) => choice.options[i].cardId);
   const way = choice.cost === "mana" ? castTapPlans(state, awaiting.player, awaiting.action, TAP_CHOICES)[picked[0]] : null;
   const action = {...structuredClone(awaiting.action), ...(choice.cost === "pool" ? {payWith: choice.options[picked[0]].key} : way ? {tapPlan: way.key} : choice.cost === "tap" ? {flashbackTap: ids}
-    : choice.cost === "convoke" ? {convokeTap: ids} : choice.cost === "sacrifice" ? {sacrificeSet: ids}
+    : choice.cost === "convoke" ? {convokeTap: ids} : choice.cost === "sacrifice" ? {sacrificeSet: ids} : choice.cost === "escalate" ? {escalateTapped: ids}
     : choice.cost === "counters" ? {counterSet: picked.map((i) => ({id: choice.options[i].cardId, counter: choice.options[i].counter}))} : {escapeExile: ids})};
   state.awaiting = null;
   state.priorityPlayer = awaiting.player;
@@ -343,6 +350,19 @@ function flashbackTapped(state, player, action, tap) {
   const fitting = flashbackTappers(state, player, tap);
   if (!Array.isArray(list) || list.length !== tap.count || new Set(list).size !== list.length || !list.every((id) => fitting.includes(id)))
     throw new Error(`Those are not ${tappersInWords(tap)} for its flashback`);
+  return [...list];
+}
+
+/* ESCALATE (CR 702.120a): the spell's escalate cost, as the card compiler put it among its additional costs -- its mana for each
+   mode beyond the first, and its creatures to tap for each (`tap`: a count and a selector). */
+const escalateAtom = (object) => (object?.spell?.additionalCost ?? []).find((a) => a?.atom === "escalate") ?? null;
+/* The creatures escalate taps, as its caster picked them: that many, none twice, each untapped, theirs and fitting -- a
+   summoning-sick one too, tapping it being no {T} of its own (CR 302.6). Refused before anything moves, saying what to do. */
+function escalateTapped(state, player, action) {
+  const tap = {count: action.escalateTap, selector: escalateAtom(state.objects[action.objectId])?.tap?.selector ?? {}};
+  const list = action.escalateTapped, fitting = flashbackTappers(state, player, tap);
+  if (!Array.isArray(list) || list.length !== tap.count || new Set(list).size !== list.length || !list.every((id) => fitting.includes(id)))
+    throw new Error(`Those are not ${tappersInWords(tap)} to tap for its escalate: pick them again`);
   return [...list];
 }
 
@@ -391,6 +411,14 @@ const MULTIKICK_MOST = 10;
 function additionalVariants(costs) {
   let variants = [{atoms: [], mana: ""}];
   for (const atom of costs ?? []) {
+    /* ESCALATE (CR 702.120a): for each mode chosen beyond the first, its cost again -- each number of extra modes its own
+       variant, its mana added that many times and its creatures to tap that many times over (`escalateTap`, picked once the
+       cast is taken: castCostChoice). The modes are then exactly that many more than one (withModes). */
+    if (atom?.atom === "escalate") {
+      variants = variants.flatMap((v) => Array.from({length: (atom.most ?? 0) + 1}, (_, k) => ({...v, mana: v.mana + (atom.mana ?? "").repeat(k), escalate: k,
+        ...(atom.tap && k > 0 ? {escalateTap: {count: atom.tap.count * k, selector: atom.tap.selector}} : {})})));
+      continue;
+    }
     if (atom?.atom === "multikicker") {
       variants = variants.flatMap((v) => Array.from({length: MULTIKICK_MOST + 1}, (_, k) => ({...v, mana: v.mana + (atom.cost ?? "").repeat(k), kicked: k})));
       continue;
@@ -430,9 +458,11 @@ function additionalChoices(state, player, spellId, costs) {
 /* MODES CHOSEN AS IT IS CAST (CR 700.2a, 601.2b): one offer per choice of modes -- as many as it says, or up to more
    when its condition holds now ("if you control a commander as you cast this spell, you may choose both instead") --
    and per way to choose the chosen modes' targets (601.2c), in the order of the modes. A mode is chosen once (700.2d). */
-function withModes(state, base, modal, context) {
-  const least = Math.max(1, modal.choose ?? 1);
-  const most = Math.min(modal.modes.length, modal.more && conditionHolds(state, modal.more.condition, context) ? modal.more.choose : modal.upTo ?? least);
+/* `exactly`: so many modes and no other number (escalate's variant, additionalVariants; the compiler holds it to what the spell
+   allows, cards/index.mjs). */
+function withModes(state, base, modal, context, exactly = null) {
+  const least = exactly ?? Math.max(1, modal.choose ?? 1);
+  const most = exactly ?? Math.min(modal.modes.length, modal.more && conditionHolds(state, modal.more.condition, context) ? modal.more.choose : modal.upTo ?? least);
   const picks = [];
   const pick = (from, chosen) => {
     if (chosen.length >= least) picks.push(chosen);
@@ -1008,6 +1038,8 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
   for (const way of [null, ...alternatives]) {
   if (way && way.life > state.players[player].life) continue;
   for (const variant of additionalVariants([...(object.spell?.additionalCost ?? []), ...(way?.extra ?? [])])) {
+  /* Escalate's creatures to tap (CR 702.120a): that many there to tap now, or not that many modes. */
+  if (variant.escalateTap && flashbackTappers(state, player, variant.escalateTap).length < variant.escalateTap.count) continue;
   for (const freely of way ? [false] : free ? (free.limited ? [false, true] : [true]) : [false]) {
   const {cost, x} = castCost(state, player, id, tax, freely, lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : null, variant.mana);
   /* {X} (CR 107.3, 601.2b): one offer per value the pool can pay, from nothing up; a spell without X, one. */
@@ -1018,7 +1050,9 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
     /* Not from the pool, but by tapping for it (castTapPlans): one offer, its sources tapped as it is cast -- with more
        than one way to tap, the caster is asked which once it is taken (castCostChoice). */
     let autoTap = false;
-    if (!payment && X === null && !freely && !back && !fled && !way && ["hand", "command"].includes(from) && poolSize(pool) === 0) {
+    /* Not with creatures to tap for escalate: one tapped for mana as the cast taps its sources could not then be tapped for it
+       (their mana is paid from the pool first). */
+    if (!payment && X === null && !freely && !back && !fled && !way && !variant.escalateTap && ["hand", "command"].includes(from) && poolSize(pool) === 0) {
       const [plan] = tapPlans(tappable(), {...cost, generic: cost.generic + x}, 1);
       if (plan) {
         autoTap = true;
@@ -1031,7 +1065,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
     /* CONVOKE (CR 702.51a): the caster's creatures help pay, and the pool the rest -- one offer, beside any the pool or its
        sources pay alone, when the pool and their untapped creatures could pay it together; which creatures, picked once it
        is taken (castCostChoice). Not with {X}, without paying its mana cost, or with another way to pay. */
-    const convokes = X === null && !freely && !back && !fled && !way && hasConvoke(state, id)
+    const convokes = X === null && !freely && !back && !fled && !way && !variant.escalateTap && hasConvoke(state, id)
       && convokeCanPay(pool, {...cost, generic: cost.generic + x}, convokers(state, player));
     if (!payment && !payWays && !convokes) continue;
     const paysFor = variant.atoms.length ? additionalChoices(state, player, id, variant.atoms) : [null];
@@ -1043,6 +1077,8 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
       const base = {kind: "cast", objectId: id, label: object.card, payment: convoke || payWays ? null : payment, from, tax, ...(X !== null ? {x: X} : {}), ...(autoTap && !convoke ? {autoTap: true} : {}),
         ...(payWays && !convoke ? {payWays: true} : {}),
         ...(convoke ? {convoke: true} : {}), ...(variant.mana ? {extraMana: variant.mana} : {}), ...(variant.kicked ? {kicked: variant.kicked} : {}),
+        /* Escalated (CR 702.120a): how many modes beyond the first, and how many creatures that taps. */
+        ...(variant.escalate ? {escalate: variant.escalate} : {}), ...(variant.escalateTap ? {escalateTap: variant.escalateTap.count} : {}),
         ...(costChoice ? {costChoice, costNames: Object.values(costChoice).map((c) => state.objects[c].card)} : {}),
         ...(freely ? {free: true} : {}), ...(back ? {flashback: true} : {}), ...(fled ? {escape: fled.kind} : {}), ...(way ? {alternative: way.index} : {}),
         ...viaOf(state, via), ...(lifeCost !== null ? {lifeInstead: lifeCost} : {}), ...ridersOffer(state, riders),
@@ -1050,7 +1086,8 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
         ...(adventure ? {adventure: true} : {})};
       /* How it would be cast, for a target it has only if ("if you cast this spell during your main phase", script/bind.mjs). */
       const cast = {from, mainPhase: player === state.activePlayer && MAIN_PHASES.includes(state.phase)};
-      actions.push(...(object.spell?.modal && !way?.overload ? withModes(state, base, object.spell.modal, {controller: player, source: id}) : withTargets(state, base, way?.overload ?? object.spell, {controller: player, source: id, cast})));
+      actions.push(...(object.spell?.modal && !way?.overload ? withModes(state, base, object.spell.modal, {controller: player, source: id}, variant.escalate !== undefined ? variant.escalate + 1 : null)
+        : withTargets(state, base, way?.overload ?? object.spell, {controller: player, source: id, cast})));
     }
   }
   }
@@ -1348,6 +1385,9 @@ const sameAction = (a, b) => a.kind === b.kind
      ("or pay {3}") another than paying its other choice. */
   && (a.alternative ?? null) === (b.alternative ?? null)
   && (a.extraMana ?? null) === (b.extraMana ?? null)
+  /* And escalated for that many modes beyond the first, tapping that many creatures (CR 702.120a): another cost. Which
+     creatures is picked after the offer is taken, so they are not part of it (and are held to the cost as it is paid). */
+  && (a.escalate ?? 0) === (b.escalate ?? 0) && (a.escalateTap ?? 0) === (b.escalateTap ?? 0)
   /* And played or cast through another permanent's permission (permissionWays): another action, when they differ. */
   && (a.via ?? null) === (b.via ?? null)
   /* And paid with other mana that does something when spent (Path of Ancestry): another action. */
@@ -1505,6 +1545,11 @@ function performOffered(state, player, action, during) {
       state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
       return [];
     }
+    /* ESCALATE'S CREATURES (CR 702.120a, 601.2h): which to tap for the modes beyond the first, asked before anything is paid. */
+    if (action.kind === "cast" && action.escalateTap > 0 && !Array.isArray(action.escalateTapped)) {
+      state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
+      return [];
+    }
     /* CONVOKE (CR 702.51a): which creatures help pay, asked before anything is tapped or paid. */
     if (action.kind === "cast" && action.convoke === true && !Array.isArray(action.convokeTap)) {
       state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
@@ -1623,6 +1668,8 @@ function performOffered(state, player, action, during) {
     const exiling = fled && !during ? escapeExiled(state, player, action, fled) : [];
     /* A flashback cost's creatures, as its caster picked them. */
     const tapping = back?.tap && !during ? flashbackTapped(state, player, action, back.tap) : [];
+    /* And escalate's, as its caster picked them (CR 702.120a). */
+    const escalating = action.escalateTap > 0 && !during ? escalateTapped(state, player, action) : [];
     /* Tapped for it (castTapPlans): the way picked, or the one there is -- each source's mana ability activated, as its
        caster would (CR 601.2g), before the cost is paid from the pool. */
     let tappedFor = null;
@@ -1695,7 +1742,8 @@ function performOffered(state, player, action, during) {
        phase (Unbreakable Formation). A copy is not cast (CR 707.10) and has none. */
     entry.cast = {from: castFrom, mainPhase: player === state.activePlayer && MAIN_PHASES.includes(state.phase),
       /* "If this spell's additional cost was paid" (Cinder Strike): an optional one, paid -- its mana too. */
-      ...(extraPaid.length || action.extraMana ? {additionalPaid: true} : {}),
+      /* Escalate's cost too, paid for a mode beyond the first (CR 702.120a: an additional cost). */
+      ...(extraPaid.length || action.extraMana || action.escalate > 0 ? {additionalPaid: true} : {}),
       /* The creatures tapped to convoke it (CR 702.51c: they "convoked" it): "each creature that convoked this spell
          connives" (Lethal Scheme; script/bind.mjs, "convoked"). */
       ...((convoke?.ids ?? []).length ? {convoked: [...convoke.ids]} : {})};
@@ -1759,7 +1807,7 @@ function performOffered(state, player, action, during) {
     /* Escape's other cards, exiled as the rest of the cost is paid (CR 601.2h). */
     for (const id of exiling) if (state.objects[id]) moveOne(state, id, "exile", events, {owner: state.objects[id].owner});
     /* And a flashback cost's creatures, tapped; and a convoke's (CR 702.51c: they convoked it), for no mana. */
-    for (const id of [...tapping, ...(convoke?.ids ?? [])]) {
+    for (const id of [...tapping, ...escalating, ...(convoke?.ids ?? [])]) {
       state.objects[id].tapped = true;
       events.push(event("GameEventCardTapped", state, {card: cardRef(state, id), tapped: true}));
     }

@@ -282,8 +282,9 @@ export function housePilot({seat, cards = () => null} = {}) {
         const fit = firstOf(choice, [...aimed, ...rest], max);
         return {indices: fit.slice(0, Math.max(min, Math.min(max, fit.filter((i) => aimed.includes(i)).length)))};
       }
-      /* A flashback cost's creatures to tap (Battle Screech): the weakest first -- what it would least miss in combat. */
-      if (id.startsWith("choose-cost:") && choice.cost === "tap") {
+      /* A flashback cost's creatures to tap (Battle Screech), or escalate's (Collective Effort): the weakest first -- what it
+         would least miss in combat. */
+      if (id.startsWith("choose-cost:") && (choice.cost === "tap" || choice.cost === "escalate")) {
         const mine = new Map(creaturesOf(self).map((c) => [c.cardId, c]));
         const order = options.map((o, i) => i).sort((a, b) => (mine.get(options[a].cardId)?.power ?? 0) - (mine.get(options[b].cardId)?.power ?? 0) || a - b);
         return {indices: firstOf(choice, order, min)};

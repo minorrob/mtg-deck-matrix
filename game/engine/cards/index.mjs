@@ -486,6 +486,8 @@ export function compileScript(script) {
   const keywords = [];
   let spell = null;
   let multikicker = null;
+  /* Escalate's cost (CR 702.120a), put on the spell once its modes are known (below). */
+  let escalate = null;
 
   /* "ENCHANT CREATURE" (CR 702.5, 303.4): an Aura spell targets what it will enchant, and the permanent may be attached
      only to what the same words describe. One keyword ability, `target` its selector; `hostile` when the Aura is a
@@ -760,6 +762,21 @@ export function compileScript(script) {
       if (!cost.length || !cost.every((atom) => atom?.atom === "mana")) problems.push(`${ability.text}: a prowl cost of mana`);
       abilities.push({id, kind: "static", rule: "alternative-cost", prowl: true, condition: {prowl: true}, text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
       keywords.push("Prowl");
+      return;
+    }
+    /* ESCALATE (CR 702.120a): "for each mode you choose beyond the first as you cast this spell, you pay an additional [cost]"
+       -- mana, "tap an untapped creature you control" (Collective Effort), or both: kept for the spell, among its additional
+       costs (below; rules/actions.mjs, additionalVariants). */
+    if (word === "escalate") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      const mana = cost.filter((a) => a?.atom === "mana"), taps = cost.filter((a) => a?.atom === "tapCreature");
+      let parsed = null;
+      try { parsed = mana.length === 1 ? parseManaCost(mana[0].cost ?? "") : null; } catch { /* refused below */ }
+      if (!cost.length || mana.length + taps.length !== cost.length || mana.length > 1 || taps.length > 1 || (mana.length === 1 && (!parsed || !parsed.symbols.length || parsed.variable > 0))
+        || taps.some((t) => !t.selector || typeof t.selector !== "object" || !(Number.isInteger(t.count ?? 1) && (t.count ?? 1) >= 1)))
+        problems.push(`${ability.text}: an escalate cost of mana, untapped creatures to tap, or both, once each`);
+      escalate = {mana: mana[0]?.cost ?? "", ...(taps.length ? {tap: {count: taps[0].count ?? 1, selector: structuredClone(taps[0].selector ?? {})}} : {})};
+      keywords.push("Escalate");
       return;
     }
     /* FLASHBACK (CR 702.34a): the keyword with its cost, a list of atoms -- a mana cost, and "pay 3 life" -- kept as a
@@ -1093,6 +1110,11 @@ export function compileScript(script) {
   if (enchant && spell) problems.push("an Aura's spell is its Enchant target, and it has no other");
   /* The Aura as a spell: its one target, nothing done as it resolves -- it enters attached (stack.mjs). */
   if (enchant) spell = {id: "enchant", text: enchant.text, targets: [enchant.target], effects: [], ...(enchant.hostile ? {hostile: true} : {})};
+  /* Escalate's (CR 702.120a), on a spell whose modes are chosen as it is cast, "choose one or more": its cost once for each mode
+     beyond the first, as many as the spell allows (rules/actions.mjs, additionalVariants and withModes). */
+  const oneOrMore = Boolean(spell?.modal) && (spell.modal.choose ?? 1) === 1 && (spell.modal.upTo ?? 1) > 1;
+  if (escalate !== null && !oneOrMore) problems.push("Escalate is on a spell whose modes are chosen as it is cast, one or more of them");
+  if (escalate !== null && oneOrMore) spell = {...spell, additionalCost: [...(spell.additionalCost ?? []), {atom: "escalate", ...escalate, most: Math.min(spell.modal.upTo, spell.modal.modes.length) - 1}]};
   /* Multikicker's additional cost, on the spell -- a permanent's too, whose spell does nothing else (CR 608.3). */
   if (multikicker !== null) spell = {...(spell ?? {id: "multikicker", text: "Multikicker", targets: [], effects: []}), additionalCost: [...(spell?.additionalCost ?? []), {atom: "multikicker", cost: multikicker}]};
 
