@@ -718,6 +718,10 @@ graveyard counted per graveyard, cards only, from none each turn (Primary Resear
 control while it remains, control changes ending in timestamp order; a player leaving the game (CR 800.4a), each kind of
 control change they had given back, what they still control exiled, what would return to them exiled (800.4c); Legion
 Warboss's token required to attack this combat, mentor's lesser power as it resolves; four players, and the credits.
+`engine-x11-leave` holds a player leaving the game (CR 800.4a): everything they own leaving every zone, the stack and
+phasing, with nothing said of a hidden card; their spells leaving and abilities ceasing, a resolution of theirs cut short
+and priority passed on; what they still control exiled; a permanent phased out under them phasing in after their turn
+would have begun (702.26n); their delayed trigger never put on the stack, their "until this leaves" exile returning.
 `engine-x11-memory` holds the pieces the memory axis's last ten cards needed, at their edges and at four seats: discarding
 "up to" two (Fable of the Mirror-Breaker); all of a kind of counter removed, counted, and a color asked for each mana
 (Coalition Relic); "put into exile from your library and/or your graveyard" (Laelia); a reduction for spells cast from
@@ -866,7 +870,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 369 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 370 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1200,6 +1204,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-enter-transformed` - `tests/engine-enter-transformed.mjs`
 - `engine-power-comparison` - `tests/engine-power-comparison.mjs`
 - `engine-x11-permissions` - `tests/engine-x11-permissions.mjs`
+- `engine-x11-leave` - `tests/engine-x11-leave.mjs`
 - `engine-x11-memory` - `tests/engine-x11-memory.mjs`
 - `engine-x11-counts-triggers` - `tests/engine-x11-counts-triggers.mjs`
 - `engine-x11-turns-counters` - `tests/engine-x11-turns-counters.mjs`
