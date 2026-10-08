@@ -47,6 +47,21 @@ id, class, attribute and file the note names to the page and the repository, and
 uses it. It found four the note named and no test pressed: Copy link and Withdraw now in `table-lobby` (71 checks:
 the clipboard holds the link; a withdrawn link no longer works), the phone's hand and Concede in `play-journeys`.
 Breaks: 3 of 3 in `play-journeys`, 7 of 7 in `playtest-harness`.
+#681 merged on main 53985e7a on green Actions.
+
+**Every caption on a board read whole (PR #682, 2026-10-08).** `play-journeys` now reads every caption on every board
+in every view at every size (a zone's, a group's heading, a pile's count) against the cards of its zone and the life
+counter, a circle at the table's true center. In Table view, at every size, it found five covered: the top-left
+board's graveyard count, the top-right board's "Lands · 3" and your own first group heading under the counter (whose
+inner corners it overlaps, as item 9 places it), "Lands · 2" under an untapped land (a mat with art gives the Lands row
+the piles' height, `1.4 × card + 1.3em + 2px`, and the zone's own padding pushed a 1.4-card land 8 px over its
+caption), and, at 1280x720, "Battlefield" under a second row of creatures. Fixed in `crankmagic.css`: at the table, a land
+starts at the Lands frame and its caption keeps to a tight line; the three captions at the counter moved clear of it (`--pie`
+now the table's, so the boards read it; the heading's rule carries `#matrix-v2`, since `#matrix-v2 :is(h1,h2,h3,p)` sets
+every margin); and at the table, once a board holds a group, the group's heading names what is there and
+"Battlefield" is kept for screen readers. The counter stays where it is. `play-journeys` 82 checks; the whole local run
+green (425 suites, 24.5 minutes); 5 of 5 breaks caught. Screenshots of both tables at every size and on the phone, with
+the fix before and after, published for Rob.
 
 ## Cloud production Play preparation, October 7, 2026
 
