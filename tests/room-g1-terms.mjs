@@ -137,6 +137,21 @@ const card = (name, owner, extra = {}) => ({card: name, types: ["Creature"], pow
   eq((await checkLeaks(told, storage, "m", leakMemory(1), 9)).map((l) => l.name), ["Maya's Secret"],
     "a history line naming a card the journal once showed is no leak, though another copy is in a library now; one naming a card never shown is");
 }
+{
+  /* A longer name is still known after its card has left the game (CR 800.4a): Rob's Mirkwood Nurturer, gone with him. */
+  const s = started(), storage = memoryStorage(), store = createMatchStore(storage, "n");
+  const nurturer = addObject(s, card("Mirkwood Nurturer", 0), "battlefield");
+  addObject(s, card("Mirkwood", 1), "library", 1);
+  const save = () => store.saveCheckpoint({...createJournal({matchId: "n", seed: "s"}).checkpoint(s, createRng("s").checkpoint()), matchId: "n"});
+  const told = {seats: [{seatId: "s1"}], view: () => ({history: [{text: "Rob cast Mirkwood Nurturer."}]})};
+  await save();
+  const memory = leakMemory(2);
+  await checkLeaks(told, storage, "n", memory, 30);
+  delete s.objects[nurturer]; s.zones.battlefield = s.zones.battlefield.filter((id) => id !== nurturer);
+  await save();
+  eq((await checkLeaks(told, storage, "n", memory, 36)).map((l) => l.name), [], "the history's Mirkwood Nurturer, its card gone from the game, is still that card, not a Mirkwood");
+  eq((await checkLeaks(told, storage, "n", leakMemory(2), 36)).map((l) => l.name), ["Mirkwood"], "and only because the check remembers the names the game has had");
+}
 
 /* ---- Judged: a whole game of Rob's decks ---- */
 {

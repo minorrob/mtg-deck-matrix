@@ -207,7 +207,7 @@ export function shownBy(event) {
 }
 
 /** A game's leak-check memory: per seat, the names no longer secret from it; and how far into the journal it has read. */
-export const leakMemory = (seats) => ({seen: Array.from({length: seats}, () => new Set()), read: 0});
+export const leakMemory = (seats) => ({seen: Array.from({length: seats}, () => new Set()), read: 0, names: new Set()});
 
 /** Every seat's view read for leaks (`leaksIn` of `secretsFor`), the engine's state and journal taken from the room's own
     storage. */
@@ -217,10 +217,13 @@ export async function checkLeaks(room, storage, matchId, memory, turn) {
   for (const key of keys.slice(memory.read)) {
     const name = shownBy(JSON.parse(await storage.get(key)));
     if (name) for (const seen of memory.seen) seen.add(name);
+    if (name) memory.names.add(name);
   }
   memory.read = keys.length;
   const found = [];
-  const terms = gameTerms(point.state), names = new Set(Object.values(point.state.objects).map(nameOf).filter(Boolean));
+  /* Every card name the game has had: a history line names a card that has since left it (CR 800.4a) as well as one in it. */
+  for (const o of Object.values(point.state.objects)) if (nameOf(o)) memory.names.add(nameOf(o));
+  const terms = gameTerms(point.state), names = memory.names;
   room.seats.forEach((s, seat) => {
     for (const leak of leaksIn(room.view(s.seatId), secretsFor(point.state, seat, memory.seen[seat]), terms, names)) found.push({turn, seatId: s.seatId, ...leak});
   });
