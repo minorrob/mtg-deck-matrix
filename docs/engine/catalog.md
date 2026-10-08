@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 47 | 0 | 11 | 136 |
+| Keyword abilities (CR 702) | 194 | 48 | 0 | 10 | 136 |
 | Keyword actions (CR 701) | 70 | 22 | 3 | 1 | 44 |
 | Effects | 192 | 68 | 1 | 4 | 119 |
 | Triggers | 138 | 20 | 4 | 2 | 112 |
@@ -166,7 +166,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.180 | Harmonize | — | missing | 1 | 12 | 1 | 0 |
 | 702.156 | Ravenous | — | missing | 1 | 12 | 1 | 1 |
 | 702.137 | Spectacle | — | missing | 1 | 11 | 1 | 0 |
-| 702.76 | Prowl | — | named | 1 | 10 | 1 | 0 |
+| 702.76 | Prowl | Prowl | built | 1 | 10 | 0 | 0 |
 | 702.150 | Compleated | — | missing | 1 | 7 | 1 | 1 |
 | 702.183 | Tiered | — | missing | 1 | 7 | 1 | 1 |
 | 702.176 | Impending | — | named | 1 | 6 | 1 | 1 |

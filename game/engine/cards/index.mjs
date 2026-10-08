@@ -751,6 +751,17 @@ export function compileScript(script) {
       keywords.push("Cumulative upkeep");
       return;
     }
+    /* PROWL [COST] (CR 702.76a): "You may pay [cost] rather than pay this spell's mana cost if a player was dealt combat damage
+       this turn by a source that, at the time it dealt that damage, was under your control and had any of this spell's
+       creature types" -- an alternative cost (CR 118.9; rules/actions.mjs offers it), its condition `prowl` (script/
+       condition.mjs), the permanent it becomes marked as cast for it, for "if its prowl cost was paid" (`prowled`). */
+    if (word === "prowl") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      if (!cost.length || !cost.every((atom) => atom?.atom === "mana")) problems.push(`${ability.text}: a prowl cost of mana`);
+      abilities.push({id, kind: "static", rule: "alternative-cost", prowl: true, condition: {prowl: true}, text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
+      keywords.push("Prowl");
+      return;
+    }
     /* FLASHBACK (CR 702.34a): the keyword with its cost, a list of atoms -- a mana cost, and "pay 3 life" -- kept as a
        static ability so the card carries it into its graveyard (rules/actions.mjs offers the cast there). Only on an
        instant or sorcery: "if the resulting spell is an instant or sorcery spell". */

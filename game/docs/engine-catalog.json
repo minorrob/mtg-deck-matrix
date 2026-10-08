@@ -16,9 +16,9 @@
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 47,
+    "built": 48,
     "partial": 0,
-    "named": 11,
+    "named": 10,
     "missing": 136
    },
    "entries": [
@@ -1346,12 +1346,12 @@
      "kind": "keyword ability",
      "rule": "702.76",
      "name": "Prowl",
-     "engine": null,
-     "status": "named",
+     "engine": "Prowl",
+     "status": "built",
      "forge": "Prowl",
      "top": 1,
      "all": 10,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {

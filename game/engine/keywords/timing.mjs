@@ -46,7 +46,10 @@ export const KEYWORD_FAMILIES = Object.freeze({
       offered beside the cast the pool pays, the creatures picked once it is taken (rules/actions.mjs, rules/mana.mjs).
       Evoke (CR 702.74a), its evoke cost rather than its mana cost -- an alternative cost (rules/actions.mjs) -- and, if it
       was paid, the permanent sacrificed as it enters (cards/index.mjs compiles both abilities). */
-  pay: Object.freeze(["Convoke", "Evoke"]),
+  /** Prowl (CR 702.76a), an alternative cost offered once a player was dealt combat damage this turn by a source of its
+      caster's with one of its creature types (rules/combat.mjs keeps them; script/condition.mjs), the permanent marked as
+      cast for it (rules/stack.mjs). */
+  pay: Object.freeze(["Convoke", "Evoke", "Prowl"]),
 });
 
 /**

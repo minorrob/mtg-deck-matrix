@@ -372,7 +372,9 @@ export function alternativeCosts(state, player, id) {
       /* Impending (CR 702.176a): how many time counters it enters with. */
       ...(Number.isInteger(ability.impending) ? {impending: ability.impending} : {}),
       /* Overload (CR 702.96b): what the spell does cast this way, "each" in place of "target". */
-      ...(ability.overload ? {overload: ability.overload} : {})}];
+      ...(ability.overload ? {overload: ability.overload} : {}),
+      /* Prowl (CR 702.76a): the permanent it becomes was cast for it (rules/stack.mjs). */
+      ...(ability.prowl === true ? {prowl: true} : {})}];
   });
 }
 
@@ -1711,6 +1713,8 @@ function performOffered(state, player, action, during) {
     if (way?.impending) entry.impending = way.impending;
     /* Overloaded (CR 702.96b): the spell's effects as they then are, carried on the stack. */
     if (way?.overload) entry.overload = structuredClone(way.overload);
+    /* Cast for its prowl cost (CR 702.76a): "if its prowl cost was paid" asks the permanent it becomes (rules/stack.mjs). */
+    if (way?.prowl) entry.prowled = true;
     /* "And that spell can't be countered" (Cavern of Souls): paid with mana that said so. */
     if (paid.uncounterable) entry.uncounterable = true;
     /* "When that mana is spent to cast a creature spell that shares a creature type with your commander, scry 1" (Path of

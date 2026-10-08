@@ -655,6 +655,8 @@ export function advance(state) {
       if (player.enteredThisTurn) player.enteredThisTurn = [];
       /* And whether each was dealt combat damage (rules/combat.mjs). */
       if (player.combatDamagedThisTurn) player.combatDamagedThisTurn = false;
+      /* And the sources each controlled that dealt combat damage to a player, with their creature types (prowl, CR 702.76a). */
+      if (player.combatDamageSources) delete player.combatDamageSources;
     }
     next = 0;
   }
