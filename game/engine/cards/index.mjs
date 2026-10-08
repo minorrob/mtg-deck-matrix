@@ -229,6 +229,16 @@ const TRIGGERS = {
     ...(t.defender ? {defender: t.defender} : {}), ...(t.planeswalkers === true ? {planeswalkers: true} : {}), ...(t.atLeast ? {atLeast: t.atLeast} : {}),
     /* "Whenever Aurelia attacks for the first time each turn" (rules/trigger.mjs). */
     ...(t.firstTime ? {firstTime: true} : {})} : null),
+  /* "Whenever this Vehicle attacks or blocks" (Smuggler's Copter; CR 509.3a): "whenever [a creature] blocks" -- once each
+     combat for each creature declared as a blocker, however many it blocks; "whenever [a creature] blocks a creature"
+     (`each: "attacker"`, 509.3b) once for each attacking creature it blocks. `who` and `filter` the blocker, read as blockers
+     are declared (509.3f). About the blocker, and -- for a creature -- the attacker blocked and its controller. A creature
+     put onto the battlefield blocking never blocked (509.4); nothing here puts one there. */
+  blocks: (t) => (ARRIVALS.includes(t.who ?? "self") && [undefined, "attacker"].includes(t.each)
+    ? {on: "GameEventBlockersDeclared", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {}), ...(t.each === "attacker" ? {eachBlocked: true} : {})} : null),
+  /* "When this creature becomes monstrous" (Protector of the Wastes; CR 701.37b): this permanent given the designation
+     (effects/attributes.mjs) -- once, since it stays monstrous until it leaves the battlefield. */
+  "becomes monstrous": (t) => ((t.who ?? "self") === "self" ? {on: "GameEventCardAttribute", attribute: "monstrous", who: "self"} : null),
   /* "Whenever this creature becomes the target of a spell" (Goldspan Dragon), "whenever a Dragon you control becomes the
      target of a spell or ability an opponent controls" (Thunderbreak Regent): `who` and `filter` what was targeted, `by`
      whose spell or ability (any, or opponent), `spell` a spell's only (CR 115.1, batch 76). About what was targeted and
@@ -451,6 +461,12 @@ function compileGrant(list, text, problems) {
    compiler's own copies of the effects (withDelayedTriggers copies each), never the script's. */
 function compileGivenIn(effects, text, problems) {
   for (const effect of effectsIn(effects)) {
+    /* "A token that's a copy of that creature, except ... it has 'When this token leaves the battlefield, ...'" (Hofri
+       Ghostforge; CR 707.9a): what a copy has besides the original's, compiled the same way, in place. */
+    if (effect.effect === "copyPermanent" && effect.except?.addAbilities !== undefined) {
+      const given = compileGrant(effect.except.addAbilities, text, problems);
+      if (given) effect.except = {...effect.except, addAbilities: given.abilities, ...(given.keywords.length ? {addKeywords: [...(effect.except.addKeywords ?? []), ...given.keywords]} : {})};
+    }
     if (effect.abilities === undefined) continue;
     if (effect.effect !== "pump") problems.push(`${text}: ${effect.effect} gives no abilities; a pump does`);
     const given = compileGrant(effect.abilities, text, problems);
@@ -551,6 +567,18 @@ export function compileScript(script) {
       abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.dies({who: "self"}),
         effects: [{effect: "createToken", count: ability.amount ?? 1, token: {name: "Spirit", types: ["Creature"], subtypes: ["Spirit"], colors: ["W", "B"], power: 1, toughness: 1, keywords: ["Flying"]}}]});
       keywords.push("Afterlife");
+      return;
+    }
+    /* HIDEAWAY N (CR 702.75a; Watcher for Tomorrow): the keyword IS a triggered ability -- "When this permanent enters,
+       look at the top N cards of your library. Exile one of them face down and put the rest on the bottom of your library
+       in a random order" -- the card exiled face down, seen by the player who controls this permanent (406.3; projection.mjs),
+       and linked to the ability that names "the exiled card" (CR 607.2a; effects/asking.mjs, dig's `link`). Not the old
+       "Hideaway" with no number (702.75b): its Oracle text says "Hideaway 4" now, and "enters tapped" on a line of its own. */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "hideaway") {
+      if (!(Number.isInteger(ability.amount) && ability.amount >= 1)) problems.push(`${ability.text}: hideaway needs its number, 1 or more`);
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.enters({who: "self"}),
+        effects: [{effect: "dig", count: ability.amount ?? 1, take: 1, to: "exile", faceDown: true, link: true, rest: "bottom", random: true}]});
+      keywords.push("Hideaway");
       return;
     }
     /* PROWESS (CR 702.108a, batch 77): "Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn"
@@ -946,6 +974,14 @@ export function compileScript(script) {
 
   /* What a static or an effect gives (compileGrant): compiled here, in place of the script's words. */
   for (const [index, ability] of abilities.entries()) {
+    /* "This creature has all activated abilities of that card" (Conspicuous Snoop): the top card's, in layer 6 (CR 613.1f),
+       what that card must be a list of subtypes (rules/layers.mjs, topCardGrant). */
+    if (ability.kind === "static" && ability.apply?.topCardAbilities !== undefined) {
+      if (ability.layer !== 6) problems.push(`${ability.text}: abilities are given in layer 6 (CR 613.1f)`);
+      const wanted = ability.apply.topCardAbilities;
+      if (!wanted || typeof wanted !== "object" || Object.keys(wanted).some((k) => k !== "subtypes") || !Array.isArray(wanted.subtypes))
+        problems.push(`${ability.text}: what the top card must be is {subtypes: [...]}`);
+    }
     if (ability.kind === "static" && ability.apply?.addAbilities !== undefined) {
       if (ability.layer !== 6) problems.push(`${ability.text}: abilities are given in layer 6 (CR 613.1f)`);
       const given = compileGrant(ability.apply.addAbilities, ability.text, problems);
@@ -1023,6 +1059,22 @@ export function compileScript(script) {
     /* What is cast from exile after it is a permanent spell (715.3d): an adventurer card is a permanent card. */
     if (types.some((t) => t === "Instant" || t === "Sorcery")) problems.push("an adventurer card is a permanent card; its Adventure is the instant or sorcery");
     if (adventure.definition) definition.adventurer = {main: faceOfDefinition(definition, names[0]), adventure: faceOfDefinition(adventure.definition, names[1])};
+  }
+  /* A PREPARATION CARD (CR 722): "Card // Prepare spell", the prepare spell -- the inset frame's alternative characteristics
+     (722.2) -- compiled as a card of its own, the card's oracle id and color identity both halves' (CR 903.4), and kept with
+     the card (`preparation`): never cast as itself (722.3), the card having only its own characteristics in every zone
+     (722.4). They are what the copy it makes in exile as it becomes prepared is (722.3c; script/effects/attributes.mjs).
+     Built for a permanent card whose prepare spell is an instant or a sorcery. */
+  if (script.prepare !== undefined) {
+    const names = String(identity.name).split(" // ");
+    const prepared = compileScript({schema: script.schema, identity: {...script.prepare.identity, oracleId: identity.oracleId, colorIdentity: identity.colorIdentity ?? []},
+      oracleText: script.prepare.oracleText, source: script.source, abilities: script.prepare.abilities});
+    if (names.length !== 2 || script.prepare.identity?.name !== names[1]) problems.push("a preparation card is named \"Card // Prepare spell\", and its prepare spell is the second name");
+    for (const problem of prepared.problems) problems.push(`prepare spell: ${problem}`);
+    if (!(script.prepare.identity?.types ?? []).some((t) => t === "Instant" || t === "Sorcery")) problems.push("a prepare spell that is a permanent spell is not built");
+    if (types.some((t) => t === "Instant" || t === "Sorcery")) problems.push("a preparation card is a permanent card: only a permanent becomes prepared (CR 722.3a)");
+    /* `of`: the card's own name, the only one it has in every zone (CR 722.4) -- what its object is called (state/index.mjs). */
+    if (prepared.definition) definition.preparation = {...faceOfDefinition(prepared.definition, names[1]), of: names[0]};
   }
   return {definition: problems.length ? null : definition, problems: [...new Set(problems)]};
 }

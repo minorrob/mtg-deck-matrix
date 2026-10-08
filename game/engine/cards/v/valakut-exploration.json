@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Valakut Exploration",
+    "oracleId": "d6861319-ae16-4e6c-af87-a264f667d694",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Landfall — Whenever a land you control enters, exile the top card of your library. You may play that card for as long as it remains exiled.\nAt the beginning of your end step, if there are cards exiled with this enchantment, put them into their owner's graveyard, then this enchantment deals that much damage to each opponent.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Landfall — Whenever a land you control enters, exile the top card of your library. You may play that card for as long as it remains exiled.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "fromTop": 1,
+          "to": "exile",
+          "remember": true,
+          "link": true
+        },
+        {
+          "effect": "mayPlay",
+          "targets": "remembered",
+          "until": "ever"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, if there are cards exiled with this enchantment, put them into their owner's graveyard, then this enchantment deals that much damage to each opponent.",
+      "trigger": {
+        "on": "end step"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "linked": true,
+          "to": "graveyard",
+          "remember": true
+        },
+        {
+          "effect": "dealDamage",
+          "amount": {
+            "rememberedCount": true
+          },
+          "who": "opponent"
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "count": {
+              "what": "card",
+              "zone": "exile",
+              "exiledWith": "self"
+            }
+          },
+          "atLeast": 1
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Betor, Ancestor's Voice",
+    "oracleId": "990b5e12-6e04-4832-9d64-87278f12cbda",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit",
+      "Dragon"
+    ],
+    "manaCost": "{2}{W}{B}{G}",
+    "colors": [
+      "B",
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "G",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 5
+  },
+  "oracleText": "Flying, lifelink\nAt the beginning of your end step, put a number of +1/+1 counters on up to one other target creature you control equal to the amount of life you gained this turn. Return up to one target creature card with mana value less than or equal to the amount of life you lost this turn from your graveyard to the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "lifelink",
+      "keyword": "lifelink"
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, put a number of +1/+1 counters on up to one other target creature you control equal to the amount of life you gained this turn. Return up to one target creature card with mana value less than or equal to the amount of life you lost this turn from your graveyard to the battlefield.",
+      "trigger": {
+        "on": "end step"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "+1/+1",
+          "count": {
+            "lifeGainedThisTurn": "you"
+          }
+        },
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 1
+          },
+          "to": "battlefield"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "another": true,
+          "count": {
+            "max": 1
+          }
+        },
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "types": [
+            "Creature"
+          ],
+          "owner": "you",
+          "manaValue": {
+            "max": {
+              "lifeLostThisTurn": "you"
+            }
+          },
+          "count": {
+            "max": 1
+          }
+        }
+      ]
+    }
+  ]
+}

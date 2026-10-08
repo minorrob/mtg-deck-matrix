@@ -140,7 +140,7 @@ const at = (seat, zone, ...names) => ({seat, zone, cards: names});
 {
   /* Before anything is chosen, "$chosen" names no type at all. */
   eq([withChosen({subtypes: ["$chosen"]}).subtypes[0], chosenFor({subtypes: ["$chosen"]}, {chosen: "Elf"}).subtypes[0]], [NONE_CHOSEN, "Elf"], "none chosen: a name no card has; chosen: Elf");
-  eq(missingFor({keywords: ["ETBReplacement"]}).length, 1, "the catalog keeps ETBReplacement unbuilt: its other forms (a color, a player, a card name, a copy) are not");
+  eq(missingFor({keywords: ["ETBReplacement"]}), [], "the catalog credits entering replacements, including the supported choices made as a permanent enters");
 }
 
 console.log(`engine-chosen: ${checks} checks passed — asked as it enters, the game's creature types or the options named; each permanent its own choice, read by its layers, rules statics, triggers, costs and replacements; triggers again of it; a condition on it; none chosen matches nothing.`);

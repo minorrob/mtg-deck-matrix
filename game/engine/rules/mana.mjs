@@ -30,7 +30,7 @@
 
 export const COLORS = Object.freeze(["W", "U", "B", "R", "G"]);
 import {eventCard} from "../state/index.mjs";
-import {summoningSick} from "../keywords/timing.mjs";
+import {sickForAbilities} from "../keywords/timing.mjs";
 import {abilitiesOf} from "./layers.mjs";
 
 /** The pool's keys: the five colors plus colorless. */
@@ -422,8 +422,9 @@ function plainSources(state, player) {
   for (const id of state.zones.battlefield) {
     const object = state.objects[id];
     if (object.controller !== player || object.tapped) continue;
-    /* CR 302.6: a creature's {T} waits until it has been theirs since their turn began. */
-    if (summoningSick(state, id)) continue;
+    /* CR 302.6: a creature's {T} waits until it has been theirs since their turn began (or "as though it had haste",
+       CR 702.10c: keywords/timing.mjs). */
+    if (sickForAbilities(state, id)) continue;
     const ability = abilitiesOf(state, id).find((a) => a.kind === "mana" && a.tapSelf && !a.cost && !a.payLife && !a.sacrifice && !a.sacrificeSelf && !a.condition && !a.spendOnly
       && (a.produces || a.anyColor === true));
     if (ability) out.push({id, ability});

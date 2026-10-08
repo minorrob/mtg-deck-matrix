@@ -1,15 +1,41 @@
 # Who holds the work
 
-## RESUMED, 2026-10-08: the same session, on Rob's "Keep building"
+## RESUMED, 2026-10-08: the review-response session (Claude, a cloud container), on Rob's "Keep building"
 
 The review-response session paused on 2026-10-06 at 97% of the week's usage (Rob: pause at 90% and "write up a
-comprehensive handoff packet for another AI platform") and resumed on 2026-10-08, the week's usage read back at 1%.
-**`docs/handoff-2026-10-06.md` is still the map**: the gates, what is on `main` (2ad84eb0, PR #668), Train B's state and
-what every undefined card needs, the order to done, how to work here, and Rob's open items. Train B goes on as §3 says:
-78 of the seven decks' 477 cards were undefined at the resume, split among five workers by engine area (permissions and
-attack statics; effects, counts and triggers; memory; keywords; costs and filters), each finishing its saved patch with
-suites and breaks first, merged here in turn (PR #669). Rob's rule stands: at 90% of the week's usage, pause and hand off.
+comprehensive handoff packet for another AI platform"). Codex on Personal-HP then picked the handoff up on 2026-10-07
+(its record below): B4, B6 and B3 landed with suites and breaks (5d068d26), 53 of the seven decks' 477 cards left
+undefined. On 2026-10-08 Rob told this session "Keep building", the week's usage read back at 1%, so the baton is back
+here, on the same branch and PR #669, building on Codex's commit. **`docs/handoff-2026-10-06.md` is still the map**, with
+`docs/train-b-proof-2026-10-07.md` and `docs/production-readiness-2026-10-07.md` beside it. Train B goes on as the
+handoff's §3 says, five workers by engine area (permissions and attack statics; effects, counts and triggers; memory;
+keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of the week's usage, pause and hand off.
 
+## The previous record: the Train B continuation, October 7, 2026 (Codex)
+
+**Holder:** Codex on Personal-HP, continuing the authorized production-readiness work on
+`claude/admiring-franklin-58cxy4` from `d8774b32`, PR #669. B4, B6 and B3 are integrated:
+25 additional definitions, 22 dedicated suites and 97 caught deliberate faults. The final
+affected aggregate passed 282 suites; check-cards passed 1,681 definitions and 2,747 scenarios.
+The exact commands, fixes and limits are in `docs/train-b-proof-2026-10-07.md`.
+The standalone ten-game CPU gate also passed after removing unnecessary controller and
+attack-cap derivations; no budget was raised. Real-deck refusal-free acceptance is still open.
+
+**Next:** complete the scan/push and ready #669 for Actions; diagnose its exact head. Then
+prove real-card games with D5 Shadrix, finish D2 Chulane's three missing cards, and continue
+library/deck integrity, human-game recovery and bounded AI acceptance as recorded in
+`docs/production-readiness-2026-10-07.md`. No production gate is declared passed.
+
+**Backup and access:** the exact October 4 live-game backup was found in the MtG project's
+AI Input folder and validated read-only with the app's checksum and model checks. No real
+library was restored or changed. The staging service-token environment variables are absent
+here, so signed-in live staging checks remain blocked. Paid AI usage waits on a concrete cap.
+Reserved access, credential, persistent-permission, history and branch-deletion actions are
+untouched. The unrelated local settings file remains untracked.
+
+## The record before: PAUSED, 2026-10-06 ~18:30 UTC
+
+The review-response session's last record before the pause; `docs/handoff-2026-10-06.md` is its handoff.
 
 | | |
 | --- | --- |

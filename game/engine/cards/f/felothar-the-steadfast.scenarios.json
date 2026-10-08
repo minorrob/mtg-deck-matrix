@@ -1,0 +1,165 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Felothar the Steadfast",
+  "fixtures": {
+    "Wall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 4,
+      "keywords": [
+        "Defender"
+      ]
+    },
+    "Hulk": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{2}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Felothar, a 0/5, deals 5; a Wall with defender attacks and deals its 4",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Felothar the Steadfast",
+            "Wall"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Felothar the Steadfast",
+            "Wall"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 31
+        }
+      ]
+    },
+    {
+      "name": "The Hulk sacrificed: three cards drawn for its toughness, then one discarded for its power",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Felothar the Steadfast",
+            "Hulk",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Felothar the Steadfast",
+          "sacrifice": "Hulk"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Hulk",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Felothar the Steadfast"
+        }
+      ]
+    },
+    {
+      "name": "Another creature only: Felothar cannot sacrifice itself",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Felothar the Steadfast",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Felothar the Steadfast"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

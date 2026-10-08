@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Demand Answers",
+    "oracleId": "c11e84a1-dbda-429b-8cd6-fd0deaefc689",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As an additional cost to cast this spell, sacrifice an artifact or discard a card.\nDraw two cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "As an additional cost to cast this spell, sacrifice an artifact or discard a card.\nDraw two cards.",
+      "targets": [],
+      "additionalCost": [
+        {
+          "atom": "oneOf",
+          "options": [
+            [
+              {
+                "atom": "sacrifice",
+                "selector": {
+                  "types": [
+                    "Artifact"
+                  ]
+                }
+              }
+            ],
+            [
+              {
+                "atom": "discard"
+              }
+            ]
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

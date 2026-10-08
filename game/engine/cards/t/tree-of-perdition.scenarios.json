@@ -1,0 +1,135 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Tree of Perdition",
+  "scenarios": [
+    {
+      "name": "Maya's 40 for the Tree's 13: Maya at 13, the Tree a 0/40",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tree of Perdition"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Tree of Perdition",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 13
+        },
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Tree of Perdition",
+            "power": 0,
+            "toughness": 40
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Tree of Perdition"
+        }
+      ]
+    },
+    {
+      "name": "Only an opponent: Rob is no target, Maya and Trey are",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tree of Perdition"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Tree of Perdition"
+          },
+          "count": 2,
+          "targets": [
+            [
+              "Maya"
+            ],
+            [
+              "Trey"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cast this turn, it waits: summoning sick, no {T} ability",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tree of Perdition"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Tree of Perdition"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Tree of Perdition"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

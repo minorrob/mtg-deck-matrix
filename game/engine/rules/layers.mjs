@@ -209,6 +209,20 @@ function allEffects(state) {
   if (key !== null) memo.effects.set(key, found);
   return found;
 }
+/* "AS LONG AS THE TOP CARD OF YOUR LIBRARY IS A GOBLIN CARD, THIS CREATURE HAS ALL ACTIVATED ABILITIES OF THAT CARD"
+   (Conspicuous Snoop; CR 613.1f, layer 6): `apply.topCardAbilities`, what that card must be (its subtypes, a changeling's
+   every creature type among them, CR 702.73a) -- read from the holder's controller's library as it now is, so the
+   abilities change as the top card does. Its activated abilities, mana abilities among them (CR 605.1a), given as granted
+   abilities are; none, and the static gives nothing. */
+function topCardGrant(state, holder, ability) {
+  const top = state.zones.library?.[holder.controller]?.[0];
+  const card = top === undefined ? null : state.objects[top];
+  const wanted = ability.apply.topCardAbilities?.subtypes ?? [];
+  if (!card || !wanted.every((t) => hasSubtype(card.subtypes ?? [], everyCreatureType(card.keywords), t))) return null;
+  const {topCardAbilities: _top, ...rest} = ability.apply;
+  return {...ability, apply: {...rest, addAbilities: (card.abilities ?? []).filter((a) => a.kind === "activated" || a.kind === "mana")}};
+}
+
 function gatherEffects(state) {
   const found = [];
   for (const graveyard of state.zones.graveyard ?? []) for (const id of graveyard) {
@@ -226,9 +240,11 @@ function gatherEffects(state) {
       /* One that works from a graveyard does not work here (CR 113.6). */
       if (ability.worksFrom === "graveyard") continue;
       if (!holdsNow(state, ability.condition, {controller: holder.controller, source: id})) continue;
+      const given = ability.apply?.topCardAbilities !== undefined ? topCardGrant(state, holder, ability) : ability;
+      if (given === null) continue;
       found.push({
         /* "Creatures you control of the chosen type get +1/+1", "this creature is the chosen type": its own choice. */
-        ...chosenFor(ability, holder),
+        ...chosenFor(given, holder),
         sourceId: id,
         sourceController: holder.controller,
         /* A static ability's timestamp is its permanent's (CR 613.7d). */
@@ -468,7 +484,7 @@ const heldAbilities = (object, current) => [...(current.lostAbilities ? [] : obj
    graveyard (where one may work from, allEffects): when none does, a permanent's abilities are its own, and nothing need
    be derived to read them. */
 function abilitiesChange(state) {
-  const changes = (apply) => Boolean(apply && (apply.addAbilities || apply.removeAllAbilities));
+  const changes = (apply) => Boolean(apply && (apply.addAbilities || apply.removeAllAbilities || apply.topCardAbilities));
   if ((state.effects ?? []).some((effect) => changes(effect.apply))) return true;
   const holders = [...state.zones.battlefield, ...(state.zones.graveyard ?? []).flat()];
   return holders.some((id) => (state.objects[id].abilities ?? []).some((ability) => ability.kind === "static" && changes(ability.apply)));
@@ -537,5 +553,11 @@ export function lastKnown(state, id) {
     commander: object.commander === true,
     /* Its abilities as it last was, the ones given it included: "when this creature dies" given by Feign Death. */
     abilities: structuredClone(heldAbilities(object, current)),
+    /* Its copiable values (CR 707.2), when they were not its card's own -- a copy of something else, or face down (708.2a) --
+       for "create a token that's a copy of that creature" (Hofri Ghostforge; effects/permanents.mjs, `asItLastWas`). */
+    ...(object.uncopied || object.faceDown === true ? {copiable: Object.fromEntries(COPIED_KEYS.filter((key) => object[key] !== undefined).map((key) => [key, structuredClone(object[key])]))} : {}),
   };
 }
+/* The copiable values a permanent shows (effects/permanents.mjs, COPY_KEYS: the same list, kept here to keep the layers free
+   of the effects). */
+const COPIED_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "spell", "enchant"]);

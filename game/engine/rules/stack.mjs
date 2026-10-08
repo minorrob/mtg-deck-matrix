@@ -41,6 +41,7 @@ import {enteringModifications} from "./replacement.mjs";
 import {countersPlaced} from "./statics.mjs";
 import {beginResolution, resolutionPending} from "../script/resolution.mjs";
 import {delayedTrigger} from "../script/effects/permanents.mjs";
+import {prepare} from "../script/effects/attributes.mjs";
 import {recheckTargets, factsOf, modalScript} from "../script/bind.mjs";
 
 /* The projection contract (§12.1) names these zones with a capital, and the telemetry matches on
@@ -236,6 +237,8 @@ export function resolveTop(state, effect = null, rng = null) {
     /* How the spell was cast, for its own conditions ("if this spell was cast from a graveyard"; rules/actions.mjs). */
     ...(entry.cast ? {cast: entry.cast} : {}),
     ...(entry.sourceTransforms !== undefined ? {sourceTransforms: entry.sourceTransforms} : {}),
+    /* What its cost sacrificed, as each last existed: "the sacrificed creature's toughness" (rules/actions.mjs). */
+    ...(entry.sacrificed ? {sacrificed: entry.sacrificed} : {}),
     /* What its permanent chose as it entered: "draw a card for each creature of the chosen type". */
     ...(source !== null && state.objects[source]?.chosen !== undefined ? {chosen: state.objects[source].chosen} : {})};
   /* "Another target" asked again with its source gone (Oblivion Ring destroyed with its trigger waiting): another than the
@@ -246,7 +249,7 @@ export function resolveTop(state, effect = null, rng = null) {
   /* An intervening "if" asked again as it resolves (CR 603.4): false now, and the ability does nothing. A triggered
      ability's own condition only -- "activate only if" was asked as it was activated (CR 602.5b) and is not again. */
   if (entry.kind === "trigger" && script.condition && !conditionHolds(state, script.condition, {controller: entry.playerId, source, about: entry.about ?? undefined,
-    ...(entry.spent ? {spent: entry.spent} : {})})) return finishTop(state, entry, events, false);
+    ...(entry.spent ? {spent: entry.spent} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {})})) return finishTop(state, entry, events, false);
   /* What its effects need to know about their targets, read once, now (CR 608.2h). */
   const outcome = beginResolution(state, script.effects, {...context, targets, facts: factsOf(state, targets)}, rng);
   events.push(...outcome.events);
@@ -406,6 +409,8 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     }));
     /* "You may have this creature enter as a copy of ...": its arrival waits for the answer (rules/entering.mjs). */
     if (to === "battlefield") holdArrival(state, arrived, events[events.length - 1]);
+    /* "Enters prepared" (CR 614.1c, 722.3a): the designation it entered with, and its prepare spell's copy in exile (722.3c). */
+    if ((entering?.designations ?? []).includes("prepared")) prepare(state, arrived, events);
   }
 
   events.push(event("GameEventSpellResolved", state, {

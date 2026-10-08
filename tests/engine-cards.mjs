@@ -55,7 +55,9 @@ const files = loadCardScenarios();
     if (double && (script.layout ?? "modal_dfc") !== card.layout) drift.push(`${path}: the oracle's ${card.layout} card, and its script says ${script.layout ?? "nothing"}`);
     /* An adventurer card (CR 715.2): its identity is its own half's, the oracle's first face, and its Adventure the second.
        The oracle gives an adventurer's halves no colors of their own: each half's are its mana cost's (CR 105.2, 202.2). */
-    const adventurer = card.layout === "adventure";
+    /* A preparation card (CR 722.2) the same way: its own half first, its prepare spell second. */
+    const adventurer = card.layout === "adventure" || card.layout === "prepare";
+    const second = card.layout === "prepare" ? script.prepare : script.adventure;
     const front = double || adventurer ? card.faces[0] : card;
     const colorsOf = (face) => face.colors ?? ["W", "U", "B", "R", "G"].filter((c) => new RegExp(`\\{[^}]*${c}[^}]*\\}`).test(face.mana ?? ""));
     /* And a planeswalker's printed loyalty (CR 306.5a). */
@@ -76,16 +78,16 @@ const files = loadCardScenarios();
       if (script.back.oracleText !== back.text) drift.push(`${path}: its back face's oracle text is not the oracle's`);
       for (const ability of script.back.abilities) if (!back.text.includes(ability.text)) drift.push(`${path}: "${ability.text}" is not a sentence of its back face`);
     }
-    if (adventurer !== (script.adventure !== undefined)) drift.push(`${path}: ${adventurer ? "an adventurer card without its Adventure" : "an Adventure on a card that has none"}`);
-    if (adventurer && script.adventure) {
+    if (adventurer !== (second !== undefined)) drift.push(`${path}: ${adventurer ? "an adventurer card without its Adventure" : "an Adventure on a card that has none"}`);
+    if (adventurer && second) {
       const adventure = card.faces[1];
       const [left, right = ""] = adventure.type.split(" — ");
       const wantAdventure = {name: adventure.name, types: left.split(" "), subtypes: right.split(" ").filter(Boolean), manaCost: adventure.mana, colors: colorsOf(adventure)};
-      const gotAdventure = {name: script.adventure.identity.name, types: script.adventure.identity.types, subtypes: script.adventure.identity.subtypes, manaCost: script.adventure.identity.manaCost,
-        colors: script.adventure.identity.colors};
+      const gotAdventure = {name: second.identity.name, types: second.identity.types, subtypes: second.identity.subtypes, manaCost: second.identity.manaCost,
+        colors: second.identity.colors};
       if (JSON.stringify(gotAdventure) !== JSON.stringify(wantAdventure)) drift.push(`${path}: Adventure ${JSON.stringify(gotAdventure)} is not the oracle's ${JSON.stringify(wantAdventure)}`);
-      if (script.adventure.oracleText !== adventure.text) drift.push(`${path}: its Adventure's oracle text is not the oracle's`);
-      for (const ability of script.adventure.abilities) if (!adventure.text.includes(ability.text)) drift.push(`${path}: "${ability.text}" is not a sentence of its Adventure`);
+      if (second.oracleText !== adventure.text) drift.push(`${path}: its Adventure's oracle text is not the oracle's`);
+      for (const ability of second.abilities) if (!adventure.text.includes(ability.text)) drift.push(`${path}: "${ability.text}" is not a sentence of its Adventure`);
     }
     if (!path.startsWith(`${foldName(script.identity.name).charAt(0)}/`)) drift.push(`${path}: filed under the wrong letter`);
   }
@@ -139,7 +141,7 @@ const files = loadCardScenarios();
     const {definition, problems} = compileScript(script);
     ok(definition === null && problems.some((p) => re.test(p)), `${message} (${problems.join("; ")})`);
   };
-  problem(base([{kind: "spell", text: "Exchange life totals with target player.", effects: [{effect: "exchangeLife"}]}]), /exchangeLife: declared, not built/, "a primitive declared and not built");
+  problem(base([{kind: "spell", text: "Take an extra turn after this one.", effects: [{effect: "addTurn"}]}]), /addTurn: declared, not built/, "a primitive declared and not built");
   problem(base([{kind: "keyword", text: "Equip {2}", keyword: "equip"}], ["Artifact"]), /Equip: declared, no behavior/, "a keyword with no behavior");
   /* (Batch 27 built "Discard a card"; the example of a cost nothing pays is now one that still is not.) */
   problem(base([{kind: "activated", text: "Exile a card from your graveyard: Draw a card.", cost: [{atom: "exileFromGraveyard"}], effects: [{effect: "draw"}]}], ["Artifact"]),
@@ -180,8 +182,8 @@ const files = loadCardScenarios();
   problem(base([]), /no spell ability/, "an instant that does nothing");
   problem(base([{kind: "spell", text: "a", effects: [{effect: "draw"}]}, {kind: "spell", text: "b", effects: [{effect: "draw"}]}]), /second spell ability/, "two spell abilities");
   problem({...base([]), identity: {name: "Probe", types: ["Instant"]}}, /oracleId/, "a script the schema refuses never becomes an object");
-  const mixed = createCardIndex([base([{kind: "spell", text: "Exchange life totals with target player.", effects: [{effect: "exchangeLife"}]}])]);
-  eq([mixed.resolve("Probe").playable, mixed.definition("Probe"), mixed.problems("Probe")], [false, null, ["exchangeLife: declared, not built"]],
+  const mixed = createCardIndex([base([{kind: "spell", text: "Take an extra turn after this one.", effects: [{effect: "addTurn"}]}])]);
+  eq([mixed.resolve("Probe").playable, mixed.definition("Probe"), mixed.problems("Probe")], [false, null, ["addTurn: declared, not built"]],
     "a card the engine cannot play resolves, says so and why, and has no definition to seat");
   throws(() => createCardIndex([scripts[0], scripts[0]]), /Two definitions of/, "two definitions of one card are refused, by name and file");
   throws(() => createCardIndex([{schema: SCRIPT_SCHEMA, identity: {}, abilities: []}]), /has no name/, "and a nameless one");

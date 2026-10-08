@@ -21,7 +21,8 @@
 
 import {runEffect, eachOf} from "./effects/index.mjs";
 import {ASKING, commandersGoingHome} from "./effects/asking.mjs";
-import {damageQuestion} from "./effects/resources.mjs";
+import {damageQuestion, addCounters} from "./effects/resources.mjs";
+import {controllerOf} from "../rules/layers.mjs";
 import {bindEffect} from "./bind.mjs";
 import {countEffect} from "./amount.mjs";
 import {conditionHolds} from "./condition.mjs";
@@ -48,7 +49,9 @@ export function beginResolution(state, effects, context = {}, rng = null) {
       /* How a spell was cast, for "if this spell was cast from a graveyard" (script/condition.mjs, `cast`). */
       ...(context.cast ? {cast: context.cast} : {}),
       /* How many times its source had transformed as the ability went on the stack (CR 701.27f; rules/stack.mjs). */
-      ...(context.sourceTransforms !== undefined ? {sourceTransforms: context.sourceTransforms} : {})},
+      ...(context.sourceTransforms !== undefined ? {sourceTransforms: context.sourceTransforms} : {}),
+      /* What the cost sacrificed, as it last existed ("the sacrificed creature's power"; script/amount.mjs). */
+      ...(context.sacrificed ? {sacrificed: context.sacrificed} : {})},
     events: [],
   };
   return runResolution(state, rng);
@@ -84,7 +87,10 @@ export function runResolution(state, rng = null) {
     if (effect?.condition && !conditionHolds(state, effect.condition, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about,
       remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast, x: resolving.context.x,
       /* "If excess damage was dealt to that permanent this way" (Violent Echoes; effects/resources.mjs). */
-      excessDamage: resolving.context.excessDamage, rememberedControllers: resolving.context.rememberedControllers})) {
+      excessDamage: resolving.context.excessDamage, rememberedControllers: resolving.context.rememberedControllers,
+      /* "If a Pirate was exiled this way" (`movedWas`), "if you search your library this way" (`searched`), and the source as it
+         last was (CR 113.7a): what this resolution remembers of what its effects did. */
+      movedWas: resolving.context.movedWas, searched: resolving.context.searched, lastKnown: resolving.context.lastKnown})) {
       resolving.queue.shift();
       continue;
     }
@@ -93,7 +99,8 @@ export function runResolution(state, rng = null) {
        put in front of whatever follows, so one of them may stop to ask (Composer of Spring's "you may put a card"). */
     if (effect?.effect === "branch") {
       const holds = conditionHolds(state, effect.if, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about,
-        remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast});
+        remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast,
+        movedWas: resolving.context.movedWas, searched: resolving.context.searched, lastKnown: resolving.context.lastKnown});
       resolving.queue.shift();
       resolving.queue.unshift(...structuredClone((holds ? effect.then : effect.otherwise) ?? []));
       continue;
@@ -106,7 +113,7 @@ export function runResolution(state, rng = null) {
        of what it ranges over (script/effects/index.mjs, eachOf: players in turn order, CR 101.4) -- each one's effects after
        a mark that makes it what "that player" and "that card" are while they run, so each is bound and counted as it reaches
        the head, as it would be repeated directly; and the resolution's own subject back after the last. */
-    if (effect?.effect === "repeatFor" && (effect.effects ?? []).some((inner) => ASKING[inner?.effect])) {
+    if (effect?.effect === "repeatFor" && (effect.effects ?? []).some((inner) => ASKING[inner?.effect] || inner?.effect === "connive")) {
       resolving.queue.shift();
       const before = resolving.context.about;
       const spliced = eachOf(state, effect.each, resolving.context).flatMap((about) => [{effect: "__about", about: {...(before ?? {}), ...about}}, ...structuredClone(effect.effects ?? [])]);
@@ -140,6 +147,45 @@ export function runResolution(state, rng = null) {
           then: [{effect: "putCounterAll", selector: jace, counter: "loyalty", count}],
           otherwise: [{effect: "createToken", count: 1, token: {predefined: "Jace"}, remember: true},
             {effect: "putCounter", targets: "remembered", counter: "loyalty", count}]}]});
+      continue;
+    }
+    /* CONNIVE (CR 701.50): "each creature that convoked this spell connives" (Lethal Scheme). Each permanent told to connive
+       does, one at a time: the first player in APNAP order controlling one still to connive picks which, when they control two
+       or more (701.50c; effects/asking.mjs, conniveWhich). One that has left the battlefield still connives, by its last
+       controller (701.50b) -- here the spell's controller, whose creatures convoked it. Conniving is its controller drawing
+       N cards and discarding N (701.50a, 701.50d), each the draw and the discard they are everywhere else, then a +1/+1
+       counter on it for each nonland card discarded, if it is still there (`__connived`). Connive 0 does nothing (701.50e). */
+    if (effect?.effect === "connive") {
+      resolving.queue.shift();
+      const n = Math.max(0, effect.count ?? 1);
+      if (n === 0) continue;
+      if (effect.one) {
+        const {id, controller} = effect.one;
+        if (!state.players[controller] || state.players[controller].lost) continue;
+        resolving.queue.unshift({effect: "draw", who: [controller], count: n}, {effect: "discard", who: [controller], count: n, remember: true, rememberOf: controller},
+          {effect: "__connived", card: id, controller});
+        continue;
+      }
+      const conniving = effect.conniving ?? [...new Set(effect.targets ?? [])].map((id) => ({id,
+        controller: state.objects[id]?.zone === "battlefield" ? controllerOf(state, id) : resolving.context.controller}));
+      const still = conniving.filter((c) => state.players[c.controller] && !state.players[c.controller].lost);
+      if (!still.length) continue;
+      const seats = state.players.length, rank = (p) => (p - (state.activePlayer ?? 0) + seats) % seats;
+      const first = still.reduce((best, c) => (rank(c.controller) < rank(best.controller) ? c : best)).controller;
+      const theirs = still.filter((c) => c.controller === first), rest = still.filter((c) => c.controller !== first);
+      resolving.queue.unshift(...(theirs.length > 1 ? [{effect: "conniveWhich", player: first, theirs, rest, n}]
+        : [{effect: "connive", one: theirs[0], count: n}, ...(rest.length ? [{effect: "connive", conniving: rest, count: n}] : [])]));
+      continue;
+    }
+    if (effect?.effect === "__connived") {
+      resolving.queue.shift();
+      /* What the discard before it discarded, as the cards they became (effects/asking.mjs, discard's `remember`). */
+      const nonland = (resolving.context.remembered ?? []).filter((id) => state.objects[id] && !(state.objects[id].types ?? []).includes("Land")).length;
+      if (nonland > 0 && state.objects[effect.card]?.zone === "battlefield") {
+        const events = [];
+        addCounters(state, effect.card, "+1/+1", nonland, events, effect.controller);
+        resolving.events.push(...events);
+      }
       continue;
     }
     /* CR 903.9b: a commander this sends to its owner's hand or library may go to the command zone instead -- a
@@ -212,6 +258,8 @@ export function answerResolution(state, indices, extra = {}, rng = null) {
      player controls" remembers each in turn (The Eternal Wanderer). */
   if (!Array.isArray(outcome) && Array.isArray(outcome.remembered)) state.resolving.context.remembered = outcome.rememberAdd === true
     ? [...(state.resolving.context.remembered ?? []), ...outcome.remembered] : outcome.remembered;
+  /* "If you search your library this way, shuffle" (Claim Jumper): a library was searched -- whatever it found (CR 701.23). */
+  if (!Array.isArray(outcome) && outcome.searched === true) state.resolving.context.searched = true;
   /* "Choose a creature type": the type, for the effects after it ("$chosen", script/bind.mjs). */
   if (!Array.isArray(outcome) && typeof outcome.chosen === "string") state.resolving.context.chosen = outcome.chosen;
 

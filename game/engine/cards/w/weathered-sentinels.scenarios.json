@@ -1,0 +1,141 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Weathered Sentinels",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya attacked Rob on her turn: on his, the Sentinels attack her as a 5/8, untapped, through her Bear",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Weathered Sentinels"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "COMBAT_BEGIN"
+          }
+        },
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Weathered Sentinels"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 35
+        },
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "tapped": "Weathered Sentinels",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Weathered Sentinels",
+            "has": [
+              "Indestructible"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Weathered Sentinels",
+            "power": 5,
+            "toughness": 8
+          }
+        }
+      ]
+    },
+    {
+      "name": "Maya did not attack: the Sentinels keep their defender, and nothing is asked",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Weathered Sentinels"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "tapped": "Weathered Sentinels",
+          "is": false
+        }
+      ]
+    }
+  ]
+}

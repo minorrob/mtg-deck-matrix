@@ -1,0 +1,94 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Felothar the Steadfast",
+    "oracleId": "2b3f791a-d672-46fb-a03a-96e19f2c3121",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warrior"
+    ],
+    "manaCost": "{1}{W}{B}{G}",
+    "colors": [
+      "B",
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "G",
+      "W"
+    ],
+    "power": 0,
+    "toughness": 5
+  },
+  "oracleText": "Each creature you control assigns combat damage equal to its toughness rather than its power.\nCreatures you control can attack as though they didn't have defender.\n{3}, {T}, Sacrifice another creature: Draw cards equal to the sacrificed creature's toughness, then discard cards equal to its power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Each creature you control assigns combat damage equal to its toughness rather than its power.",
+      "rule": "combat-damage-by-toughness",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Creatures you control can attack as though they didn't have defender.",
+      "rule": "attacks-despite-defender",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{3}, {T}, Sacrifice another creature: Draw cards equal to the sacrificed creature's toughness, then discard cards equal to its power.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "another": true
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": {
+            "toughnessOf": "sacrificed"
+          }
+        },
+        {
+          "effect": "discard",
+          "count": {
+            "powerOf": "sacrificed"
+          }
+        }
+      ]
+    }
+  ]
+}

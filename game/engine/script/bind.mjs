@@ -55,13 +55,26 @@ import {namesChosen, withChosen} from "./chosen.mjs";
 import {valueCostOf, shownName} from "../state/index.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {amountOf, AMOUNT_PARAMS} from "./amount.mjs";
+import {conditionHolds} from "./condition.mjs";
 
 /** More than this many ways to choose a spell's targets, and the card is refused at prepare rather than offered. */
 export const TARGET_CHOICES_MAX = 4096;
 
+/* WHAT A TARGET SPEC SAYS BESIDES ITS SELECTOR (Train B, X11):
+ *   `distinctFrom: [n]`        "a second target creature", "up to one other target artifact": not the object or player
+ *                               chosen for target n of the same spell or ability (Tidus, Yuna's Guardian; Return to Dust)
+ *   `onlyIf: condition`        a target the spell has only when the condition holds as it is cast (CR 601.2c: "the spell
+ *                               is cast as though it did not require those targets"): "if you cast this spell during your
+ *                               main phase, you may exile up to one other target" (Return to Dust, {cast: {mainPhase: true}})
+ *   `differentControllers`     a counted target's choices each controlled by a different player ("up to two target
+ *                               artifacts and/or enchantments controlled by different players", Protector of the Wastes)
+ * None is part of what a target may be (the selector), so each is set aside beside `count`. */
+export const SPEC_KEYS = Object.freeze(["count", "distinctFrom", "onlyIf", "differentControllers"]);
+const selectorOf = (spec) => Object.fromEntries(Object.entries(spec && typeof spec === "object" ? spec : {}).filter(([key]) => !SPEC_KEYS.includes(key)));
+
 /** A target spec's alternatives, each a targeting selector (CR 115.2); its count, if it has one, is not part of them. */
 export function targetAlternatives(spec) {
-  const {count, ...plain} = spec && typeof spec === "object" ? spec : {};
+  const plain = selectorOf(spec);
   const list = Array.isArray(plain.anyOf) ? plain.anyOf : [plain];
   return list.map((selector) => ({...selector, target: true}));
 }
@@ -89,17 +102,27 @@ export function countWords({min = 0, max = null} = {}) {
 
 const kindOf = (selector) => ((selector.what ?? "permanent") === "player" ? "player" : "object");
 
+/* The targets chosen for other instances of "target" that this one must differ from (`distinctFrom`), as the offer or the
+   stack entry holds them so far (`context.chosenTargets`, or the way being built). */
+const otherThan = (spec, chosen) => (Array.isArray(spec?.distinctFrom) ? spec.distinctFrom.flatMap((n) => [].concat((chosen ?? [])[n] ?? [])).filter((t) => t && (t.kind === "object" || t.kind === "player")) : []);
+const sameTarget = (a, b) => a.kind === b.kind && a.id === b.id;
+
 /** Every legal choice for one target, as `{kind, id}`: in the selectors' order, each in its stable order. */
 export function targetCandidates(state, spec, context) {
   const found = [];
+  const others = otherThan(spec, context?.chosenTargets);
   for (const selector of targetAlternatives(spec)) {
     const kind = kindOf(selector);
     for (const id of selectMatching(state, selector, context)) {
-      if (!found.some((c) => c.kind === kind && c.id === id)) found.push({kind, id});
+      if (!found.some((c) => c.kind === kind && c.id === id) && !others.some((o) => sameTarget(o, {kind, id}))) found.push({kind, id});
     }
   }
   return found;
 }
+
+/* Whether a spec's target is one the ability has at all: an `onlyIf` that holds as it is cast or put on the stack. */
+const required = (state, spec, context) => !spec?.onlyIf || conditionHolds(state, spec.onlyIf, {controller: context?.controller, source: context?.source ?? null,
+  ...(context?.about ? {about: context.about} : {}), ...(context?.cast ? {cast: context.cast} : {})});
 
 /**
  * Every way to choose an ability's targets: one list per way, one entry per instance of the word "target".
@@ -111,17 +134,20 @@ export function targetCandidates(state, spec, context) {
 export function targetChoices(state, specs, context) {
   let choices = [[]];
   for (const spec of specs ?? []) {
+    /* A target it has only if (`onlyIf`): cast as though it did not require it (CR 601.2c) -- chosen as none. */
+    if (!required(state, spec, context)) { choices = choices.map((chosen) => [...chosen, []]); continue; }
     const candidates = targetCandidates(state, spec, context);
     /* A counted target is one placeholder in each way, picked once the offer is taken -- or no way at all, when fewer than
        its least are there to choose (CR 601.2c). */
     const count = countOf(spec);
     if (count) {
       if (candidates.length < count.min) return [];
-      choices = choices.map((chosen) => [...chosen, choosing(spec, candidates.length)]);
+      choices = choices.map((chosen) => [...chosen, choosing(spec, candidates.filter((c) => !otherThan(spec, chosen).some((o) => sameTarget(o, c))).length)]);
       continue;
     }
     const next = [];
-    for (const chosen of choices) for (const candidate of candidates) next.push([...chosen, candidate]);
+    /* "A second target creature" (`distinctFrom`): never the one chosen for that other target. */
+    for (const chosen of choices) for (const candidate of candidates) if (!otherThan(spec, chosen).some((o) => sameTarget(o, candidate))) next.push([...chosen, candidate]);
     choices = next;
     if (choices.length > TARGET_CHOICES_MAX)
       throw new Error(`More than ${TARGET_CHOICES_MAX} ways to choose these targets; a card that needs this many is refused at prepare`);
@@ -139,14 +165,38 @@ export function countedChoice(state, spec, context, {id, name, hostile = false})
   const candidates = targetCandidates(state, spec, context);
   const options = candidates.map((c, index) => {
     const whose = c.kind === "object" && state.objects[c.id] && controllerOf(state, c.id) !== context.controller ? ` (${state.players[controllerOf(state, c.id)]?.name}'s)` : "";
-    return {index, label: `${targetName(state, c)}${whose}`, ...(c.kind === "object" ? {cardId: c.id} : {playerId: c.id}), targets: [c], hostile};
+    return {index, label: `${targetName(state, c)}${whose}`, ...(c.kind === "object" ? {cardId: c.id} : {playerId: c.id}), targets: [c], hostile,
+      ...(spec?.differentControllers === true && c.kind === "object" && state.objects[c.id] ? {controllerId: controllerOf(state, c.id)} : {})};
   });
   for (const option of options) {
     const alike = options.filter((o) => o.label === option.label);
     if (alike.length > 1) alike.forEach((o, n) => { o.label = `${o.label} (${n + 1})`; });
   }
-  return {id, title: `${name}: choose ${countWords(count)}`, mode: "many", min: Math.min(count.min, options.length),
-    max: count.max === null ? options.length : Math.min(count.max, options.length), options};
+  /* "Controlled by different players" (`differentControllers`): at most one of each player's, refused with what to do instead
+     (controller.mjs reads `capped`; both pilots keep to it). */
+  const capped = spec?.differentControllers === true ? differentControllersCap(state, options, name) : null;
+  return {id, title: `${name}: choose ${countWords(count)}${capped ? ", each controlled by a different player" : ""}`, mode: "many", min: Math.min(count.min, options.length),
+    max: count.max === null ? options.length : Math.min(count.max, options.length), options, ...(capped ? {capped} : {})};
+}
+
+/* "Controlled by different players" as a cap: no more than one option of each controller's, and the words that say so. */
+function differentControllersCap(state, options, name) {
+  const players = [...new Set(options.map((o) => o.controllerId).filter((p) => p !== undefined))];
+  return {by: "controllerId", most: Object.fromEntries(players.map((p) => [p, 1])),
+    why: Object.fromEntries(players.map((p) => [p, `${name}'s targets must be controlled by different players: choose no more than one of ${state.players[p]?.name ?? `Seat ${p + 1}`}'s, and the others from other players.`]))};
+}
+
+/** Why a counted target's choices break "controlled by different players" (`differentControllers`), in words, or null. */
+export function differentControllersProblem(state, spec, chosen, name) {
+  if (spec?.differentControllers !== true) return null;
+  const seen = new Map();
+  for (const t of chosen ?? []) {
+    if (t?.kind !== "object" || !state.objects[t.id]) continue;
+    const p = controllerOf(state, t.id);
+    if (seen.has(p)) return `${name}'s targets must be controlled by different players: ${targetName(state, seen.get(p))} and ${targetName(state, t)} are both ${state.players[p]?.name ?? `Seat ${p + 1}`}'s. Choose no more than one of each player's.`;
+    seen.set(p, t);
+  }
+  return null;
 }
 
 /** Whether a chosen target is still legal (CR 608.2b): still there, and still what its spec asks for. */
@@ -220,6 +270,10 @@ function objectsOf(value, context) {
   if (value === "enchanted" || value === "equipped") return context.attached !== undefined && context.attached !== null ? [context.attached] : [];
   /* "A copy of it": what an earlier effect of this resolution moved (effects/zones.mjs, `remember`), while it is there. */
   if (value === "remembered") return (context.remembered ?? []).slice();
+  /* "Each creature that convoked this spell" (Lethal Scheme; CR 702.51c): the creatures tapped to pay for it as it was cast
+     (rules/actions.mjs) -- each as it was then, one gone since among them, for an effect that reads last known information
+     (connive, CR 701.50b). */
+  if (value === "convoked") return [...(context.cast?.convoked ?? [])];
   /* "For each of them": everything a "one or more" trigger is about (trigger.mjs, `batch`). */
   if (value === "those cards") return (context.about?.cards ?? []).slice();
   if (!isRef(value)) return value;

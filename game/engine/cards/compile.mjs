@@ -46,7 +46,8 @@ const SUPERTYPES = ["Legendary", "Basic", "Snow", "World"];
 export function identityOf(card) {
   /* An adventurer card's are its own half's, the first face (CR 715.4) -- whose colors the oracle leaves out, and are its
      mana cost's (CR 105.2, 202.2); a nonmodal double-faced card's (the oracle's "transform", CR 712.2) too. */
-  const twoFaced = ["modal_dfc", "adventure", "transform"].includes(card.layout) && Array.isArray(card.faces) && card.faces.length;
+  /* And a preparation card's (CR 722.4: its own characteristics in every zone). */
+  const twoFaced = ["modal_dfc", "adventure", "transform", "prepare"].includes(card.layout) && Array.isArray(card.faces) && card.faces.length;
   const face = twoFaced ? {...card.faces[0], colors: card.faces[0].colors ?? colorsOfCost(card.faces[0].mana)} : card;
   const [left, right = ""] = String(face.type ?? "").split(" — ");
   const words = left.split(/\s+/).filter(Boolean);
@@ -118,8 +119,10 @@ export function oracleClauses(text) {
 export function checkFidelity(script) {
   /* An adventurer card's Adventure (CR 715.2) is held to its own text the same way, beside the card's. */
   const own = faceFidelity(script);
-  if (script.adventure === undefined) return own;
-  const adventure = faceFidelity(script.adventure);
+  /* And a preparation card's prepare spell (CR 722.2), to its own text. */
+  const other = script.adventure ?? script.prepare;
+  if (other === undefined) return own;
+  const adventure = faceFidelity(other);
   return {ok: own.ok && adventure.ok, invented: [...own.invented, ...adventure.invented], unclaimed: [...own.unclaimed, ...adventure.unclaimed]};
 }
 function faceFidelity(script) {
@@ -209,7 +212,8 @@ export function smokeScenario(script) {
   const name = script.identity.name;
   /* A modal double-faced card is cast as its front face, by that face's name (CR 712.11b); an adventurer card as itself,
      by its own name (CR 715.4). */
-  const front = script.back !== undefined || script.adventure !== undefined ? String(name).split(" // ")[0] : name;
+  /* A preparation card, by its own name (CR 722.4). */
+  const front = script.back !== undefined || script.adventure !== undefined || script.prepare !== undefined ? String(name).split(" // ")[0] : name;
   const isLand = (script.identity.types ?? []).includes("Land");
   const lands = isLand ? ["Wastes", "Wastes"] : landsFor(script.identity.manaCost);
   /* What an ability aims at: its own targets, and its modes' (Warg Tactics: "destroy target creature with flying" or "put

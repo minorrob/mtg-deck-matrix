@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thousand-Year Elixir",
+    "oracleId": "4dc5726e-2f7e-4c2b-9616-c3301d212f78",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You may activate abilities of creatures you control as though those creatures had haste.\n{1}, {T}: Untap target creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may activate abilities of creatures you control as though those creatures had haste.",
+      "rule": "activate-as-though-haste",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{1}, {T}: Untap target creature.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "untap",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

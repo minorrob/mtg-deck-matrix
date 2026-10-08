@@ -33,11 +33,13 @@ import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sa
 import {
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
   putCounter, putCounterAll, removeCounter, proliferate, damageAll, fight, poison, winGame, multiplyCounters,
+  exchangeLife, damageEach,
 } from "./resources.mjs";
 import {
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
   becomeCopy, earthbend, goad, immediateTrigger, investigate, phaseOut, setState,
 } from "./permanents.mjs";
+import {alterAttribute} from "./attributes.mjs";
 
 /**
  * The twenty-five most-used primitives across Rob's seven decks, in frequency order, with the count
@@ -79,7 +81,9 @@ export const TOP_25 = Object.freeze([
  * `effects/asking.mjs`, driven by `resolution.mjs`. Putting a throwing stub in the registry would
  * have made "is this built" answer yes to something no caller can use.
  */
-export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "surveil", "discard", "modal", "chooseCard", "proliferate", "sacrifice", "populate", "amass", "unlessPays", "copySpell", "chooseType", "play", "changeTargets", "empowerJace", "twoPiles"]);
+export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "surveil", "discard", "modal", "chooseCard", "proliferate", "sacrifice", "populate", "amass", "unlessPays", "copySpell", "chooseType", "play", "changeTargets", "empowerJace", "twoPiles",
+  /* Connive (CR 701.50): which permanent connives next, and what its controller discards. */
+  "connive"]);
 
 /* What "each" ranges over (`repeatFor`), each with what it binds: a player -- in turn order from the active player
    (CR 101.4) -- as "that player"; a creature as "that card", and its controller as "that player". */
@@ -115,7 +119,8 @@ function repeatFor(state, params, context, rng = null) {
  * question inside it can be asked; called directly (what repeats for each), what it does must not ask.
  */
 function branch(state, params, context, rng = null) {
-  const holds = conditionHolds(state, params.if, {controller: context.controller, source: context.source ?? null, about: context.about, remembered: context.remembered, targets: context.targets, cast: context.cast});
+  const holds = conditionHolds(state, params.if, {controller: context.controller, source: context.source ?? null, about: context.about, remembered: context.remembered, targets: context.targets, cast: context.cast,
+    movedWas: context.movedWas, searched: context.searched, lastKnown: context.lastKnown});
   const events = [];
   for (const effect of (holds ? params.then : params.otherwise) ?? []) events.push(...runEffect(state, countEffect(state, bindEffect(effect, context), context), context, rng));
   return events;
@@ -168,6 +173,9 @@ export const EFFECTS = Object.freeze({
   /* claude/cards-faces-class: a permanent's state -- a Class's level (CR 716.2a), and transforming (CR 701.27a) -- and
      the top card of a library manifested (CR 701.40a). */
   setState, manifest,
+  /* Train B (X11): life totals exchanged (CR 701.12), damage dealt by each of a set (Forge's EachDamage), and a designation
+     given or taken -- monstrous (CR 701.37), prepared (CR 722.3). */
+  exchangeLife, damageEach, alterAttribute,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */

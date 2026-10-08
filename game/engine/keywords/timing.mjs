@@ -26,6 +26,7 @@
  */
 
 import {keywordsOf, typesOf, controllerOf} from "../rules/layers.mjs";
+import {ruleChanged} from "../rules/statics.mjs";
 
 /** The family of §3.1, so `engine-coverage` counts these as behavior and not as words. */
 export const KEYWORD_FAMILIES = Object.freeze({
@@ -58,6 +59,17 @@ export function summoningSick(state, id) {
   if (keywordsOf(state, id).includes("Haste")) return false;
   const turnBegan = state.players[controllerOf(state, id)]?.turnBegan ?? 0;
   return object.controlledSinceTurn >= turnBegan;
+}
+
+/**
+ * CR 302.6 for a creature's {T} abilities alone: sick as above, unless a static ability lets its controller "activate
+ * abilities of creatures you control as though those creatures had haste" (Thousand-Year Elixir; `rule:
+ * "activate-as-though-haste"`, rules/statics.mjs) -- haste's second half (CR 702.10c) and not its first: it still can't
+ * attack (702.10b is not given). Read wherever a {T} ability is offered or paid: an activated ability's cost, a mana
+ * ability, a source tapped to pay an "unless" cost.
+ */
+export function sickForAbilities(state, id) {
+  return summoningSick(state, id) && !ruleChanged(state, "activate-as-though-haste", id);
 }
 
 /** CR 702.8a: this card may be cast any time its controller could cast an instant. */

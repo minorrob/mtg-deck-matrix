@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wave of Reckoning",
+    "oracleId": "24f7143c-d43a-4120-baa0-0235b15d8186",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each creature deals damage to itself equal to its power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each creature deals damage to itself equal to its power.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "damageEach",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          },
+          "dealt": {
+            "powerOf": "that card"
+          },
+          "to": "itself"
+        }
+      ]
+    }
+  ]
+}

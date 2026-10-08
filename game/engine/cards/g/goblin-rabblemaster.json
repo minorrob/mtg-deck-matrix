@@ -1,0 +1,98 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Goblin Rabblemaster",
+    "oracleId": "24661b81-6bee-4ad8-b3ab-53cb65005c51",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Warrior"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Other Goblin creatures you control attack each combat if able.\nAt the beginning of combat on your turn, create a 1/1 red Goblin creature token with haste.\nWhenever this creature attacks, it gets +1/+0 until end of turn for each other attacking Goblin.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Other Goblin creatures you control attack each combat if able.",
+      "rule": "attacks-each-combat",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Goblin"
+        ],
+        "controller": "you",
+        "another": true
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of combat on your turn, create a 1/1 red Goblin creature token with haste.",
+      "trigger": {
+        "on": "step",
+        "step": "COMBAT_BEGIN"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Goblin",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Goblin"
+            ],
+            "colors": [
+              "R"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Haste"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks, it gets +1/+0 until end of turn for each other attacking Goblin.",
+      "trigger": {
+        "on": "attacks"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": {
+            "count": {
+              "what": "permanent",
+              "subtypes": [
+                "Goblin"
+              ],
+              "attacking": true,
+              "another": true
+            }
+          },
+          "toughness": 0
+        }
+      ]
+    }
+  ]
+}

@@ -124,9 +124,9 @@ const named = (s, name) => s.zones.battlefield.filter((id) => s.objects[id].card
   eq(keywordsOf(s, hers).includes("Fear"), true, "Maya's Elf has fear");
 }
 {
-  /* The Phyrexian mana reminder claims nothing; a basic land's reminder is still its ability. ETBReplacement stays unbuilt. */
+  /* The Phyrexian mana reminder claims nothing; a basic land's reminder is still its ability. Entering replacements are credited. */
   eq([oracleClauses("({U/P} can be paid with either {U} or 2 life.)\nFlying"), oracleClauses("({T}: Add {G}.)")], [["Flying"], ["{T}: Add {G}."]], "Metamorph's reminder skipped; a Forest's kept");
-  eq([missingFor({keywords: ["ETBReplacement"]}).length, missingFor({keywords: ["Fear"]}).length], [1, 0], "ETBReplacement still uncredited (a color, a player, a card name, a number); Fear credited");
+  eq([missingFor({keywords: ["ETBReplacement"]}), missingFor({keywords: ["Fear"]})], [[], []], "entering replacements, including entering as a copy, and Fear are credited");
 }
 
 console.log(`engine-enter-copy: ${checks} checks passed — asked as it enters, each other permanent or none; it arrives as the copy, triggers and all; the copied card's own entering applies; except, until end of turn; fear.`);

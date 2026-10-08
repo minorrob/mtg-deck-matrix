@@ -1,0 +1,120 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hofri Ghostforge",
+    "oracleId": "663d451b-f848-41cc-b541-0c6fe37d3d54",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dwarf",
+      "Cleric"
+    ],
+    "manaCost": "{3}{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Spirits you control get +1/+1 and have trample and haste.\nWhenever another nontoken creature you control dies, exile it. If you do, create a token that's a copy of that creature, except it's a Spirit in addition to its other types and it has \"When this token leaves the battlefield, return the exiled card to its owner's graveyard.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Spirits you control get +1/+1 and have trample and haste.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "subtypes": [
+          "Spirit"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Spirits you control get +1/+1 and have trample and haste.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "subtypes": [
+          "Spirit"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Trample",
+          "Haste"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another nontoken creature you control dies, exile it. If you do, create a token that's a copy of that creature, except it's a Spirit in addition to its other types and it has \"When this token leaves the battlefield, return the exiled card to its owner's graveyard.\"",
+      "trigger": {
+        "on": "dies",
+        "who": "another",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "token": false,
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "that card",
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "copyPermanent",
+          "targets": "remembered",
+          "asItLastWas": true,
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          },
+          "except": {
+            "addSubtypes": [
+              "Spirit"
+            ],
+            "addAbilities": [
+              {
+                "kind": "triggered",
+                "text": "When this token leaves the battlefield, return the exiled card to its owner's graveyard.",
+                "trigger": {
+                  "on": "leaves"
+                },
+                "effects": [
+                  {
+                    "effect": "moveZone",
+                    "targets": "remembered",
+                    "to": "graveyard"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
