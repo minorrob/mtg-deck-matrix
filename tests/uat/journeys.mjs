@@ -13,8 +13,10 @@ if(gate.status!==0){console.error('Browser release gate failed: browser-geometry
 /* tour-walk is the only check that can prove a tour step points at anything: the content
    test (tests/tour.mjs) proves the selectors PARSE, and a selector that parses and matches
    nothing is exactly the bug that reaches a reader. */
+/* Required, not skippable: tour-walk found Playwright only through two variables nobody set, so it skipped itself
+   in every run from the day the Menu moved the tours behind it, and four tours drifted from the page meanwhile. */
 for(const name of ['crankmagic-journeys.mjs','tour-walk.mjs']){
-  const run=spawnSync(process.execPath,[fileURLToPath(new URL(name,import.meta.url)),...process.argv.slice(2)],{stdio:'inherit',env:process.env});
+  const run=spawnSync(process.execPath,[fileURLToPath(new URL(name,import.meta.url)),...process.argv.slice(2)],{stdio:'inherit',env:{...process.env,TOUR_WALK_REQUIRED:'1'}});
   if(run.status!==0){console.error('Browser release gate failed:',name,run.error?.message||'');process.exit(run.status||1);}
 }
 console.log('All production browser journeys passed.');

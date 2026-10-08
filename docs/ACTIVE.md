@@ -62,6 +62,29 @@ every margin); and at the table, once a board holds a group, the group's heading
 "Battlefield" is kept for screen readers. The counter stays where it is. `play-journeys` 82 checks; the whole local run
 green (425 suites, 24.5 minutes); 5 of 5 breaks caught. Screenshots of both tables at every size and on the phone, with
 the fix before and after, published for Rob.
+#682 merged on main def8fa89 on green Actions.
+
+**G-C, def8fa89:** released to `release/cloud-staging` bc88dce3 (release-acceptance 22, play-e2e 35); deployed at
+22:50:49 UTC as version bdaece4f (number 124), a minute after the push. Its `play-worker.js` is byte-identical to the
+release's dry-run bundle (2,420,554 bytes, sha256 21d7b7ee…) -- the same bundle as 8787d103's, since #680 to #682
+changed tests and static files, not the Worker. Those files (the new `crankmagic.css` v=272) are served from the
+version's assets, which only a signed-in read can see: staging is behind Access, `workers.dev` is off for it, and the
+service token's secret is Rob's (A5). The Builds API refuses this session's token, so the build's commit is read from
+the timing.
+
+**The tour walk, run again (PR #683, 2026-10-08).** `tests/uat/tour-walk.mjs`, the one check that a tour step points at
+something on the page, had skipped itself in every run: it found Playwright only through two variables nobody set, and
+`journeys.mjs` let it. Set by hand, it could not start either -- *Take a Tour* has been in the rail's Menu since the
+redesign, and the walk served itself on 127.0.0.1, where the app hides the rail. It now uses `browser-runner.mjs`'s
+`openBrowser` (Playwright where it is installed, the repo under crankmagic.localhost), opens the Menu, lists every
+step that misses rather than stopping at the first, and `journeys.mjs` runs it required. Walked, 6 of 61 steps in four
+tours pointed at nothing or at an empty box; each now points at the page as it is (`crankmagic-tour.js` v=23): Explore
+starts on its chooser's search and the graph steps open a graph (`graphOn`: your first deck's, or Sol Ring's); Narrow
+it points at *Filters · lens*, since the filters sit in a panel shut until opened; Take it with you at *Add and/or
+buy…* (`add-buy`, renamed from `add-card`); the Collect tour's trays are the sorting space with no deck picked (G6b-2);
+What the score is at the deck's Simulation history; and A tray puts it on the list opens Table on a deck with a group,
+or points at the deck picker. **tour-walk: 7 tours, 61 steps, every one pointing at something real**; `tour` 9
+checks; the release journeys (`journeys.mjs`): geometry 138, `crankmagic-journeys` 504, tour-walk 61 steps.
 
 ## Cloud production Play preparation, October 7, 2026
 

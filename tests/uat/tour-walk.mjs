@@ -20,47 +20,27 @@
  * Walking them empty would prove nothing about the other forty.
  */
 import assert from "node:assert/strict";
-import {createServer} from "node:http";
-import {readFile} from "node:fs/promises";
-import {extname, join, normalize} from "node:path";
-import {fileURLToPath} from "node:url";
+import {openBrowser} from "./browser-runner.mjs";
 
-const ROOT = fileURLToPath(new URL("../..", import.meta.url));
-const HOME = process.env.PLAYWRIGHT_HOME || process.env.SP;
-const CHROME = process.env.UAT_CHROME;
-if (!HOME || !CHROME) {
-  console.log("tour-walk: skipped — set PLAYWRIGHT_HOME and UAT_CHROME to run the tour in a browser.");
-  process.exit(0);
-}
-
-const TYPES = {".html": "text/html", ".js": "text/javascript", ".css": "text/css",
-  ".json": "application/json", ".svg": "image/svg+xml", ".webp": "image/webp", ".png": "image/png"};
-
-const server = createServer(async (req, res) => {
-  const path = join(ROOT, normalize(decodeURIComponent(req.url.split("?")[0])).replace(/^(\.\.[/\\])+/, ""));
-  try {
-    const body = await readFile(path);
-    res.writeHead(200, {"content-type": TYPES[extname(path)] || "application/octet-stream"});
-    res.end(body);
-  } catch { res.writeHead(404); res.end("not found"); }
-});
-await new Promise((done) => server.listen(0, "127.0.0.1", done));
-const base = `http://127.0.0.1:${server.address().port}`;
-
-const pw = await import(`file://${HOME}/node_modules/playwright/index.js`);
-const chromium = pw.chromium || pw.default.chromium;
-const {stubNetwork} = await import(new URL("./scryfall-stub.mjs", import.meta.url));
-
-const browser = await chromium.launch({executablePath: CHROME});
+/* The browser the other walks use (browser-runner.mjs): Playwright found where it is installed, the repo served under
+   crankmagic.localhost -- the app treats localhost and 127.0.0.1 as the game host's own copy and hides the rail there,
+   Menu and all (Rob, 2026-09-24) -- and the network stubbed. TOUR_WALK_REQUIRED=1 makes a missing browser a failure,
+   as tests/uat/journeys.mjs runs it. */
+const {browser, base, stub, close} = await openBrowser({name: "tour-walk", flag: "TOUR_WALK_REQUIRED"});
 const page = await (await browser.newContext({viewport: {width: 1400, height: 1000}})).newPage();
-await stubNetwork(page);
+if (stub) await stub(page);
 const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
 
 const fail = async (message) => {
-  await browser.close(); server.close();
+  await close();
   console.error(`tour-walk: ${message}`);
   process.exit(1);
+};
+/* Take a Tour is in the Menu, at the foot of the rail. */
+const openTours = async () => {
+  await page.locator("#cm-user-functions").click();
+  await page.locator("#cm-user-menu [data-action=tour]").click();
 };
 
 try {
@@ -88,15 +68,16 @@ try {
   if (!decks) await fail("could not seed a deck, so the four tours that need one cannot be walked");
 
   /* --------------------------------------------------- walk every tour */
-  await page.getByRole("button", {name: "Take a tour"}).click();
+  await openTours();
   await page.getByRole("dialog").waitFor({timeout: 15000});
   const ids = await page.locator(".cm-tour-pick").evaluateAll((els) => els.map((e) => e.dataset.tour));
   assert.equal(ids.length, 7, `the chooser offers ${ids.length} tours, not seven`);
   await page.keyboard.press("Escape");
 
   let walked = 0;
+  const missed = [];
   for (const id of ids) {
-    await page.getByRole("button", {name: "Take a tour"}).click();
+    await openTours();
     await page.locator(`[data-tour="${id}"]`).click();
     await page.locator("#cm-tour-layer").waitFor({state: "visible", timeout: 15000});
     for (let step = 0; step < 40; step += 1) {
@@ -117,10 +98,9 @@ try {
         await page.waitForTimeout(1000);
         seen = await read();
       }
-      if (seen.hit === "none") await fail(`${id}: step "${seen.title}" points at nothing`);
-      if (seen.hit !== "finish" && (seen.width < 10 || seen.height < 10)) {
-        await fail(`${id}: step "${seen.title}" matched ${seen.hit} but measured ${Math.round(seen.width)}x${Math.round(seen.height)}`);
-      }
+      /* Every step is walked, and every one that misses is named at the end, so one run lists them all. */
+      if (seen.hit === "none") missed.push(`${id}: step "${seen.title}" points at nothing`);
+      else if (seen.hit !== "finish" && (seen.width < 10 || seen.height < 10)) missed.push(`${id}: step "${seen.title}" matched ${seen.hit} but measured ${Math.round(seen.width)}x${Math.round(seen.height)}`);
       walked += 1;
       if (seen.last) break;
       await page.locator("#cm-tour-next").click();
@@ -129,9 +109,9 @@ try {
     await page.waitForTimeout(400);
   }
 
+  if (missed.length) await fail(`${missed.length} of ${walked} steps miss their target:\n  ${missed.join("\n  ")}`);
   if (errors.length) await fail(`console errors during the walk: ${errors.slice(0, 3).join(" | ")}`);
   console.log(`tour-walk: ${ids.length} tours, ${walked} steps, every one pointing at something real.`);
 } finally {
-  await browser.close().catch(() => {});
-  server.close();
+  await close().catch(() => {});
 }

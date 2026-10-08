@@ -28,10 +28,10 @@ const end = source.indexOf("\n\n/* A tour that describes work on a deck", start)
 assert.ok(end > start, "the end of the TOURS literal moved");
 const literal = source.slice(start + "const TOURS=".length, end).trim().replace(/;$/, "");
 /* The literal names the helpers it uses, so they are bound here as stand-ins. `firstDeck`
-   reads live state in the app; here it only has to be callable, because what this test
-   checks about a params function is that it IS one. */
+   and `graphOn` read live state in the app; here they only have to be callable, because what
+   this test checks about a params function is that it IS one. */
 // eslint-disable-next-line no-new-func
-const TOURS = new Function("firstDeck", `return ${literal}`)(() => ({deck: "example"}));
+const TOURS = new Function("firstDeck", "graphOn", `return ${literal}`)(() => ({deck: "example"}), () => ({deck: "example"}));
 
 /* The views the router actually registers. Read from the modules rather than listed here,
    so renaming a view breaks this test instead of silently orphaning a tour step. */
