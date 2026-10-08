@@ -17,15 +17,16 @@
  *              a word the game itself uses (a card named Flashback, in a keyword list).
  *   Judged     a whole game of four of the decks, every seat's view read at each of the person's questions, no leak, and
  *              its replay from seed and tape identical; a leak or a differing replay fails the game.
- *   Saved      the bug the replay found first: an effect without a sublayer wrote `sublayer: undefined`, which JSON drops
- *              and the hash keeps, so the room's checkpoint could not be read back (game/engine/storage.mjs). The effect
- *              now has no such key, and the save refuses any state that would not read back.
+ *   Saved      the bugs the replay found: an effect without a sublayer wrote `sublayer: undefined`, and a permanent that
+ *              became a copy kept "had no supertypes" as one; JSON drops such a key and the hash keeps it, so the room's
+ *              checkpoint could not be read back (game/engine/storage.mjs). Neither writes one now, a copy moving as itself
+ *              woken or not, and the save refuses any state that would not read back.
  */
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
-import {createState, addObject} from "../game/engine/state/index.mjs";
+import {createState, addObject, moveObject} from "../game/engine/state/index.mjs";
 import {beginGame} from "../game/engine/rules/turn.mjs";
-import {effectUntil} from "../game/engine/script/effects/permanents.mjs";
+import {effectUntil, copyOnto} from "../game/engine/script/effects/permanents.mjs";
 import {createJournal} from "../game/engine/journal.mjs";
 import {createRng} from "../game/engine/rng.mjs";
 import {memoryStorage, createMatchStore} from "../game/engine/storage.mjs";
@@ -134,6 +135,21 @@ const card = (name, owner, extra = {}) => ({card: name, types: ["Creature"], pow
   const store = createMatchStore(memoryStorage(), "m");
   await store.saveCheckpoint(point);
   eq((await store.latestCheckpoint()).hash, point.hash, "and the checkpoint holding it is saved and reads back as the same game");
+}
+/* ---- Saved: a permanent that became a copy keeps only the values it has, and moves as itself, woken or not ---- */
+{
+  const s = started();
+  const legend = addObject(s, card("Legendary Hero", 1, {supertypes: ["Legendary"]}), "battlefield");
+  const bear = addObject(s, card("Bear", 0), "battlefield");
+  copyOnto(s, bear, legend);
+  ok(s.objects[bear].card === "Legendary Hero" && !Object.hasOwn(s.objects[bear].uncopied, "supertypes"),
+    "a Bear that became a copy of a legendary creature: the copy's values on it, its own beside them without a supertype it never had");
+  const point = {...createJournal({matchId: "m", seed: "s"}).checkpoint(s, createRng("s").checkpoint()), matchId: "m"};
+  const store = createMatchStore(memoryStorage(), "m");
+  await store.saveCheckpoint(point);
+  const woken = (await store.latestCheckpoint()).state;
+  const moved = [s, woken].map((state) => { const id = moveObject(state, bear, "graveyard", 0); const o = state.objects[id]; return [o.card, o.supertypes ?? []]; });
+  eq(moved, [["Bear", []], ["Bear", []]], "it leaves the battlefield as a Bear, not legendary (CR 400.7) -- in memory and woken from its checkpoint alike");
 }
 
 console.log(`room-g1-terms: ${checks} checks passed -- what each seat may know of a card read off the state, a name found only where it names a card, a whole game of Rob's decks with nothing leaked and an identical replay, and an effect's checkpoint that reads back.`);

@@ -17,7 +17,7 @@
  * true` and nothing else here treats it specially.
  */
 
-import {addObject, transformObject, rememberExileLooker} from "../../state/index.mjs";
+import {addObject, transformObject, rememberExileLooker, COPY_KEYS} from "../../state/index.mjs";
 import {selectMatching, compileSelector} from "../filter.mjs";
 import {bindEffect, rememberNow} from "../bind.mjs";
 import {amountOf} from "../amount.mjs";
@@ -296,8 +296,10 @@ export function copyPermanent(state, params, context) {
  * it shows again, and with none left the permanent is its own again. Leaving the battlefield ends them all: a card moves
  * as itself (state/index.mjs, moveObject; CR 400.7).
  */
-export const COPY_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "spell", "enchant"]);
-const ownValues = (object) => Object.fromEntries(COPY_KEYS.map((key) => [key, object[key] === undefined ? undefined : structuredClone(object[key])]));
+export {COPY_KEYS};
+/* Its own values, only those it has: a key holding undefined would not survive the room's storage (JSON drops it), and a
+   value it never had is read as none (showCopy; state/index.mjs, moveObject). */
+const ownValues = (object) => Object.fromEntries(COPY_KEYS.filter((key) => object[key] !== undefined).map((key) => [key, structuredClone(object[key])]));
 function showCopy(object) {
   const latest = (object.copyEffects ?? []).at(-1);
   const values = latest ? latest.values : object.uncopied;
