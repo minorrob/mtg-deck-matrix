@@ -114,7 +114,8 @@ const planeswalkersOf = (state, player) =>
 const planeswalkerInCombat = (state, attack) => attack.planeswalker !== undefined && Boolean(state.objects[attack.planeswalker])
   && typesOf(state, attack.planeswalker).includes("Planeswalker") && controllerOf(state, attack.planeswalker) === attack.defender;
 /* Combat damage to what it attacks: the player, or the planeswalker while it is in combat; or none. */
-const toAttacked = (state, attack, amount) => (attack.planeswalker === undefined ? {toPlayer: attack.defender, amount, source: attack.attacker}
+/* None to a player who has left the game (CR 800.4e). */
+const toAttacked = (state, attack, amount) => (attack.planeswalker === undefined ? (state.players[attack.defender].lost ? null : {toPlayer: attack.defender, amount, source: attack.attacker})
   : planeswalkerInCombat(state, attack) ? {toCard: attack.planeswalker, amount, source: attack.attacker} : null);
 
 /* ---- declare attackers ---- */
@@ -423,9 +424,10 @@ const nextDefenderToDeclare = (state, after = null) => {
 };
 
 export const blockers = {
-  open(state) {
+  /* `after`: a defending player who left the game while asked (rules/turn.mjs, goOnWithout) -- the next one is asked. */
+  open(state, after = null) {
     if (!state.combat) return false;
-    const player = nextDefenderToDeclare(state);
+    const player = nextDefenderToDeclare(state, after);
     if (player === null) return false;
     state.awaiting = {kind: "declare-blockers", player};
     return true;
