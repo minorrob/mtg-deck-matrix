@@ -169,6 +169,9 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   Prowess: "pump", Toxic: "poison",
   /* Annihilator (batch 78): the triggered ability, the defending player sacrificing N permanents (cards/index.mjs). */
   Annihilator: "sacrifice",
+  /* Mentor (CR 702.134a; Legion Warboss, Train B X11): the attack trigger, a +1/+1 counter on target attacking creature
+     with power less than this creature's -- as it resolves, or as it last was if it has left (cards/index.mjs). */
+  Mentor: "putCounter",
   /* Afterlife (X5c): the dies trigger, N 1/1 white and black Spirit tokens with flying (cards/index.mjs). */
   Afterlife: "createToken",
   /* Forge's etbCounter, "this creature enters with two +1/+1 counters on it" (X5e): the replacement `entersWithCounters` on
@@ -290,6 +293,9 @@ export const FORGE_COUNTS = Object.freeze({
   /* Train B (X11; Betor, Ancestor's Voice): "the amount of life you lost this turn" -- the amount Wound Reflection's "that
      player" was built with, for "you"; and a mana value at most it (script/filter.mjs). */
   LifeYouLostThisTurn: {name: "Life you lost this turn", status: "built", engine: "amount {lifeLostThisTurn: \"you\"} (effects/resources.mjs keeps it, rules/turn.mjs clears it); a selector's manaValue.max may be it"},
+  /* Train B, X11 (Primary Research, Relic Retriever): every card that left a player's graveyard this turn, to anywhere --
+     cards only, never a token (CR 108.2b). Its one form, built. */
+  LeftGraveyardThisTurn: {name: "Cards that left your graveyard this turn", status: "built", engine: "amount {cardsLeftGraveyardThisTurn: \"you\" | \"that player\"} (state/index.mjs keeps it, rules/turn.mjs clears it)"},
   /* Train B (X11; Return to Dust): "if you cast this spell during your main phase" -- the cast's own record (rules/actions.mjs,
      Addendum's condition) -- for a target the spell has only then (CR 601.2c; script/bind.mjs, `onlyIf`). */
   IfCastInOwnMainPhase: {name: "If it was cast during its caster's main phase (\"if you cast this spell during your main phase\")", status: "built",

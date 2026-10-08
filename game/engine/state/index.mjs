@@ -404,6 +404,10 @@ export function moveObject(state, id, zone, player = null, {faceDown = false, tr
      controller as it left -- every departure moves through here (script/amount.mjs, permanentsLeftThisTurn; cleared as a
      turn begins, rules/turn.mjs). */
   if (from.zone === "battlefield" && state.players[from.controller]) state.players[from.controller].leftThisTurn = (state.players[from.controller].leftThisTurn ?? 0) + 1;
+  /* "If a card left your graveyard this turn" (Primary Research, Relic Retriever): counted for the player whose graveyard it
+     left, wherever it went -- a card only, never a token (CR 108.2b) -- as revolt's count is (script/amount.mjs,
+     cardsLeftGraveyardThisTurn; cleared as a turn begins, rules/turn.mjs). */
+  if (from.zone === "graveyard" && from.token !== true) state.players[from.zonePlayer].leftGraveyardThisTurn = (state.players[from.zonePlayer].leftGraveyardThisTurn ?? 0) + 1;
 
   /* Only what the CARD says survives the move: its identity, its printed types and its owner. The
      owner does (CR 108.3): a card goes to its OWNER's graveyard however long someone else

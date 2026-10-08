@@ -45,7 +45,7 @@ import {answerResolution, resolutionChoice} from "../script/resolution.mjs";
 import {finishResolving} from "./stack.mjs";
 import {playerRuleChanged, untapsDuringOthers, ruleChanged} from "./statics.mjs";
 import {emptyRestricted} from "./restricted-mana.mjs";
-import {endCopies, phaseIn} from "../script/effects/permanents.mjs";
+import {endCopies, phaseIn, endControlChange} from "../script/effects/permanents.mjs";
 import {untapOne} from "../script/effects/resources.mjs";
 import {runEffect} from "../script/effects/index.mjs";
 import {askEntering, enteringChoice, resolveEnteringChoice} from "./entering.mjs";
@@ -226,11 +226,10 @@ function endOfTurn(state) {
   for (const id of state.zones.battlefield) {
     if (state.objects[id].damage !== 0) state.objects[id].damage = 0;
   }
-  /* Control gained "until end of turn" returns now (effects/permanents.mjs gainControl), latest first, so the first
-     controller is the last one set. It changed hands this very turn, which already makes it summoning sick for its old
-     controller until their next turn begins (CR 302.6). */
-  for (const effect of (state.effects ?? []).filter((e) => e.rule === "control-returns").reverse())
-    for (const id of effect.affects?.ids ?? []) if (state.objects[id]) state.objects[id].controller = effect.apply.controller;
+  /* Control gained "until end of turn" returns now (effects/permanents.mjs, gainControl and endControlChange), each change
+     ending in timestamp order: twice in one turn, the first controller has it back -- and a change lasting longer, made
+     after one of these, keeps it (CR 613.7). */
+  for (const effect of (state.effects ?? []).filter((e) => e.rule === "control-returns" && e.until === "end-of-turn")) endControlChange(state, effect);
   if ((state.effects ?? []).some((effect) => effect.until === "end-of-turn")) state.effects = state.effects.filter((effect) => effect.until !== "end-of-turn");
   /* "Until the end of your next turn" (script/effects/zones.mjs, mayPlay): over at the end of the first turn of that player
      begun after it was made -- this one, if it was made before this turn began. */
@@ -644,6 +643,8 @@ export function advance(state) {
       /* And how many permanents left the battlefield under each one's control (state/index.mjs, revolt), and what entered
          under it (rules/trigger.mjs, recordArrivals). */
       if (player.leftThisTurn) player.leftThisTurn = 0;
+      /* And how many cards left each one's graveyard (state/index.mjs; "if a card left your graveyard this turn"). */
+      if (player.leftGraveyardThisTurn) player.leftGraveyardThisTurn = 0;
       if (player.enteredThisTurn) player.enteredThisTurn = [];
       /* And whether each was dealt combat damage (rules/combat.mjs). */
       if (player.combatDamagedThisTurn) player.combatDamagedThisTurn = false;

@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,195 defined and playable today; 2,525 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,196 defined and playable today; 2,527 with every
 mechanic built, so only their definitions are left to write; 28 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 42 | 0 | 16 | 136 |
+| Keyword abilities (CR 702) | 194 | 43 | 0 | 15 | 136 |
 | Keyword actions (CR 701) | 70 | 22 | 3 | 1 | 44 |
 | Effects | 192 | 68 | 1 | 4 | 119 |
 | Triggers | 138 | 20 | 4 | 2 | 112 |
@@ -26,7 +26,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Replacement effects | 34 | 0 | 5 | 0 | 29 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
 | Options and conditions | 37 | 23 | 5 | 0 | 9 |
-| Amounts the game counts | 188 | 15 | 1 | 0 | 172 |
+| Amounts the game counts | 188 | 16 | 1 | 0 | 171 |
 | Choices | 15 | 12 | 0 | 0 | 3 |
 | Other keyword constructs | 16 | 9 | 0 | 1 | 6 |
 
@@ -36,7 +36,7 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 26 | 94 |
+| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 26 | 93 |
 | option | Remembering what an effect moved | — | missing | 23 | 89 |
 | option | You may play or cast a card from another zone | — | missing | 17 | 67 |
 | effect | ChooseColor | — | missing | 10 | 14 |
@@ -127,7 +127,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.95 | Soulbond | — | missing | 2 | 25 | 2 | 1 |
 | 702.13 | Intimidate | — | missing | 2 | 23 | 2 | 2 |
 | 702.63 | Vanishing | — | missing | 2 | 21 | 2 | 2 |
-| 702.134 | Mentor | — | named | 2 | 19 | 2 | 1 |
+| 702.134 | Mentor | Mentor | built | 2 | 19 | 0 | 0 |
 | 702.101 | Extort | — | missing | 2 | 18 | 2 | 2 |
 | 702.123 | Fabricate | — | missing | 2 | 16 | 2 | 2 |
 | 702.118 | Skulk | — | missing | 2 | 15 | 2 | 2 |
@@ -828,7 +828,7 @@ The things that alone hold back the most of the most-played cards.
 | Fewer targets than the most ("up to", "any number of") | a target's count {min, max} (script/bind.mjs), picked as a pick-several | built | 126 | 1672 | 0 | 0 |
 | Remembering what an effect moved | — | missing | 124 | 1168 | 89 | 23 |
 | More than one target of a kind ("up to N") | a target's count {min, max} (script/bind.mjs); a count that is X is not built | partial | 123 | 1664 | 0 | 0 |
-| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 94 | 26 |
+| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 93 | 26 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost} | built | 104 | 684 | 0 | 0 |
@@ -948,8 +948,8 @@ The things that alone hold back the most of the most-played cards.
 | — | OptionalGenericCostPaid | — | missing | 0 | 11 | 0 | 0 |
 | — | Teamwork | — | missing | 0 | 11 | 0 | 0 |
 | — | wasCastFromGraveyard | — | missing | 0 | 11 | 0 | 0 |
+| — | Cards that left your graveyard this turn | amount {cardsLeftGraveyardThisTurn: "you" / "that player"} (state/index.mjs keeps it, rules/turn.mjs clears it) | built | 0 | 8 | 0 | 0 |
 | — | LastStateBattlefieldWithFallback | — | missing | 0 | 8 | 0 | 0 |
-| — | LeftGraveyardThisTurn | — | missing | 0 | 8 | 0 | 0 |
 | — | Life you lost this turn | amount {lifeLostThisTurn: "you"} (effects/resources.mjs keeps it, rules/turn.mjs clears it); a selector's manaValue.max may be it | built | 0 | 8 | 0 | 0 |
 | — | Result | — | missing | 0 | 8 | 0 | 0 |
 | — | TotalDamageDoneByThisTurn | — | missing | 0 | 8 | 0 | 0 |

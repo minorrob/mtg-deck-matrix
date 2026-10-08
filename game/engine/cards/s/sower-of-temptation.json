@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sower of Temptation",
+    "oracleId": "5881aac2-4f31-45cb-bdb5-64a29ec23316",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Faerie",
+      "Wizard"
+    ],
+    "manaCost": "{2}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying\nWhen this creature enters, gain control of target creature for as long as this creature remains on the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, gain control of target creature for as long as this creature remains on the battlefield.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "gainControl",
+          "targets": {
+            "target": 0
+          },
+          "until": "this leaves"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ]
+    }
+  ]
+}

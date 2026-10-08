@@ -167,12 +167,14 @@ function placesFilled(tight, caps) {
 const named = (list) => (list.length <= 1 ? list.join("") : `${list.slice(0, -1).join(", ")} and ${list[list.length - 1]}`);
 function requirementWords(state, required, most = null, at = []) {
   const names = named(required.map((r) => shownName(state.objects[r.id])));
-  const sources = named([...new Set(required.flatMap((r) => r.sources).map((s) => state.objects[s]?.card ?? "a permanent"))]);
-  if (most === null) return `${names} ${required.length === 1 ? "has" : "have"} to attack this combat: ${sources} says ${required.length === 1 ? "it attacks" : "they attack"} each combat if able. `
+  /* A requirement an effect made outlives its source (Legion Warboss's token, rules/statics.mjs): named as it was. */
+  const nameOf = (s) => state.objects[s]?.card ?? (state.effects ?? []).find((e) => e.rule === "attacks-each-combat" && e.sourceId === s)?.sourceName ?? "a permanent";
+  const sources = named([...new Set(required.flatMap((r) => r.sources).map(nameOf))]);
+  if (most === null) return `${names} ${required.length === 1 ? "has" : "have"} to attack this combat: ${sources} says ${required.length === 1 ? "it attacks" : "they attack"} if able. `
     + `Declare ${required.length === 1 ? "it" : "each of them"} attacking a player or a planeswalker.`;
   const places = named(at.map((pw) => state.objects[pw]?.card ?? "a planeswalker"));
   const howMany = String(COUNTED[most]?.replace(/ creatures?$/, "") ?? most);
-  return `${howMany[0].toUpperCase()}${howMany.slice(1)} of ${names} ${most === 1 ? "has" : "have"} to attack this combat: ${sources} says they attack each combat if able, and ${places} is all they can attack. `
+  return `${howMany[0].toUpperCase()}${howMany.slice(1)} of ${names} ${most === 1 ? "has" : "have"} to attack this combat: ${sources} says they attack if able, and ${places} is all they can attack. `
     + `Declare ${most === 1 ? "one of them" : `${most} of them`} attacking ${places}.`;
 }
 /* The record's `requires` (controller.mjs holds every answerer to it): at least `least` of the options naming these creatures. */

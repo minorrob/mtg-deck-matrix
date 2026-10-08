@@ -413,6 +413,10 @@ export function attacksEachCombat(state, id) {
       if (conditionHolds(state, ability.condition, context) && matchesSelector(chosenFor(ability, holder).affects, state, id, context)) sources.push(holderId);
     }
   }
+  /* And "attacks this combat if able" (Legion Warboss's token; effects/permanents.mjs, afterwards): an effect on the very
+     creature, for the one combat phase it names -- its source named, as a static's holder is, gone or not. */
+  for (const effect of state.effects ?? [])
+    if (effect.rule === "attacks-each-combat" && effect.combat === (state.combatsThisTurn ?? 0) && effect.affects.ids.includes(id)) sources.push(effect.sourceId);
   return sources;
 }
 
