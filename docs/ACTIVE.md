@@ -11,6 +11,142 @@ here, on the same branch and PR #669, building on Codex's commit. **`docs/handof
 handoff's §3 says, five workers by engine area (permissions and attack statics; effects, counts and triggers; memory;
 keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of the week's usage, pause and hand off.
 
+**Later, 2026-10-08:** the five workers' 45 cards and CR 800.4a merged here (#676); and on Rob's go ("merge Codex's stack") Codex's #670 to #675, reviewed first, merged here too -- every card of the seven decks is now defined (Tegwyll's definition still provisional). Codex's records of 2026-10-07 follow, as it left them.
+
+## Cloud production Play preparation, October 7, 2026
+
+**Holder:** Codex, `/workspace/crankmagic-cloud`, `codex/production-play-profile`,
+following Faerie draft PR #674 at `a985022f`. Commander draft PR #673 is now
+`3fdedc29`, with 35 successful actual-workerd browser checks and corrected
+runtime expectations for the now-supported Quintorius. Faerie proof remains
+57 targeted checks, 20 faults and 243 engine/regression suites.
+
+**Candidate:** explicit production Play and standby profiles, the same production
+account resources, no staging privileges, exact build binding guards and a
+standby entry closure that retains GameTable storage. Default pages is unchanged.
+108 Worker checks, 174 release-builder checks, three caught faults, and 27 actual
+local-workerd recovery checks pass. See
+`docs/production-play-profile-2026-10-07.md` for the first-migration rollback
+constraint, existing-socket/clock limitations and remaining live gates.
+
+No merge, deployment, new credentials or paid calls. Main `2ad84eb0`, Train B
+`5d068d26` and the exact-head green PRs #670–672 remain preserved. The saved cloud
+cannot currently reach staging; Actions secret presence cannot be inspected with
+the connected tool. The separate GitHub-runner route is documented, not installed.
+
+## Cloud Faerie interactions, October 7, 2026
+
+**Holder:** Codex, `/workspace/crankmagic-cloud`, `codex/faerie-interactions`,
+following commander draft PR #673 at `3fdedc29`. Mastermind, Spellstutter and
+Winnower pass 57 targeted checks, all 20 fault checks and all 243 engine/regression
+suites. See `docs/faerie-interactions-2026-10-07.md`. There are 46 distinct
+unavailable names left in the seven committed decks. Sower needs genuine
+source-duration control support; Tegwyll remains provisional.
+
+Main and Train B remain unchanged. PRs #670–672 have exact-head green Tests runs.
+No release or credential changes have occurred. GitHub-hosted staging acceptance
+is being investigated: current workflows have no staging job or Access-secret
+references, and the connected app cannot inspect secret metadata. A single
+service identity cannot stand in for a separately signed-in friend.
+
+## Cloud linked-exile commanders, October 7, 2026
+
+**Holder:** Codex, `/workspace/crankmagic-cloud`, `codex/exile-commanders`,
+following advice PR #672 at `b58b4534`. Quintorius and Maralen are implemented;
+107 targeted checks, all 38 faults caught, all 242 engine/regression suites and
+final D2/D5 two-browser natural games pass. See
+`docs/exile-commanders-2026-10-07.md` for rules scope and evidence limits.
+
+**Verified stack:** #670 `5174b836` / Actions `37630443333`, #671 `6eec6348` /
+`37632309093`, and #672 `b58b4534` / `37632350352` are all ready with successful
+full Tests runs. Main `2ad84eb0` and Train B `5d068d26` remain unchanged.
+Nothing has been merged or deployed. Current release configuration/user actions
+and the Library screenshot transfer failure are documented in
+`docs/cloud-release-gates-2026-10-07.md`. Production Play is in scope, after
+staging, data, Access and rollback gates; paid AI remains unapproved.
+
+## Cloud advice preparation, October 7, 2026
+
+**Holder:** Codex in `/workspace/crankmagic-cloud`, `codex/bounded-advice`,
+following D2 draft PR #671 at `6eec6348`. D2 and its natural browser game are pushed.
+The advice contract prepares bounded, account-scoped, versioned requests and
+checks evidence/card/option references against fresh snapshots. It cannot call
+providers, schedule work, persist credentials or mutate game/library data.
+
+**Proof:** 45 contract checks, 10 caught deliberate faults, data integrity and
+feature wiring; existing AI door's 45 fake-provider checks still pass. See
+`docs/bounded-advice-2026-10-07.md`. Paid AI remains unapproved and disabled.
+This is groundwork; monthly reservations, trusted source/UI integration and
+responsive live delivery are not claimed complete.
+
+**CI:** library PR #670 at `5174b836` is checking in Actions `37630443333` after
+repairing its sole inventory failure. D2 PR #671 remains draft/mergeable on
+`6eec6348`. Train B/main remain unchanged. Release blockers below still apply.
+
+## Cloud D2 completion, October 7, 2026
+
+**Holder:** Codex, `/workspace/crankmagic-cloud`, `codex/chulane-completion`,
+following PR #670. Train B/main remain unchanged. Guardian Project, Yavimaya
+Dryad and Claim Jumper are defined with engine behavior and rules tests.
+
+**Proof:** 241 engine/regression suites passed; 67 dedicated checks; 37 caught
+faults. A new cloud-local D2 game through two human browser sessions plus two
+house pilots finished naturally in 44 turns / 349 UI actions, zero refusals.
+Reload and all 354 hidden-information frames per person passed. See
+`docs/chulane-completion-2026-10-07.md` for commands and evidence limits.
+D2 has zero unavailable cards; 51 distinct unavailable names remain across the
+seven committed decks. This does not materialize the exact October 4 backup.
+
+**CI:** the separate library worktree repaired PR #670's generated inventory
+failure at `5174b836`; Actions `37630443333` is running. D2 is a separate draft
+follow-up. No merge or deployment. Staging egress/credentials, exact-backup
+materialization and AI budget approval remain open.
+
+## Cloud library continuation, October 7, 2026
+
+**Holder:** Codex in Rob's authorized separate cloud checkout, `/workspace/crankmagic-cloud`,
+`codex/real-deck-acceptance`. The remote follow-up was recovered at `e6715329`; Train B remains
+unchanged at `5d068d26`, PR #669 ready, with its successful Actions run freshly confirmed through
+GitHub's connected app. The offline desktop's uncommitted edit was not recovered.
+
+**Work:** direct reviewed card removal, commander changes, direct deck deletion, and a deletion
+Undo receipt that survives navigation. Ownership, reservation and physical location stay distinct.
+The evidence, commands, cloud toolchain differences and exact blockers are in
+`docs/cloud-continuation-2026-10-07.md`.
+
+**Release gates:** Access/Cloudflare credentials absent; staging egress CONNECT 403; exact October 4
+backup not materialized in cloud; AI spending unapproved. No merge or deployment, no production
+readiness claim. Continue the card coverage and real-game gates after this library increment.
+
+**CI repair:** PR #670's first ready run passed every suite except the generated
+data inventory: the recovered real-deck harness added one reader. The generated
+record is repaired; the new head still needs a green Actions run. Full local
+generator testing reaches an unrelated Scryfall HTTP 403; the inventory check itself passes.
+
+## Library and real-deck acceptance, October 7, 2026
+
+**Holder:** Codex on Personal-HP, `codex/real-deck-acceptance`, based on the verified
+Train B head `5d068d26`. PR #669 is pushed and ready. Its full Actions run
+`37576879773` passed 396 suites and 262 companion tests. Both Workers Builds previews
+remain failed (D8); no merge or deployment was performed.
+
+**New proof:** the exact October 4 backup passed 50 two-human-protocol/two-house games
+and 30 all-house games, all with zero whole-match refusals. The 50 games took 14,115 human
+decisions, 35-65 turns, and at most 4,198 ms for a local human response. These are isolated
+room simulations. `tests/uat/real-deck-game.mjs` also proves a natural D5 game through two
+separate browsers: 377 UI actions, 33 turns, zero AI refusals, reload preserving the pending
+question, and all 381 frames per person keeping other hands and libraries hidden.
+
+**Next:** audit the actual library/deck experience with isolated data and improve obvious
+remove, delete, commander and copy-moving paths, preserving quantities through undo,
+reload, repeated clicks and multiple tabs. Then take D2's three missing cards in bounded
+engine increments. Train B's tested head stays unchanged.
+
+**Live blockers:** service-token environment variables are absent, and the supported browser
+connection twice failed to load its request-header policy before any site interaction.
+No Access policy, credential, permission or reserved dashboard setting was changed.
+Paid AI waits on a concrete cap. D11's Claude settings are optional tooling, not a launch gate.
+
 ## The previous record: the Train B continuation, October 7, 2026 (Codex)
 
 **Holder:** Codex on Personal-HP, continuing the authorized production-readiness work on

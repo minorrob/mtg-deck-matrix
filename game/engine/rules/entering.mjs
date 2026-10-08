@@ -19,7 +19,7 @@
  */
 
 import {runEffect} from "../script/effects/index.mjs";
-import {cardsIn} from "../state/index.mjs";
+import {cardsIn, eventCard} from "../state/index.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {creatureTypesInGame} from "../script/effects/asking.mjs";
 import {copyOnto} from "../script/effects/permanents.mjs";
@@ -40,6 +40,20 @@ export function holdArrival(state, objectId, arrival) {
   if (!waiting.length || !arrival) return;
   arrival.data.fields.awaitingCopy = true;
   for (const q of waiting) q.arrival = arrival;
+}
+
+/**
+ * COUNTERS A PERMANENT ENTERED WITH WERE PUT ON IT (CR 122.6): "whenever a +1/+1 counter is put on this creature" (Fathom
+ * Mage) sees them -- said once it is on the battlefield, after its arrival, for each kind its entering gave it (`entering`,
+ * rules/replacement.mjs enteringModifications; rules/stack.mjs, effects/zones.mjs), from none: it is a new object (CR 400.7).
+ *
+ * @returns {Array} the counters events
+ */
+export function enteredWith(state, id, entering) {
+  const object = state.objects[id];
+  if (object?.zone !== "battlefield") return [];
+  return Object.keys(entering?.counters ?? {}).map((counter) => ({kind: "GameEventCardCounters",
+    data: {turn: state.turn, phase: state.phase, fields: {card: eventCard(state, id), type: counter, oldValue: 0, newValue: object.counters[counter] ?? 0}}}));
 }
 
 /* What it may enter as a copy of: each other permanent the selector matches, "you" its controller. */

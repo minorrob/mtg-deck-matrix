@@ -26,6 +26,7 @@ import {typesOf, powerOf, toughnessOf, keywordsOf, isKeywordCounter, controllerO
 import {cantGainLife, countersPlaced, playerCountersPlaced} from "../../rules/statics.mjs";
 import {playerRuled} from "../../rules/sba.mjs";
 import {amountOf} from "../amount.mjs";
+import {recordUse} from "../../state/index.mjs";
 
 /** `addMana` — into the controller's pool, which empties at the end of the step (CR 500.4). */
 export function addMana(state, params, context) {
@@ -260,6 +261,10 @@ export function damageAll(state, params, context) {
 export function damagePermanent(state, id, amount, events, {infect = false, by = null} = {}) {
   const types = typesOf(state, id);
   const object = state.objects[id];
+  /* "Target creature that was dealt damage this turn" (Mirrodin Avenged; CR 120.3): this object was dealt damage -- combat
+     or not, marked, loyalty removed or -1/-1 counters from infect, all damage dealt (120.3c-d) -- counted for this turn
+     only (state/index.mjs, usesThisTurn), and for this object only: one that leaves and returns is a new one (CR 400.7). */
+  recordUse(state, id, "dealt damage");
   if (types.includes("Planeswalker")) {
     const before = object.counters.loyalty ?? 0;
     object.counters.loyalty = Math.max(0, before - amount);
@@ -377,6 +382,9 @@ export function winGame(state, params, context) {
 /** `putCounter` — CR 121. */
 export function putCounter(state, params, context) {
   const events = [];
+  /* A kind of counter its controller chooses (`counter: "chosen"`) is asked first, as it resolves (effects/asking.mjs,
+     counterKind) -- never decided here, and never put on as a counter named "chosen". */
+  if (params.counter === "chosen") throw new Error("putCounter with a chosen kind of counter asks its controller which: run it through resolution.mjs");
   for (const id of params.targets ?? []) addCounters(state, id, params.counter ?? "+1/+1", params.count ?? 1, events, context.controller);
   return events;
 }
@@ -408,24 +416,53 @@ export function multiplyCounters(state, params, context) {
 }
 
 /** `removeCounter` — the other direction, and never below zero. "Remove all counters from target creature" (Perfect
-    Intimidation): `counter: "all"`, every kind it has, all of each. */
+    Intimidation): `counter: "all"`, every kind it has, all of each. "Remove all charge counters from this artifact"
+    (Coalition Relic): `all: true`, every counter of the kind named. And how many it removed, for "for each charge counter
+    removed this way" after it (`countersRemoved`, read by the amount `countersRemovedThisWay`, script/amount.mjs): none
+    removed is 0 (CR 122.1, 608.2c). */
 export function removeCounter(state, params, context) {
   const events = [];
+  let removed = 0;
   for (const id of params.targets ?? []) {
     const object = state.objects[id];
     if (!object) continue;
     const kinds = params.counter === "all" ? Object.keys(object.counters ?? {}) : [params.counter ?? "+1/+1"];
     for (const kind of kinds) {
       const before = object.counters[kind] ?? 0;
-      const after = params.counter === "all" ? 0 : Math.max(0, before - (params.count ?? 1));
+      const after = params.counter === "all" || params.all === true ? 0 : Math.max(0, before - (params.count ?? 1));
       if (after === before) continue;
       object.counters[kind] = after;
+      removed += before - after;
       events.push(event("GameEventCardCounters", state, {
         card: cardRef(state, id), type: kind, oldValue: before, newValue: after,
       }));
     }
   }
-  void context;
+  if (context) context.countersRemoved = removed;
+  return events;
+}
+
+/**
+ * `moveCounters` -- CR 122.5: "you may move a counter from target creature you control onto a second target creature you
+ * control" (Tidus, Yuna's Guardian). `count` counters of the kind `counter` taken off `from` (an object, bound as a target
+ * is) and put on the effect's `targets` (the second object). All or nothing (122.5): nothing moves when the two are the
+ * same object, when the first has fewer than that many of that kind, or when either is no longer on the battlefield. They
+ * are put on as any counters are (addCounters): what watches for counters being put on sees them (CR 122.6), and "twice
+ * that many instead" applies. Which kind, when the card leaves it to its controller (`counter: "chosen"`), is asked first
+ * (script/resolution.mjs; effects/asking.mjs, counterKind) -- never here.
+ */
+export function moveCounters(state, params, context) {
+  const events = [];
+  if (params.counter === "chosen") throw new Error("moveCounters with a chosen kind of counter asks its controller which: run it through resolution.mjs");
+  const [from] = params.from ?? [], [to] = params.targets ?? [];
+  const kind = params.counter ?? "+1/+1", n = Math.max(0, params.count ?? 1);
+  if (from === undefined || to === undefined || from === to || n === 0) return events;
+  const source = state.objects[from], destination = state.objects[to];
+  if (source?.zone !== "battlefield" || destination?.zone !== "battlefield" || (source.counters?.[kind] ?? 0) < n) return events;
+  const before = source.counters[kind];
+  source.counters[kind] = before - n;
+  events.push(event("GameEventCardCounters", state, {card: cardRef(state, from), type: kind, oldValue: before, newValue: source.counters[kind]}));
+  addCounters(state, to, kind, n, events, context.controller);
   return events;
 }
 

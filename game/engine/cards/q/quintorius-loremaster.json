@@ -1,0 +1,124 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Quintorius, Loremaster",
+    "oracleId": "c3d38129-b955-4fb5-8486-095f918935b9",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elephant",
+      "Cleric"
+    ],
+    "manaCost": "{3}{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 5
+  },
+  "oracleText": "Vigilance\nAt the beginning of your end step, exile target noncreature, nonland card from your graveyard. Create a 3/2 red and white Spirit creature token.\n{1}{R}{W}, {T}, Sacrifice a Spirit: Choose target card exiled with Quintorius. You may cast that card this turn without paying its mana cost. If that spell would be put into a graveyard, put it on the bottom of its owner's library instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, exile target noncreature, nonland card from your graveyard. Create a 3/2 red and white Spirit creature token.",
+      "trigger": {
+        "on": "end step"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "link": true
+        },
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Spirit",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Spirit"
+            ],
+            "colors": [
+              "R",
+              "W"
+            ],
+            "power": 3,
+            "toughness": 2
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "owner": "you",
+          "nonTypes": [
+            "Creature",
+            "Land"
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{1}{R}{W}, {T}, Sacrifice a Spirit: Choose target card exiled with Quintorius. You may cast that card this turn without paying its mana cost. If that spell would be put into a graveyard, put it on the bottom of its owner's library instead.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{R}{W}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "subtypes": [
+              "Spirit"
+            ]
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "exile",
+          "exiledWith": "self"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "mayPlay",
+          "targets": {
+            "target": 0
+          },
+          "spellsOnly": true,
+          "free": true,
+          "graveyardToLibraryBottom": true,
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

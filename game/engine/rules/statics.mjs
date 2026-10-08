@@ -153,6 +153,10 @@ export const STATIC_RULES = Object.freeze({
       you during their last turn as though it didn't have defender" (Weathered Sentinels: `against: "attackedYouLastTurn"`,
       those players only, never a planeswalker). defenderLifted, below. */
   "attacks-despite-defender": "rules/combat.mjs",
+  /** Umbra armor (CR 702.89a): the keyword kept as this static on its Aura (cards/index.mjs), read wherever the permanent it
+      enchants would be destroyed -- the damage removed and the Aura destroyed instead (script/effects/zones.mjs,
+      destructionReplaced). */
+  "umbra-armor": "script/effects/zones.mjs",
   /** "Prevent all damage that would be dealt to [them] this turn": an effect with a duration only (effectUntil), with
       `apply` {to, by, combat}; rules/replacement.mjs. */
   "prevent-damage": "rules/replacement.mjs",
@@ -413,6 +417,10 @@ export function attacksEachCombat(state, id) {
       if (conditionHolds(state, ability.condition, context) && matchesSelector(chosenFor(ability, holder).affects, state, id, context)) sources.push(holderId);
     }
   }
+  /* And "attacks this combat if able" (Legion Warboss's token; effects/permanents.mjs, afterwards): an effect on the very
+     creature, for the one combat phase it names -- its source named, as a static's holder is, gone or not. */
+  for (const effect of state.effects ?? [])
+    if (effect.rule === "attacks-each-combat" && effect.combat === (state.combatsThisTurn ?? 0) && effect.affects.ids.includes(id)) sources.push(effect.sourceId);
   return sources;
 }
 
@@ -543,6 +551,9 @@ export function costReduction(state, player, cardId) {
       if (caster === "opponent" && player === holder.controller) continue;
       const selector = {...(ability.affects ?? {}), what: "card", zone: object.zone};
       if (!matchesSelector(selector, state, cardId, {controller: holder.controller, source: holderId})) continue;
+      /* "Spells you cast from anywhere other than your hand cost {2} less to cast" (Advanced Reconstruction, level 3): where
+         the card is cast from (CR 601.2a, 601.2f) -- a graveyard, exile, a library, the command zone -- never a hand. */
+      if (ability.fromAnywhereButHand === true && object.zone === "hand") continue;
       /* "During your turn, spells you cast cost {1} less for each creature you control with power 4 or greater" (Temur
          Battlecrier): its condition, and its amount counted now. */
       if (!conditionHolds(state, ability.condition, {controller: holder.controller, source: holderId})) continue;

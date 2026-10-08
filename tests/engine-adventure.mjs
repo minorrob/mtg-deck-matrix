@@ -63,11 +63,13 @@ const mayPlays = (s) => (s.effects ?? []).filter((e) => e.rule === "may-play");
 {
   const one = play([at(0, "battlefield", "Plains", "Bear"), at(0, "hand", BOFUR)], [{tap: "Plains"}]);
   eq(casts(one), [ME], "with {W} in the pool, only Bofur: the Adventure costs {1}{W}");
-  const two = play([at(0, "battlefield", "Plains", "Wastes", "Bear"), at(0, "hand", BOFUR)], [{tap: "Plains"}, {tap: "Wastes"}]);
-  eq(casts(two), [ME, CARE + " (Adventure)"], "with {1}{W}, both, each its own offer");
+  /* The pool filled as the board is set, so nothing has weighed the card before the game is hashed. */
+  const two = play([at(0, "battlefield", "Bear"), at(0, "hand", BOFUR)], []);
+  Object.assign(two.players[0].manaPool, {W: 1, C: 1});
   const before = hashState(two);
-  legalActions(two, 0); legalActions(two, 0);
-  eq(hashState(two), before, "weighing the Adventure leaves the game as it was: the card back as itself in hand");
+  eq(casts(two), [ME, CARE + " (Adventure)"], "with {1}{W}, both, each its own offer");
+  legalActions(two, 0);
+  eq(hashState(two), before, "weighing the Adventure leaves the game as it was, from the first look: the card back as itself in hand, nothing of the Adventure's left on it");
   const [card] = named(two, ME, "hand");
   eq([card.card, card.face, card.types], [ME, undefined, ["Creature"]], "and the object is Bofur again, no face left showing");
   const none = play([at(0, "battlefield", "Plains", "Wastes"), at(0, "hand", BOFUR)], [{tap: "Plains"}, {tap: "Wastes"}]);

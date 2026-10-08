@@ -141,7 +141,7 @@ const files = loadCardScenarios();
     const {definition, problems} = compileScript(script);
     ok(definition === null && problems.some((p) => re.test(p)), `${message} (${problems.join("; ")})`);
   };
-  problem(base([{kind: "spell", text: "Take an extra turn after this one.", effects: [{effect: "addTurn"}]}]), /addTurn: declared, not built/, "a primitive declared and not built");
+  problem(base([{kind: "spell", text: "Replace a counter.", effects: [{effect: "replaceCounters"}]}]), /replaceCounters: declared, not built/, "a primitive declared and not built");
   problem(base([{kind: "keyword", text: "Equip {2}", keyword: "equip"}], ["Artifact"]), /Equip: declared, no behavior/, "a keyword with no behavior");
   /* (Batch 27 built "Discard a card"; the example of a cost nothing pays is now one that still is not.) */
   problem(base([{kind: "activated", text: "Exile a card from your graveyard: Draw a card.", cost: [{atom: "exileFromGraveyard"}], effects: [{effect: "draw"}]}], ["Artifact"]),
@@ -182,8 +182,8 @@ const files = loadCardScenarios();
   problem(base([]), /no spell ability/, "an instant that does nothing");
   problem(base([{kind: "spell", text: "a", effects: [{effect: "draw"}]}, {kind: "spell", text: "b", effects: [{effect: "draw"}]}]), /second spell ability/, "two spell abilities");
   problem({...base([]), identity: {name: "Probe", types: ["Instant"]}}, /oracleId/, "a script the schema refuses never becomes an object");
-  const mixed = createCardIndex([base([{kind: "spell", text: "Take an extra turn after this one.", effects: [{effect: "addTurn"}]}])]);
-  eq([mixed.resolve("Probe").playable, mixed.definition("Probe"), mixed.problems("Probe")], [false, null, ["addTurn: declared, not built"]],
+  const mixed = createCardIndex([base([{kind: "spell", text: "Replace a counter.", effects: [{effect: "replaceCounters"}]}])]);
+  eq([mixed.resolve("Probe").playable, mixed.definition("Probe"), mixed.problems("Probe")], [false, null, ["replaceCounters: declared, not built"]],
     "a card the engine cannot play resolves, says so and why, and has no definition to seat");
   throws(() => createCardIndex([scripts[0], scripts[0]]), /Two definitions of/, "two definitions of one card are refused, by name and file");
   throws(() => createCardIndex([{schema: SCRIPT_SCHEMA, identity: {}, abilities: []}]), /has no name/, "and a nameless one");

@@ -9,16 +9,16 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1195,
+  "defined": 1215,
   "provisional": 28,
-  "everyRule": 2525
+  "everyRule": 2568
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 42,
+    "built": 53,
     "partial": 0,
-    "named": 16,
+    "named": 5,
     "missing": 136
    },
    "entries": [
@@ -362,13 +362,13 @@
      "kind": "keyword ability",
      "rule": "702.96",
      "name": "Overload",
-     "engine": null,
-     "status": "named",
+     "engine": "Overload",
+     "status": "built",
      "forge": "Overload",
      "top": 7,
      "all": 28,
-     "blocks": 7,
-     "alone": 6
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -422,13 +422,13 @@
      "kind": "keyword ability",
      "rule": "702.131",
      "name": "Ascend",
-     "engine": null,
-     "status": "named",
+     "engine": "Ascend",
+     "status": "built",
      "forge": "Ascend",
      "top": 6,
      "all": 30,
-     "blocks": 6,
-     "alone": 4
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -440,7 +440,7 @@
      "top": 6,
      "all": 27,
      "blocks": 6,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -566,13 +566,13 @@
      "kind": "keyword ability",
      "rule": "702.100",
      "name": "Evolve",
-     "engine": null,
-     "status": "named",
+     "engine": "Evolve",
+     "status": "built",
      "forge": "Evolve",
      "top": 4,
      "all": 23,
-     "blocks": 4,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -638,13 +638,13 @@
      "kind": "keyword ability",
      "rule": "702.84",
      "name": "Unearth",
-     "engine": null,
-     "status": "named",
+     "engine": "Unearth",
+     "status": "built",
      "forge": "Unearth",
      "top": 3,
      "all": 58,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -698,13 +698,13 @@
      "kind": "keyword ability",
      "rule": "702.92",
      "name": "Living Weapon",
-     "engine": null,
-     "status": "named",
+     "engine": "Living Weapon",
+     "status": "built",
      "forge": "Living Weapon",
      "top": 3,
      "all": 19,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -716,7 +716,7 @@
      "top": 3,
      "all": 17,
      "blocks": 3,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -734,13 +734,13 @@
      "kind": "keyword ability",
      "rule": "702.89",
      "name": "Umbra Armor",
-     "engine": null,
-     "status": "named",
+     "engine": "Umbra Armor",
+     "status": "built",
      "forge": "Umbra armor",
      "top": 3,
      "all": 15,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -878,13 +878,13 @@
      "kind": "keyword ability",
      "rule": "702.134",
      "name": "Mentor",
-     "engine": null,
-     "status": "named",
+     "engine": "Mentor",
+     "status": "built",
      "forge": "Mentor",
      "top": 2,
      "all": 19,
-     "blocks": 2,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -998,13 +998,13 @@
      "kind": "keyword ability",
      "rule": "702.120",
      "name": "Escalate",
-     "engine": null,
-     "status": "named",
+     "engine": "Escalate",
+     "status": "built",
      "forge": "Escalate",
      "top": 2,
      "all": 9,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -1015,8 +1015,8 @@
      "forge": "Cumulative upkeep",
      "top": 1,
      "all": 80,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -1346,12 +1346,12 @@
      "kind": "keyword ability",
      "rule": "702.76",
      "name": "Prowl",
-     "engine": null,
-     "status": "named",
+     "engine": "Prowl",
+     "status": "built",
      "forge": "Prowl",
      "top": 1,
      "all": 10,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -1490,8 +1490,8 @@
      "kind": "keyword ability",
      "rule": "702.25",
      "name": "Flanking",
-     "engine": null,
-     "status": "named",
+     "engine": "Flanking",
+     "status": "built",
      "forge": "Flanking",
      "top": 0,
      "all": 30,
@@ -1526,8 +1526,8 @@
      "kind": "keyword ability",
      "rule": "702.165",
      "name": "Backup",
-     "engine": null,
-     "status": "named",
+     "engine": "Backup",
+     "status": "built",
      "forge": "Backup",
      "top": 0,
      "all": 26,
@@ -3206,9 +3206,9 @@
   },
   "Effects": {
    "tally": {
-    "built": 68,
+    "built": 70,
     "partial": 1,
-    "named": 4,
+    "named": 2,
     "missing": 119
    },
    "entries": [
@@ -3949,12 +3949,12 @@
      "rule": null,
      "name": "AddTurn",
      "engine": "addTurn",
-     "status": "named",
+     "status": "built",
      "forge": "AddTurn",
      "top": 10,
      "all": 65,
-     "blocks": 10,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4098,7 +4098,7 @@
      "top": 6,
      "all": 45,
      "blocks": 6,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -4153,12 +4153,12 @@
      "rule": null,
      "name": "MoveCounter",
      "engine": "moveCounters",
-     "status": "named",
+     "status": "built",
      "forge": "MoveCounter",
      "top": 5,
      "all": 32,
-     "blocks": 5,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -5692,7 +5692,7 @@
      "top": 10,
      "all": 47,
      "blocks": 10,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "trigger",
@@ -8923,8 +8923,8 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 89,
-     "alone": 23
+     "blocks": 85,
+     "alone": 22
     },
     {
      "kind": "option",
@@ -8947,7 +8947,7 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 94,
+     "blocks": 92,
      "alone": 26
     },
     {
@@ -9007,7 +9007,7 @@
      "forge": "MayPlay",
      "top": 99,
      "all": 625,
-     "blocks": 67,
+     "blocks": 66,
      "alone": 17
     },
     {
@@ -9199,8 +9199,8 @@
      "forge": "Imprint",
      "top": 10,
      "all": 97,
-     "blocks": 9,
-     "alone": 7
+     "blocks": 8,
+     "alone": 6
     },
     {
      "kind": "option",
@@ -9314,10 +9314,10 @@
   },
   "Amounts the game counts": {
    "tally": {
-    "built": 15,
+    "built": 17,
     "partial": 1,
     "named": 0,
-    "missing": 172
+    "missing": 170
    },
    "entries": [
     {
@@ -9899,13 +9899,13 @@
     {
      "kind": "count",
      "rule": null,
-     "name": "Blessing",
-     "engine": null,
-     "status": "missing",
+     "name": "The city's blessing (ascend)",
+     "engine": "condition {citysBlessing} (script/condition.mjs)",
+     "status": "built",
      "forge": "Blessing",
      "top": 1,
      "all": 10,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -10098,7 +10098,7 @@
      "top": 1,
      "all": 1,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "count",
@@ -10331,10 +10331,10 @@
     {
      "kind": "count",
      "rule": null,
-     "name": "LastStateBattlefieldWithFallback",
-     "engine": null,
-     "status": "missing",
-     "forge": "LastStateBattlefieldWithFallback",
+     "name": "Cards that left your graveyard this turn",
+     "engine": "amount {cardsLeftGraveyardThisTurn: \"you\" | \"that player\"} (state/index.mjs keeps it, rules/turn.mjs clears it)",
+     "status": "built",
+     "forge": "LeftGraveyardThisTurn",
      "top": 0,
      "all": 8,
      "blocks": 0,
@@ -10343,10 +10343,10 @@
     {
      "kind": "count",
      "rule": null,
-     "name": "LeftGraveyardThisTurn",
+     "name": "LastStateBattlefieldWithFallback",
      "engine": null,
      "status": "missing",
-     "forge": "LeftGraveyardThisTurn",
+     "forge": "LastStateBattlefieldWithFallback",
      "top": 0,
      "all": 8,
      "blocks": 0,

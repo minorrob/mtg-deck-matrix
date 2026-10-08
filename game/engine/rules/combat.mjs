@@ -53,7 +53,8 @@
 import {cardsIn, recordUse, shownName, eventCard} from "../state/index.mjs";
 import {applyReplacements, hitKey, damageChoicesPossible} from "./replacement.mjs";
 import {runFollowUps} from "../script/effects/index.mjs";
-import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf, deriving} from "./layers.mjs";
+import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf, deriving, subtypesOf, everyCreatureTypeOf} from "./layers.mjs";
+import {isCreatureType} from "../keywords/types.mjs";
 import {givePoison, changeLife, infects, addCounters, damagePermanent} from "../script/effects/resources.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
 import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack as restricted, cantGainLife, attackerCaps, defenderLifted, attacksEachCombat} from "./statics.mjs";
@@ -113,7 +114,8 @@ const planeswalkersOf = (state, player) =>
 const planeswalkerInCombat = (state, attack) => attack.planeswalker !== undefined && Boolean(state.objects[attack.planeswalker])
   && typesOf(state, attack.planeswalker).includes("Planeswalker") && controllerOf(state, attack.planeswalker) === attack.defender;
 /* Combat damage to what it attacks: the player, or the planeswalker while it is in combat; or none. */
-const toAttacked = (state, attack, amount) => (attack.planeswalker === undefined ? {toPlayer: attack.defender, amount, source: attack.attacker}
+/* None to a player who has left the game (CR 800.4e). */
+const toAttacked = (state, attack, amount) => (attack.planeswalker === undefined ? (state.players[attack.defender].lost ? null : {toPlayer: attack.defender, amount, source: attack.attacker})
   : planeswalkerInCombat(state, attack) ? {toCard: attack.planeswalker, amount, source: attack.attacker} : null);
 
 /* ---- declare attackers ---- */
@@ -167,12 +169,14 @@ function placesFilled(tight, caps) {
 const named = (list) => (list.length <= 1 ? list.join("") : `${list.slice(0, -1).join(", ")} and ${list[list.length - 1]}`);
 function requirementWords(state, required, most = null, at = []) {
   const names = named(required.map((r) => shownName(state.objects[r.id])));
-  const sources = named([...new Set(required.flatMap((r) => r.sources).map((s) => state.objects[s]?.card ?? "a permanent"))]);
-  if (most === null) return `${names} ${required.length === 1 ? "has" : "have"} to attack this combat: ${sources} says ${required.length === 1 ? "it attacks" : "they attack"} each combat if able. `
+  /* A requirement an effect made outlives its source (Legion Warboss's token, rules/statics.mjs): named as it was. */
+  const nameOf = (s) => state.objects[s]?.card ?? (state.effects ?? []).find((e) => e.rule === "attacks-each-combat" && e.sourceId === s)?.sourceName ?? "a permanent";
+  const sources = named([...new Set(required.flatMap((r) => r.sources).map(nameOf))]);
+  if (most === null) return `${names} ${required.length === 1 ? "has" : "have"} to attack this combat: ${sources} says ${required.length === 1 ? "it attacks" : "they attack"} if able. `
     + `Declare ${required.length === 1 ? "it" : "each of them"} attacking a player or a planeswalker.`;
   const places = named(at.map((pw) => state.objects[pw]?.card ?? "a planeswalker"));
   const howMany = String(COUNTED[most]?.replace(/ creatures?$/, "") ?? most);
-  return `${howMany[0].toUpperCase()}${howMany.slice(1)} of ${names} ${most === 1 ? "has" : "have"} to attack this combat: ${sources} says they attack each combat if able, and ${places} is all they can attack. `
+  return `${howMany[0].toUpperCase()}${howMany.slice(1)} of ${names} ${most === 1 ? "has" : "have"} to attack this combat: ${sources} says they attack if able, and ${places} is all they can attack. `
     + `Declare ${most === 1 ? "one of them" : `${most} of them`} attacking ${places}.`;
 }
 /* The record's `requires` (controller.mjs holds every answerer to it): at least `least` of the options naming these creatures. */
@@ -420,9 +424,10 @@ const nextDefenderToDeclare = (state, after = null) => {
 };
 
 export const blockers = {
-  open(state) {
+  /* `after`: a defending player who left the game while asked (rules/turn.mjs, goOnWithout) -- the next one is asked. */
+  open(state, after = null) {
     if (!state.combat) return false;
-    const player = nextDefenderToDeclare(state);
+    const player = nextDefenderToDeclare(state, after);
     if (player === null) return false;
     state.awaiting = {kind: "declare-blockers", player};
     return true;
@@ -694,6 +699,14 @@ export const combatDamage = {
         /* Dealt combat damage this turn, infect or not ("the number of opponents that were dealt combat damage this turn",
            Tymna the Weaver; script/amount.mjs). turn.mjs clears it. */
         state.players[hit.toPlayer].combatDamagedThisTurn = true;
+        /* PROWL'S RECORD (CR 702.76a): "a source that, at the time it dealt that damage, was under your control and had any
+           of this spell's creature types" -- each source that dealt combat damage to a player this turn, kept for the player
+           who controlled it, with its creature types as it dealt it (a changeling's, every one). turn.mjs clears it. */
+        if (state.objects[hit.source]) {
+          const dealer = controllerOf(state, hit.source);
+          if (state.players[dealer]) (state.players[dealer].combatDamageSources ??= []).push({types: subtypesOf(state, hit.source).filter(isCreatureType),
+            every: everyCreatureTypeOf(state, hit.source)});
+        }
         /* The damage is a loss of life (CR 120.3a), counted as one this turn (batch 78: it was not) -- or, with infect, as
            many poison counters. */
         /* Whoever controls the source puts the counters (rules/statics.mjs, playerCountersPlaced). */

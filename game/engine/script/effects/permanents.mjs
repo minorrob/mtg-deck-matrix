@@ -21,7 +21,7 @@ import {addObject, transformObject, rememberExileLooker} from "../../state/index
 import {selectMatching, compileSelector} from "../filter.mjs";
 import {bindEffect, rememberNow} from "../bind.mjs";
 import {amountOf} from "../amount.mjs";
-import {event, cardRef} from "./zones.mjs";
+import {event, cardRef, moveOne} from "./zones.mjs";
 import {typesOf, controllerOf} from "../../rules/layers.mjs";
 import {protectedFrom} from "../../rules/protection.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
@@ -212,6 +212,12 @@ export function afterwards(state, ids, params, context) {
   if (params.mustAttack === "that player" && Number.isInteger(context.about?.player))
     pushEffect(state, {id: `must-attack:${context.source ?? "effect"}:${made.join(",")}`, rule: "must-attack", affects: {ids: made}, defender: context.about.player,
       until: "end-of-turn", sourceController: controller});
+  /* "That token gains haste until end of turn and attacks this combat if able" (Legion Warboss; CR 508.1d): a requirement on
+     them in this combat alone -- the combat phase under way, as rules/turn.mjs counts them -- read with the statics' "attacks each
+     combat if able" (rules/statics.mjs, attacksEachCombat), and named by its source when a declaration breaks it. */
+  if (params.mustAttack === "this combat")
+    pushEffect(state, {id: `attacks-this-combat:${context.source ?? "effect"}:${made.join(",")}`, rule: "attacks-each-combat", affects: {ids: made},
+      combat: state.combatsThisTurn ?? 0, until: "end-of-turn", sourceId: context.source ?? null, sourceName: state.objects[context.source]?.card ?? null, sourceController: controller});
   /* "Return it to the battlefield under its owner's control. It's an enchantment. (It's not a creature.)" (the Enduring
      cycle): its card types from now on, as long as it is this object (CR 205.1a, layer 4). */
   if (params.setTypes) pushEffect(state, {id: `types:${context.source ?? "effect"}`, layer: 4, affects: {ids: made}, apply: {setTypes: params.setTypes}, until: null, sourceController: controller});
@@ -422,7 +428,9 @@ export function animate(state, params, context) {
   pushEffect(state, {
     id: `animate:${context.source ?? "effect"}`,
     layer: 4, affects,
-    apply: {addTypes: params.addTypes ?? ["Creature"], ...(params.subtypes ? {addTypes: [...(params.addTypes ?? ["Creature"]), ...params.subtypes]} : {}),
+    /* "Becomes a 0/0 Elemental creature", "each of them is a 1/1 Spirit in addition to its other types" (Ghost Vacuum): its
+       subtypes added beside its own, in the same layer (CR 205.1b, 613.1d) -- creature types, never card types. */
+    apply: {addTypes: params.addTypes ?? ["Creature"], ...(params.subtypes ? {addSubtypes: [...params.subtypes]} : {}),
       /* "And gain all creature types" (Mirror Entity, batch 74): in the same layer (rules/layers.mjs). */
       ...(params.allCreatureTypes === true ? {allCreatureTypes: true} : {})},
     until: params.until ?? null,
@@ -592,25 +600,76 @@ export function effectUntil(state, params, context) {
 
 /**
  * `gainControl` -- CR 613.1b: "gain control of target creature until end of turn", "untap all creatures and gain control
- * of them" (`selector`, fixed as it resolves), "target opponent gains control of this creature" (`toPlayer`). For good
- * unless `until` says "end-of-turn". The permanent's controller itself changes -- the projection, its triggers, a choice
- * of "a creature you control" all read it -- and for a turn a `control-returns` record gives it back as the turn ends
- * (rules/turn.mjs). It has changed controller, so it is summoning sick for its new controller unless it has haste
- * (CR 302.6), and again for its old one when it returns.
+ * of them" (`selector`, fixed as it resolves), "target opponent gains control of this creature" (`toPlayer`), "for as long
+ * as this creature remains on the battlefield" (Sower of Temptation: `until: "this leaves"`). For good unless `until` says
+ * one of those. The permanent's controller itself changes -- the projection, its triggers, a choice of "a creature you
+ * control" all read it -- and every change leaves a `control-returns` record: whom it took the permanent from, whom it gave
+ * it to (`to`), and how long it lasts (`until`, unsaid for good). That record gives it back when the change ends
+ * (endControlChange): as the turn ends (rules/turn.mjs), as its source leaves the battlefield (effects/zones.mjs), or --
+ * for good ones too -- as the player it gave control to leaves the game (CR 800.4a; rules/sba.mjs). It has changed
+ * controller, so it is summoning sick for its new controller unless it has haste (CR 302.6), and again for its old one
+ * when it returns.
  */
 export function gainControl(state, params, context) {
   const to = Number.isInteger(params.toPlayer) ? params.toPlayer : context.controller;
+  /* "For as long as this creature remains on the battlefield": a duration that never starts -- its source gone from the
+     battlefield before this resolves (rules/stack.mjs leaves it null then) -- and the effect does nothing (CR 611.2b). */
+  const source = context.source ?? null;
+  if (params.until === "this leaves" && (source === null || state.objects[source]?.zone !== "battlefield")) return [];
   const ids = (params.selector ? selectMatching(state, params.selector, context) : params.targets ?? []).filter((id) => state.objects[id]?.zone === "battlefield");
   for (const id of ids) {
     const object = state.objects[id];
-    if (params.until === "end-of-turn" && object.controller !== to)
-      (state.effects ??= []).push({id: `control-returns:${id}:${state.effects.length}`, rule: "control-returns", affects: {ids: [id]}, apply: {controller: object.controller}, until: "end-of-turn", sourceController: context.controller});
+    /* Kept even for good, and even when it changes nothing: a later change outlasts the earlier ones in layer 2 (CR 613.7),
+       but its player may leave the game and the earlier ones decide again (CR 800.4a). */
+    (state.effects ??= []).push({id: `control-returns:${id}:${state.effects.length}`, rule: "control-returns", affects: {ids: [id]},
+      apply: {controller: object.controller}, to, until: params.until, ...(params.until === "this leaves" ? {source} : {}), sourceController: context.controller});
     rememberExileLooker(state, id, controllerOf(state, id));
     if (object.controller !== to) object.controlledSinceTurn = state.turn;
     object.controller = to;
     rememberExileLooker(state, id, controllerOf(state, id));
   }
   return [];
+}
+/** How long a control change may last other than for good: the turn, or while its source stays (schema.mjs reads it). */
+export const CONTROL_DURATIONS = Object.freeze(["end-of-turn", "this leaves"]);
+
+/**
+ * A CONTROL CHANGE ENDS (CR 613.1b, 613.7): `record`, the `control-returns` record gainControl left. Control effects apply in
+ * timestamp order, the latest winning, so its permanent goes back to whom this one took it from -- unless a later change
+ * still holds it, and then that one is told to give it back there in its turn, as though this one had never been. "Gain
+ * control until end of turn" twice in a turn ends with the first controller; a creature Sower of Temptation took and then
+ * lent until end of turn goes to its owner when the Sower leaves only once the loan ends. Changing hands, it is summoning
+ * sick for whom it returns to (CR 302.6), and not at all for one who has had it all along. A permanent gone from the
+ * battlefield is a new object (CR 400.7) whose records are spent as it leaves (controlSourceLeft). Ending one may exile its
+ * permanent (CR 800.4c), so a caller ending several asks for the next one still standing each time (`nextRecord`).
+ */
+export function endControlChange(state, record, events = []) {
+  const id = record.affects.ids[0];
+  const later = (state.effects ?? []).filter((e) => e.rule === "control-returns" && e.affects.ids[0] === id);
+  const next = later[later.indexOf(record) + 1];
+  state.effects = state.effects.filter((e) => e !== record);
+  if (next) next.apply = {...next.apply, controller: record.apply.controller};
+  /* Back to a player who has left the game it does not go: no other change gives it to a player still in the game, the
+     one who controlled it by default is gone, and it is exiled -- as soon as the change ends (CR 800.4c). */
+  else if (state.players[record.apply.controller].lost) moveOne(state, id, "exile", events);
+  else if (state.objects[id].controller !== record.apply.controller) {
+    state.objects[id].controller = record.apply.controller;
+    state.objects[id].controlledSinceTurn = state.turn;
+  }
+  return events;
+}
+/** The first control record still in effect that `fits` (endControlChange's callers, one at a time). */
+export const nextRecord = (state, fits) => (state.effects ?? []).find((e) => e.rule === "control-returns" && fits(e));
+
+/**
+ * A PERMANENT HAS LEFT THE BATTLEFIELD (`departed`, its id there): each control change lasting "for as long as" it remained
+ * there ends (CR 611.2b; Sower of Temptation), and the records of control changes to it are spent -- it is a new object
+ * now, wherever it went (CR 400.7). Called with every departure (effects/zones.mjs, returnExiledUntil).
+ */
+export function controlSourceLeft(state, departed, events = []) {
+  for (let record; (record = nextRecord(state, (e) => e.until === "this leaves" && e.source === departed));) endControlChange(state, record, events);
+  if (state.effects?.some((e) => e.rule === "control-returns" && e.affects.ids[0] === departed))
+    state.effects = state.effects.filter((e) => !(e.rule === "control-returns" && e.affects.ids[0] === departed));
 }
 
 /**
@@ -756,6 +815,9 @@ export function immediateTrigger(state, params, context) {
   (state.pendingTriggers ??= []).push({abilityId: "reflexive", text: params.text ?? "When you do", controller: context.controller,
     source: {cardId: source, name: source !== null ? state.objects[source]?.card ?? null : null}, cause: null, optional: false,
     ...(context.about ? {about: structuredClone(context.about)} : {}),
+    /* And the X of the resolution that made it (Halo Forager's "you may pay {X}. When you do, ... with mana value X"):
+       what its targets and effects read as X (rules/trigger.mjs). */
+    ...(Number.isInteger(context.x) ? {x: context.x} : {}),
     script: {targets: structuredClone(params.targets ?? []), effects: structuredClone(params.effects ?? [])}});
   return [];
 }

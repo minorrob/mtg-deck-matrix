@@ -27,8 +27,15 @@
  *                                        Spirit for each card type among cards discarded this way" (Occult Epiphany)
  *   {rememberedCount: true}              how many things the effect before it remembered -- "each player shuffles the cards
  *                                        from their hand into their library, then draws that many cards" (batch 80)
+ *   {movedCount: filter}                 how many of what the effect before it moved from the battlefield were, as each
+ *                                        last existed there, what the filter says -- "for each nontoken creature you
+ *                                        controlled that was destroyed this way" (Ceaseless Conflict)
  *   {excessDamage: true}                 the excess damage the damage before it in this resolution dealt (CR 120.4a)
+ *   {countersRemovedThisWay: true}       how many counters the removeCounter before it in this resolution removed ("add one
+ *                                        mana of any color for each charge counter removed this way", Coalition Relic)
  *   {lesserOf: [amount, amount]}         the least of them: "greater than this creature's power or toughness" (increment)
+ *   {tappedThisWay: true}                how many creatures this spell's additional cost tapped as it was cast -- "three times
+ *                                        the number of creatures tapped this way" (Burn at the Stake; rules/actions.mjs)
  *
  * and any of them may say `atMost` ("{1} less IF you control a creature with flying": the count, at most 1), `times` and
  * `plus`: "twice X", "1 plus the number of ...", and `times: -1` for "-X/-X" and
@@ -53,7 +60,8 @@ import {valueCostOf, commanderKeyOf} from "../state/index.mjs";
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
 export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "toughnessOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
   "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn", "playersDealtCombatDamage", "cardTypesAmong", "manaSpent",
-  "permanentsEnteredThisTurn", "excessDamage", "lesserOf", "kicked", "differentPowers", "commanderCasts"]);
+  "permanentsEnteredThisTurn", "excessDamage", "lesserOf", "kicked", "differentPowers", "commanderCasts", "cardsLeftGraveyardThisTurn",
+  "countersRemovedThisWay", "movedCount", "tappedThisWay"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "filter", "controlledBy"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -69,16 +77,20 @@ export function amountProblems(value) {
   const problems = [];
   for (const key of Object.keys(value)) if (!AMOUNT_KINDS.includes(key) && !AMOUNT_EXTRAS.includes(key)) problems.push(`An amount has no key ${JSON.stringify(key)}`);
   if ("countersOn" in value && typeof value.counter !== "string") problems.push("Counting counters says which kind: {countersOn, counter}");
-  for (const key of ["lifeGainedThisTurn", "tokensCreatedThisTurn", "permanentsLeftThisTurn", "permanentsEnteredThisTurn"]) if (key in value && !["you", "that player"].includes(value[key])) problems.push(`${key} is "you" or "that player"`);
+  for (const key of ["lifeGainedThisTurn", "tokensCreatedThisTurn", "permanentsLeftThisTurn", "permanentsEnteredThisTurn", "cardsLeftGraveyardThisTurn"]) if (key in value && !["you", "that player"].includes(value[key])) problems.push(`${key} is "you" or "that player"`);
   /* What entered, as it was (rules/trigger.mjs keeps it): a filter of what a last known snapshot answers, and only there. */
   if ("filter" in value) {
     if (!("permanentsEnteredThisTurn" in value)) problems.push("Only permanentsEnteredThisTurn takes a filter");
     else try { matchesLastKnown(value.filter, {}, {}); } catch (error) { problems.push(`What permanentsEnteredThisTurn counts: ${error.message}`); }
   }
+  /* What was moved, as it last was: a filter of what a last known snapshot answers (script/filter.mjs, matchesLastKnown). */
+  if ("movedCount" in value) try { matchesLastKnown(value.movedCount ?? {}, {}, {}); } catch (error) { problems.push(`What movedCount counts: ${error.message}`); }
   if ("playersDealtCombatDamage" in value && !["opponent", "any"].includes(value.playersDealtCombatDamage)) problems.push('playersDealtCombatDamage is "opponent" or "any"');
   if ("cardTypesAmong" in value && value.cardTypesAmong !== "remembered") problems.push('cardTypesAmong is "remembered"');
   if ("manaSpent" in value && !["that card", "self"].includes(value.manaSpent)) problems.push('manaSpent is "that card" or "self"');
   if ("commanderCasts" in value && value.commanderCasts !== "that card") problems.push('commanderCasts is "that card"');
+  if ("countersRemovedThisWay" in value && value.countersRemovedThisWay !== true) problems.push("countersRemovedThisWay is true");
+  if ("tappedThisWay" in value && value.tappedThisWay !== true) problems.push("tappedThisWay is true");
   if ("controlledBy" in value && !("rememberedCount" in value && value.controlledBy === "that player")) problems.push('controlledBy is "that player", of a rememberedCount');
   if ("lesserOf" in value && !(Array.isArray(value.lesserOf) && value.lesserOf.length >= 2)) problems.push("lesserOf is two or more amounts");
   else if ("lesserOf" in value) for (const one of value.lesserOf) problems.push(...amountProblems(one).map((p) => `lesserOf: ${p}`));
@@ -157,6 +169,9 @@ export function amountOf(state, value, context = {}) {
   if ("x" in value) n = Math.max(0, context.x ?? 0);
   /* "A charge counter on it for each time it was kicked" (Everflowing Chalice; multikicker, CR 702.33c). */
   else if ("kicked" in value) n = context.kicked ?? 0;
+  /* The creatures its additional cost tapped, as the spell was cast (CR 601.2h): what the cast recorded; a copy was not cast
+     (CR 707.10) and tapped none. */
+  else if ("tappedThisWay" in value) n = context.cast?.tapped ?? 0;
   /* "Greater than this creature's power or toughness" (increment, Berta): the lesser of them. */
   else if ("lesserOf" in value) n = Math.min(...value.lesserOf.map((one) => amountOf(state, one, context)));
   else if ("count" in value) n = matching(state, value.count, who).length;
@@ -198,8 +213,16 @@ export function amountOf(state, value, context = {}) {
   else if ("rememberedCount" in value) n = value.controlledBy === "that player"
     ? (context.remembered ?? []).filter((id) => (context.rememberedControllers ?? {})[id] === context.about?.player).length
     : (context.remembered ?? []).length;
+  /* "For each nontoken creature you controlled that was destroyed this way" (Ceaseless Conflict): of what the effect before
+     it moved from the battlefield (`movedWas`: effects/zones.mjs, destroyAll's and moveZone's `remember`), those that were,
+     as each last existed there (CR 608.2h), what the filter says -- "you" the player who controlled it then, `token` whether
+     it was one. */
+  else if ("movedCount" in value) n = (context.movedWas ?? []).filter((was) => matchesLastKnown(value.movedCount, was, {controller: context.controller, source: context.source})).length;
   /* "Empower Jace X, where X is that excess damage" (Violent Echoes): the excess the damage before it dealt (effects/resources.mjs). */
   else if ("excessDamage" in value) n = context.excessDamage ?? 0;
+  /* "For each charge counter removed this way" (Coalition Relic): what the removeCounter before it removed
+     (effects/resources.mjs) -- none removed, or none removed yet, is 0. */
+  else if ("countersRemovedThisWay" in value) n = context.countersRemoved ?? 0;
   /* "For each card type among cards discarded this way" (Occult Epiphany): the card types (CR 205.2a) the remembered
      cards have between them, as they are now -- an artifact creature is two. */
   else if ("cardTypesAmong" in value) n = new Set((context.remembered ?? []).flatMap((id) => state.objects[id]?.types ?? [])).size;
@@ -243,6 +266,12 @@ export function amountOf(state, value, context = {}) {
   else if ("permanentsLeftThisTurn" in value) {
     const player = playerOf(value.permanentsLeftThisTurn, context);
     n = player !== null ? state.players[player]?.leftThisTurn ?? 0 : 0;
+  }
+  /* "If a card left your graveyard this turn" (Primary Research, Relic Retriever): how many cards did, from that player's
+     graveyard to anywhere (state/index.mjs counts each as it leaves, rules/turn.mjs clears it as a turn begins). */
+  else if ("cardsLeftGraveyardThisTurn" in value) {
+    const player = playerOf(value.cardsLeftGraveyardThisTurn, context);
+    n = player !== null ? state.players[player]?.leftGraveyardThisTurn ?? 0 : 0;
   }
   /* "The number of creatures that entered the battlefield under your control this turn" (Kinbinding), and "another
      creature" (Wary Farmer, `another`: not this one): what entered under that player's control, as it entered (rules/

@@ -1,0 +1,103 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tidus, Yuna's Guardian",
+    "oracleId": "e8fbcafd-3617-4cd7-b55d-457fb7b60162",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warrior"
+    ],
+    "manaCost": "{G}{W}{U}",
+    "colors": [
+      "G",
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "U",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "At the beginning of combat on your turn, you may move a counter from target creature you control onto a second target creature you control.\nCheer — Whenever one or more creatures you control with counters on them deal combat damage to a player, you may draw a card and proliferate. Do this only once each turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of combat on your turn, you may move a counter from target creature you control onto a second target creature you control.",
+      "trigger": {
+        "on": "step",
+        "step": "COMBAT_BEGIN"
+      },
+      "effects": [
+        {
+          "effect": "moveCounters",
+          "from": {
+            "target": 0
+          },
+          "targets": {
+            "target": 1
+          },
+          "counter": "chosen",
+          "count": 1
+        }
+      ],
+      "optional": true,
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        },
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "distinctFrom": [
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Cheer — Whenever one or more creatures you control with counters on them deal combat damage to a player, you may draw a card and proliferate. Do this only once each turn.",
+      "trigger": {
+        "on": "damage dealt once",
+        "who": "any",
+        "to": "player",
+        "combat": true,
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "counters": "any"
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "proliferate"
+        }
+      ],
+      "optional": true,
+      "onceEachTurn": true
+    }
+  ]
+}

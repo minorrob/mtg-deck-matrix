@@ -33,13 +33,14 @@ import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sa
 import {
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
   putCounter, putCounterAll, removeCounter, proliferate, damageAll, fight, poison, winGame, multiplyCounters,
-  exchangeLife, damageEach,
+  exchangeLife, damageEach, moveCounters,
 } from "./resources.mjs";
 import {
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
   becomeCopy, earthbend, goad, immediateTrigger, investigate, phaseOut, setState,
 } from "./permanents.mjs";
 import {alterAttribute} from "./attributes.mjs";
+import {addTurn} from "./turns.mjs";
 
 /**
  * The twenty-five most-used primitives across Rob's seven decks, in frequency order, with the count
@@ -176,6 +177,9 @@ export const EFFECTS = Object.freeze({
   /* Train B (X11): life totals exchanged (CR 701.12), damage dealt by each of a set (Forge's EachDamage), and a designation
      given or taken -- monstrous (CR 701.37), prepared (CR 722.3). */
   exchangeLife, damageEach, alterAttribute,
+  /* Train B (X11): counters moved from one permanent to another (CR 122.5; Tidus, Yuna's Guardian), and extra turns (CR
+     500.7; Ichormoon Gauntlet). */
+  moveCounters, addTurn,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */

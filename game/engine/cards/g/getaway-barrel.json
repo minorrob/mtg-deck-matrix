@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Getaway Barrel",
+    "oracleId": "7ddbf891-7f80-44e9-b94c-70c1da0b91ed",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When this artifact is put into a graveyard from the battlefield, reveal the top thirteen cards of your library. Put a random creature card from among them onto the battlefield. Put the rest on the bottom of your library in a random order.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this artifact is put into a graveyard from the battlefield, reveal the top thirteen cards of your library. Put a random creature card from among them onto the battlefield. Put the rest on the bottom of your library in a random order.",
+      "trigger": {
+        "on": "leaves",
+        "to": "graveyard"
+      },
+      "effects": [
+        {
+          "effect": "peekAndReveal",
+          "count": 13,
+          "reveal": true,
+          "remember": true
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "among": "remembered",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "random": true,
+          "count": 1,
+          "destinations": [
+            {
+              "to": "battlefield"
+            }
+          ]
+        },
+        {
+          "effect": "moveZone",
+          "targets": "remembered",
+          "to": "library",
+          "random": true
+        }
+      ]
+    }
+  ]
+}

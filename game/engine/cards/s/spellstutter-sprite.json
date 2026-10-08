@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Spellstutter Sprite",
+    "oracleId": "32e60fb4-e841-4f82-9c83-5e63766e8e6f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Faerie",
+      "Wizard"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Flash\nFlying\nWhen this creature enters, counter target spell with mana value X or less, where X is the number of Faeries you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, counter target spell with mana value X or less, where X is the number of Faeries you control.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "spell",
+          "manaValue": {
+            "max": {
+              "count": {
+                "what": "permanent",
+                "controller": "you",
+                "subtypes": [
+                  "Faerie"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

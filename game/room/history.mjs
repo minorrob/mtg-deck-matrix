@@ -26,7 +26,8 @@ export function historyLines(event, names = []) {
   const line = (text, extra = {}) => [{turn, text, ...extra}];
   switch (kind) {
     case "GameEventTurnPhase":
-      return f.phase === "UNTAP" && f.playerTurn ? line(`Turn ${turn} · ${who(f.playerTurn.playerId)}`, {mark: "turn"}) : [];
+      /* An extra turn (CR 500.7) says so. */
+      return f.phase === "UNTAP" && f.playerTurn ? line(`Turn ${turn} · ${who(f.playerTurn.playerId)}${f.extraTurn ? " (an extra turn)" : ""}`, {mark: "turn"}) : [];
     /* A designation (CR 701.37b, 722.3): monstrous, prepared or unprepared -- public. */
     case "GameEventCardAttribute":
       return line(f.attribute === "monstrous" ? `${cardName(f.card)} became monstrous` : `${cardName(f.card)} ${f.value ? "became prepared" : "is no longer prepared"}`);

@@ -1,0 +1,238 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sidar Kondo of Jamuraa",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Spider": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Spider"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 3,
+      "keywords": [
+        "Reach"
+      ]
+    },
+    "Squirrel": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Squirrel"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Flanking: Maya's Spider, without flanking, blocks Sidar Kondo and gets -1/-1, and Sidar's 2 damage kills it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sidar Kondo of Jamuraa"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Spider"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Sidar Kondo of Jamuraa"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Spider",
+              "Sidar Kondo of Jamuraa"
+            ]
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "stats": {
+                "card": "Spider",
+                "power": 0,
+                "toughness": 2
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Spider"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Sidar Kondo of Jamuraa"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Rob's Bear, power 2, attacks: Maya's Spider has reach and blocks it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sidar Kondo of Jamuraa",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Spider"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Spider",
+              "Bear"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Bear",
+            "Sidar Kondo of Jamuraa"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maya's Squirrel, power 1, attacks Rob: his own Bear, without flying or reach, still blocks it -- the restriction is on his opponents' creatures",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sidar Kondo of Jamuraa",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Squirrel"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Squirrel"
+          ],
+          "seat": 1
+        },
+        {
+          "block": [
+            [
+              "Bear",
+              "Squirrel"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Squirrel"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

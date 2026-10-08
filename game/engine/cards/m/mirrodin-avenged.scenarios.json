@@ -1,0 +1,383 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mirrodin Avenged",
+  "fixtures": {
+    "Their Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Their Wall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 4
+    },
+    "My Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Bolted and still alive, Maya's Giant is destroyed, and Rob draws a card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt",
+            "Mirrodin Avenged"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Giant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Lightning Bolt",
+          "targets": [
+            {
+              "card": "Their Giant"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "controls": [
+                "Their Giant"
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Mirrodin Avenged",
+          "targets": [
+            {
+              "card": "Their Giant"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Their Giant"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Lightning Bolt",
+            "Mirrodin Avenged"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Only a creature dealt damage this turn is a target: the bolted Giant, never the untouched Wall",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt",
+            "Mirrodin Avenged"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Giant",
+            "Their Wall"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Mirrodin Avenged"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Lightning Bolt",
+          "targets": [
+            {
+              "card": "Their Giant"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Mirrodin Avenged"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Their Giant"
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Their Giant",
+            "Their Wall"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Combat damage counts: the Giant that blocked the Bear is destroyed after combat",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "My Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mirrodin Avenged"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Giant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "My Bear"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Their Giant",
+              "My Bear"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "My Bear"
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Mirrodin Avenged",
+          "targets": [
+            {
+              "card": "Their Giant"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Their Giant"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Damage dealt last turn does not count: on Maya's turn the Giant Rob bolted is no target",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt",
+            "Mirrodin Avenged"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Giant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Lightning Bolt",
+          "targets": [
+            {
+              "card": "Their Giant"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Mirrodin Avenged",
+                "seat": 0
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Their Giant"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Laelia, the Blade Reforged",
+    "oracleId": "a0be9bb2-3234-4c6c-b8ce-0879b1f43003",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit",
+      "Warrior"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Haste\nWhenever Laelia attacks, exile the top card of your library. You may play that card this turn.\nWhenever one or more cards are put into exile from your library and/or your graveyard, put a +1/+1 counter on Laelia.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Haste",
+      "keyword": "haste"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Laelia attacks, exile the top card of your library. You may play that card this turn.",
+      "trigger": {
+        "on": "attacks"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "fromTop": 1,
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "mayPlay",
+          "targets": "remembered",
+          "until": "end-of-turn"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever one or more cards are put into exile from your library and/or your graveyard, put a +1/+1 counter on Laelia.",
+      "trigger": {
+        "on": "exiled",
+        "from": [
+          "library",
+          "graveyard"
+        ],
+        "batch": true
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

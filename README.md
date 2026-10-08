@@ -633,7 +633,8 @@ creatures; and an emblem (Ajani Resolute), an effect with no source and no end, 
 cast so, one removed at its controller's end step, and none of it when cast for its mana cost; and "cards with
 different names" (Gifts Ungiven), one of each name offered.
 `engine-overload` holds overload (Winds of Abandon): offered beside the mana cost, with no target; a repetition that
-asks, each player in turn; and each search by the creature's controller as it left the battlefield.
+asks, each player in turn; and each search by the creature's controller as it left the battlefield. The keyword is
+credited as built, with Mizzium Mortars and Vandalblast (Train B X11).
 `engine-discover` holds discover (Quintorius Kand), written with what was built: past what doesn't fit, the rest under,
 cast free from exile or put into hand; each opponent dealt 2 for a spell cast from exile; and mana for each card exiled.
 `engine-eminence` holds eminence (The Ur-Sphinx), from the command zone and its owner's other Sphinxes only; "that many"
@@ -713,6 +714,51 @@ choice; and three counters from among its controller's other permanents, picked 
 `engine-cards-x11-b2` holds what the scenarios of X11's second batch cannot reach: Topiary Stomper can't attack or block
 unless its controller has seven lands, at six and at seven ("can't block" on a condition, now compiled); Plaza of Heroes'
 two ways to make {W}, one only for a legendary spell; Purphoros an attacker only at devotion five.
+`engine-x11-permissions` holds what the scenarios of X11's permissions and control cards cannot reach: a card leaving a
+graveyard counted per graveyard, cards only, from none each turn (Primary Research, Relic Retriever); Sower of Temptation's
+control while it remains, control changes ending in timestamp order; a player leaving the game (CR 800.4a), each kind of
+control change they had given back, what they still control exiled, what would return to them exiled (800.4c); Legion
+Warboss's token required to attack this combat, mentor's lesser power as it resolves; four players, and the credits.
+`engine-x11-leave` holds a player leaving the game (CR 800.4a): everything they own leaving every zone, the stack and
+phasing, with nothing said of a hidden card; their spells leaving and abilities ceasing, a resolution of theirs cut short
+and priority passed on; what they still control exiled; a permanent phased out under them phasing in after their turn
+would have begun (702.26n); their delayed trigger never put on the stack, their "until this leaves" exile returning.
+`engine-x11-leave-questions` holds a player leaving the game while they are asked (CR 800.4f-h): their sacrifice, discard,
+search, commander, Aura, attacking tokens and conniving left with them, the next player asked; an "unless" cost not paid;
+any other choice -- a "may" of theirs, Fact or Fiction's piles, Gifts Ungiven's two -- made by another opponent, the
+controller choosing which; the next defender blocking, the next player's triggers and targets, combat damage dealt to
+nobody who has left (800.4e), priority to the next player (800.4j); and a fuzzed concession at every question of seeded
+games, none stalling or leading to a refused answer.
+`engine-x11-memory` holds the pieces the memory axis's last ten cards needed, at their edges and at four seats: discarding
+"up to" two (Fable of the Mirror-Breaker); all of a kind of counter removed, counted, and a color asked for each mana
+(Coalition Relic); "put into exile from your library and/or your graveyard" (Laelia); a reduction for spells cast from
+anywhere but the hand (Advanced Reconstruction); copies cast (Mizzix's Mastery) and Overload credited; each creature card
+exiled with it, a 1/1 Spirit in addition to its other types (Ghost Vacuum); Getaway Barrel, Settle the Wreckage and
+Currency Converter at the edges the scenarios cannot reach; and an adventurer card's offer leaving the card as it was.
+`engine-x11-counts-triggers` holds the counts and triggers of the effects axis's last cards: a creature dealt damage this
+turn (Mirrodin Avenged), the other attackers sharing a creature type with one (Shared Animosity), the nontoken creatures
+you controlled that were destroyed (Ceaseless Conflict), a mana value capped by a count (Venerable Warsinger), and a
+preparation card cast. `engine-x11-turns-counters` holds extra turns (Ichormoon Gauntlet: the newest first, turn order
+resumed after them, a departed player's dropped), counters moved and the kind asked, and "only once each turn" (Tidus).
+`engine-x11-costs` holds the costs X11's costs worker built, each paid with what the player picks: Burn at the Stake's "tap
+any number of untapped creatures you control" (one offer, asked once taken, never tapped for), Cathartic Reunion's two
+discards, the mana abilities that tap another creature (Jaspera Sentinel, Saruli Caretaker) or exile a card from the
+graveyard (Rubble Rouser, with its "when you do"), Lorehold Excavation's creature card exiled, and Squee, Dubious
+Monarch's alternative cost from the graveyard, four other cards exiled (no escape); four players, both pilots' answers, the
+refusals, and no payer ever choosing the creature or the card for the player.
+`engine-x11-filters` holds the selector key X11's costs worker built for Hemlock Vial: "each equipped creature", an
+Equipment attached and still there, not an Aura; only what the Vial's controller controls, its set fixed as it resolves.
+`engine-x11-keep` holds the two ways X11's costs worker built to choose what is kept before the rest is sacrificed: Slaughter
+the Strong's "creatures with total power 4 or less", each player asked in turn with the question's budget, refused past
+it, all sacrificed at once; and Tragic Arrogance's caster choosing one of each type for every player, asked only where
+there is a choice; four players, both pilots' answers, a planeswalker and an artifact land.
+`engine-x11-finality` holds finality counters (CR 122.1h): a permanent with one exiled instead of put into a graveyard from
+the battlefield, destroyed, sacrificed or dead to damage, any kind of permanent, beside another "exile it instead" without
+a question, to a hand untouched; moveZone's "with a finality counter on it"; and Excava, the Risen Past at four players.
+`engine-x11-pay-x` holds Halo Forager's "you may pay {X}. When you do, you may cast target instant or sorcery card with
+mana value X from a graveyard without paying its mana cost. If that spell would be put into a graveyard, exile it
+instead": every amount the payer could pay offered, which mana asked when it matters, the X carried to the reflexive
+trigger's targets in every graveyard, the spell cast marked to be exiled, both pilots' answers, the schema.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -831,7 +877,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 360 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 385 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -967,6 +1013,9 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-ingest` — `tests/engine-ingest.mjs`
 - `engine-learned` — `tests/engine-learned.mjs`
 - `engine-mana-abilities` — `tests/engine-mana-abilities.mjs`
+- `engine-exile-commanders` — `tests/engine-exile-commanders.mjs` (Quintorius and Maralen linked exile, free casting and owner choices)
+- `engine-faerie-interactions` — `tests/engine-faerie-interactions.mjs` (second-card draws, Spellstutter's live Faerie count and Winnower's unequal power/toughness targets)
+- `engine-chulane-completion` — `tests/engine-chulane-completion.mjs` (Guardian Project, Yavimaya Dryad, Claim Jumper)
 - `engine-search` — `tests/engine-search.mjs`
 - `engine-storage` — `tests/engine-storage.mjs`
 - `engine-targets` — `tests/engine-targets.mjs`
@@ -1023,6 +1072,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-beats` — `tests/room-beats.mjs`
 - `board-choices` — `tests/board-choices.mjs`
 - `crankmagic-audio` — `tests/crankmagic-audio.mjs`
+- `advice-contract` — `tests/advice-contract.mjs` (preparation-only AI requests, evidence references and stale-result rejection)
 - `advise-brief` — `tests/advise-brief.mjs`
 - `import-flow` — `tests/import-flow.mjs`
 - `deck-holds-cards` — `tests/deck-holds-cards.mjs`
@@ -1164,6 +1214,27 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-card-choice-memory` - `tests/engine-card-choice-memory.mjs`
 - `engine-enter-transformed` - `tests/engine-enter-transformed.mjs`
 - `engine-power-comparison` - `tests/engine-power-comparison.mjs`
+- `engine-x11-permissions` - `tests/engine-x11-permissions.mjs`
+- `engine-x11-leave` - `tests/engine-x11-leave.mjs`
+- `engine-x11-leave-questions` - `tests/engine-x11-leave-questions.mjs`
+- `engine-x11-memory` - `tests/engine-x11-memory.mjs`
+- `engine-x11-counts-triggers` - `tests/engine-x11-counts-triggers.mjs`
+- `engine-x11-turns-counters` - `tests/engine-x11-turns-counters.mjs`
+- `engine-x11-costs` - `tests/engine-x11-costs.mjs`
+- `engine-x11-filters` - `tests/engine-x11-filters.mjs`
+- `engine-x11-keep` - `tests/engine-x11-keep.mjs`
+- `engine-x11-finality` - `tests/engine-x11-finality.mjs`
+- `engine-x11-pay-x` - `tests/engine-x11-pay-x.mjs`
+- `engine-x11-flanking` - `tests/engine-x11-flanking.mjs`: flanking (Sidar Kondo of Jamuraa), once per blocker without it, and a selector's "without" a keyword
+- `engine-x11-umbra-armor` - `tests/engine-x11-umbra-armor.mjs`: umbra armor (Treefolk Umbra) wherever a permanent would be destroyed, and the CR 616.1 choice between two ways out
+- `engine-x11-living-weapon` - `tests/engine-x11-living-weapon.mjs`: living weapon (Bitterthorn, Nissa's Animus), the Germ made and equipped, its controller's
+- `engine-x11-evolve` - `tests/engine-x11-evolve.mjs`: evolve (Fathom Mage), its comparison as it triggers and resolves, and a trigger for each counter, entered with or put on
+- `engine-x11-backup` - `tests/engine-x11-backup.mjs`: backup (Guardian Scalelord), its counter, and the abilities printed below it given to another creature until end of turn
+- `engine-x11-cumulative-upkeep` - `tests/engine-x11-cumulative-upkeep.mjs`: cumulative upkeep (Mystic Remora), an age counter each upkeep and its cost for every one, or sacrificed
+- `engine-x11-prowl` - `tests/engine-x11-prowl.mjs`: prowl (Latchkey Faerie), after combat damage by a source of the caster's sharing a creature type, this turn
+- `engine-x11-escalate` - `tests/engine-x11-escalate.mjs`: escalate (Collective Effort), its cost for each mode beyond the first, the creatures to tap asked of the caster
+- `engine-x11-unearth` - `tests/engine-x11-unearth.mjs`: unearth (Salvation Colossus), from the graveyard at sorcery speed for mana or energy, and exiled at the end step or instead of leaving any other way
+- `engine-x11-ascend` - `tests/engine-x11-ascend.mjs`: ascend (Wayward Swordtooth), the city's blessing at ten permanents for the rest of the game, a permanent's and a spell's, and "unless you have the city's blessing"
 
 ## Design and execution record
 

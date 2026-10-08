@@ -96,6 +96,10 @@ export async function handle(request, env, deps = {}) {
     throw error;
   }
   if (await overLimit(env.LIMIT_PERSON, who.email)) return tooMany("your account");
+  /* Recovery entry gate: keep the GameTable class/storage, but admit no new HTTP or socket
+     connections while the public app has Play closed. Existing sockets and clocks are not paused. */
+  if (env.PLAY_TABLES_CLOSED === "on" && (path === "/api/tables" || path.startsWith("/api/tables/") || joinLocation(url)))
+    return reply(503, {error: "Play is temporarily unavailable. Your library and saved tables are kept. Try again after Play reopens."});
   /* PLAY (M5; cloud/tables.mjs): shut until Play's release binds TABLES. Its writes carry their own header, and
      its WebSocket must come from this site: a socket carries the Access cookie like any request, and a page
      elsewhere could otherwise open one to someone's seat. */

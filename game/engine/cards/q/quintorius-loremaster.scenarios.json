@@ -1,0 +1,152 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Quintorius, Loremaster",
+  "scenarios": [
+    {
+      "name": "End step links a spell and makes a Spirit",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Quintorius, Loremaster"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Sol Ring"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "choose": [
+            "Sol Ring"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Sol Ring"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Quintorius, Loremaster",
+            "Spirit"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Sacrifice the Spirit to cast the linked spell free and bottom it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Quintorius, Loremaster",
+            "Mountain",
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Harmonize"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "choose": [
+            "Harmonize"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Quintorius, Loremaster",
+          "targets": [
+            {
+              "card": "Harmonize"
+            }
+          ],
+          "sacrifice": "Spirit"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "cast": "Harmonize"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 17
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

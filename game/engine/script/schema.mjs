@@ -41,6 +41,7 @@ import {amountProblems, AMOUNT_PARAMS} from "./amount.mjs";
 import {conditionProblems} from "./condition.mjs";
 import {isCreatureType} from "../keywords/types.mjs";
 import {parseManaCost} from "../rules/mana.mjs";
+import {CONTROL_DURATIONS} from "./effects/permanents.mjs";
 
 /* The facts about a target an effect may name where it takes a number (script/bind.mjs). */
 const FACT_KEYS = ["powerOf", "manaValueOf", "controllerOf"];
@@ -106,6 +107,14 @@ function checkEffect(effect, path, errors) {
     for (const n of targetRefs(effect.effects ?? []))
       if (n < 0 || n >= (effect.targets ?? []).length) errors.push({path: `${path}.effects`, message: `A reflexive trigger's effect names target ${n}, and it declares ${(effect.targets ?? []).length}`});
   }
+  /* What a permanent put onto the battlefield is required to attack (CR 508.1d): "that opponent this turn" (encore), or
+     anyone "this combat" (Legion Warboss) -- effects/permanents.mjs, afterwards. */
+  if (effect.mustAttack !== undefined && !["that player", "this combat"].includes(effect.mustAttack))
+    errors.push({path: `${path}.mustAttack`, message: "What it must attack is \"that player\" (this turn) or anyone \"this combat\""});
+  /* Control for the turn, or "for as long as this creature remains on the battlefield" (CR 611.2b; Sower of Temptation),
+     or for good when unsaid (effects/permanents.mjs). */
+  if (name === "gainControl" && effect.until !== undefined && !CONTROL_DURATIONS.includes(effect.until))
+    errors.push({path: `${path}.until`, message: `Control is gained for good, or until ${CONTROL_DURATIONS.join(" or ")}`});
   /* "Exile ... until this leaves the battlefield" (CR 610.3): the one "until" the engine returns from. */
   if (name === "exileUntil" && effect.until !== "this leaves")
     errors.push({path: `${path}.until`, message: "exileUntil returns what it exiled when its source leaves the battlefield: `until: \"this leaves\"`"});
@@ -129,6 +138,11 @@ function checkEffect(effect, path, errors) {
     if (effect.sacrifice !== undefined || effect.discard !== undefined)
       errors.push({path: `${path}.returnToHand`, message: "An \"unless\" cost returns a permanent, sacrifices one or discards a card: one of them"});
   }
+  /* "You may pay {X}. When you do, ..." (Halo Forager): X chosen as it is paid, so no amount beside it, and only a "you may". */
+  if (name === "unlessPays" && effect.amountX !== undefined && !(effect.amountX === true && effect.ifPaid === true && effect.amount === undefined && effect.mana === undefined))
+    errors.push({path: `${path}.amountX`, message: "\"You may pay {X}\" is `amountX: true` with `ifPaid: true`, and no amount or mana beside it"});
+  if (name === "play" && effect.exileInstead !== undefined && effect.exileInstead !== true)
+    errors.push({path: `${path}.exileInstead`, message: "\"If that spell would be put into a graveyard, exile it instead\" is `exileInstead: true`"});
   if (name === "unlessPays" && effect.whenPaid !== undefined && !(Array.isArray(effect.whenPaid) && effect.whenPaid.length))
     errors.push({path: `${path}.whenPaid`, message: "What follows paying is a list of effects"});
   /* Where a countered spell goes instead of its owner's graveyard: exile (Force of Negation) or the top of its owner's
@@ -149,6 +163,19 @@ function checkEffect(effect, path, errors) {
     if (effect.to !== undefined && effect.to !== "itself") errors.push({path: `${path}.to`, message: "damageEach deals to `to: \"itself\"`, or to its targets and players"});
     if (effect.to === undefined && effect.targets === undefined && effect.who === undefined) errors.push({path, message: "damageEach deals its damage to itself, or to targets or players"});
     if (effect.selector !== undefined) checkSelector(effect.selector, `${path}.selector`, errors, {choice: true});
+  }
+  /* "Put each creature card exiled with this artifact onto the battlefield" (Ghost Vacuum): of a linked move's cards, those a
+     selector fits (`linkedOnly`) -- only beside `linked`. */
+  if (name === "moveZone" && effect.linkedOnly !== undefined) {
+    if (effect.linked !== true) errors.push({path: `${path}.linkedOnly`, message: "linkedOnly narrows a linked move: it goes with `linked: true`"});
+    checkSelector(effect.linkedOnly, `${path}.linkedOnly`, errors);
+  }
+  /* Counters moved (moveCounters, CR 122.5; script/effects/resources.mjs): from one object onto another, of a kind named --
+     or "chosen", its controller's choice among the kinds there (effects/asking.mjs, counterKind). */
+  if (name === "moveCounters") {
+    if (effect.from === undefined) errors.push({path: `${path}.from`, message: "moveCounters says what it moves counters from: `from`, an object"});
+    if (effect.targets === undefined) errors.push({path: `${path}.targets`, message: "moveCounters says what it moves them onto: `targets`, an object"});
+    if (typeof effect.counter !== "string") errors.push({path: `${path}.counter`, message: "moveCounters names the kind of counter it moves, or \"chosen\" for its controller's choice"});
   }
   /* A designation (alterAttribute, script/effects/attributes.mjs): monstrous or prepared. */
   if (name === "alterAttribute" && !["monstrous", "prepared"].includes(effect.attribute))
@@ -305,6 +332,12 @@ function checkAbility(ability, path, errors) {
     /* A rule is read through the whole selector grammar (rules/statics.mjs), a choice of selectors included: "creatures you
        control with power or toughness 1 or less". A layer's `affects` is the layers' narrower matcher, and is not. */
     else checkSelector(ability.affects, `${path}.affects`, errors, {choice: ability.rule !== undefined});
+    if (ability.rule === "play-from") {
+      if (!["graveyard", "library-top", "exile"].includes(ability.zone)) errors.push({path: `${path}.zone`, message: "play-from zone is graveyard, library-top or exile"});
+      for (const key of ["free", "graveyardToLibraryBottom"]) if (ability[key] !== undefined && ability[key] !== true)
+        errors.push({path: `${path}.${key}`, message: `${key} is true`});
+      if (ability.spells && typeof ability.spells === "object") checkSelector(ability.spells, `${path}.spells`, errors, {choice: true});
+    }
     /* What causes a trigger to trigger again: an arrival, a death, an attack (rules/trigger.mjs). */
     if (ability.rule === "triggers-again" && ability.cause !== undefined && !["enters", "dies", "attacks"].includes(ability.cause?.event))
       errors.push({path: `${path}.cause`, message: "What causes it to trigger again is an event: enters, dies or attacks"});

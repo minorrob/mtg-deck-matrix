@@ -425,8 +425,10 @@ function plainSources(state, player) {
     /* CR 302.6: a creature's {T} waits until it has been theirs since their turn began (or "as though it had haste",
        CR 702.10c: keywords/timing.mjs). */
     if (sickForAbilities(state, id)) continue;
+    /* Not one that taps another creature too (Jaspera Sentinel), or exiles a card from the graveyard (Rubble Rouser): which
+       creature, or which card, is the payer's to choose (rules/actions.mjs). */
     const ability = abilitiesOf(state, id).find((a) => a.kind === "mana" && a.tapSelf && !a.cost && !a.payLife && !a.sacrifice && !a.sacrificeSelf && !a.condition && !a.spendOnly
-      && (a.produces || a.anyColor === true));
+      && !a.tapCreature && !a.exileFromGraveyard && (a.produces || a.anyColor === true));
     if (ability) out.push({id, ability});
   }
   return out;

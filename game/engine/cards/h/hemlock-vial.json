@@ -1,0 +1,87 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hemlock Vial",
+    "oracleId": "0d977dc5-807b-4fab-b44b-ccad5e3d63e3",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When this artifact enters, you draw a card and you lose 1 life.\n{B}, {T}, Sacrifice this artifact: Each equipped creature and Equipment you control gains deathtouch until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this artifact enters, you draw a card and you lose 1 life.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "loseLife",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{B}, {T}, Sacrifice this artifact: Each equipped creature and Equipment you control gains deathtouch until end of turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{B}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "layer": 6,
+          "apply": {
+            "addKeywords": [
+              "Deathtouch"
+            ]
+          },
+          "selector": {
+            "what": "permanent",
+            "controller": "you",
+            "anyOf": [
+              {
+                "types": [
+                  "Creature"
+                ],
+                "equipped": true
+              },
+              {
+                "subtypes": [
+                  "Equipment"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Squee, Dubious Monarch",
+    "oracleId": "124a5dd7-c4f8-479c-9eb0-669aca01d045",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Noble"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Haste\nWhenever Squee attacks, create a 1/1 red Goblin creature token that's tapped and attacking.\nYou may cast this card from your graveyard by paying {3}{R} and exiling four other cards from your graveyard rather than paying its mana cost.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Haste",
+      "keyword": "haste"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Squee attacks, create a 1/1 red Goblin creature token that's tapped and attacking.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Goblin",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Goblin"
+            ],
+            "colors": [
+              "R"
+            ],
+            "power": 1,
+            "toughness": 1
+          },
+          "tapped": true,
+          "attacking": true
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "You may cast this card from your graveyard by paying {3}{R} and exiling four other cards from your graveyard rather than paying its mana cost.",
+      "rule": "alternative-cost",
+      "zone": "graveyard",
+      "affects": {
+        "what": "card",
+        "self": true
+      },
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{R}"
+        },
+        {
+          "atom": "exileFromGraveyard",
+          "count": 4
+        }
+      ]
+    }
+  ]
+}

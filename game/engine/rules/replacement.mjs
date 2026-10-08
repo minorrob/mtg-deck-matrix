@@ -75,6 +75,9 @@ function unlessHolds(state, unless, player) {
   return count >= (unless.min ?? (unless.max !== undefined ? 0 : 1)) && (unless.max === undefined || count <= unless.max);
 }
 
+/* The replacement effect finality counters make (CR 122.1h): the counted permanent's own, never an ability it could lose. */
+const FINALITY = Object.freeze({id: "finality-counter", kind: "replacement", watches: {event: "zone-change", from: "battlefield", to: "graveyard"}, change: {to: "exile"}});
+
 /** Where an effect has to be for it to act on the battlefield (CR 113.6). */
 const ACTING_ZONES = ["battlefield"];
 
@@ -202,6 +205,11 @@ function applicable(state, proposal) {
   }
   /* The copied card's own, alone (ownEntering): the others' applied as it entered. */
   if (proposal.ownOnly) return found;
+  /* A FINALITY COUNTER (CR 122.1h): one or more on a permanent make one replacement effect, "if this permanent would be put
+     into a graveyard from the battlefield, exile it instead" (Excava, the Risen Past) -- its own, ordered with the others
+     that apply as any is (CR 616.1). */
+  const moving = proposal.event === "zone-change" ? state.objects[proposal.objectId] : null;
+  if ((moving?.counters?.finality ?? 0) > 0 && applies(state, FINALITY, moving, proposal)) found.push({holderId: proposal.objectId, ability: FINALITY});
   for (const zone of ACTING_ZONES) {
     for (const id of state.zones[zone]) {
       const holder = state.objects[id];
@@ -369,6 +377,13 @@ export function applyReplacements(state, proposal, {orders = [], askable = false
   /* PROTECTION (CR 702.16e, 702.16j; rules/protection.mjs): damage from a source with the quality is prevented, all of it. */
   if (proposal.event === "damage" && protectedFrom(state, {card: current.toCard ?? null, player: current.toPlayer ?? null}, current.sourceId))
     return {proposal: {...current, amount: 0, prevented: true}, applied: current.applied, awaiting: false};
+
+  /* "IF IT WOULD LEAVE THE BATTLEFIELD, EXILE IT INSTEAD OF PUTTING IT ANYWHERE ELSE" (unearth, CR 702.84a; Whip of Erebos): an
+     effect on that permanent (effects/permanents.mjs, afterwards), gone with it when it leaves (CR 400.7) -- so any zone change
+     of what carries it is its leaving the battlefield. Every way it would leave asks here -- an effect, a sacrifice, lethal
+     damage or another state-based action -- so it is exiled by each. */
+  if (proposal.event === "zone-change" && state.objects[proposal.objectId]?.exileIfLeaves === true)
+    current = {...current, to: "exile"};
 
   /* Each round finds what still applies to the event AS IT NOW IS, which is what makes an effect
      that rewrites the destination able to bring a different effect into play. Bounded by CR 614.5:

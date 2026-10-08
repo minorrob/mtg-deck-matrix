@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mystic Remora",
+    "oracleId": "8a52f3c0-2552-4425-b2e3-5496eb2232a7",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Cumulative upkeep {1} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nWhenever an opponent casts a noncreature spell, you may draw a card unless that player pays {4}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Cumulative upkeep {1} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)",
+      "keyword": "cumulative upkeep",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent casts a noncreature spell, you may draw a card unless that player pays {4}.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "opponent",
+        "filter": {
+          "nonTypes": [
+            "Creature"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "that player",
+          "amount": 4,
+          "effects": [
+            {
+              "effect": "modal",
+              "title": "Mystic Remora: draw a card?",
+              "modes": [
+                {
+                  "text": "Yes",
+                  "effects": [
+                    {
+                      "effect": "draw",
+                      "count": 1
+                    }
+                  ]
+                },
+                {
+                  "text": "No",
+                  "effects": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

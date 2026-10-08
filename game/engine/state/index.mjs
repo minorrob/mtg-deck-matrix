@@ -33,6 +33,14 @@ export const ZONES = [...PER_PLAYER, ...SHARED];
 
 const STARTING_LIFE = 40;
 
+/** A successful draw's ordinal this turn (CR 121.2): each card of a multi-card draw is separate.
+ * Stored on the event as well as the player so later draws in one resolution cannot change it. */
+export function recordDraw(state, player) {
+  const who = state.players[player];
+  who.drawnThisTurn = (who.drawnThisTurn ?? 0) + 1;
+  return who.drawnThisTurn;
+}
+
 /**
  * A new game state.
  *
@@ -117,7 +125,9 @@ function assertZone(state, zone, player) {
   }
 }
 
-const listFor = (state, zone, player) => (PER_PLAYER.includes(zone) ? state.zones[zone][player] : state.zones[zone]);
+/* A phased-out permanent's list is `phasedOut` (effects/permanents.mjs, phaseOut): it is in no zone a player sees (CR 702.26b),
+   and still leaves one when its owner leaves the game or it is exiled (CR 702.26k, 800.4a). */
+const listFor = (state, zone, player) => (PER_PLAYER.includes(zone) ? state.zones[zone][player] : zone === "phased" ? state.phasedOut : state.zones[zone]);
 
 /**
  * Put a new object into a zone. Returns its id.
@@ -216,11 +226,17 @@ export function showFace(state, id, face) {
 const adventureSide = (adventurer, shown) => Object.fromEntries(FACE_KEYS.map((key) => [key, (shown ? adventurer.adventure : adventurer.main)[key]]));
 
 /** Show an adventurer card as its Adventure (`shown`), or as itself again: what is weighed as it is cast as an Adventure
-    (CR 715.3a) -- rules/actions.mjs shows it for the offer and the cast, and puts it back unless the cast moved it. */
+    (CR 715.3a) -- rules/actions.mjs shows it for the offer and the cast, and puts it back unless the cast moved it. What
+    the side shown lacks, the object lacks too, so a look leaves it as it was. */
 export function showAdventure(state, id, shown) {
   const object = state.objects[id];
   if (!object?.adventurer) return;
-  Object.assign(object, adventureSide(object.adventurer, shown));
+  /* A characteristic the side shown has not (a creature's spell, an Adventure's power) is absent, not present as nothing:
+     shown and put back for an offer, the card is exactly as it was -- asking what may be done changes no state. */
+  for (const [key, value] of Object.entries(adventureSide(object.adventurer, shown))) {
+    if (value === undefined) delete object[key];
+    else object[key] = value;
+  }
   if (shown) object.face = "adventure"; else delete object.face;
 }
 
@@ -404,6 +420,10 @@ export function moveObject(state, id, zone, player = null, {faceDown = false, tr
      controller as it left -- every departure moves through here (script/amount.mjs, permanentsLeftThisTurn; cleared as a
      turn begins, rules/turn.mjs). */
   if (from.zone === "battlefield" && state.players[from.controller]) state.players[from.controller].leftThisTurn = (state.players[from.controller].leftThisTurn ?? 0) + 1;
+  /* "If a card left your graveyard this turn" (Primary Research, Relic Retriever): counted for the player whose graveyard it
+     left, wherever it went -- a card only, never a token (CR 108.2b) -- as revolt's count is (script/amount.mjs,
+     cardsLeftGraveyardThisTurn; cleared as a turn begins, rules/turn.mjs). */
+  if (from.zone === "graveyard" && from.token !== true) state.players[from.zonePlayer].leftGraveyardThisTurn = (state.players[from.zonePlayer].leftGraveyardThisTurn ?? 0) + 1;
 
   /* Only what the CARD says survives the move: its identity, its printed types and its owner. The
      owner does (CR 108.3): a card goes to its OWNER's graveyard however long someone else

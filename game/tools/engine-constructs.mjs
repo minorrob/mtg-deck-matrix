@@ -148,8 +148,12 @@ export const DECK_RULE_KEYWORDS = {Partner: "room/table.mjs", "Choose a Backgrou
    ETBReplacement -- "[this permanent] enters ..." and "as [this permanent] enters ..." (CR 614.1c, 614.12): tapped, with
      counters, as a copy, with a choice made, unless a cost is paid or a card revealed, and -- new here -- prepared
      (Goblin Glasswright, CR 722.3a; rules/replacement.mjs, script/effects/attributes.mjs). Named, not built: one that
-     enters attached to something chosen as it enters, other than an Aura's own Enchant. */
-export const CAST_RULE_KEYWORDS = {AlternateAdditionalCost: "rules/actions.mjs", ETBReplacement: "rules/replacement.mjs"};
+     enters attached to something chosen as it enters, other than an Aura's own Enchant.
+   Overload -- "you may cast this spell for its overload cost. If you do, change 'target' in its text to 'each'" (CR 702.96a):
+     an alternative cost offered beside the mana cost (rules/actions.mjs), the spell then with no targets (702.96b) and the
+     effects its card writes for "each" (702.96c; cards/index.mjs compiles the keyword). Built for Winds of Abandon and
+     credited with Mizzix's Mastery (Train B, X11), whose overloaded copies are cast one by one; no new code for the keyword. */
+export const CAST_RULE_KEYWORDS = {AlternateAdditionalCost: "rules/actions.mjs", ETBReplacement: "rules/replacement.mjs", Overload: "rules/actions.mjs"};
 
 export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: "chooseCard", Enchant: "attach",
   /* Hideaway (Train B, CR 702.75a): dig links a face-down exile, shuffles the rest to the bottom,
@@ -169,6 +173,9 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   Prowess: "pump", Toxic: "poison",
   /* Annihilator (batch 78): the triggered ability, the defending player sacrificing N permanents (cards/index.mjs). */
   Annihilator: "sacrifice",
+  /* Mentor (CR 702.134a; Legion Warboss, Train B X11): the attack trigger, a +1/+1 counter on target attacking creature
+     with power less than this creature's -- as it resolves, or as it last was if it has left (cards/index.mjs). */
+  Mentor: "putCounter",
   /* Afterlife (X5c): the dies trigger, N 1/1 white and black Spirit tokens with flying (cards/index.mjs). */
   Afterlife: "createToken",
   /* Forge's etbCounter, "this creature enters with two +1/+1 counters on it" (X5e): the replacement `entersWithCounters` on
@@ -196,7 +203,20 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   /* Monstrosity (CR 701.37a; Protector of the Wastes, Train B): "{cost}: Monstrosity N" -- if it isn't monstrous, N +1/+1
      counters and it becomes monstrous (alterAttribute's `counters`, script/effects/attributes.mjs), "when this becomes
      monstrous" its trigger (cards/index.mjs). */
-  Monstrosity: "alterAttribute"};
+  Monstrosity: "alterAttribute",
+  /* Living weapon (CR 702.92a; Bitterthorn, Nissa's Animus, Train B X11): the Equipment's enters trigger, a 0/0 black
+     Phyrexian Germ token and the Equipment attached to it (cards/index.mjs). */
+  "Living Weapon": "createToken",
+  /* Evolve (CR 702.100a; Fathom Mage, Train B X11): the trigger as a creature you control enters, its intervening "if" the
+     comparison of power and toughness, and a +1/+1 counter (cards/index.mjs, script/condition.mjs). */
+  Evolve: "putCounter",
+  /* Backup N (CR 702.165a; Guardian Scalelord, Train B X11): the enters trigger, N +1/+1 counters on target creature, and
+     another creature given the abilities printed below until end of turn (cards/index.mjs). */
+  Backup: "putCounter",
+  /* Cumulative upkeep (CR 702.24a; Mystic Remora, Train B X11): the upkeep trigger, its intervening "if", an age counter,
+     and "sacrifice it unless you pay" its mana cost once for each age counter, generic or colored (cards/index.mjs,
+     effects/asking.mjs). Named, not built: a cost that is not mana (life, a sacrifice, a discard). */
+  "Cumulative upkeep": "unlessPays"};
 
 /* "PROTECTION FROM [QUALITY]" printed as a keyword (CR 702.16a; Karmic Guide's "protection from black"): built for the
    qualities rules/protection.mjs reads -- a color, a card type, everything -- compiled from the keyword (cards/index.mjs).
@@ -290,6 +310,9 @@ export const FORGE_COUNTS = Object.freeze({
   /* Train B (X11; Betor, Ancestor's Voice): "the amount of life you lost this turn" -- the amount Wound Reflection's "that
      player" was built with, for "you"; and a mana value at most it (script/filter.mjs). */
   LifeYouLostThisTurn: {name: "Life you lost this turn", status: "built", engine: "amount {lifeLostThisTurn: \"you\"} (effects/resources.mjs keeps it, rules/turn.mjs clears it); a selector's manaValue.max may be it"},
+  /* Train B, X11 (Primary Research, Relic Retriever): every card that left a player's graveyard this turn, to anywhere --
+     cards only, never a token (CR 108.2b). Its one form, built. */
+  LeftGraveyardThisTurn: {name: "Cards that left your graveyard this turn", status: "built", engine: "amount {cardsLeftGraveyardThisTurn: \"you\" | \"that player\"} (state/index.mjs keeps it, rules/turn.mjs clears it)"},
   /* Train B (X11; Return to Dust): "if you cast this spell during your main phase" -- the cast's own record (rules/actions.mjs,
      Addendum's condition) -- for a target the spell has only then (CR 601.2c; script/bind.mjs, `onlyIf`). */
   IfCastInOwnMainPhase: {name: "If it was cast during its caster's main phase (\"if you cast this spell during your main phase\")", status: "built",
@@ -313,6 +336,9 @@ export const FORGE_COUNTS = Object.freeze({
   /* Fblthp, the Lost (AI 1's deck): "if it entered from your library or was cast from your library". */
   wasCastFromYourLibrary: {name: "It entered from, or was cast from, your library", status: "built", engine: "condition {cameFrom: \"library\"} (script/condition.mjs)"},
   Threshold: {name: "Threshold (seven cards in your graveyard)", status: "missing"},
+  /* Train B (X11; Wayward Swordtooth): "unless you have the city's blessing" -- ascend's designation (CR 702.131;
+     keywords/designations.mjs). */
+  Blessing: {name: "The city's blessing (ascend)", status: "built", engine: "condition {citysBlessing} (script/condition.mjs)"},
   Morbid: {name: "Morbid (a creature died this turn)", status: "missing"},
   UrzaLands: {name: "The Urza lands", status: "missing"},
   Monarch: {name: "The monarch", status: "missing"},

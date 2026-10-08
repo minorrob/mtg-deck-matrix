@@ -25,12 +25,12 @@
  *
  * WHAT IS DEFERRED AND NAMED: protection (CR 702.16) needs a quality — "protection from black" is
  * not a keyword, it is a keyword with an argument, and the card script has to express that;
- * landwalk the same. Fear is here (batch 59); intimidate, shadow and horsemanship are one card each in
+ * other landwalk forms remain deferred; Forestwalk is implemented for Yavimaya Dryad. Fear is here (batch 59); intimidate, shadow and horsemanship are one card each in
  * the pool and belong with the long tail. Infect (batch 78) and wither change what damage DOES rather than who may block,
  * and go with the counters family.
  */
 
-import {keywordsOf, characteristicsOf} from "../rules/layers.mjs";
+import {keywordsOf, characteristicsOf, controllerOf, typesOf, subtypesOf} from "../rules/layers.mjs";
 import {toughnessOf} from "../rules/layers.mjs";
 import {combatDamageOf, ruleChanged, cantBeBlockedBy} from "../rules/statics.mjs";
 import {protectedFrom} from "../rules/protection.mjs";
@@ -38,12 +38,15 @@ import {protectedFrom} from "../rules/protection.mjs";
 /** The families of §3.1, so a caller can ask what this module covers. */
 export const KEYWORD_FAMILIES = Object.freeze({
   /** Who may block, and whom. */
-  evasion: Object.freeze(["Flying", "Reach", "Menace", "Fear"]),
+  evasion: Object.freeze(["Flying", "Reach", "Menace", "Fear", "Forestwalk"]),
   /** What happens when damage is dealt. */
   combat: Object.freeze(["Deathtouch", "Trample", "Lifelink", "First Strike", "Double Strike", "Vigilance", "Defender",
     /* Infect (CR 702.90, batch 78): its damage is poison counters to a player and -1/-1 counters to a creature (rules/combat.mjs,
        effects/resources.mjs dealDamage). */
-    "Infect"]),
+    "Infect",
+    /* Flanking (CR 702.25a): a triggered ability, as a creature without flanking blocks this one, the blocker -1/-1 until end
+       of turn (cards/index.mjs; rules/trigger.mjs, `blockedBy`). */
+    "Flanking"]),
   /**
    * Keywords that stop something happening, enforced elsewhere in the engine but listed here so
    * that "which keywords actually do something" has one answer.
@@ -56,7 +59,10 @@ export const KEYWORD_FAMILIES = Object.freeze({
    * Ward (CR 702.21a) counters a spell or ability an opponent aims at it unless that player pays: the keyword compiles to
    * that triggered ability (cards/index.mjs), on GameEventBecomesTarget (rules/stack.mjs, becameTarget).
    */
-  protective: Object.freeze(["Indestructible", "Hexproof", "Shroud", "Ward"]),
+  /* Umbra armor (CR 702.89a): an Aura's "if enchanted permanent would be destroyed, instead remove all damage marked on it
+     and destroy this Aura" -- the static `umbra-armor` (cards/index.mjs), read wherever a permanent would be destroyed
+     (script/effects/zones.mjs, destructionReplaced). */
+  protective: Object.freeze(["Indestructible", "Hexproof", "Shroud", "Ward", "Umbra armor"]),
 });
 
 const has = (state, id, keyword) => keywordsOf(state, id).includes(keyword);
@@ -72,6 +78,13 @@ export function canBlockAttacker(state, blockerId, attackerId) {
   if (ruleChanged(state, "cant-be-blocked", attackerId)) return false;
   /* "Can't be blocked except by Slivers", "by creatures with power 2 or less": this blocker, by what it is. */
   if (cantBeBlockedBy(state, attackerId, blockerId)) return false;
+  /* Forestwalk (CR 702.14): the defending player controls a Forest land. A dual land
+     qualifies, ownership does not, and a Forest controlled by a different opponent does not. */
+  if (has(state, attackerId, "Forestwalk")) {
+    const defender = state.combat?.attacks?.find(a => a.attacker === attackerId)?.defender ?? controllerOf(state, blockerId);
+    if (state.zones.battlefield.some(id => controllerOf(state, id) === defender
+        && typesOf(state, id).includes("Land") && subtypesOf(state, id).includes("Forest"))) return false;
+  }
   /* Protection (CR 702.16f): not blocked by a creature with the quality. */
   if (protectedFrom(state, {card: attackerId}, blockerId)) return false;
   /* CR 702.9b: flying can be blocked only by flying or reach (CR 702.17b). Note which way round it

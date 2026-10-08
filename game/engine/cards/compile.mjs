@@ -235,7 +235,8 @@ export function smokeScenario(script) {
      each choice of a choice of costs too ("sacrifice a creature or planeswalker or pay {3}", Silence the Echo: `oneOf`). */
   const extra = ((script.abilities ?? []).find((a) => a?.kind === "spell")?.additionalCost ?? [])
     .flatMap((a) => (a?.atom === "oneOf" && Array.isArray(a.options) ? a.options.flat() : [a]));
-  const fodderHand = extra.some((a) => a?.atom === "discard") ? ["Smoke Charm"] : [];
+  /* As many cards as its discard takes ("discard two cards", Cathartic Reunion). */
+  const fodderHand = Array.from({length: Math.max(0, ...extra.filter((a) => a?.atom === "discard").map((a) => a.count ?? 1))}, () => "Smoke Charm");
   /* A card aimed at its caster's own things ("target creature you control") gets something of the caster's to aim at. */
   const ownTargets = (script.abilities ?? []).some((a) => aims(a).some((t) => JSON.stringify(t).includes('"controller":"you"'))
     /* An Aura's target is its Enchant's: "Enchant creature you control" (Super State). */
@@ -317,8 +318,9 @@ export function smokeTest(script, cards) {
     const bad = zoneProblems(state);
     /* Whether the card was actually played: a counterspell with nothing to counter stays in hand, which is the
        fixture's limit and not the script's fault -- so it is reported, not refused. */
-    /* A double-faced card's events name the face that was cast or played. */
-    const names = script.back !== undefined || script.adventure !== undefined ? String(script.identity.name).split(" // ") : [script.identity.name];
+    /* A double-faced card's events name the face that was cast or played -- and a preparation card's its own name, the
+       only one it has in every zone (CR 722.4): "Goblin Glasswright", never the pair. */
+    const names = script.back !== undefined || script.adventure !== undefined || script.prepare !== undefined ? String(script.identity.name).split(" // ") : [script.identity.name];
     const played = (!(script.identity.types ?? []).includes("Land") && !script.identity.manaCost)
       || events.some((e) => (e.kind === "GameEventLandPlayed" && names.includes(e.data.fields.land?.name))
         || (e.kind === "GameEventSpellAbilityCast" && e.data.fields.sa?.isSpell && names.includes(e.data.fields.card?.name)));

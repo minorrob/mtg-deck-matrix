@@ -153,6 +153,8 @@ function applyEffect(current, effect) {
   if (Number.isInteger(change.controller)) current.controller = change.controller;
   /* CR 613.1d: "in addition to its other types" adds; setTypes replaces. */
   if (change.addTypes) for (const type of change.addTypes) if (!current.types.includes(type)) current.types.push(type);
+  /* And subtypes "in addition to its other types" (CR 205.1b; effects/permanents.mjs, animate's `subtypes`). */
+  if (change.addSubtypes) for (const subtype of change.addSubtypes) if (!current.subtypes.includes(subtype)) current.subtypes.push(subtype);
   if (change.setTypes) current.types = [...change.setTypes];
   /* "Enchanted permanent is a colorless Forest land" (Song of the Dryads): its subtypes set, every other one lost (CR 205.1b). */
   if (change.setSubtypes) { current.subtypes = [...change.setSubtypes]; current.everyCreatureType = false; }
