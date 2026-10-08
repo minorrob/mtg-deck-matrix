@@ -28,6 +28,7 @@ import {replayTape} from "../game/room/replay.mjs";
 import {createMatchStore} from "../game/engine/storage.mjs";
 import {tableOn, AWAY_LIMIT} from "../game/room/table.mjs";
 import {GameTable} from "../cloud/game-room.mjs";
+import {playGame} from "../tools/fuzz-live.mjs";
 
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
@@ -299,7 +300,14 @@ async function playingTable(storage = memoryStorage()) {
   /* The table launches every game with the flag; with Maya gone, Rob conceding ends it and the table moves on. */
   const tableStorage = memoryStorage(), t = await playingTable(tableStorage);
   const matchId = (await t.currentRoom()).matchId;
-  eq((await createMatchStore(tableStorage, matchId).loadMatch()).pod.endWhenNoPerson, true, "the table launches its games with the rule");
+  const launched = (await createMatchStore(tableStorage, matchId).loadMatch()).pod;
+  eq(launched.endWhenNoPerson, true, "the table launches its games with the rule");
+  /* The G1 harness (tools/fuzz-live.mjs) plays its games as the table launches them, or the person's waits it measures
+     would include the AI seats playing a game out for nobody, which no person at the table waits through. */
+  const beats = (p) => ({drawBeat: p.drawBeat, passEmpty: p.passEmpty, endWhenNoPerson: p.endWhenNoPerson});
+  const harness = memoryStorage();
+  await playGame({decks: ["ha", "hb", "hc"].map((tag) => ({name: tag, ...deck(tag)})), seed: 1, cards, humans: [0], matchId: "harness", storage: harness, turnLimit: 1});
+  eq(beats((await createMatchStore(harness, "harness").loadMatch()).pod), beats(launched), "and the G1 harness launches its games with the table's beats: the draw's click, the empty step passed, the game ending once every person is out");
   await t.concede(MAYA, now);
   eq((await t.view(ROB)).phase, "playing", "one person concedes: the other is still in, and the game goes on");
   const ended = await t.concede(ROB, now);
