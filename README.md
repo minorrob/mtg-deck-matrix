@@ -715,8 +715,9 @@ unless its controller has seven lands, at six and at seven ("can't block" on a c
 two ways to make {W}, one only for a legendary spell; Purphoros an attacker only at devotion five.
 `engine-x11-permissions` holds what the scenarios of X11's permissions and control cards cannot reach: a card leaving a
 graveyard counted per graveyard, cards only, from none each turn (Primary Research, Relic Retriever); Sower of Temptation's
-control while it remains, control changes ending in timestamp order; Legion Warboss's token required to attack this combat,
-mentor's lesser power as it resolves; four players, and the credits.
+control while it remains, control changes ending in timestamp order; a player leaving the game (CR 800.4a), each kind of
+control change they had given back, what they still control exiled, what would return to them exiled (800.4c); Legion
+Warboss's token required to attack this combat, mentor's lesser power as it resolves; four players, and the credits.
 `engine-x11-memory` holds the pieces the memory axis's last ten cards needed, at their edges and at four seats: discarding
 "up to" two (Fable of the Mirror-Breaker); all of a kind of counter removed, counted, and a color asked for each mana
 (Coalition Relic); "put into exile from your library and/or your graveyard" (Laelia); a reduction for spells cast from

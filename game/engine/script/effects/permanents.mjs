@@ -21,7 +21,7 @@ import {addObject, transformObject, rememberExileLooker} from "../../state/index
 import {selectMatching, compileSelector} from "../filter.mjs";
 import {bindEffect, rememberNow} from "../bind.mjs";
 import {amountOf} from "../amount.mjs";
-import {event, cardRef} from "./zones.mjs";
+import {event, cardRef, moveOne} from "./zones.mjs";
 import {typesOf, controllerOf} from "../../rules/layers.mjs";
 import {protectedFrom} from "../../rules/protection.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
@@ -603,10 +603,12 @@ export function effectUntil(state, params, context) {
  * of them" (`selector`, fixed as it resolves), "target opponent gains control of this creature" (`toPlayer`), "for as long
  * as this creature remains on the battlefield" (Sower of Temptation: `until: "this leaves"`). For good unless `until` says
  * one of those. The permanent's controller itself changes -- the projection, its triggers, a choice of "a creature you
- * control" all read it -- and a change for a while leaves a `control-returns` record of whom it took the permanent from,
- * which gives it back when the duration ends (endControlChange: as the turn ends, rules/turn.mjs; as its source leaves the
- * battlefield, effects/zones.mjs). It has changed controller, so it is summoning sick for its new controller unless it has
- * haste (CR 302.6), and again for its old one when it returns.
+ * control" all read it -- and every change leaves a `control-returns` record: whom it took the permanent from, whom it gave
+ * it to (`to`), and how long it lasts (`until`, unsaid for good). That record gives it back when the change ends
+ * (endControlChange): as the turn ends (rules/turn.mjs), as its source leaves the battlefield (effects/zones.mjs), or --
+ * for good ones too -- as the player it gave control to leaves the game (CR 800.4a; rules/sba.mjs). It has changed
+ * controller, so it is summoning sick for its new controller unless it has haste (CR 302.6), and again for its old one
+ * when it returns.
  */
 export function gainControl(state, params, context) {
   const to = Number.isInteger(params.toPlayer) ? params.toPlayer : context.controller;
@@ -617,11 +619,10 @@ export function gainControl(state, params, context) {
   const ids = (params.selector ? selectMatching(state, params.selector, context) : params.targets ?? []).filter((id) => state.objects[id]?.zone === "battlefield");
   for (const id of ids) {
     const object = state.objects[id];
-    /* For good: later than every control change before it, and never ending, so none of them decides its controller again
-       (CR 613.7, timestamp order in layer 2) -- their records are spent. */
-    if (!CONTROL_DURATIONS.includes(params.until)) state.effects = state.effects?.filter((e) => !(e.rule === "control-returns" && e.affects.ids[0] === id));
-    else if (object.controller !== to) (state.effects ??= []).push({id: `control-returns:${id}:${state.effects.length}`, rule: "control-returns", affects: {ids: [id]},
-      apply: {controller: object.controller}, until: params.until, ...(params.until === "this leaves" ? {source} : {}), sourceController: context.controller});
+    /* Kept even for good, and even when it changes nothing: a later change outlasts the earlier ones in layer 2 (CR 613.7),
+       but its player may leave the game and the earlier ones decide again (CR 800.4a). */
+    (state.effects ??= []).push({id: `control-returns:${id}:${state.effects.length}`, rule: "control-returns", affects: {ids: [id]},
+      apply: {controller: object.controller}, to, until: params.until, ...(params.until === "this leaves" ? {source} : {}), sourceController: context.controller});
     rememberExileLooker(state, id, controllerOf(state, id));
     if (object.controller !== to) object.controlledSinceTurn = state.turn;
     object.controller = to;
@@ -639,27 +640,34 @@ export const CONTROL_DURATIONS = Object.freeze(["end-of-turn", "this leaves"]);
  * control until end of turn" twice in a turn ends with the first controller; a creature Sower of Temptation took and then
  * lent until end of turn goes to its owner when the Sower leaves only once the loan ends. Changing hands, it is summoning
  * sick for whom it returns to (CR 302.6), and not at all for one who has had it all along. A permanent gone from the
- * battlefield is a new object (CR 400.7) whose records are spent as it leaves (controlSourceLeft).
+ * battlefield is a new object (CR 400.7) whose records are spent as it leaves (controlSourceLeft). Ending one may exile its
+ * permanent (CR 800.4c), so a caller ending several asks for the next one still standing each time (`nextRecord`).
  */
-export function endControlChange(state, record) {
+export function endControlChange(state, record, events = []) {
   const id = record.affects.ids[0];
   const later = (state.effects ?? []).filter((e) => e.rule === "control-returns" && e.affects.ids[0] === id);
   const next = later[later.indexOf(record) + 1];
+  state.effects = state.effects.filter((e) => e !== record);
   if (next) next.apply = {...next.apply, controller: record.apply.controller};
+  /* Back to a player who has left the game it does not go: no other change gives it to a player still in the game, the
+     one who controlled it by default is gone, and it is exiled -- as soon as the change ends (CR 800.4c). */
+  else if (state.players[record.apply.controller].lost) moveOne(state, id, "exile", events);
   else if (state.objects[id].controller !== record.apply.controller) {
     state.objects[id].controller = record.apply.controller;
     state.objects[id].controlledSinceTurn = state.turn;
   }
-  state.effects = state.effects.filter((e) => e !== record);
+  return events;
 }
+/** The first control record still in effect that `fits` (endControlChange's callers, one at a time). */
+export const nextRecord = (state, fits) => (state.effects ?? []).find((e) => e.rule === "control-returns" && fits(e));
 
 /**
  * A PERMANENT HAS LEFT THE BATTLEFIELD (`departed`, its id there): each control change lasting "for as long as" it remained
  * there ends (CR 611.2b; Sower of Temptation), and the records of control changes to it are spent -- it is a new object
  * now, wherever it went (CR 400.7). Called with every departure (effects/zones.mjs, returnExiledUntil).
  */
-export function controlSourceLeft(state, departed) {
-  for (const record of (state.effects ?? []).filter((e) => e.rule === "control-returns" && e.until === "this leaves" && e.source === departed)) endControlChange(state, record);
+export function controlSourceLeft(state, departed, events = []) {
+  for (let record; (record = nextRecord(state, (e) => e.until === "this leaves" && e.source === departed));) endControlChange(state, record, events);
   if (state.effects?.some((e) => e.rule === "control-returns" && e.affects.ids[0] === departed))
     state.effects = state.effects.filter((e) => !(e.rule === "control-returns" && e.affects.ids[0] === departed));
 }
