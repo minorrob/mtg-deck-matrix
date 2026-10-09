@@ -406,6 +406,15 @@ globalThis.CrankBoard = Object.freeze({
     if (d && d.kind === "draw" && view.status !== "finished") return b("Draw a card", "board-draw", {}, true, {cls: "compact", disabled: sending});
     return b(passLabel(), "board-pass", {}, true, {cls: "compact", disabled: !canPass()});
   }
+  /* RESOLVE ALL, beside the pass (Rob, 2026-10-09): a run of identical triggers on top of the stack -- a thousand
+     Intruder Alarm triggers -- let resolve with one click rather than one each. The room offers it (game/room/room.mjs,
+     `triggerRun`) and passes for you through that run only; anything else on top, and you are asked again. */
+  const resolveAllOption = () => {const d = view.decision; return d && d.kind === "priority" ? d.options.find((o) => o.act === "resolve-all") || null : null;};
+  function resolveAllButton() {
+    const o = resolveAllOption();
+    if (!o || view.status === "finished") return "";
+    return b(`Resolve all ${Number(o.count).toLocaleString("en-US")}`, "board-resolve-all", {}, false, {cls: "compact", disabled: sending});
+  }
   function strip() {
     const s = view.state, turnName = s.turnPlayerId === null ? "" : nameOf(s.turnPlayerId);
     const {at, step, detail, next} = stepInfo();
@@ -417,6 +426,7 @@ globalThis.CrankBoard = Object.freeze({
       <span class="cm-board-tools">${at < 0 ? "" : `<button type="button" class="cm-board-count" data-action="board-steps" aria-expanded="${stepsOpen}" aria-label="Step ${at + 1} of ${STEPS.length}; show the steps">${at + 1} / ${STEPS.length} ▾</button>`}${stepsOpen ? stepsMenu() : ""}</span>
       <span class="cm-board-prompt">${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}<span class="cm-board-waiting" role="status" aria-live="polite">${e(waitingText())}</span>${conn}</span>
       ${passButton()}
+      ${resolveAllButton()}
       ${b(skipWords(), "board-skip", {}, false, {cls: `compact${skipping === null ? "" : " is-on"}`, disabled: view.status === "finished"})}
       ${alsoButton()}
       <span class="cm-board-divider" aria-hidden="true"></span>
@@ -667,10 +677,16 @@ globalThis.CrankBoard = Object.freeze({
     return `<section class="cm-mat-zone cm-board-band" data-zone="history" aria-label="History"><h3>History ${ib(CLOCK, "board-history", "Open the history")}</h3>
       <ol>${recent.map((l, k) => `<li style="--age:${k}"${l.mark === "end" ? ' class="is-end"' : l.mark === "quiet" ? ' class="is-quiet"' : ""}><span>${e(l.text)}</span></li>`).join("") || `<li class="cm-muted">Nothing yet.</li>`}</ol></section>`;
   }
+  /* The stack, newest first; a run of the same thing in a row (a thousand Intruder Alarm triggers) is one line, ×N. */
   function stack() {
     const items = view.state.stack;
     if (!items.length) return "";
-    return `<section class="cm-board-stack" aria-label="The stack"><h3>On the stack · ${items.length}</h3><ol>${[...items].reverse().map((s) => `<li>${e(s.name || "A face-down spell")} <span class="cm-muted">${e(nameOf(s.playerId))}</span></li>`).join("")}</ol></section>`;
+    const rows = [];
+    for (const s of [...items].reverse()) {
+      const last = rows[rows.length - 1];
+      if (last && s.name && last.s.name === s.name && last.s.playerId === s.playerId && last.s.kind === s.kind) last.n += 1; else rows.push({s, n: 1});
+    }
+    return `<section class="cm-board-stack" aria-label="The stack"><h3>On the stack · ${items.length}</h3><ol>${rows.map(({s, n}) => `<li>${e(s.name || "A face-down spell")}${n > 1 ? ` <b>×${n.toLocaleString("en-US")}</b>` : ""} <span class="cm-muted">${e(nameOf(s.playerId))}</span></li>`).join("")}</ol></section>`;
   }
   /* PANEL ▸: the right panel of the handoff (Card · Tracker · History · Combat), sliding over the surface. */
   function panel() {
@@ -701,7 +717,7 @@ globalThis.CrankBoard = Object.freeze({
          times over being one "Play Forest" (tapping a card in the hand plays that very one). */
       const seen = new Map();
       for (const o of d.options) {
-        if (o.act === "pass") continue;
+        if (o.act === "pass" || o.act === "resolve-all") continue;
         const key = `${o.act}|${o.label}`;
         if (seen.has(key)) seen.get(key).n += 1; else seen.set(key, {o, n: 1});
       }
@@ -731,7 +747,10 @@ globalThis.CrankBoard = Object.freeze({
     /* A question in the card's own words ("When this creature enters, you may search ...") is a sentence to read, not a
        heading: it is set as one (Rob, 2026-10-01: a choice is a pop-up where the player selects). */
     const sentence = String(d.title || "").length > 48;
-    return `<section class="cm-board-decision" id="cm-board-decision" aria-label="${e(d.title)}"><h3${sentence ? ' class="is-sentence"' : ""}>${e(d.title)}</h3>
+    /* Asked in a run you chose Resolve all for: this answer goes for the same question each time the run asks it (Rob,
+       2026-10-09: "Yes to all"; game/room/room.mjs). */
+    const forRun = d.forRun ? `<p class="cm-muted cm-board-for-run">Resolve all: your answer goes for this same question each time the run asks it.</p>` : "";
+    return `<section class="cm-board-decision" id="cm-board-decision" aria-label="${e(d.title)}"><h3${sentence ? ' class="is-sentence"' : ""}>${e(d.title)}</h3>${forRun}
       <div class="cm-board-options">${body}</div>${foot ? `<div class="cm-board-decision-foot">${foot}</div>` : ""}</section>`;
   }
   /* What the room asks, and what is on the stack, floated over the surface under the strip. Priority is not
@@ -759,7 +778,7 @@ globalThis.CrankBoard = Object.freeze({
   function alsoButton() {
     const d = view.decision;
     if (!d || d.kind !== "priority" || view.status === "finished") return "";
-    const n = new Set(d.options.filter((o) => o.act !== "pass").map((o) => `${o.act}|${o.label}`)).size;
+    const n = new Set(d.options.filter((o) => o.act !== "pass" && o.act !== "resolve-all").map((o) => `${o.act}|${o.label}`)).size;
     if (!n) return "";
     return `<span class="cm-board-tools">${b(`You can also ▾`, "board-also", {}, false, {cls: `compact${alsoOpen ? " is-on" : ""}`})}${alsoOpen ? `<div class="cm-board-menu cm-board-also" role="dialog" aria-label="What you can do">${decision()}</div>` : ""}</span>`;
   }
@@ -1237,6 +1256,10 @@ globalThis.CrankBoard = Object.freeze({
     if (!d || d.kind !== "priority") return;
     const pass = d.options.find((o) => o.label === "Pass priority");
     if (pass) send({indices: [pass.index]});
+  };
+  actions["board-resolve-all"] = () => {
+    const o = view && resolveAllOption();
+    if (o && !sending) send({indices: [o.index]});
   };
   actions["board-went-close"] = () => {wentBy = null; draw();};
   actions["board-draw"] = () => {

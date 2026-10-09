@@ -30,6 +30,9 @@
  * And a third, Rob's of 2026-10-06, kept with the match the same way:
  *   `endWhenNoPerson`  once every person at the table is out of the game -- lost, conceded or out of time -- the game
  *                ends there, its record saying so, rather than the AI seats playing it out for nobody.
+ * And a fourth, Rob's of 2026-10-09 ("resolve all"), kept the same way:
+ *   `resolveAll`  a run of identical triggers on top of the stack is let resolve by one decision, Resolve all, rather
+ *                than a pass for each (CR 732.2a, a shortcut; `triggerRun`).
  *
  * WHAT IT PLAYS. Only cards the `cards` resolver can define. A pod with any other card is refused before
  * anything is written, naming every card it cannot play (docs/decisions-2026-09-25.md, M4: "refused by name;
@@ -227,12 +230,36 @@ export function offerDetails(state, seat, actions) {
   });
 }
 
-/* A priority decision, as a §12.1 choice: one of the seat's legal actions, passing included. */
+/* A priority decision, as a §12.1 choice: one of the seat's legal actions, passing included -- and Resolve all, when
+   a run of identical triggers is on top of the stack (`triggerRun`). */
 function priorityChoice(id, actions, state = null, seat = null) {
   const details = state ? offerDetails(state, seat, actions) : [];
   return {id, title: "Your priority", mode: "one", min: 1, max: 1, kind: "priority",
-    options: actions.map((a, index) => ({index, label: a.kind === "pass" ? "Pass priority" : (a.label || a.kind), act: a.kind, ...(a.objectId !== undefined ? {cardId: a.objectId} : {}),
-      ...(details[index] ? {detail: details[index]} : {})}))};
+    options: actions.map((a, index) => (a.kind === "resolve-all" ? {index, label: `Resolve all ${a.n}`, act: a.kind, count: a.n, detail: `${a.name} triggers`}
+      : {index, label: a.kind === "pass" ? "Pass priority" : (a.label || a.kind), act: a.kind, ...(a.objectId !== undefined ? {cardId: a.objectId} : {}),
+        ...(details[index] ? {detail: details[index]} : {})}))};
+}
+
+/* RESOLVE ALL (Rob, 2026-10-09). Krenko, Mob Boss with Intruder Alarm puts thousands of one trigger on the stack, and
+   every one was a pass for each person, a question and a save, so a real table would stall as two of G1's games did.
+   A run is the entries from the top of the stack that are the same trigger: the same ability of the same source,
+   controlled by the same player, with the same targets. What each is about (which creature entered) may differ; letting
+   them all resolve is the person's choice, as it is at a table. The seat that takes it passes for each, no more than were
+   there when it chose, and is asked again as soon as anything else is on top or the stack is empty. */
+const RUN_LEAST = 2;
+/* AND THE SAME ANSWER FOR THE SAME QUESTION (Rob, 2026-10-09: "Yes to all"). A run's triggers can each ask their
+   controller the same thing -- "you may put a quest counter on this enchantment", once per Goblin. Asked during the run,
+   the person answers once; each time the very same question comes again in that run (its words, its mode and limits,
+   every option's words and card), the room gives that answer. A question that differs in any of them is asked. */
+export const questionKey = (choice) => JSON.stringify([choice.title, choice.mode, choice.min ?? null, choice.max ?? null,
+  (choice.options ?? []).map((o) => [o.label, o.cardId ?? null, o.detail ?? null])]);
+const runKey = (e) => (e && e.kind === "trigger" && e.stage === "waiting" ? JSON.stringify([e.playerId, e.cardId, e.name, e.abilityId, e.targets]) : null);
+export function triggerRun(stack) {
+  const key = runKey(stack[stack.length - 1]);
+  if (key === null) return null;
+  let n = 0;
+  while (n < stack.length && runKey(stack[stack.length - 1 - n]) === key) n += 1;
+  return n >= RUN_LEAST ? {key, n, name: stack[stack.length - 1].name} : null;
 }
 
 /**
@@ -290,6 +317,9 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
   let passEmpty = false, step = {key: null, quiet: false, acted: false};
   /* Rob, 2026-10-06: when every person is out, the game ends; the AI seats do not play it out. */
   let endWhenNoPerson = false;
+  /* Rob, 2026-10-09: Resolve all is offered (`resolveAll`), and the seats that took it, each with the run it is passing
+     through and how many passes it has left (`standing`). */
+  let resolveAll = false, standing = {};
   const nobodyLeft = () => seats.some((s) => s.pilot === "human") && seats.every((s, i) => s.pilot !== "human" || state.players[i].lost);
   const track = () => {const key = `${state.turn}:${state.stepIndex}`; if (key !== step.key) step = {key, quiet: false, acted: false};};
   /* A step that passed by itself, said once; the quiet steps of a turn in a row share one line. */
@@ -360,15 +390,41 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
           write(answerForPilot(seat, choice, a));
           continue;
         }
+        /* In a run they let resolve: the same question as one already answered in it is answered the same way; the
+           first of its kind is asked, saying the answer will go for the rest. Refused this time, it is asked. */
+        const run = standing[seat];
+        if (run) {
+          const key = questionKey(choice), given = run.answers?.[key];
+          if (given) {
+            try {write(resolveAwaiting(state, given.indices, given.amounts, rng, given)); step.acted = true; driven = 0; continue;}
+            catch {delete run.answers[key];}
+          }
+          run.asking = key;
+          choice.forRun = true;
+        }
         controller.offer(choice); pendingSeat = seat; pendingActions = null; driven = 0; return;
       }
       if (state.stepIndex === undefined) {write(beginGame(state)); continue;}
       if (state.priorityPlayer === null) {write(advance(state)); continue;}
-      const seat = state.priorityPlayer, actions = legalActions(state, seat);
-      if (seats[seat].pilot === "house") {apply(seat, pilots[seat].choose(projectFor(state, seat), actions), "pilot"); continue;}
+      const seat = state.priorityPlayer;
+      /* Resolve all, taken: the seat passes while the same run is on top, as many times as it chose; each pass is a
+         decision of theirs, so it is not counted toward a hang. Anything else on top, and they are asked again. A pass
+         is always legal, so what else the seat could do is not worked out: on a board of hundreds that is most of the
+         cost of each pass. */
+      if (standing[seat] && seats[seat].pilot !== "house") {
+        const run = standing[seat];
+        if (run.left > 0 && runKey(state.stack[state.stack.length - 1]) === run.key) {run.left -= 1; driven = 0; apply(seat, {kind: "pass"}, "standing"); continue;}
+        delete standing[seat];
+      }
+      const actions = legalActions(state, seat);
+      /* The house pilot passes whatever it sees when nothing it would take is on offer (house-pilot.mjs, `passes`):
+         its view of the board is not worked out for that, which on a big board is most of an AI seat's pass. */
+      if (seats[seat].pilot === "house") {apply(seat, pilots[seat].passes?.(actions, state.stack.length) ? actions.find((a) => a.kind === "pass") : pilots[seat].choose(projectFor(state, seat), actions), "pilot"); continue;}
       if (passEmpty && nothingToDo(state, seat, actions)) {apply(seat, actions.find((a) => a.kind === "pass"), "room"); continue;}
-      controller.offer(priorityChoice(`priority:${state.turn}:${state.stepIndex}:${controller.revision}`, actions, state, seat));
-      pendingSeat = seat; pendingActions = actions; driven = 0; return;
+      const run = resolveAll ? triggerRun(state.stack) : null;
+      const offered = run ? [...actions, {kind: "resolve-all", key: run.key, n: run.n, name: run.name}] : actions;
+      controller.offer(priorityChoice(`priority:${state.turn}:${state.stepIndex}:${controller.revision}`, offered, state, seat));
+      pendingSeat = seat; pendingActions = offered; driven = 0; return;
     }
   }
   /* Leaving or ending while the AI seats play on is refused, with when to try again (see `continuing`). */
@@ -401,7 +457,15 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
         const action = pendingActions[answer.indices[0]];
         pendingActions = null;
         apply(seat, action);
-      } else {step.acted = true; write(resolveAwaiting(state, answer.indices, answer.amounts, rng, answer));}
+      } else {
+        step.acted = true; write(resolveAwaiting(state, answer.indices, answer.amounts, rng, answer));
+        /* Asked in a run they let resolve: the answer goes for the same question in the rest of it. */
+        const run = standing[seat];
+        if (run?.asking) {
+          run.answers = {...run.answers, [run.asking]: {indices: answer.indices ?? [], ...(answer.amounts ? {amounts: answer.amounts} : {}), ...(answer.value !== undefined ? {value: answer.value} : {})}};
+          delete run.asking;
+        }
+      }
     } catch (error) {
       if (error instanceof RoomError) throw error;
       throw new RoomError(422, error.message, {refused: true});
@@ -420,6 +484,7 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
     const point = await store.latestCheckpoint();
     if (!point || point.sequence !== record.sequence) throw new RoomError(500, "This table's saved game does not match its record, so it was not resumed.");
     passEmpty = record.passEmpty === true; step = record.step || {key: null, quiet: false, acted: false};
+    resolveAll = record.resolveAll === true; standing = record.standing || {};
     seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; history = record.history || [];
     refusals = record.refusals || {total: 0, since: point.sequence, first: []};
     continuing = record.continuing === true; driven = record.driven || 0; endWhenNoPerson = record.endWhenNoPerson === true;
@@ -438,8 +503,14 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
     if (error instanceof RoomError) return error;
     return new RoomError(500, `The rules engine failed after that (${error.message}), so it was not taken: nothing changed, and the game is where it was. Try another choice, or end the game.`);
   }
-  /* `by`: a person, the house pilot, or the room passing for a person with nothing to do (item 11). */
+  /* `by`: a person, the house pilot, the room passing for a person with nothing to do (item 11), or for one who chose
+     Resolve all ("standing"). */
   function apply(seat, action, by = "person") {
+    if (action.kind === "resolve-all") {
+      standing[seat] = {key: action.key, left: action.n - 1, answers: {}};
+      note(`${seats[seat].name} let ${action.n} ${action.name} triggers resolve`);
+      return apply(seat, {kind: "pass"}, by);
+    }
     if (action.kind === "pass") {
       if (by === "room") step.quiet = true; else if (by === "person") step.acted = true;
       /* The game's random stream, for what resolves ("then shuffle", "in a random order"): the room's own, so a replay
@@ -463,7 +534,7 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
-    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {})}));
+    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {})}));
   }
 
   const api = {
@@ -486,8 +557,8 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
       /* The table's starting life (its host's rule), kept with the match so a replay deals the same game. */
       const startingLife = pod && pod.startingLife !== undefined ? pod.startingLife : undefined;
       const beats = {...(pod && pod.drawBeat === true ? {drawBeat: true} : {}), ...(pod && pod.passEmpty === true ? {passEmpty: true} : {}),
-        ...(pod && pod.endWhenNoPerson === true ? {endWhenNoPerson: true} : {})};
-      passEmpty = beats.passEmpty === true; endWhenNoPerson = beats.endWhenNoPerson === true;
+        ...(pod && pod.endWhenNoPerson === true ? {endWhenNoPerson: true} : {}), ...(pod && pod.resolveAll === true ? {resolveAll: true} : {})};
+      passEmpty = beats.passEmpty === true; endWhenNoPerson = beats.endWhenNoPerson === true; resolveAll = beats.resolveAll === true;
       try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...(startingLife !== undefined ? {startingLife} : {}), ...(beats.drawBeat ? {drawBeat: true} : {})});}
       catch (error) {throw new RoomError(400, error.message);}
       seats.forEach((s, seat) => {
@@ -584,6 +655,7 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
       tape({kind: "leave", seat: seatId, why});
       note(why === "timed-out" ? `${seats[seat].name} ran out of time · not finished` : `${seats[seat].name} conceded`);
       leaving = [...leaving, seat];
+      delete standing[seat];
       /* Conceded in the engine, and the AI seats play on: should that fail, they have not left, and nothing changed. */
       try {drive();} catch (error) {throw await undone(error);}
       await persist();
