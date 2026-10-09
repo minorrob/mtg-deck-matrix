@@ -490,6 +490,10 @@ seat controls a hundred permanents. `room-resolve-all` holds Resolve all (Rob, 2
 top of the stack read off it, offered as one decision in a game that asked for it and in no other, the room passing for
 that seat through that run only -- asked again when another player's ability lands on top, no more passes than were
 there, kept across a wake and replayed -- and the board's button beside the pass, with the run one line on the stack.
+`coach` holds the Coach (X13): its brief, the person's own hand, the board as everyone sees it and their deck as a sorted
+list, never another hand or a library's order; the table building it for the AI door alone; POST /api/ai/coach behind the
+door's gates and its own switch, asking Haiku 5.5 in one to three sentences, aiming for one; an answer naming anything not
+in the brief refused; and the board's panel showing the answer, Show me and Why?, and the AI door's sign-in.
 `engine-derive-once` holds the layers' memo: each object derived once per question and guard level, the same answers as
 without it on a board where the guard levels differ, a question that only reads changing nothing, and the work linear in
 the board. `engine-targets-up-to`
@@ -893,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 389 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 391 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1089,6 +1093,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `table-board` — `tests/table-board.mjs`
 - `room-beats` — `tests/room-beats.mjs`
 - `room-resolve-all` — `tests/room-resolve-all.mjs`
+- `coach` — `tests/coach.mjs`
 - `board-choices` — `tests/board-choices.mjs`
 - `crankmagic-audio` — `tests/crankmagic-audio.mjs`
 - `advice-contract` — `tests/advice-contract.mjs` (preparation-only AI requests, evidence references and stale-result rejection)

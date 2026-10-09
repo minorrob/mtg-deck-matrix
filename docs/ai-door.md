@@ -86,3 +86,39 @@ Rob approved it as written. `DELETE /api/account` deletes the person's `ai_calls
 account (`cloud/library.mjs`, `forget`; proved in `tests/cloud-worker.mjs`). The allowlist row stays, because the
 list is Rob's. The training sentence stands on the terms of Anthropic's commercial API; it is worth reading again
 before production's door opens.
+
+## The Coach (X13), through the same door
+
+`POST /api/ai/coach` with `{tableId, question}`. The gates are the same as explain's: the AI application, the
+allowlist, the key, the caps and the model. Then the Coach has its own switch, `AI_COACH`, because it sends a person's
+hand and board, which the privacy page must name before the Coach is offered.
+- **The brief** is built by the table (`game/room/coach-brief.mjs`, `GET /table/brief`, which only the Worker's AI door
+  asks for). It comes from the asking seat's own view, never from anything the browser sends.
+  - It holds the person's own hand, with what each card can do now.
+  - It holds the board as everyone at the table sees it: life, poison, commander damage, permanents, graveyards,
+    face-up exile, command zones, the stack, the step and the history's recent lines.
+  - It holds their deck as a list sorted by name, and the library's count.
+  - It never holds another seat's hand or library, a face-down card that is not theirs, or a library's order, not even a
+    top card a look showed them.
+- **The call:** the brief and the question, on Claude Haiku 5.5 at low effort. The instruction is the length control:
+  one to three very concise sentences, aiming for one (Rob, 2026-10-09). Nothing measures the answer afterward.
+  `max_tokens` is a cost ceiling only (1,200).
+- **What is shown** is an answer in which every card it names, every play's card, every id it would highlight and the
+  seat it calls the threat is in the brief. Otherwise it is not shown and is logged as ungrounded. Its calls are logged
+  as `coach`, on the same caps.
+- **The board:** the Coach panel asks the route. It shows the answer, with its cards in bold. *Show me* lights the cards
+  on the board, and *Why?* opens each play's reason. Signed in to the library only, the panel offers the AI door's
+  sign-in, which comes back to the table (`GET /api/ai/login?to=#table?id=…`).
+
+### Draft privacy wording for the Coach, for Rob to approve
+
+It would be added to the "AI features" section of `privacy.html`. On Rob's approval, the staging profile gets
+`ai.coach: true` (`AI_COACH` on).
+
+> **The Coach.** At a table, people invited to AI features can ask the Coach about their game. When you ask,
+> CrankMagic sends Anthropic your question and what you can see at that table: your own hand, the board as everyone
+> at the table sees it (including the names players use there), the stack, the game's recent history, and your deck's
+> card list. It never sends another player's hand, the order of any library, your email address, your library or your
+> collection. Anthropic processes it to write the answer and does not use it to train its models. CrankMagic keeps the
+> same record of each request as for other AI features, and deletes it with your account.
+

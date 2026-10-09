@@ -19,11 +19,14 @@
  *                                  (tables.mjs, game-room.mjs) -- shut until Play's release binds TABLES
  *   POST /api/ai/explain           a measured score read out loud by the AI, behind its own Access application, an
  *                                  allowlist, the key and the spend caps -- shut until Rob opens each (ai.mjs, M6)
+ *   POST /api/ai/coach             the Coach at a table (X13): the same door, the brief built by the table for the
+ *                                  asker's own seat, and its own switch, AI_COACH, until the privacy page names it
+ *   GET  /api/ai/login?to=#...     back to the app once signed in to the AI door
  */
 import {verifyAccess, Unauthorized} from "./access.mjs";
 import {createLibrary, Conflict, Invalid, LIMITS} from "./library.mjs";
 import {archidekt, ImportError} from "./import.mjs";
-import {createAi, settings, explain, Closed} from "./ai.mjs";
+import {createAi, settings, explain, coach, readQuestion, Closed} from "./ai.mjs";
 import {tables} from "./tables.mjs";
 
 /** An invitation's link, `/api/join/<table>/<code>`: where it sends the person -- the app, at the seat's fragment -- or
@@ -159,6 +162,7 @@ export async function handle(request, env, deps = {}) {
 /* THE AI DOOR (M6; cloud/ai.mjs, docs/ai-door.md). Its own Access application, so a library sign-in -- which may
    be the emailed code -- never opens it; then the allowlist, the key and the caps, each shut until Rob sets it. */
 const AI_BODY = 64 * 1024;
+const AI_ROUTES = {"/api/ai/explain": "Explain", "/api/ai/coach": "The Coach"};
 async function aiDoor(request, env, deps, url, ms) {
   if (!env.AI_ACCESS_AUD) return reply(503, {error: "AI features are not switched on here yet."});
   let who;
@@ -168,18 +172,36 @@ async function aiDoor(request, env, deps, url, ms) {
     throw error;
   }
   if (await overLimit(env.LIMIT_PERSON, who.email)) return tooMany("your account");
-  if (url.pathname !== "/api/ai/explain") return reply(404, {error: "No such endpoint."});
-  if (request.method !== "POST") return reply(405, {error: "Explain is a POST."});
+  /* Signed in to the AI door, back to the app: the board sends a person here when its first question finds them signed
+     in to the library only (Access's sign-in keeps a path and drops a fragment, so the place to return is `to`). */
+  if (request.method === "GET" && url.pathname === "/api/ai/login") {
+    const to = url.searchParams.get("to") || "";
+    const fragment = /^#[\w\-?=&%.:+~/]{0,200}$/.test(to) ? to : "";
+    return new Response(null, {status: 302, headers: {location: `${url.origin}/${fragment}`, "cache-control": "no-store"}});
+  }
+  const feature = AI_ROUTES[url.pathname];
+  if (!feature) return reply(404, {error: "No such endpoint."});
+  if (request.method !== "POST") return reply(405, {error: `${feature} is a POST.`});
   if (!fromTheApp(request, url, "ai")) return reply(403, {error: "That request did not come from CrankMagic."});
   const ai = createAi(env.DB, {now: () => new Date(ms()).toISOString(), ...(deps.newId ? {newId: deps.newId} : {})});
   if (!(await ai.allowed(who.email))) return reply(403, {error: "Your account is not on CrankMagic's list for AI features. Ask the person who invited you."});
+  /* The Coach sends a person's hand and board, which the privacy page must say before it is offered: its own switch. */
+  if (feature === "The Coach" && env.AI_COACH !== "on") return reply(503, {error: "The Coach is not switched on here yet."});
   try {
     const config = settings(env);
     const text = await request.text();
-    if (text.length > AI_BODY) return reply(413, {error: "That is more than a score explanation needs. Nothing was sent to the AI."});
+    if (text.length > AI_BODY) return reply(413, {error: `That is more than ${feature === "Explain" ? "a score explanation" : "a question for the Coach"} needs. Nothing was sent to the AI.`});
     let input;
     try {input = JSON.parse(text);} catch {return reply(400, {error: "That request is not JSON."});}
-    return reply(200, await explain({ai, who, input, config, fetchImpl: deps.fetchImpl || fetch}));
+    if (feature === "Explain") return reply(200, await explain({ai, who, input, config, fetchImpl: deps.fetchImpl || fetch}));
+    /* THE COACH: the table builds the asking person's brief from their own seat's view (game/room/coach-brief.mjs),
+       never from anything the browser sends; a person with no seat there, or no game on, is refused by the table. */
+    const {tableId, question} = readQuestion(input);
+    if (!env.TABLES) return reply(503, {error: "Play is not switched on here yet."});
+    const asked = await env.TABLES.get(env.TABLES.idFromName(tableId)).fetch(new Request("https://table.internal/table/brief", {headers: {"x-crankmagic-email": who.email}}));
+    const found = await asked.json().catch(() => null);
+    if (!asked.ok || !found?.brief) return reply(asked.ok ? 502 : asked.status, {error: found?.error || "The table could not say what is on it."});
+    return reply(200, await coach({ai, who, brief: found.brief, question, config, fetchImpl: deps.fetchImpl || fetch}));
   } catch (error) {
     if (error instanceof Closed) return reply(error.status, {error: error.message});
     throw error;

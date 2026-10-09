@@ -113,6 +113,9 @@ async function person(email, viewport, {fullscreen = true} = {}) {
   /* The app at "/", where an invitation's link comes back to (cloud/worker.mjs, joinLocation). */
   await page.route((url) => url.origin === base && url.pathname === "/", (r) => r.fulfill({contentType: "text/html; charset=utf-8", body: PAGE}));
   await page.route(`${base}/api/me`, (r) => r.fulfill({json: {email}}));
+  /* The Coach's door, shut as it is until the privacy page names what it sends (cloud/worker.mjs, AI_COACH): the board
+     says so in the Coach's own words. A moment's wait, as the network has, so its typing shows. */
+  await page.route(`${base}/api/ai/coach`, async (r) => {await new Promise((go) => setTimeout(go, 300)); r.fulfill({status: 503, json: {error: "The Coach is not switched on here yet."}});});
   await page.route(`${base}/api/library**`, (r) => r.request().method() === "GET" ? r.fulfill({json: {head: null}})
     : r.fulfill({json: {head: {id: "00000000-0000-4000-8000-000000000000", revision: 1, checksum: "x", device: "test", createdAt: new Date().toISOString()}}}));
   await page.route(`${base}/api/tables**`, (r) => answer(r, email));
@@ -285,7 +288,7 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
   await rob.page.locator("#cm-board-coach:not([hidden]) .cm-coach-input").waitFor();
   await rob.page.click("[data-action=board-coach-ask][data-q=\"What's my best play?\"]");
   await rob.page.locator(".cm-coach-msg.is-coach:not(.is-typing)").waitFor({timeout: 5000});
-  ok(/not switched on yet/.test(await text(rob.page, ".cm-coach-thread")), `table ${n}: the Coach answers a suggested prompt with the stub's honest reply`);
+  ok(/not switched on here yet/.test(await text(rob.page, ".cm-coach-thread")), `table ${n}: the Coach answers a suggested prompt with the door's honest reply while it is shut`);
   await rob.page.keyboard.press("Escape");
   await rob.page.locator("#cm-board-coach[hidden], #cm-board-coach:not(:has(.cm-coach-input))").first().waitFor({state: "attached", timeout: 5000}).catch(() => {});
   /* CONCEDE, at the second table: Maya leaves it from the phone's settings, and the others play on. */

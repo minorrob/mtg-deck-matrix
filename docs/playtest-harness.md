@@ -47,6 +47,11 @@ The countdown ends on the table's alarm, and the page hands itself to the board.
   - *Pass* on another player's turn.
 - **`data-action=board-draw`, *Draw a card*.** It replaces the pass button in your own draw step. The draw waits for it.
 - **`data-action=board-resolve-all`, *Resolve all N*.** It shows beside the pass when a run of the same trigger is on top of the stack: the same ability of the same source, one player's, with the same targets. One click lets the whole run resolve, and you are asked again as soon as anything else is on top. The stack shows the run as one line, ×N. If each trigger of the run asks the same question ("you may …"), you answer the first one. That question's panel carries `.cm-board-for-run`, *Resolve all: your answer goes for this same question each time the run asks it*, and the room gives your answer to the rest.
+- **The Coach panel (`data-action=board-coach`):**
+  - `data-action=board-coach-ask` asks a suggested question; the composer asks your own.
+  - An answer carries `data-action=board-coach-show`, *Show me*, which lights the cards it names, and
+    `data-action=board-coach-why`, *Why?*, which opens each play's reason.
+  - Signed in to the library only, the reply is a link to the AI door's sign-in.
 - **`data-action=board-skip`, *Skip to end*.** It passes for you through the rest of the turn and stops on anything on the stack or any other question.
 - **`data-action=board-also`, *You can also ▾*.** What else you can do; each thing is a `data-action=board-option` button with `data-index`.
 - **`data-action=board-view` with `data-view`:** Table, Focus, Full screen.

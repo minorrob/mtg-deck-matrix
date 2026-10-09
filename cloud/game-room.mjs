@@ -163,6 +163,7 @@ export class GameRoom {
  *   POST /table/concede  you leave the game in play
  *   GET  /table/record?match=<matchId>  a finished game's record (M8b): the whole game on a playtest table, your
  *        own seat's elsewhere. A table is a playtest table when the Worker's PLAYTEST_TABLES is "on" as it is made.
+ *   GET  /table/brief    the Coach's brief for your seat (X13), asked for by the Worker's AI door alone
  *   GET  /connect (websocket), once the game is on: the seat this address holds
  *
  * ONE ALARM, TWO CLOCKS: the countdown's end, and a dropped player's five minutes (Rob, 2026-09-26). When a
@@ -192,6 +193,9 @@ export class GameTable extends GameRoom {
       /* With the table, the object's own time: a countdown is read against the clock that set it, not the device's. */
       if (route === "GET /table") return reply(200, {table: await t.view(email), now});
       if (route === "GET /table/record") return reply(200, {record: await t.record(email, url.searchParams.get("match") || undefined)});
+      /* The Coach's brief for this person's seat (game/room/coach-brief.mjs). Only the Worker's AI door asks for it: the
+         front door (cloud/tables.mjs) forwards no such path. */
+      if (route === "GET /table/brief") return reply(200, {brief: await t.brief(email)});
       if (route === "POST /table/invite") return reply(201, {invite: await t.invite(email, Number((await body()).seatId), now)});
       if (route === "POST /table/uninvite") return reply(200, {table: await t.uninvite(email, Number((await body()).seatId), now)});
       if (route === "POST /table/join") return reply(200, {table: await t.join(email, (await body()).code, now)});

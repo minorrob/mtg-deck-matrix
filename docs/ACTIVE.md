@@ -16,7 +16,7 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | Gate item | State | Proof, or whose step |
 | --- | --- | --- |
 | G-A: G1, 1,400 games | **done: 1,400 of 1,400 clean** | PR #686's head ccb250d1: every game finished, none refused, every replay identical, 0 leaks in 105,656 checks of every seat's view |
-| G-A: the AI program (AI-1 to AI-6), X13 | the door open on staging; the features not built | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it |
+| G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; AI-1, the Coach, built behind its own switch; AI-2 to AI-6 not built | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach (records below) waits on **Rob's** approval of its privacy wording |
 | G-B: the whole gate green twice on main | done | dispatched Tests runs on main, every suite: 2499 on def8fa89 and 2503 on eff40fdc, both green |
 | G-B: `play-e2e` under wrangler dev | done | 35 checks at every staging release |
 | G-B: hidden information in every frame | done | `play-journeys` reads every frame to both people; G1's oracle 102,879 checks, no leak |
@@ -30,7 +30,7 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | G-C: the four agents' access | not set | **Rob** (M8) |
 
 So the first sentence of Part 7 is not yet true: it waits on the network measurement, the phones and the agents'
-access, all Rob's, and on the AI features, this session's.
+access, all Rob's; on the Coach's privacy wording, Rob's to approve; and on AI-2 to AI-6, this session's.
 
 **Later, 2026-10-08:** the five workers' 45 cards and CR 800.4a merged here (#676); and on Rob's go ("merge Codex's stack") Codex's #670 to #675, reviewed first, merged here too -- every card of the seven decks is now defined; #676 merged on main 09499dcd and #671 to #675 closed as merged through it. The first G1 pass (70 games over seven pods) then found two blockers, each on its own worker: Tegwyll's provisional definition kept D7 off the table (now confirmed, hand-authored, 477 of 477), and a person's answer the engine refuses (Lethal Scheme's convoke) escaped room.act after the tape had recorded it, so the room could not reopen. Codex's records of 2026-10-07 follow, as it left them.
 
@@ -629,3 +629,41 @@ because half of the board you were seeing would win before ever getting to that 
 - **Breaks:** 26 of 26 caught: the 14 above; the answer not carried, the answer not kept, the question not told, every
   question the same, a card not part of the question, the board silent about the run; and the quick pass too eager,
   blind to mana, to spells, to lands, and to loyalty.
+
+**G-C, 6e24523a (#686's merge):** released to `release/cloud-staging` 17d71486; deployed at 20:35:18 UTC on 2026-10-09
+as version 469ff5a4, its `play-worker.js` byte-identical to the release's dry-run bundle (2,424,596 bytes, sha256
+54c405a478b5…).
+
+**The AI door, proven (2026-10-09).** Rob's first call, from his browser at 20:30 UTC: Explain, Claude Haiku 5.5, 566
+tokens in and 239 out, 177 micros (0.018¢), logged as ok. The door's GET reply, *"Explain is a POST."*, was his first
+sight of it signed in.
+
+**The Coach (AI-1, X13), built behind its own switch (2026-10-09).** Rob: *"begin building the coach next"*.
+- **The brief** (`game/room/coach-brief.mjs`): built by the table (`GET /table/brief`, `game/room/table.mjs` `brief`)
+  from the asking seat's own projection and the deck that seat brought. It holds the person's hand, each card with what
+  it can do now; the board as everyone sees it (life, poison, commander damage, permanents with their state, graveyards,
+  face-up exile, the command zone); the stack; the step; the history's last 20 lines; the question being asked; and the
+  deck as a counted list sorted by name, with the library's count. Never another seat's hand or library, a face-down
+  card that is not theirs, the library's order, or a top card a look showed them. The front door (`cloud/tables.mjs`)
+  forwards no such path: only the Worker's AI door asks for it, and nothing from the browser goes into it.
+- **The route:** `POST /api/ai/coach` with `{tableId, question}` (a question of at most 300 characters), behind the AI
+  door's gates (Access, the allowlist, the key, the caps, the model), then its own switch, `AI_COACH`. It is set only by
+  a release profile whose `ai.coach` is true (`tools/release-pages.mjs`); staging's is not, so staging answers *"The
+  Coach is not switched on here yet."* until Rob approves the Coach's privacy wording (drafted in `docs/ai-door.md`).
+  A table's refusal (no seat, no game yet) is passed on as the table said it.
+- **The call:** Claude Haiku 5.5 at low effort, a JSON schema `{answer, plays[{card, action, why}], threat?, show}`, and
+  the instruction as the brevity control: *"one to three at most, and aim for one"*, and that it sees no other hand or
+  library order. Nothing measures the length afterward; `COACH_MAX_TOKENS` (1,200) is a cost ceiling only. The same
+  caps and log as Explain, logged as `coach`.
+- **Grounding:** every `[[card]]` in the answer, every play's card, every id to highlight and the threat's seat must be
+  in the brief, or the answer is not shown (502) and is logged as ungrounded.
+- **The board:** the stub reply is gone. An answer shows its card names in bold; *Show me* lights the cards it names for
+  four seconds; *Why?* opens each play's reason and the threat. Signed in to the library only, the reply is a link to
+  `GET /api/ai/login?to=#table?id=…`, which comes back to the table once signed in to the AI door.
+- **Not built, by Rob's own cap choice:** the plan's per-game cap. Rob chose *"a general spending cap, not per
+  person"*, 300¢ a day for everyone, which holds the Coach as it holds Explain.
+- **Proof:** `coach` 51 checks (the brief by hand and from a real table against an AI seat whose seven-mana Bears stay in
+  its hand; the door with the table bound; the board's panel in Chromium), `release-pages` 191, `table-board` 236,
+  `playtest-harness` 150; 41 breaks caught: the brief carrying the library, its deck list in library order or uncounted, another seat's view, the brief before the game, the front door forwarding it, the switch ignored, the allowlist skipped, the browser's brief used, a table's refusal hidden, the sign-in sending anywhere, the question unbounded, Sonnet, the instruction's two lines, the effort, the log's feature, the asker sent, each of the grounding's checks, Show me, Why?, the bold, the sign-in link, the board sending its view, and the release's switch on and off.
+- **Rob's, left:** approve the Coach's privacy wording. Then it goes on `privacy.html`, staging's profile gets
+  `ai.coach: true`, and the next staging release turns the Coach on.

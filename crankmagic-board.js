@@ -122,9 +122,11 @@ globalThis.CrankBoard = Object.freeze({
   let historyOpen = false, historyFilter = "", menuOpen = false, stepsOpen = false, panelOpen = false, paneShut = false, alsoOpen = false;
   let skipping = null;                 /* Skip to end: the turn being skipped through, or null */
   /* The Coach: open or not, its thread ({from: "you"|"coach", text} or {divider}), and whether it is "typing". */
-  const coach = {open: false, thread: [], typing: false, timer: null};
+  const coach = {open: false, thread: [], typing: false, asked: 0};
   const COACH_PROMPTS = ["What's my best play?", "Who's the threat?", "Plan my next turn", "Explain the stack"];
-  const COACH_STUB = "I'm not switched on yet. When the Coach arrives, I'll read your board, your hand and the table, and answer here. For now, the History and Table vitals say what has happened.";
+  /* THE COACH, through the AI door (X13; cloud/ai.mjs `coach`): the table builds what it sees from your seat, and it
+     answers in a sentence or three. `shown` is the cards an answer's Show me lights on the board for a few seconds. */
+  let coachShown = new Set(), coachShownTimer = null;
 
   let tableId = null, table = null, view = null, socket = null, status = "idle", retry = 0, retryTimer = null;
   let focus = null, picked = [], amounts = [], sending = false, tools = false, confirmEnd = false, closedByUs = false;
@@ -356,7 +358,7 @@ globalThis.CrankBoard = Object.freeze({
     const opts = optionsFor(c.cardId), mine = view.decision && !sending;
     const bright = mine && opts.length > 0, chosen = opts.some((o) => picked.includes(o.index));
     const creature = c.types.includes("Creature") && c.power !== null, upright = UPRIGHT.has(where);
-    const cls = ["cm-bcard", c.tapped && !upright ? "is-tapped" : "", bright ? "is-bright" : "", chosen ? "is-picked" : "", (where === "hand" || where === "fan") && mine && !bright ? "is-dim" : "", selected === c.cardId && where !== "pick" ? "is-selected" : ""].filter(Boolean).join(" ");
+    const cls = ["cm-bcard", c.tapped && !upright ? "is-tapped" : "", bright ? "is-bright" : "", chosen ? "is-picked" : "", coachShown.has(c.cardId) ? "is-coach-shown" : "", (where === "hand" || where === "fan") && mine && !bright ? "is-dim" : "", selected === c.cardId && where !== "pick" ? "is-selected" : ""].filter(Boolean).join(" ");
     const marks = [c.tapped && upright ? `<span class="cm-bcard-mark is-state">Tapped</span>` : "", c.damage ? `<span class="cm-bcard-mark">${c.damage} damage</span>` : "", ...Object.entries(c.counters || {}).map(([k, n]) => `<span class="cm-bcard-mark">${n} ${e(k)}</span>`)].join("");
     /* Its name first, then its state as a person looking at it would say it: tapped, its power and toughness, damage
        marked, counters; then what it can do now (the accessibility pass). */
@@ -905,8 +907,17 @@ globalThis.CrankBoard = Object.freeze({
     const keep = panelEl.querySelector(".cm-coach-input"), more = panelEl.querySelector(".cm-coach-more"), active = document.activeElement;
     const typed = keep ? keep.value : "", focused = keep && active === keep, moreOpen = !!(more && more.open);
     const moreFocus = more && more.contains(active) ? (moreOpen && active.matches("[data-action=board-coach-clear]") ? "[data-action=board-coach-clear]" : "summary") : null;
-    const bubble = (m) => m.divider ? `<li class="cm-coach-divider"><span>${e(m.divider)}</span></li>`
-      : `<li class="cm-coach-msg is-${m.from}">${m.from === "coach" ? `<span class="cm-coach-avatar">${COACH}</span>` : ""}<p>${e(m.text)}</p></li>`;
+    /* A card the Coach names is written [[like this]]: shown in bold, the brackets dropped. */
+    const said = (t) => e(t).replace(/\[\[([^\]]{1,200})\]\]/g, "<b>$1</b>");
+    const extras = (m, i) => {
+      if (m.signIn) return `<div class="cm-coach-chips"><a class="v-button compact" href="/api/ai/login?to=${encodeURIComponent(`#table?id=${tableId}`)}">Sign in to the Coach</a></div>`;
+      const chips = [(m.show || []).length ? b("Show me", "board-coach-show", {i}, false, {cls: "compact"}) : "", (m.plays || []).length || m.threat ? b(m.open ? "Hide why" : "Why?", "board-coach-why", {i}, false, {cls: "compact"}) : ""].join("");
+      const why = m.open ? `<ul class="cm-coach-why">${(m.plays || []).map((p) => `<li><b>${e(p.action)} ${e(p.card)}</b> · ${e(p.why)}</li>`).join("")}${m.threat ? `<li><b>The threat: ${e(m.threat.seat)}</b> · ${e(m.threat.why)}</li>` : ""}</ul>` : "";
+      return chips ? `<div class="cm-coach-chips">${chips}</div>${why}` : "";
+    };
+    const bubble = (m, i) => m.divider ? `<li class="cm-coach-divider"><span>${e(m.divider)}</span></li>`
+      : m.from === "coach" ? `<li class="cm-coach-msg is-coach"><span class="cm-coach-avatar">${COACH}</span><div class="cm-coach-said"><p>${said(m.text)}</p>${extras(m, i)}</div></li>`
+      : `<li class="cm-coach-msg is-${m.from}"><p>${e(m.text)}</p></li>`;
     panelEl.innerHTML = `<header class="cm-coach-head"><span class="cm-coach-logo">${COACH}</span>
         <div><h2><span class="cm-coach-brand">CrankMagic </span>Coach</h2><p class="cm-muted" id="cm-coach-context">${e(coachContext())}</p></div>
         <details class="cm-coach-more"${moreOpen ? " open" : ""}><summary aria-label="More">⋯</summary><div>${b("Clear chat", "board-coach-clear")}</div></details>
@@ -923,15 +934,33 @@ globalThis.CrankBoard = Object.freeze({
     const thread = panelEl.querySelector(".cm-coach-thread");
     thread.scrollTop = thread.scrollHeight;
   }
-  function ask_(text) {
+  /* A question to the Coach: POST /api/ai/coach with the table and the question, nothing more -- the table says what is
+     on it (cloud/worker.mjs). Signed in to the library only, the AI door's sign-in answers with a redirect, which a
+     fetch cannot follow: the reply is then a link to sign in, which comes back here. Any refusal reads as the door said it. */
+  async function ask_(text) {
     const q = String(text || "").trim();
-    if (!q || !view) return;
+    if (!q || !view || coach.typing) return;
     const here = stepNow(), last = [...coach.thread].reverse().find((m) => m.divider);
     if (!last || last.divider !== here) coach.thread.push({divider: here});
     coach.thread.push({from: "you", text: q});
     coach.typing = true;
-    clearTimeout(coach.timer);
-    coach.timer = setTimeout(() => {coach.typing = false; coach.thread.push({from: "coach", text: COACH_STUB}); drawCoach();}, 700);
+    /* Clear chat, closing the board or leaving the table moves `asked` on: a reply still on its way is then dropped. */
+    const turn = (coach.asked += 1);
+    drawCoach();
+    let said;
+    try {
+      const r = await fetch("/api/ai/coach", {method: "POST", credentials: "same-origin", redirect: "manual",
+        headers: {"content-type": "application/json", "x-crankmagic": "ai"}, body: JSON.stringify({tableId, question: q})});
+      if (r.type === "opaqueredirect" || r.status === 401) said = {text: "Sign in to the Coach first: it has its own sign-in, with Google.", signIn: true};
+      else {
+        const j = await r.json().catch(() => null);
+        said = r.ok && j && j.answer ? {text: j.answer, plays: j.plays || [], show: j.show || [], ...(j.threat ? {threat: j.threat} : {})}
+          : {text: (j && j.error) || "The Coach could not answer just now. Try again in a moment."};
+      }
+    } catch {said = {text: "The Coach could not be reached. Try again in a moment."};}
+    if (coach.asked !== turn) return;
+    coach.typing = false;
+    coach.thread.push({from: "coach", ...said});
     drawCoach();
   }
   function banner() {
@@ -1199,7 +1228,7 @@ globalThis.CrankBoard = Object.freeze({
       if (audio) audio.stopBgm(400);
       stopSea(); if (observer) {observer.disconnect(); observer = null;} peek(null); leaveFullscreen();
       tools = false; confirmEnd = false; historyOpen = false; menuOpen = false; stepsOpen = false; alsoOpen = false; showing = null; held = null;
-      coach.open = false; clearTimeout(coach.timer); coach.typing = false;
+      coach.open = false; coach.asked += 1; coach.typing = false;
       gameChip();
     },
     /** A game of yours that is on: {tableId, turn}, or null. Play opens it. */
@@ -1215,7 +1244,7 @@ globalThis.CrankBoard = Object.freeze({
       document.getElementById("cm-game-on")?.remove();
       tableId = null; view = null; table = null; tools = false; confirmEnd = false; selected = null; hover = null; showing = null; held = null;
       historyOpen = false; historyFilter = ""; menuOpen = false; stepsOpen = false; panelOpen = false; skipping = null; records = null;
-      coach.open = false; coach.thread = []; coach.typing = false; clearTimeout(coach.timer); peek(null); leaveFullscreen();
+      coach.open = false; coach.thread = []; coach.typing = false; coach.asked += 1; peek(null); leaveFullscreen();
     },
   };
 
@@ -1407,8 +1436,17 @@ globalThis.CrankBoard = Object.freeze({
   actions["board-tools"] = () => {tools = !tools; confirmEnd = false; historyOpen = false; menuOpen = false; stepsOpen = false; draw();};
   actions["board-coach"] = () => {coach.open = !coach.open; tools = false; historyOpen = false; if (coach.open) panelOpen = false; draw(); drawCoach(); if (coach.open) document.querySelector("#cm-board-coach .cm-coach-input")?.focus();};
   actions["board-coach-ask"] = (el) => ask_(el.dataset.q);
+  /* Show me: the cards an answer names, lit on the board for four seconds. Why?: each play's reason, one sentence. */
+  actions["board-coach-show"] = (el) => {
+    const m = coach.thread[Number(el.dataset.i)];
+    if (!m || !m.show) return;
+    coachShown = new Set(m.show); clearTimeout(coachShownTimer);
+    coachShownTimer = setTimeout(() => {coachShown = new Set(); draw();}, 4000);
+    draw();
+  };
+  actions["board-coach-why"] = (el) => {const m = coach.thread[Number(el.dataset.i)]; if (m) {m.open = !m.open; drawCoach();}};
   /* Clear chat is ⋯'s command, so doing it closes ⋯ (the redraw keeps the menu as it finds it). */
-  actions["board-coach-clear"] = (el) => {coach.thread = []; coach.typing = false; clearTimeout(coach.timer); const more = el.closest(".cm-coach-more"); if (more) more.open = false; drawCoach();};
+  actions["board-coach-clear"] = (el) => {coach.thread = []; coach.typing = false; coach.asked += 1; const more = el.closest(".cm-coach-more"); if (more) more.open = false; drawCoach();};
   document.addEventListener("submit", (event) => {
     if (!event.target.matches || !event.target.matches("[data-coach-form]")) return;
     event.preventDefault();

@@ -12,7 +12,7 @@ import {readFileSync, mkdtempSync, rmSync} from "node:fs";
 import {execFileSync} from "node:child_process";
 import os from "node:os";
 import path from "node:path";
-import {build, worktreeSource, verify, releaseBranch, refuseDropTables, commitRelease, transform, referencesOf, workerModules, PROFILES, NEVER, PAGES, FIRST_PUBLIC, RETIRED_PUBLIC, PLAY_WORKER} from "../tools/release-pages.mjs";
+import {build, worktreeSource, verify, releaseBranch, refuseDropTables, commitRelease, transform, referencesOf, workerModules, PROFILES, NEVER, PAGES, FIRST_PUBLIC, RETIRED_PUBLIC, PLAY_WORKER, aiVars} from "../tools/release-pages.mjs";
 
 let checks = 0;
 const ok = (value, message) => {assert.ok(value, message); checks++;};
@@ -196,6 +196,10 @@ ok(verify(playConfig(built, (c) => ({...c, vars: {...c.vars, AI_ACCESS_AUD: "d3e
 ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_ACCESS_AUD: "ff51f3bcda0f6f50d2f48bb9d3d96b76530c128a23cdb1cc33aa4fa6d68611a3"}})), stagingProfile).some((p) => p.includes("open the AI door")), "and staging's door trusting another application is refused");
 ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_CAP_PERSON_CENTS: undefined}})), stagingProfile).some((p) => p.includes("open the AI door")), "as is staging with a cap missing, which would keep the door shut");
 ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_MODEL: "claude-opus-5-5"}})), stagingProfile).some((p) => p.includes("open the AI door")), "and staging asking a model other than its profile's");
+/* The Coach's switch (X13): off on staging until Rob approves its privacy wording; a release that turns it on without its profile is refused. */
+eq(sw2.vars.AI_COACH, undefined, "staging's Coach stays off until its privacy wording is approved");
+ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_COACH: "on"}})), stagingProfile).some((p) => p.includes("open the AI door")), "a release that turns the Coach on without its profile saying so is refused");
+eq(aiVars({...stagingProfile, ai: {...stagingProfile.ai, coach: true}}).AI_COACH, "on", "and a profile that says so turns it on");
 ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_MODEL: "claude-opus-5-5"}})), {...stagingProfile, ai: {...stagingProfile.ai, model: "claude-opus-5-5"}}).some((p) => p.includes("not one the AI door calls")), "and a profile naming a model dearer than Sonnet, even its own (Rob: Sonnet or the lowest-cost models, always)");
 ok(verify(playConfig(built, (c) => ({...c, durable_objects: sw2.durable_objects})), profile).some((p) => p.includes("release without Play")), "and production binding a table");
 ok(verify(new Map([...sb, [".assetsignore", Buffer.from(sb.get(".assetsignore").toString().replace("game/\n", ""))]]), stagingProfile).some((p) => p.includes("engine's source as files")), "a Play release that would publish the engine's source is named");
