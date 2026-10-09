@@ -133,13 +133,13 @@ export function settings(env) {
   return {key: env.ANTHROPIC_API_KEY, model, capPerson: person * 10000, capTotal: total * 10000};
 }
 
-/* Explain a score: gate on the caps, call, price, ground, log, answer. `who` has already passed Access and the
-   allowlist. Throws Closed for a refusal the reader should see; everything spent is logged first. */
-export async function explain({ai, who, input, config, fetchImpl = fetch}) {
-  const req = readRequest(input);
-  const body = buildBody(req, config.model);
-  /* The worst case, before a cent is spent: every input character a token, and the whole output allowance. */
-  const worst = costMicros(config.model, JSON.stringify(body).length, MAX_TOKENS);
+/* ONE CALL THROUGH THE DOOR, for any feature: the caps on the worst case before a cent is spent, the call, its price,
+   the log, and the refusals said plainly. Returns the answer's structured output, parsed, with `done(outcome)` to log
+   it once the feature has judged it and `meter(extra)` for the person's meter. Throws Closed for anything the reader
+   should see; everything spent is logged first. */
+async function ask({ai, who, feature, body, maxTokens, config, fetchImpl, declined}) {
+  /* The worst case: every input character a token, and the whole output allowance. */
+  const worst = costMicros(config.model, JSON.stringify(body).length, maxTokens);
   const spent = await ai.spent(who.email);
   const meter = (extra = 0) => ({spentCents: Math.round((spent.mine + extra) / 10000 * 100) / 100, capCents: config.capPerson / 10000});
   if (spent.mine + worst > config.capPerson) throw new Closed(`You have reached your AI spend cap for the last 24 hours (${meter().spentCents}¢ of ${meter().capCents}¢). Try again tomorrow.`, 429);
@@ -151,24 +151,122 @@ export async function explain({ai, who, input, config, fetchImpl = fetch}) {
       headers: {"content-type": "application/json", "x-api-key": config.key, "anthropic-version": VERSION},
       body: JSON.stringify(body)});
   } catch {
-    await ai.log({email: who.email, feature: "explain", model: config.model, input: 0, output: 0, micros: 0, outcome: "error"});
+    await ai.log({email: who.email, feature, model: config.model, input: 0, output: 0, micros: 0, outcome: "error"});
     throw new Closed("The AI service did not answer in time. Nothing was spent. Try again in a moment.", 504);
   }
   const json = await response.json().catch(() => null);
   if (!response.ok || !json) {
     /* The provider's own error text is not passed on: it is not the reader's, and it can name account details. */
-    await ai.log({email: who.email, feature: "explain", model: config.model, input: 0, output: 0, micros: 0, outcome: "error"});
+    await ai.log({email: who.email, feature, model: config.model, input: 0, output: 0, micros: 0, outcome: "error"});
     throw new Closed(response.status === 429 || response.status === 529 ? "The AI service is busy. Nothing was spent. Try again in a minute." : "The AI service had a problem. Nothing was spent.", 502);
   }
   const spend = spendOf(json, config.model);
-  const done = async (outcome) => ai.log({email: who.email, feature: "explain", model: spend.model, input: spend.input, output: spend.output, micros: spend.micros, outcome});
-  if (json.stop_reason === "refusal") {await done("refused"); throw new Closed("The AI declined to explain this one.", 422);}
+  const done = async (outcome) => ai.log({email: who.email, feature, model: spend.model, input: spend.input, output: spend.output, micros: spend.micros, outcome});
+  if (json.stop_reason === "refusal") {await done("refused"); throw new Closed(declined, 422);}
   const text = (Array.isArray(json.content) ? json.content : []).filter((b) => b && b.type === "text").map((b) => b.text).join("");
-  let explanation = "";
-  try {explanation = String(JSON.parse(text).explanation || "").trim();} catch {}
-  if (!explanation || json.stop_reason === "max_tokens") {await done("error"); throw new Closed("The AI's answer came back incomplete, so it is not shown.", 502);}
+  let answer = null;
+  try {answer = JSON.parse(text);} catch {}
+  if (!answer || typeof answer !== "object" || json.stop_reason === "max_tokens") {await done("error"); throw new Closed("The AI's answer came back incomplete, so it is not shown.", 502);}
+  return {answer, spend, done, meter};
+}
+
+/* Explain a score: through the door, then grounded in the deck. `who` has already passed Access and the allowlist. */
+export async function explain({ai, who, input, config, fetchImpl = fetch}) {
+  const req = readRequest(input);
+  const {answer, spend, done, meter} = await ask({ai, who, feature: "explain", body: buildBody(req, config.model), maxTokens: MAX_TOKENS, config, fetchImpl,
+    declined: "The AI declined to explain this one."});
+  const explanation = String(answer.explanation || "").trim();
+  if (!explanation) {await done("error"); throw new Closed("The AI's answer came back incomplete, so it is not shown.", 502);}
   const check = grounded(explanation, req.deck.cards);
   if (!check.ok) {await done("ungrounded"); throw new Closed("The AI's answer named a card that is not in this deck, so it is not shown.", 502);}
   await done("ok");
   return {explanation, cards: check.named, model: spend.model, meter: meter(spend.micros)};
+}
+
+/* THE COACH (X13; AI-1 in docs/plan-to-done-2026-09-30.md). A person at a table asks; the Worker has the table build
+ * that person's brief (game/room/coach-brief.mjs: their hand, the public board, their deck as a list -- never another
+ * hand or a library's order), and the Coach answers through the same door, on the same caps and log, as `coach`.
+ *
+ *   Brevity (Rob, 2026-10-09): the instruction is the control -- "very concise 1-3 sentences and aim for no more than 1
+ *   sentence" -- and nothing measures the answer afterward. COACH_MAX_TOKENS is a cost ceiling only, well above three
+ *   sentences and the schema, so it never cuts an answer.
+ *   Grounding: every card the answer names, every play's card, every id it would highlight and the seat it calls the
+ *   threat must be in the brief. An answer that names anything else is not shown, and is logged as ungrounded.
+ */
+export const COACH_MAX_TOKENS = 1200;
+const QUESTION_MAX = 300;
+const TABLE_ID = /^[a-z0-9]{8,40}$/;
+export const COACH_SYSTEM = [
+  "You are the CrankMagic Coach, beside a person playing a game of Commander.",
+  "The user message holds the game as that person may see it, as JSON: their hand and what each card can do now, every public zone, the stack, the step, recent history and their deck as a list; then their question.",
+  "You do not see any other player's hand or the order of any library, and you never guess at them.",
+  "Answer in very concise sentences: one to three at most, and aim for one. No preamble, no restating the question, no lists. Each play's why is one short sentence.",
+  "Name only cards and players in the game you are given, and write every card name in the answer inside double square brackets, like [[Sol Ring]].",
+  "You advise and never act: suggest plays the person can make with what they have now.",
+  "In show, put the ids of the cards your answer is about, from the ids you are given only. Give a threat only when one player is clearly the danger.",
+  "Do not quote prices.",
+].join(" ");
+const COACH_SCHEMA = {
+  type: "object",
+  properties: {
+    answer: {type: "string"},
+    plays: {type: "array", items: {type: "object", properties: {card: {type: "string"}, action: {type: "string"}, why: {type: "string"}}, required: ["card", "action", "why"], additionalProperties: false}},
+    threat: {type: "object", properties: {seat: {type: "string"}, why: {type: "string"}}, required: ["seat", "why"], additionalProperties: false},
+    show: {type: "array", items: {type: "integer"}},
+  },
+  required: ["answer", "plays", "show"],
+  additionalProperties: false,
+};
+
+/** The question, bounded: which table, and what is asked. */
+export function readQuestion(input) {
+  const tableId = typeof input?.tableId === "string" ? input.tableId : "";
+  if (!TABLE_ID.test(tableId)) throw new Closed("Ask the Coach from a table.", 400);
+  const question = typeof input?.question === "string" ? input.question.trim() : "";
+  if (!question) throw new Closed("Ask the Coach a question.", 400);
+  if (question.length > QUESTION_MAX) throw new Closed(`A question for the Coach is at most ${QUESTION_MAX} characters.`, 400);
+  return {tableId, question};
+}
+
+export function coachBody(brief, question, model) {
+  return {
+    model, max_tokens: COACH_MAX_TOKENS, system: COACH_SYSTEM,
+    output_config: {effort: "low", format: {type: "json_schema", schema: COACH_SCHEMA}},
+    messages: [{role: "user", content: JSON.stringify({game: brief, question})}],
+  };
+}
+
+/** What an answer may name: every card the brief carries (by id and by name, the deck list's names included) and every seat. */
+export function briefFacts(brief) {
+  const ids = new Set(), names = new Set(), seats = new Set((brief.players ?? []).map((p) => p.name));
+  const add = (c) => {if (c && c.name) {if (Number.isInteger(c.id)) ids.add(c.id); names.add(String(c.name).toLowerCase());}};
+  for (const p of brief.players ?? []) for (const zone of ["battlefield", "graveyard", "exile", "command"]) for (const c of p[zone] ?? []) add(c);
+  for (const c of brief.hand ?? []) add(c);
+  for (const e of brief.stack ?? []) add(e);
+  for (const line of brief.deck?.cards ?? []) names.add(String(line).replace(/^\d+ /, "").toLowerCase());
+  return {ids, names, seats};
+}
+
+/** Every name, play, id and seat an answer uses, checked against the brief. */
+export function coachGrounded(answer, facts) {
+  const strangers = [];
+  for (const m of String(answer.answer ?? "").matchAll(/\[\[([^\]]{1,200})\]\]/g)) if (!facts.names.has(m[1].trim().toLowerCase())) strangers.push(m[1].trim());
+  for (const p of answer.plays ?? []) {const card = String(p.card ?? "").replace(/^\[\[|\]\]$/g, "").trim(); if (!facts.names.has(card.toLowerCase())) strangers.push(card);}
+  for (const id of answer.show ?? []) if (!facts.ids.has(id)) strangers.push(`card #${id}`);
+  if (answer.threat && !facts.seats.has(answer.threat.seat)) strangers.push(`seat ${answer.threat.seat}`);
+  return {ok: strangers.length === 0, strangers};
+}
+
+/* Ask the Coach: through the door, then grounded in the brief. `who` has passed Access and the allowlist; `brief` is the
+   table's own, for that person's seat. */
+export async function coach({ai, who, brief, question, config, fetchImpl = fetch}) {
+  const {answer, spend, done, meter} = await ask({ai, who, feature: "coach", body: coachBody(brief, question, config.model), maxTokens: COACH_MAX_TOKENS, config, fetchImpl,
+    declined: "The Coach declined to answer that one."});
+  const text = String(answer.answer ?? "").trim();
+  if (!text) {await done("error"); throw new Closed("The Coach's answer came back incomplete, so it is not shown.", 502);}
+  const check = coachGrounded(answer, briefFacts(brief));
+  if (!check.ok) {await done("ungrounded"); throw new Closed("The Coach's answer named something that is not on your table or in your deck, so it is not shown.", 502);}
+  await done("ok");
+  const plays = (answer.plays ?? []).map((p) => ({card: String(p.card).replace(/^\[\[|\]\]$/g, "").trim(), action: String(p.action ?? "").trim(), why: String(p.why ?? "").trim()}));
+  return {answer: text, plays, ...(answer.threat ? {threat: {seat: answer.threat.seat, why: String(answer.threat.why ?? "").trim()}} : {}), show: answer.show ?? [], model: spend.model, meter: meter(spend.micros)};
 }

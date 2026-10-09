@@ -23,6 +23,7 @@
  *            choosing, the AI seats still ready
  */
 import {createTable, transitionTable, countdownBlockers} from "../contracts/table-lifecycle.mjs";
+import {coachBrief} from "./coach-brief.mjs";
 import {startRoom, openRoom, RoomError, basicCards} from "./room.mjs";
 import {createMatchStore} from "../engine/storage.mjs";
 
@@ -394,6 +395,13 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       if (record.lifecycle.phase !== "playing") throw new TableError(409, "No game is being played at this table.");
       if (!room || room.matchId !== record.lifecycle.matchId) room = await openRoom({storage, matchId: record.lifecycle.matchId, cards, slice});
       return {room, seatId: seatName(seat)};
+    },
+
+    /** THE COACH'S BRIEF (X13; game/room/coach-brief.mjs): the game as this person may see it, and the deck they brought --
+        built here, from their own seat's view, for the Worker's AI door and nothing else. */
+    async brief(email) {
+      const {room: game, seatId} = await api.room(email);
+      return coachBrief(game.view(seatId), record.decks[needSeat(email)]);
     },
 
     /**
