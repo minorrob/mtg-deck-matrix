@@ -124,8 +124,9 @@ when in coach. We will always be using sonnet or other lowest cost models."* So:
   Haiku 5.5); `AI_MODEL` naming any other keeps the door shut, and nothing is sent. The server-side fallback is no
   longer asked for, since it can re-run a declined request on a dearer model; a refusal is a plain 422.
 - **The privacy wording** is on `privacy.html`, and `DELETE /api/account` deletes the person's `ai_calls` rows.
-- **The Coach's brevity** is written into AI-1 (`docs/plan-to-done-2026-09-30.md`): one sentence asked for, two or
-  three only when needed; the Worker refuses more than three (logged `too-long`); the eval holds 80% to one sentence.
+- **The Coach's brevity** is written into AI-1 (`docs/plan-to-done-2026-09-30.md`) as Rob then put it: the Coach's
+  brief instructs the model to answer in one to three very concise sentences, aiming for one; nothing checks the
+  length afterward, and there is no 80% gate.
 - Proof: `ai-door` 50 checks, `release-pages` 188, `cloud-worker` 109.
 - **Rob's, left:** the key as a Secret on `crankmagic-staging`, a monthly limit in the Anthropic console, and the three
   emails in `crankmagic-staging`'s `ai_allowlist` (0 rows and no secrets at last check). Both work from the dashboard.

@@ -308,27 +308,25 @@ a stub reply that says it is not switched on; in Full screen it will live in the
   your hand with what each card can do *now*, from the decision's options; the stack; the step); the last twenty
   history lines; the question; and the reply schema: `{answer, plays: [{card, action, why}], threat: {seat, why},
   show: [cardIds]}` — every `card` and `seat` must be in the brief.
-- **The panel:** shows the answer once the Worker has checked it (grounded, and no longer than Rob allows; at one to
-  three sentences there is little to stream, and a streamed answer would be on screen before it was checked); replies carry the action
+- **The panel:** shows the answer once the Worker has checked its grounding (every card and seat in the brief; at one
+  to three sentences there is little to stream, and a streamed answer would be on screen before it was checked); replies carry the action
   chips the shell already draws (*Show me* highlights the named cards on the mat; *Why?* expands the reasoning);
   turn dividers as now. The Coach never acts: it names a play; the person makes it.
 - **Brevity (Rob, 2026-10-09):** *"I want tight controls on the coach. It's responses should be very concise, no
-  more than 1-3 sentences with 80% being 1 sentence, when in coach."* Held four ways:
-  - **The prompt:** answer in one sentence; use two or three only when one would leave out something the person
-    needs to make the play. No preamble, no restating the question, no list.
-  - **The schema:** `answer` is the reply; each play's `why` is one sentence too, and is shown only when the person
-    taps *Why?*.
-  - **The Worker:** it counts the sentences of `answer`. More than three is not shown and is logged `too-long`, as
-    an ungrounded answer is. `max_tokens` is sized for three short sentences and the schema, not the explain
-    route's 2,000.
-  - **The eval:** at least 80% of its board states answered in one sentence and none in more than three, before
-    the Coach is switched on and again after any change of model or prompt. The call log's `too-long` count is the
-    same check on real games.
+  more than 1-3 sentences with 80% being 1 sentence, when in coach."* Then: *"I don't want the text length check
+  occurring after the response is generated. The agent between the API and the consumption layer should have
+  instruction to only return very concise 1-3 sentences and aim for no more than 1 sentence. We don't need a hard
+  check on 80% either."* So the control is the instruction, not a check:
+  - **The Coach's brief** (the agent between the API and the panel) tells the model to answer in very concise
+    sentences, one to three at most, and to aim for one; no preamble, no restating the question, no list. Each
+    play's `why` is held to one sentence the same way, and shows only when the person taps *Why?*.
+  - **Nothing measures the answer afterward:** no sentence count on the Worker, and no 80% gate in the eval.
+    `max_tokens` is a cost ceiling only, set well above three sentences and the schema, so it never cuts an answer.
 - **Model and cost:** `AI_MODEL_coach` = Claude Sonnet 5.5 (Rob's call) at low effort, for a chat that must
   answer in a few seconds; the eval says whether Claude Haiku 5.5, the lowest-cost, answers as well. Never a
   dearer model (Rob, 2026-10-09). Each game has its own cap (a Worker variable) on top of the person's.
 - **Proof:** `tests/ai-door.mjs` grows a coach section with a stubbed provider: grounding refused, the cap
-  refused, a four-sentence answer refused as too long, an answer's chips; `tests/table-board.mjs`: the Coach's answer and *Show me* highlighting the
+  refused, the brief's brevity instruction sent with every call, an answer's chips; `tests/table-board.mjs`: the Coach's answer and *Show me* highlighting the
   card. The privacy wording, approved, before the switch.
 
 ### AI-2. AI players
