@@ -711,5 +711,18 @@ staging.** Production's AI door stays shut until Rob's go.
   now puts it away. `table-board`.
 - A phone finding on the way: a main phase's ten ways to play covered 46% of a phone held sideways; what is asked there
   is at most a third of the height now, scrolling within.
-- **Asked of Rob:** *"Resolving Land should be called 'Untap Lands' during the first untap phase"*: the untap step asks
-  nobody anything (CR 502.4), and no control says *Resolving* or names a land there, so what he saw is asked of him.
+- *"Resolving Land should be called 'Untap Lands' during the first untap phase"*, and then *"It's the Resolve pop-up
+  that came up on my first turn in a 2-player game."* Nothing in the engine is titled *Resolve*: the only one is the pass
+  button, which names what is on top of the stack, so on that first turn something of his was waiting there to be let
+  resolve. With the cast that passes, his own spells and abilities no longer ask it; should a *Resolve* still show on a
+  first turn, a screenshot names what was on the stack.
+- **Proof:** `room-beats` 34, `table-board` 246, `table-lobby` 73, `board-choices` 38 (its scry and Zap now read with
+  the cast that passes), `game-leave` 59, `playtest-harness` 153; the full local run green but for `board-choices`,
+  since fixed; **35 breaks caught**: the cast's pass (never made, holding ignored, the answer's `hold` unread,
+  activations, not kept across a wake, on every game), the table's beats (the pass, the held draw, the harness), the
+  board's Hold priority (never sent, always sent, not kept, Tools silent), *Turns went by* waiting for OK, the turn
+  marks (none, the tile, Full screen), the peek (a press, Escape, a card gone from under the pointer), two seats
+  stacked again or fitted as rows, the upright bar (dragged up and down, deaf to ← →), the life counter's halves, the
+  hand's room (Table, Focus and Full screen each following the hand, the board not scrolling, Focus clipping it, Full
+  screen's hand growing up, the Table tray stretched), the phone's question, and the lobby's music (silent, the game's
+  bed).
