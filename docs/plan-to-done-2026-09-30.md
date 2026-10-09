@@ -268,7 +268,11 @@ extraction design** (`docs/plan-card-extraction-skill.md`; M7 in `docs/plan-to-1
   $2/$10, Claude Haiku 4.5 `claude-haiku-4-5` $1/$5, cache reads a fifth of input), and an unknown model is still
   priced at the dearest rate. Each feature has its own `AI_MODEL_<feature>` so Rob sets a model per job. **Rob,
   2026-09-30: `AI_MODEL_coach` Claude Sonnet 5.5 · `AI_MODEL_pilot` Claude Haiku 4.5 · `AI_MODEL_loader` Claude
-  Sonnet 5.5 · `AI_MODEL_advise` Claude Haiku 4.5, each held to its eval.**
+  Sonnet 5.5 · `AI_MODEL_advise` Claude Haiku 4.5, each held to its eval.** **Rob, 2026-10-09: *"We will always be
+  using sonnet or other lowest cost models,"* and then the Coach on Claude Haiku 5.5, explicitly.** The door calls only models priced at or below Claude Sonnet 5.5
+  (`cloud/ai.mjs`, `MODELS`: Sonnet 5.5 and Claude Haiku 5.5 `claude-haiku-5-5`, $0.10/$0.50); a feature's model
+  naming a dearer one keeps that feature shut, and the release tool refuses it. Claude Haiku 5.5 now costs a tenth
+  of Haiku 4.5, so the pilot's and the advisor's evals try it first.
 - **The agent is code; the model judges.** For each feature the Worker assembles a *brief* deterministically from
   the library and the game — the facts, the candidates, the constraints — and asks the model to choose and explain
   among the candidates only, with structured output (`output_config.format`, a JSON schema per feature) so the
@@ -281,8 +285,10 @@ extraction design** (`docs/plan-card-extraction-skill.md`; M7 in `docs/plan-to-1
 - **The stable prefix is cached.** Each feature's system prompt and vocabulary (the roles, the card states, the
   rules of the brief) come first and never change between calls; the brief follows. Prompt caching then makes
   the repeated part nearly free.
-- **Effort low or medium; adaptive thinking; streaming where a person waits** (the Coach). Never a refusal shown
-  raw: the door's fallback (`fallbacks: "default"`) re-runs a declined request server-side, and a 422 says so.
+- **Effort low or medium; adaptive thinking; streaming only where an answer is long** (never the Coach's, which is
+  checked before it is shown). Never a refusal shown
+  raw: a declined request comes back as a plain 422. No server-side fallback is asked for, since it can re-run a
+  request on a model dearer than Rob allows.
 - **An eval before a model is trusted with a job**, kept in the repository: for the advisor, Rob's seven decks with
   changes he would make himself as the rubric; for the card loader, the cards of the seven decks against their
   oracle text and a smoke test in the engine; for the Coach, a set of board states with the plays a seasoned
@@ -295,21 +301,46 @@ extraction design** (`docs/plan-card-extraction-skill.md`; M7 in `docs/plan-to-1
 *Rob's ask:* the Coach answers for real. *Today:* the chat panel (#414) with turn dividers, prompts, a composer and
 a stub reply that says it is not switched on; in Full screen it will live in the side column under the log (item 22).
 
-- **The route:** `POST /api/ai/coach` with the asking seat's own view (the same projection the room sends that seat
-  — its hand, every public zone, the history's last lines, the decision it is being asked) and the question. Never
-  another seat's hand; the projection cannot carry it.
+- **The route:** `POST /api/ai/coach` with the question. The Worker reads the asking seat's own view from the table
+  itself (the same projection the room sends that seat — its hand, every public zone, the history's last lines, the
+  decision it is being asked), never a view the browser sends, so nothing can be added to it. Never another seat's
+  hand; the projection cannot carry it.
+- **What the Coach may see (Rob, 2026-10-09):** *"keep it's context restricted to the content present within the
+  player's deck and the active played board (can't see the opponents hands)"*, and then: *"within the player's hand
+  and knowledge of their deck (not visibility into the order of cards in the deck)"*. The brief holds only:
+  - the asking person's own hand;
+  - the board as everyone at the table sees it: each seat's battlefield, graveyard, face-up exile and command zone,
+    life and counters, the stack, the step, and the history's public lines;
+  - their own deck as a list: the cards it was built with, sorted by name, and how many cards their library still
+    holds. Never the library's order, its top card, or where any card is in it;
+  - never another seat's hand or library, nor a face-down card that is not theirs.
+
+  The proof is the check G1 already makes of every frame, applied to the brief: no other seat's hidden card, and no
+  library order (a shuffled library gives the same brief).
 - **The brief:** the board as a table (each seat's life, poison, commander damage, permanents with their state;
   your hand with what each card can do *now*, from the decision's options; the stack; the step); the last twenty
   history lines; the question; and the reply schema: `{answer, plays: [{card, action, why}], threat: {seat, why},
   show: [cardIds]}` — every `card` and `seat` must be in the brief.
-- **The panel:** streams the answer as it comes (the Worker passes the stream through); replies carry the action
+- **The panel:** shows the answer once the Worker has checked its grounding (every card and seat in the brief; at one
+  to three sentences there is little to stream, and a streamed answer would be on screen before it was checked); replies carry the action
   chips the shell already draws (*Show me* highlights the named cards on the mat; *Why?* expands the reasoning);
   turn dividers as now. The Coach never acts: it names a play; the person makes it.
-- **Model and cost:** `AI_MODEL_coach` = Claude Sonnet 5.5 (Rob's call) at low effort, for a chat that must
-  answer in a few seconds; the eval says whether Claude Haiku 4.5 answers as well. Each game has its
-  own cap (a Worker variable) on top of the person's.
+- **Brevity (Rob, 2026-10-09):** *"I want tight controls on the coach. It's responses should be very concise, no
+  more than 1-3 sentences with 80% being 1 sentence, when in coach."* Then: *"I don't want the text length check
+  occurring after the response is generated. The agent between the API and the consumption layer should have
+  instruction to only return very concise 1-3 sentences and aim for no more than 1 sentence. We don't need a hard
+  check on 80% either."* So the control is the instruction, not a check:
+  - **The Coach's brief** (the agent between the API and the panel) tells the model to answer in very concise
+    sentences, one to three at most, and to aim for one; no preamble, no restating the question, no list. Each
+    play's `why` is held to one sentence the same way, and shows only when the person taps *Why?*.
+  - **Nothing measures the answer afterward:** no sentence count on the Worker, and no 80% gate in the eval.
+    `max_tokens` is a cost ceiling only, set well above three sentences and the schema, so it never cuts an answer.
+- **Model and cost:** `AI_MODEL_coach` = **Claude Haiku 5.5** (`claude-haiku-5-5`), explicitly (Rob, 2026-10-09:
+  *"change the model use to Haiku explicitly"*; it was Sonnet 5.5), at low effort, for a chat that must answer in a
+  few seconds. Claude Sonnet 5.5 stays the ceiling, never a dearer model. Each game has its own cap (a Worker
+  variable) on top of the person's.
 - **Proof:** `tests/ai-door.mjs` grows a coach section with a stubbed provider: grounding refused, the cap
-  refused, a streamed answer's chips; `tests/table-board.mjs`: the Coach's answer and *Show me* highlighting the
+  refused, the brief's brevity instruction sent with every call, an answer's chips; `tests/table-board.mjs`: the Coach's answer and *Show me* highlighting the
   card. The privacy wording, approved, before the switch.
 
 ### AI-2. AI players

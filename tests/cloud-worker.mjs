@@ -23,6 +23,7 @@ function d1() {
   const db = new DatabaseSync(":memory:");
   db.exec("PRAGMA foreign_keys = ON");
   db.exec(readFileSync(new URL("../cloud/migrations/0001_accounts.sql", import.meta.url), "utf8"));
+  db.exec(readFileSync(new URL("../cloud/migrations/0002_ai.sql", import.meta.url), "utf8"));   /* as both real databases have it */
   const statement = (sql, args = []) => ({
     bind: (...values) => statement(sql, values),
     first: async () => db.prepare(sql).get(...args) ?? null,
@@ -248,15 +249,19 @@ eq(me.headers.get("x-content-type-options") + " " + me.headers.get("cache-contro
 {
   const rows = (email) => {
     const u = DB.raw.prepare("SELECT id FROM users WHERE email = ?").get(email);
-    if (!u) return {user: 0, versions: 0, head: 0};
-    return {user: 1, versions: Number(DB.raw.prepare("SELECT COUNT(*) AS n FROM snapshots WHERE user_id = ?").get(u.id).n), head: Number(DB.raw.prepare("SELECT COUNT(*) AS n FROM heads WHERE user_id = ?").get(u.id).n)};
+    const ai = Number(DB.raw.prepare("SELECT COUNT(*) AS n FROM ai_calls WHERE email = ?").get(email).n);
+    if (!u) return {user: 0, versions: 0, head: 0, ai};
+    return {user: 1, versions: Number(DB.raw.prepare("SELECT COUNT(*) AS n FROM snapshots WHERE user_id = ?").get(u.id).n), head: Number(DB.raw.prepare("SELECT COUNT(*) AS n FROM heads WHERE user_id = ?").get(u.id).n), ai};
   };
   clock += 120_000;
   const other = await call("PUT", "/api/library", {as: "someone@example.com", body: {...library(7), parent: null}});
   eq(other.status, 200, "another person has a library of their own");
   const robHead = (await call("GET", "/api/library")).json.head;
+  /* Two AI requests of Rob's and one of someone else's, in the call log the AI door writes (cloud/ai.mjs). */
+  const logCall = (email, id) => DB.raw.prepare("INSERT INTO ai_calls (id, email, feature, model, input_tokens, output_tokens, cost_micros, outcome, at) VALUES (?, ?, 'explain', 'claude-opus-5', 10, 10, 300, 'ok', '2026-10-09T00:00:00Z')").run(id, email);
+  logCall("rob@example.com", "a1"); logCall("rob@example.com", "a2"); logCall("someone@example.com", "a3");
   const before = rows("rob@example.com");
-  ok(before.user === 1 && before.versions > 1 && before.head === 1, `rob has an account, versions and a head to delete: ${JSON.stringify(before)}`);
+  ok(before.user === 1 && before.versions > 1 && before.head === 1 && before.ai === 2, `rob has an account, versions, a head and two AI requests to delete: ${JSON.stringify(before)}`);
 
   eq((await call("DELETE", "/api/account", {body: {confirm: "rob@example.com"}, headers: {"x-crankmagic": ""}})).status, 403, "a delete without the app's header: 403");
   eq((await call("DELETE", "/api/account", {body: {confirm: "rob@example.com"}, headers: {origin: "https://evil.example"}})).status, 403, "a delete from another site's page: 403");
@@ -266,8 +271,9 @@ eq(me.headers.get("x-content-type-options") + " " + me.headers.get("cache-contro
   eq(rows("rob@example.com"), before, "after those refusals, every row is still there");
 
   const gone = await call("DELETE", "/api/account", {body: {confirm: "  ROB@Example.com "}});
-  eq([gone.status, gone.json.deleted], [200, {email: "rob@example.com", versions: before.versions}], "the address typed in any case deletes the account, and says how many versions went");
-  eq(rows("rob@example.com"), {user: 0, versions: 0, head: 0}, "the user row, the head and every version are gone from the database");
+  eq([gone.status, gone.json.deleted], [200, {email: "rob@example.com", versions: before.versions, aiRequests: 2}], "the address typed in any case deletes the account, and says how many versions and AI requests went");
+  eq(rows("rob@example.com"), {user: 0, versions: 0, head: 0, ai: 0}, "the user row, the head, every version and the record of each AI request are gone from the database");
+  eq(rows("someone@example.com").ai, 1, "another person's AI requests stay");
   eq((await call("GET", `/api/library/versions/${robHead.id}`, {as: "someone@example.com"})).status, 404, "an old version is not reachable by anyone");
   const theirs = await call("GET", "/api/library", {as: "someone@example.com"});
   eq([theirs.status, theirs.json.head.id], [200, other.json.head.id], "the other person's library is untouched");

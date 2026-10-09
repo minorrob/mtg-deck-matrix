@@ -46,6 +46,7 @@ import {existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, mkdtemp
 import os from "node:os";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
+import {MODELS} from "../cloud/ai.mjs";
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const RELEASE_BRANCH = "release/pages";
@@ -129,6 +130,13 @@ export const PROFILES = {
     /* A session's automated checks sit at its tables as the Access service token Rob made for them (cloud/access.mjs,
        SERVICE_SEATS; staging's "Session checks" policy, 2026-10-06). Never in production. */
     serviceSeats: true,
+    /* THE AI DOOR, open on staging (Rob, 2026-10-09; docs/ai-door.md). Its own Access application, "CrankMagic AI
+       (staging)" on staging.crankmagic.com/api/ai/*, Google sign-in only, its policy the people allowed; and one
+       spend cap for everyone together, 300 US cents in any 24 hours. The door also takes a cap per person, and Rob
+       wants none, so it is the same number, which never stops anyone before the total does. The model is Claude
+       Haiku 5.5 ("change the model use to Haiku explicitly"). The key is a Worker secret Rob
+       set himself, never here; the allowlist is his, in the database. Production's door stays shut. */
+    ai: {aud: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", capTotalCents: 300, model: "claude-haiku-5-5"},
     cloud: {database: {name: "crankmagic-staging", id: "b7f806ec-c9e8-4265-9f23-7d9705db9a26"}, limits: {ip: "2001", person: "2002"}, access: {team: "crankmagic.cloudflareaccess.com", aud: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5"}},
   },
 };
@@ -142,6 +150,15 @@ export const PROFILES = {
    .assetsignore keeps a clone's .git, wrangler's own .wrangler scratch folder (it writes one into the
    folder it deploys from, and its debug log walks it with the assets) and the configuration off the site. */
 export const CLOUDFLARE_MAX_FILE = 25 * 1024 * 1024;
+/* The AI door's Worker variables (cloud/ai.mjs): none for a profile whose door is shut, so cloud/worker.mjs answers
+   503 "not switched on here yet" there. A profile with one cap for everyone gives the per-person cap the same
+   number, which can never bind first. */
+export const aiVars = (profile) => (profile.ai ? {
+  AI_ACCESS_AUD: profile.ai.aud,
+  AI_CAP_TOTAL_CENTS: String(profile.ai.capTotalCents),
+  AI_CAP_PERSON_CENTS: String(profile.ai.capPersonCents ?? profile.ai.capTotalCents),
+  AI_MODEL: profile.ai.model,
+} : {});
 /* RATE LIMITS ON /api/* (M3): requests a minute, counted at the edge by Cloudflare's Rate Limiting bindings,
    which cloud/worker.mjs asks before it does anything. Per IP first, so a flood is turned away before any
    work; per person once Access has named them. The app saves a few seconds after a change, about twenty
@@ -164,7 +181,7 @@ export const HOST_FILES = {
       preview_urls: false,
       ...(profile.cloud ? {
         d1_databases: [{binding: "DB", database_name: profile.cloud.database.name, database_id: profile.cloud.database.id, migrations_dir: "cloud/migrations"}],
-        vars: {ACCESS_TEAM_DOMAIN: profile.cloud.access.team, ACCESS_AUD: profile.cloud.access.aud, ...(profile.tables?.playtest ? {PLAYTEST_TABLES: "on"} : {}), ...(profile.serviceSeats ? {SERVICE_SEATS: "on"} : {}), ...(profile.tables?.closed ? {PLAY_TABLES_CLOSED: "on"} : {})},
+        vars: {ACCESS_TEAM_DOMAIN: profile.cloud.access.team, ACCESS_AUD: profile.cloud.access.aud, ...(profile.tables?.playtest ? {PLAYTEST_TABLES: "on"} : {}), ...(profile.serviceSeats ? {SERVICE_SEATS: "on"} : {}), ...(profile.tables?.closed ? {PLAY_TABLES_CLOSED: "on"} : {}), ...aiVars(profile)},
         ratelimits: [
           {name: "LIMIT_IP", namespace_id: profile.cloud.limits.ip, simple: {limit: LIMITS_PER_MINUTE.ip, period: 60}},
           {name: "LIMIT_PERSON", namespace_id: profile.cloud.limits.person, simple: {limit: LIMITS_PER_MINUTE.person, period: 60}},
@@ -395,6 +412,11 @@ export function verify(built, profile) {
       if (config?.vars && "ACCESS_JWKS" in config.vars) problems.push("wrangler.jsonc hands the Worker its own signing keys (ACCESS_JWKS) -- that is for the local end-to-end run only");
       if ((config?.vars?.SERVICE_SEATS === "on") !== !!profile.serviceSeats) problems.push(profile.serviceSeats ? "the session's service token is not seated (SERVICE_SEATS)" : "SERVICE_SEATS is on in a release that does not seat a service token: an automated check would be a person there");
       if ((config?.vars?.PLAY_TABLES_CLOSED === "on") !== !!profile.tables?.closed) problems.push("wrangler.jsonc has the wrong Play entry state (PLAY_TABLES_CLOSED)");
+      /* The AI door: exactly this profile's settings, or none at all where the door is shut (production, until Rob's go). */
+      const ai = Object.fromEntries(Object.entries(config?.vars || {}).filter(([name]) => /^AI_/.test(name)));
+      if (JSON.stringify(ai) !== JSON.stringify(aiVars(profile))) problems.push(profile.ai ? "wrangler.jsonc does not open the AI door with this profile's Access application, spend caps and model" : `${Object.keys(ai).join(", ")} set in a release whose AI door is shut`);
+      /* Sonnet or the lowest-cost models, always (Rob, 2026-10-09): a dearer one would keep the Worker's door shut. */
+      if (ai.AI_MODEL && !MODELS.includes(ai.AI_MODEL)) problems.push(`AI_MODEL ${ai.AI_MODEL} is not one the AI door calls (${MODELS.join(", ")})`);
       for (const f of ["cloud/worker.mjs", "cloud/access.mjs", "cloud/library.mjs"]) if (!files.has(f)) problems.push(`${f} is missing, so the Worker cannot be bundled`);
       if (![...files].some((f) => /^cloud\/migrations\/.+\.sql$/.test(f))) problems.push("the database migrations are missing");
       if (!(built.get(".assetsignore")?.toString("utf8") || "").split("\n").includes("cloud/")) problems.push(".assetsignore would publish the Worker's source as files");

@@ -143,7 +143,8 @@ eq(pw.vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: 
   "and it trusts the CrankMagic accounts application (crankmagic.com/api/*, the invite list), read from its sign-in redirect");
 const staging = build({source: worktreeSource(), profileName: "cloud-staging"});
 eq(staging.problems, [], "the staging build is complete, its Access application's team and audience included");
-eq(JSON.parse(staging.built.get("wrangler.jsonc").toString("utf8")).vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5", PLAYTEST_TABLES: "on", SERVICE_SEATS: "on"},
+eq(JSON.parse(staging.built.get("wrangler.jsonc").toString("utf8")).vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5", PLAYTEST_TABLES: "on", SERVICE_SEATS: "on",
+  AI_ACCESS_AUD: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", AI_CAP_TOTAL_CENTS: "300", AI_CAP_PERSON_CENTS: "300", AI_MODEL: "claude-haiku-5-5"},
   "and the Worker trusts that team's keys for that application only (read from the sign-in redirect's kid, and confirmed by Rob from the dashboard); its tables are playtest tables (M8b)");
 const sb = staging.built, sw2 = JSON.parse(sb.get("wrangler.jsonc").toString("utf8"));
 eq([sw2.name, sw2.main, sw2.assets, sw2.routes], ["crankmagic-staging", PLAY_WORKER, {directory: "./", binding: "ASSETS", run_worker_first: ["/api/*"]}, [{pattern: "staging.crankmagic.com", custom_domain: true}]],
@@ -189,6 +190,13 @@ ok(verify(playConfig(built, (c) => ({...c, vars: {...c.vars, PLAYTEST_TABLES: "o
 ok(verify(playConfig(built, (c) => ({...c, vars: {...c.vars, SERVICE_SEATS: "on"}})), profile).some((p) => p.includes("SERVICE_SEATS is on")), "production seating a service token is refused: an automated check would be a person there");
 ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, SERVICE_SEATS: undefined}})), stagingProfile).some((p) => p.includes("service token is not seated")), "and staging without it, its session checks shut out");
 eq(pw.vars.SERVICE_SEATS, undefined, "production's Worker never seats a service token");
+/* The AI door (Rob, 2026-10-09): open on staging with its own application and one cap for everyone; shut in production. */
+ok(Object.keys(pw.vars).every((name) => !/^AI_/.test(name)), "production's AI door stays shut: no AI application, no caps");
+ok(verify(playConfig(built, (c) => ({...c, vars: {...c.vars, AI_ACCESS_AUD: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", AI_CAP_TOTAL_CENTS: "300", AI_CAP_PERSON_CENTS: "300"}})), profile).some((p) => p.includes("AI door is shut")), "a production release that opens the AI door is refused");
+ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_ACCESS_AUD: "ff51f3bcda0f6f50d2f48bb9d3d96b76530c128a23cdb1cc33aa4fa6d68611a3"}})), stagingProfile).some((p) => p.includes("open the AI door")), "and staging's door trusting another application is refused");
+ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_CAP_PERSON_CENTS: undefined}})), stagingProfile).some((p) => p.includes("open the AI door")), "as is staging with a cap missing, which would keep the door shut");
+ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_MODEL: "claude-opus-5-5"}})), stagingProfile).some((p) => p.includes("open the AI door")), "and staging asking a model other than its profile's");
+ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_MODEL: "claude-opus-5-5"}})), {...stagingProfile, ai: {...stagingProfile.ai, model: "claude-opus-5-5"}}).some((p) => p.includes("not one the AI door calls")), "and a profile naming a model dearer than Sonnet, even its own (Rob: Sonnet or the lowest-cost models, always)");
 ok(verify(playConfig(built, (c) => ({...c, durable_objects: sw2.durable_objects})), profile).some((p) => p.includes("release without Play")), "and production binding a table");
 ok(verify(new Map([...sb, [".assetsignore", Buffer.from(sb.get(".assetsignore").toString().replace("game/\n", ""))]]), stagingProfile).some((p) => p.includes("engine's source as files")), "a Play release that would publish the engine's source is named");
 ok(verify(without(sb, "game/room/room.mjs"), stagingProfile).some((p) => p.includes("game/room/room.mjs")), "one missing a module the table imports is named");
