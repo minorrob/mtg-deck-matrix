@@ -298,8 +298,15 @@ extraction design** (`docs/plan-card-extraction-skill.md`; M7 in `docs/plan-to-1
 
 ### AI-1. The Coach, wired
 
-*Rob's ask:* the Coach answers for real. *Today:* the chat panel (#414) with turn dividers, prompts, a composer and
-a stub reply that says it is not switched on; in Full screen it will live in the side column under the log (item 22).
+*Rob's ask:* the Coach answers for real. *Before:* the chat panel (#414) with turn dividers, prompts, a composer and
+a stub reply that said it was not switched on; in Full screen it lives in the side column under the log (item 22).
+
+**Status, 2026-10-09: built, behind its own switch.** The route, the brief, the grounding and the panel are in, as
+below (`game/room/coach-brief.mjs`, `cloud/ai.mjs` `coach`, `tests/coach.mjs`; `docs/ACTIVE.md` has the record). It
+stays off on staging, `AI_COACH` unset, until Rob approves the Coach's privacy wording (drafted in `docs/ai-door.md`);
+then staging's release profile sets `ai.coach`. Two differences from the text below: the model is the door's one
+`AI_MODEL` (Haiku 5.5), not a separate `AI_MODEL_coach`; and there is no per-game cap, since Rob chose one general
+cap, *"not per person"*, 300¢ a day for everyone.
 
 - **The route:** `POST /api/ai/coach` with the question. The Worker reads the asking seat's own view from the table
   itself (the same projection the room sends that seat — its hand, every public zone, the history's last lines, the
@@ -339,9 +346,10 @@ a stub reply that says it is not switched on; in Full screen it will live in the
   *"change the model use to Haiku explicitly"*; it was Sonnet 5.5), at low effort, for a chat that must answer in a
   few seconds. Claude Sonnet 5.5 stays the ceiling, never a dearer model. Each game has its own cap (a Worker
   variable) on top of the person's.
-- **Proof:** `tests/ai-door.mjs` grows a coach section with a stubbed provider: grounding refused, the cap
-  refused, the brief's brevity instruction sent with every call, an answer's chips; `tests/table-board.mjs`: the Coach's answer and *Show me* highlighting the
-  card. The privacy wording, approved, before the switch.
+- **Proof:** `tests/coach.mjs`, its own suite, with a stubbed provider: grounding refused, the cap refused, the
+  brief's brevity instruction sent with every call, the brief from a real table holding no other seat's hidden card
+  and no library order, and the board's panel: the Coach's answer, *Show me* highlighting the card, *Why?*. The
+  privacy wording, approved, before the switch.
 
 ### AI-2. AI players
 

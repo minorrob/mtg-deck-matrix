@@ -149,6 +149,9 @@ async function person(email, viewport, {fullscreen = true} = {}) {
   await loadLiveState(page, base);
   await page.route(`${base}/index.html*`, (r) => r.fulfill({contentType: "text/html; charset=utf-8", body: html}));
   await page.route(`${base}/api/me`, (r) => r.fulfill({json: {email}}));
+  /* The Coach's door, shut as it is until the privacy page names what it sends (cloud/worker.mjs, AI_COACH): the board
+     says so in the Coach's own words. A moment's wait, as the network has, so its typing shows. */
+  await page.route(`${base}/api/ai/coach`, async (r) => {await new Promise((go) => setTimeout(go, 300)); r.fulfill({status: 503, json: {error: "The Coach is not switched on here yet."}});});
   await page.route(`${base}/api/library**`, (r) => r.request().method() === "GET" ? r.fulfill({json: {head: null}})
     : r.fulfill({json: {head: {id: "00000000-0000-4000-8000-000000000000", revision: 1, checksum: "x", device: "test", createdAt: new Date().toISOString()}}}));
   await page.route(`${base}/api/tables**`, (r) => answer(r, email));
@@ -1078,7 +1081,7 @@ try {
   ok(await rob.page.locator(".cm-coach-msg.is-typing").count() === 1, "a suggested prompt is asked, and the Coach shows it is typing");
   await rob.page.locator(".cm-coach-msg.is-coach:not(.is-typing)").waitFor({timeout: 5000});
   const thread = await rob.page.locator(".cm-coach-thread li").allInnerTexts();
-  ok(/^Turn \d+ · /.test(thread[0].trim()) && thread[1].trim() === "What's my best play?" && /not switched on yet/.test(thread[2]), `the thread: a turn divider, the question, and the stub's honest reply (${thread[0].trim()})`);
+  ok(/^Turn \d+ · /.test(thread[0].trim()) && thread[1].trim() === "What's my best play?" && /not switched on here yet/.test(thread[2]), `the thread: a turn divider, the question, and the door's honest reply while the Coach is shut (${thread[0].trim()})`);
   await rob.page.fill(".cm-coach-input", "Who's the threat?");
   await rob.page.press(".cm-coach-input", "Shift+Enter");
   await rob.page.type(".cm-coach-input", "and why");

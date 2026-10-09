@@ -158,6 +158,8 @@ export const aiVars = (profile) => (profile.ai ? {
   AI_CAP_TOTAL_CENTS: String(profile.ai.capTotalCents),
   AI_CAP_PERSON_CENTS: String(profile.ai.capPersonCents ?? profile.ai.capTotalCents),
   AI_MODEL: profile.ai.model,
+  /* The Coach (X13) sends a person's hand and board: its own switch, on only once the privacy page says so. */
+  ...(profile.ai.coach ? {AI_COACH: "on"} : {}),
 } : {});
 /* RATE LIMITS ON /api/* (M3): requests a minute, counted at the edge by Cloudflare's Rate Limiting bindings,
    which cloud/worker.mjs asks before it does anything. Per IP first, so a flood is turned away before any
