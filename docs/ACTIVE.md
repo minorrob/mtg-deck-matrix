@@ -11,6 +11,27 @@ here, on the same branch and PR #669, building on Codex's commit. **`docs/handof
 handoff's §3 says, five workers by engine area (permissions and attack statics; effects, counts and triggers; memory;
 keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of the week's usage, pause and hand off.
 
+**Where the gates stand, 2026-10-09** (Part 7 of `docs/plan-to-done-2026-09-30.md`; the records below are the proof):
+
+| Gate item | State | Proof, or whose step |
+| --- | --- | --- |
+| G-A: G1, 1,400 games | 1,398 clean; 2 wait | PR #679. The two are pod 5's huge boards (Krenko and Intruder Alarm): **Rob** picks the large-board answer (a "resolve all / repeat N" shortcut recommended) |
+| G-A: the AI program (AI-1 to AI-6), X13 | not built | the AI door, D12: **Rob** |
+| G-B: the whole gate green twice on main | done | dispatched Tests runs on main, every suite: 2499 on def8fa89 and 2503 on eff40fdc, both green |
+| G-B: `play-e2e` under wrangler dev | done | 35 checks at every staging release |
+| G-B: hidden information in every frame | done | `play-journeys` reads every frame to both people; G1's oracle 102,879 checks, no leak |
+| G-B: the five-second rule | in this container only | `play-journeys` median 280 ms, longest 1.0 s; G1 99th percentile 1.84 s. Over the network needs a browser on a real network: **Rob** or Grok Bot |
+| G-B: `play-journeys` with the seven decks | done | 82 checks (PRs #681, #682): every view at 1280, 1400, 1920, 2560 and the phone, the Coach's stub, the record |
+| G-B: `crankmagic-journeys` and the tours | done | `journeys.mjs`: geometry 138, workshop 504, tour-walk 61 steps (PR #683) |
+| G-B: the browser and device matrix | Chromium here | `docs/uat/browser-matrix.md` (Edge and WebKit on Personal-HP, 2026-10-01); the phones: **Rob** |
+| G-B: screenshots to Rob | done | the published gallery "CrankMagic Board Sizes" (the session's report) |
+| G-C: staging from main, version read back | done at every merge | the G-C records below; the signed-in read-back needs the service token's secret (A5): **Rob** |
+| G-C: the harness note for Grok Bot | done | `docs/playtest-harness.md`, held to the page by `tests/playtest-harness.mjs` (PR #681) |
+| G-C: the four agents' access | not set | **Rob** (M8) |
+
+So the first sentence of Part 7 is not yet true: it waits on the AI door, G1's large-board decision, the network
+measurement, the phones and the agents' access, all Rob's.
+
 **Later, 2026-10-08:** the five workers' 45 cards and CR 800.4a merged here (#676); and on Rob's go ("merge Codex's stack") Codex's #670 to #675, reviewed first, merged here too -- every card of the seven decks is now defined; #676 merged on main 09499dcd and #671 to #675 closed as merged through it. The first G1 pass (70 games over seven pods) then found two blockers, each on its own worker: Tegwyll's provisional definition kept D7 off the table (now confirmed, hand-authored, 477 of 477), and a person's answer the engine refuses (Lethal Scheme's convoke) escaped room.act after the tape had recorded it, so the room could not reopen. Codex's records of 2026-10-07 follow, as it left them.
 
 **G1, second and third passes (PR #677):** both blockers fixed (a refused answer is now a 422 with the room restored from its last save; convoke asks which mana pays the rest), and the layers' dependency trials made only where one can find a dependency (CR 613.8a; `tests/engine-layer-prune.mjs`, the slow game 2.5 times faster). Pass two, at 3df6e1b4: 70 of 70 games clean, none refused, but "longest waits" of up to 9.3 s, every one on a game's last turn. Their cause was in the harness: `tools/fuzz-live.mjs` built its pod without the table's beats, so once the person was out its timer ran while three AI seats played the game out, which no person at the table waits through (`endWhenNoPerson`, Rob's of 2026-10-06). The harness now launches its games as `game/room/table.mjs` does (the draw's click, the empty step passed, the game ending once every person is out); `tests/game-leave.mjs` checks the two pods agree, and three breaks are caught. Pass three, with that pod: **70 of 70 clean, none refused; over the 35 games with a person, the longest wait was 3.3 s, the median 0.23 s and the 90th percentile 0.43 s.** The 3.3 s is a real mid-game wait (D7|D1|D2|D3, seed 2, turn 27 of 33, a 35 s game), measured with three sweeps sharing the container: under the five-second rule, and the first one to profile. #677 merged on main 0d173a0d on green Actions.
@@ -85,6 +106,11 @@ buy…* (`add-buy`, renamed from `add-card`); the Collect tour's trays are the s
 What the score is at the deck's Simulation history; and A tray puts it on the list opens Table on a deck with a group,
 or points at the deck picker. **tour-walk: 7 tours, 61 steps, every one pointing at something real**; `tour` 9
 checks; the release journeys (`journeys.mjs`): geometry 138, `crankmagic-journeys` 504, tour-walk 61 steps.
+#683 merged on main eff40fdc on green Actions.
+
+**G-C, eff40fdc:** released to `release/cloud-staging` e279db77 (release-acceptance 22, play-e2e 35); deployed at
+00:16:48 UTC on 2026-10-09 as version afb87439, its `play-worker.js` byte-identical to the release's dry-run bundle
+(2,420,554 bytes, sha256 21d7b7ee…; the tours are static files, read back only signed in, A5).
 
 ## Cloud production Play preparation, October 7, 2026
 
