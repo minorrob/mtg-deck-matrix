@@ -667,3 +667,8 @@ sight of it signed in.
   `playtest-harness` 150; 41 breaks caught: the brief carrying the library, its deck list in library order or uncounted, another seat's view, the brief before the game, the front door forwarding it, the switch ignored, the allowlist skipped, the browser's brief used, a table's refusal hidden, the sign-in sending anywhere, the question unbounded, Sonnet, the instruction's two lines, the effort, the log's feature, the asker sent, each of the grounding's checks, Show me, Why?, the bold, the sign-in link, the board sending its view, and the release's switch on and off.
 - **Rob's, left:** approve the Coach's privacy wording. Then it goes on `privacy.html`, staging's profile gets
   `ai.coach: true`, and the next staging release turns the Coach on.
+
+**The Coach, switched on for staging (2026-10-09).** Rob: *"Coach privacy wording approved."* The wording is in the AI
+features section of `privacy.html`; staging's profile has `ai.coach: true`, so its release sets `AI_COACH` on; and
+`tools/release-pages.mjs` now refuses any release that switches the Coach on where the privacy policy does not say what
+it sends. `release-pages` 193 checks. Production's AI door stays shut until Rob's go.

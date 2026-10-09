@@ -301,10 +301,9 @@ extraction design** (`docs/plan-card-extraction-skill.md`; M7 in `docs/plan-to-1
 *Rob's ask:* the Coach answers for real. *Before:* the chat panel (#414) with turn dividers, prompts, a composer and
 a stub reply that said it was not switched on; in Full screen it lives in the side column under the log (item 22).
 
-**Status, 2026-10-09: built, behind its own switch.** The route, the brief, the grounding and the panel are in, as
-below (`game/room/coach-brief.mjs`, `cloud/ai.mjs` `coach`, `tests/coach.mjs`; `docs/ACTIVE.md` has the record). It
-stays off on staging, `AI_COACH` unset, until Rob approves the Coach's privacy wording (drafted in `docs/ai-door.md`);
-then staging's release profile sets `ai.coach`. Two differences from the text below: the model is the door's one
+**Status, 2026-10-09: built, and on on staging.** The route, the brief, the grounding and the panel are in, as
+below (`game/room/coach-brief.mjs`, `cloud/ai.mjs` `coach`, `tests/coach.mjs`; `docs/ACTIVE.md` has the record). Rob
+approved its privacy wording the same day; it is on `privacy.html`, and staging's release profile sets `ai.coach`. Two differences from the text below: the model is the door's one
 `AI_MODEL` (Haiku 5.5), not a separate `AI_MODEL_coach`; and there is no per-game cap, since Rob chose one general
 cap, *"not per person"*, 300¢ a day for everyone.
 

@@ -110,10 +110,10 @@ hand and board, which the privacy page must name before the Coach is offered.
   on the board, and *Why?* opens each play's reason. Signed in to the library only, the panel offers the AI door's
   sign-in, which comes back to the table (`GET /api/ai/login?to=#table?id=…`).
 
-### Draft privacy wording for the Coach, for Rob to approve
+### The Coach's privacy wording (Rob approved it, 2026-10-09)
 
-It would be added to the "AI features" section of `privacy.html`. On Rob's approval, the staging profile gets
-`ai.coach: true` (`AI_COACH` on).
+It is in the "AI features" section of `privacy.html`, and the staging profile has `ai.coach: true` (`AI_COACH` on).
+`tools/release-pages.mjs` refuses a release that switches the Coach on where the privacy policy does not say this.
 
 > **The Coach.** At a table, people invited to AI features can ask the Coach about their game. When you ask,
 > CrankMagic sends Anthropic your question and what you can see at that table: your own hand, the board as everyone
