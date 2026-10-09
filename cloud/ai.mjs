@@ -16,8 +16,9 @@
  *   4. the spend caps               AI_CAP_PERSON_CENTS and AI_CAP_TOTAL_CENTS, over a rolling 24 hours, read from
  *                                   the call log; a call is refused when its worst case would cross either
  *
- * and the model is Rob's too: AI_MODEL, or claude-opus-5 when it is unset. The privacy page says what goes to the
- * AI before the browser offers the feature at all (docs/ai-door.md has the draft for Rob to approve).
+ * and the model is Rob's too, within his rule (2026-10-09): "We will always be using sonnet or other lowest cost
+ * models." AI_MODEL may name only a model in MODELS, Claude Sonnet 5.5 when it is unset; a dearer one keeps the door
+ * shut. The privacy page says what goes to the AI before the browser offers the feature at all (docs/ai-door.md).
  *
  * WHAT IS SENT, AND WHAT COMES BACK. Only what the request carries: the deck's name, its commander(s), its card
  * names, the score and its measures, the strongest and weakest cards. No email, no library, no prices paid. The
@@ -27,17 +28,18 @@
  * The Worker has no npm dependencies, so this calls the Messages API over fetch, as tools/generate-guides.mjs does.
  */
 
-export const DEFAULT_MODEL = "claude-opus-5";
+/* The models the door calls: Claude Sonnet 5.5, and Claude Haiku 5.5, the lowest-cost. No server-side fallback is
+   asked for either, since it can re-run a declined request on a dearer model; a refusal is said plainly (422). */
+export const DEFAULT_MODEL = "claude-sonnet-5-5";
+export const MODELS = ["claude-sonnet-5-5", "claude-haiku-5-5"];
 const API = "https://api.anthropic.com/v1/messages";
 const VERSION = "2023-06-01";
-/* A declined request is re-run server-side on the model Anthropic recommends for that category, rather than
-   returned as a refusal; the call log prices each attempt at the rate of the model that ran it. */
-const FALLBACK_BETA = "server-side-fallback-2026-07-01";
 const MAX_TOKENS = 2000;          // thinking included; the answer itself is three to five sentences
 const TIMEOUT_MS = 30000;
 /* List prices, US dollars per million tokens [input, output]. A model not listed is priced at the dearest rate,
-   so an unknown model can only make the meter read high, never low. */
-export const PRICES = {"claude-opus-5": [5, 25], "claude-opus-4-8": [5, 25], "claude-sonnet-5": [2, 10], "claude-haiku-4-5": [1, 5]};
+   so an unknown model can only make the meter read high, never low. Claude Haiku 5.5's rate is for a prompt under
+   100K tokens, which a request capped at 64 KB always is. */
+export const PRICES = {"claude-sonnet-5-5": [2, 10], "claude-haiku-5-5": [0.1, 0.5], "claude-opus-5": [5, 25], "claude-opus-4-8": [5, 25], "claude-sonnet-5": [2, 10], "claude-haiku-4-5": [1, 5]};
 const DEAREST = [10, 50];
 const priceOf = (model) => PRICES[model] || DEAREST;
 export const costMicros = (model, input, output) => Math.ceil(input * priceOf(model)[0] + output * priceOf(model)[1]);
@@ -76,7 +78,7 @@ const SCHEMA = {type: "object", properties: {explanation: {type: "string"}}, req
 
 export function buildBody(req, model) {
   return {
-    model, max_tokens: MAX_TOKENS, system: SYSTEM, fallbacks: "default",
+    model, max_tokens: MAX_TOKENS, system: SYSTEM,
     output_config: {effort: "low", format: {type: "json_schema", schema: SCHEMA}},
     messages: [{role: "user", content: JSON.stringify(req)}],
   };
@@ -125,7 +127,9 @@ export function settings(env) {
   if (!env.ANTHROPIC_API_KEY) throw new Closed("AI features are not switched on here yet.");
   const person = cents(env.AI_CAP_PERSON_CENTS), total = cents(env.AI_CAP_TOTAL_CENTS);
   if (!person || !total) throw new Closed("AI features have no spend cap set, so they stay off.");
-  return {key: env.ANTHROPIC_API_KEY, model: String(env.AI_MODEL || DEFAULT_MODEL), capPerson: person * 10000, capTotal: total * 10000};
+  const model = String(env.AI_MODEL || DEFAULT_MODEL);
+  if (!MODELS.includes(model)) throw new Closed("AI features are set to a model CrankMagic does not use, so they stay off.");
+  return {key: env.ANTHROPIC_API_KEY, model, capPerson: person * 10000, capTotal: total * 10000};
 }
 
 /* Explain a score: gate on the caps, call, price, ground, log, answer. `who` has already passed Access and the
@@ -143,7 +147,7 @@ export async function explain({ai, who, input, config, fetchImpl = fetch}) {
   let response;
   try {
     response = await fetchImpl(API, {method: "POST", signal: AbortSignal.timeout(TIMEOUT_MS),
-      headers: {"content-type": "application/json", "x-api-key": config.key, "anthropic-version": VERSION, "anthropic-beta": FALLBACK_BETA},
+      headers: {"content-type": "application/json", "x-api-key": config.key, "anthropic-version": VERSION},
       body: JSON.stringify(body)});
   } catch {
     await ai.log({email: who.email, feature: "explain", model: config.model, input: 0, output: 0, micros: 0, outcome: "error"});

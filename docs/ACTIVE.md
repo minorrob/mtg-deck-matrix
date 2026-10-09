@@ -15,8 +15,8 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 
 | Gate item | State | Proof, or whose step |
 | --- | --- | --- |
-| G-A: G1, 1,400 games | 1,398 clean; 2 wait | PR #679. The two are pod 5's huge boards (Krenko and Intruder Alarm): **Rob** picks the large-board answer (a "resolve all / repeat N" shortcut recommended) |
-| G-A: the AI program (AI-1 to AI-6), X13 | not built | the AI door, D12: **Rob** |
+| G-A: G1, 1,400 games | 1,398 clean; 2 wait | PR #679. The two are pod 5's huge boards (Krenko and Intruder Alarm). **Rob, 2026-10-09: "resolve all"**, one decision for a run of identical triggers: being built |
+| G-A: the AI program (AI-1 to AI-6), X13 | the door wired on staging; the features not built | the AUD, the cap (300¢ a day for everyone) and the model (Sonnet 5.5, nothing dearer) in the staging release; the key and the allowlist rows: **Rob** |
 | G-B: the whole gate green twice on main | done | dispatched Tests runs on main, every suite: 2499 on def8fa89 and 2503 on eff40fdc, both green |
 | G-B: `play-e2e` under wrangler dev | done | 35 checks at every staging release |
 | G-B: hidden information in every frame | done | `play-journeys` reads every frame to both people; G1's oracle 102,879 checks, no leak |
@@ -29,8 +29,8 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | G-C: the harness note for Grok Bot | done | `docs/playtest-harness.md`, held to the page by `tests/playtest-harness.mjs` (PR #681) |
 | G-C: the four agents' access | not set | **Rob** (M8) |
 
-So the first sentence of Part 7 is not yet true: it waits on the AI door, G1's large-board decision, the network
-measurement, the phones and the agents' access, all Rob's.
+So the first sentence of Part 7 is not yet true: it waits on the AI door's last two steps, the network measurement,
+the phones and the agents' access, all Rob's, and on "resolve all" and the AI features, this session's.
 
 **Later, 2026-10-08:** the five workers' 45 cards and CR 800.4a merged here (#676); and on Rob's go ("merge Codex's stack") Codex's #670 to #675, reviewed first, merged here too -- every card of the seven decks is now defined; #676 merged on main 09499dcd and #671 to #675 closed as merged through it. The first G1 pass (70 games over seven pods) then found two blockers, each on its own worker: Tegwyll's provisional definition kept D7 off the table (now confirmed, hand-authored, 477 of 477), and a person's answer the engine refuses (Lethal Scheme's convoke) escaped room.act after the tape had recorded it, so the room could not reopen. Codex's records of 2026-10-07 follow, as it left them.
 
@@ -111,6 +111,25 @@ checks; the release journeys (`journeys.mjs`): geometry 138, `crankmagic-journey
 **G-C, eff40fdc:** released to `release/cloud-staging` e279db77 (release-acceptance 22, play-e2e 35); deployed at
 00:16:48 UTC on 2026-10-09 as version afb87439, its `play-worker.js` byte-identical to the release's dry-run bundle
 (2,420,554 bytes, sha256 21d7b7ee…; the tours are static files, read back only signed in, A5).
+
+**The AI door, wired on staging (2026-10-09).** Rob made the Access application "CrankMagic AI (staging)" on
+`staging.crankmagic.com/api/ai/*` (Google sign-in; its "AI Testers" policy three emails), approved the privacy wording,
+and chose one cap for everyone: *"I only want a general spending cap, not per person"*, 300¢. Then: *"I want tight
+controls on the coach. It's responses should be very concise, no more than 1-3 sentences with 80% being 1 sentence,
+when in coach. We will always be using sonnet or other lowest cost models."* So:
+- **The staging release** carries `AI_ACCESS_AUD`, `AI_CAP_TOTAL_CENTS` 300, `AI_CAP_PERSON_CENTS` 300 (the same
+  number, so it never binds first) and `AI_MODEL` claude-sonnet-5-5 (`tools/release-pages.mjs`, the profile's `ai`).
+  The release tool refuses any other set, and any AI variable at all in production, whose door stays shut.
+- **Sonnet or cheaper, always:** `cloud/ai.mjs` calls only `MODELS` (Claude Sonnet 5.5, the default, and Claude
+  Haiku 5.5); `AI_MODEL` naming any other keeps the door shut, and nothing is sent. The server-side fallback is no
+  longer asked for, since it can re-run a declined request on a dearer model; a refusal is a plain 422.
+- **The privacy wording** is on `privacy.html`, and `DELETE /api/account` deletes the person's `ai_calls` rows.
+- **The Coach's brevity** is written into AI-1 (`docs/plan-to-done-2026-09-30.md`): one sentence asked for, two or
+  three only when needed; the Worker refuses more than three (logged `too-long`); the eval holds 80% to one sentence.
+- Proof: `ai-door` 50 checks, `release-pages` 188, `cloud-worker` 109.
+- **Rob's, left:** the key as a Secret on `crankmagic-staging`, a monthly limit in the Anthropic console, and the three
+  emails in `crankmagic-staging`'s `ai_allowlist` (0 rows and no secrets at last check). Both work from the dashboard.
+
 
 ## Cloud production Play preparation, October 7, 2026
 

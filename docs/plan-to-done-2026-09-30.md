@@ -268,7 +268,11 @@ extraction design** (`docs/plan-card-extraction-skill.md`; M7 in `docs/plan-to-1
   $2/$10, Claude Haiku 4.5 `claude-haiku-4-5` $1/$5, cache reads a fifth of input), and an unknown model is still
   priced at the dearest rate. Each feature has its own `AI_MODEL_<feature>` so Rob sets a model per job. **Rob,
   2026-09-30: `AI_MODEL_coach` Claude Sonnet 5.5 · `AI_MODEL_pilot` Claude Haiku 4.5 · `AI_MODEL_loader` Claude
-  Sonnet 5.5 · `AI_MODEL_advise` Claude Haiku 4.5, each held to its eval.**
+  Sonnet 5.5 · `AI_MODEL_advise` Claude Haiku 4.5, each held to its eval.** **Rob, 2026-10-09: *"We will always be
+  using sonnet or other lowest cost models."*** The door calls only models priced at or below Claude Sonnet 5.5
+  (`cloud/ai.mjs`, `MODELS`: Sonnet 5.5 and Claude Haiku 5.5 `claude-haiku-5-5`, $0.10/$0.50); a feature's model
+  naming a dearer one keeps that feature shut, and the release tool refuses it. Claude Haiku 5.5 now costs a tenth
+  of Haiku 4.5, so the pilot's and the advisor's evals try it first.
 - **The agent is code; the model judges.** For each feature the Worker assembles a *brief* deterministically from
   the library and the game — the facts, the candidates, the constraints — and asks the model to choose and explain
   among the candidates only, with structured output (`output_config.format`, a JSON schema per feature) so the
@@ -281,8 +285,10 @@ extraction design** (`docs/plan-card-extraction-skill.md`; M7 in `docs/plan-to-1
 - **The stable prefix is cached.** Each feature's system prompt and vocabulary (the roles, the card states, the
   rules of the brief) come first and never change between calls; the brief follows. Prompt caching then makes
   the repeated part nearly free.
-- **Effort low or medium; adaptive thinking; streaming where a person waits** (the Coach). Never a refusal shown
-  raw: the door's fallback (`fallbacks: "default"`) re-runs a declined request server-side, and a 422 says so.
+- **Effort low or medium; adaptive thinking; streaming only where an answer is long** (never the Coach's, which is
+  checked before it is shown). Never a refusal shown
+  raw: a declined request comes back as a plain 422. No server-side fallback is asked for, since it can re-run a
+  request on a model dearer than Rob allows.
 - **An eval before a model is trusted with a job**, kept in the repository: for the advisor, Rob's seven decks with
   changes he would make himself as the rubric; for the card loader, the cards of the seven decks against their
   oracle text and a smoke test in the engine; for the Coach, a set of board states with the plays a seasoned
@@ -302,14 +308,27 @@ a stub reply that says it is not switched on; in Full screen it will live in the
   your hand with what each card can do *now*, from the decision's options; the stack; the step); the last twenty
   history lines; the question; and the reply schema: `{answer, plays: [{card, action, why}], threat: {seat, why},
   show: [cardIds]}` — every `card` and `seat` must be in the brief.
-- **The panel:** streams the answer as it comes (the Worker passes the stream through); replies carry the action
+- **The panel:** shows the answer once the Worker has checked it (grounded, and no longer than Rob allows; at one to
+  three sentences there is little to stream, and a streamed answer would be on screen before it was checked); replies carry the action
   chips the shell already draws (*Show me* highlights the named cards on the mat; *Why?* expands the reasoning);
   turn dividers as now. The Coach never acts: it names a play; the person makes it.
+- **Brevity (Rob, 2026-10-09):** *"I want tight controls on the coach. It's responses should be very concise, no
+  more than 1-3 sentences with 80% being 1 sentence, when in coach."* Held four ways:
+  - **The prompt:** answer in one sentence; use two or three only when one would leave out something the person
+    needs to make the play. No preamble, no restating the question, no list.
+  - **The schema:** `answer` is the reply; each play's `why` is one sentence too, and is shown only when the person
+    taps *Why?*.
+  - **The Worker:** it counts the sentences of `answer`. More than three is not shown and is logged `too-long`, as
+    an ungrounded answer is. `max_tokens` is sized for three short sentences and the schema, not the explain
+    route's 2,000.
+  - **The eval:** at least 80% of its board states answered in one sentence and none in more than three, before
+    the Coach is switched on and again after any change of model or prompt. The call log's `too-long` count is the
+    same check on real games.
 - **Model and cost:** `AI_MODEL_coach` = Claude Sonnet 5.5 (Rob's call) at low effort, for a chat that must
-  answer in a few seconds; the eval says whether Claude Haiku 4.5 answers as well. Each game has its
-  own cap (a Worker variable) on top of the person's.
+  answer in a few seconds; the eval says whether Claude Haiku 5.5, the lowest-cost, answers as well. Never a
+  dearer model (Rob, 2026-10-09). Each game has its own cap (a Worker variable) on top of the person's.
 - **Proof:** `tests/ai-door.mjs` grows a coach section with a stubbed provider: grounding refused, the cap
-  refused, a streamed answer's chips; `tests/table-board.mjs`: the Coach's answer and *Show me* highlighting the
+  refused, a four-sentence answer refused as too long, an answer's chips; `tests/table-board.mjs`: the Coach's answer and *Show me* highlighting the
   card. The privacy wording, approved, before the switch.
 
 ### AI-2. AI players
