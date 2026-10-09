@@ -16,7 +16,7 @@ not offer the feature yet.
 | 2. Allowlist | **Rob's:** the same three emails in `crankmagic-staging`'s `ai_allowlist` (0 rows at last check) | Shut |
 | 3. Key | **Rob's:** `ANTHROPIC_API_KEY` as a secret on `crankmagic-staging` (none at last check), and a monthly limit in the Anthropic console | Shut |
 | 4. Caps | **Done.** One cap for everyone, **300¢ in any 24 hours** (Rob: "I only want a general spending cap, not per person"); the per-person cap is given the same number, so it never binds first | Shut |
-| Model | **Claude Sonnet 5.5** (`claude-sonnet-5-5`). Rob, 2026-10-09: *"We will always be using sonnet or other lowest cost models."* The door calls only Sonnet 5.5 or Claude Haiku 5.5 (`claude-haiku-5-5`); `AI_MODEL` naming any other keeps it shut, and the release tool refuses one | — |
+| Model | **Claude Haiku 5.5** (`claude-haiku-5-5`). Rob, 2026-10-09: *"We will always be using sonnet or other lowest cost models,"* then *"change the model use to Haiku explicitly."* The door calls only Haiku 5.5 or, at most, Claude Sonnet 5.5 (`claude-sonnet-5-5`); `AI_MODEL` naming any other keeps it shut, and the release tool refuses one | — |
 | 5. Privacy wording | **Done.** Approved by Rob and on `privacy.html`; `DELETE /api/account` now deletes the person's `ai_calls` rows | — |
 
 Both steps left are Rob's and can be done in the Cloudflare dashboard, with no terminal: the secret under Workers &
@@ -35,7 +35,7 @@ in a response or in the log.
 | 1 | **Its own Access application** | In Cloudflare Zero Trust, add an application for `crankmagic.com/api/ai/*`. Use **Google only**, never the emailed one-time code, and passkey MFA if the plan offers it. Its policy is the people allowed to use AI. Copy the application's **AUD tag**. | 503, "AI features are not switched on here yet." A library sign-in never opens it, because its token is for another application. |
 | 2 | **The allowlist** | Add each person with `wrangler d1 execute crankmagic --remote --command "INSERT INTO ai_allowlist (email, added_at, note) VALUES ('name@example.com', datetime('now'), 'why')"`. To remove someone, run `DELETE FROM ai_allowlist WHERE email = '…'`. Staging uses the `crankmagic-staging` database. | 403, "not on CrankMagic's list for AI features" |
 | 3 | **The key** | Run `wrangler secret put ANTHROPIC_API_KEY` for the Worker, pasting the key only into the terminal's prompt. Set the key's own monthly limit in the Anthropic console too. | 503, "not switched on here yet" |
-| 4 | **The spend caps** | Choose two numbers, in US cents over any 24 hours: **one person's** cap (`AI_CAP_PERSON_CENTS`) and **everyone's** together (`AI_CAP_TOTAL_CENTS`). One cap only is the same number for both. For scale, one explanation costs about 1¢ on Claude Sonnet 5.5. `AI_MODEL` is Sonnet 5.5 unset, and may be Sonnet 5.5 or Haiku 5.5 only. | 503, "no spend cap set, so they stay off" |
+| 4 | **The spend caps** | Choose two numbers, in US cents over any 24 hours: **one person's** cap (`AI_CAP_PERSON_CENTS`) and **everyone's** together (`AI_CAP_TOTAL_CENTS`). One cap only is the same number for both. For scale, one explanation costs about a tenth of a cent on Claude Haiku 5.5 (about 1¢ on Sonnet 5.5). `AI_MODEL` is Haiku 5.5 unset, and may be Haiku 5.5 or Sonnet 5.5 only. | 503, "no spend cap set, so they stay off" |
 | 5 | **The privacy wording** | Approve or edit the draft below. It goes on `privacy.html` before the app offers any AI feature. | The app shows nothing AI |
 
 The release tool gives each profile's Worker the AUD tag, the caps and the model as variables
@@ -51,13 +51,13 @@ key in place.
   120), the score and up to 12 of its measures, and up to five strongest and five weakest cards, each with a short
   note. It never sends the person's email, library, collection or prices paid. The request is capped at 64 KB.
 - **The call:** the Messages API over `fetch`, since the Worker has no npm dependencies. It asks for structured
-  output and low effort, on Claude Sonnet 5.5 or Claude Haiku 5.5 only. It asks for no server-side fallback, since
+  output and low effort, on Claude Haiku 5.5 or Claude Sonnet 5.5 only. It asks for no server-side fallback, since
   a fallback can re-run a declined request on a dearer model than Rob allows. There is a 30-second timeout.
 - **What is shown:** only an answer in which every card named in `[[double brackets]]` was sent. Otherwise it says
   "named a card that is not in this deck" and shows nothing.
 - **The log:** every call made goes in `ai_calls`, including errors (at no cost), refusals and ungrounded answers.
   Each row records who, the feature, the model that answered, the tokens, the cost and the outcome. Cost uses list
-  prices per million tokens: $2 and $10 on Claude Sonnet 5.5, $0.10 and $0.50 on Claude Haiku 5.5. A response that
+  prices per million tokens: $0.10 and $0.50 on Claude Haiku 5.5, $2 and $10 on Claude Sonnet 5.5. A response that
   itemizes its attempts is priced attempt by attempt, each at its own model's rate. A model the price list does not
   know is priced at the dearest rate, so the meter can only read high.
 - **The caps** are read from the log over a rolling 24 hours, **before** anything is sent. The worst case (every

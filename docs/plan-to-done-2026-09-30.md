@@ -269,7 +269,7 @@ extraction design** (`docs/plan-card-extraction-skill.md`; M7 in `docs/plan-to-1
   priced at the dearest rate. Each feature has its own `AI_MODEL_<feature>` so Rob sets a model per job. **Rob,
   2026-09-30: `AI_MODEL_coach` Claude Sonnet 5.5 · `AI_MODEL_pilot` Claude Haiku 4.5 · `AI_MODEL_loader` Claude
   Sonnet 5.5 · `AI_MODEL_advise` Claude Haiku 4.5, each held to its eval.** **Rob, 2026-10-09: *"We will always be
-  using sonnet or other lowest cost models."*** The door calls only models priced at or below Claude Sonnet 5.5
+  using sonnet or other lowest cost models,"* and then the Coach on Claude Haiku 5.5, explicitly.** The door calls only models priced at or below Claude Sonnet 5.5
   (`cloud/ai.mjs`, `MODELS`: Sonnet 5.5 and Claude Haiku 5.5 `claude-haiku-5-5`, $0.10/$0.50); a feature's model
   naming a dearer one keeps that feature shut, and the release tool refuses it. Claude Haiku 5.5 now costs a tenth
   of Haiku 4.5, so the pilot's and the advisor's evals try it first.
@@ -301,9 +301,22 @@ extraction design** (`docs/plan-card-extraction-skill.md`; M7 in `docs/plan-to-1
 *Rob's ask:* the Coach answers for real. *Today:* the chat panel (#414) with turn dividers, prompts, a composer and
 a stub reply that says it is not switched on; in Full screen it will live in the side column under the log (item 22).
 
-- **The route:** `POST /api/ai/coach` with the asking seat's own view (the same projection the room sends that seat
-  — its hand, every public zone, the history's last lines, the decision it is being asked) and the question. Never
-  another seat's hand; the projection cannot carry it.
+- **The route:** `POST /api/ai/coach` with the question. The Worker reads the asking seat's own view from the table
+  itself (the same projection the room sends that seat — its hand, every public zone, the history's last lines, the
+  decision it is being asked), never a view the browser sends, so nothing can be added to it. Never another seat's
+  hand; the projection cannot carry it.
+- **What the Coach may see (Rob, 2026-10-09):** *"keep it's context restricted to the content present within the
+  player's deck and the active played board (can't see the opponents hands)"*, and then: *"within the player's hand
+  and knowledge of their deck (not visibility into the order of cards in the deck)"*. The brief holds only:
+  - the asking person's own hand;
+  - the board as everyone at the table sees it: each seat's battlefield, graveyard, face-up exile and command zone,
+    life and counters, the stack, the step, and the history's public lines;
+  - their own deck as a list: the cards it was built with, sorted by name, and how many cards their library still
+    holds. Never the library's order, its top card, or where any card is in it;
+  - never another seat's hand or library, nor a face-down card that is not theirs.
+
+  The proof is the check G1 already makes of every frame, applied to the brief: no other seat's hidden card, and no
+  library order (a shuffled library gives the same brief).
 - **The brief:** the board as a table (each seat's life, poison, commander damage, permanents with their state;
   your hand with what each card can do *now*, from the decision's options; the stack; the step); the last twenty
   history lines; the question; and the reply schema: `{answer, plays: [{card, action, why}], threat: {seat, why},
@@ -322,9 +335,10 @@ a stub reply that says it is not switched on; in Full screen it will live in the
     play's `why` is held to one sentence the same way, and shows only when the person taps *Why?*.
   - **Nothing measures the answer afterward:** no sentence count on the Worker, and no 80% gate in the eval.
     `max_tokens` is a cost ceiling only, set well above three sentences and the schema, so it never cuts an answer.
-- **Model and cost:** `AI_MODEL_coach` = Claude Sonnet 5.5 (Rob's call) at low effort, for a chat that must
-  answer in a few seconds; the eval says whether Claude Haiku 5.5, the lowest-cost, answers as well. Never a
-  dearer model (Rob, 2026-10-09). Each game has its own cap (a Worker variable) on top of the person's.
+- **Model and cost:** `AI_MODEL_coach` = **Claude Haiku 5.5** (`claude-haiku-5-5`), explicitly (Rob, 2026-10-09:
+  *"change the model use to Haiku explicitly"*; it was Sonnet 5.5), at low effort, for a chat that must answer in a
+  few seconds. Claude Sonnet 5.5 stays the ceiling, never a dearer model. Each game has its own cap (a Worker
+  variable) on top of the person's.
 - **Proof:** `tests/ai-door.mjs` grows a coach section with a stubbed provider: grounding refused, the cap
   refused, the brief's brevity instruction sent with every call, an answer's chips; `tests/table-board.mjs`: the Coach's answer and *Show me* highlighting the
   card. The privacy wording, approved, before the switch.

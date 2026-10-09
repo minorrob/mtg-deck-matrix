@@ -107,12 +107,12 @@ eq(r.status, 200, "an answer that names only the deck's own cards is shown");
 eq([r.json.explanation.includes("turn 10.8"), r.json.cards, r.json.model], [true, ["Goblin Chieftain", "Skirk Prospector"], DEFAULT_MODEL], "the explanation, the cards it named, and the model that answered");
 const out = sent.at(-1);
 eq([out.headers["x-api-key"], out.headers["anthropic-version"], out.headers["anthropic-beta"]], [KEY, "2023-06-01", undefined], "the key rides only in the provider's header, with the API version and no beta");
-eq([out.body.model, "fallbacks" in out.body, out.body.output_config.format.type, out.body.messages.length], ["claude-sonnet-5-5", false, "json_schema", 1], "Claude Sonnet 5.5 unless Rob names another; no server-side fallback, which can re-run a request on a dearer model; the answer as structured output; one message");
+eq([out.body.model, "fallbacks" in out.body, out.body.output_config.format.type, out.body.messages.length], ["claude-haiku-5-5", false, "json_schema", 1], "Claude Haiku 5.5 unless Rob names another (Rob: \"change the model use to Haiku explicitly\"); no server-side fallback, which can re-run a request on a dearer model; the answer as structured output; one message");
 const payload = JSON.parse(out.body.messages[0].content);
 eq(Object.keys(payload).sort(), ["deck", "measures", "score", "strongest", "weakest"], "what is sent is only the deck, its score and measures, and its strongest and weakest cards");
 ok(!JSON.stringify(out.body).includes("rob@example.com"), "and never who is asking");
 ok(!r.text.includes(KEY) && !JSON.stringify(calls()).includes(KEY), "the key is in no response and no log row");
-eq((await call({env: {...OPEN, AI_MODEL: "claude-haiku-5-5"}}) , sent.at(-1).body.model), "claude-haiku-5-5", "AI_MODEL, when Rob sets it, is the model asked: here Claude Haiku 5.5, the lowest-cost");
+eq((await call({env: {...OPEN, AI_MODEL: "claude-sonnet-5-5"}}) , sent.at(-1).body.model), "claude-sonnet-5-5", "AI_MODEL, when Rob sets it, is the model asked: here Claude Sonnet 5.5, the dearest he allows");
 /* Rob, 2026-10-09: "We will always be using sonnet or other lowest cost models." */
 ok(MODELS.every((m) => PRICES[m] && PRICES[m][0] <= PRICES["claude-sonnet-5-5"][0] && PRICES[m][1] <= PRICES["claude-sonnet-5-5"][1]), `every model the door may call costs no more than Claude Sonnet 5.5 (${MODELS.join(", ")})`);
 for (const dearer of ["claude-opus-5-5", "claude-opus-5", "claude-fable-5-1", "some-new-model"]) {
@@ -123,13 +123,13 @@ for (const dearer of ["claude-opus-5-5", "claude-opus-5", "claude-fable-5-1", "s
 
 /* SPENT: the log, the prices, the meter, the caps. */
 const last = calls().at(-2);
-eq(last, {email: "rob@example.com", feature: "explain", model: DEFAULT_MODEL, input_tokens: 900, output_tokens: 300, cost_micros: 900 * 2 + 300 * 10, outcome: "ok"}, "every call is logged: who, what for, the model, the tokens and the cost at list price ($2 and $10 a million)");
-eq(costMicros("claude-haiku-5-5", 900, 300), 90 + 150, "Claude Haiku 5.5 at $0.10 and $0.50 a million");
+eq(last, {email: "rob@example.com", feature: "explain", model: DEFAULT_MODEL, input_tokens: 900, output_tokens: 300, cost_micros: 90 + 150, outcome: "ok"}, "every call is logged: who, what for, the model, the tokens and the cost at list price ($0.10 and $0.50 a million)");
+eq(costMicros("claude-sonnet-5-5", 900, 300), 900 * 2 + 300 * 10, "Claude Sonnet 5.5 at $2 and $10 a million");
 ok(costMicros("some-new-model", 900, 300) >= costMicros(DEFAULT_MODEL, 900, 300), "a model not in the price list is priced at the dearest rate, so the meter can only read high");
 /* A response that itemizes its attempts at two prices, so an attempt priced at the wrong model's rate shows. */
-answer = reply("[[Mountain]] is there.", {model: "claude-haiku-5-5", usage: {input_tokens: 1000, output_tokens: 100, iterations: [{type: "message", model: DEFAULT_MODEL, input_tokens: 800, output_tokens: 0}, {type: "message", model: "claude-haiku-5-5", input_tokens: 1000, output_tokens: 100}]}});
+answer = reply("[[Mountain]] is there.", {model: "claude-sonnet-5-5", usage: {input_tokens: 1000, output_tokens: 100, iterations: [{type: "message", model: DEFAULT_MODEL, input_tokens: 800, output_tokens: 0}, {type: "message", model: "claude-sonnet-5-5", input_tokens: 1000, output_tokens: 100}]}});
 r = await call();
-eq([r.json.model, calls().at(-1).cost_micros], ["claude-haiku-5-5", costMicros(DEFAULT_MODEL, 800, 0) + costMicros("claude-haiku-5-5", 1000, 100)], "a response that itemizes its attempts names the model that answered and prices each attempt at its own model's rate");
+eq([r.json.model, calls().at(-1).cost_micros], ["claude-sonnet-5-5", costMicros(DEFAULT_MODEL, 800, 0) + costMicros("claude-sonnet-5-5", 1000, 100)], "a response that itemizes its attempts names the model that answered and prices each attempt at its own model's rate");
 ok(r.json.meter.capCents === 25 && r.json.meter.spentCents > 0, `the answer carries the meter: ${r.json.meter.spentCents}¢ of ${r.json.meter.capCents}¢`);
 answer = reply("", {stop: "refusal"});
 eq((await call()).status, 422, "a refusal is said plainly, never run again on another model");
@@ -146,7 +146,7 @@ eq(calls().slice(-3).map((c) => [c.outcome, c.cost_micros]), [["error", 0], ["er
 
 /* The caps, read from the log over a rolling 24 hours, before anything is sent. */
 const before = sent.length;
-DB.raw.prepare("INSERT INTO ai_calls (id, email, feature, model, input_tokens, output_tokens, cost_micros, outcome, at) VALUES ('big', 'rob@example.com', 'explain', ?, 0, 0, 240000, 'ok', ?)").run(DEFAULT_MODEL, new Date(clock - 3600e3).toISOString());
+DB.raw.prepare("INSERT INTO ai_calls (id, email, feature, model, input_tokens, output_tokens, cost_micros, outcome, at) VALUES ('big', 'rob@example.com', 'explain', ?, 0, 0, 249800, 'ok', ?)").run(DEFAULT_MODEL, new Date(clock - 3600e3).toISOString());
 r = await call();
 eq([r.status, sent.length], [429, before], "a call whose worst case would cross the person's cap is refused before anything is sent");
 ok(/your AI spend cap/.test(r.json.error), "and says it is the person's cap, and when to come back");
@@ -154,7 +154,7 @@ clock += 25 * 3600e3;
 answer = reply("[[Mountain]].");
 eq((await call()).status, 200, "a day later the rolling window has moved on");
 allow("friend@example.com");
-DB.raw.prepare("INSERT INTO ai_calls (id, email, feature, model, input_tokens, output_tokens, cost_micros, outcome, at) VALUES ('others', 'someone@example.com', 'explain', ?, 0, 0, 990000, 'ok', ?)").run(DEFAULT_MODEL, new Date(clock - 60e3).toISOString());
+DB.raw.prepare("INSERT INTO ai_calls (id, email, feature, model, input_tokens, output_tokens, cost_micros, outcome, at) VALUES ('others', 'someone@example.com', 'explain', ?, 0, 0, 999500, 'ok', ?)").run(DEFAULT_MODEL, new Date(clock - 60e3).toISOString());
 r = await call({jwt: await token({email: "friend@example.com"})});
 eq([r.status, /CrankMagic has reached its AI spend cap/.test(r.json.error)], [429, true], "everyone's spend together meets the total cap: refused for everyone");
 

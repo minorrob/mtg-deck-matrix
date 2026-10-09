@@ -16,7 +16,7 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | Gate item | State | Proof, or whose step |
 | --- | --- | --- |
 | G-A: G1, 1,400 games | 1,398 clean; 2 wait | PR #679. The two are pod 5's huge boards (Krenko and Intruder Alarm). **Rob, 2026-10-09: "resolve all"**, one decision for a run of identical triggers: being built |
-| G-A: the AI program (AI-1 to AI-6), X13 | the door wired on staging; the features not built | the AUD, the cap (300¢ a day for everyone) and the model (Sonnet 5.5, nothing dearer) in the staging release; the key and the allowlist rows: **Rob** |
+| G-A: the AI program (AI-1 to AI-6), X13 | the door wired on staging; the features not built | the AUD, the cap (300¢ a day for everyone) and the model (Haiku 5.5, explicitly; nothing dearer than Sonnet 5.5) in the staging release; the key and the allowlist rows: **Rob** |
 | G-B: the whole gate green twice on main | done | dispatched Tests runs on main, every suite: 2499 on def8fa89 and 2503 on eff40fdc, both green |
 | G-B: `play-e2e` under wrangler dev | done | 35 checks at every staging release |
 | G-B: hidden information in every frame | done | `play-journeys` reads every frame to both people; G1's oracle 102,879 checks, no leak |
@@ -116,17 +116,21 @@ checks; the release journeys (`journeys.mjs`): geometry 138, `crankmagic-journey
 `staging.crankmagic.com/api/ai/*` (Google sign-in; its "AI Testers" policy three emails), approved the privacy wording,
 and chose one cap for everyone: *"I only want a general spending cap, not per person"*, 300¢. Then: *"I want tight
 controls on the coach. It's responses should be very concise, no more than 1-3 sentences with 80% being 1 sentence,
-when in coach. We will always be using sonnet or other lowest cost models."* So:
+when in coach. We will always be using sonnet or other lowest cost models."* And: *"change the model use to Haiku
+explicitly"*, with the Coach seeing only the player's hand, the board, and their deck as a list, never its order. So:
 - **The staging release** carries `AI_ACCESS_AUD`, `AI_CAP_TOTAL_CENTS` 300, `AI_CAP_PERSON_CENTS` 300 (the same
-  number, so it never binds first) and `AI_MODEL` claude-sonnet-5-5 (`tools/release-pages.mjs`, the profile's `ai`).
+  number, so it never binds first) and `AI_MODEL` claude-haiku-5-5 (`tools/release-pages.mjs`, the profile's `ai`).
   The release tool refuses any other set, and any AI variable at all in production, whose door stays shut.
-- **Sonnet or cheaper, always:** `cloud/ai.mjs` calls only `MODELS` (Claude Sonnet 5.5, the default, and Claude
-  Haiku 5.5); `AI_MODEL` naming any other keeps the door shut, and nothing is sent. The server-side fallback is no
+- **Haiku, and never dearer than Sonnet:** `cloud/ai.mjs` calls only `MODELS` (Claude Haiku 5.5, the default, and
+  Claude Sonnet 5.5, the ceiling); `AI_MODEL` naming any other keeps the door shut, and nothing is sent. The server-side fallback is no
   longer asked for, since it can re-run a declined request on a dearer model; a refusal is a plain 422.
 - **The privacy wording** is on `privacy.html`, and `DELETE /api/account` deletes the person's `ai_calls` rows.
 - **The Coach's brevity** is written into AI-1 (`docs/plan-to-done-2026-09-30.md`) as Rob then put it: the Coach's
   brief instructs the model to answer in one to three very concise sentences, aiming for one; nothing checks the
   length afterward, and there is no 80% gate.
+- **What the Coach may see** is written into AI-1 too: the person's own hand, the board as everyone at the table sees
+  it, and their deck as a list sorted by name with the library's count, never its order, its top card or another
+  seat's hand; the Worker builds the brief from the room's own projection for that seat, not from the browser.
 - Proof: `ai-door` 50 checks, `release-pages` 188, `cloud-worker` 109.
 - **Rob's, left:** the key as a Secret on `crankmagic-staging`, a monthly limit in the Anthropic console, and the three
   emails in `crankmagic-staging`'s `ai_allowlist` (0 rows and no secrets at last check). Both work from the dashboard.

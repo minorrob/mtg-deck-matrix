@@ -17,8 +17,8 @@
  *                                   the call log; a call is refused when its worst case would cross either
  *
  * and the model is Rob's too, within his rule (2026-10-09): "We will always be using sonnet or other lowest cost
- * models." AI_MODEL may name only a model in MODELS, Claude Sonnet 5.5 when it is unset; a dearer one keeps the door
- * shut. The privacy page says what goes to the AI before the browser offers the feature at all (docs/ai-door.md).
+ * models." Then: "change the model use to Haiku explicitly." AI_MODEL may name only a model in MODELS, Claude Haiku 5.5
+ * when it is unset; a dearer one keeps the door shut. The privacy page says what goes to the AI before the browser offers the feature at all (docs/ai-door.md).
  *
  * WHAT IS SENT, AND WHAT COMES BACK. Only what the request carries: the deck's name, its commander(s), its card
  * names, the score and its measures, the strongest and weakest cards. No email, no library, no prices paid. The
@@ -28,10 +28,11 @@
  * The Worker has no npm dependencies, so this calls the Messages API over fetch, as tools/generate-guides.mjs does.
  */
 
-/* The models the door calls: Claude Sonnet 5.5, and Claude Haiku 5.5, the lowest-cost. No server-side fallback is
-   asked for either, since it can re-run a declined request on a dearer model; a refusal is said plainly (422). */
-export const DEFAULT_MODEL = "claude-sonnet-5-5";
-export const MODELS = ["claude-sonnet-5-5", "claude-haiku-5-5"];
+/* The models the door calls: Claude Haiku 5.5, the lowest-cost and Rob's choice, and Claude Sonnet 5.5, the dearest he
+   allows. No server-side fallback is asked for, since it can re-run a declined request on a dearer model; a refusal is
+   said plainly (422). */
+export const DEFAULT_MODEL = "claude-haiku-5-5";
+export const MODELS = ["claude-haiku-5-5", "claude-sonnet-5-5"];
 const API = "https://api.anthropic.com/v1/messages";
 const VERSION = "2023-06-01";
 const MAX_TOKENS = 2000;          // thinking included; the answer itself is three to five sentences

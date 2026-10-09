@@ -134,9 +134,9 @@ export const PROFILES = {
        (staging)" on staging.crankmagic.com/api/ai/*, Google sign-in only, its policy the people allowed; and one
        spend cap for everyone together, 300 US cents in any 24 hours. The door also takes a cap per person, and Rob
        wants none, so it is the same number, which never stops anyone before the total does. The model is Claude
-       Sonnet 5.5 ("We will always be using sonnet or other lowest cost models"). The key is a Worker secret Rob
+       Haiku 5.5 ("change the model use to Haiku explicitly"). The key is a Worker secret Rob
        set himself, never here; the allowlist is his, in the database. Production's door stays shut. */
-    ai: {aud: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", capTotalCents: 300, model: "claude-sonnet-5-5"},
+    ai: {aud: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", capTotalCents: 300, model: "claude-haiku-5-5"},
     cloud: {database: {name: "crankmagic-staging", id: "b7f806ec-c9e8-4265-9f23-7d9705db9a26"}, limits: {ip: "2001", person: "2002"}, access: {team: "crankmagic.cloudflareaccess.com", aud: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5"}},
   },
 };
