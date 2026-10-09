@@ -76,23 +76,32 @@ export function decksFromBackup(backup, names) {
    landing that way: in G1's 1,400 games, two games to thousands of Goblins, every step slower than the last (2026-10-08).
    A person going round a loop of optional actions picks how many times (CR 732.2a: a shortcut "may be ... a loop that
    repeats a specified number of times") and then does something else; this one goes round with one activated ability
-   at most LOOP_LIMIT times a turn, then passes, and says how often it did (`stopped`). */
+   at most LOOP_LIMIT times a turn, then passes, and says how often it did (`stopped`). And as a person at the table would
+   (Rob, 2026-10-09), it lets a run of identical triggers resolve with one decision, Resolve all, whenever one is offered
+   (`resolvedAll`); and once its seat controls BOARD_LIMIT permanents it goes round no loop at all. Rob: "Games as huge
+   as you saw in those 2 will never happen because half of the board you were seeing would win before ever getting to
+   that point." A person with a hundred permanents has the game won, and attacks rather than make more. */
 export const LOOP_LIMIT = 4;
+export const BOARD_LIMIT = 100;
+const controls = (view) => {const field = view?.state?.players?.[view.seat]?.zones?.Battlefield; return field ? field.count ?? (field.cards ?? []).length : 0;};
 export function person(seed) {
   const pilot = randomLegalPilot(createRng(seed));
   let turn = null, taken = new Map();
-  const answer = (decision, now) => {
+  const answer = (decision, now, view = null) => {
     if (now !== turn) {turn = now; taken = new Map();}
+    const all = decision.kind === "priority" ? decision.options.find((o) => o.act === "resolve-all") : null;
+    if (all) {answer.resolvedAll += 1; return {kind: "answer", choiceId: decision.id, indices: [all.index]};}
     let a = pilot.answer(decision);
     const [one] = a.indices ?? [], option = decision.kind === "priority" && a.indices?.length === 1 ? decision.options?.[one] : null;
     if (option?.act === "activate") {
       const key = `${option.cardId}:${option.label}`, pass = decision.options.find((o) => o.act === "pass");
-      if ((taken.get(key) ?? 0) >= LOOP_LIMIT && pass) {a = {indices: [pass.index]}; answer.stopped += 1;}
+      if (((taken.get(key) ?? 0) >= LOOP_LIMIT || controls(view) >= BOARD_LIMIT) && pass) {a = {indices: [pass.index]}; answer.stopped += 1;}
       else taken.set(key, (taken.get(key) ?? 0) + 1);
     }
     return {kind: "answer", choiceId: decision.id, ...(a.indices ? {indices: a.indices} : {}), ...(a.amounts ? {amounts: a.amounts} : {}), ...(a.value !== undefined ? {value: a.value} : {})};
   };
   answer.stopped = 0;
+  answer.resolvedAll = 0;
   return answer;
 }
 
@@ -260,7 +269,7 @@ export async function playGame({decks, seed, cards, humans = [], matchId = `fuzz
   /* The pod as the table launches it (game/room/table.mjs): the draw waits for its click, a step with nothing to do passes
      itself, and once every person is out the game ends there -- so a wait measured here is one a person at the table has,
      not the AI seats playing a game out for nobody. */
-  const pod = {drawBeat: true, passEmpty: true, endWhenNoPerson: true, seats: decks.map((d, i) => ({seatId: `s${i}`, name: NAMES[i] || `Seat ${i + 1}`, pilot: humans.includes(i) ? "human" : "house", commander: d.commander, cards: d.cards}))};
+  const pod = {drawBeat: true, passEmpty: true, endWhenNoPerson: true, resolveAll: true, seats: decks.map((d, i) => ({seatId: `s${i}`, name: NAMES[i] || `Seat ${i + 1}`, pilot: humans.includes(i) ? "human" : "house", commander: d.commander, cards: d.cards}))};
   const people = Object.fromEntries(humans.map((i) => [`s${i}`, answerer(`person-${seed}-${i}`)]));
   const started = Date.now();
   let room = await startRoom({storage, matchId, ...(cards ? {cards} : {}), pod, seed: `seed-${seed}`, ...(pilot ? {pilot} : {})});
@@ -275,7 +284,7 @@ export async function playGame({decks, seed, cards, humans = [], matchId = `fuzz
     if (leaks) {leaked.push(...await checkLeaks(room, storage, matchId, memory, view.state.turn)); leakChecks += 1;}
     const asked = Date.now();
     for (let tries = 1; ; tries += 1) {
-      try {await room.act(who, {actionId: randomUUID(), revision: view.revision, ...people[who](view.decision, view.state.turn)}); break;}
+      try {await room.act(who, {actionId: randomUUID(), revision: view.revision, ...people[who](view.decision, view.state.turn, view)}); break;}
       catch (error) {
         if (!(error instanceof RoomError) || error.status !== 422 || tries >= PERSON_TRIES) throw error;
         personRefused.push({turn: view.state.turn, seatId: who, question: view.decision.title, reason: error.message});
@@ -290,7 +299,7 @@ export async function playGame({decks, seed, cards, humans = [], matchId = `fuzz
   const last = room.view(pod.seats[0].seatId);
   const ms = Date.now() - started;
   return {seed, status: room.status, result: last.result, turns: last.state.turn, decisions, reopened, ms, longestWait: longest, refusals: room.refusals,
-    personRefused, loopsStopped: Object.values(people).reduce((n, p) => n + (p.stopped ?? 0), 0), room, ...(leaks ? {leaks: leaked, leakChecks} : {}),
+    personRefused, loopsStopped: Object.values(people).reduce((n, p) => n + (p.stopped ?? 0), 0), resolvedAll: Object.values(people).reduce((n, p) => n + (p.resolvedAll ?? 0), 0), room, ...(leaks ? {leaks: leaked, leakChecks} : {}),
     ...(replay ? {replay: await replayMatch({storage, matchId, ...(cards ? {cards} : {}), ...(pilot ? {pilot} : {})})} : {})};
 }
 
@@ -316,7 +325,8 @@ export function describe(game) {
   const first = game.personRefused?.[0];
   const people = first ? `, ${game.personRefused.length} of the people's answers refused by the rules and given again (first: turn ${first.turn}, ${first.seatId}, "${first.question}": ${first.reason})` : "";
   const judged = [game.replay ? `replay ${game.replay.same ? "identical" : "DIFFERENT"}` : "", game.leaks ? `${game.leaks.length} leaks in ${game.leakChecks} checks of every seat's view` : "",
-    game.loopsStopped ? `the person stopped going round a loop ${game.loopsStopped} time${game.loopsStopped === 1 ? "" : "s"}` : ""].filter(Boolean).join(", ");
+    game.loopsStopped ? `the person stopped going round a loop ${game.loopsStopped} time${game.loopsStopped === 1 ? "" : "s"}` : "",
+    game.resolvedAll ? `the person chose Resolve all ${game.resolvedAll} time${game.resolvedAll === 1 ? "" : "s"}` : ""].filter(Boolean).join(", ");
   return `seed ${game.seed}: ${game.status} (${end}), ${game.turns} turns, ${game.decisions} decisions, ${(game.ms / 1000).toFixed(1)} s, longest wait for a person ${wait}, ${game.refusals?.total ?? "?"} refused over the whole match${people}${judged ? `, ${judged}` : ""}${v.clean ? "" : ` -- NOT CLEAN: ${v.problems.join("; ")}`}`;
 }
 

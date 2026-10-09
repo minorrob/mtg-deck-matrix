@@ -141,7 +141,9 @@ ok(proof.same && proof.tape === tape.length + more, `its tape of ${proof.tape} a
   let crash = false;
   const breaking = ({seat, cards: facts}) => {
     const real = housePilot({seat, cards: facts});
+    /* Its quick pass (`passes`, which the room asks before working out its view) is its play too, and breaks with it. */
     return {...real,
+      passes(actions, stackSize) {if (crash) throw new Error("the house pilot broke"); return real.passes(actions, stackSize);},
       choose(view, actions) {if (crash) throw new Error("the house pilot broke"); return real.choose(view, actions);},
       answer(view, choice) {if (crash) throw new Error("the house pilot broke"); return real.answer(view, choice);}};
   };

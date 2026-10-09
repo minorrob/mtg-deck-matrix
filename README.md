@@ -485,7 +485,11 @@ seat may know of a card read off the state -- a hand its owner's, a library no o
 face-down card its controller's or its lookers', a name with a copy anywhere public no secret -- a name found only where
 it names a card, a planted leak found, a whole game of four of the decks with nothing leaked and an identical replay, and
 the checkpoints the replay found would not read back (an effect's `sublayer: undefined`, a copy's own values) now saved
-and read back as the same game.
+and read back as the same game; and the harness's person going round a loop at most four times a turn, and none once its
+seat controls a hundred permanents. `room-resolve-all` holds Resolve all (Rob, 2026-10-09): a run of the same trigger on
+top of the stack read off it, offered as one decision in a game that asked for it and in no other, the room passing for
+that seat through that run only -- asked again when another player's ability lands on top, no more passes than were
+there, kept across a wake and replayed -- and the board's button beside the pass, with the run one line on the stack.
 `engine-derive-once` holds the layers' memo: each object derived once per question and guard level, the same answers as
 without it on a board where the guard levels differ, a question that only reads changing nothing, and the work linear in
 the board. `engine-targets-up-to`
@@ -1084,6 +1088,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `table-lobby` — `tests/table-lobby.mjs`
 - `table-board` — `tests/table-board.mjs`
 - `room-beats` — `tests/room-beats.mjs`
+- `room-resolve-all` — `tests/room-resolve-all.mjs`
 - `board-choices` — `tests/board-choices.mjs`
 - `crankmagic-audio` — `tests/crankmagic-audio.mjs`
 - `advice-contract` — `tests/advice-contract.mjs` (preparation-only AI requests, evidence references and stale-result rejection)
