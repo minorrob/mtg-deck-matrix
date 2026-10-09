@@ -266,10 +266,10 @@ export async function checkLeaks(room, storage, matchId, memory, turn) {
  */
 export async function playGame({decks, seed, cards, humans = [], matchId = `fuzz-${seed}`, pilot, storage = memoryStorage(), turnLimit = 400, reopenEvery = 0, people: answerer = person,
   replay = false, leaks = false}) {
-  /* The pod as the table launches it (game/room/table.mjs): the draw waits for its click, a step with nothing to do passes
-     itself, and once every person is out the game ends there -- so a wait measured here is one a person at the table has,
-     not the AI seats playing a game out for nobody. */
-  const pod = {drawBeat: true, passEmpty: true, endWhenNoPerson: true, resolveAll: true, seats: decks.map((d, i) => ({seatId: `s${i}`, name: NAMES[i] || `Seat ${i + 1}`, pilot: humans.includes(i) ? "human" : "house", commander: d.commander, cards: d.cards}))};
+  /* The pod as the table launches it (game/room/table.mjs): a step with nothing to do passes itself, once every person is
+     out the game ends there, a run of identical triggers may resolve at once, and a person's cast passes for them -- so a
+     wait measured here is one a person at the table has, not the AI seats playing a game out for nobody. */
+  const pod = {passEmpty: true, endWhenNoPerson: true, resolveAll: true, passAfterCast: true, seats: decks.map((d, i) => ({seatId: `s${i}`, name: NAMES[i] || `Seat ${i + 1}`, pilot: humans.includes(i) ? "human" : "house", commander: d.commander, cards: d.cards}))};
   const people = Object.fromEntries(humans.map((i) => [`s${i}`, answerer(`person-${seed}-${i}`)]));
   const started = Date.now();
   let room = await startRoom({storage, matchId, ...(cards ? {cards} : {}), pod, seed: `seed-${seed}`, ...(pilot ? {pilot} : {})});

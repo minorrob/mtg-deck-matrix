@@ -3462,6 +3462,13 @@ button.cm-vitals{cursor:pointer}
 .cm-board-tile:hover{border-color:var(--seat)}
 .cm-board-tile-main{display:grid;gap:2px;justify-items:start;width:100%;padding:0;border:0;background:none;text-align:left;font:inherit;color:inherit;cursor:pointer;min-width:0}
 .cm-board-tile.is-you{border-color:color-mix(in srgb,var(--v-accent) 60%,var(--v-line))}
+/* Whose turn it is (Rob, 2026-10-09): the seat's card in the side pane ringed and marked. */
+.cm-board-tile.is-turn{border-color:var(--v-brass);box-shadow:0 0 0 2px var(--v-brass)}
+.cm-board-turn-mark{display:inline-flex;align-items:center;gap:4px;padding:1px 7px 1px 5px;border-radius:999px;background:var(--v-brass);color:var(--poster-ground);font-size:11px;line-height:1.5;white-space:nowrap}
+.cm-board-turn-mark b{font-weight:800}
+.cm-board-tile>.cm-board-turn-mark{position:absolute;right:8px;bottom:8px;z-index:4}
+.cm-full-vitals>.is-turn{box-shadow:inset 3px 0 0 var(--v-brass)}
+.cm-full-vitals>div>span .cm-board-turn-mark{margin-left:6px}
 .cm-board-tile.is-focus{outline:2px solid var(--v-accent);outline-offset:1px}
 .cm-board-tile-name{font-weight:700;font-size:12px}
 .cm-board-tile .cm-muted{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
@@ -3666,7 +3673,8 @@ button.cm-vitals{cursor:pointer}
 .cm-phone-center>.cm-mat{flex:1 1 auto;min-height:0;padding-top:46px}
 .cm-phone-pill{position:absolute;left:50%;top:6px;z-index:3;display:flex;align-items:center;gap:8px;padding:3px 4px 3px 12px;transform:translateX(-50%);border-radius:999px;background:var(--v-panel);border:1px solid var(--v-line-strong);font-size:12px;white-space:nowrap;max-width:calc(100% - 12px)}
 #matrix-v2 .cm-phone-pill .v-button{min-height:0;height:30px;padding:0 12px}
-.cm-phone-ask{position:absolute;left:8px;right:8px;bottom:8px;z-index:3;display:flex;flex-direction:column;gap:6px;max-height:55%;overflow:auto}
+/* At most a third of the phone's height, what is asked scrolling within it: a main phase's ten ways to play once covered half the board. */
+.cm-phone-ask{position:absolute;left:8px;right:8px;bottom:8px;z-index:3;display:flex;flex-direction:column;gap:6px;max-height:33%;overflow:auto}
 .cm-phone-ask:empty{display:none}
 .cm-phone-ask .cm-board-decision,.cm-phone-ask .cm-board-stack{padding:8px 10px}
 .cm-phone-seats{display:flex;flex-direction:column;gap:6px;min-height:0;overflow:auto}

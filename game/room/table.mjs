@@ -314,10 +314,13 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
         seatId: seatName(s.seatId), name: s.name, pilot: s.kind === "ai" ? "house" : "human",
         commander: record.decks[s.seatId].commander, cards: record.decks[s.seatId].cards,
       })), startingLife: rulesOf().startingLife,
-      /* The table's two beats (items 11 and 13): the draw waits for its click; a step with nothing to do passes itself.
-         And once every person is out, the game ends there (Rob, 2026-10-06; game/room/room.mjs); and a run of identical
-         triggers may be let resolve with one decision (Rob, 2026-10-09: "resolve all"). */
-      drawBeat: true, passEmpty: true, endWhenNoPerson: true, resolveAll: true};
+      /* The table's beats (game/room/room.mjs): a step with nothing to do passes itself (item 11); once every person is
+         out, the game ends there (Rob, 2026-10-06); a run of identical triggers may be let resolve with one decision (Rob,
+         2026-10-09: "resolve all"); and a person's cast passes for them (Rob, 2026-10-09: "I don't want to have to click a
+         pop-up to resolve it"). The draw no longer waits for a click (Rob, 2026-10-09: "Draw phase should be resolved
+         automatically by drawing a card and progress to the next screen"): a game launched before that keeps its
+         `drawBeat` with its match and replays as it was played. */
+      passEmpty: true, endWhenNoPerson: true, resolveAll: true, passAfterCast: true};
       try {
         room = await startRoom({storage: storageForRoom, matchId, cards, pod, seed: `${matchId}:${now}`, slice});
         step({type: "engine-started", launchId: matchId, matchId}, now);
