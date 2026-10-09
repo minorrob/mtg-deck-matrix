@@ -326,8 +326,8 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
   /* Rob, 2026-10-09: Resolve all is offered (`resolveAll`), and the seats that took it, each with the run it is passing
      through and how many passes it has left (`standing`). */
   let resolveAll = false, standing = {};
-  /* Rob, 2026-10-09: the pass a person's cast or activation makes for them (`passAfterCast`), and the cast it waits on --
-     the seat and how deep the stack was -- until priority comes back to them (`castBy`). */
+  /* Rob, 2026-10-09: the pass a person's cast or activation makes for them (`passAfterCast`), and the seat whose cast it
+     waits on until priority comes back to them (`castBy`). */
   let passAfterCast = false, castBy = null;
   const nobodyLeft = () => seats.some((s) => s.pilot === "human") && seats.every((s, i) => s.pilot !== "human" || state.players[i].lost);
   const track = () => {const key = `${state.turn}:${state.stepIndex}`; if (key !== step.key) step = {key, quiet: false, acted: false};};
@@ -416,12 +416,13 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
       if (state.stepIndex === undefined) {write(beginGame(state)); continue;}
       if (state.priorityPlayer === null) {write(advance(state)); continue;}
       const seat = state.priorityPlayer;
-      /* Having cast, the caster passes: priority back to them with what they cast on the stack (CR 117.3c), the pass is
-         theirs, made by the cast. Anything else first -- the cast came to nothing -- and they are asked as ever. */
-      if (castBy) {
-        const cast = castBy;
+      /* Having cast, the caster passes: a spell cast or an ability activated is on the stack at once (CR 601.2a, 602.2a)
+         and its caster has priority first (CR 117.3c), so the pass is theirs, made by the cast. Priority first to anyone
+         else -- the caster out of the game -- and nobody is passed for. */
+      if (castBy !== null) {
+        const caster = castBy;
         castBy = null;
-        if (cast.seat === seat && state.stack.length > cast.depth) {driven = 0; apply(seat, {kind: "pass"}, "cast"); continue;}
+        if (caster === seat) {driven = 0; apply(seat, {kind: "pass"}, "cast"); continue;}
       }
       /* Resolve all, taken: the seat passes while the same run is on top, as many times as it chose; each pass is a
          decision of theirs, so it is not counted toward a hang. Anything else on top, and they are asked again. A pass
@@ -501,7 +502,7 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
     if (!point || point.sequence !== record.sequence) throw new RoomError(500, "This table's saved game does not match its record, so it was not resumed.");
     passEmpty = record.passEmpty === true; step = record.step || {key: null, quiet: false, acted: false};
     resolveAll = record.resolveAll === true; standing = record.standing || {};
-    passAfterCast = record.passAfterCast === true; castBy = record.castBy || null;
+    passAfterCast = record.passAfterCast === true; castBy = record.castBy ?? null;
     seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; history = record.history || [];
     refusals = record.refusals || {total: 0, since: point.sequence, first: []};
     continuing = record.continuing === true; driven = record.driven || 0; endWhenNoPerson = record.endWhenNoPerson === true;
@@ -541,9 +542,8 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
       }
     } else {
       step.acted = true;
-      const depth = state.stack.length;
       write(applyAction(state, seat, action));
-      if (passAfterCast && by === "person" && !hold && (action.kind === "cast" || action.kind === "activate")) castBy = {seat, depth};
+      if (passAfterCast && by === "person" && !hold && (action.kind === "cast" || action.kind === "activate")) castBy = seat;
     }
   }
 

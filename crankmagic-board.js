@@ -884,8 +884,8 @@ globalThis.CrankBoard = Object.freeze({
   }
   /* The peek follows the pointer: it is put away when the pointer leaves the card -- and, since a card redrawn or moved
      away from under a still pointer never says it was left (Rob, 2026-10-09: ending the game left a Plains shown large,
-     "I couldn't click off of it"), by any press or Escape, and by a redraw that leaves no card of that id under the
-     pointer (`stalePeek`). */
+     "I couldn't click off of it"), by any press or Escape; and the board redrawn while it waits to show, it shows only if
+     a card of that id is still under the pointer (`stillUnder`). */
   let peekTimer = null, peekId = null, pointerAt = null;
   function peek(el) {
     clearTimeout(peekTimer);
@@ -895,6 +895,7 @@ globalThis.CrankBoard = Object.freeze({
     peekId = Number(el.dataset.card);
     peekTimer = setTimeout(() => {
       peekTimer = null;
+      if (!el.isConnected && !stillUnder(peekId)) {peekId = null; return;}
       const c = findCard(Number(el.dataset.card));
       if (!c || !c.name || !document.getElementById("cm-board")) return;
       const div = old || Object.assign(document.createElement("div"), {id: "cm-board-peek", className: "cm-board-peek"});
@@ -905,11 +906,10 @@ globalThis.CrankBoard = Object.freeze({
       if (!old) document.getElementById("cm-board").append(div);
     }, 350);
   }
-  function stalePeek() {
-    if (peekId === null) return;
+  function stillUnder(id) {
     const under = pointerAt && document.elementFromPoint(pointerAt.x, pointerAt.y);
     const el = under && under.closest && under.closest(".cm-board .cm-bcard[data-card]");
-    if (!el || Number(el.dataset.card) !== peekId || el.closest(".cm-board-peek")) peek(null);
+    return !!el && Number(el.dataset.card) === id && !el.closest(".cm-board-peek");
   }
   /* A PHONE: the shorter side of the screen at most 500px. Held upright, the surface is turned to landscape. */
   const phone = () => Math.min(innerWidth, innerHeight) <= 500;
@@ -1026,7 +1026,6 @@ globalThis.CrankBoard = Object.freeze({
     const active = document.activeElement;
     const caret = active && active.matches && active.matches("[data-board-history-filter]") ? active.selectionStart : null;
     render();
-    stalePeek();
     const context = document.getElementById("cm-coach-context");
     if (context && view) context.textContent = coachContext();
     if (caret === null) return;

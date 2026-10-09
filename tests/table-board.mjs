@@ -798,13 +798,17 @@ try {
   await rob.page.locator("#cm-board-peek").waitFor({state: "detached", timeout: 2000});
   ok(true, "and so does Escape");
   await rob.page.mouse.move(5, 5);
+  await rob.page.waitForTimeout(400);
+  const hovered = await robCard.getAttribute("data-card"), at = await robCard.boundingBox();
   await robCard.hover();
-  await rob.page.locator("#cm-board-peek .cm-bcard").waitFor({timeout: 5000});
-  await rob.page.focus("[data-action=board-view][data-view=table]");
-  await rob.page.keyboard.press("Enter");
+  await rob.page.evaluate(() => {const b = document.querySelector("[data-action=board-view][data-view=table]"); b.focus(); b.click();});
   await rob.page.locator(".cm-board-table").waitFor();
-  await rob.page.locator("#cm-board-peek").waitFor({state: "detached", timeout: 2000});
-  ok(true, "and so does a redraw that leaves no such card under the pointer: Table view chosen from the keyboard");
+  await rob.page.waitForTimeout(700);
+  const after = await rob.page.evaluate(([x, y]) => {
+    const peeked = document.querySelector("#cm-board-peek [data-card]"), under = document.elementFromPoint(x, y)?.closest(".cm-board .cm-bcard[data-card]:not(#cm-board-peek *)");
+    return {peeked: peeked ? peeked.dataset.card : null, under: under ? under.dataset.card : null};
+  }, [at.x + at.width / 2, at.y + at.height / 2]);
+  ok(after.peeked === null || (after.peeked === after.under && after.peeked !== hovered), `and the board redrawn while a card waits to be shown large -- Table view chosen without the pointer moving -- never shows the card that left: ${after.peeked === null ? "nothing is shown" : `the card now under the pointer is (${after.peeked})`}`);
   await rob.page.mouse.move(5, 5);
   await rob.page.click("[data-action=board-view][data-view=focus]");
   await rob.page.locator(".cm-board-mat").waitFor();
