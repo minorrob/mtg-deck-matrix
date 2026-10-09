@@ -799,16 +799,15 @@ try {
   ok(true, "and so does Escape");
   await rob.page.mouse.move(5, 5);
   await rob.page.waitForTimeout(400);
-  const hovered = await robCard.getAttribute("data-card"), at = await robCard.boundingBox();
+  /* The card gone from under the still pointer while it waits to be shown large -- the hand taken off the page, as a
+     redraw does -- is never shown: nothing of it is under the pointer. */
   await robCard.hover();
-  await rob.page.evaluate(() => {const b = document.querySelector("[data-action=board-view][data-view=table]"); b.focus(); b.click();});
-  await rob.page.locator(".cm-board-table").waitFor();
+  await rob.page.evaluate(() => document.querySelector("#cm-board .cm-board-hand").remove());
   await rob.page.waitForTimeout(700);
-  const after = await rob.page.evaluate(([x, y]) => {
-    const peeked = document.querySelector("#cm-board-peek [data-card]"), under = document.elementFromPoint(x, y)?.closest(".cm-board .cm-bcard[data-card]:not(#cm-board-peek *)");
-    return {peeked: peeked ? peeked.dataset.card : null, under: under ? under.dataset.card : null};
-  }, [at.x + at.width / 2, at.y + at.height / 2]);
-  ok(after.peeked === null || (after.peeked === after.under && after.peeked !== hovered), `and the board redrawn while a card waits to be shown large -- Table view chosen without the pointer moving -- never shows the card that left: ${after.peeked === null ? "nothing is shown" : `the card now under the pointer is (${after.peeked})`}`);
+  eq(await rob.page.locator("#cm-board-peek").count(), 0, "and a card taken from under the still pointer before it is shown large is never shown: nothing waits to be clicked off");
+  await rob.page.focus("[data-action=board-view][data-view=table]");
+  await rob.page.keyboard.press("Enter");
+  await rob.page.locator(".cm-board-table").waitFor();
   await rob.page.mouse.move(5, 5);
   await rob.page.click("[data-action=board-view][data-view=focus]");
   await rob.page.locator(".cm-board-mat").waitFor();
@@ -1017,8 +1016,13 @@ try {
     await rob.page.locator("#cm-board [data-board-scale=hand]").first().fill(String(hi));
     await rob.page.waitForTimeout(300);
     const big = await at();
-    ok(big.card > before.card * 1.2 && Math.abs(big.w - before.w) < 1 && Math.abs(big.h - before.h) < 1 && big.over > 0 && big.foot <= big.room + 1,
-      `${v === "full" ? "Full screen" : "Focus"}: Hand cards at ${hi}%, the hand's cards grow (${before.card} → ${big.card}px), the board keeps its size (${before.w}×${before.h} → ${big.w}×${big.h}), and the hand runs ${big.over}px on below the window, all of it reached by scrolling`);
+    /* scrolled as a person scrolls, with the wheel over the board */
+    await rob.page.mouse.move(700, 300);
+    await rob.page.mouse.wheel(0, 2000);
+    await rob.page.waitForTimeout(300);
+    const scrolled = await rob.page.evaluate(() => document.getElementById("cm-board").scrollTop);
+    ok(big.card > before.card * 1.2 && Math.abs(big.w - before.w) < 1 && Math.abs(big.h - before.h) < 1 && big.over > 0 && big.foot <= big.room + 1 && scrolled > 0,
+      `${v === "full" ? "Full screen" : "Focus"}: Hand cards at ${hi}%, the hand's cards grow (${before.card} → ${big.card}px), the board keeps its size (${before.w}×${before.h} → ${big.w}×${big.h}), and the hand runs ${big.over}px on below the window, the wheel scrolling down to it (${Math.round(scrolled)}px)`);
     await rob.page.evaluate(() => {document.getElementById("cm-board").scrollTop = 0; localStorage.removeItem("cm-board-scale:hand");});
     await rob.page.locator("#cm-board [data-board-scale=hand]").first().fill(String(await rob.page.evaluate(() => Math.round(globalThis.__cm.cardScale()))));
     if (v === "full") {await rob.page.click("[data-action=board-view][data-view=focus]"); await rob.page.locator(".cm-board-mat").waitFor();}
@@ -1286,7 +1290,16 @@ try {
   ok(true, "My board goes back to hers, and › goes round to the next seat");
   await maya.page.click("[data-action=board-rotate][data-by='-1']");
   const askShare = await maya.page.evaluate(() => {const a = document.querySelector(".cm-phone-ask"); return a && a.children.length ? a.getBoundingClientRect().height / innerHeight : 0;});
-  ok(askShare > 0 && askShare < 0.35, `what she is asked -- her main phase's ways to play -- sits over the board's foot without covering most of it (${Math.round(askShare * 100)}% of the height), the rest scrolling within it`);
+  ok(askShare > 0 && askShare < 0.35, `what she is asked sits over the board's foot without covering most of it (${Math.round(askShare * 100)}% of the height)`);
+  /* However much it holds -- a main phase with ten ways to play covered 46% -- it stops at a third and scrolls within. */
+  const capped = await maya.page.evaluate(() => {
+    const a = document.querySelector(".cm-phone-ask"), filler = Object.assign(document.createElement("div"), {style: "flex:none;height:600px"});
+    a.append(filler);
+    const share = a.getBoundingClientRect().height / innerHeight, scrolls = a.scrollHeight > a.clientHeight;
+    filler.remove();
+    return {share, scrolls};
+  });
+  ok(capped.share <= 0.34 && capped.scrolls, `and filled past it, it stops at a third of the phone's height (${Math.round(capped.share * 100)}%) and scrolls within`);
   await shot(maya.page, "phone-landscape");
   /* When the room asks her something, the board snaps back to hers, wherever she was looking. */
   let snapped = false;
