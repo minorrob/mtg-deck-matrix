@@ -261,6 +261,31 @@ async function walk(room, {turns, hook, pick} = {}) {
   const top = after && after.state.stack[after.state.stack.length - 1];
   ok(convoking && after && !(top && top.name === "Convoke Spell" && top.playerId === 0) && room.history.some((l) => /^Rob cast Convoke Spell/.test(l.text)),
     `woken at the convoke question and answered, the cast passes: Rob is next asked with no Convoke Spell of his on top, and it resolved (${after ? `${after.decision.title}, stack ${after.state.stack.length}` : "never asked"})`);
+  /* An ability activated passes the same way: Rob casts a Shrine ("{T}: You gain 1 life.") and, a turn later, activates
+     it; he is not asked again with the ability on the stack, and it resolves -- his life goes up by one. */
+  const SHRINE = {types: ["Artifact"], manaCost: "{1}", abilities: [{id: "g", kind: "activated", text: "{T}: You gain 1 life.", cost: [{atom: "{T}"}], targets: [], effects: [{effect: "gainLife", amount: 1}]}]};
+  const shrineCards = (name) => (name === "Shrine" ? SHRINE : cards(name));
+  const shrineRoom = await startRoom({storage: memoryStorage(), matchId: "cast4", cards: shrineCards, seed: "cast4-seed", pod: {passEmpty: true, passAfterCast: true, seats: [
+    {seatId: "rob", name: "Rob", pilot: "human", commander: [], cards: Array.from({length: 40}, (_, i) => (i % 2 ? "Forest" : "Shrine"))},
+    {seatId: "maya", name: "Maya", pilot: "human", commander: [], cards: Array(40).fill("Forest")}]}});
+  const activated = {times: 0, ownAbilityOnTop: 0, lifeBefore: null, lifeAfter: null};
+  for (let n = 0; n < 3000 && shrineRoom.waitingOn && activated.times < 2; n += 1) {
+    const who = shrineRoom.waitingOn, view = shrineRoom.view(who), d = view.decision;
+    if (view.state.turn > 12) break;
+    const top = view.state.stack[view.state.stack.length - 1];
+    if (d.kind === "priority" && top && top.playerId === view.seat && top.kind !== "spell") activated.ownAbilityOnTop += 1;
+    let indices;
+    if (d.kind === "priority") {
+      const use = view.seat === 0 && d.options.find((o) => o.act === "activate" && o.label === "Shrine");
+      const o = use || d.options.find((x) => x.act === "cast") || d.options.find((x) => x.act === "play-land") || d.options.find((x) => x.act === "pass");
+      if (o === use) {activated.times += 1; if (activated.lifeBefore === null) activated.lifeBefore = view.state.players[0].health.life;}
+      indices = [o.index];
+    } else indices = d.mode === "many" ? d.options.slice(0, d.min).map((o) => o.index) : [0];
+    await shrineRoom.act(who, {actionId: randomUUID(), revision: view.revision, kind: "answer", choiceId: d.id, indices});
+    if (activated.times && activated.lifeAfter === null && !shrineRoom.view("rob").state.stack.length) activated.lifeAfter = shrineRoom.view("rob").state.players[0].health.life;
+  }
+  ok(activated.times >= 1 && activated.ownAbilityOnTop === 0 && activated.lifeAfter === activated.lifeBefore + 1,
+    `an ability activated passes too: Rob's Shrine used ${activated.times} times, he is never asked again with it on the stack, and it resolves (life ${activated.lifeBefore} → ${activated.lifeAfter})`);
   const woken = {room, storage, cards: zeroCards};
   for (const game of [passing, held, woken]) {
     const proof = await replayMatch({storage: game.storage, matchId: game.room.matchId, cards: game.cards || cards});

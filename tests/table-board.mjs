@@ -1020,6 +1020,23 @@ try {
     if (v === "full") {await rob.page.click("[data-action=board-view][data-view=focus]"); await rob.page.locator(".cm-board-mat").waitFor();}
   }
 
+  /* TURNS THAT WENT BY, put away by themselves (Rob, 2026-10-09: "I shouldn't have to acknowledge every stage"). Two
+     players never let whole turns go by unseen, so Rob's board is handed his own last view as if two turns had: the note
+     shows, goes by itself within seconds with nothing pressed, and the real view, handed back, is the board again. */
+  {
+    const lastFrame = JSON.parse(frames[ROB].filter((f) => JSON.parse(f).view).at(-1)), later = structuredClone(lastFrame);
+    later.view.state.turn += 2;
+    const carrier = routes[ROB].at(-1).ws;
+    carrier.send(JSON.stringify(later));
+    await rob.page.locator("section.cm-board-went").waitFor({timeout: 5000});
+    const shownAt = Date.now();
+    await rob.page.locator("section.cm-board-went").waitFor({state: "detached", timeout: 9000});
+    const lasted = Date.now() - shownAt;
+    ok(lasted > 3000 && lasted < 8000, `turns that went by are said, then put away by themselves after a few seconds, nothing pressed (${(lasted / 1000).toFixed(1)} s)`);
+    carrier.send(JSON.stringify(lastFrame));
+    await waitText(rob.page, ".cm-board-turn", new RegExp(`Turn ${lastFrame.view.state.turn} `));
+  }
+
   /* THE ACCESSIBILITY PASS (docs/plan-to-done-2026-09-30.md Part 6). WORDS OVER ARTWORK: a mat can be any picture, so
      every word on one is read against the worst of them, plain white under everything the word sits on -- its own
      backing and every one between it and the mat, their opacity counted -- and must reach 4.5:1. */
