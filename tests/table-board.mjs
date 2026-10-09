@@ -358,7 +358,9 @@ try {
   ok(/^#table\?id=/.test(await rob.page.evaluate(() => location.hash)) && routes[ROB].length === robSockets, "Play opens straight onto the game, on the same socket");
   ok(awayFrames() === awayBefore && !/Dropped/.test(await text(maya.page, ".cm-board-tile[data-seat='0'] .cm-board-tile-flag")), "and through all of it the room never marked Rob's seat away");
 
-  /* THE THREE VIEWS. Table: both boards at once, you at the foot, the logo between them opening Table vitals. */
+  /* THE THREE VIEWS. Table: both boards at once, side by side -- each a landscape 16:9 on its half of the screen, yours on
+     the right (Rob, 2026-10-09: "In 2-player, the screen should split down the middle vertically") -- the logo between
+     them opening Table vitals. */
   await rob.page.click("[data-action=board-view][data-view=table]");
   await rob.page.locator(".cm-board-table .cm-seatboard").nth(1).waitFor();
   const tableGeo = await rob.page.evaluate(() => {
@@ -366,17 +368,17 @@ try {
     const mine = box(".cm-seatboard.is-you"), theirs = box(".cm-seatboard:not(.is-you)"), center = box(".cm-board-center"), host = box("#cm-board");
     const ring = getComputedStyle(document.querySelector(".cm-seatboard.is-you")).boxShadow;
     const table = document.querySelector(".cm-board-table").getBoundingClientRect(), tray = box(".cm-board-hand");
-    return {mineBelow: mine.top >= theirs.bottom, ring: /2px/.test(ring), same: Math.abs(mine.width - theirs.width) < 1 && Math.abs(mine.height - theirs.height) < 1,
-      ratio: Math.round(mine.width / mine.height * 100) / 100, fits: mine.width <= table.width && theirs.top >= table.top - 1 && mine.bottom <= table.bottom + 1,
-      largest: Math.min(table.width, (table.height - parseFloat(getComputedStyle(document.querySelector(".cm-board-table")).rowGap)) / 2 * 16 / 9) - mine.width < 2,
+    return {mineRight: mine.left >= theirs.right && Math.abs(mine.top - theirs.top) < 1, ring: /2px/.test(ring), same: Math.abs(mine.width - theirs.width) < 1 && Math.abs(mine.height - theirs.height) < 1,
+      ratio: Math.round(mine.width / mine.height * 100) / 100, fits: mine.right <= table.right + 1 && theirs.left >= table.left - 1 && mine.top >= table.top - 1 && mine.bottom <= table.bottom + 1,
+      largest: Math.min((table.width - parseFloat(getComputedStyle(document.querySelector(".cm-board-table")).columnGap)) / 2, table.height * 16 / 9) - mine.width < 2,
       whole: host.left === 0 && host.top === 0 && host.width === innerWidth && host.height === innerHeight,
       library: document.querySelectorAll(".cm-seatboard [data-zone=library]").length, trayBelow: tray.top >= mine.bottom,
       logo: (document.querySelector(".cm-board-center img") || {}).src || "",
-      centerBetween: center.top < mine.top && center.bottom > theirs.bottom, sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth};
+      centerBetween: center.left < mine.left && center.right > theirs.right, sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth};
   });
   ok(tableGeo.whole, "the game fills the window: the board is the whole viewport, the rail under it");
-  ok(tableGeo.mineBelow && tableGeo.ring, "Table view: Rob's board at the foot in a brass ring, Maya's above");
-  ok(tableGeo.same && Math.abs(tableGeo.ratio - 1.78) < 0.02 && tableGeo.fits && tableGeo.largest, `the boards are identical 16:9 (${tableGeo.ratio}), the largest that fit the tabletop`);
+  ok(tableGeo.mineRight && tableGeo.ring, "Table view: two boards side by side, Rob's on the right in a brass ring, Maya's on the left");
+  ok(tableGeo.same && Math.abs(tableGeo.ratio - 1.78) < 0.02 && tableGeo.fits && tableGeo.largest, `the boards are identical landscape 16:9 (${tableGeo.ratio}), the largest that fit each half of the tabletop`);
   ok(tableGeo.library === 2 && tableGeo.trayBelow, "each board draws its Library pile, and the hand sits along the foot below the boards");
   ok(tableGeo.centerBetween && tableGeo.sideways === 0 && /logo-wand/.test(tableGeo.logo), "the wand logo sits in the gap between the boards, and nothing scrolls sideways");
   /* R12 (the plan review, X8): AT 1280x720 THE CAPTIONS ARE WORDS, NOT A PILE-UP. With Board cards at its smallest the
@@ -464,13 +466,14 @@ try {
     const theirs = document.querySelector(".cm-board-table .cm-seatboard:not(.is-you)").getBoundingClientRect(), mine = document.querySelector(".cm-board-table .cm-seatboard.is-you").getBoundingClientRect();
     const mid = r.top + r.height / 2, bg = getComputedStyle(el).backgroundImage;
     const life = (seat) => document.querySelector(`.cm-board-table .cm-seatboard[data-seat='${seat}'] .cm-vitals b`).textContent;
-    const totals = [...el.querySelectorAll(".cm-board-pie-life")].map((b) => {const q = b.getBoundingClientRect(); return {seat: b.dataset.seat, n: b.textContent, above: q.top + q.height / 2 < mid, pill: life(b.dataset.seat)};});
-    return {dx: r.left + r.width / 2 - (tbl.left + tbl.width / 2), dy: mid - (theirs.bottom + mine.top) / 2, conic: /conic-gradient/.test(bg), colors: new Set(bg.match(/(rgba?|color|oklab|oklch|lab)\([^)]*\)/g) || []).size,
+    const center = r.left + r.width / 2;
+    const totals = [...el.querySelectorAll(".cm-board-pie-life")].map((b) => {const q = b.getBoundingClientRect(); return {seat: b.dataset.seat, n: b.textContent, left: q.left + q.width / 2 < center, pill: life(b.dataset.seat)};});
+    return {dx: center - (theirs.right + mine.left) / 2, dy: mid - (mine.top + mine.bottom) / 2, conic: /conic-gradient/.test(bg), colors: new Set(bg.match(/(rgba?|color|oklab|oklch|lab)\([^)]*\)/g) || []).size,
       totals, logo: !!el.querySelector(".cm-board-center img"), round: Math.abs(r.width - r.height) < 1};
   });
-  ok(Math.abs(pie.dx) < 2 && Math.abs(pie.dy) < 2 && pie.round && pie.logo, `the life counter sits at the true center, between the rows and across the middle, the logo in it (${pie.dx.toFixed(1)}, ${pie.dy.toFixed(1)})`);
-  ok(pie.conic && pie.colors >= 2 && pie.totals.length === 2 && pie.totals.every((t) => t.n === t.pill) && pie.totals.find((t) => t.seat === "1").above && !pie.totals.find((t) => t.seat === "0").above,
-    `a slice per seat, each its own color, its life on it: Maya's on the top half over her board, Rob's on the bottom (${pie.totals.map((t) => `${t.seat}:${t.n}`).join(", ")}; ${pie.colors} colors)`);
+  ok(Math.abs(pie.dx) < 2 && Math.abs(pie.dy) < 2 && pie.round && pie.logo, `the life counter sits at the true center, between the boards and halfway down them, the logo in it (${pie.dx.toFixed(1)}, ${pie.dy.toFixed(1)})`);
+  ok(pie.conic && pie.colors >= 2 && pie.totals.length === 2 && pie.totals.every((t) => t.n === t.pill) && pie.totals.find((t) => t.seat === "1").left && !pie.totals.find((t) => t.seat === "0").left,
+    `a slice per seat, each its own color, its life on it: Maya's on the left half beside her board, Rob's on the right (${pie.totals.map((t) => `${t.seat}:${t.n}`).join(", ")}; ${pie.colors} colors)`);
   /* The pile cards on top of their frames, over the frame's lines; the reminder below the Lands. */
   const pileOver = (page, q) => page.evaluate((sel) => {
     const f = document.querySelector(sel), c = f.querySelector(".cm-bcard"), fr = f.getBoundingClientRect(), cr = c.getBoundingClientRect();
@@ -482,24 +485,25 @@ try {
   const chip = await rob.page.evaluate(() => {const m = document.querySelector(".cm-board-table .cm-seatboard.is-you"), l = m.querySelector("[data-zone=lands]"), c = m.querySelector(".cm-board-chip"), lr = l.getBoundingClientRect(), cr = c.getBoundingClientRect();
     return {inside: l.contains(c), below: cr.top - lr.bottom, right: Math.abs(cr.right - lr.right), text: c.textContent};});
   ok(!chip.inside && chip.below >= 0 && chip.below < 8 && chip.right < 2, `the mana and land-drop reminder sits directly outside and below the Lands frame, at its right ("${chip.text}", ${chip.below.toFixed(1)}px below)`);
-  /* The bar between the rows: dragged down, Maya's row grows and Rob's gives way; both stay 16:9. */
+  /* The bar between the boards: dragged right, Maya's board grows and Rob's gives way; both stay 16:9. */
   const geoT = () => rob.page.evaluate(() => {
     const r = (q) => document.querySelector(q).getBoundingClientRect(), theirs = r(".cm-board-table .cm-seatboard:not(.is-you)"), mine = r(".cm-board-table .cm-seatboard.is-you");
     const pie = r(".cm-board-table > .cm-board-pie"), bar = r(".cm-board-rowbar");
     return {tw: theirs.width, th: theirs.height, mw: mine.width, mh: mine.height, trayTop: r(".cm-board-hand").top, hand: parseFloat(getComputedStyle(document.querySelector(".cm-board-hand .cm-board-hand-cards .cm-bcard")).width),
-      centered: Math.abs(pie.top + pie.height / 2 - (theirs.bottom + mine.top) / 2) < 2 && Math.abs(bar.top + bar.height / 2 - (theirs.bottom + mine.top) / 2) < 2};
+      centered: Math.abs(pie.left + pie.width / 2 - (theirs.right + mine.left) / 2) < 2 && Math.abs(bar.left + bar.width / 2 - (theirs.right + mine.left) / 2) < 2,
+      scrolls: document.getElementById("cm-board").scrollHeight - document.getElementById("cm-board").clientHeight};
   });
   const rowsKept = () => rob.page.evaluate(() => localStorage.getItem("cm-board-rows"));
   const even = await geoT();
   const rowGrip = await rob.page.locator(".cm-board-rowbar [data-drag=rows]").boundingBox();
-  await rob.page.mouse.move(rowGrip.x + 40, rowGrip.y + rowGrip.height / 2);
+  await rob.page.mouse.move(rowGrip.x + rowGrip.width / 2, rowGrip.y + 40);
   await rob.page.mouse.down();
-  await rob.page.mouse.move(rowGrip.x + 40, rowGrip.y + rowGrip.height / 2 + 40, {steps: 4});
-  await rob.page.mouse.move(rowGrip.x + 40, rowGrip.y + rowGrip.height / 2 + 80, {steps: 4});
+  await rob.page.mouse.move(rowGrip.x + rowGrip.width / 2 + 40, rowGrip.y + 40, {steps: 4});
+  await rob.page.mouse.move(rowGrip.x + rowGrip.width / 2 + 80, rowGrip.y + 40, {steps: 4});
   await rob.page.mouse.up();
   const dragged = await geoT(), share = Number(await rowsKept());
   ok(dragged.tw > even.tw + 20 && dragged.mw < even.mw - 20 && Math.abs(dragged.tw / dragged.th - 16 / 9) < 0.02 && Math.abs(dragged.mw / dragged.mh - 16 / 9) < 0.02 && share > 0.55 && dragged.centered,
-    `the bar between the rows drags: 80px down, Maya's row grows and Rob's gives way, both still 16:9, the bar and the life counter kept between them (${even.tw.toFixed(0)} → ${dragged.tw.toFixed(0)}px over ${even.mw.toFixed(0)} → ${dragged.mw.toFixed(0)}px; share ${share})`);
+    `the bar between the boards drags: 80px right, Maya's board grows and Rob's gives way, both still 16:9, the bar and the life counter kept between them (${even.tw.toFixed(0)} → ${dragged.tw.toFixed(0)}px over ${even.mw.toFixed(0)} → ${dragged.mw.toFixed(0)}px; share ${share})`);
   await rob.page.click("[data-action=board-view][data-view=focus]");
   await rob.page.locator(".cm-board-mat").waitFor();
   const libF = await pileOver(rob.page, ".cm-board-mat [data-zone=library]");
@@ -507,15 +511,17 @@ try {
   await rob.page.click("[data-action=board-view][data-view=table]");
   await rob.page.locator(".cm-board-table .cm-seatboard").nth(1).waitFor();
   const redrawn = await geoT();
-  ok(Math.abs(redrawn.tw - dragged.tw) < 1 && Math.abs(redrawn.mw - dragged.mw) < 1 && Number(await rowsKept()) === share, "and the share is remembered on the device: the Table view drawn again keeps the rows as they were left");
+  ok(Math.abs(redrawn.tw - dragged.tw) < 1 && Math.abs(redrawn.mw - dragged.mw) < 1 && Number(await rowsKept()) === share, "and the share is remembered on the device: the Table view drawn again keeps the boards as they were left");
   await rob.page.focus(".cm-board-rowbar [data-drag=rows]");
-  for (let i = 0; i < 20; i += 1) await rob.page.keyboard.press("ArrowUp");
+  for (let i = 0; i < 20; i += 1) await rob.page.keyboard.press("ArrowLeft");
   const keyed = await geoT(), low = Number(await rowsKept());
-  ok(low === 0.3 && keyed.tw < keyed.mw && (await rob.page.getAttribute(".cm-board-rowbar [data-drag=rows]", "aria-valuenow")) === "30", `the arrow keys move it too, and it stops at 30% of the height (${low})`);
-  for (let i = 0; i < 10; i += 1) await rob.page.keyboard.press("ArrowDown");
+  ok(low === 0.3 && keyed.tw < keyed.mw && (await rob.page.getAttribute(".cm-board-rowbar [data-drag=rows]", "aria-valuenow")) === "30", `the arrow keys move it too, ← and → as it stands, and it stops at 30% of the width (${low})`);
+  for (let i = 0; i < 10; i += 1) await rob.page.keyboard.press("ArrowRight");
   const back = await geoT();
   ok(Number(await rowsKept()) === 0.5 && Math.abs(back.tw - back.mw) < 1 && Math.abs(back.tw - even.tw) < 1, "and back at half, the boards are identical again");
-  /* The bar atop the hand tray: dragged up, the hand's cards grow and every board gives way alike. */
+  /* The bar atop the hand tray: dragged up, the hand's cards grow, and the boards keep their size (Rob, 2026-10-09: "Card
+     hand size should never decrease the board size. The user would just scroll down on the window to see the full card
+     if it goes below the bottom"): the hand runs on below the window, and the board scrolls down to it. */
   const trayGrip = await rob.page.locator(".cm-board-traybar [data-drag=hand]").boundingBox();
   await rob.page.mouse.move(trayGrip.x + 40, trayGrip.y + trayGrip.height / 2);
   await rob.page.mouse.down();
@@ -523,8 +529,8 @@ try {
   await rob.page.mouse.move(trayGrip.x + 40, trayGrip.y + trayGrip.height / 2 - 40, {steps: 3});
   await rob.page.mouse.up();
   const grown = await geoT(), handOut = (await text(rob.page, ".cm-board-traybar output")).trim();
-  ok(grown.hand > even.hand * 1.2 && grown.tw < even.tw - 10 && Math.abs(grown.tw - grown.mw) < 1 && Math.abs(grown.th - grown.mh) < 1 && grown.trayTop < even.trayTop - 20 && /^1[2-9]\d%$/.test(handOut),
-    `the bar atop the hand tray drags: 40px up, the hand's cards grow (${even.hand.toFixed(0)} → ${grown.hand.toFixed(0)}px, ${handOut}) and every board gives way alike (${even.tw.toFixed(0)} → ${grown.tw.toFixed(0)}px, still identical)`);
+  ok(grown.hand > even.hand * 1.2 && Math.abs(grown.tw - even.tw) < 1 && Math.abs(grown.mw - even.mw) < 1 && Math.abs(grown.trayTop - even.trayTop) < 1 && even.scrolls <= 0 && grown.scrolls > 0 && /^1[2-9]\d%$/.test(handOut),
+    `the bar atop the hand tray drags: 40px up, the hand's cards grow (${even.hand.toFixed(0)} → ${grown.hand.toFixed(0)}px, ${handOut}), every board keeps its size (${even.tw.toFixed(0)} → ${grown.tw.toFixed(0)}px) and the tray its place, and the hand runs on ${grown.scrolls}px below the window, to scroll down to`);
   /* The three card sizes: the board's and the hand's each their own; Tools sets both to its value. */
   const sizes = () => rob.page.evaluate(() => {
     const land = document.querySelector(".cm-board-table [data-zone=lands] .cm-bcard"), board = land.closest(".cm-seatboard"), host = getComputedStyle(document.getElementById("cm-board"));
@@ -993,6 +999,25 @@ try {
     ok(g.docked && g.clear, `at ${width} the hand's tray is a full row under the mat, as wide as it, inside the window (B1, item 25), and the Lands stay clear of it`);
     ok(g.ratios.length && g.ratios.every((r) => Math.abs(r - 5 / 7) < 0.01), `at ${width} every card is 5:7 (${[...new Set(g.ratios)].join(", ")})`);
     ok(g.handWidth > g.matWidth || !g.matWidth, `at ${width} the hand's cards are larger than the mat's (${g.handWidth} > ${g.matWidth})`);
+  }
+
+  /* THE HAND NEVER TAKES THE BOARD'S ROOM, in Focus and Full screen too (Rob, 2026-10-09): Hand cards at its largest, the
+     mat keeps its size, and the hand runs on below the window, the board scrolling down to its foot. */
+  for (const v of ["focus", "full"]) {
+    if (v === "full") {await rob.page.click("[data-action=board-view][data-view=full]"); await rob.page.locator(".cm-full-mine .cm-board-hand").waitFor();}
+    const sel = v === "full" ? ".cm-full-mine > .cm-mat" : ".cm-board-mat";
+    const at = () => rob.page.evaluate((q) => {const h = document.getElementById("cm-board"), m = document.querySelector(q).getBoundingClientRect(), c = [...document.querySelectorAll(".cm-board-hand .cm-board-hand-cards .cm-bcard")].map((el) => el.getBoundingClientRect());
+      return {w: Math.round(m.width), h: Math.round(m.height), card: c.length ? Math.round(c[0].width) : 0, foot: Math.max(...c.map((r) => r.bottom)) + h.scrollTop, room: h.scrollHeight, over: h.scrollHeight - h.clientHeight};}, sel);
+    const before = await at();
+    const [, hi] = await rob.page.evaluate(() => [0, Number(document.querySelector("#cm-board [data-board-scale=hand]").max)]);
+    await rob.page.locator("#cm-board [data-board-scale=hand]").first().fill(String(hi));
+    await rob.page.waitForTimeout(300);
+    const big = await at();
+    ok(big.card > before.card * 1.2 && Math.abs(big.w - before.w) < 1 && Math.abs(big.h - before.h) < 1 && big.over > 0 && big.foot <= big.room + 1,
+      `${v === "full" ? "Full screen" : "Focus"}: Hand cards at ${hi}%, the hand's cards grow (${before.card} → ${big.card}px), the board keeps its size (${before.w}×${before.h} → ${big.w}×${big.h}), and the hand runs ${big.over}px on below the window, all of it reached by scrolling`);
+    await rob.page.evaluate(() => {document.getElementById("cm-board").scrollTop = 0; localStorage.removeItem("cm-board-scale:hand");});
+    await rob.page.locator("#cm-board [data-board-scale=hand]").first().fill(String(await rob.page.evaluate(() => Math.round(globalThis.__cm.cardScale()))));
+    if (v === "full") {await rob.page.click("[data-action=board-view][data-view=focus]"); await rob.page.locator(".cm-board-mat").waitFor();}
   }
 
   /* THE ACCESSIBILITY PASS (docs/plan-to-done-2026-09-30.md Part 6). WORDS OVER ARTWORK: a mat can be any picture, so

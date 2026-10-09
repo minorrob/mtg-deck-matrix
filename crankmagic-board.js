@@ -136,8 +136,11 @@ globalThis.CrankBoard = Object.freeze({
   const away = new Map();   /* seat number -> until, from the table and from the room's "away" frames */
   let attached = false;     /* the table page is showing the board (the board can hold a game with the page elsewhere) */
   /* THE TABLE VIEW'S TWO BARS AND THE THREE CARD SIZES (items 4-6). The bar between the rows shares the tabletop's
-     height between the other seats' row and yours; the bar atop the hand tray is the hand's size, and the boards take
-     what it leaves them, all alike. The Tools slider is the table's card size; the board's cards and the hand's each
+     height between the other seats' row and yours -- with two seats side by side, the width between the two boards
+     (Rob, 2026-10-09) -- and the bar atop the hand tray is the hand's size. The hand never takes the boards' room (Rob,
+     2026-10-09: "Card hand size should never decrease the board size. The user would just scroll down on the window to
+     see the full card if it goes below the bottom"): the boards are fitted with room for a hand at the table's card
+     size, and a larger hand runs on below them, the board scrolling down to it. The Tools slider is the table's card size; the board's cards and the hand's each
      have their own, on those two bars, and moving Tools sets both to its value (Rob's rule). All of it is remembered
      on this device, as the card size is. */
   /* HOLD PRIORITY AFTER A CAST (Rob, 2026-10-09: "When I play a card to the board from my hand, I don't want to have to
@@ -572,20 +575,24 @@ globalThis.CrankBoard = Object.freeze({
   }
 
   /* THE TABLE VIEW: every board at once, you at the bottom right and the others round from the top left (the
-     handoff's "seats 2 · 3 / 4 · 1"). Fewer seats, fewer boards: two stack, three put you across the foot. The
+     handoff's "seats 2 · 3 / 4 · 1"). Fewer seats, fewer boards: two sit side by side, yours on the right, each the
+     height of the table (Rob, 2026-10-09: "In 2-player, the screen should split down the middle vertically, not
+     horizontally, thereby increasing play surface for each board on a landscape screen"); three put you across the foot. The
      boards are 16:9 tracks sized to the window (fit()), alike in a row; the bar between the rows shares the height
      (item 4), identical boards until it is moved. At the true center, the life counter (item 9). */
   function tableView() {
     const ps = players(), n = ps.length, active = view.state.turnPlayerId;
-    const bottom = n === 2 ? ["b"] : ["c", "d"];
-    const boards = ps.map((p) => {const area = areaOf(p.playerId), low = bottom.includes(area); return `<div class="cm-board-slot" data-area="${area}" style="grid-area:${area};--row-w:var(${low ? "--bot-w" : "--top-w"})">${mat(p, {size: "table", head: low ? "bottom" : "top", focusButton: true})}</div>`;}).join("");
-    const rows = `<div class="cm-board-rowbar">${grip("rows", "The rows' sizes: drag, or use the arrow keys", Math.round(rowShare() * 100), [ROWS[0] * 100, ROWS[1] * 100])}${scaleSlider("board", "Board cards")}</div>`;
+    const side = n === 2, bottom = side ? ["b"] : ["c", "d"];
+    const boards = ps.map((p) => {const area = areaOf(p.playerId), low = bottom.includes(area); return `<div class="cm-board-slot" data-area="${area}" style="grid-area:${area};--row-w:var(${low ? "--bot-w" : "--top-w"})">${mat(p, {size: "table", head: low && !side ? "bottom" : "top", focusButton: true})}</div>`;}).join("");
+    const rows = side
+      ? `<div class="cm-board-rowbar is-upright">${grip("rows", "The boards' widths: drag, or use the arrow keys", Math.round(rowShare() * 100), [ROWS[0] * 100, ROWS[1] * 100], "vertical")}${scaleSlider("board", "Board cards")}</div>`
+      : `<div class="cm-board-rowbar">${grip("rows", "The rows' sizes: drag, or use the arrow keys", Math.round(rowShare() * 100), [ROWS[0] * 100, ROWS[1] * 100])}${scaleSlider("board", "Board cards")}</div>`;
     return `<div class="cm-board-tabletop"><div class="cm-board-table" data-seats="${n}">${active === null ? "" : fan(active)}${boards}${rows}${counter()}</div>${ask()}</div>${hand()}`;
   }
   /* THE LIFE COUNTER at the true center (item 9; wireframe 2e's counter()): a slice per seat in its color, on the side
      its board sits -- four quarters, three thirds, two halves -- its life on it, and the logo in the middle, which
      opens Table vitals. Degrees run clockwise from twelve o'clock, as a conic gradient draws them. */
-  const SLICES = {4: {b: [0, 90], d: [90, 180], c: [180, 270], a: [270, 360]}, 3: {b: [0, 120], c: [120, 240], a: [240, 360]}, 2: {b: [90, 270], a: [270, 450]}};
+  const SLICES = {4: {b: [0, 90], d: [90, 180], c: [180, 270], a: [270, 360]}, 3: {b: [0, 120], c: [120, 240], a: [240, 360]}, 2: {b: [0, 180], a: [180, 360]}};
   function counter() {
     const ps = players(), cut = SLICES[ps.length] || SLICES[4];
     const parts = ps.map((p) => ({p, at: cut[areaOf(p.playerId)]})).filter((x) => x.at).sort((x, y) => x.at[0] - y.at[0]);
@@ -823,7 +830,7 @@ globalThis.CrankBoard = Object.freeze({
     const mine = players()[view.seat];
     if (!mine) return "";
     const cards = mine.zones.Hand.cards;
-    const bar = `<div class="cm-board-traybar">${grip("hand", "The hand's size: drag to resize the boards, or use the arrow keys", scaleOf("hand"), C.cardScaleRange())}${scaleSlider("hand", "Hand cards")}</div>`;
+    const bar = `<div class="cm-board-traybar">${grip("hand", "The hand's size: drag, or use the arrow keys; the boards keep theirs", scaleOf("hand"), C.cardScaleRange())}${scaleSlider("hand", "Hand cards")}</div>`;
     return `<section class="cm-board-hand" aria-label="Your hand">${bar}<div class="cm-board-hand-side"><span class="cm-board-hand-head"><button type="button" class="cm-board-showhand" data-action="board-show-hand" aria-label="Show hand (Space)" title="Show hand (Space)" aria-pressed="${!!showing}">✋</button><b class="cm-board-hand-count" aria-label="${cards.length} ${cards.length === 1 ? "card" : "cards"} in your hand">${cards.length}</b></span>${handTypes(cards)}</div>
       <div class="cm-board-hand-cards cm-board-cards">${cards.map((c) => card(c, {where: "hand"})).join("")}</div></section>`;
   }
@@ -1078,20 +1085,45 @@ globalThis.CrankBoard = Object.freeze({
     try {
       const host = document.getElementById("cm-board");
       if (!host || !view) return;
+      /* The hand's tray as it would be at the table's card size (Tools): the room the boards leave it, whatever size the
+         hand is now (Rob, 2026-10-09). A larger hand runs on below; a smaller one leaves the boards where they are. */
+      const atTableSize = (el, measure) => {
+        el.style.setProperty("--hand-scale", String(C.cardScale() / 100));
+        try {return measure();} finally {el.style.removeProperty("--hand-scale");}
+      };
       const tbl = host.querySelector(".cm-board-table");
       if (tbl) {
-        /* Each row the largest 16:9 its share of the height allows (item 4), no wider than a column; the bar and the
-           life counter sit in the gap between the rows, at the true center. */
-        const n = Number(tbl.dataset.seats) || 4, cols = n === 2 ? 1 : 2, gaps = getComputedStyle(tbl);
+        const tray = host.querySelector(":scope > .cm-board-hand");
+        const reserve = tray ? atTableSize(tray, () => Math.ceil(tray.getBoundingClientRect().height)) : 0;
+        host.style.setProperty("--tabletop-h", `${Math.max(240, host.clientHeight - 48 - reserve)}px`);
+        const n = Number(tbl.dataset.seats) || 4, gaps = getComputedStyle(tbl);
         const gx = parseFloat(gaps.columnGap) || 14, gy = parseFloat(gaps.rowGap) || 22;
-        const box = tbl.getBoundingClientRect(), room = box.height - gy, col = (box.width - gx * (cols - 1)) / cols, share = rowShare();
-        const widest = (part) => Math.max(160, Math.floor(Math.min(col, part * room * 16 / 9)));
-        const top = widest(share), bot = widest(1 - share), used = (top + bot) * 9 / 16 + gy;
-        tbl.style.setProperty("--top-w", `${top}px`);
-        tbl.style.setProperty("--bot-w", `${bot}px`);
-        tbl.style.setProperty("--board-w", `${Math.max(top, bot)}px`);
-        tbl.style.setProperty("--grid-w", `${Math.round(Math.max(top, bot) * cols + gx * (cols - 1))}px`);
-        tbl.style.setProperty("--mid-y", `${Math.round((box.height - used) / 2 + top * 9 / 16 + gy / 2)}px`);
+        const box = tbl.getBoundingClientRect(), share = rowShare();
+        if (n === 2) {
+          /* Two seats, side by side: each the largest 16:9 its share of the width allows, no taller than the table; the
+             bar and the life counter in the gap between them, at the true center. */
+          const room = box.width - gx, widest = (part) => Math.max(160, Math.floor(Math.min(part * room, box.height * 16 / 9)));
+          const left = widest(share), right = widest(1 - share), used = left + right + gx;
+          tbl.style.setProperty("--top-w", `${left}px`);
+          tbl.style.setProperty("--bot-w", `${right}px`);
+          tbl.style.setProperty("--board-w", `${Math.max(left, right)}px`);
+          tbl.style.setProperty("--grid-w", `${Math.round(used)}px`);
+          tbl.style.setProperty("--grid-h", `${Math.round(Math.max(left, right) * 9 / 16)}px`);
+          tbl.style.setProperty("--mid-x", `${Math.round((box.width - used) / 2 + left + gx / 2)}px`);
+          tbl.style.setProperty("--mid-y", `${Math.round(box.height / 2)}px`);
+        } else {
+          /* Each row the largest 16:9 its share of the height allows (item 4), no wider than a column; the bar and the
+             life counter sit in the gap between the rows, at the true center. */
+          const room = box.height - gy, col = (box.width - gx) / 2;
+          const widest = (part) => Math.max(160, Math.floor(Math.min(col, part * room * 16 / 9)));
+          const top = widest(share), bot = widest(1 - share), used = (top + bot) * 9 / 16 + gy;
+          tbl.style.setProperty("--top-w", `${top}px`);
+          tbl.style.setProperty("--bot-w", `${bot}px`);
+          tbl.style.setProperty("--board-w", `${Math.max(top, bot)}px`);
+          tbl.style.setProperty("--grid-w", `${Math.round(Math.max(top, bot) * 2 + gx)}px`);
+          tbl.style.setProperty("--mid-x", `${Math.round(box.width / 2)}px`);
+          tbl.style.setProperty("--mid-y", `${Math.round((box.height - used) / 2 + top * 9 / 16 + gy / 2)}px`);
+        }
       }
       const stage = host.querySelector(".cm-board-stage");
       if (stage) {
@@ -1101,7 +1133,8 @@ globalThis.CrankBoard = Object.freeze({
            and a last step makes sure the pair fits the window, since a narrower mat never needs a taller tray. */
         const main = stage.parentElement, box = main.getBoundingClientRect(), tray = main.querySelector(":scope > .cm-board-hand"), GAP = 8;
         const widest = (trayH) => Math.max(320, Math.floor(Math.min(box.width - 16, (box.height - 8 - GAP - trayH) * 16 / 9)));
-        const trayAt = (w) => {main.style.setProperty("--mat-w", `${w}px`); return tray ? tray.getBoundingClientRect().height : 0;};
+        /* the tray measured at the table's card size: the hand's own size never moves the mat (Rob, 2026-10-09) */
+        const trayAt = (w) => {main.style.setProperty("--mat-w", `${w}px`); return tray ? atTableSize(main, () => tray.getBoundingClientRect().height) : 0;};
         let matW = widest(0);
         for (let k = 0; k < 4; k += 1) {const next = widest(trayAt(matW)); if (Math.abs(next - matW) < 1) break; matW = next;}
         const trayH = trayAt(matW);
@@ -1113,10 +1146,16 @@ globalThis.CrankBoard = Object.freeze({
       if (big) {
         /* The hand is whole (item 25): the tray is a full row along the big board's foot, the board keeping that much
            clear under its Lands, and its cards no taller than a third of the big board leaves room for. */
-        const bigBox = big.getBoundingClientRect(), scale = scaleOf("hand") / 100;
+        const bigBox = big.getBoundingClientRect(), scale = scaleOf("hand") / 100, ref = C.cardScale() / 100;
         big.style.setProperty("--full-w", `${Math.round(bigBox.width)}px`);
-        big.style.setProperty("--hc", `${Math.round(Math.min(112 * scale, Math.max(56, (bigBox.height * .36 - 22) * 5 / 7)))}px`);
-        const tray = big.querySelector(":scope > .cm-board-hand"), trayH = tray ? Math.ceil(tray.getBoundingClientRect().height) : 0;
+        /* At the table's card size the hand fits under the big board, its cards no taller than a third of it; the room it
+           takes then is the room the board keeps for it. A hand made larger than that grows past the window's foot, the
+           board scrolling down to it, and never squeezes the board (Rob, 2026-10-09). */
+        const fitted = Math.min(112 * ref, Math.max(56, (bigBox.height * .36 - 22) * 5 / 7));
+        const tray = big.querySelector(":scope > .cm-board-hand");
+        big.style.setProperty("--hc", `${Math.round(fitted)}px`);
+        const trayH = tray ? Math.ceil(tray.getBoundingClientRect().height) : 0;
+        big.style.setProperty("--hc", `${Math.round(fitted * scale / ref)}px`);
         big.style.setProperty("--tray-h", `${trayH}px`);
         /* and the board's own cards no larger than its two rows of piles can stand in what is left above the tray:
            two card-height rows (5:7, with the pad) and their captions, under the 52px the pill takes. */
@@ -1584,8 +1623,10 @@ globalThis.CrankBoard = Object.freeze({
       drag = {kind, y: event.clientY, from: splitOf(kind), per: Math.max(1, col ? col.getBoundingClientRect().height : 600)};
     } else if (kind === "rows") {
       if (!tbl) return;
-      const room = tbl.getBoundingClientRect().height - (parseFloat(getComputedStyle(tbl).rowGap) || 22);
-      drag = {kind, y: event.clientY, from: rowShare(), per: Math.max(1, room)};
+      /* Two seats side by side: the bar between them moves sideways, the left board's share of the width. */
+      const side = tbl.dataset.seats === "2", r = tbl.getBoundingClientRect(), gaps = getComputedStyle(tbl);
+      const room = side ? r.width - (parseFloat(gaps.columnGap) || 14) : r.height - (parseFloat(gaps.rowGap) || 22);
+      drag = {kind, x: event.clientX, y: event.clientY, from: rowShare(), per: Math.max(1, room), side};
     } else {
       const c = document.querySelector("#cm-board .cm-board-hand .cm-board-hand-cards .cm-bcard"), s = scaleOf("hand");
       drag = {kind, y: event.clientY, from: s, per: Math.max(40, c ? c.getBoundingClientRect().height / (s / 100) : 104)};
@@ -1597,7 +1638,7 @@ globalThis.CrankBoard = Object.freeze({
     if (drag.kind === "pane") {setPane(drag.from + event.clientX - drag.x); return;}
     const dy = event.clientY - drag.y;
     if (drag.kind === "panel" || drag.kind === "side") setSplit(drag.kind, drag.from + dy / drag.per);
-    else if (drag.kind === "rows") setRows(drag.from + dy / drag.per);
+    else if (drag.kind === "rows") setRows(drag.from + (drag.side ? event.clientX - drag.x : dy) / drag.per);
     else setScale("hand", drag.from - dy / drag.per * 100);
   });
   const endDrag = () => {if (drag) {drag = null; document.documentElement.classList.remove("cm-dragging");}};
@@ -1609,6 +1650,11 @@ globalThis.CrankBoard = Object.freeze({
     if (el.dataset.drag === "pane") {
       if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
       event.preventDefault(); setPane(paneWidth() + (event.key === "ArrowRight" ? 20 : -20)); return;
+    }
+    /* The upright bar between two boards side by side moves with ← and →, as it looks. */
+    if (el.dataset.drag === "rows" && el.getAttribute("aria-orientation") === "vertical") {
+      if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+      event.preventDefault(); setRows(rowShare() + (event.key === "ArrowRight" ? 0.02 : -0.02)); return;
     }
     if (!["ArrowUp", "ArrowDown"].includes(event.key)) return;
     event.preventDefault();
