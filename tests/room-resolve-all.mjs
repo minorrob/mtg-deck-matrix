@@ -14,7 +14,8 @@
  *             did not ask for it (one made before it) offers nothing new.
  *   Taken     one answer, and the room passes for the person through that run only: each trigger resolves, the person
  *             is asked nothing until the run is gone, and the history says it once.
- *   Bounded   anything else on top -- another player's ability -- and the person is asked again, the shortcut gone.
+ *   Bounded   anything else on top -- another player's ability -- and the person is asked again, the shortcut gone; and
+ *             no more passes than the run held when it was chosen.
  *   Kept      a room woken from storage in the middle of a run goes on the same way, and the game replays from its
  *             seed and tape to the same game.
  *   Board     the strip draws Resolve all beside the pass, and its click sends that option; the stack shows the run as one
@@ -177,6 +178,21 @@ let room = await untilRobsDen(storage, true);
 }
 ok((await replayMatch({storage, matchId: "resolve", cards})).same, "the game woken mid-run replays from its seed and tape to the same game");
 
+/* 3b. NO MORE PASSES THAN WERE THERE: the room keeps how many are left with its record, so a run that grew while it
+   resolved could never keep a person passing for good. With none left, Rob is asked about the next one again. */
+{
+  const s3 = memoryStorage(), r3 = await untilRobsDen(s3, true);
+  await answer(r3, "rob", [r3.view("rob").decision.options.find((o) => o.act === "resolve-all").index]);
+  const record = JSON.parse(await s3.get("room/resolve"));
+  eq(record.standing, {0: {key: record.standing[0]?.key, left: 2}}, "taken for three, the room holds two more passes for Rob, saved with its record");
+  record.standing[0].left = 0;
+  await s3.put("room/resolve", JSON.stringify(record));
+  const r4 = await openRoom({storage: s3, matchId: "resolve", cards});
+  await answer(r4, "maya", [r4.view("maya").decision.options.find((o) => o.act === "pass").index]);
+  const v = r4.view(r4.waitingOn);
+  eq([v.seatId, v.state.stack.length, v.decision.options.find((o) => o.act === "resolve-all")?.label], ["rob", 2, "Resolve all 2"], "with none left, Rob is asked about the next of the run, and offered Resolve all for the two still there");
+}
+
 /* 4. THE BOARD: Rob against an AI seat; his priority with the run on the stack, in the browser. */
 const ROB = "rob@example.com";
 let clock = Date.parse("2026-10-09T18:00:00Z");
@@ -263,6 +279,8 @@ try {
   const line = page.locator(".cm-board-stack li").first();
   eq([await page.locator(".cm-board-stack li").count(), (await line.textContent()).replace(/\s+/g, " ").trim().startsWith("Alarm Field ×3")], [1, true], "the stack shows the run as one line, Alarm Field ×3");
   /* "You can also" is for what else there is to do; Resolve all is beside the pass, not in it. */
+  const others = latest.decision.options.filter((o) => o.act !== "pass" && o.act !== "resolve-all").length;
+  eq(await page.locator(".cm-board-strip [data-action=board-also]").count() > 0, others > 0, `You can also shows only for what else there is (${others} other options): Resolve all is not counted in it`);
   if (await page.locator("[data-action=board-also]").count()) {
     await page.click("[data-action=board-also]");
     eq(await page.locator(".cm-board-also [data-action=board-option]", {hasText: "Resolve all"}).count(), 0, "and it is not listed again under You can also");
