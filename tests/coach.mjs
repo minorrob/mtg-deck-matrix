@@ -144,7 +144,7 @@ const fetchImpl = async (url, init = {}) => {
 };
 const DB = d1();
 const TABLES = {idFromName: (n) => n, get: (name) => ({fetch: (req) => (name === TABLE ? serial(() => table.fetch(req)) : Promise.resolve(new Response(JSON.stringify({error: "There is no such table."}), {status: 404})))})};
-const OPEN = {DB, TABLES, ACCESS_TEAM_DOMAIN: TEAM, ACCESS_AUD: "aud-library", AI_ACCESS_AUD: AI_AUD, ANTHROPIC_API_KEY: "sk-test-not-a-real-key", AI_CAP_PERSON_CENTS: "25", AI_CAP_TOTAL_CENTS: "100", AI_MODEL: "claude-haiku-5-5", AI_COACH: "on"};
+const OPEN = {DB, TABLES, ACCESS_TEAM_DOMAIN: TEAM, ACCESS_AUD: "aud-library", AI_ACCESS_AUD: AI_AUD, ANTHROPIC_API_KEY: "a-stand-in-key", AI_CAP_PERSON_CENTS: "25", AI_CAP_TOTAL_CENTS: "100", AI_MODEL: "claude-haiku-5-5", AI_COACH: "on"};
 async function ask({env = OPEN, body = {tableId: TABLE, question: "What's my best play?"}, method = "POST", path = "/api/ai/coach", email = ROB} = {}) {
   const init = {method, headers: {"cf-access-jwt-assertion": await token(email), "content-type": "application/json", "x-crankmagic": "ai"}};
   if (method !== "GET") init.body = JSON.stringify(body);
