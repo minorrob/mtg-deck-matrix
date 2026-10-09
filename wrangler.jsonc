@@ -33,7 +33,8 @@
     "AI_ACCESS_AUD": "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db",
     "AI_CAP_TOTAL_CENTS": "300",
     "AI_CAP_PERSON_CENTS": "300",
-    "AI_MODEL": "claude-haiku-5-5"
+    "AI_MODEL": "claude-haiku-5-5",
+    "AI_COACH": "on"
   },
   "ratelimits": [
     {
