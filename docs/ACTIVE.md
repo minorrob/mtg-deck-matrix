@@ -17,7 +17,7 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | --- | --- | --- |
 | G-A: G1, 1,400 games | 1,398 clean; 2 wait | PR #679. The two are pod 5's huge boards (Krenko and Intruder Alarm): **Rob** picks the large-board answer (a "resolve all / repeat N" shortcut recommended) |
 | G-A: the AI program (AI-1 to AI-6), X13 | not built | the AI door, D12: **Rob** |
-| G-B: the whole gate green twice on main | once; the second running | dispatched Tests runs on main: 2499 on def8fa89 green; the second on eff40fdc |
+| G-B: the whole gate green twice on main | done | dispatched Tests runs on main, every suite: 2499 on def8fa89 and 2503 on eff40fdc, both green |
 | G-B: `play-e2e` under wrangler dev | done | 35 checks at every staging release |
 | G-B: hidden information in every frame | done | `play-journeys` reads every frame to both people; G1's oracle 102,879 checks, no leak |
 | G-B: the five-second rule | in this container only | `play-journeys` median 280 ms, longest 1.0 s; G1 99th percentile 1.84 s. Over the network needs a browser on a real network: **Rob** or Grok Bot |
