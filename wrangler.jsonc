@@ -1,7 +1,7 @@
 {
   "name": "crankmagic-staging",
   "main": "cloud/play-worker.mjs",
-  "compatibility_date": "2026-10-08",
+  "compatibility_date": "2026-10-09",
   "assets": {
     "directory": "./",
     "binding": "ASSETS",
@@ -29,7 +29,11 @@
     "ACCESS_TEAM_DOMAIN": "crankmagic.cloudflareaccess.com",
     "ACCESS_AUD": "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5",
     "PLAYTEST_TABLES": "on",
-    "SERVICE_SEATS": "on"
+    "SERVICE_SEATS": "on",
+    "AI_ACCESS_AUD": "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db",
+    "AI_CAP_TOTAL_CENTS": "300",
+    "AI_CAP_PERSON_CENTS": "300",
+    "AI_MODEL": "claude-haiku-5-5"
   },
   "ratelimits": [
     {

@@ -141,7 +141,7 @@ export async function handle(request, env, deps = {}) {
     if (method === "DELETE" && path === "/api/account") {
       const input = await body(request);
       if (String(input.confirm || "").trim().toLowerCase() !== person.email) return reply(400, {error: "Type the address you are signed in as to delete this account. Nothing was deleted."});
-      return reply(200, {deleted: {email: person.email, ...await library.forget(person.id)}});
+      return reply(200, {deleted: {email: person.email, ...await library.forget(person.id, person.email)}});
     }
     const version = /^\/api\/library\/versions\/([0-9a-f-]{36})$/.exec(path);
     if (method === "GET" && version) {
