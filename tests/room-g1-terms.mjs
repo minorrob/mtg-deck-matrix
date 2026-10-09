@@ -31,7 +31,7 @@ import {createJournal, EVENT_SCHEMA, hashState} from "../game/engine/journal.mjs
 import {beginResolution, runResolution} from "../game/engine/script/resolution.mjs";
 import {createRng} from "../game/engine/rng.mjs";
 import {memoryStorage, createMatchStore} from "../game/engine/storage.mjs";
-import {secretsFor, leaksIn, gameTerms, checkLeaks, leakMemory, shownBy, playGame, verdict, decksFromBackup, person, LOOP_LIMIT} from "../tools/fuzz-live.mjs";
+import {secretsFor, leaksIn, gameTerms, checkLeaks, leakMemory, shownBy, playGame, verdict, decksFromBackup, person, LOOP_LIMIT, BOARD_LIMIT} from "../tools/fuzz-live.mjs";
 import {tableCards} from "../cloud/game-room.mjs";
 
 let checks = 0;
@@ -169,6 +169,11 @@ const card = (name, owner, extra = {}) => ({card: name, types: ["Creature"], pow
   ok(answer.stopped > 0, "and says it stopped going round");
   eq(taken(34, "activate"), LOOP_LIMIT, "a new turn, a new count");
   ok(taken(34, "activate-mana") > LOOP_LIMIT, "a mana ability is never what it stops: one land is tapped once anyway");
+  /* Rob, 2026-10-09: "half of the board you were seeing would win before ever getting to that point." */
+  const board = (n) => ({seat: 0, state: {players: [{zones: {Battlefield: {count: n}}}]}});
+  const rounds = (seed, n) => {const p = person(seed); return Array.from({length: 30}, () => p(offer("activate"), 40, board(n)).indices[0]).filter((i) => i === 1).length;};
+  eq(rounds("board", BOARD_LIMIT - 1), LOOP_LIMIT, `with ${BOARD_LIMIT - 1} permanents the person still goes round, ${LOOP_LIMIT} times a turn`);
+  eq(rounds("board", BOARD_LIMIT), 0, `with ${BOARD_LIMIT} it goes round no loop: it has the game won`);
 }
 
 /* ---- Judged: a whole game of Rob's decks ---- */
