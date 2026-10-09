@@ -33,6 +33,7 @@ import {createRng} from "../game/engine/rng.mjs";
 import {memoryStorage, createMatchStore} from "../game/engine/storage.mjs";
 import {secretsFor, leaksIn, gameTerms, checkLeaks, leakMemory, shownBy, playGame, verdict, decksFromBackup, person, LOOP_LIMIT, BOARD_LIMIT} from "../tools/fuzz-live.mjs";
 import {tableCards} from "../cloud/game-room.mjs";
+import {housePilot} from "../game/engine/pilots/house-pilot.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -187,6 +188,24 @@ const card = (name, owner, extra = {}) => ({card: name, types: ["Creature"], pow
   ok(verdict(game).clean, "and the harness passes it");
   ok(!verdict({...game, leaks: [{turn: 3, seatId: "s1", name: "Sol Ring", context: "name: Sol Ring"}]}).clean, "a game with one leak fails it");
   ok(!verdict({...game, replay: {...game.replay, same: false}}).clean, "and one whose replay differs");
+}
+
+/* ---- The house pilot's quick pass (house-pilot.mjs, `passes`) is its own choice, on Rob's real cards ---- */
+{
+  let said = 0, other = 0;
+  const crossCheck = ({seat, cards}) => {
+    const pilot = housePilot({seat, cards});
+    return {...pilot, passes: undefined, choose(view, actions) {
+      const chosen = pilot.choose(view, actions);
+      if (pilot.passes(actions, view.stackSize)) {said += 1; assert.equal(chosen.kind, "pass", `seat ${seat} was said to pass, and chose ${chosen.kind} ${chosen.label ?? ""}`);}
+      else other += 1;
+      return chosen;
+    }};
+  };
+  const backup = JSON.parse(readFileSync(new URL("../data/live-state.json", import.meta.url), "utf8"));
+  const decks = decksFromBackup(backup, ["D5 Shadrix Aristocrats", "D6 Krenko Goblins", "D7 Maralen Exile Cast", "D1 Quintorius Spirits"]);
+  const game = await playGame({decks, seed: 3, cards: tableCards, pilot: crossCheck});
+  ok(game.status === "finished" && said > 200 && other > 50, `a game of four AI seats on Rob's decks (${game.turns} turns): at ${said} passes the quick check said each would pass, and its full choice passed every time; the other ${other} it worked out in full`);
 }
 
 /* ---- Saved: an effect without a sublayer has no such key, and its checkpoint reads back ---- */

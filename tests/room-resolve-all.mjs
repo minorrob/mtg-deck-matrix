@@ -14,6 +14,8 @@
  *             did not ask for it (one made before it) offers nothing new.
  *   Taken     one answer, and the room passes for the person through that run only: each trigger resolves, the person
  *             is asked nothing until the run is gone, and the history says it once.
+ *   Answered  a question each trigger of the run asks ("you may") is the person's to answer once: the room answers the
+ *             same question the same way for the rest of the run, yes or no (Rob: "Yes to all").
  *   Bounded   anything else on top -- another player's ability -- and the person is asked again, the shortcut gone; and
  *             no more passes than the run held when it was chosen.
  *   Kept      a room woken from storage in the middle of a run goes on the same way, and the game replays from its
@@ -33,7 +35,7 @@ import path from "node:path";
 import {fileURLToPath} from "node:url";
 import {memoryStorage} from "../game/engine/storage.mjs";
 import {compileScript} from "../game/engine/cards/index.mjs";
-import {startRoom, openRoom, basicCards, triggerRun} from "../game/room/room.mjs";
+import {startRoom, openRoom, basicCards, triggerRun, questionKey} from "../game/room/room.mjs";
 import {replayMatch} from "../game/room/replay.mjs";
 import {GameTable} from "../cloud/game-room.mjs";
 
@@ -50,6 +52,9 @@ const land = (name, ability) => {
 };
 const DEFS = new Map([
   ["Alarm Field", land("Alarm Field", {kind: "triggered", text: "Whenever another creature enters, you gain 1 life.",
+    trigger: {on: "enters", who: "another", filter: {what: "permanent", types: ["Creature"]}}, effects: [{effect: "gainLife", amount: 1}]})],
+  /* Quest for the Goblin Lord's kind of question, once per trigger: "you may". */
+  ["Quest Field", land("Quest Field", {kind: "triggered", text: "Whenever another creature enters, you may gain 1 life.", optional: true,
     trigger: {on: "enters", who: "another", filter: {what: "permanent", types: ["Creature"]}}, effects: [{effect: "gainLife", amount: 1}]})],
   ["Goblin Den", land("Goblin Den", {kind: "activated", text: "{T}: Create three 1/1 red Goblin creature tokens.", cost: [{atom: "{T}"}],
     effects: [{effect: "createToken", count: 3, token: {name: "Goblin", types: ["Creature"], subtypes: ["Goblin"], colors: ["R"], power: 1, toughness: 1}}]})],
@@ -75,6 +80,13 @@ const WANTS = {Rob: ["Alarm Field", "Goblin Den"], Maya: ["Goblin Den"]};
   eq(triggerRun([t(1, {targets: [{kind: "player", id: 1}]}), t(2, {targets: [{kind: "player", id: 0}]})]), null, "nor the same trigger aimed elsewhere");
   eq(triggerRun([t(1, {kind: "ability"}), t(2, {kind: "ability"})]), null, "activated abilities are not triggers");
   eq(triggerRun([t(1), t(2, {stage: "targeting"})]), null, "nor is a trigger still choosing its targets");
+  /* The same question, for an answer carried through the run: its words, its mode and limits, each option's words and card. */
+  const q = (over = {}, options = [{index: 0, label: "Yes"}, {index: 1, label: "No"}]) => ({id: `c-${Math.random()}`, title: "You may gain 1 life.", mode: "one", min: 1, max: 1, options, ...over});
+  eq(questionKey(q()), questionKey(q()), "a question asked again in other words of id only is the same question");
+  ok(questionKey(q({title: "You may draw a card."})) !== questionKey(q()), "other words are another question");
+  ok(questionKey(q({mode: "many", max: 2})) !== questionKey(q()), "so is another mode or limit");
+  ok(questionKey(q({}, [{index: 0, label: "Yes"}])) !== questionKey(q()), "or other options");
+  ok(questionKey(q({}, [{index: 0, label: "Goblin", cardId: 4}])) !== questionKey(q({}, [{index: 0, label: "Goblin", cardId: 5}])), "or an option naming another card of the same name");
 }
 
 /* What one seat is asked, answered by a rule, until `until` says stop: each seat plays the lands it wants, in order, a
@@ -106,16 +118,17 @@ const life = (view, seat) => view.state.players[seat].life;
 const denOption = (view) => view.decision?.kind === "priority" && view.state.stack.length === 0 && view.decision.options.find((o) => o.act === "activate" && o.label === "Goblin Den");
 
 /* 2. THE ROOM: Rob and Maya, both people, each with an Alarm Field and a Goblin Den. */
-const pod = (resolveAll) => ({passEmpty: true, ...(resolveAll ? {resolveAll: true} : {}), seats: [{seatId: "rob", name: "Rob", pilot: "human", ...deck("Rob")}, {seatId: "maya", name: "Maya", pilot: "human", ...deck("Maya")}]});
-async function untilRobsDen(storage, resolveAll) {
-  const room = await startRoom({storage, matchId: "resolve", cards, seed: "resolve-all-1", pod: pod(resolveAll)});
+const pod = (resolveAll, field) => ({passEmpty: true, ...(resolveAll ? {resolveAll: true} : {}), seats: [{seatId: "rob", name: "Rob", pilot: "human", ...deck("Rob", [field, "Goblin Den"])}, {seatId: "maya", name: "Maya", pilot: "human", ...deck("Maya")}]});
+async function untilRobsDen(storage, resolveAll, field = "Alarm Field") {
+  WANTS.Rob = [field, "Goblin Den"];
+  const room = await startRoom({storage, matchId: "resolve", cards, seed: "resolve-all-1", pod: pod(resolveAll, field)});
   /* Both lands down for each, and then Rob's turn with the stack empty: he makes three Goblins. */
-  const ready = await walk(room, (v) => v.seatId === "rob" && v.state.turnPlayerId === v.seat && denOption(v) && onField(v, 0, "Alarm Field") && onField(v, 1, "Goblin Den"));
-  ok(ready, "Rob, on his turn, can tap Goblin Den, his Alarm Field down and Maya's Goblin Den too");
+  const ready = await walk(room, (v) => v.seatId === "rob" && v.state.turnPlayerId === v.seat && denOption(v) && onField(v, 0, field) && onField(v, 1, "Goblin Den"));
+  ok(ready, `Rob, on his turn, can tap Goblin Den, his ${field} down and Maya's Goblin Den too`);
   await answer(room, "rob", [denOption(ready).index]);
   /* Maya lets it resolve; three Goblins enter, and Rob's Alarm Field triggers three times: he orders them. */
   const asked = await walk(room, (v) => v.decision.mode === "order");
-  eq([asked.seatId, asked.decision.options.length], ["rob", 3], "three Goblins enter, and Rob orders his three Alarm Field triggers");
+  eq([asked.seatId, asked.decision.options.length], ["rob", 3], `three Goblins enter, and Rob orders his three ${field} triggers`);
   await answer(room, "rob", asked.decision.options.map((o) => o.index));
   return room;
 }
@@ -184,7 +197,7 @@ ok((await replayMatch({storage, matchId: "resolve", cards})).same, "the game wok
   const s3 = memoryStorage(), r3 = await untilRobsDen(s3, true);
   await answer(r3, "rob", [r3.view("rob").decision.options.find((o) => o.act === "resolve-all").index]);
   const record = JSON.parse(await s3.get("room/resolve"));
-  eq(record.standing, {0: {key: record.standing[0]?.key, left: 2}}, "taken for three, the room holds two more passes for Rob, saved with its record");
+  eq(record.standing, {0: {key: record.standing[0]?.key, left: 2, answers: {}}}, "taken for three, the room holds two more passes for Rob, saved with its record (and, so far, no answers to carry)");
   record.standing[0].left = 0;
   await s3.put("room/resolve", JSON.stringify(record));
   const r4 = await openRoom({storage: s3, matchId: "resolve", cards});
@@ -193,7 +206,34 @@ ok((await replayMatch({storage, matchId: "resolve", cards})).same, "the game wok
   eq([v.seatId, v.state.stack.length, v.decision.options.find((o) => o.act === "resolve-all")?.label], ["rob", 2, "Resolve all 2"], "with none left, Rob is asked about the next of the run, and offered Resolve all for the two still there");
 }
 
-/* 4. THE BOARD: Rob against an AI seat; his priority with the run on the stack, in the browser. */
+/* 3c. THE SAME ANSWER FOR THE SAME QUESTION (Rob, 2026-10-09: "Yes to all"). Quest Field's triggers each ask Rob
+   "you may gain 1 life": in the run he let resolve, he answers the first, and the room answers the rest his way. */
+async function questRun(yes) {
+  const s5 = memoryStorage(), r5 = await untilRobsDen(s5, true, "Quest Field");
+  const v = r5.view("rob"), before = life(v, 0);
+  eq(v.decision.options.find((o) => o.act === "resolve-all")?.label, "Resolve all 3", "Quest Field's three triggers are a run, offered Resolve all 3");
+  await answer(r5, "rob", [v.decision.options.find((o) => o.act === "resolve-all").index]);
+  const asks = [];
+  for (let n = 0; n < 40 && r5.waitingOn && r5.view(r5.waitingOn).state.stack.length; n += 1) {
+    const who = r5.waitingOn, d = r5.view(who).decision;
+    if (who === "maya") {await answer(r5, "maya", [d.options.find((o) => o.act === "pass").index]); continue;}
+    asks.push(d);
+    if (d.kind === "priority") break;
+    const pick = d.options.find((o) => (yes ? /^yes/i : /^no/i).test(o.label)) ?? d.options[yes ? 0 : 1];
+    await answer(r5, "rob", [pick.index]);
+  }
+  return {asks, gained: life(r5.view("rob"), 0) - before, left: r5.view("rob").state.stack.length, same: (await replayMatch({storage: s5, matchId: "resolve", cards})).same};
+}
+{
+  const yes = await questRun(true);
+  eq([yes.asks.length, yes.asks[0]?.forRun, /you may gain 1 life/i.test(yes.asks[0]?.title ?? ""), yes.gained, yes.left], [1, true, true, 3, 0],
+    "Rob is asked \"you may gain 1 life\" once, told his answer goes for the run; he says yes, and all three resolve: 3 life");
+  ok(yes.same, "and the game replays from its seed and tape, the room's answers with it");
+  const no = await questRun(false);
+  eq([no.asks.length, no.gained, no.left], [1, 0, 0], "no is carried the same way: asked once, no life gained, the run gone");
+}
+/* 4. THE BOARD: Rob against an AI seat; his priority with a run of Quest Field's triggers on the stack, in the browser. */
+WANTS.Rob = ["Quest Field", "Goblin Den"];
 const ROB = "rob@example.com";
 let clock = Date.parse("2026-10-09T18:00:00Z");
 const map = new Map(), sockets = [];
@@ -206,7 +246,7 @@ let queue = Promise.resolve();
 const serial = (fn) => (queue = queue.then(fn, fn));
 const callAt = (p, body) => serial(async () => (await table.fetch(new Request(`https://table.internal${p}`, {method: body === undefined ? "GET" : "POST", headers: {"content-type": "application/json", "x-crankmagic-email": ROB}, ...(body !== undefined ? {body: JSON.stringify(body)} : {})}))).json());
 await callAt("/table/create", {tableId: TABLE, hostName: "Rob", seats: [{kind: "ai", name: "Maya"}]});
-await callAt("/table/deck", {seatId: 0, deck: {name: "Rob's deck", ...deck("Rob")}});
+await callAt("/table/deck", {seatId: 0, deck: {name: "Rob's deck", ...deck("Rob", ["Quest Field", "Goblin Den"])}});
 await callAt("/table/deck", {seatId: 1, deck: {name: "Maya's deck", ...deck("Maya", ["Forest"])}});
 await callAt("/table/ready", {ready: true});
 await callAt("/table/start", {});
@@ -232,10 +272,10 @@ for (let i = 0; i < 3000; i += 1) {
   if (triggerRun(v.state.stack) && d.kind === "priority") break;
   if (d.mode === "order") {await send(v, d.options.map((o) => o.index)); continue;}
   if (d.kind !== "priority") {await send(v, [keepOrDraw(d)]); continue;}
-  const den = onField(v, v.seat, "Alarm Field") && onField(v, v.seat, "Goblin Den") && denOption(v);
+  const den = onField(v, v.seat, "Quest Field") && onField(v, v.seat, "Goblin Den") && denOption(v);
   await send(v, [den ? den.index : plays(v, d)]);
 }
-ok(triggerRun(latest.state.stack)?.n === 3 && latest.decision?.options.some((o) => o.act === "resolve-all"), "at the table: Rob has priority with his three Alarm Field triggers on the stack, and Resolve all is offered");
+ok(triggerRun(latest.state.stack)?.n === 3 && latest.decision?.options.some((o) => o.act === "resolve-all"), "at the table: Rob has priority with his three Quest Field triggers on the stack, and Resolve all is offered");
 const lifeBefore = latest.state.players[0].life;
 
 const {openBrowser} = await import("./uat/browser-runner.mjs");
@@ -274,10 +314,10 @@ try {
   await button.waitFor({timeout: 60000});
   eq((await button.textContent()).trim(), "Resolve all 3", "the strip draws Resolve all 3 beside the pass");
   const pass = page.locator(".cm-board-strip [data-action=board-pass]");
-  eq((await pass.textContent()).trim(), "Resolve Alarm Field", "and the pass still says it resolves the one on top");
+  eq((await pass.textContent()).trim(), "Resolve Quest Field", "and the pass still says it resolves the one on top");
   ok(await page.evaluate(() => {const a = document.querySelector(".cm-board-strip [data-action=board-pass]"), b = document.querySelector(".cm-board-strip [data-action=board-resolve-all]"); return !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);}), "Resolve all comes right after the pass");
   const line = page.locator(".cm-board-stack li").first();
-  eq([await page.locator(".cm-board-stack li").count(), (await line.textContent()).replace(/\s+/g, " ").trim().startsWith("Alarm Field ×3")], [1, true], "the stack shows the run as one line, Alarm Field ×3");
+  eq([await page.locator(".cm-board-stack li").count(), (await line.textContent()).replace(/\s+/g, " ").trim().startsWith("Quest Field ×3")], [1, true], "the stack shows the run as one line, Quest Field ×3");
   /* "You can also" is for what else there is to do; Resolve all is beside the pass, not in it. */
   const others = latest.decision.options.filter((o) => o.act !== "pass" && o.act !== "resolve-all").length;
   eq(await page.locator(".cm-board-strip [data-action=board-also]").count() > 0, others > 0, `You can also shows only for what else there is (${others} other options): Resolve all is not counted in it`);
@@ -288,12 +328,17 @@ try {
   }
   await button.click();
   await page.waitForFunction(() => !document.querySelector(".cm-board-strip [data-action=board-resolve-all]"), null, {timeout: 20000});
+  /* The first trigger asks "you may": the board says the answer goes for the run; one Yes, and the room answers the rest. */
+  const note = page.locator("#cm-board-decision .cm-board-for-run");
+  await note.waitFor({timeout: 20000});
+  ok(/your answer goes for this same question each time the run asks it/.test(await note.textContent()), "the first of the run's questions says the answer goes for the rest of the run");
+  await page.locator("#cm-board-decision [data-action=board-option]", {hasText: /^Yes/}).first().click();
   for (let i = 0; i < 200 && latest.state.stack.length; i += 1) {clock += 1000; await serial(() => table.alarm()); await page.waitForTimeout(20);}
-  eq([latest.state.stack.length, latest.state.players[0].life - lifeBefore], [0, 3], "one click: the three resolve, Rob gains 3 life, and the button is gone");
+  eq([latest.state.stack.length, latest.state.players[0].life - lifeBefore, latest.decision?.title ?? ""].map((x, i) => (i === 2 ? /you may/.test(x) : x)), [0, 3, false], "two clicks in all: Resolve all, then one Yes; the three resolve, Rob gains 3 life, and he is asked no more");
   await context.close();
 } finally {
   await close();
 }
 
-console.log(`room-resolve-all: ${checks} checks passed — a run of identical triggers on top of the stack is let resolve with one decision, through that run only, kept across a wake and replayed; the board offers it beside the pass and shows the run as one line.`);
+console.log(`room-resolve-all: ${checks} checks passed — a run of identical triggers on top of the stack is let resolve with one decision, through that run only, its same question answered once, kept across a wake and replayed; the board offers it beside the pass, shows the run as one line, and says the answer goes for the run.`);
 process.exit(0);

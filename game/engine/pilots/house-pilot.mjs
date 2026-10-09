@@ -137,6 +137,14 @@ export function housePilot({seat, cards = () => null} = {}) {
     id: HOUSE_PILOT_ID,
     seat,
 
+    /** True when `choose` would pass whatever the board: nothing on offer that it ever takes -- a land, a loyalty ability,
+        a spell, a face-down card turned up -- and no mana it would tap, which it does only in its own main phase with
+        the stack empty. The room then passes for it without working out its view (game/room/room.mjs). */
+    passes(actions, stackSize) {
+      return !actions.some((a) => a.kind === "play-land" || a.kind === "cast" || a.kind === "turn-face-up" || (a.kind === "activate" && a.loyalty !== undefined)
+        || (a.kind === "activate-mana" && stackSize === 0));
+    },
+
     /** One of the offered actions. */
     choose(view, actions) {
       const self = me(view);

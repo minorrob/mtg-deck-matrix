@@ -247,6 +247,12 @@ function priorityChoice(id, actions, state = null, seat = null) {
    them all resolve is the person's choice, as it is at a table. The seat that takes it passes for each, no more than were
    there when it chose, and is asked again as soon as anything else is on top or the stack is empty. */
 const RUN_LEAST = 2;
+/* AND THE SAME ANSWER FOR THE SAME QUESTION (Rob, 2026-10-09: "Yes to all"). A run's triggers can each ask their
+   controller the same thing -- "you may put a quest counter on this enchantment", once per Goblin. Asked during the run,
+   the person answers once; each time the very same question comes again in that run (its words, its mode and limits,
+   every option's words and card), the room gives that answer. A question that differs in any of them is asked. */
+export const questionKey = (choice) => JSON.stringify([choice.title, choice.mode, choice.min ?? null, choice.max ?? null,
+  (choice.options ?? []).map((o) => [o.label, o.cardId ?? null, o.detail ?? null])]);
 const runKey = (e) => (e && e.kind === "trigger" && e.stage === "waiting" ? JSON.stringify([e.playerId, e.cardId, e.name, e.abilityId, e.targets]) : null);
 export function triggerRun(stack) {
   const key = runKey(stack[stack.length - 1]);
@@ -384,6 +390,18 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
           write(answerForPilot(seat, choice, a));
           continue;
         }
+        /* In a run they let resolve: the same question as one already answered in it is answered the same way; the
+           first of its kind is asked, saying the answer will go for the rest. Refused this time, it is asked. */
+        const run = standing[seat];
+        if (run) {
+          const key = questionKey(choice), given = run.answers?.[key];
+          if (given) {
+            try {write(resolveAwaiting(state, given.indices, given.amounts, rng, given)); step.acted = true; driven = 0; continue;}
+            catch {delete run.answers[key];}
+          }
+          run.asking = key;
+          choice.forRun = true;
+        }
         controller.offer(choice); pendingSeat = seat; pendingActions = null; driven = 0; return;
       }
       if (state.stepIndex === undefined) {write(beginGame(state)); continue;}
@@ -399,7 +417,9 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
         delete standing[seat];
       }
       const actions = legalActions(state, seat);
-      if (seats[seat].pilot === "house") {apply(seat, pilots[seat].choose(projectFor(state, seat), actions), "pilot"); continue;}
+      /* The house pilot passes whatever it sees when nothing it would take is on offer (house-pilot.mjs, `passes`):
+         its view of the board is not worked out for that, which on a big board is most of an AI seat's pass. */
+      if (seats[seat].pilot === "house") {apply(seat, pilots[seat].passes?.(actions, state.stack.length) ? actions.find((a) => a.kind === "pass") : pilots[seat].choose(projectFor(state, seat), actions), "pilot"); continue;}
       if (passEmpty && nothingToDo(state, seat, actions)) {apply(seat, actions.find((a) => a.kind === "pass"), "room"); continue;}
       const run = resolveAll ? triggerRun(state.stack) : null;
       const offered = run ? [...actions, {kind: "resolve-all", key: run.key, n: run.n, name: run.name}] : actions;
@@ -437,7 +457,15 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
         const action = pendingActions[answer.indices[0]];
         pendingActions = null;
         apply(seat, action);
-      } else {step.acted = true; write(resolveAwaiting(state, answer.indices, answer.amounts, rng, answer));}
+      } else {
+        step.acted = true; write(resolveAwaiting(state, answer.indices, answer.amounts, rng, answer));
+        /* Asked in a run they let resolve: the answer goes for the same question in the rest of it. */
+        const run = standing[seat];
+        if (run?.asking) {
+          run.answers = {...run.answers, [run.asking]: {indices: answer.indices ?? [], ...(answer.amounts ? {amounts: answer.amounts} : {}), ...(answer.value !== undefined ? {value: answer.value} : {})}};
+          delete run.asking;
+        }
+      }
     } catch (error) {
       if (error instanceof RoomError) throw error;
       throw new RoomError(422, error.message, {refused: true});
@@ -479,7 +507,7 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
      Resolve all ("standing"). */
   function apply(seat, action, by = "person") {
     if (action.kind === "resolve-all") {
-      standing[seat] = {key: action.key, left: action.n - 1};
+      standing[seat] = {key: action.key, left: action.n - 1, answers: {}};
       note(`${seats[seat].name} let ${action.n} ${action.name} triggers resolve`);
       return apply(seat, {kind: "pass"}, by);
     }
