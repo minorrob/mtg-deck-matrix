@@ -15,12 +15,12 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 
 | Gate item | State | Proof, or whose step |
 | --- | --- | --- |
-| G-A: G1, 1,400 games | 1,398 clean; the 2 now finish clean; the 1,400 to run again | PR #679; Resolve all (PR #686) and its person's board limit: pod 5's seeds 54 and 90 each finish, replay identically and leak nothing. The person changed, so every game is new: the 1,400 run again on #686 |
+| G-A: G1, 1,400 games | **done: 1,400 of 1,400 clean** | PR #686's head ccb250d1: every game finished, none refused, every replay identical, 0 leaks in 105,656 checks of every seat's view |
 | G-A: the AI program (AI-1 to AI-6), X13 | the door open on staging; the features not built | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it |
 | G-B: the whole gate green twice on main | done | dispatched Tests runs on main, every suite: 2499 on def8fa89 and 2503 on eff40fdc, both green |
 | G-B: `play-e2e` under wrangler dev | done | 35 checks at every staging release |
 | G-B: hidden information in every frame | done | `play-journeys` reads every frame to both people; G1's oracle 102,879 checks, no leak |
-| G-B: the five-second rule | in this container only | `play-journeys` median 280 ms, longest 1.0 s; G1 99th percentile 1.84 s. Over the network needs a browser on a real network: **Rob** or Grok Bot |
+| G-B: the five-second rule | in this container only | `play-journeys` median 280 ms, longest 1.0 s; G1's 700 games with a person, four at a time: each game's longest wait a median 172 ms, 99th percentile 1.6 s, the worst 3.5 s (the biggest board, seed 90), none over 5 s. Over the network needs a browser on a real network: **Rob** or Grok Bot |
 | G-B: `play-journeys` with the seven decks | done | 82 checks (PRs #681, #682): every view at 1280, 1400, 1920, 2560 and the phone, the Coach's stub, the record |
 | G-B: `crankmagic-journeys` and the tours | done | `journeys.mjs`: geometry 138, workshop 504, tour-walk 61 steps (PR #683) |
 | G-B: the browser and device matrix | Chromium here | `docs/uat/browser-matrix.md` (Edge and WebKit on Personal-HP, 2026-10-01); the phones: **Rob** |
@@ -30,7 +30,7 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | G-C: the four agents' access | not set | **Rob** (M8) |
 
 So the first sentence of Part 7 is not yet true: it waits on the network measurement, the phones and the agents'
-access, all Rob's, and on G1's 1,400 run again and the AI features, this session's.
+access, all Rob's, and on the AI features, this session's.
 
 **Later, 2026-10-08:** the five workers' 45 cards and CR 800.4a merged here (#676); and on Rob's go ("merge Codex's stack") Codex's #670 to #675, reviewed first, merged here too -- every card of the seven decks is now defined; #676 merged on main 09499dcd and #671 to #675 closed as merged through it. The first G1 pass (70 games over seven pods) then found two blockers, each on its own worker: Tegwyll's provisional definition kept D7 off the table (now confirmed, hand-authored, 477 of 477), and a person's answer the engine refuses (Lethal Scheme's convoke) escaped room.act after the tape had recorded it, so the room could not reopen. Codex's records of 2026-10-07 follow, as it left them.
 
@@ -615,4 +615,17 @@ because half of the board you were seeing would win before ever getting to that 
     - seed 90: longest wait 2.8 s (was 6.5), 39.9 s (was 77.9), 285 decisions (was 436);
     - seed 54: 1.1 s, 38.0 s.
 
-    Both clean, replayed identically, 0 leaks. `room-resolve-all` 59 checks. G1's 1,400 run again on this head.
+    Both clean, replayed identically, 0 leaks. `room-resolve-all` 59 checks.
+- **G1, the 1,400 again, on ccb250d1:** seven pods, 100 seeds each with a person in seat 0 and 100 all house, every
+  game with `--replay --leaks`, four at a time (3.7 hours of games). The results:
+  - **1,400 of 1,400 clean:** finished, none refused, every replay identical, 0 leaks in 105,656 checks of every seat's
+    view.
+  - **The person's longest wait in each of the 700 games:** median 172 ms, 90th percentile 363 ms, 99th 1.6 s, and the
+    worst 3.5 s (pod 5 seed 90, turn 34, the biggest board). None was over five seconds.
+  - **The person** stopped going round a loop 239 times.
+
+  The later commit cb92f98e changed a test only (`room-refused-answer`'s breaking pilot), so these games stand for
+  the PR.
+- **Breaks:** 26 of 26 caught: the 14 above; the answer not carried, the answer not kept, the question not told, every
+  question the same, a card not part of the question, the board silent about the run; and the quick pass too eager,
+  blind to mana, to spells, to lands, and to loyalty.
