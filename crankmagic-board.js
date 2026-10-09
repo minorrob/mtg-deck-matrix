@@ -1454,6 +1454,18 @@ globalThis.CrankBoard = Object.freeze({
     if (!el || !view) return;
     event.preventDefault(); peek(null); zoom(Number(el.dataset.card));
   });
+  /* THE LOBBY'S MUSIC (Rob, 2026-10-09: "Lobby music."): the pack's lobby bed ("Lobby / seat", bgm_lobby_mythic_calm), from
+     the first press on a table's page before its game -- a browser plays nothing before one -- and crossfading into the
+     game's bed when the board opens (listen). The board keeps the one player, so one bed plays at a time; leaving the
+     table's page stops it (detach), and the board's mute keeps it quiet. */
+  const LOBBY_BED = "bgm_lobby_mythic_calm";
+  document.addEventListener("pointerdown", (event) => {
+    if (attached || !event.isTrusted || !C.main || !C.main.contains(event.target) || !document.querySelector(".cm-cloud-table")) return;
+    const a = sound();
+    if (!a) return;
+    if (a.isArmed()) {a.startBgm(LOBBY_BED); return;}
+    a.arm().then((on) => {if (on && !attached && document.querySelector(".cm-cloud-table")) a.startBgm(LOBBY_BED);});
+  }, true);
   /* THE GESTURE (docs/plan-play-audio.md): the audio context is made and resumed inside the first press on the board,
      with nothing awaited before it, or the browser refuses to play and says nothing. The bed starts with it. */
   document.addEventListener("pointerdown", (event) => {

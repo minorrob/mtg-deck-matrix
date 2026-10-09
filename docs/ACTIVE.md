@@ -668,7 +668,48 @@ sight of it signed in.
 - **Rob's, left:** approve the Coach's privacy wording. Then it goes on `privacy.html`, staging's profile gets
   `ai.coach: true`, and the next staging release turns the Coach on.
 
+**#687 merged on main 662e1aba on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 658edafa (release-acceptance 22, play-e2e 35); Workers Builds deployed it at 21:43:15 UTC as
+version fa3dead1, its `play-worker.js` byte-identical to the release's dry-run bundle (2,435,420 bytes, sha256
+8ed11a8e5e4e…). The Coach is in it, switched off (`AI_COACH` unset) until Rob approves its privacy wording.
+
 **The Coach, switched on for staging (2026-10-09).** Rob: *"Coach privacy wording approved."* The wording is in the AI
 features section of `privacy.html`; staging's profile has `ai.coach: true`, so its release sets `AI_COACH` on; and
 `tools/release-pages.mjs` now refuses any release that switches the Coach on where the privacy policy does not say what
-it sends. `release-pages` 193 checks. Production's AI door stays shut until Rob's go.
+it sends. `release-pages` 193 checks. #688 merged on main 81bcda09 on green Actions; `tools/release-staging.sh` released it
+to `release/cloud-staging` 4df68386 (release-acceptance 22, play-e2e 35), and Workers Builds deployed it at 23:08:02 UTC
+as version 1a4de099, its `play-worker.js` byte-identical to the release's dry-run bundle (2,435,420 bytes, sha256
+8ed11a8e5e4e…), its bindings `AI_COACH` on, `AI_MODEL` claude-haiku-5-5 and the key a secret. **The Coach answers on
+staging.** Production's AI door stays shut until Rob's go.
+
+**Rob's playtest, 2026-10-09: ten turns against the AI on staging, and his notes.** Each is built and held by a suite:
+- *"Draw phase should be resolved automatically by drawing a card and progress to the next screen."* The table no
+  longer launches games with the held draw (`game/room/table.mjs`, and the G1 harness with it); a game launched
+  before keeps its `drawBeat` and replays as played. *"Clicking the library pile should Draw a Card"*: in such a game
+  your Library pile is the Draw a card button too. `table-board`: turn 2's draw by itself, no button, on to Main 1.
+- *"When I play a card to the board from my hand, I don't want to have to click a pop-up to resolve it."* A fifth
+  beat, `passAfterCast` (`game/room/room.mjs`): a person's cast or activation passes the priority it brings back to
+  them (CR 117.3c), so it resolves unless someone responds. Holding priority stays the caster's choice (AGENTS.md:
+  decisions belong to the players): Tools' *Hold priority after I cast*, remembered on the device and sent with the cast
+  as `hold`. `room-beats` 33 checks (without the beat, with it, holding, a convoke cast woken mid-question, each game
+  replayed); `table-board`: a cast that passes and Maya's that holds.
+- *"I shouldn't have to acknowledge every stage."* *Turns went by* puts itself away after six seconds; OK only does it
+  sooner.
+- *"In 2-player, the screen should split down the middle vertically"*, and *"each board will be landscape on each half
+  of the screen"*: two seats sit side by side in Table view, yours on the right, each the largest 16:9 its half allows,
+  the life counter and an upright bar between them (← and →).
+- *"Card hand size should never decrease the board size. The user would just scroll down on the window to see the full
+  card if it goes below the bottom."* In every view the boards are fitted with room for a hand at the table's card size
+  (Tools), and a larger hand runs on below the window, the board scrolling to it; the strip stays at the top.
+  `table-board`: Table, Focus and Full screen at Hand cards 160%.
+- *"Needs more clear indication of whose turn it is. Icon on the Card in the left or right side pane."* The seat whose
+  turn it is: its Focus tile ringed and marked *Your turn* / *Maya's turn*, and its line of Full screen's vitals too.
+- *"Lobby music."* The pack's lobby bed (`bgm_lobby_mythic_calm`) from the first press in a table's lobby, crossfading
+  into the game's bed when the board opens; leaving the page stops it. `table-lobby`.
+- And the screenshot after End game, *"I couldn't click off of it"*: the card shown large under the pointer stayed when
+  the board was redrawn under a still pointer. A press anywhere, Escape, or a redraw with no such card under the pointer
+  now puts it away. `table-board`.
+- A phone finding on the way: a main phase's ten ways to play covered 46% of a phone held sideways; what is asked there
+  is at most a third of the height now, scrolling within.
+- **Asked of Rob:** *"Resolving Land should be called 'Untap Lands' during the first untap phase"*: the untap step asks
+  nobody anything (CR 502.4), and no control says *Resolving* or names a land there, so what he saw is asked of him.

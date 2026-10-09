@@ -210,7 +210,14 @@ try {
      deck above the limit refused with what to do instead. */
   const sizes = await rob.page.evaluate(() => {const e = document.querySelector(".cm-table-center .cm-table-rules-edit"), other = document.querySelector(".cm-lobby-seat [data-action=table-deck]"), h = document.querySelector(".cm-table-head h2"); if (!e || !other) return null; const r = e.getBoundingClientRect(), o = other.getBoundingClientRect(), hr = h.getBoundingClientRect(); return {edit: Math.round(r.height), other: Math.round(o.height), beside: r.left >= hr.right && Math.abs((r.top + r.bottom) / 2 - (hr.top + hr.bottom) / 2) < 8};});
   ok(sizes && sizes.beside && sizes.edit < sizes.other * 0.75, `the host sees a small Edit beside Table rules (${sizes && sizes.edit}px, the page's buttons ${sizes && sizes.other}px)`);
+  /* THE LOBBY'S MUSIC (Rob, 2026-10-09: "Lobby music."): nothing of the sound before a press in the lobby -- a browser would
+     refuse to play it -- and the pack's lobby bed from the first one. */
+  const audioAsked = () => rob.page.evaluate(() => performance.getEntriesByType("resource").map((r) => r.name).filter((n) => n.includes("/assets/audio/")).map((n) => n.split("/assets/audio/")[1].split("?")[0]));
+  eq(await audioAsked(), [], "the lobby fetches nothing of the sound before a press in it");
   await rob.page.click(".cm-table-rules-edit");
+  await rob.page.waitForFunction(() => performance.getEntriesByType("resource").some((r) => /bgm_lobby_mythic_calm\.mp3/.test(r.name)), null, {timeout: 10000});
+  const lobbySound = await audioAsked();
+  ok(lobbySound.includes("sound-index.json") && lobbySound.includes("bgm/bgm_lobby_mythic_calm.mp3") && !lobbySound.some((n) => /bgm_game/.test(n)), `the first press in the lobby starts its music: the pack's index and the lobby's bed, never the game's (${lobbySound.join(", ")})`);
   await rob.page.locator("#cm-table-rules-form").waitFor();
   await rob.page.fill("#cm-table-rules-form [name=startingLife]", "30");
   await rob.page.selectOption("#cm-table-rules-form [name=bracketLimit]", "2");
