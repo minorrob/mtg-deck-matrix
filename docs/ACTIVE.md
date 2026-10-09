@@ -599,6 +599,20 @@ because half of the board you were seeing would win before ever getting to that 
   - seed 54: the person (D6) the last standing, 56 turns, 47.6 s, Resolve all 7 times;
   - seed 90: the person the last standing, 38 turns, 81.9 s, Resolve all 17 times.
 
-  Both replayed identically, with 0 leaks. Seed 90's longest wait was 6.0 s, on turn 34, measured while the staging
-  release's walks and the other game shared the four cores: to be measured again alone.
+  Both replayed identically, with 0 leaks. Seed 90's longest wait was 6.5 s on turn 34, alone on the machine: one
+  Resolve all over 79 triggers on a board of 93. Most of it was D6's Quest for the Goblin Lord asking *"you may put a
+  quest counter"* once per Goblin, each answer a save, and the AI seats' passes.
+- **Rob's answer to that (2026-10-09): "Yes to all, and yes, build #1."**
+  - **The same answer for the same question:** in a run the person let resolve, the first of a question (its words,
+    mode, limits, and every option's words and card: `questionKey`) is asked. The board says *"Resolve all: your
+    answer goes for this same question each time the run asks it"*. The room then gives that answer, yes or no, each
+    time the very same question comes again in that run. It is kept with the standing pass, so a wake and the replay
+    agree.
+  - **The house pilot's quick pass:** `passes(actions, stackSize)` is true only when `choose` would pass whatever the
+    board. The room then passes for the AI seat without working out its view. `engine-house-pilot` and
+    `room-g1-terms` check it against the full choice at every AI pass, vanilla and on Rob's decks.
+  - **Pod 5 with both:**
+    - seed 90: longest wait 2.8 s (was 6.5), 39.9 s (was 77.9), 285 decisions (was 436);
+    - seed 54: 1.1 s, 38.0 s.
 
+    Both clean, replayed identically, 0 leaks. `room-resolve-all` 59 checks. G1's 1,400 run again on this head.
