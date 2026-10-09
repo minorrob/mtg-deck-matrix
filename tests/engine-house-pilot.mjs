@@ -212,4 +212,14 @@ function playGame(seed, kinds, {onDecision} = {}) {
 }
 
 ok(quick > 1000, `at ${quick} of its passes the quick check said it would pass whatever the board, and every time its full choice passed`);
+/* And never for what it takes: each kind of action it may choose keeps the quick check from saying "pass". */
+{
+  const quickly = housePilot({seat: 0, cards});
+  const pass = {kind: "pass"}, plain = {kind: "activate", objectId: 3, label: "Goblin Den"}, mana = {kind: "activate-mana", objectId: 4};
+  ok(quickly.passes([pass, plain, mana], 1), "with only a plain ability and mana on offer, the stack in use: a certain pass");
+  ok(!quickly.passes([pass, mana], 0), "mana with the stack empty: not certain (it may tap for a spell in its main phase)");
+  for (const [what, action] of [["a land", {kind: "play-land", objectId: 5}], ["a spell", {kind: "cast", objectId: 6, label: "Shock"}],
+    ["a face-down card to turn up", {kind: "turn-face-up", objectId: 7}], ["a loyalty ability", {kind: "activate", objectId: 8, loyalty: -1}]])
+    ok(!quickly.passes([pass, plain, action], 1), `${what} on offer: not a certain pass, so its full choice is worked out`);
+}
 console.log(`engine-house-pilot: ${checks} checks passed — the house pilot sees only its seat, draws nothing it cannot see, replays exactly, finishes 100 games, and beats random play (${measured.join("; ")}).`);
