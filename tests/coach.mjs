@@ -198,12 +198,26 @@ const stranger = await ask({email: STRANGER});
 eq(stranger.status, 403, "a stranger, not on the list, is refused before the table is asked");
 DB.raw.prepare("INSERT INTO ai_calls (id, email, feature, model, input_tokens, output_tokens, cost_micros, outcome, at) VALUES ('big', ?, 'coach', 'claude-haiku-5-5', 0, 0, 250000, 'ok', ?)").run(ROB, new Date(clock - 60e3).toISOString());
 eq((await ask()).status, 429, "the person's cap holds for the Coach as for every AI feature");
+DB.raw.prepare("DELETE FROM ai_calls WHERE id = 'big'").run();
+/* THE COACH'S OWN DAILY CAP, for everyone together (Rob, 2026-10-10: "$1.50 for the coach per day is good"): another
+   feature's spending does not count toward it, and the Coach's own does -- here a cap of 2 cents. */
+const capped = {...OPEN, AI_CAP_COACH_CENTS: "2"};
+DB.raw.prepare("INSERT INTO ai_calls (id, email, feature, model, input_tokens, output_tokens, cost_micros, outcome, at) VALUES ('expl', 'someone-else@example.com', 'explain', 'claude-haiku-5-5', 0, 0, 30000, 'ok', ?)").run(new Date(clock - 60e3).toISOString());
+answer = reply({answer: "Hold.", plays: [], show: []});
+eq((await ask({env: capped})).status, 200, "another feature's 3 cents count nothing toward the Coach's cap of 2");
+/* Someone else's Coach calls bring the Coach's day to 1.95 cents: under the cap, but this call's worst case (its whole
+   output allowance alone is 0.06 cents) would pass it, so it is refused before a cent is spent. */
+const coachSoFar = Number(DB.raw.prepare("SELECT COALESCE(SUM(cost_micros), 0) AS micros FROM ai_calls WHERE feature = 'coach'").get().micros);
+ok(coachSoFar < 19500, `the Coach's calls so far (${coachSoFar} micros) leave room under its cap`);
+DB.raw.prepare("INSERT INTO ai_calls (id, email, feature, model, input_tokens, output_tokens, cost_micros, outcome, at) VALUES ('mate', 'someone-else@example.com', 'coach', 'claude-haiku-5-5', 0, 0, ?, 'ok', ?)").run(19500 - coachSoFar, new Date(clock - 60e3).toISOString());
+const full = await ask({env: capped});
+eq([full.status, full.json.error], [429, "The Coach has reached its spend cap for the last 24 hours. Try again tomorrow."], "the Coach's own spending, anyone's, with this call's worst case would pass its cap: the Coach is refused, saying so");
+DB.raw.prepare("DELETE FROM ai_calls WHERE id IN ('expl', 'mate')").run();
 const login = await ask({method: "GET", path: `/api/ai/login?to=${encodeURIComponent(`#table?id=${TABLE}`)}`});
 eq([login.status, login.location], [302, `https://crankmagic.test/#table?id=${TABLE}`], "signed in to the AI door, back to the table");
 eq((await ask({method: "GET", path: "/api/ai/login?to=https://elsewhere.example"})).location, "https://crankmagic.test/", "and never anywhere else");
 
 /* 4. THE BOARD: Rob's Coach panel asks the real route (the door above, the provider a stand-in) from his table. */
-DB.raw.prepare("DELETE FROM ai_calls WHERE id = 'big'").run();
 const now = (await at("/table/brief")).json.brief, mine = now.hand[0];
 const {openBrowser} = await import("./uat/browser-runner.mjs");
 const {browser, base, stub, close} = await openBrowser({name: "coach", flag: "GEOMETRY_REQUIRED"});

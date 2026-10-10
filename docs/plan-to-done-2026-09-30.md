@@ -308,7 +308,8 @@ a stub reply that said it was not switched on; in Full screen it lives in the si
 below (`game/room/coach-brief.mjs`, `cloud/ai.mjs` `coach`, `tests/coach.mjs`; `docs/ACTIVE.md` has the record). Rob
 approved its privacy wording the same day; it is on `privacy.html`, and staging's release profile sets `ai.coach`. Two differences from the text below: the model is the door's one
 `AI_MODEL` (Haiku 5.5), not a separate `AI_MODEL_coach`; and there is no per-game cap, since Rob chose one general
-cap, *"not per person"*, 300¢ a day for everyone.
+cap, *"not per person"*, 300¢ a day for everyone. Inside it, the Coach has a daily cap of its own, for everyone
+together: Rob, 2026-10-10, *"$1.50 for the coach per day is good"* (`AI_CAP_COACH_CENTS`, 150 on staging).
 
 - **The route:** `POST /api/ai/coach` with the question. The Worker reads the asking seat's own view from the table
   itself (the same projection the room sends that seat — its hand, every public zone, the history's last lines, the
@@ -370,9 +371,97 @@ plays what the engine offers); the LLM seat is M6's "through the door".
   among more than one non-pass option; mulligans; blocks; targets) and answers priority-with-nothing-to-do itself.
   A per-game cap; when it is reached the seat finishes on the house pilot and the table says so.
 - **Model:** `AI_MODEL_pilot` = Claude Haiku 4.5 (Rob's call) at low effort, measured against the house pilot
-  over 100 seeded games (M4's gate G1 harness) before a table offers it.
+  over 100 seeded games (M4's gate G1 harness) before a table offers it. **Rob, 2026-10-10: *"Use Haiku 5.5. 0.25 per
+  game is good"*:** Claude Haiku 5.5 at low effort, and a cap of 25¢ a game; and *"I do want to deliver on L0 as part
+  of the LLM AI seat capability"*: the LLM seat chooses among L0's legal options (below).
 - **Proof:** the engine's determinism holds (the tape records the answer, not the model); `tests/game-room.mjs`
   gains an LLM pilot with a stubbed provider; the lobby suite the configurator's pilot choice; M8's playtests use it.
+
+#### The house pilot's levels of decision (Rob, 2026-10-10)
+
+Rob's definitions, as he gave them:
+- **L0, legal:** the basic layer, and legal. What the house pilot has now.
+- **L1, probability:** considers some probabilistic outcome, or another statistically or mathematically derived result,
+  for a good choice out of those provided.
+- **L2, the deck's formulas:** the deck's mechanics converted to formulas, where certain cards commit input to
+  completing a formula, which makes the mechanic possible. The formulas cover engine-building, and the defense a given
+  attack or counter requires, set against the cards in hand (or in the graveyard, where there is a way to play from it)
+  that are available, playable and affordable with the mana there is. Much of L2 combines formula-driven completion,
+  on statistical modeling, with deterministic if/then logic. For example, if a card can be played from the graveyard,
+  the graveyard joins the options, and the formula updates to include them.
+- **L3, chained probability:** like today's video games' easy, medium and hard. Determinism chained through several
+  layers on the probabilities of outcomes, including the other players' boards and how likely each is to play a given
+  card, given the direction their board is taking from the cards played and the mechanics those cards support.
+
+**Not now:** Rob, 2026-10-10: *"We won't be doing L2 or L3 right now."* L1 is built now, with AI-2.
+
+**How the field builds this.** Game AIs that are not language models set difficulty with one engine and three knobs:
+how far it looks ahead (Stockfish's depth; the simulations in AI Factory's Spades; XMage's minimax), how much it knows
+about what a position is worth (Forge's rules for each card; learned evaluation weights; utility scoring), and how
+often it chooses a worse option on purpose (Stockfish's Skill Level picks among its best few moves; weighted chance
+among scored moves reaches a target strength better than always the best or pure chance). None of them changes what
+the AI may see, which is the house pilot's rule already: difficulty changes the effort, never the information. Two
+warnings: weakening an AI by making it think less produces mistakes that read as broken, not human; and strength that
+swings within a game reads as fake. The strongest shipped card-game AIs combine rules with search: AI Factory's
+Spades made far fewer plays that people saw as blunders than search alone, and played better than its rules-only
+predecessor. Language models do not yet play Magic better than simple scripted AIs, at a dollar or more a game on the
+mage-bench harness. So the engine comes first, and the model fills the gaps.
+
+| Level | In the field | In CrankMagic |
+|---|---|---|
+| L0 | Scripted rules | Today's house pilot: a land each turn, the dearest spell it can cast, attack the lowest life, a block only when the blocker kills and survives |
+| L1 | Utility scoring with expected value, one turn ahead | Each legal option scored from the seat's own view: mana used this turn, card advantage, the board's value after it, the life race (turns until each side can kill the other), exact combat for the creatures on the board, an opponent's trick as a probability from their open mana and cards in hand, the odds of drawing a land or a needed card (hypergeometric, over the seat's own deck list less the cards it has seen), and the threat it removes. The weights in one table |
+| L2 | Goal recipes and resource checks | Each deck's formulas as recipes with slots; a recipe's completion, and the odds of drawing its missing pieces, raise a card's score; a threat is matched with the answers castable now; rules add zones to the options |
+| L3 | Simulated futures with opponent models | Opponents' hidden hands invented to fit what is public, weighted by their deck's likely direction; short futures played out with L1 and L2 choosing inside them; the number of futures is the difficulty. Processor time on the Durable Object, in the step-budgeted slices that already exist; no tokens |
+
+**The difficulty settings (Claude's recommendation; Rob, 2026-10-10: *"I agree with your recommendations"*).** L0
+is the floor, not a difficulty: the fallback, and the baseline every level is measured against. Its mistakes come
+from what it cannot see (an attack that lets the opponent swing back for lethal), and they read as broken, not easy.
+
+| Setting | Uses | How it chooses |
+|---|---|---|
+| Easy | L1 | Weighted chance among the scored options: usually the best, sometimes the second-best, never an absurd one. Its temperature is fixed for the game and drawn from the game's seed, so the game replays identically |
+| Normal | L1 | The best score |
+| Medium | L1 and L2 | The best score |
+| Hard | L1, L2 and L3 | The best result after the simulated futures; how many futures can be set |
+
+**Where the model fills the gaps, cheapest first.**
+1. **Once for each deck (Phase 2):** the model reads the deck's card text and writes its L2 formulas as structured
+   data; a check in code refuses any card or effect the deck does not hold; the result is kept by the deck's hash.
+   Pennies, once, and every game after is free.
+2. **At close calls (Phase 1, the LLM seat):** the seat chooses among L0's legal options, with L1's three best scores
+   as the hint. It is asked only when the decision matters (a cast, an attack, a block, a target, a mulligan) and L1's
+   two best scores are close; the house pilot answers everything else at once. At the 25¢ cap, on a timeout or on an
+   index that is not offered, the house pilot answers.
+3. **Inside the simulations (Phase 3 or later):** narrowing which options to play out; never each priority pass.
+
+At the door's prices (Claude Haiku 5.5, $0.10/$0.50 a million tokens), 25¢ buys about 500 decisions, so the cap will
+not bind. The wait will: each call takes one to three seconds, against Rob's five-second rule (G-B). Estimated, until
+the bench measures it: 1¢ to 3¢ a game for the LLM seat asked only at close calls, against about 15¢ if it answered
+every decision.
+
+**The phases.**
+- **Phase 1 (now):** L1 in the house pilot (the board's value from the seat's own projection; option scoring; combat
+  math; draw odds; the Easy and Normal settings), then the LLM seat on L0 with L1 as its hint and its fallback. The
+  bench: 100 seeded games measuring L1's wins against L0; a checklist of plain blunders (attacked into a lethal swing
+  back, passed with a castable spell and the mana for it, chump-blocked at high life); the slowest 5% of decision
+  times; and, for the LLM seat, its calls and cents a game, how often it fell back, and its wins against L1.
+- **Phase 2 (Medium):** L2, the formulas written once for each deck by the model, the defense formulas, and the zones
+  rules add.
+- **Phase 3 (Hard):** L3, simulated futures and opponent models, the number of futures as the difficulty.
+
+Sources: [AI Factory's Spades, MCTS with knowledge](https://ojs.aaai.org/index.php/AIIDE/article/view/12679);
+[Information Set MCTS](https://eprints.whiterose.ac.uk/75048); [determinized MCTS for
+Magic](https://eprints.whiterose.ac.uk/75050); [evolved evaluation functions for a collectible card
+game](https://www.scitepress.org/Papers/2022/108069/108069.pdf); [Hearthstone opponent card
+prediction](https://arxiv.org/abs/1808.04794); [opponent hand estimation in Gin
+Rummy](https://ojs.aaai.org/index.php/AAAI/article/view/17824); [XMage's AI
+players](https://mintlify.wiki/magefree/mage/development/ai-players); [Stockfish's Skill
+Level](https://stockfishchess.org/blog/2011/stockfish-2-1/); [weaker play
+levels](https://www.talkchess.com/forum/viewtopic.php?p=677118); [utility
+systems](https://en.wikipedia.org/wiki/Utility_system); [mage-bench, the author's
+notes](https://hn.svelte.dev/item/47049227); [a language model inside
+search](https://arxiv.org/pdf/2403.05632).
 
 ### AI-3. The card loader: the data grows as cards are played
 
@@ -526,8 +615,9 @@ pilot: two sessions), AI-5 (the connection: one session, after AI-3 makes a deck
 | 20 | The CrankMagic card back | **His artwork: `design/art-source/card_backgrounds/` (five colors)**; which is universal, and whether a seat's follows its color, at build (recommended tan; yes) |
 | 21 | The Coach's glyph | **A speech bubble with the wand** |
 | AI | The door's five steps (`docs/ai-door.md`) | **Rob does them** (the Access application, the allowlist, the key, the caps, the privacy wording) |
-| AI | A model per job | **Coach Sonnet 5.5 · pilot Haiku 4.5 · loader Sonnet 5.5 · advise Haiku 4.5, each held to its eval** |
+| AI | A model per job | **Coach Sonnet 5.5 · pilot Haiku 4.5 · loader Sonnet 5.5 · advise Haiku 4.5, each held to its eval**; 2026-10-09 to 10: **the Coach and the pilot on Claude Haiku 5.5**, the pilot capped at 25¢ a game and the Coach at $1.50 a day |
 | AI | The advisor's rubric | **An afternoon of his, before AI-4 is judged**, starting from the workbook's Target-versus-Actual intent |
+| AI-2 | The house pilot's levels | **L0 to L3 as he defined them (AI-2); L1 now, L2 and L3 not yet; Easy is L1 with chosen mistakes, Normal L1, Medium L2, Hard L3; L0 the floor** |
 | AI | Whether the advisor may name cards he does not own | **A person's setting, in AI Coach Settings (AI-6), off by default** |
 | AI-3 | The first batch of cards to learn | **His whole library from `MtG - Master - 9.30.xlsx` (1,132 cards), not the seven decks' 477** |
 | Part 5 | The roadmap's recommendations (Actions billing restored for CI and the refresh; the tracks and their order) | **Accepted** |

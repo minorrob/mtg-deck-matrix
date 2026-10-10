@@ -16,7 +16,7 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | Gate item | State | Proof, or whose step |
 | --- | --- | --- |
 | G-A: G1, 1,400 games | **done: 1,400 of 1,400 clean** | PR #686's head ccb250d1: every game finished, none refused, every replay identical, 0 leaks in 105,656 checks of every seat's view |
-| G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**; AI-2 to AI-6 not built | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
+| G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**, with a daily cap of its own ($1.50); AI-2's levels decided by Rob (L1 now); AI-2 to AI-6 not built | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
 | G-B: the whole gate green twice on main | done | dispatched Tests runs on main, every suite: 2499 on def8fa89 and 2503 on eff40fdc, both green |
 | G-B: `play-e2e` under wrangler dev | done | 35 checks at every staging release |
 | G-B: hidden information in every frame | done | `play-journeys` reads every frame to both people; G1's oracle 102,879 checks, no leak |
@@ -745,3 +745,22 @@ follows a redirect on the same site, the token's headers with it, and calls only
 `/cdn-cgi/access/` a refusal. **`node tools/staging-check.mjs --expect 2125854a…`: staging serves 2125854a (cloud-staging),
 both pages say 2125854, `/api/me` answers as `service:session-checks`; exit 0.** `staging-check` 12 checks; 3 breaks
 caught (every redirect read as Access, one off the site followed, the names in one case only).
+
+**The Coach's own daily cap (2026-10-10).** Rob: *"$1.50 for the coach per day is good."* Inside the general 300¢, for
+everyone together: `AI_CAP_COACH_CENTS` (the profile's `ai.coachCapCents`, 150 on staging), counting only calls logged
+as `coach` and checked on the call's worst case before a cent is spent, like the others. Reached, the Coach answers
+429, *"The Coach has reached its spend cap for the last 24 hours. Try again tomorrow."*, and Explain goes on.
+`tools/release-pages.mjs` refuses a release that switches the Coach on without it. `coach` 54 checks, `release-pages`
+195; **11 breaks caught** (the cap unread, read in the wrong unit, never checked, checked on what was spent without
+the call's worst case, counting every feature, counting only the asker, the feature not passed, the refusal unnamed;
+staging's cap unset, the variable never emitted, an uncapped Coach released).
+
+**AI-2's levels, decided (2026-10-10).** Rob defined the house pilot's levels of decision, L0 (legal, today's) to L3
+(chained probability, other players' likely plays included), and: *"Use Haiku 5.5. 0.25 per game is good"*; *"I do want
+to deliver on L0 as part of the LLM AI seat capability"*; *"We won't be doing L2 or L3 right now."* Researched against
+how game AIs that are not language models set difficulty, the recommendation, which Rob took (*"I agree with your
+recommendations"*): one engine with three knobs (look-ahead, knowledge, chosen mistakes), never more information; L0 the
+floor and the baseline; Easy L1 with weighted chance, Normal L1, Medium L2, Hard L3; the LLM seat asked only at close
+calls that matter, with L1's scores as its hint and the house pilot as its fallback; and, in Phase 2, the model writing
+each deck's L2 formulas once rather than at every decision. Written into AI-2 of `docs/plan-to-done-2026-09-30.md`,
+with its sources. **Next: Phase 1, L1 in the house pilot, then the LLM seat.**
