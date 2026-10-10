@@ -1,7 +1,7 @@
 {
   "name": "crankmagic-staging",
   "main": "cloud/play-worker.mjs",
-  "compatibility_date": "2026-10-09",
+  "compatibility_date": "2026-10-10",
   "assets": {
     "directory": "./",
     "binding": "ASSETS",
@@ -34,7 +34,8 @@
     "AI_CAP_TOTAL_CENTS": "300",
     "AI_CAP_PERSON_CENTS": "300",
     "AI_MODEL": "claude-haiku-5-5",
-    "AI_COACH": "on"
+    "AI_COACH": "on",
+    "AI_CAP_COACH_CENTS": "150"
   },
   "ratelimits": [
     {
