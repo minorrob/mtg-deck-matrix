@@ -172,10 +172,13 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       if (await storage.get(KEY) !== null) throw new TableError(409, "This table already exists.");
       const others = Array.isArray(seats) ? seats : [];
       if (others.length < 1 || others.length > 3) throw new TableError(400, "A table seats two to four players.");
-      const all = [{kind: "human", name: clean(hostName) || "Host"}, ...others.map((s, i) => ({kind: s && s.kind === "ai" ? "ai" : "human", name: clean(s && s.name) || (s && s.kind === "ai" ? `AI ${i + 2}` : `Seat ${i + 2}`)}))];
+      /* An AI seat plays at a setting (AI-2, Rob, 2026-10-10): "easy" or "normal", normal unless the host chose easy. */
+      const all = [{kind: "human", name: clean(hostName) || "Host"}, ...others.map((s, i) => (s && s.kind === "ai"
+        ? {kind: "ai", name: clean(s.name) || `AI ${i + 2}`, level: s.level === "easy" ? "easy" : "normal"}
+        : {kind: "human", name: clean(s && s.name) || `Seat ${i + 2}`}))];
       record = {
         schema: TABLE_SCHEMA, tableId, host, created: true,
-        lifecycle: createTable({tableId, seats: all.map((s, seatId) => ({seatId, kind: s.kind, name: s.name, occupied: seatId === 0})), settings: {startingLife: 40, bracketLimit: null, ...settings}}),
+        lifecycle: createTable({tableId, seats: all.map((s, seatId) => ({seatId, kind: s.kind, name: s.name, ...(s.level ? {level: s.level} : {}), occupied: seatId === 0})), settings: {startingLife: 40, bracketLimit: null, ...settings}}),
         members: {0: host}, invites: [], decks: {}, matches: [], away: {}, playtest: playtest === true,
       };
       await save();
@@ -312,6 +315,8 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       step({type: "tick"}, now, {launchId: matchId});
       const pod = {seats: t.seats.filter((s) => s.occupied).map((s) => ({
         seatId: seatName(s.seatId), name: s.name, pilot: s.kind === "ai" ? "house" : "human",
+        /* An AI seat's setting; a table made before settings were, normal. */
+        ...(s.kind === "ai" ? {level: s.level === "easy" ? "easy" : "normal"} : {}),
         commander: record.decks[s.seatId].commander, cards: record.decks[s.seatId].cards,
       })), startingLife: rulesOf().startingLife,
       /* The table's beats (game/room/room.mjs): a step with nothing to do passes itself (item 11); once every person is
@@ -445,7 +450,7 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
         rules: rulesOf(),
         away: Object.entries(record.away || {}).map(([seatId, until]) => ({seatId: Number(seatId), until})),
         seats: t.seats.map((s) => ({
-          seatId: s.seatId, kind: s.kind, name: s.name, occupied: s.occupied, connected: s.connected, ready: s.ready,
+          seatId: s.seatId, kind: s.kind, name: s.name, ...(s.kind === "ai" ? {level: s.level === "easy" ? "easy" : "normal"} : {}), occupied: s.occupied, connected: s.connected, ready: s.ready,
           invited: s.invited, you: s.seatId === mine, mat: (record.mats || {})[s.seatId] || "felt",
           deck: record.decks[s.seatId] ? {name: record.decks[s.seatId].name, commander: record.decks[s.seatId].commander, bracket: record.decks[s.seatId].bracket ?? null} : null,
           ...(s.seatId === mine && record.decks[s.seatId] ? {cards: record.decks[s.seatId].cards.length, source: record.decks[s.seatId].source || null} : {}),
