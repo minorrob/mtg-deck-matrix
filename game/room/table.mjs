@@ -27,6 +27,11 @@ import {coachBrief} from "./coach-brief.mjs";
 import {startRoom, openRoom, RoomError, basicCards} from "./room.mjs";
 import {createMatchStore} from "../engine/storage.mjs";
 
+/* An AI seat's setting (AI-2): "easy", "llm" (an AI on Claude) or, unless one of those was chosen, "normal". */
+const levelOf = (s) => (s.level === "easy" || s.level === "llm" ? s.level : "normal");
+/** Whether the room is waiting on an LLM seat, whose answer the table's object gives (cloud/game-room.mjs). */
+export const llmWaiting = (room) => !!room && !!room.waitingOn && room.status !== "finished" && room.seats.some((s) => s.seatId === room.waitingOn && s.level === "llm");
+
 export const TABLE_SCHEMA = "CrankTable@1";
 export const RECORD_SCHEMA = "CrankGameRecord@1";
 export const INVITE_TTL = 24 * 3600 * 1000;
@@ -167,14 +172,18 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
 
   const api = {
     /** A new table, the host in seat 1. Seats after the first are a person to invite or an AI. */
-    async create({tableId, host, hostName, seats, settings = {}, playtest = false}) {
+    /* `llmAllowed`: whether this host may seat an AI on Claude (the LLM seat, AI-2), which the table's object works out
+       from the AI door's gates (cloud/game-room.mjs); without it, such a seat is refused. */
+    async create({tableId, host, hostName, seats, settings = {}, playtest = false, llmAllowed = false}) {
       if (!TABLE_ID.test(String(tableId || ""))) throw new TableError(400, "A table needs its id.");
       if (await storage.get(KEY) !== null) throw new TableError(409, "This table already exists.");
       const others = Array.isArray(seats) ? seats : [];
       if (others.length < 1 || others.length > 3) throw new TableError(400, "A table seats two to four players.");
-      /* An AI seat plays at a setting (AI-2, Rob, 2026-10-10): "easy" or "normal", normal unless the host chose easy. */
+      /* An AI seat plays at a setting (AI-2, Rob, 2026-10-10): "easy" or "normal", normal unless the host chose easy; or
+         "llm", an AI on Claude, only where the AI door lets this host seat one. */
+      if (others.some((s) => s && s.kind === "ai" && s.level === "llm") && !llmAllowed) throw new TableError(403, "An AI on Claude needs CrankMagic's AI features, switched on here and open to you. Choose a Normal or Easy AI.");
       const all = [{kind: "human", name: clean(hostName) || "Host"}, ...others.map((s, i) => (s && s.kind === "ai"
-        ? {kind: "ai", name: clean(s.name) || `AI ${i + 2}`, level: s.level === "easy" ? "easy" : "normal"}
+        ? {kind: "ai", name: clean(s.name) || `AI ${i + 2}`, level: levelOf(s)}
         : {kind: "human", name: clean(s && s.name) || `Seat ${i + 2}`}))];
       record = {
         schema: TABLE_SCHEMA, tableId, host, created: true,
@@ -316,7 +325,7 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       const pod = {seats: t.seats.filter((s) => s.occupied).map((s) => ({
         seatId: seatName(s.seatId), name: s.name, pilot: s.kind === "ai" ? "house" : "human",
         /* An AI seat's setting; a table made before settings were, normal. */
-        ...(s.kind === "ai" ? {level: s.level === "easy" ? "easy" : "normal"} : {}),
+        ...(s.kind === "ai" ? {level: levelOf(s)} : {}),
         commander: record.decks[s.seatId].commander, cards: record.decks[s.seatId].cards,
       })), startingLife: rulesOf().startingLife,
       /* The table's beats (game/room/room.mjs): a step with nothing to do passes itself (item 11); once every person is
@@ -385,8 +394,13 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       const times = Object.values(record.away || {});
       if (record.lifecycle.phase === "countdown") times.push(record.lifecycle.countdownAt);
       if (record.lifecycle.phase === "playing" && (await api.currentRoom())?.continuing) times.push(now);
+      /* The LLM seat being asked: its turn is the object's to take (cloud/game-room.mjs, agentTurns), at once. */
+      if (record.lifecycle.phase === "playing" && llmWaiting(await api.currentRoom())) times.push(now);
       return times.length ? Math.min(...times) : null;
     },
+
+    /** Who made the table: whose AI features an LLM seat's calls are, and whose caps hold them. */
+    async host() {await load(); return record.host;},
 
     /** The room of the game being played, whoever asks (the object's own sockets), or null. */
     async currentRoom() {
@@ -450,7 +464,7 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
         rules: rulesOf(),
         away: Object.entries(record.away || {}).map(([seatId, until]) => ({seatId: Number(seatId), until})),
         seats: t.seats.map((s) => ({
-          seatId: s.seatId, kind: s.kind, name: s.name, ...(s.kind === "ai" ? {level: s.level === "easy" ? "easy" : "normal"} : {}), occupied: s.occupied, connected: s.connected, ready: s.ready,
+          seatId: s.seatId, kind: s.kind, name: s.name, ...(s.kind === "ai" ? {level: levelOf(s)} : {}), occupied: s.occupied, connected: s.connected, ready: s.ready,
           invited: s.invited, you: s.seatId === mine, mat: (record.mats || {})[s.seatId] || "felt",
           deck: record.decks[s.seatId] ? {name: record.decks[s.seatId].name, commander: record.decks[s.seatId].commander, bracket: record.decks[s.seatId].bracket ?? null} : null,
           ...(s.seatId === mine && record.decks[s.seatId] ? {cards: record.decks[s.seatId].cards.length, source: record.decks[s.seatId].source || null} : {}),

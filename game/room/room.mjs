@@ -59,6 +59,7 @@ import {createController} from "../engine/controller.mjs";
 import {createMatchStore} from "../engine/storage.mjs";
 import {housePilot} from "../engine/pilots/house-pilot.mjs";
 import {scoredPilot, SETTINGS} from "../engine/pilots/scored-pilot.mjs";
+import {agentPilot} from "../engine/pilots/agent-pilot.mjs";
 import {addToHistory} from "./history.mjs";
 
 export const ROOM_PROTOCOL = 1;
@@ -113,9 +114,10 @@ function readPod(pod, cards) {
     if (!SEAT_ID.test(seatId) || ids.has(seatId)) throw new RoomError(400, `Seat ${index + 1} needs its own seat id.`);
     ids.add(seatId);
     const pilot = s.pilot === "house" ? "house" : "human";
-    /* An AI seat's setting (AI-2): "easy" or "normal", L1 (game/engine/pilots/scored-pilot.mjs). A seat without one, as every
-       match launched before it, is L0, the house pilot, and replays as it was played. */
-    const level = pilot === "house" && SETTINGS.includes(s.level) ? s.level : null;
+    /* An AI seat's setting (AI-2): "easy" or "normal", L1 (game/engine/pilots/scored-pilot.mjs), or "llm", the LLM seat
+       (game/engine/pilots/agent-pilot.mjs). A seat without one, as every match launched before it, is L0, the house pilot,
+       and replays as it was played. */
+    const level = pilot === "house" && [...SETTINGS, LLM].includes(s.level) ? s.level : null;
     const commander = (Array.isArray(s.commander) ? s.commander : []).map(String);
     const library = (Array.isArray(s.cards) ? s.cards : []).map(String);
     if (commander.length > 2 || commander.length + library.length > MAX_CARDS) throw new RoomError(400, `${seatId}'s deck is not one a table can hold.`);
@@ -295,8 +297,11 @@ export function triggerRun(stack) {
  * (easy's chance); without a setting, L0. Both see only the seat's projection.
  */
 export function seatPilot({seat, cards, deck = [], level = null, seed = ""}) {
+  if (level === LLM) return agentPilot({seat, cards, deck, seed});
   return level ? scoredPilot({seat, cards, deck, setting: level, seed}) : housePilot({seat, cards});
 }
+/** The LLM seat's setting: L1, but its close calls are offered to the seat, for its model to answer (`consults`). */
+export const LLM = "llm";
 
 function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity) {
   const store = createMatchStore(storage, matchId);
@@ -369,6 +374,8 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   let matchSeed = "";
   const pilotMade = (seat) => makePilot({seat, cards: facts, deck: seats[seat].cards, level: seats[seat].level ?? null, seed: matchSeed});
   const pilotFor = (seat) => pilots[seat] || (pilots[seat] = pilotMade(seat));
+  /* Whether the LLM seat asks for this decision (agent-pilot.mjs `consult`): never a seat that has left. */
+  const consults = (seat, view, offer) => seats[seat].level === LLM && !leaving.includes(seat) && pilotFor(seat).consult?.(view, offer) === true;
 
   const write = (events) => {
     const names = seats.map((s) => s.name);
@@ -416,7 +423,10 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       if (state.awaiting) {
         const seat = state.awaiting.player, choice = awaitingChoice(state);
         if (seats[seat].pilot === "house" || leaving.includes(seat)) {
-          const a = pilotFor(seat).answer(projectFor(state, seat), choice);
+          const seen = projectFor(state, seat);
+          /* The LLM seat's close call: offered to the seat as to a person, for the table to answer through its model. */
+          if (consults(seat, seen, {choice})) {controller.offer(choice); pendingSeat = seat; pendingActions = null; driven = 0; return;}
+          const a = pilotFor(seat).answer(seen, choice);
           step.acted = true;
           write(answerForPilot(seat, choice, a));
           continue;
@@ -459,7 +469,15 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       /* The house pilot passes whatever it sees when nothing it would take is on offer (house-pilot.mjs, `passes`):
          its view of the board is not worked out for that, which on a big board is most of an AI seat's pass. */
       /* Whose turn and which step go with it, which everyone sees: L1 uses an ability only in its own main phase. */
-      if (seats[seat].pilot === "house") {apply(seat, pilots[seat].passes?.(actions, state.stack.length, {ownTurn: state.activePlayer === seat, phase: state.phase}) ? actions.find((a) => a.kind === "pass") : pilots[seat].choose(projectFor(state, seat), actions), "pilot"); continue;}
+      if (seats[seat].pilot === "house") {
+        if (pilots[seat].passes?.(actions, state.stack.length, {ownTurn: state.activePlayer === seat, phase: state.phase})) {apply(seat, actions.find((a) => a.kind === "pass"), "pilot"); continue;}
+        const seen = projectFor(state, seat);
+        if (consults(seat, seen, {actions})) {
+          controller.offer(priorityChoice(`priority:${state.turn}:${state.stepIndex}:${controller.revision}`, actions, state, seat));
+          pendingSeat = seat; pendingActions = actions; driven = 0; return;
+        }
+        apply(seat, pilots[seat].choose(seen, actions), "pilot"); continue;
+      }
       if (passEmpty && nothingToDo(state, seat, actions)) {apply(seat, actions.find((a) => a.kind === "pass"), "room"); continue;}
       const run = resolveAll ? triggerRun(state.stack) : null;
       const offered = run ? [...actions, {kind: "resolve-all", key: run.key, n: run.n, name: run.name}] : actions;
@@ -731,6 +749,24 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
      * §12.1 action envelope. A retry with the same action id returns the same receipt and applies nothing. An answer
      * the rules refuse is refused (422, in the rules' words) with nothing changed, and may be given again otherwise.
      */
+    /**
+     * WHAT THE SEAT'S OWN PILOT WOULD ANSWER to the decision it is being asked, as a person's answer (`{indices}`): the LLM
+     * seat's when its model cannot answer (the game's cap reached, a failure, an option that was not offered). The table
+     * gives it through `act`, so it is on the tape like any other answer and a replay does not ask again.
+     */
+    houseAnswer(seatId) {
+      const seat = seatIndex(seatId);
+      if (seat < 0 || seats[seat].pilot !== "house") throw new RoomError(403, "That is not an AI seat at this table.");
+      if (pendingSeat !== seat || !controller.pending) throw new RoomError(409, "That seat is not being asked anything.");
+      const pilot = pilotFor(seat), seen = projectFor(state, seat);
+      if (pendingActions) {
+        const chosen = pilot.choose(seen, pendingActions);
+        return {indices: [Math.max(0, pendingActions.indexOf(chosen))]};
+      }
+      const given = pilot.answer(seen, awaitingChoice(state));
+      return {indices: given.indices ?? [], ...(given.amounts ? {amounts: given.amounts} : {}), ...(given.value !== undefined ? {value: given.value} : {}), ...(given.cancel ? {cancel: true} : {})};
+    },
+
     async act(seatId, request) {
       const seat = seatIndex(seatId);
       if (seat < 0) throw new RoomError(403, "That seat is not at this table.");
