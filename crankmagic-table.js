@@ -25,7 +25,7 @@
   C.HELP.table = {title: "Play: the table and the board", body: `<div class="cm-help"><h3>The table</h3>
     <p>Up to four seats. Invite people by link, QR code or email, or seat an AI. Everyone brings a deck from their own library and marks Ready, and the host starts the countdown. The host can change the table's rules (starting life, bracket limit) until a seat is ready.</p>
     <h3>The board</h3>
-    <p><strong>Table</strong> shows every board at once. <strong>Focus</strong> puts one board on the mat, beside the seats. <strong>Full screen</strong> gives the game the whole screen. The pass button says what passing will do: <em>Next step</em>, <em>Resolve</em> and the spell's name, or <em>Pass</em>. In your draw step it is <em>Draw a card</em>. A step where you have nothing to do passes by itself, and the history says so.</p>
+    <p><strong>Table</strong> shows every board at once. <strong>Focus</strong> puts one board on the mat, beside the seats. <strong>Full screen</strong> gives the game the whole screen. The pass button says what passing will do: <em>Next step</em>, <em>Resolve</em> and the spell's name, or <em>Pass</em>. Your draw happens by itself, and a spell you cast resolves unless someone responds; to be asked first, turn on <em>Hold priority after I cast</em> in Tools. A step where you have nothing to do passes by itself, and the history says so.</p>
     <h3>Keys</h3>
     <ul class="cm-help-keys">
       <li><kbd>Tab</kbd> moves through the strip, then the boards, then your hand. <kbd>Enter</kbd> or <kbd>Space</kbd> presses what has the focus.</li>

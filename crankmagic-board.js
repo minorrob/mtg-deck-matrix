@@ -118,7 +118,10 @@ globalThis.CrankBoard = Object.freeze({
   let mode = (() => {try {const v = localStorage.getItem(VIEW_KEY); return VIEWS.some(([k]) => k === v) ? v : "focus";} catch {return "focus";}})();
   let selected = null, hover = null;   /* Full screen: the card shown large in the side column (picked, and under the pointer) */
   let showing = null, held = null;     /* Show hand: null, "fan" or "held"; the card held up */
-  let wentBy = null;
+  /* Turns that went by while you waited: said for a few seconds, then put away by itself -- nothing to acknowledge (Rob,
+     2026-10-09: "I shouldn't have to acknowledge every stage"); the History holds every line. */
+  let wentBy = null, wentTimer = null;
+  const WENT_MS = 6000;
   let historyOpen = false, historyFilter = "", menuOpen = false, stepsOpen = false, panelOpen = false, paneShut = false, alsoOpen = false;
   let skipping = null;                 /* Skip to end: the turn being skipped through, or null */
   /* The Coach: open or not, its thread ({from: "you"|"coach", text} or {divider}), and whether it is "typing". */
@@ -133,10 +136,18 @@ globalThis.CrankBoard = Object.freeze({
   const away = new Map();   /* seat number -> until, from the table and from the room's "away" frames */
   let attached = false;     /* the table page is showing the board (the board can hold a game with the page elsewhere) */
   /* THE TABLE VIEW'S TWO BARS AND THE THREE CARD SIZES (items 4-6). The bar between the rows shares the tabletop's
-     height between the other seats' row and yours; the bar atop the hand tray is the hand's size, and the boards take
-     what it leaves them, all alike. The Tools slider is the table's card size; the board's cards and the hand's each
+     height between the other seats' row and yours -- with two seats side by side, the width between the two boards
+     (Rob, 2026-10-09) -- and the bar atop the hand tray is the hand's size. The hand never takes the boards' room (Rob,
+     2026-10-09: "Card hand size should never decrease the board size. The user would just scroll down on the window to
+     see the full card if it goes below the bottom"): the boards are fitted with room for a hand at the table's card
+     size, and a larger hand runs on below them, the board scrolling down to it. The Tools slider is the table's card size; the board's cards and the hand's each
      have their own, on those two bars, and moving Tools sets both to its value (Rob's rule). All of it is remembered
      on this device, as the card size is. */
+  /* HOLD PRIORITY AFTER A CAST (Rob, 2026-10-09: "When I play a card to the board from my hand, I don't want to have to
+     click a pop-up to resolve it"). The room passes for you once you cast or activate (game/room/room.mjs,
+     `passAfterCast`), so it resolves unless someone responds; holding priority instead stays your choice (CR 117.3c),
+     from Tools, remembered on this device, and sent with each cast as `hold`. */
+  const HOLD_KEY = "cm-board-hold";
   const ROWS_KEY = "cm-board-rows", ROWS = [0.3, 0.7], SCALE_KEY = {board: "cm-board-scale:board", hand: "cm-board-scale:hand"};
   const stored = (k) => {try {return localStorage.getItem(k);} catch {return null;}};
   const keep = (k, v) => {try {localStorage.setItem(k, String(v));} catch {/* applied, not remembered */}};
@@ -192,8 +203,11 @@ globalThis.CrankBoard = Object.freeze({
     view = next;
     /* Whole turns went by since this seat's last view: say which, until the turn moves on or it is put away. */
     const went = globalThis.CrankBoard.turnsWentBy(was, next);
-    if (went) wentBy = went;
-    else if (wentBy && (next.matchId !== (was && was.matchId) || next.state.turn !== wentBy.now)) wentBy = null;
+    if (went) {
+      wentBy = went;
+      clearTimeout(wentTimer);
+      wentTimer = setTimeout(() => {if (wentBy === went) {wentBy = null; draw();}}, WENT_MS);
+    } else if (wentBy && (next.matchId !== (was && was.matchId) || next.state.turn !== wentBy.now)) wentBy = null;
     listen(was, next);
     if (focus === null) focus = view.seat;
     /* On a phone the board you are looking at is the only one on screen: when you are asked, it is yours. */
@@ -286,7 +300,9 @@ globalThis.CrankBoard = Object.freeze({
     if (!socket || socket.readyState !== 1) {C.notice("The board is reconnecting; try again in a moment.", true); return;}
     if (!view || !view.decision) return;
     sending = true;
-    socket.send(JSON.stringify({type: "act", actionId: crypto.randomUUID(), revision: view.revision, kind: "answer", choiceId: view.decision.id, ...payload}));
+    const chosen = view.decision.kind === "priority" && payload.indices ? view.decision.options[payload.indices[0]] : null;
+    const hold = chosen && (chosen.act === "cast" || chosen.act === "activate") && stored(HOLD_KEY) === "on" ? {hold: true} : {};
+    socket.send(JSON.stringify({type: "act", actionId: crypto.randomUUID(), revision: view.revision, kind: "answer", choiceId: view.decision.id, ...payload, ...hold}));
     draw();
   }
 
@@ -463,6 +479,8 @@ globalThis.CrankBoard = Object.freeze({
        stack or you are asked anything else, and puts itself away when the turn ends. */
     const yours = view.state.turnPlayerId === view.seat;
     const priority = `<div class="cm-actions">${b(skipWords(), "board-skip", {}, false, {cls: skipping === null ? "" : "is-on", disabled: over})}</div>
+      <label class="cm-board-hold"><input type="checkbox" data-board-hold${stored(HOLD_KEY) === "on" ? " checked" : ""}> Hold priority after I cast</label>
+      <p class="cm-muted cm-board-hold-help">When you cast a spell or activate an ability, it resolves unless someone responds${stored(HOLD_KEY) === "on" ? "; with Hold priority on, you are asked first, to respond to it yourself" : ""}.</p>
       <p class="cm-muted cm-board-yield-help">${yours ? "Skip to end passes your priority for you through the rest of your turn" : `Yield this turn passes your priority for you through the rest of ${e(nameOf(view.state.turnPlayerId))}'s turn`}. It stops the moment anything is on the stack or you are asked anything else, so you can still answer a spell. Until then you hold priority: with a card you could use, you are asked at every step.</p>`;
     return `<div class="cm-board-menu" role="menu" id="cm-board-tools">
       <div class="cm-actions cm-board-menu-row">${gb(COACH, "Recommended actions", "board-coach", {}, {cls: ""})}${b("Table vitals", "board-vitals", {})}</div>
@@ -494,6 +512,11 @@ globalThis.CrankBoard = Object.freeze({
       : dropped ? `Dropped · back by ${new Date(dropped).toLocaleTimeString("en-US", {hour: "numeric", minute: "2-digit"})}`
       : view.waitingOn === `s${i}` ? "Deciding" : view.state.turnPlayerId === i ? "● Active" : "";
   }
+  /* WHOSE TURN IT IS, marked on that seat's card in the side pane -- Focus's tiles, Full screen's vitals -- as well as
+     the strip's Turn (Rob, 2026-10-09: "Needs more clear indication of who's turn it is on. Icon on the Card in the
+     left or right side pane"). */
+  const TURN_ICON = `<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 4.5v7l5.5-3.5z" fill="currentColor"/></svg>`;
+  const turnMark = (i) => view.state.turnPlayerId !== i ? "" : `<span class="cm-board-turn-mark" role="img" aria-label="${i === view.seat ? "Your turn" : `${e(nameOf(i))}'s turn`}" title="${i === view.seat ? "Your turn" : `${e(nameOf(i))}'s turn`}">${TURN_ICON}<b>${i === view.seat ? "Your turn" : "Turn"}</b></span>`;
   function ribbon(active, at = stepAt(view.state.phase)) {
     return `<ol class="cm-board-ribbon" aria-label="Steps">${STEPS.map(([label], i) => `<li class="${!active ? "" : i < at ? "is-done" : i === at ? "is-now" : ""}">${e(label)}</li>`).join("")}</ol>`;
   }
@@ -504,8 +527,12 @@ globalThis.CrankBoard = Object.freeze({
   }
   const grip = (kind, label, now, [lo, hi], orient = "horizontal") => `<span class="cm-board-grip${orient === "vertical" ? " is-upright" : ""}" role="separator" aria-orientation="${orient}" tabindex="0" data-drag="${kind}" aria-label="${e(label)}" aria-valuemin="${lo}" aria-valuemax="${hi}" aria-valuenow="${now}" title="${e(label)}"></span>`;
   /* A card-shaped zone: the top card (or the back of the library, its count on it), the name and the count below. */
-  function pile(label, zone, top, {back = false} = {}) {
-    const face = top ? card(top) : `<div class="cm-bcard is-empty${back && zone.count ? " is-back" : ""}" aria-hidden="true">${back && zone.count ? `<b class="cm-bcard-count">${zone.count}</b>` : ""}</div>`;
+  function pile(label, zone, top, {back = false, draw: drawing = false} = {}) {
+    /* Your library, while your draw waits for you (a game launched with the held draw): clicking it draws, as Draw a card
+       does (Rob, 2026-10-09: "Clicking the library pile should Draw a Card also on a Draw turn"). */
+    const face = top ? card(top) : drawing
+      ? `<button type="button" class="cm-bcard is-back is-bright" data-action="board-draw" aria-label="Draw a card: your library, ${zone.count}"${sending ? " disabled" : ""}><b class="cm-bcard-count">${zone.count}</b></button>`
+      : `<div class="cm-bcard is-empty${back && zone.count ? " is-back" : ""}" aria-hidden="true">${back && zone.count ? `<b class="cm-bcard-count">${zone.count}</b>` : ""}</div>`;
     return `<figure class="cm-mat-zone cm-board-pile" data-zone="${e(label.toLowerCase())}" aria-label="${e(label)}, ${zone.count}" title="${e(label)}, ${zone.count}">${face}<figcaption><em>${e(label)}</em><b>${zone.count}</b></figcaption></figure>`;
   }
   function mat(p, {size = "focus", head = "top", focusButton = false} = {}) {
@@ -529,7 +556,7 @@ globalThis.CrankBoard = Object.freeze({
         ${you ? `<span class="cm-board-chip">${mana} mana open · land drop ${p.landsPlayed ? "used" : "1 left"}</span>` : ""}
         ${pile("Command", z.Command, z.Command.cards[0])}${pile("Exile", z.Exile, z.Exile.cards.at(-1))}
         ${size === "focus" ? historyBand(6) : ""}
-        ${pile("Library", z.Library, null, {back: true})}${pile("Graveyard", z.Graveyard, z.Graveyard.cards.at(-1))}
+        ${pile("Library", z.Library, null, {back: true, draw: you && !!view.decision && view.decision.kind === "draw" && view.status !== "finished"})}${pile("Graveyard", z.Graveyard, z.Graveyard.cards.at(-1))}
       </div>`;
     const cls = `cm-mat ${size === "focus" ? "cm-board-mat" : "cm-seatboard"}${you ? " is-you" : ""}${head === "bottom" ? " is-bottom" : ""}${bare ? " is-bare" : ""}${active ? " is-active" : ""}`;
     return `<section class="${cls}" data-seat="${i}" data-fit="${size}" data-mat="${e(matOf(i))}" style="${backStyle(i)}" aria-label="${e(you ? "Your board" : `${p.name}'s board`)}">${head === "bottom" ? body + header : header + body}</section>`;
@@ -548,20 +575,24 @@ globalThis.CrankBoard = Object.freeze({
   }
 
   /* THE TABLE VIEW: every board at once, you at the bottom right and the others round from the top left (the
-     handoff's "seats 2 · 3 / 4 · 1"). Fewer seats, fewer boards: two stack, three put you across the foot. The
+     handoff's "seats 2 · 3 / 4 · 1"). Fewer seats, fewer boards: two sit side by side, yours on the right, each the
+     height of the table (Rob, 2026-10-09: "In 2-player, the screen should split down the middle vertically, not
+     horizontally, thereby increasing play surface for each board on a landscape screen"); three put you across the foot. The
      boards are 16:9 tracks sized to the window (fit()), alike in a row; the bar between the rows shares the height
      (item 4), identical boards until it is moved. At the true center, the life counter (item 9). */
   function tableView() {
     const ps = players(), n = ps.length, active = view.state.turnPlayerId;
-    const bottom = n === 2 ? ["b"] : ["c", "d"];
-    const boards = ps.map((p) => {const area = areaOf(p.playerId), low = bottom.includes(area); return `<div class="cm-board-slot" data-area="${area}" style="grid-area:${area};--row-w:var(${low ? "--bot-w" : "--top-w"})">${mat(p, {size: "table", head: low ? "bottom" : "top", focusButton: true})}</div>`;}).join("");
-    const rows = `<div class="cm-board-rowbar">${grip("rows", "The rows' sizes: drag, or use the arrow keys", Math.round(rowShare() * 100), [ROWS[0] * 100, ROWS[1] * 100])}${scaleSlider("board", "Board cards")}</div>`;
+    const side = n === 2, bottom = side ? ["b"] : ["c", "d"];
+    const boards = ps.map((p) => {const area = areaOf(p.playerId), low = bottom.includes(area); return `<div class="cm-board-slot" data-area="${area}" style="grid-area:${area};--row-w:var(${low ? "--bot-w" : "--top-w"})">${mat(p, {size: "table", head: low && !side ? "bottom" : "top", focusButton: true})}</div>`;}).join("");
+    const rows = side
+      ? `<div class="cm-board-rowbar is-upright">${grip("rows", "The boards' widths: drag, or use the arrow keys", Math.round(rowShare() * 100), [ROWS[0] * 100, ROWS[1] * 100], "vertical")}${scaleSlider("board", "Board cards")}</div>`
+      : `<div class="cm-board-rowbar">${grip("rows", "The rows' sizes: drag, or use the arrow keys", Math.round(rowShare() * 100), [ROWS[0] * 100, ROWS[1] * 100])}${scaleSlider("board", "Board cards")}</div>`;
     return `<div class="cm-board-tabletop"><div class="cm-board-table" data-seats="${n}">${active === null ? "" : fan(active)}${boards}${rows}${counter()}</div>${ask()}</div>${hand()}`;
   }
   /* THE LIFE COUNTER at the true center (item 9; wireframe 2e's counter()): a slice per seat in its color, on the side
      its board sits -- four quarters, three thirds, two halves -- its life on it, and the logo in the middle, which
      opens Table vitals. Degrees run clockwise from twelve o'clock, as a conic gradient draws them. */
-  const SLICES = {4: {b: [0, 90], d: [90, 180], c: [180, 270], a: [270, 360]}, 3: {b: [0, 120], c: [120, 240], a: [240, 360]}, 2: {b: [90, 270], a: [270, 450]}};
+  const SLICES = {4: {b: [0, 90], d: [90, 180], c: [180, 270], a: [270, 360]}, 3: {b: [0, 120], c: [120, 240], a: [240, 360]}, 2: {b: [0, 180], a: [180, 360]}};
   function counter() {
     const ps = players(), cut = SLICES[ps.length] || SLICES[4];
     const parts = ps.map((p) => ({p, at: cut[areaOf(p.playerId)]})).filter((x) => x.at).sort((x, y) => x.at[0] - y.at[0]);
@@ -584,7 +615,7 @@ globalThis.CrankBoard = Object.freeze({
      look at (inert), the tile's own button over it. */
   function tile(p) {
     const i = p.playerId, commander = commanderOf(p), mini = paneWidth() >= MINI_AT;
-    return `<div class="cm-board-tile${mini ? " is-mini" : ""}${focus === i ? " is-focus" : ""}${i === view.seat ? " is-you" : ""}" data-seat="${i}" style="--seat:${seatColor(i)}">
+    return `<div class="cm-board-tile${mini ? " is-mini" : ""}${focus === i ? " is-focus" : ""}${i === view.seat ? " is-you" : ""}${view.state.turnPlayerId === i ? " is-turn" : ""}" data-seat="${i}" style="--seat:${seatColor(i)}">${turnMark(i)}
       ${mini ? `<div class="cm-board-mini" inert>${mat(p, {size: "mini", head: "none"})}</div>` : ""}<button type="button" class="cm-board-tile-main" data-action="board-focus" data-seat="${i}" aria-pressed="${focus === i}">
         <span class="cm-board-tile-name">${e(seatLabel(p))}</span><span class="cm-muted">${e(commander ? commander.name : "")}</span></button>
       ${vitals(p)}<span class="cm-board-tile-flag">${e(seatFlag(p))}</span></div>`;
@@ -621,7 +652,7 @@ globalThis.CrankBoard = Object.freeze({
     return `${rail}<div class="cm-full-center">
         <div class="cm-full-others" style="--cols:${Math.max(1, others.length)}">${others.map((p) => `<div class="cm-full-other" style="--seat:${seatColor(p.playerId)}">${mat(p, {size: "opp", focusButton: true})}</div>`).join("")}</div>
         <div class="cm-full-mine">${pill}${mat(big, {size: "full", head: "none"})}${corner}${viewing ? handBacks(big) : hand()}</div></div>
-      <aside class="cm-full-side" aria-label="The table" style="--split:${Math.round(splitOf("side") * 100)}%"><div class="cm-full-vitals">${players().map((p) => `<div style="--seat:${seatColor(p.playerId)}"><span>${e(seatLabel(p))}</span>${vitals(p, {big: true})}</div>`).join("")}</div>
+      <aside class="cm-full-side" aria-label="The table" style="--split:${Math.round(splitOf("side") * 100)}%"><div class="cm-full-vitals">${players().map((p) => `<div class="${view.state.turnPlayerId === p.playerId ? "is-turn" : ""}" data-seat="${p.playerId}" style="--seat:${seatColor(p.playerId)}"><span>${e(seatLabel(p))}${turnMark(p.playerId)}</span>${vitals(p, {big: true})}</div>`).join("")}</div>
         <div id="cm-full-pick">${pickPanel()}</div>${splitBar("side")}${went()}${decision()}${stack()}${historyBand(30)}</aside>`;
   }
   function pickPanel() {
@@ -799,7 +830,7 @@ globalThis.CrankBoard = Object.freeze({
     const mine = players()[view.seat];
     if (!mine) return "";
     const cards = mine.zones.Hand.cards;
-    const bar = `<div class="cm-board-traybar">${grip("hand", "The hand's size: drag to resize the boards, or use the arrow keys", scaleOf("hand"), C.cardScaleRange())}${scaleSlider("hand", "Hand cards")}</div>`;
+    const bar = `<div class="cm-board-traybar">${grip("hand", "The hand's size: drag, or use the arrow keys; the boards keep theirs", scaleOf("hand"), C.cardScaleRange())}${scaleSlider("hand", "Hand cards")}</div>`;
     return `<section class="cm-board-hand" aria-label="Your hand">${bar}<div class="cm-board-hand-side"><span class="cm-board-hand-head"><button type="button" class="cm-board-showhand" data-action="board-show-hand" aria-label="Show hand (Space)" title="Show hand (Space)" aria-pressed="${!!showing}">✋</button><b class="cm-board-hand-count" aria-label="${cards.length} ${cards.length === 1 ? "card" : "cards"} in your hand">${cards.length}</b></span>${handTypes(cards)}</div>
       <div class="cm-board-hand-cards cm-board-cards">${cards.map((c) => card(c, {where: "hand"})).join("")}</div></section>`;
   }
@@ -851,12 +882,20 @@ globalThis.CrankBoard = Object.freeze({
     if (opts.length > 1) return C.modal(c.name, `<div class="cm-board-zoom is-choosing">${card(c, {where: "zoom", action: "close"})}</div><p class="cm-board-choose-say">Choose one:</p><div class="cm-board-choices" role="group" aria-label="Ways to use ${e(c.name)}">${acts}</div><div class="cm-form-footer">${b("Close", "close")}</div>`);
     C.modal(c.name, `<div class="cm-board-zoom">${card(c, {where: "zoom", action: "close"})}</div><div class="cm-form-footer">${acts}${b("Close", "close", {}, !acts)}</div>`);
   }
-  let peekTimer = null;
+  /* The peek follows the pointer: it is put away when the pointer leaves the card -- and, since a card redrawn or moved
+     away from under a still pointer never says it was left (Rob, 2026-10-09: ending the game left a Plains shown large,
+     "I couldn't click off of it"), by any press or Escape; and the board redrawn while it waits to show, it shows only if
+     a card of that id is still under the pointer (`stillUnder`). */
+  let peekTimer = null, peekId = null, pointerAt = null;
   function peek(el) {
     clearTimeout(peekTimer);
+    peekTimer = null;
     const old = document.getElementById("cm-board-peek");
-    if (!el) {if (old) old.remove(); return;}
+    if (!el) {peekId = null; if (old) old.remove(); return;}
+    peekId = Number(el.dataset.card);
     peekTimer = setTimeout(() => {
+      peekTimer = null;
+      if (!el.isConnected && !stillUnder(peekId)) {peekId = null; return;}
       const c = findCard(Number(el.dataset.card));
       if (!c || !c.name || !document.getElementById("cm-board")) return;
       const div = old || Object.assign(document.createElement("div"), {id: "cm-board-peek", className: "cm-board-peek"});
@@ -866,6 +905,11 @@ globalThis.CrankBoard = Object.freeze({
       div.innerHTML = `<span class="cm-sr-only">Showing ${e(c.name)}</span><div aria-hidden="true">${card(c, {where: "peek", action: "none"})}</div>`;
       if (!old) document.getElementById("cm-board").append(div);
     }, 350);
+  }
+  function stillUnder(id) {
+    const under = pointerAt && document.elementFromPoint(pointerAt.x, pointerAt.y);
+    const el = under && under.closest && under.closest(".cm-board .cm-bcard[data-card]");
+    return !!el && Number(el.dataset.card) === id && !el.closest(".cm-board-peek");
   }
   /* A PHONE: the shorter side of the screen at most 500px. Held upright, the surface is turned to landscape. */
   const phone = () => Math.min(innerWidth, innerHeight) <= 500;
@@ -1040,20 +1084,45 @@ globalThis.CrankBoard = Object.freeze({
     try {
       const host = document.getElementById("cm-board");
       if (!host || !view) return;
+      /* The hand's tray as it would be at the table's card size (Tools): the room the boards leave it, whatever size the
+         hand is now (Rob, 2026-10-09). A larger hand runs on below; a smaller one leaves the boards where they are. */
+      const atTableSize = (el, measure) => {
+        el.style.setProperty("--hand-scale", String(C.cardScale() / 100));
+        try {return measure();} finally {el.style.removeProperty("--hand-scale");}
+      };
       const tbl = host.querySelector(".cm-board-table");
       if (tbl) {
-        /* Each row the largest 16:9 its share of the height allows (item 4), no wider than a column; the bar and the
-           life counter sit in the gap between the rows, at the true center. */
-        const n = Number(tbl.dataset.seats) || 4, cols = n === 2 ? 1 : 2, gaps = getComputedStyle(tbl);
+        const tray = host.querySelector(":scope > .cm-board-hand");
+        const reserve = tray ? atTableSize(tray, () => Math.ceil(tray.getBoundingClientRect().height)) : 0;
+        host.style.setProperty("--tabletop-h", `${Math.max(240, host.clientHeight - 48 - reserve)}px`);
+        const n = Number(tbl.dataset.seats) || 4, gaps = getComputedStyle(tbl);
         const gx = parseFloat(gaps.columnGap) || 14, gy = parseFloat(gaps.rowGap) || 22;
-        const box = tbl.getBoundingClientRect(), room = box.height - gy, col = (box.width - gx * (cols - 1)) / cols, share = rowShare();
-        const widest = (part) => Math.max(160, Math.floor(Math.min(col, part * room * 16 / 9)));
-        const top = widest(share), bot = widest(1 - share), used = (top + bot) * 9 / 16 + gy;
-        tbl.style.setProperty("--top-w", `${top}px`);
-        tbl.style.setProperty("--bot-w", `${bot}px`);
-        tbl.style.setProperty("--board-w", `${Math.max(top, bot)}px`);
-        tbl.style.setProperty("--grid-w", `${Math.round(Math.max(top, bot) * cols + gx * (cols - 1))}px`);
-        tbl.style.setProperty("--mid-y", `${Math.round((box.height - used) / 2 + top * 9 / 16 + gy / 2)}px`);
+        const box = tbl.getBoundingClientRect(), share = rowShare();
+        if (n === 2) {
+          /* Two seats, side by side: each the largest 16:9 its share of the width allows, no taller than the table; the
+             bar and the life counter in the gap between them, at the true center. */
+          const room = box.width - gx, widest = (part) => Math.max(160, Math.floor(Math.min(part * room, box.height * 16 / 9)));
+          const left = widest(share), right = widest(1 - share), used = left + right + gx;
+          tbl.style.setProperty("--top-w", `${left}px`);
+          tbl.style.setProperty("--bot-w", `${right}px`);
+          tbl.style.setProperty("--board-w", `${Math.max(left, right)}px`);
+          tbl.style.setProperty("--grid-w", `${Math.round(used)}px`);
+          tbl.style.setProperty("--grid-h", `${Math.round(Math.max(left, right) * 9 / 16)}px`);
+          tbl.style.setProperty("--mid-x", `${Math.round((box.width - used) / 2 + left + gx / 2)}px`);
+          tbl.style.setProperty("--mid-y", `${Math.round(box.height / 2)}px`);
+        } else {
+          /* Each row the largest 16:9 its share of the height allows (item 4), no wider than a column; the bar and the
+             life counter sit in the gap between the rows, at the true center. */
+          const room = box.height - gy, col = (box.width - gx) / 2;
+          const widest = (part) => Math.max(160, Math.floor(Math.min(col, part * room * 16 / 9)));
+          const top = widest(share), bot = widest(1 - share), used = (top + bot) * 9 / 16 + gy;
+          tbl.style.setProperty("--top-w", `${top}px`);
+          tbl.style.setProperty("--bot-w", `${bot}px`);
+          tbl.style.setProperty("--board-w", `${Math.max(top, bot)}px`);
+          tbl.style.setProperty("--grid-w", `${Math.round(Math.max(top, bot) * 2 + gx)}px`);
+          tbl.style.setProperty("--mid-x", `${Math.round(box.width / 2)}px`);
+          tbl.style.setProperty("--mid-y", `${Math.round((box.height - used) / 2 + top * 9 / 16 + gy / 2)}px`);
+        }
       }
       const stage = host.querySelector(".cm-board-stage");
       if (stage) {
@@ -1063,7 +1132,8 @@ globalThis.CrankBoard = Object.freeze({
            and a last step makes sure the pair fits the window, since a narrower mat never needs a taller tray. */
         const main = stage.parentElement, box = main.getBoundingClientRect(), tray = main.querySelector(":scope > .cm-board-hand"), GAP = 8;
         const widest = (trayH) => Math.max(320, Math.floor(Math.min(box.width - 16, (box.height - 8 - GAP - trayH) * 16 / 9)));
-        const trayAt = (w) => {main.style.setProperty("--mat-w", `${w}px`); return tray ? tray.getBoundingClientRect().height : 0;};
+        /* the tray measured at the table's card size: the hand's own size never moves the mat (Rob, 2026-10-09) */
+        const trayAt = (w) => {main.style.setProperty("--mat-w", `${w}px`); return tray ? atTableSize(main, () => tray.getBoundingClientRect().height) : 0;};
         let matW = widest(0);
         for (let k = 0; k < 4; k += 1) {const next = widest(trayAt(matW)); if (Math.abs(next - matW) < 1) break; matW = next;}
         const trayH = trayAt(matW);
@@ -1075,10 +1145,16 @@ globalThis.CrankBoard = Object.freeze({
       if (big) {
         /* The hand is whole (item 25): the tray is a full row along the big board's foot, the board keeping that much
            clear under its Lands, and its cards no taller than a third of the big board leaves room for. */
-        const bigBox = big.getBoundingClientRect(), scale = scaleOf("hand") / 100;
+        const bigBox = big.getBoundingClientRect(), scale = scaleOf("hand") / 100, ref = C.cardScale() / 100;
         big.style.setProperty("--full-w", `${Math.round(bigBox.width)}px`);
-        big.style.setProperty("--hc", `${Math.round(Math.min(112 * scale, Math.max(56, (bigBox.height * .36 - 22) * 5 / 7)))}px`);
-        const tray = big.querySelector(":scope > .cm-board-hand"), trayH = tray ? Math.ceil(tray.getBoundingClientRect().height) : 0;
+        /* At the table's card size the hand fits under the big board, its cards no taller than a third of it; the room it
+           takes then is the room the board keeps for it. A hand made larger than that grows past the window's foot, the
+           board scrolling down to it, and never squeezes the board (Rob, 2026-10-09). */
+        const fitted = Math.min(112 * ref, Math.max(56, (bigBox.height * .36 - 22) * 5 / 7));
+        const tray = big.querySelector(":scope > .cm-board-hand");
+        big.style.setProperty("--hc", `${Math.round(fitted)}px`);
+        const trayH = tray ? Math.ceil(tray.getBoundingClientRect().height) : 0;
+        big.style.setProperty("--hc", `${Math.round(fitted * scale / ref)}px`);
         big.style.setProperty("--tray-h", `${trayH}px`);
         /* and the board's own cards no larger than its two rows of piles can stand in what is left above the tray:
            two card-height rows (5:7, with the pad) and their captions, under the 52px the pill takes. */
@@ -1290,7 +1366,7 @@ globalThis.CrankBoard = Object.freeze({
     const o = view && resolveAllOption();
     if (o && !sending) send({indices: [o.index]});
   };
-  actions["board-went-close"] = () => {wentBy = null; draw();};
+  actions["board-went-close"] = () => {wentBy = null; clearTimeout(wentTimer); draw();};
   actions["board-draw"] = () => {
     const d = view && view.decision;
     if (d && d.kind === "draw" && !sending) send({indices: [d.options[0].index]});
@@ -1356,7 +1432,10 @@ globalThis.CrankBoard = Object.freeze({
   actions["board-hand-do"] = (el) => {const index = Number(el.dataset.index); showing = null; held = null; option(index);};
   actions["board-zoom-do"] = (el) => {actions.close(); option(Number(el.dataset.index));};
   document.addEventListener("dblclick", (event) => {if (showing === "held" && event.target.closest && event.target.closest(".cm-hand-held")) actions["board-hand-back"]();});
+  document.addEventListener("pointermove", (event) => {pointerAt = {x: event.clientX, y: event.clientY};}, {passive: true, capture: true});
+  document.addEventListener("pointerdown", () => {if (peekId !== null) peek(null);}, {capture: true});
   document.addEventListener("pointerover", (event) => {
+    pointerAt = {x: event.clientX, y: event.clientY};
     if (event.pointerType !== "mouse" || !document.getElementById("cm-board") || !view) return;
     const el = event.target.closest && event.target.closest(".cm-board .cm-bcard[data-card]");
     if (!el || el.closest(".cm-board-peek, .cm-full-pick, .cm-panel-card")) return;
@@ -1374,6 +1453,18 @@ globalThis.CrankBoard = Object.freeze({
     if (!el || !view) return;
     event.preventDefault(); peek(null); zoom(Number(el.dataset.card));
   });
+  /* THE LOBBY'S MUSIC (Rob, 2026-10-09: "Lobby music."): the pack's lobby bed ("Lobby / seat", bgm_lobby_mythic_calm), from
+     the first press on a table's page before its game -- a browser plays nothing before one -- and crossfading into the
+     game's bed when the board opens (listen). The board keeps the one player, so one bed plays at a time; leaving the
+     table's page stops it (detach), and the board's mute keeps it quiet. */
+  const LOBBY_BED = "bgm_lobby_mythic_calm";
+  document.addEventListener("pointerdown", (event) => {
+    if (attached || !event.isTrusted || !C.main || !C.main.contains(event.target) || !document.querySelector(".cm-cloud-table")) return;
+    const a = sound();
+    if (!a) return;
+    if (a.isArmed()) {a.startBgm(LOBBY_BED); return;}
+    a.arm().then((on) => {if (on && !attached && document.querySelector(".cm-cloud-table")) a.startBgm(LOBBY_BED);});
+  }, true);
   /* THE GESTURE (docs/plan-play-audio.md): the audio context is made and resumed inside the first press on the board,
      with nothing awaited before it, or the browser refuses to play and says nothing. The bed starts with it. */
   document.addEventListener("pointerdown", (event) => {
@@ -1397,6 +1488,7 @@ globalThis.CrankBoard = Object.freeze({
      Space would press has the focus), 1–9 (hold that card), Enter (do the held card's first thing), Escape
      (back a step: held, fanned, a menu, the panel, full screen), ⌘/Ctrl + and − (card size). */
   document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && peekId !== null) peek(null);
     if (!document.getElementById("cm-board") || !view || document.querySelector("#cm-dialog[open]")) return;
     const tag = (document.activeElement && document.activeElement.tagName) || "";
     const typing = /^(INPUT|SELECT|TEXTAREA)$/.test(tag);
@@ -1478,6 +1570,12 @@ globalThis.CrankBoard = Object.freeze({
   actions["board-end-cancel"] = () => {confirmEnd = false; draw();};
   actions["board-concede"] = async () => {tools = false; await tableApi().api("POST", `${tableApi().tableUrl(tableId)}/concede`); draw();};
   actions["board-leave"] = async () => {const id = tableId; C.board.close(); await tableApi().refresh(id);};
+  /* Hold priority after I cast (Tools): kept on this device, and the Tools' words follow it. */
+  document.addEventListener("change", (event) => {
+    if (!event.target || !event.target.matches || !event.target.matches("#cm-board [data-board-hold]")) return;
+    keep(HOLD_KEY, event.target.checked ? "on" : "off");
+    draw();
+  });
   /* The filter hides and shows the rows where they are, so typing keeps its place. */
   document.addEventListener("input", (event) => {
     if (!event.target || !event.target.matches || !event.target.matches("[data-board-history-filter]")) return;
@@ -1536,8 +1634,10 @@ globalThis.CrankBoard = Object.freeze({
       drag = {kind, y: event.clientY, from: splitOf(kind), per: Math.max(1, col ? col.getBoundingClientRect().height : 600)};
     } else if (kind === "rows") {
       if (!tbl) return;
-      const room = tbl.getBoundingClientRect().height - (parseFloat(getComputedStyle(tbl).rowGap) || 22);
-      drag = {kind, y: event.clientY, from: rowShare(), per: Math.max(1, room)};
+      /* Two seats side by side: the bar between them moves sideways, the left board's share of the width. */
+      const side = tbl.dataset.seats === "2", r = tbl.getBoundingClientRect(), gaps = getComputedStyle(tbl);
+      const room = side ? r.width - (parseFloat(gaps.columnGap) || 14) : r.height - (parseFloat(gaps.rowGap) || 22);
+      drag = {kind, x: event.clientX, y: event.clientY, from: rowShare(), per: Math.max(1, room), side};
     } else {
       const c = document.querySelector("#cm-board .cm-board-hand .cm-board-hand-cards .cm-bcard"), s = scaleOf("hand");
       drag = {kind, y: event.clientY, from: s, per: Math.max(40, c ? c.getBoundingClientRect().height / (s / 100) : 104)};
@@ -1549,7 +1649,7 @@ globalThis.CrankBoard = Object.freeze({
     if (drag.kind === "pane") {setPane(drag.from + event.clientX - drag.x); return;}
     const dy = event.clientY - drag.y;
     if (drag.kind === "panel" || drag.kind === "side") setSplit(drag.kind, drag.from + dy / drag.per);
-    else if (drag.kind === "rows") setRows(drag.from + dy / drag.per);
+    else if (drag.kind === "rows") setRows(drag.from + (drag.side ? event.clientX - drag.x : dy) / drag.per);
     else setScale("hand", drag.from - dy / drag.per * 100);
   });
   const endDrag = () => {if (drag) {drag = null; document.documentElement.classList.remove("cm-dragging");}};
@@ -1561,6 +1661,11 @@ globalThis.CrankBoard = Object.freeze({
     if (el.dataset.drag === "pane") {
       if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
       event.preventDefault(); setPane(paneWidth() + (event.key === "ArrowRight" ? 20 : -20)); return;
+    }
+    /* The upright bar between two boards side by side moves with ← and →, as it looks. */
+    if (el.dataset.drag === "rows" && el.getAttribute("aria-orientation") === "vertical") {
+      if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+      event.preventDefault(); setRows(rowShare() + (event.key === "ArrowRight" ? 0.02 : -0.02)); return;
     }
     if (!["ArrowUp", "ArrowDown"].includes(event.key)) return;
     event.preventDefault();

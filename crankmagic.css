@@ -3188,8 +3188,11 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
    tray kept clear), --full-w and --opp-w (Full screen), and --lap, the overlap of a row of cards that would
    otherwise run past its zone. Cards are 5:7 by width. Three card sizes: the table's (--card-scale, the Tools
    slider), the boards' (--board-scale) and the hand's (--hand-scale), the last two on the board, Tools setting both. */
-.cm-board{position:fixed;inset:0;z-index:50;display:grid;grid-template-rows:48px minmax(0,1fr);background:var(--v-bg);color:var(--v-ink);overflow:hidden;--board-scale:var(--card-scale,1);--hand-scale:var(--card-scale,1);--back-img:url(assets/crankmagic/card-back-tan.webp);--bc:calc(78px * var(--board-scale,1));--hc:calc(112px * var(--hand-scale,1))}
-.cm-board[data-view="table"]{grid-template-rows:48px minmax(0,1fr) auto}
+.cm-board{position:fixed;inset:0;z-index:50;display:grid;grid-template-rows:48px minmax(0,1fr);background:var(--v-bg);color:var(--v-ink);overflow-x:hidden;overflow-y:auto;--board-scale:var(--card-scale,1);--hand-scale:var(--card-scale,1);--back-img:url(assets/crankmagic/card-back-tan.webp);--bc:calc(78px * var(--board-scale,1));--hc:calc(112px * var(--hand-scale,1))}
+/* The tabletop keeps the room fit() gives it (--tabletop-h), and a hand larger than the table's card size runs on below,
+   the board scrolling to it (Rob, 2026-10-09). The strip stays at the top. */
+.cm-board[data-view="table"]{grid-template-rows:48px var(--tabletop-h,minmax(0,1fr)) auto}
+.cm-board-strip{position:sticky;top:0}
 .cm-board-loading{padding:40px;text-align:center;color:var(--v-muted)}
 /* THE STRIP, one 48px line that never wraps. */
 .cm-board-strip{display:flex;align-items:center;gap:8px;height:48px;padding:0 12px;border-bottom:1px solid var(--v-line);background:var(--v-panel);white-space:nowrap;position:relative;z-index:8;min-width:0}
@@ -3344,19 +3347,20 @@ button.cm-vitals{cursor:pointer}
 .cm-board-tabletop{position:relative;display:flex;flex-direction:column;min-height:0;min-width:0;padding:14px 14px 8px}
 .cm-board-table{position:relative;flex:1 1 auto;min-height:0;min-width:0;display:grid;grid-template-columns:repeat(2,var(--board-w,45%));grid-template-rows:calc(var(--top-w,45%) * 9 / 16) calc(var(--bot-w,45%) * 9 / 16);grid-template-areas:"a b" "c d";gap:22px 14px;justify-content:center;align-content:center;border-radius:var(--v-radius-tile);overflow:hidden;isolation:isolate;--pie:clamp(64px,calc(var(--board-w,620px) * .13),112px)}
 .cm-board-table[data-seats="3"]{grid-template-areas:"a b" "c c"}
-.cm-board-table[data-seats="2"]{grid-template-columns:var(--board-w,90%);grid-template-areas:"a" "b"}
+.cm-board-table[data-seats="2"]{column-gap:22px;grid-template-columns:var(--top-w,45%) var(--bot-w,45%);grid-template-rows:calc(var(--board-w,45%) * 9 / 16);grid-template-areas:"a b"}
 .cm-board-slot{min-width:0;min-height:0;display:grid;z-index:1;width:var(--row-w,100%)}
 /* A row narrower than the columns keeps to the middle: the left seats to the right of their column, the right to the left. */
 .cm-board-slot[data-area="a"],.cm-board-slot[data-area="c"]{justify-self:end}
 .cm-board-slot[data-area="b"],.cm-board-slot[data-area="d"]{justify-self:start}
-.cm-board-table[data-seats="3"] .cm-board-slot[data-area="c"],.cm-board-table[data-seats="2"] .cm-board-slot{justify-self:center}
+.cm-board-table[data-seats="3"] .cm-board-slot[data-area="c"]{justify-self:center}
+.cm-board-table[data-seats="2"] .cm-board-slot{align-self:center;height:calc(var(--row-w,45%) * 9 / 16)}
 .cm-board-slot>.cm-mat{height:100%}
 .cm-board-sea{position:absolute;inset:0;width:100%;height:100%;z-index:-2;display:block}
 .cm-board-fan{position:absolute;inset:0;z-index:-1;opacity:.35;pointer-events:none;transition:opacity .6s}
 .cm-board-table>.cm-board-fan{transition:none}   /* the tabletop is still, for now (item 3) */
 .cm-board-fan .cm-seat-fan{position:absolute;inset:0;width:100%;height:100%}
 /* THE BAR BETWEEN THE ROWS (item 4), in the row gap: dragged, it shares the height; its right end sizes the board's cards. */
-.cm-board-rowbar{position:absolute;left:50%;width:var(--grid-w,100%);top:var(--mid-y,50%);z-index:2;height:22px;transform:translate(-50%,-50%);display:flex;align-items:center;gap:10px;padding:0 6px;pointer-events:none}
+.cm-board-rowbar{position:absolute;left:var(--mid-x,50%);width:var(--grid-w,100%);top:var(--mid-y,50%);z-index:2;height:22px;transform:translate(-50%,-50%);display:flex;align-items:center;gap:10px;padding:0 6px;pointer-events:none}
 .cm-board-grip{flex:1 1 auto;align-self:stretch;position:relative;cursor:row-resize;pointer-events:auto;touch-action:none;border-radius:6px}
 .cm-board-grip::before{content:"";position:absolute;left:0;right:0;top:50%;height:4px;transform:translateY(-50%);border-radius:2px;background:color-mix(in srgb,var(--mat-ink) 22%,transparent)}
 .cm-board-grip:hover::before,.cm-board-grip:focus-visible::before,.cm-dragging .cm-board-grip::before{background:var(--v-accent)}
@@ -3374,7 +3378,7 @@ button.cm-vitals{cursor:pointer}
 .cm-board-sound span{min-width:6ch}
 .cm-board-sound output{min-width:4ch;text-align:right;font-variant-numeric:tabular-nums}
 /* THE LIFE COUNTER at the true center (item 9): a slice per seat, its life on it, the logo in the middle. */
-.cm-board-pie{position:absolute;left:50%;top:var(--mid-y,50%);z-index:3;width:var(--pie,96px);height:var(--pie,96px);transform:translate(-50%,-50%);border-radius:50%;box-shadow:0 10px 30px -10px rgba(0,0,0,.6),0 0 0 2px var(--mat-felt-edge)}
+.cm-board-pie{position:absolute;left:var(--mid-x,50%);top:var(--mid-y,50%);z-index:3;width:var(--pie,96px);height:var(--pie,96px);transform:translate(-50%,-50%);border-radius:50%;box-shadow:0 10px 30px -10px rgba(0,0,0,.6),0 0 0 2px var(--mat-felt-edge)}
 .cm-board-pie-life{position:absolute;transform:translate(-50%,-50%);font-weight:900;font-size:calc(var(--pie) * .16);line-height:1;font-variant-numeric:tabular-nums;color:var(--table-ink);pointer-events:none}
 .cm-board-center{position:absolute;left:50%;top:50%;z-index:3;width:34px;height:34px;padding:0;transform:translate(-50%,-50%);border-radius:50%;border:2px solid var(--v-accent);background:var(--mat-felt-edge);display:grid;place-items:center;cursor:pointer}
 .cm-board-center img{width:18px;height:18px;display:block}
@@ -3437,11 +3441,18 @@ button.cm-vitals{cursor:pointer}
 .cm-board-hand .cm-bcard{--bc:var(--hc);cursor:pointer;transform-origin:50% 100%}
 .cm-board-hand .cm-bcard:hover{transform:translateY(-22%);z-index:3}
 .cm-board[data-view="table"] .cm-board-hand{margin:0 14px;--hc:calc(74px * var(--hand-scale,1))}
+.cm-board[data-view="table"]>.cm-board-hand{align-self:start}   /* its own height, not the row's: what fit() reserves for it */
 /* THE FOCUS VIEW: the seat pane, then the mat, the largest 16:9 that fits, the fan behind it, the tray over its foot. */
 .cm-board-body{position:relative;display:grid;grid-template-columns:var(--pane-w,168px) minmax(0,1fr);min-height:0;min-width:0}
 /* The divider between the pane and the mat (item 15): a bar along the pane's edge, dragged sideways. */
 .cm-board-panegrip{position:absolute;top:0;bottom:0;left:calc(var(--pane-w,168px) - 6px);z-index:6;width:12px;display:flex}
 .cm-board-grip.is-upright{cursor:col-resize;border-radius:6px}
+/* Two seats side by side (Rob, 2026-10-09): the bar between them upright, as tall as the boards, its Board cards pill
+   hung below them, in the room a landscape screen leaves under two boards side by side. */
+.cm-board-rowbar.is-upright{width:22px;height:var(--grid-h,50%);flex-direction:column;padding:0}
+.cm-board-rowbar.is-upright>.cm-board-grip{width:100%}
+.cm-board-rowbar.is-upright>.cm-board-scale{position:absolute;top:calc(100% + 10px);left:50%;transform:translateX(-50%)}
+.cm-dragging:has(.cm-board-grip.is-upright:hover),.cm-dragging:has(.cm-board-grip.is-upright:hover) *{cursor:col-resize!important}
 .cm-board-grip.is-upright::before{left:50%;right:auto;top:0;bottom:0;width:4px;height:auto;transform:translateX(-50%)}
 .cm-board-tile.is-mini{display:block;padding:0;background:var(--v-panel)}
 .cm-board-mini{position:absolute;inset:0;border-radius:inherit;overflow:hidden;--mini-w:calc(var(--pane-w,168px) - 20px)}
@@ -3462,6 +3473,13 @@ button.cm-vitals{cursor:pointer}
 .cm-board-tile:hover{border-color:var(--seat)}
 .cm-board-tile-main{display:grid;gap:2px;justify-items:start;width:100%;padding:0;border:0;background:none;text-align:left;font:inherit;color:inherit;cursor:pointer;min-width:0}
 .cm-board-tile.is-you{border-color:color-mix(in srgb,var(--v-accent) 60%,var(--v-line))}
+/* Whose turn it is (Rob, 2026-10-09): the seat's card in the side pane ringed and marked. */
+.cm-board-tile.is-turn{border-color:var(--v-brass);box-shadow:0 0 0 2px var(--v-brass)}
+.cm-board-turn-mark{display:inline-flex;align-items:center;gap:4px;padding:1px 7px 1px 5px;border-radius:999px;background:var(--v-brass);color:var(--poster-ground);font-size:11px;line-height:1.5;white-space:nowrap}
+.cm-board-turn-mark b{font-weight:800}
+.cm-board-tile>.cm-board-turn-mark{position:absolute;right:8px;bottom:8px;z-index:4}
+.cm-full-vitals>.is-turn{box-shadow:inset 3px 0 0 var(--v-brass)}
+.cm-full-vitals>div>span .cm-board-turn-mark{margin-left:6px}
 .cm-board-tile.is-focus{outline:2px solid var(--v-accent);outline-offset:1px}
 .cm-board-tile-name{font-weight:700;font-size:12px}
 .cm-board-tile .cm-muted{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
@@ -3474,7 +3492,7 @@ button.cm-vitals{cursor:pointer}
 #matrix-v2 .v-button.cm-board-glyphed{display:inline-flex;align-items:center;gap:6px}
 .cm-phone-icon .cm-icon{width:20px;height:20px}
 .cm-board-coach-open[aria-pressed="true"]{background:color-mix(in srgb,var(--v-aether) 22%,transparent)}
-.cm-board-main{position:relative;min-width:0;min-height:0;overflow:hidden;--hc:calc(clamp(112px,var(--mat-w,1060px) * .097,168px) * var(--hand-scale,1))}
+.cm-board-main{position:relative;min-width:0;min-height:0;overflow-x:clip;overflow-y:visible;--hc:calc(clamp(112px,var(--mat-w,1060px) * .097,168px) * var(--hand-scale,1))}
 .cm-board-stage{position:absolute;left:50%;top:8px;transform:translateX(-50%);width:var(--mat-w,calc(100% - 16px));aspect-ratio:16 / 9;isolation:isolate;border-radius:var(--v-radius-card)}
 .cm-board-stage>.cm-board-fan{border-radius:var(--v-radius-card);opacity:.3}
 .cm-board-stage>.cm-mat{position:absolute;inset:0}
@@ -3502,7 +3520,9 @@ button.cm-vitals{cursor:pointer}
 #matrix-v2 .cm-full-corner .v-button.compact{min-height:0;height:28px;padding:0 10px}
 .cm-full-corner{position:absolute;left:12px;top:10px;z-index:6;display:flex;align-items:center;gap:8px}
 .cm-full-corner-name{font-size:12px;font-weight:700;color:var(--mat-ink);text-shadow:0 1px 3px rgba(0,0,0,.8)}
-.cm-full-mine>.cm-board-hand{position:absolute;left:120px;right:120px;bottom:0;z-index:5}
+/* The tray starts where the room kept for it starts, and a larger hand grows down past the window, never up over the
+   board (Rob, 2026-10-09). */
+.cm-full-mine>.cm-board-hand{position:absolute;left:120px;right:120px;top:calc(100% - var(--tray-h,calc(var(--hc) * 7 / 5 + 22px)));z-index:5}
 .cm-full-side{display:flex;flex-direction:column;gap:6px;min-width:0;min-height:0;overflow:hidden}
 .cm-full-vitals{display:grid;gap:3px}
 .cm-full-vitals>div{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;background:linear-gradient(90deg,color-mix(in srgb,var(--seat) 30%,var(--mat-cavern)),var(--mat-cavern));font-size:11px;color:var(--mat-ink)}
@@ -3666,7 +3686,8 @@ button.cm-vitals{cursor:pointer}
 .cm-phone-center>.cm-mat{flex:1 1 auto;min-height:0;padding-top:46px}
 .cm-phone-pill{position:absolute;left:50%;top:6px;z-index:3;display:flex;align-items:center;gap:8px;padding:3px 4px 3px 12px;transform:translateX(-50%);border-radius:999px;background:var(--v-panel);border:1px solid var(--v-line-strong);font-size:12px;white-space:nowrap;max-width:calc(100% - 12px)}
 #matrix-v2 .cm-phone-pill .v-button{min-height:0;height:30px;padding:0 12px}
-.cm-phone-ask{position:absolute;left:8px;right:8px;bottom:8px;z-index:3;display:flex;flex-direction:column;gap:6px;max-height:55%;overflow:auto}
+/* At most a third of the phone's height, what is asked scrolling within it: a main phase's ten ways to play once covered half the board. */
+.cm-phone-ask{position:absolute;left:8px;right:8px;bottom:8px;z-index:3;display:flex;flex-direction:column;gap:6px;max-height:33%;overflow:auto}
 .cm-phone-ask:empty{display:none}
 .cm-phone-ask .cm-board-decision,.cm-phone-ask .cm-board-stack{padding:8px 10px}
 .cm-phone-seats{display:flex;flex-direction:column;gap:6px;min-height:0;overflow:auto}
