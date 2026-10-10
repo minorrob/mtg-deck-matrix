@@ -450,6 +450,45 @@ every decision.
   rules add.
 - **Phase 3 (Hard):** L3, simulated futures and opponent models, the number of futures as the difficulty.
 
+**Status, 2026-10-10: Phase 1's L1 built, and measured.** `game/engine/pilots/scored-pilot.mjs` (with `odds.mjs`) scores
+five choices and leaves the rest to L0:
+- the spells it casts: the set that spends the most of its mana, the largest first, a commander's tax counted;
+- where a spell is aimed: the opposing permanent worth the most;
+- its attacks: damage dealt, trades against the defender's likely blocks, and the swing back each one leaves open;
+- its blocks: kills that survive, fair trades, walls, and chump blocks only while what gets through would kill;
+- its opening hand: the hypergeometric chance of its third land by turn three, from its own deck list.
+
+Combat is exact for one attacker and one blocker: first strike, double strike, deathtouch, indestructible, trample and
+damage already marked. A table's AI seat is chosen at Normal or Easy on New table (*An AI · Normal*, *An AI · Easy*).
+The table and the room keep the setting with the seat, and the room makes the pilot from it with its own deck list and
+the match's seed. A seat without a setting (every match launched before) is L0 and replays as it was played. Easy's
+chance comes from the seed, the seat and the question, not a stream, so a replay and a reopened room choose alike
+(`tests/room-seat-pilots.mjs`).
+
+**The bench** (`tools/pilot-bench.mjs`) plays two-seat games of the seven decks through the real room, round the 21
+pairs, L1's seat alternating. It ran 420 seeded games per arm, each arm on the same seeds:
+
+| Arm | L1's seat won | L0 won | L1's share (95%) | Paired with the control: wins gained / lost |
+|---|---|---|---|---|
+| Control (both L0) | 214 | 206 | 51% (46–56%) | — |
+| **Normal** | **242** | **178** | **58% (53–62%)** | **+51 / −23, sign test p = 0.0015** |
+| Easy | 233 | 187 | 55% (51–60%) | +54 / −35, p = 0.06 (against Normal: +27 / −36) |
+| Normal's attacks alone | 222 | 198 | 53% | +22 / −14, p = 0.24 |
+| Normal's casting alone | 224 | 196 | 53% | +31 / −21, p = 0.21 |
+
+No part decides much alone; together they do. Most games (about 80%) end the same either way: these decks' engines
+decide them, not these choices.
+- **Its time:** of 66,348 decisions, the median under 0.01 ms, the slowest 5% from 0.2 ms, the slowest 24 ms. It works
+  combat out only up to 4,000 creature pairs; beyond that (a board of hundreds of Goblins), L0 answers.
+- **Its checklist:** no pass with a castable spell, either pilot. Normal's bench flagged 4 chump blocks as not needed
+  where L0 had none, counted on raw power. The bench now counts double strike twice, as L1 does.
+- **Not answered:** none of either pilot's answers was refused.
+
+**What L1 does not do yet, and is next:** activated abilities. L0 never activates one that is not a mana or loyalty
+ability, and L1 inherits that. Krenko's Goblins, Chulane's land and draw, Sakura-Tribe Elder's land, Priest of
+Forgotten Gods and a Clue's card were offered hundreds of times in seven games and never used. Scoring them means
+reading what each does, which is public card text. That is the next L1 work, measured on the same bench.
+
 Sources: [AI Factory's Spades, MCTS with knowledge](https://ojs.aaai.org/index.php/AIIDE/article/view/12679);
 [Information Set MCTS](https://eprints.whiterose.ac.uk/75048); [determinized MCTS for
 Magic](https://eprints.whiterose.ac.uk/75050); [evolved evaluation functions for a collectible card

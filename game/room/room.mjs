@@ -58,6 +58,7 @@ import {createJournal, hashState} from "../engine/journal.mjs";
 import {createController} from "../engine/controller.mjs";
 import {createMatchStore} from "../engine/storage.mjs";
 import {housePilot} from "../engine/pilots/house-pilot.mjs";
+import {scoredPilot, SETTINGS} from "../engine/pilots/scored-pilot.mjs";
 import {addToHistory} from "./history.mjs";
 
 export const ROOM_PROTOCOL = 1;
@@ -105,11 +106,14 @@ function readPod(pod, cards) {
     if (!SEAT_ID.test(seatId) || ids.has(seatId)) throw new RoomError(400, `Seat ${index + 1} needs its own seat id.`);
     ids.add(seatId);
     const pilot = s.pilot === "house" ? "house" : "human";
+    /* An AI seat's setting (AI-2): "easy" or "normal", L1 (game/engine/pilots/scored-pilot.mjs). A seat without one, as every
+       match launched before it, is L0, the house pilot, and replays as it was played. */
+    const level = pilot === "house" && SETTINGS.includes(s.level) ? s.level : null;
     const commander = (Array.isArray(s.commander) ? s.commander : []).map(String);
     const library = (Array.isArray(s.cards) ? s.cards : []).map(String);
     if (commander.length > 2 || commander.length + library.length > MAX_CARDS) throw new RoomError(400, `${seatId}'s deck is not one a table can hold.`);
     for (const name of [...commander, ...library]) if (!cards(name)) missing.add(name);
-    return {seatId, name: String(s.name || `Seat ${index + 1}`).slice(0, 60), pilot, commander, cards: library};
+    return {seatId, name: String(s.name || `Seat ${index + 1}`).slice(0, 60), pilot, ...(level ? {level} : {}), commander, cards: library};
   });
   if (missing.size) {
     const names = [...missing].sort();
@@ -274,12 +278,20 @@ export function triggerRun(stack) {
  * @param {object} storage  the M4 storage contract (get/put/delete/list); a Durable Object's own, in the cloud
  * @param {(name: string) => ?object} cards  a card's definition for `addObject`, or null when the engine
  *   cannot play it
- * @param {Function} makePilot  what answers for an AI seat: the house pilot. A suite may pass its own (one that answers
- *   wrongly on purpose, to prove the refusal tally); the table never does
+ * @param {Function} makePilot  what answers for an AI seat: `seatPilot`, given {seat, cards, deck, level, seed}. A suite may
+ *   pass its own (one that answers wrongly on purpose, to prove the refusal tally); the table never does
  * @param {number} slice  engine steps one call may take before it stops, saved, for `resume` (the Durable Object's
  *   alarm) to play on from; unbounded unless given
  */
-function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinity) {
+/**
+ * WHAT ANSWERS FOR AN AI SEAT: L1 at its setting, handed its own deck list (which its player knows) and the match's seed
+ * (easy's chance); without a setting, L0. Both see only the seat's projection.
+ */
+export function seatPilot({seat, cards, deck = [], level = null, seed = ""}) {
+  return level ? scoredPilot({seat, cards, deck, setting: level, seed}) : housePilot({seat, cards});
+}
+
+function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity) {
   const store = createMatchStore(storage, matchId);
   const ROOM_KEY = `room/${matchId}`;
   const facts = factsFrom(cards);
@@ -346,7 +358,10 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
   const tape = (entry) => {unsaved.push({n: tapeN, turn: state ? state.turn : 0, ...entry}); tapeN += 1;};
   const note = (text) => {history.push({turn: state ? state.turn : 0, text}); if (history.length > HISTORY_KEEP) history.splice(0, history.length - HISTORY_KEEP);};
   const finished = () => Boolean(ended) || Boolean(gameOver(state));
-  const pilotFor = (seat) => pilots[seat] || (pilots[seat] = makePilot({seat, cards: facts}));
+  /* What a seat's pilot is made with: public card facts, and its seat's own deck list, setting and the match's seed. */
+  let matchSeed = "";
+  const pilotMade = (seat) => makePilot({seat, cards: facts, deck: seats[seat].cards, level: seats[seat].level ?? null, seed: matchSeed});
+  const pilotFor = (seat) => pilots[seat] || (pilots[seat] = pilotMade(seat));
 
   const write = (events) => {
     const names = seats.map((s) => s.name);
@@ -510,7 +525,8 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
     rng = createRng(point.seed, point.rng);
     journal = createJournal({matchId, seed: point.seed}, point);
     controller = createController(record.controller);
-    pilots = seats.map((s, seat) => (s.pilot === "house" ? makePilot({seat, cards: facts}) : null));
+    matchSeed = point.seed;
+    pilots = seats.map((s, seat) => (s.pilot === "house" ? pilotMade(seat) : null));
     saved = 0; unsaved = [];
     tapeN = (await store.readTape()).length;
   }
@@ -562,7 +578,7 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
 
   const api = {
     matchId,
-    get seats() {return seats.map(({seatId, name, pilot}) => ({seatId, name, pilot}));},
+    get seats() {return seats.map(({seatId, name, pilot, level}) => ({seatId, name, pilot, ...(level ? {level} : {})}));},
     get status() {return finished() ? "finished" : "playing";},
     get revision() {return controller.revision;},
     get waitingOn() {return pendingSeat === null ? null : seats[pendingSeat].seatId;},
@@ -592,7 +608,8 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
       rng = createRng(seed);
       journal = createJournal({matchId, seed});
       controller = createController();
-      pilots = seats.map((s, seat) => (s.pilot === "house" ? makePilot({seat, cards: facts}) : null));
+      matchSeed = seed;
+      pilots = seats.map((s, seat) => (s.pilot === "house" ? pilotMade(seat) : null));
       await store.saveMatch({pod: {seats, ...(startingLife !== undefined ? {startingLife} : {}), ...beats}, seed});
       write(beginMulligans(state, rng));
       drive();

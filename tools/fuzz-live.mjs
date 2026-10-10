@@ -264,12 +264,14 @@ export async function checkLeaks(room, storage, matchId, memory, turn) {
  * `person` unless a suite says otherwise). Returns what the game was, never its state: how it ended, its length, the
  * people's longest wait, their answers the rules refused, and the room's tally of refused AI answers.
  */
-export async function playGame({decks, seed, cards, humans = [], matchId = `fuzz-${seed}`, pilot, storage = memoryStorage(), turnLimit = 400, reopenEvery = 0, people: answerer = person,
+export async function playGame({decks, seed, cards, humans = [], levels = [], matchId = `fuzz-${seed}`, pilot, storage = memoryStorage(), turnLimit = 400, reopenEvery = 0, people: answerer = person,
   replay = false, leaks = false}) {
   /* The pod as the table launches it (game/room/table.mjs): a step with nothing to do passes itself, once every person is
      out the game ends there, a run of identical triggers may resolve at once, and a person's cast passes for them -- so a
      wait measured here is one a person at the table has, not the AI seats playing a game out for nobody. */
-  const pod = {passEmpty: true, endWhenNoPerson: true, resolveAll: true, passAfterCast: true, seats: decks.map((d, i) => ({seatId: `s${i}`, name: NAMES[i] || `Seat ${i + 1}`, pilot: humans.includes(i) ? "human" : "house", commander: d.commander, cards: d.cards}))};
+  /* `levels`: an AI seat's setting (AI-2), "easy" or "normal", for L1; none, L0. */
+  const pod = {passEmpty: true, endWhenNoPerson: true, resolveAll: true, passAfterCast: true, seats: decks.map((d, i) => ({seatId: `s${i}`, name: NAMES[i] || `Seat ${i + 1}`, pilot: humans.includes(i) ? "human" : "house",
+    ...(!humans.includes(i) && levels[i] ? {level: levels[i]} : {}), commander: d.commander, cards: d.cards}))};
   const people = Object.fromEntries(humans.map((i) => [`s${i}`, answerer(`person-${seed}-${i}`)]));
   const started = Date.now();
   let room = await startRoom({storage, matchId, ...(cards ? {cards} : {}), pod, seed: `seed-${seed}`, ...(pilot ? {pilot} : {})});
