@@ -24,7 +24,7 @@ import {fileURLToPath} from "node:url";
 import {performance} from "node:perf_hooks";
 import {decksFromBackup, playGame} from "./fuzz-live.mjs";
 import {seatPilot} from "../game/room/room.mjs";
-import {scoredPilot, fight, WEIGHTS} from "../game/engine/pilots/scored-pilot.mjs";
+import {scoredPilot, fight, WEIGHTS, TEMPERATURE} from "../game/engine/pilots/scored-pilot.mjs";
 
 export const DECKS = ["D1 Quintorius Spirits", "D2 Chulane Value Loop", "D3 Atraxa Proliferate", "D4 Felothar Walls", "D5 Shadrix Aristocrats", "D6 Krenko Goblins", "D7 Maralen Exile Cast"];
 export const PAIRS = DECKS.flatMap((a, i) => DECKS.slice(i + 1).map((b) => [a, b]));
@@ -68,7 +68,7 @@ const interval = (wins, n) => {
 const quantile = (sorted, q) => (sorted.length ? sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))] : 0);
 
 /** One game: game n's pair of decks, L1 in the seat n's parity gives it. */
-export async function benchGame({n, decksByName, cards, setting = "normal", parts, weights, turnLimit = 400}) {
+export async function benchGame({n, decksByName, cards, setting = "normal", parts, weights, temperature, turnLimit = 400}) {
   const [a, b] = PAIRS[(n - 1) % PAIRS.length];
   const l1Seat = n % 2 === 0 ? 0 : 1;
   const decks = [decksByName.get(a), decksByName.get(b)];
@@ -80,7 +80,7 @@ export async function benchGame({n, decksByName, cards, setting = "normal", part
      seed by the room; L0 with none. Only what the bench measures, and any parts or weights it is trying, are added. */
   const levels = l1Seat === 0 ? [setting, null] : [null, setting];
   const makePilot = (given) => (given.level
-    ? watch(timed(parts || weights ? scoredPilot({...given, setting: given.level, ...(parts ? {parts} : {}), ...(weights ? {weights} : {})}) : seatPilot(given)), counts.l1)
+    ? watch(timed(parts || weights || temperature ? scoredPilot({...given, setting: given.level, ...(parts ? {parts} : {}), ...(weights ? {weights} : {}), ...(temperature ? {temperature} : {})}) : seatPilot(given)), counts.l1)
     : watch(seatPilot(given), counts.l0));
   const game = await playGame({decks, seed: `bench-${n}`, matchId: `bench-${n}`, cards, humans: [], levels, pilot: makePilot, turnLimit});
   const winner = game.result?.winner ?? null;
@@ -104,12 +104,14 @@ async function main(argv) {
   /* --parts cast,attack: only those scored, the rest L0's (none: L0 throughout, the control); --weights '{"exposure": 5}': weights changed for the run. */
   const parts = arg("parts") === "none" ? [] : arg("parts") ? arg("parts").split(",") : undefined;
   const weights = arg("weights") ? {...WEIGHTS, ...JSON.parse(arg("weights"))} : undefined;
+  /* --temperature 3: easy's, for the run. */
+  const temperature = arg("temperature") ? {...TEMPERATURE, easy: Number(arg("temperature"))} : undefined;
   const {tableCards} = await import("../cloud/game-room.mjs");
   const backup = JSON.parse(readFileSync(new URL("../data/live-state.json", import.meta.url), "utf8"));
   const decksByName = new Map(decksFromBackup(backup, DECKS).map((d) => [d.name, d]));
   const rows = [];
   for (let n = from; n < from + games; n += 1) {
-    const row = await benchGame({n, decksByName, cards: tableCards, setting, parts, weights});
+    const row = await benchGame({n, decksByName, cards: tableCards, setting, parts, weights, temperature});
     rows.push(row);
     console.log(`game ${n}: ${row.decks.join(" v ")}, L1 in s${row.l1Seat}: ${row.outcome === "l1" ? "L1 won" : row.outcome === "l0" ? "L0 won" : "neither"} (${row.reason}), ${row.turns} turns, ${(row.ms / 1000).toFixed(1)} s`);
   }

@@ -82,6 +82,26 @@ const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1;};
     `and reopened every five of the person's answers (${reopened.reopened} times), the same game to the same end`);
 }
 
+/* ---- The room hands the pilot what the cards say, and whose turn it is ---- */
+{
+  const backup = JSON.parse(readFileSync(new URL("../data/live-state.json", import.meta.url), "utf8"));
+  const decks = decksFromBackup(backup, ["D6 Krenko Goblins", "D4 Felothar Walls"]);
+  let facts = null;
+  const whens = [];
+  const spy = (given) => {
+    const p = seatPilot(given);
+    if (given.level) facts = given.cards;
+    return given.level ? {...p, passes(actions, stackSize, when) {whens.push(when); return p.passes(actions, stackSize, when);}} : p;
+  };
+  const game = await playGame({decks, seed: 3, cards: tableCards, humans: [], levels: ["normal", null], pilot: spy});
+  const krenko = facts("Krenko, Mob Boss");
+  ok(game.status === "finished" && krenko.subtypes.includes("Goblin") && krenko.activated.some((a) => a.effects.some((e) => e.effect === "createToken")) && facts("Forest").activated.length === 0,
+    "the pilot reads a card's subtypes and what its activated abilities cost and do, as the card says them");
+  ok(whens.some((w) => w.ownTurn === true && w.phase === "MAIN1") && whens.some((w) => w.ownTurn === false) && whens.every((w) => typeof w.phase === "string"),
+    `and its quick pass is told whose turn it is and the step (${whens.length} passes)`);
+  ok(facts("Krenko, Mob Boss") === krenko, "a card's facts are read once and kept");
+}
+
 /* ---- The bench (tools/pilot-bench.mjs) plays and counts ---- */
 {
   const {benchGame, summarize, DECKS, PAIRS} = await import("../tools/pilot-bench.mjs");
