@@ -106,6 +106,11 @@ hand and board, which the privacy page must name before the Coach is offered.
 - **What is shown** is an answer in which every card it names, every play's card, every id it would highlight and the
   seat it calls the threat is in the brief. Otherwise it is not shown and is logged as ungrounded. Its calls are logged
   as `coach`, on the same caps.
+- **Its own daily cap,** inside the general one, for everyone together: `AI_CAP_COACH_CENTS`, 150 on staging (Rob,
+  2026-10-10: *"$1.50 for the coach per day is good"*). Only calls logged as `coach` count toward it. Reached, the Coach
+  answers 429, *"The Coach has reached its spend cap for the last 24 hours. Try again tomorrow."*, while Explain goes on
+  under the general caps. The release profile sets it as `ai.coachCapCents`, and `tools/release-pages.mjs` refuses a
+  release that switches the Coach on without it.
 - **The board:** the Coach panel asks the route. It shows the answer, with its cards in bold. *Show me* lights the cards
   on the board, and *Why?* opens each play's reason. Signed in to the library only, the panel offers the AI door's
   sign-in, which comes back to the table (`GET /api/ai/login?to=#table?id=…`).

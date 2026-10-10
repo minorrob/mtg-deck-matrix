@@ -109,10 +109,12 @@ export function createAi(db, {now = () => new Date().toISOString(), newId = () =
   const since = () => new Date(Date.parse(now()) - 24 * 3600 * 1000).toISOString();
   return {
     async allowed(email) {return !!(await db.prepare("SELECT 1 AS yes FROM ai_allowlist WHERE email = ?").bind(email).first());},
-    async spent(email) {
+    /* What was spent in the last 24 hours: by this person, by everyone, and by everyone on this one feature. */
+    async spent(email, feature = null) {
       const mine = await db.prepare("SELECT COALESCE(SUM(cost_micros), 0) AS micros FROM ai_calls WHERE email = ? AND at >= ?").bind(email, since()).first();
       const all = await db.prepare("SELECT COALESCE(SUM(cost_micros), 0) AS micros FROM ai_calls WHERE at >= ?").bind(since()).first();
-      return {mine: Number(mine.micros) || 0, all: Number(all.micros) || 0};
+      const on = feature ? await db.prepare("SELECT COALESCE(SUM(cost_micros), 0) AS micros FROM ai_calls WHERE feature = ? AND at >= ?").bind(feature, since()).first() : null;
+      return {mine: Number(mine.micros) || 0, all: Number(all.micros) || 0, feature: on ? Number(on.micros) || 0 : 0};
     },
     async log(row) {
       await db.prepare("INSERT INTO ai_calls (id, email, feature, model, input_tokens, output_tokens, cost_micros, outcome, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
@@ -130,8 +132,13 @@ export function settings(env) {
   if (!person || !total) throw new Closed("AI features have no spend cap set, so they stay off.");
   const model = String(env.AI_MODEL || DEFAULT_MODEL);
   if (!MODELS.includes(model)) throw new Closed("AI features are set to a model CrankMagic does not use, so they stay off.");
-  return {key: env.ANTHROPIC_API_KEY, model, capPerson: person * 10000, capTotal: total * 10000};
+  /* A feature's own cap, inside the general one, for everyone together (Rob, 2026-10-10: "$1.50 for the coach per day"). */
+  const coach = cents(env.AI_CAP_COACH_CENTS);
+  return {key: env.ANTHROPIC_API_KEY, model, capPerson: person * 10000, capTotal: total * 10000, capFeature: coach ? {coach: coach * 10000} : {}};
 }
+
+/* How a feature with a cap of its own is named when it reaches it. */
+const FEATURE_NAME = {coach: "The Coach"};
 
 /* ONE CALL THROUGH THE DOOR, for any feature: the caps on the worst case before a cent is spent, the call, its price,
    the log, and the refusals said plainly. Returns the answer's structured output, parsed, with `done(outcome)` to log
@@ -140,10 +147,12 @@ export function settings(env) {
 async function ask({ai, who, feature, body, maxTokens, config, fetchImpl, declined}) {
   /* The worst case: every input character a token, and the whole output allowance. */
   const worst = costMicros(config.model, JSON.stringify(body).length, maxTokens);
-  const spent = await ai.spent(who.email);
+  const spent = await ai.spent(who.email, feature);
   const meter = (extra = 0) => ({spentCents: Math.round((spent.mine + extra) / 10000 * 100) / 100, capCents: config.capPerson / 10000});
   if (spent.mine + worst > config.capPerson) throw new Closed(`You have reached your AI spend cap for the last 24 hours (${meter().spentCents}¢ of ${meter().capCents}¢). Try again tomorrow.`, 429);
   if (spent.all + worst > config.capTotal) throw new Closed("CrankMagic has reached its AI spend cap for the last 24 hours. Try again tomorrow.", 429);
+  const featureCap = config.capFeature?.[feature];
+  if (featureCap && spent.feature + worst > featureCap) throw new Closed(`${FEATURE_NAME[feature] ?? "This AI feature"} has reached its spend cap for the last 24 hours. Try again tomorrow.`, 429);
 
   let response;
   try {

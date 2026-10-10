@@ -144,7 +144,7 @@ eq(pw.vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: 
 const staging = build({source: worktreeSource(), profileName: "cloud-staging"});
 eq(staging.problems, [], "the staging build is complete, its Access application's team and audience included");
 eq(JSON.parse(staging.built.get("wrangler.jsonc").toString("utf8")).vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5", PLAYTEST_TABLES: "on", SERVICE_SEATS: "on",
-  AI_ACCESS_AUD: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", AI_CAP_TOTAL_CENTS: "300", AI_CAP_PERSON_CENTS: "300", AI_MODEL: "claude-haiku-5-5", AI_COACH: "on"},
+  AI_ACCESS_AUD: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", AI_CAP_TOTAL_CENTS: "300", AI_CAP_PERSON_CENTS: "300", AI_MODEL: "claude-haiku-5-5", AI_COACH: "on", AI_CAP_COACH_CENTS: "150"},
   "and the Worker trusts that team's keys for that application only (read from the sign-in redirect's kid, and confirmed by Rob from the dashboard); its tables are playtest tables (M8b)");
 const sb = staging.built, sw2 = JSON.parse(sb.get("wrangler.jsonc").toString("utf8"));
 eq([sw2.name, sw2.main, sw2.assets, sw2.routes], ["crankmagic-staging", PLAY_WORKER, {directory: "./", binding: "ASSETS", run_worker_first: ["/api/*"]}, [{pattern: "staging.crankmagic.com", custom_domain: true}]],
@@ -204,6 +204,11 @@ delete noCoach.ai.coach;
 ok(verify(sb, noCoach).some((p) => p.includes("open the AI door")), "a release that turns the Coach on without its profile saying so is refused");
 const unsaid = new Map([...sb].map(([f, b]) => [f, f === "privacy.html" ? Buffer.from(b.toString("utf8").replace("<strong>The Coach.</strong>", "")) : b]));
 ok(verify(unsaid, stagingProfile).some((p) => p.includes("privacy.html does not say what it sends")), "and so is one whose privacy policy does not say what the Coach sends");
+/* Its own daily cap, $1.50 for everyone together (Rob, 2026-10-10), set with it or the release is refused. */
+eq(sw2.vars.AI_CAP_COACH_CENTS, "150", "staging's Coach has its own daily cap: 150 cents for everyone together");
+const uncapped = {...stagingProfile, ai: {...stagingProfile.ai}};
+delete uncapped.ai.coachCapCents;
+ok(verify(playConfig(sb, (c) => ({...c, vars: Object.fromEntries(Object.entries(c.vars).filter(([k]) => k !== "AI_CAP_COACH_CENTS"))})), uncapped).some((p) => p.includes("without a daily cap of its own")), "and a release that switches the Coach on without its cap is refused");
 ok(sb.get("privacy.html").toString("utf8").includes("It never sends another player's hand, the order of any library"), "the published privacy policy says what the Coach sends and never sends");
 eq(aiVars({...stagingProfile, ai: {...stagingProfile.ai, coach: true}}).AI_COACH, "on", "and a profile that says so turns it on");
 ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_MODEL: "claude-opus-5-5"}})), {...stagingProfile, ai: {...stagingProfile.ai, model: "claude-opus-5-5"}}).some((p) => p.includes("not one the AI door calls")), "and a profile naming a model dearer than Sonnet, even its own (Rob: Sonnet or the lowest-cost models, always)");

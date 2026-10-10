@@ -136,8 +136,9 @@ export const PROFILES = {
        wants none, so it is the same number, which never stops anyone before the total does. The model is Claude
        Haiku 5.5 ("change the model use to Haiku explicitly"). The key is a Worker secret Rob
        set himself, never here; the allowlist is his, in the database. Production's door stays shut. And the Coach
-       (X13) is on: Rob approved its privacy wording on 2026-10-09, and privacy.html says what it sends. */
-    ai: {aud: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", capTotalCents: 300, model: "claude-haiku-5-5", coach: true},
+       (X13) is on: Rob approved its privacy wording on 2026-10-09, and privacy.html says what it sends; and it has a cap of
+       its own inside the general one, for everyone together (Rob: "$1.50 for the coach per day is good"). */
+    ai: {aud: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", capTotalCents: 300, model: "claude-haiku-5-5", coach: true, coachCapCents: 150},
     cloud: {database: {name: "crankmagic-staging", id: "b7f806ec-c9e8-4265-9f23-7d9705db9a26"}, limits: {ip: "2001", person: "2002"}, access: {team: "crankmagic.cloudflareaccess.com", aud: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5"}},
   },
 };
@@ -159,8 +160,9 @@ export const aiVars = (profile) => (profile.ai ? {
   AI_CAP_TOTAL_CENTS: String(profile.ai.capTotalCents),
   AI_CAP_PERSON_CENTS: String(profile.ai.capPersonCents ?? profile.ai.capTotalCents),
   AI_MODEL: profile.ai.model,
-  /* The Coach (X13) sends a person's hand and board: its own switch, on only once the privacy page says so. */
-  ...(profile.ai.coach ? {AI_COACH: "on"} : {}),
+  /* The Coach (X13) sends a person's hand and board: its own switch, on only once the privacy page says so; and its own
+     daily cap, for everyone together. */
+  ...(profile.ai.coach ? {AI_COACH: "on", ...(profile.ai.coachCapCents ? {AI_CAP_COACH_CENTS: String(profile.ai.coachCapCents)} : {})} : {}),
 } : {});
 /* RATE LIMITS ON /api/* (M3): requests a minute, counted at the edge by Cloudflare's Rate Limiting bindings,
    which cloud/worker.mjs asks before it does anything. Per IP first, so a flood is turned away before any
@@ -422,6 +424,7 @@ export function verify(built, profile) {
       if (ai.AI_MODEL && !MODELS.includes(ai.AI_MODEL)) problems.push(`AI_MODEL ${ai.AI_MODEL} is not one the AI door calls (${MODELS.join(", ")})`);
       /* The Coach sends a person's hand and board: never switched on where the privacy policy does not say so. */
       if (ai.AI_COACH === "on" && !(built.get("privacy.html")?.toString("utf8") || "").includes("<strong>The Coach.</strong>")) problems.push("the Coach is switched on (AI_COACH) but privacy.html does not say what it sends");
+      if (ai.AI_COACH === "on" && !(Number(ai.AI_CAP_COACH_CENTS) > 0)) problems.push("the Coach is switched on (AI_COACH) without a daily cap of its own (AI_CAP_COACH_CENTS)");
       for (const f of ["cloud/worker.mjs", "cloud/access.mjs", "cloud/library.mjs"]) if (!files.has(f)) problems.push(`${f} is missing, so the Worker cannot be bundled`);
       if (![...files].some((f) => /^cloud\/migrations\/.+\.sql$/.test(f))) problems.push("the database migrations are missing");
       if (!(built.get(".assetsignore")?.toString("utf8") || "").split("\n").includes("cloud/")) problems.push(".assetsignore would publish the Worker's source as files");
