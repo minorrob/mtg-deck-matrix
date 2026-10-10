@@ -25,13 +25,12 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | G-B: `crankmagic-journeys` and the tours | done | `journeys.mjs`: geometry 138, workshop 504, tour-walk 61 steps (PR #683) |
 | G-B: the browser and device matrix | **done** | `docs/uat/browser-matrix.md`: Chrome, Edge and WebKit on Personal-HP (2026-10-01); the phones, held sideways, by Rob on staging (2026-10-10): *"phones work"* |
 | G-B: screenshots to Rob | done | the published gallery "CrankMagic Board Sizes" (the session's report) |
-| G-C: staging from main, version read back | done at every merge | the G-C records below; the signed-in read-back needs the service token's secret (A5): **Rob** |
+| G-C: staging from main, version read back | **done**, signed in too | the G-C records below; and `tools/staging-check.mjs` signed in as the session-check token (A5; 2026-10-10): staging serves 2125854a, both pages say so, `/api/me` seats the token |
 | G-C: the harness note for Grok Bot | done | `docs/playtest-harness.md`, held to the page by `tests/playtest-harness.mjs` (PR #681) |
 | G-C: the four agents' access | not set | **Rob** (M8) |
 
-So the first sentence of Part 7 is not yet true: it waits on the agents' access and the signed-in read-back's secret
-(A5), both Rob's, and on AI-2 to AI-6, this session's. The network measurement and the phones are done (Rob,
-2026-10-10).
+So the first sentence of Part 7 is not yet true: it waits on the agents' access, Rob's, and on AI-2 to AI-6, this
+session's. The network measurement, the phones and the signed-in read-back are done (2026-10-10).
 
 **Later, 2026-10-08:** the five workers' 45 cards and CR 800.4a merged here (#676); and on Rob's go ("merge Codex's stack") Codex's #670 to #675, reviewed first, merged here too -- every card of the seven decks is now defined; #676 merged on main 09499dcd and #671 to #675 closed as merged through it. The first G1 pass (70 games over seven pods) then found two blockers, each on its own worker: Tegwyll's provisional definition kept D7 off the table (now confirmed, hand-authored, 477 of 477), and a person's answer the engine refuses (Lethal Scheme's convoke) escaped room.act after the tape had recorded it, so the room could not reopen. Codex's records of 2026-10-07 follow, as it left them.
 
@@ -737,3 +736,12 @@ sha256 d099d931004c…). Rob's playtest notes are on staging.
 in ten turns against the AI on staging, no wait reached five seconds; and Play on an iPhone and an Android phone held
 sideways works. Both are in `docs/uat/browser-matrix.md` (and its generator, `tests/uat/browser-matrix.mjs`, so a
 rewrite keeps them) and in the table above.
+
+**The signed-in read-back (A5), done (2026-10-10).** Rob put the service token's secret in the environment's settings
+(kept there as `CF_Access_Client_Secret`; Linux's names are case-sensitive, so `tools/staging-check.mjs` now finds the
+token's two names in any case). Its first run read version.json, `/` and `/api/me` but called `/crankmagic.html` refused:
+staging's static files answer it with their own 307 to `/crankmagic`, and the tool read every redirect as Access's. It now
+follows a redirect on the same site, the token's headers with it, and calls only one off the site or to
+`/cdn-cgi/access/` a refusal. **`node tools/staging-check.mjs --expect 2125854a…`: staging serves 2125854a (cloud-staging),
+both pages say 2125854, `/api/me` answers as `service:session-checks`; exit 0.** `staging-check` 12 checks; 3 breaks
+caught (every redirect read as Access, one off the site followed, the names in one case only).

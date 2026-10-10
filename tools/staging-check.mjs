@@ -19,10 +19,16 @@ import {fileURLToPath} from "node:url";
 
 export async function check({base = "https://staging.crankmagic.com", expect = null, id, secret, fetchImpl = fetch} = {}) {
   const headers = {"CF-Access-Client-Id": id, "CF-Access-Client-Secret": secret};
-  const read = async (path) => {
-    const response = await fetchImpl(new URL(path, base), {headers, redirect: "manual"});
-    /* Access answers a token it does not admit with a redirect to its sign-in, or 403. */
-    if (response.status >= 300 && response.status < 400) return {status: response.status, refused: "Access did not admit the service token (a redirect to its sign-in)"};
+  /* Access answers a token it does not admit with a redirect to its sign-in (its team's domain, or /cdn-cgi/access/), or
+     403. Any other redirect is staging's own -- its static files drop ".html", /crankmagic.html answering 307 to
+     /crankmagic -- and is followed, on the same site only, the token's headers with it. */
+  const read = async (path, hops = 0) => {
+    const at = new URL(path, base), response = await fetchImpl(at, {headers, redirect: "manual"});
+    if (response.status >= 300 && response.status < 400) {
+      const to = new URL(response.headers.get("location") || "/", at);
+      if (to.origin !== at.origin || to.pathname.startsWith("/cdn-cgi/access/") || hops >= 3) return {status: response.status, refused: "Access did not admit the service token (a redirect to its sign-in)"};
+      return read(to.pathname + to.search, hops + 1);
+    }
     return {status: response.status, text: await response.text()};
   };
   const problems = [];
@@ -48,9 +54,16 @@ export async function check({base = "https://staging.crankmagic.com", expect = n
   return {release, pages, who, problems};
 }
 
+/** The token from the environment, its names in any case: an environment's settings may keep the case they were typed in
+    (CF_Access_Client_Secret), and Linux's names are case-sensitive. Never printed. */
+export function credentials(env) {
+  const named = (name) => env[name] ?? Object.entries(env).find(([k]) => k.toUpperCase() === name)?.[1];
+  return {id: named("CF_ACCESS_CLIENT_ID"), secret: named("CF_ACCESS_CLIENT_SECRET")};
+}
+
 async function main(argv) {
   const arg = (name) => { const i = argv.indexOf(`--${name}`); return i >= 0 ? argv[i + 1] : undefined; };
-  const id = process.env.CF_ACCESS_CLIENT_ID, secret = process.env.CF_ACCESS_CLIENT_SECRET;
+  const {id, secret} = credentials(process.env);
   if (!id || !secret) {
     console.error("staging-check: CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET are not in this environment. Add them in the cloud environment's settings (docs/review-response-2026-10-05.md §6.2, A5); a new session receives them.");
     return 2;
