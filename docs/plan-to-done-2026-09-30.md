@@ -161,6 +161,9 @@ These are the things the executor must keep true. Most are in `AGENTS.md`; the r
       drew Island* until the next action. No rule bends; the surprise goes.
     **Rob, 2026-09-30: the beat.** The room carries a "draw" acknowledgment in the draw step; the button reads
     *Draw a card*; the click draws; priority follows.
+    **Rob, 2026-10-09, after playing it: automatic.** *"Draw phase should be resolved automatically by drawing a card
+    and progress to the next screen."* The table no longer asks for the beat (`game/room/table.mjs`); a game launched
+    with it keeps it and replays as played. With it, *"Clicking the library pile should Draw a Card"* too.
 14. **The hand tray:** the count beside the ✋ (remove *Hand · 8*); remove *Bright = you can use it now*; keep the
     space for something hand-specific. **Rob, 2026-09-30: counts by type, four types only — Land, Creature,
     Instant (which includes any card with flash), Other — each shown as X/Y, X the number castable now and Y the
@@ -518,7 +521,7 @@ pilot: two sessions), AI-5 (the connection: one session, after AI-3 makes a deck
 | # | Decision | Rob's answer |
 | --- | --- | --- |
 | 2 | Which table rules the host may edit, and whether once a seat is ready | **Bracket limit and starting life; not once any seat is ready** |
-| 13 | The draw as its own beat (a *Draw a card* click) or automatic and visible | **The beat** |
+| 13 | The draw as its own beat (a *Draw a card* click) or automatic and visible | **The beat** (2026-09-30); **automatic** (2026-10-09, after playing it) |
 | 14 | What fills the hand tray's space | **Counts by type — Land, Creature, Instant (with flash), Other — as X/Y, castable now over in hand** |
 | 20 | The CrankMagic card back | **His artwork: `design/art-source/card_backgrounds/` (five colors)**; which is universal, and whether a seat's follows its color, at build (recommended tan; yes) |
 | 21 | The Coach's glyph | **A speech bubble with the wand** |

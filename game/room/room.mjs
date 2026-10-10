@@ -33,6 +33,12 @@
  * And a fourth, Rob's of 2026-10-09 ("resolve all"), kept the same way:
  *   `resolveAll`  a run of identical triggers on top of the stack is let resolve by one decision, Resolve all, rather
  *                than a pass for each (CR 732.2a, a shortcut; `triggerRun`).
+ * And a fifth, Rob's of 2026-10-09 ("When I play a card to the board from my hand, I don't want to have to click a pop-up
+ * to resolve it"), kept the same way:
+ *   `passAfterCast`  a person who casts a spell or activates an ability passes the priority it brings back to them (CR
+ *                117.3c) by doing so, so what they put on the stack resolves unless someone responds. To hold priority
+ *                instead -- the caster's choice, CR 117.3c -- the answer that casts carries `hold: true` (the board's
+ *                Tools, "Hold priority after I cast"). One pass, for that cast: a response on top asks them again.
  *
  * WHAT IT PLAYS. Only cards the `cards` resolver can define. A pod with any other card is refused before
  * anything is written, naming every card it cannot play (docs/decisions-2026-09-25.md, M4: "refused by name;
@@ -320,6 +326,9 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
   /* Rob, 2026-10-09: Resolve all is offered (`resolveAll`), and the seats that took it, each with the run it is passing
      through and how many passes it has left (`standing`). */
   let resolveAll = false, standing = {};
+  /* Rob, 2026-10-09: the pass a person's cast or activation makes for them (`passAfterCast`), and the seat whose cast it
+     waits on until priority comes back to them (`castBy`). */
+  let passAfterCast = false, castBy = null;
   const nobodyLeft = () => seats.some((s) => s.pilot === "human") && seats.every((s, i) => s.pilot !== "human" || state.players[i].lost);
   const track = () => {const key = `${state.turn}:${state.stepIndex}`; if (key !== step.key) step = {key, quiet: false, acted: false};};
   /* A step that passed by itself, said once; the quiet steps of a turn in a row share one line. */
@@ -407,6 +416,14 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
       if (state.stepIndex === undefined) {write(beginGame(state)); continue;}
       if (state.priorityPlayer === null) {write(advance(state)); continue;}
       const seat = state.priorityPlayer;
+      /* Having cast, the caster passes: a spell cast or an ability activated is on the stack at once (CR 601.2a, 602.2a)
+         and its caster has priority first (CR 117.3c), so the pass is theirs, made by the cast. Priority first to anyone
+         else -- the caster out of the game -- and nobody is passed for. */
+      if (castBy !== null) {
+        const caster = castBy;
+        castBy = null;
+        if (caster === seat) {driven = 0; apply(seat, {kind: "pass"}, "cast"); continue;}
+      }
       /* Resolve all, taken: the seat passes while the same run is on top, as many times as it chose; each pass is a
          decision of theirs, so it is not counted toward a hang. Anything else on top, and they are asked again. A pass
          is always legal, so what else the seat could do is not worked out: on a board of hundreds that is most of the
@@ -456,7 +473,7 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
       if (pendingActions) {
         const action = pendingActions[answer.indices[0]];
         pendingActions = null;
-        apply(seat, action);
+        apply(seat, action, "person", answer.hold === true);
       } else {
         step.acted = true; write(resolveAwaiting(state, answer.indices, answer.amounts, rng, answer));
         /* Asked in a run they let resolve: the answer goes for the same question in the rest of it. */
@@ -485,6 +502,7 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
     if (!point || point.sequence !== record.sequence) throw new RoomError(500, "This table's saved game does not match its record, so it was not resumed.");
     passEmpty = record.passEmpty === true; step = record.step || {key: null, quiet: false, acted: false};
     resolveAll = record.resolveAll === true; standing = record.standing || {};
+    passAfterCast = record.passAfterCast === true; castBy = record.castBy ?? null;
     seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; history = record.history || [];
     refusals = record.refusals || {total: 0, since: point.sequence, first: []};
     continuing = record.continuing === true; driven = record.driven || 0; endWhenNoPerson = record.endWhenNoPerson === true;
@@ -503,9 +521,10 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
     if (error instanceof RoomError) return error;
     return new RoomError(500, `The rules engine failed after that (${error.message}), so it was not taken: nothing changed, and the game is where it was. Try another choice, or end the game.`);
   }
-  /* `by`: a person, the house pilot, the room passing for a person with nothing to do (item 11), or for one who chose
-     Resolve all ("standing"). */
-  function apply(seat, action, by = "person") {
+  /* `by`: a person, the house pilot, the room passing for a person with nothing to do (item 11), for one who chose
+     Resolve all ("standing"), or for one whose cast passes (`passAfterCast`, "cast"); `hold`, a person casting who holds
+     priority. */
+  function apply(seat, action, by = "person", hold = false) {
     if (action.kind === "resolve-all") {
       standing[seat] = {key: action.key, left: action.n - 1, answers: {}};
       note(`${seats[seat].name} let ${action.n} ${action.name} triggers resolve`);
@@ -521,7 +540,11 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
         if (step.quiet && !step.acted) quietly(state.phase);
         write(advance(state));
       }
-    } else {step.acted = true; write(applyAction(state, seat, action));}
+    } else {
+      step.acted = true;
+      write(applyAction(state, seat, action));
+      if (passAfterCast && by === "person" && !hold && (action.kind === "cast" || action.kind === "activate")) castBy = seat;
+    }
   }
 
   /* Everything since the last save, then the checkpoint, then the room's own record (which names it). */
@@ -534,7 +557,7 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
-    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {})}));
+    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {})}));
   }
 
   const api = {
@@ -557,8 +580,9 @@ function roomOn(storage, matchId, cards, makePilot = housePilot, slice = Infinit
       /* The table's starting life (its host's rule), kept with the match so a replay deals the same game. */
       const startingLife = pod && pod.startingLife !== undefined ? pod.startingLife : undefined;
       const beats = {...(pod && pod.drawBeat === true ? {drawBeat: true} : {}), ...(pod && pod.passEmpty === true ? {passEmpty: true} : {}),
-        ...(pod && pod.endWhenNoPerson === true ? {endWhenNoPerson: true} : {}), ...(pod && pod.resolveAll === true ? {resolveAll: true} : {})};
-      passEmpty = beats.passEmpty === true; endWhenNoPerson = beats.endWhenNoPerson === true; resolveAll = beats.resolveAll === true;
+        ...(pod && pod.endWhenNoPerson === true ? {endWhenNoPerson: true} : {}), ...(pod && pod.resolveAll === true ? {resolveAll: true} : {}),
+        ...(pod && pod.passAfterCast === true ? {passAfterCast: true} : {})};
+      passEmpty = beats.passEmpty === true; endWhenNoPerson = beats.endWhenNoPerson === true; resolveAll = beats.resolveAll === true; passAfterCast = beats.passAfterCast === true;
       try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...(startingLife !== undefined ? {startingLife} : {}), ...(beats.drawBeat ? {drawBeat: true} : {})});}
       catch (error) {throw new RoomError(400, error.message);}
       seats.forEach((s, seat) => {

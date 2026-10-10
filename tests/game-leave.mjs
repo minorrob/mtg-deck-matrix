@@ -304,10 +304,10 @@ async function playingTable(storage = memoryStorage()) {
   eq(launched.endWhenNoPerson, true, "the table launches its games with the rule");
   /* The G1 harness (tools/fuzz-live.mjs) plays its games as the table launches them, or the person's waits it measures
      would include the AI seats playing a game out for nobody, which no person at the table waits through. */
-  const beats = (p) => ({drawBeat: p.drawBeat, passEmpty: p.passEmpty, endWhenNoPerson: p.endWhenNoPerson, resolveAll: p.resolveAll});
+  const beats = (p) => ({drawBeat: p.drawBeat, passEmpty: p.passEmpty, endWhenNoPerson: p.endWhenNoPerson, resolveAll: p.resolveAll, passAfterCast: p.passAfterCast});
   const harness = memoryStorage();
   await playGame({decks: ["ha", "hb", "hc"].map((tag) => ({name: tag, ...deck(tag)})), seed: 1, cards, humans: [0], matchId: "harness", storage: harness, turnLimit: 1});
-  eq(beats((await createMatchStore(harness, "harness").loadMatch()).pod), beats(launched), "and the G1 harness launches its games with the table's beats: the draw's click, the empty step passed, the game ending once every person is out, Resolve all");
+  eq(beats((await createMatchStore(harness, "harness").loadMatch()).pod), beats(launched), "and the G1 harness launches its games with the table's beats: the empty step passed, the game ending once every person is out, Resolve all, the cast that passes -- and no held draw");
   await t.concede(MAYA, now);
   eq((await t.view(ROB)).phase, "playing", "one person concedes: the other is still in, and the game goes on");
   const ended = await t.concede(ROB, now);

@@ -45,7 +45,10 @@ The countdown ends on the table's alarm, and the page hands itself to the board.
   - *Next step* on your turn with the stack empty;
   - *Resolve* plus the spell's name with something on the stack;
   - *Pass* on another player's turn.
-- **`data-action=board-draw`, *Draw a card*.** It replaces the pass button in your own draw step. The draw waits for it.
+- **The draw happens by itself** (Rob, 2026-10-09): nobody is asked to draw. Only a game launched before that waits for
+  `data-action=board-draw`, *Draw a card*, in place of the pass button; your Library pile is that button too then.
+- **A cast passes for you:** a spell you cast or an ability you activate resolves unless someone responds, with nothing
+  more to press. To be asked first, check `[data-board-hold]`, *Hold priority after I cast*, in Tools.
 - **`data-action=board-resolve-all`, *Resolve all N*.** It shows beside the pass when a run of the same trigger is on top of the stack: the same ability of the same source, one player's, with the same targets. One click lets the whole run resolve, and you are asked again as soon as anything else is on top. The stack shows the run as one line, ×N. If each trigger of the run asks the same question ("you may …"), you answer the first one. That question's panel carries `.cm-board-for-run`, *Resolve all: your answer goes for this same question each time the run asks it*, and the room gives your answer to the rest.
 - **The Coach panel (`data-action=board-coach`):**
   - `data-action=board-coach-ask` asks a suggested question; the composer asks your own.
@@ -74,7 +77,8 @@ few seconds (*The AI players are still taking their turns*); try again when the 
 - **A question of numbers** (combat damage among blockers, a split, an X) has one `input[data-board-amount=<n>]` per row
   (`label.cm-board-amount`). Fill each, then `data-action=board-confirm`.
 - **Turns that went by while you waited** float as `section.cm-board-went` (`role=status`, named *Turns 3–5 went by*), a
-  few lines a turn, the History holding the rest. `data-action=board-went-close` (*OK*) puts it away.
+  few lines a turn, the History holding the rest. It goes by itself after a few seconds; `data-action=board-went-close`
+  (*OK*) puts it away sooner. Nothing waits on it.
 - **Cards** are `button.cm-bcard`. `aria-label` is the name, then its state as the card shows it (*tapped*, power/toughness such as *2/2*, *3 damage*, *1 +1/+1 counter*), then, after a colon, what it can do now: `Llanowar Elves, tapped, 1/1` or `Forest: Play Forest`. A hidden card is a `div` labeled *A hidden card*. `data-card` is the object id, which changes when the card moves (CR 400.7).
 
 **Your hand** (`section[aria-label="Your hand"]`):
@@ -92,12 +96,17 @@ few seconds (*The AI players are still taking their turns*); try again when the 
 
 - The life counter at the center: `.cm-board-pie`, `role=group`, named *Life: You 40, Maya 40*. Its logo, `data-action=board-vitals`, opens Table vitals.
 - The row bar and the tray bar: `[data-drag=rows]` and `[data-drag=hand]`, `role=separator`. The arrow keys move them.
+  With two seats the boards sit side by side, yours on the right, and the row bar stands upright between them (← and →).
+- The hand never takes the boards' room: a hand larger than the table's card size runs on below the window, and the
+  board scrolls down to it.
 - The card sizes: `[data-board-scale=board|hand]`.
 
 **Focus:**
 
 - The seat pane's divider: `[data-drag=pane]`.
-- Tiles: `.cm-board-tile[data-seat]`, and `.cm-board-tile-main` puts that seat's board on the mat.
+- Tiles: `.cm-board-tile[data-seat]`, and `.cm-board-tile-main` puts that seat's board on the mat. The tile of the
+  seat whose turn it is carries `.is-turn` and `.cm-board-turn-mark` (*Your turn*, or *Maya's turn*); Full screen's side
+  column marks that seat's vitals the same way.
 
 **Full screen:**
 
