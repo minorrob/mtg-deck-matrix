@@ -177,12 +177,14 @@ try {
   await rob.page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"), null, {timeout: 5000});
   await rob.page.fill("#cm-table-new [name=hostName]", "Rob");
   await rob.page.fill("#cm-table-new [name=name2]", "Maya");
-  await rob.page.selectOption("#cm-table-new [name=kind3]", "ai");
+  eq(await rob.page.locator("#cm-table-new [name=kind3] option").allTextContents(), ["A person I will invite", "An AI · Normal", "An AI · Easy", "Nobody"],
+    "an AI seat is offered at Normal or Easy (AI-2)");
+  await rob.page.selectOption("#cm-table-new [name=kind3]", "ai-easy");
   await rob.page.fill("#cm-table-new [name=name3]", "Shadrix");
   await rob.page.click("[data-action=table-create]");
   await rob.page.waitForFunction(() => /#table\?id=table\d+/.test(location.hash), null, {timeout: 20000});
   await rob.page.locator(".cm-cloud-table .cm-lobby-seat").first().waitFor({state: "attached"});
-  eq(await rob.page.locator(".cm-cloud-table .cm-lobby-seat h3").allTextContents(), ["Seat 1 · You", "Seat 2 · Maya", "Seat 3 · AI"], "the lobby: you in seat 1, Maya to invite, an AI; seat 4 left out");
+  eq(await rob.page.locator(".cm-cloud-table .cm-lobby-seat h3").allTextContents(), ["Seat 1 · You", "Seat 2 · Maya", "Seat 3 · AI · Easy"], "the lobby: you in seat 1, Maya to invite, an AI at Easy, as chosen; seat 4 left out");
   eq(await rob.page.locator('#cm-main .cm-page-head [data-action="page-help"]').getAttribute("data-help"), "table", "and its head carries the same ?, to the table's help");
   const seaWords = await overSea(rob.page), seaLow = seaWords.filter((w) => w.ratio < 4.5);
   ok(seaWords.length >= 6 && !seaLow.length, `every word over a seat's sea reads at 4.5:1 or better over a white sea (${seaWords.length} read; ${(seaLow.length ? seaLow : seaWords.slice(0, 3)).map((w) => `"${w.text}" (${w.cls}) ${w.ratio}`).join(", ")})`);

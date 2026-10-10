@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 391 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 393 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1030,6 +1030,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-equip` — `tests/engine-equip.mjs`
 - `engine-event-triggers` — `tests/engine-event-triggers.mjs`
 - `engine-house-pilot` — `tests/engine-house-pilot.mjs`
+- `engine-scored-pilot` — `tests/engine-scored-pilot.mjs` (the house pilot's L1: draw odds, exact combat, its choices scored, Easy and Normal)
 - `engine-ingest` — `tests/engine-ingest.mjs`
 - `engine-learned` — `tests/engine-learned.mjs`
 - `engine-mana-abilities` — `tests/engine-mana-abilities.mjs`
@@ -1085,6 +1086,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `game-room` — `tests/game-room.mjs`
 - `room-refusals` — `tests/room-refusals.mjs`
 - `room-slices` — `tests/room-slices.mjs`
+- `room-seat-pilots` — `tests/room-seat-pilots.mjs` (an AI seat's Easy or Normal, from New table to the pilot; L1 games replay)
 - `room-refused-answer` — `tests/room-refused-answer.mjs`
 - `room-g1-terms` — `tests/room-g1-terms.mjs`
 - `game-table` — `tests/game-table.mjs`

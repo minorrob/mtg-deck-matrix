@@ -105,7 +105,8 @@
   }
   function seatBox(s, t) {
     const art = C.seatArt;
-    const who = `Seat ${s.seatId + 1} · ${s.you ? "You" : s.kind === "ai" ? "AI" : s.name}`;
+    /* An AI seat says its setting (AI-2): Easy or Normal. */
+    const who = `Seat ${s.seatId + 1} · ${s.you ? "You" : s.kind === "ai" ? `AI · ${s.level === "easy" ? "Easy" : "Normal"}` : s.name}`;
     const state = seatState(s, t);
     const pseudo = s.deck ? {name: s.deck.name, commanders: (s.deck.commander || []).map((name) => ({name}))} : null;
     const away = (t.away || []).find((a) => a.seatId === s.seatId);
@@ -267,7 +268,7 @@
   /* ---- a new table ---- */
   function newTable() {
     const row = (n) => `<div class="cm-table-new-seat"><span>Seat ${n}</span>
-      <select name="kind${n}" aria-label="Seat ${n}"><option value="human"${n === 2 ? " selected" : ""}>A person I will invite</option><option value="ai">An AI</option><option value="none"${n > 2 ? " selected" : ""}>Nobody</option></select>
+      <select name="kind${n}" aria-label="Seat ${n}"><option value="human"${n === 2 ? " selected" : ""}>A person I will invite</option><option value="ai">An AI · Normal</option><option value="ai-easy">An AI · Easy</option><option value="none"${n > 2 ? " selected" : ""}>Nobody</option></select>
       <input name="name${n}" maxlength="60" placeholder="${n === 2 ? "Their name" : "Name (optional)"}" aria-label="Seat ${n} name"></div>`;
     C.main.innerHTML = C.pageHead("Play", "", "table") + `<section class="v-panel cm-table-new"><h2>New table</h2>
       <p class="cm-muted">You sit in seat 1 as the host. Each other seat is a person you invite, an AI, or nobody; a table seats two to four.</p>
@@ -295,7 +296,10 @@
     const form = document.getElementById("cm-table-new");
     const v = Object.fromEntries(new FormData(form));
     if (!v.hostName.trim()) throw Error("Give your name at the table.");
-    const seats = [2, 3, 4].filter((n) => v[`kind${n}`] !== "none").map((n) => ({kind: v[`kind${n}`], name: v[`name${n}`]}));
+    /* An AI at Normal or Easy (AI-2): Normal scores its choices; Easy, now and then, takes the second best. */
+    const seats = [2, 3, 4].filter((n) => v[`kind${n}`] !== "none").map((n) => (v[`kind${n}`].startsWith("ai")
+      ? {kind: "ai", level: v[`kind${n}`] === "ai-easy" ? "easy" : "normal", name: v[`name${n}`]}
+      : {kind: v[`kind${n}`], name: v[`name${n}`]}));
     if (!seats.length) throw Error("A table needs at least one other seat: a person or an AI.");
     const {table} = await api("POST", "/api/tables", {hostName: v.hostName, seats});
     C.go("table", {id: table.tableId});

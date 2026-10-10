@@ -16,7 +16,7 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | Gate item | State | Proof, or whose step |
 | --- | --- | --- |
 | G-A: G1, 1,400 games | **done: 1,400 of 1,400 clean** | PR #686's head ccb250d1: every game finished, none refused, every replay identical, 0 leaks in 105,656 checks of every seat's view |
-| G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**, with a daily cap of its own ($1.50); AI-2's levels decided by Rob (L1 now); AI-2 to AI-6 not built | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
+| G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**, with a daily cap of its own ($1.50, released at 905394dc); **AI-2's L1 built** (Normal and Easy, measured: Normal 58% against L0); the LLM seat, and AI-3 to AI-6, not built | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
 | G-B: the whole gate green twice on main | done | dispatched Tests runs on main, every suite: 2499 on def8fa89 and 2503 on eff40fdc, both green |
 | G-B: `play-e2e` under wrangler dev | done | 35 checks at every staging release |
 | G-B: hidden information in every frame | done | `play-journeys` reads every frame to both people; G1's oracle 102,879 checks, no leak |
@@ -764,3 +764,35 @@ floor and the baseline; Easy L1 with weighted chance, Normal L1, Medium L2, Hard
 calls that matter, with L1's scores as its hint and the house pilot as its fallback; and, in Phase 2, the model writing
 each deck's L2 formulas once rather than at every decision. Written into AI-2 of `docs/plan-to-done-2026-09-30.md`,
 with its sources. **Next: Phase 1, L1 in the house pilot, then the LLM seat.**
+
+**#691 merged on main 905394dc on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 1d34e211 (release-acceptance 22, play-e2e 35); Workers Builds deployed it at 21:37:33 UTC as
+version d59a3702, its `play-worker.js` byte-identical to the release's dry-run bundle (2,437,220 bytes, sha256
+ee1b400c670a…), its bindings `AI_CAP_COACH_CENTS` 150 beside `AI_CAP_TOTAL_CENTS` and `AI_CAP_PERSON_CENTS` 300. The
+Coach's $1.50 a day is live on staging.
+
+**AI-2, Phase 1: L1 built (2026-10-10).** `game/engine/pilots/scored-pilot.mjs` and `odds.mjs`, as Rob's L1 and the
+settings he agreed. It scores five choices and leaves the rest to L0:
+- the mana it spends;
+- where a spell is aimed;
+- attacks against the swing back;
+- blocks;
+- the opening hand's odds.
+
+Combat is exact. On New table an AI seat is *An AI · Normal* or *An AI · Easy*; the table, the room and the record
+keep it; the room makes the pilot with the seat's deck list and the match's seed. A seat without a setting is L0, so
+matches launched before replay unchanged.
+- **Measured** (`tools/pilot-bench.mjs`): 420 two-seat games of the seven decks per arm, on the same seeds.
+  - Control (L0 against L0): 51%.
+  - **Normal: 242 to 178, 58% (95%: 53–62%); paired with the control, 51 games won that L0 lost and 23 the other
+    way, p = 0.0015.**
+  - Easy: 55%.
+  - Decision time: the median under 0.01 ms, the slowest 24 ms.
+  - Answers refused: none.
+- **Proof:**
+  - `engine-scored-pilot` 51 checks;
+  - `room-seat-pilots` 12;
+  - `table-lobby` 74, `table-board` 246, `game-table` 154, `game-room` 520, `room-g1-terms` 45, `room-beats` 34,
+    `room-slices` 26, `game-leave` 59, `engine-house-pilot` 19, `asset-versions`, all green;
+  - **45 breaks caught**: the odds (the binomial, the tail); combat (first strike, double strike, deathtouch, indestructible, marked damage, a first striker striking twice, trample); who may block (flying, menace); the defender (chumps when not lethal, trades at any price, no walls, the dearest chump, a menace attacker blocked alone); the spells (aim, tax, the mana, the cheapest first, no plan); the attack (the swing back unweighed and unpunished, vigilance, no plan); no block plan; the hand (by land count, the same draws either way, odds without a deck); easy (beyond the band, from a stream, no chance at all); another seat's view; the room (the setting ignored, no deck, no seed, the seed forgotten on reopening, a person given a setting, the seats hiding it); the table (Easy dropped, launched without settings, the view hiding it); the lobby (the form, the seat's title).
+- **Next:** L1's activated abilities, which L0 never uses (Krenko's Goblins among them); then the LLM seat on L0.
