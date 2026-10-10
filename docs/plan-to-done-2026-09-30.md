@@ -472,7 +472,7 @@ pairs, L1's seat alternating. It ran 420 seeded games per arm, each arm on the s
 |---|---|---|---|---|
 | Control (both L0) | 214 | 206 | 51% (46–56%) | — |
 | **Normal** | **242** | **178** | **58% (53–62%)** | **+51 / −23, sign test p = 0.0015** |
-| Easy | 233 | 187 | 55% (51–60%) | +54 / −35, p = 0.06 (against Normal: +27 / −36) |
+| Easy (its first temperature, 1.5) | 233 | 187 | 55% (51–60%) | +54 / −35, p = 0.06 (against Normal: +27 / −36) |
 | Normal's attacks alone | 222 | 198 | 53% | +22 / −14, p = 0.24 |
 | Normal's casting alone | 224 | 196 | 53% | +31 / −21, p = 0.21 |
 
@@ -484,10 +484,33 @@ decide them, not these choices.
   where L0 had none, counted on raw power. The bench now counts double strike twice, as L1 does.
 - **Not answered:** none of either pilot's answers was refused.
 
-**What L1 does not do yet, and is next:** activated abilities. L0 never activates one that is not a mana or loyalty
-ability, and L1 inherits that. Krenko's Goblins, Chulane's land and draw, Sakura-Tribe Elder's land, Priest of
-Forgotten Gods and a Clue's card were offered hundreds of times in seven games and never used. Scoring them means
-reading what each does, which is public card text. That is the next L1 work, measured on the same bench.
+**Then, the same day: its activated abilities.** L0 never activates an ability that is not a mana or loyalty ability,
+and L1 at first inherited that. Krenko's Goblins, Chulane's land and draw, Sakura-Tribe Elder's land, Priest of Forgotten
+Gods and a Clue's card were offered hundreds of times in seven games and never used. L1 now weighs each one offered,
+by what the card says it does against what it costs, in its own main phase with the stack empty, once no spell fits.
+- **What it does:** cards drawn, tokens made (*"X Goblins, where X is the number of Goblins you control"* counted on its
+  own board), a land fetched, counters, a look at the library, a threat destroyed or damaged at the worthiest target,
+  life lost by an opponent.
+- **What it costs:** mana, tapping a creature, what it sacrifices (itself, or the permanents the offer names), counters
+  removed, a card discarded, life.
+- **Where it stops,** since it keeps no count: an ability that costs nothing is never taken; no more tokens past 60
+  permanents of its own; no draw past eight cards in hand or with five left in the library; no ability at all past 150
+  permanents on the battlefield. The first bench found the reason: Krenko with Intruder Alarm untaps as each Goblin
+  enters, and L1 doubled them every activation until the game crawled.
+- **Its quick pass** (the room asks it before working out its view) now looks for an ability worth taking in its own
+  main phase. The room tells it whose turn it is and the step, which everyone sees, and the card facts it reads now carry
+  each card's subtypes and activated abilities, as the card says them, read once a match.
+
+| Arm (420 games each, the same seeds) | L1's seat won | L0 won | L1's share (95%) | Paired: gained / lost |
+|---|---|---|---|---|
+| **Normal, with abilities** | **255** | **165** | **61% (56–65%)** | **+60 / −19 against the control, p < 0.0001**; +19 / −6 against Normal without them, p = 0.015 |
+| Abilities alone | 220 | 200 | 52% | +11 / −5 against the control |
+| Easy at its first temperature (1.5) | 246 | 174 | 59% | +23 / −32 against Normal: too close to it to feel easier |
+| **Easy at 4, as set** | **234** | **186** | **56% (51–60%)** | **+54 / −34 against the control, p = 0.04; +22 / −43 against Normal, p = 0.01** |
+
+So the settings are in order, each step measured: L0 51%, Easy 56%, Normal 61%.
+- **Time:** the slowest decision was 176 ms, on a board of a hundred Goblins.
+- **Refused answers:** none, from either pilot.
 
 Sources: [AI Factory's Spades, MCTS with knowledge](https://ojs.aaai.org/index.php/AIIDE/article/view/12679);
 [Information Set MCTS](https://eprints.whiterose.ac.uk/75048); [determinized MCTS for

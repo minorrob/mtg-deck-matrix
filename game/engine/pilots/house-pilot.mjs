@@ -25,8 +25,9 @@
  * five lands. These are heuristics on the visible board.
  *
  * THIS IS L0, the floor of the house pilot's levels of decision (AI-2, docs/plan-to-done-2026-09-30.md). L1 scores the
- * choices that decide games -- the mana it spends, where a spell is aimed, attacks against the swing back, blocks, the
- * opening hand's odds -- and answers the rest with this pilot: `scored-pilot.mjs`. A table's AI seat is L1 at Normal or
+ * choices that decide games -- the mana it spends, where a spell is aimed, the activated abilities worth their cost
+ * (which this pilot never takes), attacks against the swing back, blocks, the opening hand's odds -- and answers the
+ * rest with this pilot: `scored-pilot.mjs`. A table's AI seat is L1 at Normal or
  * Easy; a seat without a setting, as in every match launched before settings were, is this one.
  *
  * NOT YET: PLAN §3.6's rollouts (short deterministic playouts against the engine, whose budget is the

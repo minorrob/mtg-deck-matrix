@@ -16,7 +16,7 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | Gate item | State | Proof, or whose step |
 | --- | --- | --- |
 | G-A: G1, 1,400 games | **done: 1,400 of 1,400 clean** | PR #686's head ccb250d1: every game finished, none refused, every replay identical, 0 leaks in 105,656 checks of every seat's view |
-| G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**, with a daily cap of its own ($1.50, released at 905394dc); **AI-2's L1 built** (Normal and Easy, measured: Normal 58% against L0); the LLM seat, and AI-3 to AI-6, not built | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
+| G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**, with a daily cap of its own ($1.50, released at 905394dc); **AI-2's L1 built** (Normal and Easy, measured against L0: Normal 61%, Easy 56%, L0 itself 51%); the LLM seat, and AI-3 to AI-6, not built | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
 | G-B: the whole gate green twice on main | done | dispatched Tests runs on main, every suite: 2499 on def8fa89 and 2503 on eff40fdc, both green |
 | G-B: `play-e2e` under wrangler dev | done | 35 checks at every staging release |
 | G-B: hidden information in every frame | done | `play-journeys` reads every frame to both people; G1's oracle 102,879 checks, no leak |
@@ -796,3 +796,37 @@ matches launched before replay unchanged.
     `room-slices` 26, `game-leave` 59, `engine-house-pilot` 19, `asset-versions`, all green;
   - **45 breaks caught**: the odds (the binomial, the tail); combat (first strike, double strike, deathtouch, indestructible, marked damage, a first striker striking twice, trample); who may block (flying, menace); the defender (chumps when not lethal, trades at any price, no walls, the dearest chump, a menace attacker blocked alone); the spells (aim, tax, the mana, the cheapest first, no plan); the attack (the swing back unweighed and unpunished, vigilance, no plan); no block plan; the hand (by land count, the same draws either way, odds without a deck); easy (beyond the band, from a stream, no chance at all); another seat's view; the room (the setting ignored, no deck, no seed, the seed forgotten on reopening, a person given a setting, the seats hiding it); the table (Easy dropped, launched without settings, the view hiding it); the lobby (the form, the seat's title).
 - **Next:** L1's activated abilities, which L0 never uses (Krenko's Goblins among them); then the LLM seat on L0.
+
+**#692 merged on main 862fae14 on green Actions** (its first run failed on `generators`: `docs/data-inventory.md` had
+not named the bench as a reader of `data/live-state.json`; regenerated with its own tool). Staging released from it:
+see below.
+
+**L1's activated abilities (2026-10-10).** L0 never takes an ability that is not a mana or loyalty ability; Krenko's
+Goblins, Chulane's, Sakura-Tribe Elder's, Priest of Forgotten Gods' and a Clue's went unused hundreds of times. L1 now
+weighs each one by what the card says it does (cards, tokens counted on its own board, a land fetched, counters, a
+look, a threat destroyed at the worthiest target) against what it costs (mana, a creature tapped, what it sacrifices
+or discards, counters, life), in its own main phase with the stack empty, once no spell fits.
+- **Where it stops,** since it keeps no count: never an ability that costs nothing; no tokens past 60 permanents of its
+  own, no draw past eight in hand or five left in the library, no ability past 150 permanents on the battlefield. The
+  first bench hung on Krenko with Intruder Alarm, doubling Goblins with every untap; the board's size now ends it.
+- **The room's part:** the quick pass is told whose turn it is and the step. A card's facts carry its subtypes and
+  activated abilities, as the card says them, read once a match.
+- **Measured** (420 games an arm, the same seeds as before):
+  - **Normal with abilities: 255 to 165, 61% (56–65%); paired, +60 / −19 against the L0 control, and +19 / −6
+    against Normal without them (p = 0.015).**
+  - Easy, its temperature raised from 1.5 (59%, too close to Normal) to 4: 56%. That is +54 / −34 against L0 and
+    +22 / −43 against Normal, each significant. So L0 51%, Easy 56%, Normal 61%.
+  - The slowest decision: 176 ms, on a board of a hundred Goblins.
+- **Proof:** `engine-scored-pilot` 60 checks, `room-seat-pilots` 15; `game-room` 520, `table-board` 246, `table-lobby`
+  74, `room-g1-terms` 45, `game-leave` 59, `room-slices` 26, `engine-x11-leave-questions` 94, `engine-derive-once` 16
+  green; **12 more breaks caught**:
+  - a free ability taken;
+  - abilities at any time;
+  - tokens without end;
+  - a sacrifice costing nothing;
+  - an ability unaimed;
+  - the quick pass blind to abilities, or looking on any turn;
+  - no ability plan;
+  - facts without abilities or subtypes;
+  - facts read anew;
+  - the quick pass not told the turn.

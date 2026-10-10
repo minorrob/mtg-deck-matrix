@@ -10,7 +10,8 @@
  *      take, walls, and chump blocks only while what gets through would kill.
  *   4. On boards where L0's rule of thumb goes wrong, L1 does not: the mana it spends, where a removal spell goes, the
  *      swing back an all-out attack leaves open, the chump blocks a lethal attack does not need, a hand too light for its
- *      deck's lands.
+ *      deck's lands; and the activated abilities L0 never takes, weighed by what the card says they do against their
+ *      cost, in its own main phase, never one that costs nothing, and no more tokens once its board is large.
  *   5. Easy chooses by weighted chance among the plans near the best, the same every time it is asked the same; normal
  *      takes the best.
  *   6. It sees only its seat, as L0 does.
@@ -154,6 +155,42 @@ const l1 = scoredPilot({seat: 0, cards}), l0 = housePilot({seat: 0, cards});
   eq(scoredPilot({seat: 0, cards}).answer(at(0), choice).indices, [0], "without its deck list it has no odds, and answers as L0");
 }
 
+{ /* Activated abilities, which L0 never takes: weighed by what the card says they do against what they cost. */
+  const goblins = Array.from({length: 3}, (_, i) => mine(500 + i, 1, 1, [], {name: "Goblin"}));
+  const krenko = mine(510, 3, 3, [], {name: fact("Krenko", {manaValue: 3, types: ["Creature"], subtypes: ["Goblin"],
+    activated: [{id: "k", cost: [{atom: "{T}"}], effects: [{effect: "createToken", count: {count: {controller: "you", subtypes: ["Goblin"]}}, token: {types: ["Creature"], power: 1, toughness: 1}}]}]})});
+  const strider = mine(511, 3, 2, [], {name: fact("Strider", {manaValue: 5, types: ["Creature"], activated: [{id: "s", cost: [{atom: "sacrifice", selector: {types: ["Creature"], another: true}}], effects: [{effect: "scry", count: 1}]}]})});
+  const idol = mine(512, null, null, [], {types: ["Artifact"], name: fact("Idol", {manaValue: 1, types: ["Artifact"], activated: [{id: "free", cost: [], effects: [{effect: "draw", count: 1}]}]})});
+  const board = [krenko, strider, idol, ...goblins];
+  const main = viewOf({players: [{battlefield: board}, {}]});
+  const make = {kind: "activate", objectId: 510, abilityId: "k", label: "Krenko"};
+  const scry = {kind: "activate", objectId: 511, abilityId: "s", label: "Strider", costChoice: {sacrifice: [500]}};
+  const free = {kind: "activate", objectId: 512, abilityId: "free", label: "Idol"};
+  const pass = {kind: "pass"};
+  eq([l0.choose(main, [make, pass]).kind, l1.choose(main, [make, pass]).label], ["pass", "Krenko"], "Krenko's four Goblins (one for each Goblin it controls, itself among them): L0 passes; L1 makes them");
+  eq(l1.choose(main, [scry, pass]).kind, "pass", "but not a Goblin sacrificed to scry 1: it costs more than it does");
+  eq(l1.choose(main, [free, pass]).kind, "pass", "and never an ability that costs nothing, which could go round for ever");
+  const altar = mine(514, null, null, [], {types: ["Artifact"], name: fact("Altar", {manaValue: 2, types: ["Artifact"], activated: [{id: "a", cost: [{atom: "sacrifice", selector: {types: ["Creature"], another: true}}], effects: [{effect: "draw", count: 1}]}]})});
+  const ogre = mine(515, 3, 3);
+  const feed = viewOf({players: [{battlefield: [altar, ogre]}, {}]});
+  eq(l1.choose(feed, [{kind: "activate", objectId: 514, abilityId: "a", label: "Altar", costChoice: {sacrifice: 515}}, pass]).kind, "pass",
+    "a card is not worth the 3/3 it would sacrifice for it");
+  const theirTurn = viewOf({turnPlayerId: 1, players: [{battlefield: board}, {}]});
+  const combat = viewOf({phase: "COMBAT_DECLARE_ATTACKERS", players: [{battlefield: board}, {}]});
+  eq([l1.choose(theirTurn, [make, pass]).kind, l1.choose(combat, [make, pass]).kind, l1.choose({...main, stackSize: 1}, [make, pass]).kind], ["pass", "pass", "pass"],
+    "only in its own main phase with the stack empty: not on another player's turn, in combat, or with something on the stack");
+  const crowded = viewOf({players: [{battlefield: [...board, ...Array.from({length: WEIGHTS.tokensUpTo}, (_, i) => mine(600 + i, 1, 1, [], {name: "Goblin"}))]}, {}]});
+  eq(l1.choose(crowded, [make, pass]).kind, "pass", `with ${WEIGHTS.tokensUpTo} permanents already its own, no more tokens: the way out of Krenko going round with Intruder Alarm`);
+  eq([l1.passes([make, pass], 0, {ownTurn: true, phase: "MAIN1"}), l1.passes([make, pass], 0, {ownTurn: false, phase: "MAIN1"}), l0.passes([make, pass], 0, {ownTurn: true, phase: "MAIN1"})], [false, true, true],
+    "its quick pass looks at an ability worth taking in its own main phase; on another's turn it passes, and L0 always does");
+  eq(l1.passes([scry, pass], 0, {ownTurn: true, phase: "MAIN1"}), true, "and one not worth it does not stop the quick pass");
+  const kill = mine(513, null, null, [], {types: ["Artifact"], name: fact("Rod", {manaValue: 3, types: ["Artifact"], activated: [{id: "d", cost: [{atom: "mana", cost: "{2}"}, {atom: "{T}"}], effects: [{effect: "destroy", target: 0}]}]})});
+  const small = theirs(520, 1, 1), big = theirs(521, 5, 5, ["Flying"]);
+  const aimed = viewOf({players: [{battlefield: [kill]}, {battlefield: [small, big]}]});
+  const rod = (id) => ({kind: "activate", objectId: 513, abilityId: "d", label: "Rod", hostile: true, targets: [{kind: "object", id}]});
+  eq(l1.choose(aimed, [rod(520), rod(521), pass]).targets[0].id, 521, "an ability that destroys is aimed at the worthiest opposing permanent");
+}
+
 /* ---- 5. Easy and normal ---- */
 {
   const plans = [{value: 10, n: "best"}, {value: 9, n: "close"}, {value: 10 - BAND * TEMPERATURE.easy - 0.01, n: "far"}];
@@ -182,4 +219,4 @@ assert.throws(() => l1.choose(viewOf({seat: 1, players: [{}, {}]}), [{kind: "pas
 assert.throws(() => l1.answer(viewOf({seat: 1, players: [{}, {}]}), {id: "declare-attackers:1", options: []}), /seat 0 was handed seat 1/);
 checks += 3;
 
-console.log(`engine-scored-pilot: ${checks} checks passed — L1 reads the draw odds and combat exactly, blocks as a sensible defender, spends its mana, aims at the worthiest, keeps a guard against the swing back, chumps only what it must, and at easy chooses near the best, the same every time.`);
+console.log(`engine-scored-pilot: ${checks} checks passed — L1 reads the draw odds and combat exactly, blocks as a sensible defender, spends its mana, aims at the worthiest, uses the abilities worth their cost, keeps a guard against the swing back, chumps only what it must, and at easy chooses near the best, the same every time.`);

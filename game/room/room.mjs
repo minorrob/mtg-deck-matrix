@@ -90,10 +90,17 @@ export function basicCards(name) {
 
 /* Public facts the house pilot may read about a named card: what anyone reads off the card itself. */
 const manaValueOf = (cost) => (String(cost || "").match(/\{([^}]+)\}/g) || []).reduce((n, s) => {const x = s.slice(1, -1); return n + (/^\d+$/.test(x) ? Number(x) : x === "X" ? 0 : 1);}, 0);
-const factsFrom = (cards) => (name) => {
-  const c = cards(name);
-  /* `x`: a cost with {X} (CR 107.3), so the house pilot taps everything before it casts. */
-  return c ? {manaValue: manaValueOf(c.manaCost), types: c.types || [], power: c.power ?? null, toughness: c.toughness ?? null, ...(/\{X\}/.test(c.manaCost || "") ? {x: true} : {})} : null;
+const factsFrom = (cards) => {
+  /* Read once a name: a card's facts do not change in a match. */
+  const known = new Map();
+  return (name) => (known.has(name) ? known.get(name) : known.set(name, factsOf(cards(name))).get(name));
+};
+const factsOf = (c) => {
+  /* `x`: a cost with {X} (CR 107.3), so the house pilot taps everything before it casts. `subtypes`, and what each activated
+     ability costs and does (`activated`), as the card says: L1 weighs an ability by them (scored-pilot.mjs). */
+  return c ? {manaValue: manaValueOf(c.manaCost), types: c.types || [], subtypes: c.subtypes || [], power: c.power ?? null, toughness: c.toughness ?? null,
+    ...(/\{X\}/.test(c.manaCost || "") ? {x: true} : {}),
+    activated: (c.abilities || []).filter((a) => a.kind === "activated").map((a) => ({id: a.id, cost: a.cost || [], effects: a.effects || []}))} : null;
 };
 
 /* A pod, checked before anything is created: its seats, and every card named by name. */
@@ -451,7 +458,8 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       const actions = legalActions(state, seat);
       /* The house pilot passes whatever it sees when nothing it would take is on offer (house-pilot.mjs, `passes`):
          its view of the board is not worked out for that, which on a big board is most of an AI seat's pass. */
-      if (seats[seat].pilot === "house") {apply(seat, pilots[seat].passes?.(actions, state.stack.length) ? actions.find((a) => a.kind === "pass") : pilots[seat].choose(projectFor(state, seat), actions), "pilot"); continue;}
+      /* Whose turn and which step go with it, which everyone sees: L1 uses an ability only in its own main phase. */
+      if (seats[seat].pilot === "house") {apply(seat, pilots[seat].passes?.(actions, state.stack.length, {ownTurn: state.activePlayer === seat, phase: state.phase}) ? actions.find((a) => a.kind === "pass") : pilots[seat].choose(projectFor(state, seat), actions), "pilot"); continue;}
       if (passEmpty && nothingToDo(state, seat, actions)) {apply(seat, actions.find((a) => a.kind === "pass"), "room"); continue;}
       const run = resolveAll ? triggerRun(state.stack) : null;
       const offered = run ? [...actions, {kind: "resolve-all", key: run.key, n: run.n, name: run.name}] : actions;
