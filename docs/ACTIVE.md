@@ -11,26 +11,26 @@ here, on the same branch and PR #669, building on Codex's commit. **`docs/handof
 handoff's §3 says, five workers by engine area (permissions and attack statics; effects, counts and triggers; memory;
 keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of the week's usage, pause and hand off.
 
-**Where the gates stand, 2026-10-09** (Part 7 of `docs/plan-to-done-2026-09-30.md`; the records below are the proof):
+**Where the gates stand, 2026-10-10** (Part 7 of `docs/plan-to-done-2026-09-30.md`; the records below are the proof):
 
 | Gate item | State | Proof, or whose step |
 | --- | --- | --- |
 | G-A: G1, 1,400 games | **done: 1,400 of 1,400 clean** | PR #686's head ccb250d1: every game finished, none refused, every replay identical, 0 leaks in 105,656 checks of every seat's view |
-| G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; AI-1, the Coach, built behind its own switch; AI-2 to AI-6 not built | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach (records below) waits on **Rob's** approval of its privacy wording |
+| G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**; AI-2 to AI-6 not built | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
 | G-B: the whole gate green twice on main | done | dispatched Tests runs on main, every suite: 2499 on def8fa89 and 2503 on eff40fdc, both green |
 | G-B: `play-e2e` under wrangler dev | done | 35 checks at every staging release |
 | G-B: hidden information in every frame | done | `play-journeys` reads every frame to both people; G1's oracle 102,879 checks, no leak |
-| G-B: the five-second rule | in this container only | `play-journeys` median 280 ms, longest 1.0 s; G1's 700 games with a person, four at a time: each game's longest wait a median 172 ms, 99th percentile 1.6 s, the worst 3.5 s (the biggest board, seed 90), none over 5 s. Over the network needs a browser on a real network: **Rob** or Grok Bot |
+| G-B: the five-second rule | **done** | over a real network, Rob on staging (2026-10-10): ten turns against the AI, the longest wait *"about 3 seconds"*; here, `play-journeys` median 280 ms, longest 1.0 s; G1's 700 games with a person: each game's longest wait a median 172 ms, 99th percentile 1.6 s, the worst 3.5 s, none over 5 s |
 | G-B: `play-journeys` with the seven decks | done | 82 checks (PRs #681, #682): every view at 1280, 1400, 1920, 2560 and the phone, the Coach's stub, the record |
 | G-B: `crankmagic-journeys` and the tours | done | `journeys.mjs`: geometry 138, workshop 504, tour-walk 61 steps (PR #683) |
-| G-B: the browser and device matrix | Chromium here | `docs/uat/browser-matrix.md` (Edge and WebKit on Personal-HP, 2026-10-01); the phones: **Rob** |
+| G-B: the browser and device matrix | **done** | `docs/uat/browser-matrix.md`: Chrome, Edge and WebKit on Personal-HP (2026-10-01); the phones, held sideways, by Rob on staging (2026-10-10): *"phones work"* |
 | G-B: screenshots to Rob | done | the published gallery "CrankMagic Board Sizes" (the session's report) |
-| G-C: staging from main, version read back | done at every merge | the G-C records below; the signed-in read-back needs the service token's secret (A5): **Rob** |
+| G-C: staging from main, version read back | **done**, signed in too | the G-C records below; and `tools/staging-check.mjs` signed in as the session-check token (A5; 2026-10-10): staging serves 2125854a, both pages say so, `/api/me` seats the token |
 | G-C: the harness note for Grok Bot | done | `docs/playtest-harness.md`, held to the page by `tests/playtest-harness.mjs` (PR #681) |
 | G-C: the four agents' access | not set | **Rob** (M8) |
 
-So the first sentence of Part 7 is not yet true: it waits on the network measurement, the phones and the agents'
-access, all Rob's; on the Coach's privacy wording, Rob's to approve; and on AI-2 to AI-6, this session's.
+So the first sentence of Part 7 is not yet true: it waits on the agents' access, Rob's, and on AI-2 to AI-6, this
+session's. The network measurement, the phones and the signed-in read-back are done (2026-10-10).
 
 **Later, 2026-10-08:** the five workers' 45 cards and CR 800.4a merged here (#676); and on Rob's go ("merge Codex's stack") Codex's #670 to #675, reviewed first, merged here too -- every card of the seven decks is now defined; #676 merged on main 09499dcd and #671 to #675 closed as merged through it. The first G1 pass (70 games over seven pods) then found two blockers, each on its own worker: Tegwyll's provisional definition kept D7 off the table (now confirmed, hand-authored, 477 of 477), and a person's answer the engine refuses (Lethal Scheme's convoke) escaped room.act after the tape had recorded it, so the room could not reopen. Codex's records of 2026-10-07 follow, as it left them.
 
@@ -726,3 +726,22 @@ staging.** Production's AI door stays shut until Rob's go.
   hand's room (Table, Focus and Full screen each following the hand, the board not scrolling, Focus clipping it, Full
   screen's hand growing up, the Table tray stretched), the phone's question, and the lobby's music (silent, the game's
   bed).
+
+**#689 merged on main 2125854a on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` b6437fd6 (release-acceptance 22, play-e2e 35); Workers Builds deployed it at 00:48:13 UTC on
+2026-10-10 as version ae71a787, its `play-worker.js` byte-identical to the release's dry-run bundle (2,436,473 bytes,
+sha256 d099d931004c…). Rob's playtest notes are on staging.
+
+**Rob's two G-B steps, done (2026-10-10).** *"Longest wait was about 3 seconds. phones work."* Over his own network,
+in ten turns against the AI on staging, no wait reached five seconds; and Play on an iPhone and an Android phone held
+sideways works. Both are in `docs/uat/browser-matrix.md` (and its generator, `tests/uat/browser-matrix.mjs`, so a
+rewrite keeps them) and in the table above.
+
+**The signed-in read-back (A5), done (2026-10-10).** Rob put the service token's secret in the environment's settings
+(kept there as `CF_Access_Client_Secret`; Linux's names are case-sensitive, so `tools/staging-check.mjs` now finds the
+token's two names in any case). Its first run read version.json, `/` and `/api/me` but called `/crankmagic.html` refused:
+staging's static files answer it with their own 307 to `/crankmagic`, and the tool read every redirect as Access's. It now
+follows a redirect on the same site, the token's headers with it, and calls only one off the site or to
+`/cdn-cgi/access/` a refusal. **`node tools/staging-check.mjs --expect 2125854a…`: staging serves 2125854a (cloud-staging),
+both pages say 2125854, `/api/me` answers as `service:session-checks`; exit 0.** `staging-check` 12 checks; 3 breaks
+caught (every redirect read as Access, one off the site followed, the names in one case only).

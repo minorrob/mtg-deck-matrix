@@ -74,6 +74,10 @@ for (const browser of BROWSERS) {
 const commit = spawnSync("git", ["rev-parse", "--short", "HEAD"], {cwd: ROOT, encoding: "utf8"}).stdout.trim();
 const date = new Date().toISOString().slice(0, 10);
 const cell = (r) => (r.status === "pass" ? `pass -- ${r.note}` : r.status === "fail" ? `**fail** -- ${r.note}` : `${r.status}: ${r.note}`).replace(/\|/g, "/");
+/* The phones, as Rob ran them on staging (Part 6's Play on a phone held sideways: sign in, an invite link, Keep, a land,
+   Pass, the hand fanned, Concede): "phones work" (2026-10-10). The walks on a desk only, they ask nothing of a phone. */
+const PHONE = (w) => (/^play/.test(w.name) ? "pass -- Rob on staging, 2026-10-10: \"phones work\"" : "a desk's walk, not asked of a phone");
+const PHONES_SAID = "The phones: Rob played staging on each, held sideways, on 2026-10-10 -- *\"phones work\"* -- and his longest wait over his own network in ten turns against the AI was about 3 seconds (the five-second rule, G-B).";
 const md = [
   "# The browser matrix",
   "",
@@ -83,8 +87,10 @@ const md = [
   "| Browser | Version | " + WALKS.map((w) => w.name).join(" | ") + " |",
   "| --- | --- | " + WALKS.map(() => "---").join(" | ") + " |",
   ...rows.map((r) => `| ${LABEL[r.browser]} | ${r.version || "--"} | ${r.walks.map(cell).join(" | ")} |`),
-  "| Safari on an iPhone | -- | " + WALKS.map(() => "Rob's to run").join(" | ") + " |",
-  "| Chrome on an Android phone | -- | " + WALKS.map(() => "Rob's to run").join(" | ") + " |",
+  "| Safari on an iPhone | -- | " + WALKS.map((w) => PHONE(w)).join(" | ") + " |",
+  "| Chrome on an Android phone | -- | " + WALKS.map((w) => PHONE(w)).join(" | ") + " |",
+  "",
+  PHONES_SAID,
   "",
 ].join("\n");
 console.log("\n" + md);
