@@ -15,6 +15,10 @@
  *     next turn is scored down, unless the attack wins the game.
  *   - WHICH CREATURES BLOCK: blocks that kill and survive, trades that favor it, blockers that survive and stop the
  *     damage, and chump blocks only as many as keep it alive -- where L0, facing lethal, throws everything in.
+ *   - WHICH ABILITIES IT ACTIVATES, which L0 never does: in its own main phase, once no spell fits, the one whose effects
+ *     (as the card says them: cards drawn, tokens made, a land fetched, a threat destroyed) are worth most over what it
+ *     costs (mana, tapping a creature, what it sacrifices or discards). An ability that costs nothing is never taken, so
+ *     it cannot go round a loop.
  *   - WHETHER TO KEEP AN OPENING HAND: the hypergeometric chance of its third land by its third turn (odds.mjs), from its
  *     own deck list less what it holds -- what its player knows; never the library's order.
  *
@@ -52,11 +56,20 @@ export const WEIGHTS = {
   crackback: 60,      // for an attack that leaves it dead to the swing back when holding back would not
   others: 0.5,        // each opponent but the most dangerous, in the swing back: not all of them come at once
   aimed: 0.25,        // a spell's target's worth, beside the mana it spends
+  /* An activated ability, by what the card says it does, against what it costs; used when it clears `activate`. */
+  ability: {draw: 1.5, ramp: 2, tutor: 1.5, look: 0.3, proliferate: 1, counter: 1, life: 0.1, discard: 1, treasure: 1,
+    mana: 0.25, tapCreature: 0.5, counterCost: 0.5, tapOther: 0.5, exile: 0.2, lifeCost: 0.2},
+  activate: 0.75,
+  /* Where going round again stops being worth it, read off the board, since it keeps no count: tokens past `tokensUpTo`
+     permanents of its own (Krenko, Mob Boss with Intruder Alarm untapping it as each Goblin enters doubles them every
+     time), cards past `handUpTo` in hand or with `libraryLeast` left, and any ability at all past `boardUpTo` on the
+     battlefield. */
+  tokensUpTo: 60, handUpTo: 8, libraryLeast: 5, boardUpTo: 150,
   keep: 0.6,          // the least chance of its third land by turn three that it keeps a hand for
 };
-export const TEMPERATURE = {easy: 1.5, normal: 0};
+export const TEMPERATURE = {easy: 4, normal: 0};
 /* What it scores; the rest is L0's. The bench turns them off one at a time, to measure each. */
-export const PARTS = ["cast", "attack", "block", "keep"];
+export const PARTS = ["cast", "ability", "attack", "block", "keep"];
 export const BAND = 3;
 /* The most creature pairs it works combat out for; beyond it (a board of hundreds of Goblins) L0 answers. */
 const MOST_PAIRS = 4000;
@@ -154,10 +167,10 @@ const chance = (...parts) => createRng(parts.join("|")).unit();
  * THE CHOSEN PLAN among scored ones: the best at "normal"; at "easy", by weighted chance among those within BAND
  * temperatures of the best. Ties go to the earlier plan, so the order plans are made in is the tie-break.
  */
-export function pick(plans, setting, roll) {
+export function pick(plans, setting, roll, temperature = TEMPERATURE) {
   if (!plans.length) return null;
   const best = plans.reduce((top, p) => (p.value > top.value ? p : top));
-  const t = TEMPERATURE[setting] ?? 0;
+  const t = temperature[setting] ?? 0;
   if (!(t > 0)) return best;
   const near = plans.filter((p) => p.value >= best.value - BAND * t);
   const weights = near.map((p) => Math.exp((p.value - best.value) / t));
@@ -171,7 +184,7 @@ export function pick(plans, setting, roll) {
  *   `deck`: the seat's own deck list by name, which its player knows; `setting`: "easy" or "normal"; `seed`: the match's,
  *   for easy's chance.
  */
-export function scoredPilot({seat, cards = () => null, deck = [], setting = "normal", seed = "", parts = PARTS, weights = WEIGHTS} = {}) {
+export function scoredPilot({seat, cards = () => null, deck = [], setting = "normal", seed = "", parts = PARTS, weights = WEIGHTS, temperature = TEMPERATURE} = {}) {
   if (!SETTINGS.includes(setting)) throw new Error(`The house pilot plays at ${SETTINGS.join(" or ")}, not ${setting}`);
   const on = new Set(parts);
   const floor = housePilot({seat, cards});
@@ -247,8 +260,96 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
     /* The largest spell of the plan is cast first; the same first spell is one choice, at its best plan's score. */
     const firsts = new Map();
     for (const p of plans) if (!firsts.has(p.first.objectId) || p.value > firsts.get(p.first.objectId).value) firsts.set(p.first.objectId, p);
-    const chosen = pick([...firsts.values()], setting, roll(view, `cast:${view.stackSize}:${spells.map((s) => s.a.objectId).join(",")}`));
+    const chosen = pick([...firsts.values()], setting, roll(view, `cast:${view.stackSize}:${spells.map((s) => s.a.objectId).join(",")}`), temperature);
     return chosen ? chosen.first : null;
+  }
+
+  /* ---- Which abilities it activates ---- */
+  const costMana = (cost) => (String(cost || "").match(/\{([^}]+)\}/g) || []).reduce((n, t) => {const x = t.slice(1, -1); return n + (/^\d+$/.test(x) ? Number(x) : x === "X" ? 0 : 1);}, 0);
+  const abilityOf = (action) => (known(action.label)?.activated ?? []).find((a) => a.id === action.abilityId) ?? null;
+  /* It pays something -- a tap, mana, a sacrifice, counters, a card, life -- or it is never taken: a free ability is a loop. */
+  const paysSomething = (ability) => (ability.cost ?? []).length > 0;
+  const tokenWorth = (token) => (!token || token.predefined ? W.ability.treasure
+    : (isCreature(token) ? power(token) * W.power + Math.max(0, token.toughness ?? 0) * W.toughness + (token.keywords ?? []).reduce((n, k) => n + (W.keyword[k] ?? 0), 0) : W.ability.treasure));
+  /* How many: a number, or "the number of Goblins you control", counted on its own battlefield (a token is its name). */
+  function countOf(view, count) {
+    if (typeof count === "number") return count;
+    const sel = count?.count;
+    if (view && sel && (sel.controller === "you" || sel.controller === undefined)) {
+      return battlefield(view).filter((c) => c.controller === seat && (!sel.subtypes || sel.subtypes.some((t) => (known(c.name)?.subtypes ?? []).includes(t) || c.name === t))
+        && (!sel.types || sel.types.some((t) => (c.types ?? []).includes(t)))).length;
+    }
+    return 1;
+  }
+  /* What the card says it does, scored; a view of null is the quick pass's guess (one of each, any target worth 2). */
+  function effectsWorth(view, ability, aim) {
+    let v = 0;
+    const foes = view ? opponents(view) : [];
+    const self = view ? view.players[seat] : null;
+    const enoughTokens = !!view && battlefield(view).filter((c) => c.controller === seat).length >= W.tokensUpTo;
+    const enoughCards = !!self && ((self.zones?.Hand?.cards ?? []).length >= W.handUpTo || (self.zones?.Library?.count ?? Infinity) <= W.libraryLeast);
+    for (const e of ability.effects ?? []) {
+      const n = Math.max(0, countOf(view, e.count ?? 1)), half = e.condition ? 0.5 : 1;
+      const amount = typeof e.amount === "number" ? e.amount : 1;
+      if (e.effect === "draw") v += enoughCards ? 0 : W.ability.draw * n * half;
+      else if (e.effect === "createToken") v += enoughTokens ? 0 : tokenWorth(e.token) * n * half;
+      else if (e.effect === "chooseCard" && e.zone === "library") v += (e.to === "battlefield" ? W.ability.ramp : W.ability.tutor) * half;
+      else if (e.effect === "proliferate") v += W.ability.proliferate * half;
+      else if (e.effect === "putCounter") v += W.ability.counter * half;
+      else if (e.effect === "scry" || e.effect === "surveil") v += W.ability.look * n * half;
+      else if (e.effect === "gainLife") v += W.ability.life * amount * half;
+      else if (e.effect === "discard") v -= W.ability.discard * n;
+      else if (e.effect === "destroy" || e.effect === "dealDamage" || e.effect === "loseLife") {
+        if (aim && aim.value > 0) v += aim.value * half;
+        else if (!view) v += 2 * half;
+        else if (e.effect !== "destroy") v += half * foes.reduce((m, o) => Math.max(m, W.damage * Math.min(amount, o.life) / Math.max(1, o.life)), 0);
+      }
+    }
+    return v;
+  }
+  /* What it costs: mana, tapping a creature, what it sacrifices (itself, or the permanents the offer names), counters,
+     a card discarded, life. */
+  function costWorth(view, ability, action) {
+    const source = view ? battlefield(view).find((c) => c.cardId === action.objectId) : null;
+    const where = view ? new Map(battlefield(view).map((c) => [c.cardId, c])) : new Map();
+    let c = 0;
+    for (const k of ability.cost ?? []) {
+      if (k.atom === "mana") c += W.ability.mana * costMana(k.cost);
+      else if (k.atom === "{T}") c += (source ? isCreature(source) : isCreature(known(action.label))) ? W.ability.tapCreature : 0;
+      else if (k.atom === "sacrifice" && k.self) c += source ? worth(source) : 2;
+      else if (k.atom === "sacrifice" && !action.costChoice) c += 2 * (k.count ?? 1);
+      else if (k.atom === "removeCounters" || k.atom === "removeAnyCounter") c += W.ability.counterCost * (k.count ?? 1);
+      else if (k.atom === "payLife") c += W.ability.lifeCost * (k.amount ?? 1);
+      else if (k.atom === "exileFromGraveyard" || k.atom === "exile") c += W.ability.exile;
+    }
+    const choice = action.costChoice ?? {};
+    /* One permanent or a set of them, as the offer names it. */
+    const ids = (v) => (v === undefined || v === null ? [] : [].concat(v));
+    for (const id of ids(choice.sacrifice)) if (id !== action.objectId) c += worth(where.get(id)) || 2;
+    c += ids(choice.discard).length * W.ability.discard;
+    c += ids(choice.returnToHand).length + (ids(choice.tapAll).length + ids(choice.tap).length + ids(choice.crew).length) * W.ability.tapOther;
+    if (action.sacrificeLater) c += 2 * action.sacrificeLater;
+    return c;
+  }
+  const abilityOffers = (actions) => actions.filter((a) => a.kind === "activate" && a.loyalty === undefined && a.x === undefined);
+  /* The quick pass's question: might one of these be worth it? Read off the card alone, no view. */
+  const promising = (actions) => abilityOffers(actions).some((a) => {
+    const ability = abilityOf(a);
+    return ability && paysSomething(ability) && effectsWorth(null, ability, null) - costWorth(null, ability, a) > W.activate;
+  });
+  function abilityPlan(view, actions) {
+    if (!(view.turnPlayerId === seat && MAIN.includes(view.phase) && view.stackSize === 0)) return null;
+    if (battlefield(view).length >= W.boardUpTo) return null;
+    let best = null;
+    for (const a of abilityOffers(actions)) {
+      const ability = abilityOf(a);
+      if (!ability || !paysSomething(ability)) continue;
+      const aim = aimOf(view, a);
+      if ((a.targets ?? []).length && aim.on === 0) continue;
+      const value = effectsWorth(view, ability, aim) - costWorth(view, ability, a);
+      if (value > W.activate && (!best || value > best.value)) best = {a, value};
+    }
+    return best ? best.a : null;
   }
 
   /* ---- Which creatures attack ---- */
@@ -311,7 +412,7 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
       }
     }
     if (!plans.length) return null;
-    const chosen = pick(plans, setting, roll(view, `attack:${choice.id}`));
+    const chosen = pick(plans, setting, roll(view, `attack:${choice.id}`), temperature);
     return {indices: meetRequirements(choice, chosen.set.map((r) => r.o.index), chosen.p.playerId)};
   }
 
@@ -352,8 +453,11 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
     id: SCORED_PILOT_ID,
     seat,
     setting,
-    /* Its quick pass is L0's: it takes nothing L0 would not. */
-    passes: floor.passes,
+    /* Its quick pass is L0's, unless, in its own main phase with the stack empty, an ability on offer might be worth it. */
+    passes(actions, stackSize, when = {}) {
+      if (!floor.passes(actions, stackSize)) return false;
+      return !(on.has("ability") && stackSize === 0 && when.ownTurn && MAIN.includes(when.phase) && promising(actions));
+    },
 
     choose(view, actions) {
       me(view);
@@ -364,7 +468,7 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
         const l0 = floor.choose(view, actions);
         if (l0.kind === "activate") return l0;
       }
-      const planned = on.has("cast") ? castPlan(view, actions) : null;
+      const planned = (on.has("cast") ? castPlan(view, actions) : null) ?? (on.has("ability") ? abilityPlan(view, actions) : null);
       return planned ?? floor.choose(view, actions);
     },
 
