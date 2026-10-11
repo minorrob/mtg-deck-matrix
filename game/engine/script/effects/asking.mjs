@@ -1594,7 +1594,9 @@ export function commandersGoingHome(state, params) {
     return (params.spells ?? []).filter((id) => {
       const entry = state.stack.find((e) => e.objectId === id);
       const library = params.to === "top" || ([undefined, "graveyard"].includes(params.to) && entry?.graveyardToLibraryBottom);
-      return library && state.objects[id]?.commander === true && entry && !entry.flashback && !entry.graveyardToExile && !cantBeCountered(state, id);
+      return library && state.objects[id]?.commander === true && entry && !entry.flashback && !entry.graveyardToExile && !cantBeCountered(state, id)
+        /* A permanent spell exiled instead (Thranduil's Decree; effects/zones.mjs, counterSpell) goes to no library. */
+        && !(params.permanentTo === "exile" && entry.permanent === true);
     });
   }
   if (params.sacrifice === true || params.fromTop !== undefined) return [];
