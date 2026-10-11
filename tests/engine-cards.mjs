@@ -23,6 +23,7 @@ import {execFileSync} from "node:child_process";
 import {loadCardScripts, loadCardScenarios, loadCardIndex} from "../game/tools/engine-cards.mjs";
 import {createCardIndex, compileScript, foldName} from "../game/engine/cards/index.mjs";
 import {runScenario, SCENARIOS_SCHEMA} from "../game/engine/cards/scenario.mjs";
+import {lostIn} from "../game/engine/storage.mjs";
 import {SCRIPT_SCHEMA} from "../game/engine/script/schema.mjs";
 import {definitionsModule, DEFINITIONS_MODULE} from "../game/tools/engine-definitions.mjs";
 import {tableDefinition, DEFINITIONS} from "../game/engine/cards/definitions.mjs";
@@ -105,14 +106,20 @@ const files = loadCardScenarios();
   eq(files.flatMap((f) => Object.keys(f.scenarios.fixtures ?? {}).filter((n) => index.resolve(n)).map((n) => `${f.path}: ${n}`)), [],
     "no fixture stands in for a card the directory defines: a defined card is always played from its definition");
   let scenarios = 0, assertions = 0;
+  const unsaved = [];
   for (const {scenarios: file} of files) {
     for (const scenario of file.scenarios) {
-      const {passed} = runScenario(scenario, index.definition, file.fixtures ?? {});
+      const {passed, state} = runScenario(scenario, index.definition, file.fixtures ?? {});
       scenarios += 1;
       assertions += passed.length;
+      /* As a room saves it (storage.mjs refuses a state JSON would change, so the room could not wake): a card that leaves
+         an undefined field in the state breaks the game it is played in, at its next save. */
+      const lost = lostIn(state, "state");
+      if (lost) unsaved.push(`${file.card}, "${scenario.name}": ${lost}`);
     }
   }
   ok(scenarios >= 25 && assertions >= 80, `${scenarios} scenarios played through the rules, ${assertions} assertions on what each seat sees, all passing`);
+  eq(unsaved, [], "and every scenario's state can be saved as a room saves it: nothing in it that JSON would drop or change");
 }
 
 /* ---- 3. resolve, suggest, definition ---- */

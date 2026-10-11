@@ -1143,7 +1143,16 @@ export function compileScript(script) {
       if (effect.effect === "mayPlay") {
         if (!MAY_PLAY_UNTIL.includes(effect.until ?? "end-of-turn")) problems.push(`mayPlay: until ${MAY_PLAY_UNTIL.join(" or ")}`);
         for (const key of ["free", "graveyardToLibraryBottom"]) if (effect[key] !== undefined && effect[key] !== true) problems.push(`mayPlay: ${key} is true`);
+        /* "You may play them if you control a Wizard" (Flameshape): a condition asked as each card would be played, on a
+           permission that names cards (`targets`) -- the effect's own `condition` is asked once, as it resolves. */
+        if (effect.onlyIf !== undefined && effect.targets === undefined) problems.push("mayPlay: onlyIf is a condition on the cards it names (`targets`)");
       }
+      /* "Exile them face down" (Flameshape; CR 406.3a): into exile alone -- face down onto the battlefield is manifest's
+         (CR 701.40a) -- and "look at ... and exile them face down" (`look`) only beside it. */
+      if (effect.effect === "moveZone" && effect.faceDown !== undefined && !(effect.faceDown === true && effect.to === "exile"))
+        problems.push("moveZone: faceDown is true, into exile (to: \"exile\"); face down onto the battlefield is manifest");
+      if (effect.effect === "moveZone" && effect.look !== undefined && !(effect.look === true && effect.faceDown === true))
+        problems.push("moveZone: look is true, beside faceDown: the cards looked at, then exiled face down");
       /* "Return ... to the battlefield with a finality counter on it" (Excava, the Risen Past): onto the battlefield only, each
          kind of counter a whole number, 1 or more (effects/zones.mjs, moveOne's `counters`). */
       if (effect.effect === "moveZone" && effect.withCounters !== undefined && !(effect.to === "battlefield" && effect.withCounters && typeof effect.withCounters === "object"

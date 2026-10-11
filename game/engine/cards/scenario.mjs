@@ -23,7 +23,7 @@
  *            | {attack: [names], at?} | {block: [[blocker, attacker], ...]} | {choose: [labels]} ],
  *   (`targets: "any"` takes the first legal aim; `optional` skips a move the rules do not offer; `settle` answers every
  *   question with its first legal answer and resolves the stack until it is empty -- the card loader's smoke test.)
- *     expect: [ {seat, zone, cards} | {seat, zone, count} | {seat, life} | {seat, poison} | {stack} | {seat, tapped, is}
+ *     expect: [ {seat, of?, zone, cards?, count?, faceDown?} | {seat, life} | {seat, poison} | {stack} | {seat, tapped, is}
  *             | {seat, pool} | {seat, counters: {card, counter, count}} | {offers: {kind, card, seat?}, count, targets?} | {event, where} ] }]}
  */
 
@@ -230,16 +230,26 @@ export function runScenario(scenario, cards, fixtures = {}) {
   function check(expect) {
     for (const e of expect ?? []) {
       if (e.zone !== undefined) {
-        const zone = projectFor(state, e.seat).players[e.seat].zones[ZONES[e.zone]];
+        /* Another seat's zone as this seat sees it (`of`, whose): Maya's view of Rob's exile. */
+        const whose = e.of ?? e.seat, where = whose === e.seat ? `${names[e.seat]}'s ${e.zone}` : `${names[whose]}'s ${e.zone} as ${names[e.seat]} sees it`;
+        const zone = projectFor(state, e.seat).players[whose].zones[ZONES[e.zone]];
         if (e.cards !== undefined) {
           const got = zone.cards.map((c) => c.name).sort();
           const want = [...e.cards].sort();
-          if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${names[e.seat]}'s ${e.zone} is ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);
-          passed.push(`${names[e.seat]}'s ${e.zone}: ${want.join(", ") || "empty"}`);
+          if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${where} is ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);
+          passed.push(`${where}: ${want.join(", ") || "empty"}`);
+        }
+        /* Its face-down cards as this seat may look at them (CR 406.3, 708.5; projection.mjs, `faceDownName`): the card each
+           is, or null where this seat may not look. */
+        if (e.faceDown !== undefined) {
+          const got = zone.cards.filter((c) => c.faceDown).map((c) => c.faceDownName ?? null).sort();
+          const want = [...e.faceDown].sort();
+          if (JSON.stringify(got) !== JSON.stringify(want)) fail(`the face-down cards of ${where} are ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);
+          passed.push(`the face-down cards of ${where}: ${want.map((n) => n ?? "unseen").join(", ") || "none"}`);
         }
         if (e.count !== undefined) {
-          if (zone.count !== e.count) fail(`${names[e.seat]}'s ${e.zone} holds ${zone.count}, not ${e.count}`);
-          passed.push(`${names[e.seat]}'s ${e.zone} holds ${e.count}`);
+          if (zone.count !== e.count) fail(`${where} holds ${zone.count}, not ${e.count}`);
+          passed.push(`${where} holds ${e.count}`);
         }
       } else if (e.life !== undefined) {
         const life = projectFor(state, e.seat).players[e.seat].life;
