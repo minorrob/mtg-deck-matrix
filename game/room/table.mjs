@@ -335,8 +335,9 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
          automatically by drawing a card and progress to the next screen"): a game launched before that keeps its
          `drawBeat` with its match and replays as it was played. And a person's turn ends only when they say so (Rob,
          2026-10-11: "passing the turn to the next player should always require player confirmation"): their end step is
-         always asked. */
-      passEmpty: true, endWhenNoPerson: true, resolveAll: true, passAfterCast: true, endAsks: true};
+         always asked; and a land tapped for mana may be untapped while its mana is unspent ("I should also be able to
+         click the card to untap it again"). */
+      passEmpty: true, endWhenNoPerson: true, resolveAll: true, passAfterCast: true, endAsks: true, untapMana: true};
       try {
         room = await startRoom({storage: storageForRoom, matchId, cards, pod, seed: `${matchId}:${now}`, slice});
         step({type: "engine-started", launchId: matchId, matchId}, now);
