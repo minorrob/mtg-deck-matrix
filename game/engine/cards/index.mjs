@@ -1008,6 +1008,15 @@ export function compileScript(script) {
       /* "That player ... puts a +1/+1 counter on it" (Alexios): who puts them, the player a trigger is about. */
       if (effect.effect === "putCounter" && effect.puts !== undefined && effect.puts !== "that player")
         problems.push("putCounter: puts is \"that player\", the player the trigger is about putting them");
+      /* "Remove up to three counters from another target creature or planeswalker" (Mabel, Bitter Recluse): of any kinds, a
+         number of them in all, "up to" (`upTo`) or exactly -- which ones asked as it resolves (effects/asking.mjs,
+         countersToRemove), so never where nothing can ask, and never with its answer (`removing`) written in. */
+      if (effect.effect === "removeCounter" && effect.counter !== "any" && (effect.upTo !== undefined || effect.removing !== undefined))
+        problems.push("removeCounter: upTo goes with counters of any kinds (`counter: \"any\"`)");
+      if (effect.effect === "removeCounter" && effect.counter === "any" && !(Number.isInteger(effect.count) && effect.count >= 1 && [undefined, true].includes(effect.upTo) && effect.removing === undefined))
+        problems.push("removeCounter: counters of any kinds are a number of them, 1 or more, `upTo: true` or exactly -- which ones asked as it resolves");
+      if (effect.effect === "repeatFor" && (effect.effects ?? []).some((inner) => inner?.effect === "removeCounter" && inner.counter === "any"))
+        problems.push("repeatFor: which counters of any kinds to remove is asked, and what repeats here does not ask it");
       /* "Spend this mana only to cast instant and sorcery spells" (effects/resources.mjs), "only to cast a creature spell of
          the chosen type" (a mana ability's, cards/index.mjs manaAbility): what the mana may pay for, read here for both. */
       if (effect.effect === "addMana" && effect.spendOnly !== undefined && !spendOnlyValid(effect.spendOnly))
@@ -1250,6 +1259,14 @@ export function compileScript(script) {
       const wanted = ability.apply.topCardAbilities;
       if (!wanted || typeof wanted !== "object" || Object.keys(wanted).some((k) => k !== "subtypes") || !Array.isArray(wanted.subtypes))
         problems.push(`${ability.text}: what the top card must be is {subtypes: [...]}`);
+    }
+    /* "Thranduil has all activated abilities of all Elf cards in your graveyard": those cards' (rules/layers.mjs,
+       graveyardGrant), in layer 6, what they must be a list of subtypes. */
+    if (ability.kind === "static" && ability.apply?.graveyardAbilities !== undefined) {
+      if (ability.layer !== 6) problems.push(`${ability.text}: abilities are given in layer 6 (CR 613.1f)`);
+      const wanted = ability.apply.graveyardAbilities;
+      if (!wanted || typeof wanted !== "object" || Object.keys(wanted).some((k) => k !== "subtypes") || !Array.isArray(wanted.subtypes) || !wanted.subtypes.length)
+        problems.push(`${ability.text}: what the graveyard's cards must be is {subtypes: [...]}`);
     }
     if (ability.kind === "static" && ability.apply?.addAbilities !== undefined) {
       if (ability.layer !== 6) problems.push(`${ability.text}: abilities are given in layer 6 (CR 613.1f)`);

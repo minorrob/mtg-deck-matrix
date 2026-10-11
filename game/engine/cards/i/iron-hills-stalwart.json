@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Iron Hills Stalwart",
+    "oracleId": "bd4ab393-9538-4230-b2a1-bc77099481c9",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dwarf",
+      "Warrior"
+    ],
+    "manaCost": "{4}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Reach, trample\nWhen this creature enters, attach target Equipment you control to up to one target creature you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Reach",
+      "keyword": "reach"
+    },
+    {
+      "kind": "keyword",
+      "text": "trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, attach target Equipment you control to up to one target creature you control.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "attach",
+          "source": {
+            "target": 0
+          },
+          "targets": {
+            "target": 1
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "subtypes": [
+            "Equipment"
+          ],
+          "controller": "you"
+        },
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    }
+  ]
+}

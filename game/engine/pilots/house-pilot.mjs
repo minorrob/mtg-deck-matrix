@@ -349,6 +349,14 @@ export function housePilot({seat, cards = () => null} = {}) {
         const order = options.map((o, i) => i).sort((a, b) => rank(options[a]) - rank(options[b]) || a - b);
         return {indices: firstOf(choice, order, min)};
       }
+      /* Which counters to remove (Mabel, Bitter Recluse): from another player's permanent all it may but -1/-1 counters; from
+         its own, its -1/-1 counters alone -- and only as many others as it must. */
+      if (id.startsWith("remove-counters:") && options.length) {
+        const own = controllerIn(view, options[0].cardId) === seat, harmful = (i) => options[i].counter === "-1/-1";
+        const wanted = options.map((o) => o.index).filter((i) => own === harmful(i));
+        const rest = options.map((o) => o.index).filter((i) => !wanted.includes(i));
+        return {indices: [...wanted, ...rest].slice(0, Math.max(min, Math.min(max, wanted.length)))};
+      }
       /* CR 616.1: which effect changes damage dealt to it or its own first -- the one that leaves the least. */
       if (id.startsWith("order-damage:") && options.length) {
         const best = options.reduce((b, o) => ((o.leaves ?? Infinity) < (b.leaves ?? Infinity) ? o : b));

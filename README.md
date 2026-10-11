@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 419 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 423 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1289,6 +1289,10 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-waterbend` - `tests/engine-waterbend.mjs`: waterbend as an activated ability's cost (CR 701.67; Giant Koi, Foggy Swamp Vinebender), artifacts and creatures tapped for its generic mana, never for an increase on it
 - `engine-cant-cast-self` - `tests/engine-cant-cast-self.mjs`: a card's own "you can't cast this spell unless ..." (Proft, Sinister Mastermind's threshold), read wherever it would be cast from
 - `engine-unless-tap` - `tests/engine-unless-tap.mjs`: "you may tap another untapped Merfolk you control. When you do, ..." (Meanders Guide; CR 118.12a, 603.12), each permanent its own option
+- `engine-each-player-creates` - `tests/engine-each-player-creates.mjs`: "each opponent creates a 1/1 white Human creature token" (Slaughter Specialist; CR 111.2) -- a token made for "that player" of a repetition, theirs to control and own, in turn order, none for a player gone
+- `engine-attach-target` - `tests/engine-attach-target.mjs`: "attach target Equipment you control to up to one target creature you control" (Iron Hills Stalwart; CR 701.3) -- the targeted Equipment moves, from where it was; nothing moves for an illegal target, none chosen, or protection
+- `engine-counters-removed` - `tests/engine-counters-removed.mjs`: "remove up to three counters from another target creature or planeswalker" (Mabel, Bitter Recluse; CR 122.1, 608.2d) -- of any kinds, which ones its controller chooses as it resolves, counted after; unasked where there is no choice
+- `engine-graveyard-abilities` - `tests/engine-graveyard-abilities.mjs`: "Thranduil has all activated abilities of all Elf cards in your graveyard" (CR 613.1f) -- its controller's graveyard as it now is, a changeling card among them, one ability each, "this creature" the holder
 
 ## Design and execution record
 

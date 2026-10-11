@@ -29,7 +29,7 @@
 import {cardsIn, moveObject, addObject, valueCostOf, rememberExileLooker, usesThisTurn, recordUse, recordDiscard} from "../../state/index.mjs";
 import {compileSelector} from "../filter.mjs";
 import {event, cardRef, moveOne, playersFor, sacrificeOne, destructionQuestion, destructionChoice} from "./zones.mjs";
-import {proliferate as giveEachAnother, addCounters, putCounter, moveCounters} from "./resources.mjs";
+import {proliferate as giveEachAnother, addCounters, putCounter, moveCounters, removeCounter} from "./resources.mjs";
 import {makeCopies, afterwards, joinAttack, attackPlaces, attachTo, createToken, effectUntil, COPY_KEYS} from "./permanents.mjs";
 import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits, unlessPlans, planWords, payPlan} from "../../rules/mana.mjs";
 import {typesOf, characteristicsOf, everyCreatureTypeOf, controllerOf} from "../../rules/layers.mjs";
@@ -1800,6 +1800,53 @@ export const counterKind = {
   },
 };
 
+/* ---- which counters to remove (CR 122.1, 608.2d; Train C, w2d) ----
+
+   "Remove up to three counters from another target creature or planeswalker" (Mabel, Bitter Recluse): a removeCounter of
+   any kinds (`counter: "any"`), `count` of them in all, "up to" (`upTo`) as few as none -- which ones its controller chooses
+   as it resolves, among the counters on its target then; put here by the resolution before it is done
+   (script/resolution.mjs). Each counter is an option, as many of each kind as could be removed; the effect follows with the
+   answer, how many of each kind (`removing`), so "for each counter removed this way" counts them (effects/resources.mjs).
+   Nothing on it, or it gone, and there is nothing to choose; and where every counter there must go, the rules leave no
+   choice: nobody is asked either way. */
+export const countersToRemove = {
+  open(state, params, context) {
+    const then = params.then, [on] = then.targets ?? [], most = Math.max(0, then.count ?? 1);
+    const units = countersOn(state, on).flatMap(({kind, n}) => Array.from({length: Math.min(n, most)}, () => kind));
+    const min = then.upTo === true ? 0 : Math.min(most, units.length);
+    if (min === units.length) {
+      const removing = {};
+      for (const kind of units) removing[kind] = (removing[kind] ?? 0) + 1;
+      return {events: removeCounter(state, {...then, removing}, context)};
+    }
+    state.awaiting = {kind: "effect-choice", effect: "countersToRemove", player: context.controller, on, units, min, max: Math.min(most, units.length), then};
+    return true;
+  },
+  choice(state, awaiting) {
+    const name = state.objects[awaiting.on]?.card ?? "that permanent";
+    const options = awaiting.units.map((kind, index) => ({index, label: `${kind} counter`, cardId: awaiting.on, counter: kind}));
+    for (const option of options) {
+      const alike = options.filter((o) => o.counter === option.counter);
+      if (alike.length > 1 && option === alike[0]) alike.forEach((o, k) => { o.label = `${o.label} (${k + 1})`; });
+    }
+    return {id: `remove-counters:${awaiting.player}:${state.turn}:${awaiting.on}`,
+      title: `Remove ${awaiting.min === 0 ? "up to " : ""}${awaiting.max} counter${awaiting.max === 1 ? "" : "s"} from ${name}`,
+      mode: "many", min: awaiting.min, max: awaiting.max, options};
+  },
+  apply(state, awaiting, indices) {
+    const picked = [...new Set(indices ?? [])];
+    if (picked.length !== (indices ?? []).length || picked.length < awaiting.min || picked.length > awaiting.max || picked.some((i) => awaiting.units[i] === undefined))
+      throw new Error("Invalid selection");
+    const removing = {};
+    for (const i of picked) removing[awaiting.units[i]] = (removing[awaiting.units[i]] ?? 0) + 1;
+    return {events: [], splice: [{...awaiting.then, removing}]};
+  },
+  /* Its controller has left the game, and the ability with them (CR 800.4a): nothing is removed. */
+  left() {
+    return {events: []};
+  },
+};
+
 /* ---- orderDestruction (CR 616.1): a destroy whose destruction of one permanent two or more effects would replace, ending
    differently -- two Auras with umbra armor, or one and a regeneration shield -- asks that permanent's controller which,
    before anything is destroyed (effects/zones.mjs, destructionQuestion; script/resolution.mjs puts this in the destroy's place
@@ -1840,4 +1887,4 @@ export const chooseInstead = {
 };
 
 export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, orderCounters, orderDraws,
-  conniveWhich, manaColors, counterKind, orderDestruction, chooseInstead});
+  conniveWhich, manaColors, counterKind, countersToRemove, orderDestruction, chooseInstead});

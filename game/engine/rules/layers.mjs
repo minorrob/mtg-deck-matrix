@@ -231,6 +231,20 @@ function topCardGrant(state, holder, ability) {
   const {topCardAbilities: _top, ...rest} = ability.apply;
   return {...ability, apply: {...rest, addAbilities: (card.abilities ?? []).filter((a) => a.kind === "activated" || a.kind === "mana")}};
 }
+/* "THRANDUIL HAS ALL ACTIVATED ABILITIES OF ALL ELF CARDS IN YOUR GRAVEYARD" (Thranduil, the Elvenking; CR 613.1f, layer 6):
+   `apply.graveyardAbilities`, what those cards must be (their subtypes, a changeling card's every creature type among them,
+   CR 702.73a) -- read from the holder's controller's graveyard as it now is, so the abilities come and go with the cards.
+   Each card's activated abilities, mana abilities among them (CR 605.1a), given as granted abilities are, each named by its
+   card as well, so two cards' alike abilities are two; one that works only from a graveyard is given and never offered on
+   the battlefield (rules/actions.mjs). No such card, and the static gives nothing. */
+function graveyardGrant(state, holder, ability) {
+  const wanted = ability.apply.graveyardAbilities?.subtypes ?? [];
+  const cards = (state.zones.graveyard?.[holder.controller] ?? []).filter((id) => state.objects[id]
+    && wanted.every((t) => hasSubtype(state.objects[id].subtypes ?? [], everyCreatureType(state.objects[id].keywords), t)));
+  const {graveyardAbilities: _graveyard, ...rest} = ability.apply;
+  return {...ability, apply: {...rest, addAbilities: cards.flatMap((id) => (state.objects[id].abilities ?? [])
+    .filter((a) => a.kind === "activated" || a.kind === "mana").map((a) => ({...a, id: `${id}:${a.id}`})))}};
+}
 
 function gatherEffects(state) {
   const found = [];
@@ -249,7 +263,8 @@ function gatherEffects(state) {
       /* One that works from a graveyard does not work here (CR 113.6). */
       if (ability.worksFrom === "graveyard") continue;
       if (!holdsNow(state, ability.condition, {controller: holder.controller, source: id})) continue;
-      const given = ability.apply?.topCardAbilities !== undefined ? topCardGrant(state, holder, ability) : ability;
+      const given = ability.apply?.topCardAbilities !== undefined ? topCardGrant(state, holder, ability)
+        : ability.apply?.graveyardAbilities !== undefined ? graveyardGrant(state, holder, ability) : ability;
       if (given === null) continue;
       found.push({
         /* "Creatures you control of the chosen type get +1/+1", "this creature is the chosen type": its own choice. */
@@ -576,7 +591,7 @@ const heldAbilities = (object, current) => [...(current.lostAbilities ? [] : obj
    graveyard (where one may work from, allEffects): when none does, a permanent's abilities are its own, and nothing need
    be derived to read them. */
 function abilitiesChange(state) {
-  const changes = (apply) => Boolean(apply && (apply.addAbilities || apply.removeAllAbilities || apply.topCardAbilities));
+  const changes = (apply) => Boolean(apply && (apply.addAbilities || apply.removeAllAbilities || apply.topCardAbilities || apply.graveyardAbilities));
   if ((state.effects ?? []).some((effect) => changes(effect.apply))) return true;
   const holders = [...state.zones.battlefield, ...(state.zones.graveyard ?? []).flat()];
   return holders.some((id) => (state.objects[id].abilities ?? []).some((ability) => ability.kind === "static" && changes(ability.apply)));

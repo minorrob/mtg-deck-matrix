@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thranduil, the Elvenking",
+    "oracleId": "4a5f76e7-40be-4b06-9935-4a3b2672e1c2",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Noble"
+    ],
+    "manaCost": "{2}{B}{G}{U}",
+    "colors": [
+      "B",
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "G",
+      "U"
+    ],
+    "power": 5,
+    "toughness": 6
+  },
+  "oracleText": "Thranduil has all activated abilities of all Elf cards in your graveyard.\nWhenever another legendary Elf you control enters, draw two cards, then discard a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Thranduil has all activated abilities of all Elf cards in your graveyard.",
+      "layer": 6,
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "graveyardAbilities": {
+          "subtypes": [
+            "Elf"
+          ]
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another legendary Elf you control enters, draw two cards, then discard a card.",
+      "trigger": {
+        "on": "enters",
+        "who": "another",
+        "filter": {
+          "supertypes": [
+            "Legendary"
+          ],
+          "subtypes": [
+            "Elf"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2
+        },
+        {
+          "effect": "discard",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}
