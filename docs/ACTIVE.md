@@ -30,9 +30,9 @@ byte with the dry run):**
 - Gandalf, so 1,131 of Rob's 1,132 cards play, and control for good no longer breaking a room's save (#707);
 - G-D's dress rehearsal: 50 games through the real board, every one replayed with no leak, M8's exit criteria met (#708);
 - G1 over Rob's whole library, not only his seven decks: 650 games, and the two table-stalling bugs they found fixed
-  (#710, and the amass fix after it; the G1-L record below).
+  (#710, #711), then 250 more with both fixes in, every one clean (the G1-L record below).
 
-Staging serves main 9c746136. Every gate item that is this side's is done; what is left is Rob's (the list above, and
+Staging serves main 039c86dd. Every gate item that is this side's is done; what is left is Rob's (the list above, and
 G-D's 50 games by Grok Bot once the agents' tokens are in).
 
 ## RESUMED, 2026-10-08: the review-response session (Claude, a cloud container), on Rob's "Keep building"
@@ -1284,3 +1284,16 @@ with G1's terms: finished, nothing refused over the whole match, replayed identi
 version 025e7c27, its `play-worker.js` byte-identical to the release's dry-run bundle (3,305,854 bytes). Its AI bindings
 are the Coach's alone. `tools/staging-check.mjs --expect 9c74613` exits 0, seating the session's token as
 `service:e07b4fed5ab9`.
+
+**#711 merged on main 039c86dd on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 74fe31e2 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 23:00:47 UTC as
+version 20b71b9f, its `play-worker.js` byte-identical to the release's dry-run bundle (3,305,857 bytes). Its AI bindings
+are the Coach's alone. `tools/staging-check.mjs --expect 039c86d` exits 0, seating the session's token as
+`service:e07b4fed5ab9`.
+
+**G1-L's third sweep, with both fixes in: 250 of 250 clean (2026-10-11).** `tools/fuzz-live.mjs --library`, fresh seeds,
+G1's terms (finished, nothing refused over the whole match, replayed identically, no leak):
+- with a person in seat 0, seeds 401-500: 100 of 100;
+- all AI seats, seeds 1251-1400: 150 of 150.
+
+So of the library sweep's 900 games, the two that were not clean were the two stalls, both fixed (#710, #711).
