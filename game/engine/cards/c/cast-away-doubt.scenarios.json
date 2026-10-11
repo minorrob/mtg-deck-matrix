@@ -1,0 +1,116 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Cast Away Doubt",
+  "scenarios": [
+    {
+      "name": "Two cards drawn, and 2 damage to each player, its caster too",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Cast Away Doubt"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Cast Away Doubt"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "seat": 1,
+          "life": 38
+        }
+      ]
+    },
+    {
+      "name": "Four players: each is dealt 2",
+      "seats": 4,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Cast Away Doubt"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Cast Away Doubt"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "seat": 1,
+          "life": 38
+        },
+        {
+          "seat": 2,
+          "life": 38
+        },
+        {
+          "seat": 3,
+          "life": 38
+        }
+      ]
+    }
+  ]
+}

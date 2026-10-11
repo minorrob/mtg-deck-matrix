@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Artifist Acumen",
+    "oracleId": "129b41cf-8327-42f0-b186-1111b42c08ab",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures you control gain first strike until end of turn.\nDraw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Creatures you control gain first strike until end of turn.\nDraw a card.",
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "First Strike"
+          ],
+          "until": "end-of-turn"
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}
