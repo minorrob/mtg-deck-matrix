@@ -19,7 +19,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 53 | 0 | 5 | 136 |
-| Keyword actions (CR 701) | 70 | 22 | 3 | 1 | 44 |
+| Keyword actions (CR 701) | 70 | 22 | 4 | 1 | 43 |
 | Effects | 192 | 70 | 1 | 2 | 119 |
 | Triggers | 138 | 20 | 4 | 2 | 112 |
 | Static abilities | 77 | 14 | 2 | 0 | 61 |
@@ -302,7 +302,7 @@ The things that alone hold back the most of the most-played cards.
 | 701.2 | Activate | (the rules modules) | built | 0 | 0 | 0 | 0 |
 | 701.46 | Adapt | — | missing | 0 | 0 | 0 | 0 |
 | 701.45 | Assemble | — | missing | 0 | 0 | 0 | 0 |
-| 701.4 | Behold | — | missing | 0 | 0 | 0 | 0 |
+| 701.4 | Behold (as a cost: an additional cost or a flashback cost's; as an effect, not yet) | (the rules modules) | partial | 0 | 0 | 0 | 0 |
 | 701.39 | Bolster | — | missing | 0 | 0 | 0 | 0 |
 | 701.5 | Cast | (the rules modules) | built | 0 | 0 | 0 | 0 |
 | 701.59 | Collect Evidence | — | missing | 0 | 0 | 0 | 0 |

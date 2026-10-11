@@ -1,0 +1,89 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lys Alana Dignitary",
+    "oracleId": "ce7582a2-e014-41fb-8753-00d29cffc81a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Advisor"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "As an additional cost to cast this spell, behold an Elf or pay {2}. (To behold an Elf, choose an Elf you control or reveal an Elf card from your hand.)\n{T}: Add {G}{G}. Activate only if there is an Elf card in your graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "As an additional cost to cast this spell, behold an Elf or pay {2}. (To behold an Elf, choose an Elf you control or reveal an Elf card from your hand.)",
+      "targets": [],
+      "effects": [],
+      "additionalCost": [
+        {
+          "atom": "oneOf",
+          "options": [
+            [
+              {
+                "atom": "behold",
+                "selector": {
+                  "subtypes": [
+                    "Elf"
+                  ]
+                }
+              }
+            ],
+            [
+              {
+                "atom": "mana",
+                "cost": "{2}"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {G}{G}. Activate only if there is an Elf card in your graveyard.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": 2
+          }
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "count": {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "subtypes": [
+                "Elf"
+              ]
+            }
+          },
+          "atLeast": 1
+        }
+      }
+    }
+  ]
+}

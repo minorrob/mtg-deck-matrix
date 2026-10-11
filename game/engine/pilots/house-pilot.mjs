@@ -318,6 +318,11 @@ export function housePilot({seat, cards = () => null} = {}) {
         const order = options.map((o, i) => i).sort((a, b) => (mine.get(options[a].cardId)?.power ?? 0) - (mine.get(options[b].cardId)?.power ?? 0) || a - b);
         return {indices: firstOf(choice, order, min)};
       }
+      /* What to behold (CR 701.4a): permanents first -- choosing one shows nothing -- then cards revealed from the hand. */
+      if (id.startsWith("choose-cost:") && choice.cost === "behold") {
+        const order = options.map((o, i) => i).sort((a, b) => Number(options[a].fromHand === true) - Number(options[b].fromHand === true) || a - b);
+        return {indices: firstOf(choice, order, min)};
+      }
       /* Creatures tapped as an additional cost, any number of them ("three times the number of creatures tapped this way",
          Burn at the Stake): every one it is offered, for the most the spell can do. */
       if (id.startsWith("choose-cost:") && choice.cost === "tapAny") return {indices: options.map((o) => o.index).slice(0, max)};

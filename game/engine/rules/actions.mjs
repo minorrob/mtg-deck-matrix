@@ -113,10 +113,12 @@ function castCost(state, player, id, tax, free = false, instead = null, extra = 
  * Past in Flames) -- its mana cost. Only an instant or sorcery, and only from the caster's own graveyard. A cost that taps
  * creatures ("Flashback--Tap three untapped white creatures you control", Battle Screech) says how many and which
  * (`tap`); whether they are there is the offer's to ask (flashbackTappers). One that discards ("Flashback--{1}{U/R}{U/R},
- * Discard a card", Twinned Vision) has it among its `extra` atoms, each card its own offer, as an alternative cost's are.
+ * Discard a card", Twinned Vision) has it among its `extra` atoms, each card its own offer, as an alternative cost's are; and
+ * one that beholds ("Flashback--{1}{R}, Behold three Elementals", Kindle the Inner Flame), which ones asked once it is taken.
  *
  * @returns {?{mana: string, life: number, extra?: Array<object>, tap?: {count: number, selector: object}}}
  */
+const FLASHBACK_EXTRA = ["discard", "behold"];
 export function flashbackCost(state, player, id) {
   const object = state.objects[id];
   if (!object || object.zone !== "graveyard" || object.owner !== player) return null;
@@ -130,7 +132,7 @@ export function flashbackCost(state, player, id) {
   if (!cost) return null;
   const tap = cost.find((a) => a.atom === "tapCreature");
   return {mana: cost.find((a) => a.atom === "mana")?.cost ?? "", life: cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0),
-    ...(cost.some((a) => a.atom === "discard") ? {extra: cost.filter((a) => a.atom === "discard")} : {}), ...(tap ? {tap: {count: tap.count ?? 1, selector: tap.selector ?? {}}} : {})};
+    ...(cost.some((a) => FLASHBACK_EXTRA.includes(a.atom)) ? {extra: cost.filter((a) => FLASHBACK_EXTRA.includes(a.atom))} : {}), ...(tap ? {tap: {count: tap.count ?? 1, selector: tap.selector ?? {}}} : {})};
 }
 
 /* The untapped creatures a player controls that a flashback cost may tap: each fits its selector ("white creatures"), a
@@ -298,6 +300,13 @@ function costChoice(state, awaiting) {
     return {id: `choose-cost:${action.objectId}`, title: `${name}: tap any number of untapped creatures you control`, mode: "many", min: 0, max: able.length,
       cost: "tapAny", options: numbered(able.map((cardId, index) => ({index, label: state.objects[cardId].card, cardId})))};
   }
+  /* Behold (CR 701.4a): which permanents of theirs to choose and cards in their hand to reveal, exactly that many. */
+  if (action.behold > 0 && !Array.isArray(action.beheld)) {
+    const atom = beholdOf(state, player, action), n = atom?.count ?? 1, kind = (atom?.selector?.subtypes ?? [])[0] ?? "card";
+    return {id: `choose-cost:${action.objectId}`, title: `${name}: behold ${inWords(n)} ${kind}${n === 1 ? "" : "s"}`, mode: "many", min: n, max: n, cost: "behold",
+      options: numbered(beholdChoices(state, player, action.objectId, atom).map((c, index) => ({index, label: c.fromHand ? `${state.objects[c.id].card} (reveal it from your hand)` : state.objects[c.id].card,
+        cardId: c.id, ...(c.fromHand ? {fromHand: true} : {})})))};
+  }
   /* Escalate (CR 702.120a): which untapped creatures to tap, the cost's count again for each mode chosen beyond the first --
      the creatures a flashback cost's tap may take (flashbackTappers), the same words. */
   if (action.escalateTap > 0 && !Array.isArray(action.escalateTapped)) {
@@ -369,7 +378,7 @@ export function resolveCastCost(state, awaiting, indices) {
   const ids = picked.map((i) => choice.options[i].cardId);
   const way = choice.cost === "mana" ? castTapPlans(state, awaiting.player, awaiting.action, TAP_CHOICES)[picked[0]] : null;
   const action = {...structuredClone(awaiting.action), ...(choice.cost === "pool" ? {payWith: choice.options[picked[0]].key} : way ? {tapPlan: way.key} : choice.cost === "tap" ? {flashbackTap: ids}
-    : choice.cost === "convoke" ? {convokeTap: ids} : choice.cost === "tapAny" ? {tapChosen: ids} : choice.cost === "exileOthers" ? {othersExiled: ids} : choice.cost === "sacrifice" ? {sacrificeSet: ids} : choice.cost === "escalate" ? {escalateTapped: ids}
+    : choice.cost === "convoke" ? {convokeTap: ids} : choice.cost === "tapAny" ? {tapChosen: ids} : choice.cost === "behold" ? {beheld: ids} : choice.cost === "exileOthers" ? {othersExiled: ids} : choice.cost === "sacrifice" ? {sacrificeSet: ids} : choice.cost === "escalate" ? {escalateTapped: ids}
     : choice.cost === "counters" ? {counterSet: picked.map((i) => ({id: choice.options[i].cardId, counter: choice.options[i].counter}))} : {escapeExile: ids})};
   state.awaiting = null;
   state.priorityPlayer = awaiting.player;
@@ -383,6 +392,33 @@ function flashbackTapped(state, player, action, tap) {
   const fitting = flashbackTappers(state, player, tap);
   if (!Array.isArray(list) || list.length !== tap.count || new Set(list).size !== list.length || !list.every((id) => fitting.includes(id)))
     throw new Error(`Those are not ${tappersInWords(tap)} for its flashback`);
+  return [...list];
+}
+
+/* BEHOLD (CR 701.4a): "behold an Elf" is "reveal an Elf card from your hand or choose an Elf you control"; "behold three
+   Elementals", three different objects, of either. A cost atom of a spell's -- an additional cost ("behold an Elf or pay {2}",
+   Lys Alana Dignitary) or its flashback cost's (Kindle the Inner Flame) -- offered while there are that many to behold, which
+   ones asked once the cast is taken (choose-cost, "behold"), never one offer per set of them. The spell itself is never one
+   (it is on its way to the stack); a card from the hand is revealed to every player as the cost is paid (CR 701.20a), and a
+   permanent is only chosen. */
+const beholdAtom = (atoms) => (atoms ?? []).find((a) => a?.atom === "behold");
+/* The behold of the cast an offer takes: its flashback cost's, or its additional cost's, a choice's looked into. */
+const beholdOf = (state, player, action) => (action.flashback ? beholdAtom(flashbackCost(state, player, action.objectId)?.extra)
+  : additionalAtom(state.objects[action.objectId]?.spell?.additionalCost, "behold"));
+function beholdChoices(state, player, spellId, atom) {
+  const context = {controller: player, source: spellId};
+  const chosen = compileSelector({...(atom?.selector ?? {}), what: "permanent", controller: "you"});
+  const revealed = compileSelector({...(atom?.selector ?? {}), what: "card", zone: "hand", controller: "you"});
+  return [...state.zones.battlefield.filter((id) => chosen(state, id, context)).map((id) => ({id, fromHand: false})),
+    ...cardsIn(state, "hand", player).filter((id) => id !== spellId && revealed(state, id, context)).map((id) => ({id, fromHand: true}))];
+}
+/* What its caster picked to behold: exactly that many, none twice, each still one it may behold. Refused before anything is
+   paid, saying what to do instead. */
+function beheldPicked(state, player, action) {
+  const atom = beholdOf(state, player, action), able = beholdChoices(state, player, action.objectId, atom).map((c) => c.id);
+  const list = action.beheld;
+  if (!Array.isArray(list) || list.length !== (atom?.count ?? 1) || new Set(list).size !== list.length || !list.every((id) => able.includes(id)))
+    throw new Error(`Those are not what ${state.objects[action.objectId]?.card ?? "that spell"} may behold: pick them again`);
   return [...list];
 }
 
@@ -1185,7 +1221,10 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
   /* Creatures tapped as an additional cost (tapAnyAtom): asked once the cast is taken, and paid from the pool -- never tapped
      for, which taps creatures too (a mana creature), the two questions about the same creatures. */
   const tapsAny = tapAnyAtom(variant.atoms);
-  const offeredAtoms = variant.atoms.filter((a) => a !== tapsAny);
+  /* What it beholds (CR 701.4a): that many there to behold, or not this way; which ones, asked once it is taken. */
+  const beholds = beholdAtom(variant.atoms);
+  if (beholds && beholdChoices(state, player, id, beholds).length < (beholds.count ?? 1)) continue;
+  const offeredAtoms = variant.atoms.filter((a) => a !== tapsAny && a !== beholds);
   /* Escalate's creatures to tap (CR 702.120a): that many there to tap now, or not that many modes. */
   if (variant.escalateTap && flashbackTappers(state, player, variant.escalateTap).length < variant.escalateTap.count) continue;
   /* Its targets first, when its cost reads them (aimsFor): each way to choose them costed, and offered, on its own. */
@@ -1228,7 +1267,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
       const base = {kind: "cast", objectId: id, label: object.card, payment: convoke || payWays ? null : payment, from, tax, ...(X !== null ? {x: X} : {}), ...(autoTap && !convoke ? {autoTap: true} : {}),
         ...(payWays && !convoke ? {payWays: true} : {}),
         ...(convoke ? {convoke: true} : {}), ...(variant.mana ? {extraMana: variant.mana} : {}), ...(variant.kicked ? {kicked: variant.kicked} : {}),
-        ...(tapsAny ? {tapAny: true} : {}),
+        ...(tapsAny ? {tapAny: true} : {}), ...(beholds ? {behold: beholds.count ?? 1} : {}),
         /* Escalated (CR 702.120a): how many modes beyond the first, and how many creatures that taps. */
         ...(variant.escalate ? {escalate: variant.escalate} : {}), ...(variant.escalateTap ? {escalateTap: variant.escalateTap.count} : {}),
         /* A set of cards ("discard two cards") names each one. */
@@ -1554,6 +1593,8 @@ const sameAction = (a, b) => a.kind === b.kind
   /* And escalated for that many modes beyond the first, tapping that many creatures (CR 702.120a): another cost. Which
      creatures is picked after the offer is taken, so they are not part of it (and are held to the cost as it is paid). */
   && (a.escalate ?? 0) === (b.escalate ?? 0) && (a.escalateTap ?? 0) === (b.escalateTap ?? 0)
+  /* And one that beholds (CR 701.4a) another than one that pays the other choice. What it beholds is picked after. */
+  && (a.behold ?? 0) === (b.behold ?? 0)
   /* And played or cast through another permanent's permission (permissionWays): another action, when they differ. */
   && (a.via ?? null) === (b.via ?? null)
   /* And paid with other mana that does something when spent (Path of Ancestry): another action. */
@@ -1727,6 +1768,11 @@ function performOffered(state, player, action, during) {
         return [];
       }
     }
+    /* BEHOLD (CR 701.4a, 601.2h): which to choose or reveal, asked before anything is paid. */
+    if (action.kind === "cast" && action.behold > 0 && !Array.isArray(action.beheld)) {
+      state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
+      return [];
+    }
     /* ESCALATE'S CREATURES (CR 702.120a, 601.2h): which to tap for the modes beyond the first, asked before anything is paid. */
     if (action.kind === "cast" && action.escalateTap > 0 && !Array.isArray(action.escalateTapped)) {
       state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
@@ -1869,6 +1915,8 @@ function performOffered(state, player, action, during) {
     const tapping = back?.tap && !during ? flashbackTapped(state, player, action, back.tap) : [];
     /* And "tap any number of untapped creatures you control", as its caster picked them (tapAnyPicked). */
     const tappedAny = action.tapAny === true && !during ? tapAnyPicked(state, player, action) : [];
+    /* And what it beholds, as its caster picked it (beheldPicked). */
+    const beholding = action.behold > 0 && !during ? beheldPicked(state, player, action) : [];
     /* And escalate's, as its caster picked them (CR 702.120a). */
     const escalating = action.escalateTap > 0 && !during ? escalateTapped(state, player, action) : [];
     /* Tapped for it (castTapPlans): the way picked, or the one there is -- each source's mana ability activated, as its
@@ -1945,7 +1993,7 @@ function performOffered(state, player, action, during) {
     entry.cast = {from: castFrom, mainPhase: player === state.activePlayer && MAIN_PHASES.includes(state.phase),
       /* "If this spell's additional cost was paid" (Cinder Strike): an optional one, paid -- its mana too. */
       /* Escalate's cost too, paid for a mode beyond the first (CR 702.120a: an additional cost). */
-      ...(extraPaid.length || action.extraMana || action.escalate > 0 ? {additionalPaid: true} : {}),
+      ...(extraPaid.length || action.extraMana || action.escalate > 0 || (beholding.length && additionalAtom(object.spell?.additionalCost, "behold")) ? {additionalPaid: true} : {}),
       /* The creatures tapped to convoke it (CR 702.51c: they "convoked" it): "each creature that convoked this spell
          connives" (Lethal Scheme; script/bind.mjs, "convoked"). */
       ...((convoke?.ids ?? []).length ? {convoked: [...convoke.ids]} : {}),
@@ -2010,6 +2058,8 @@ function performOffered(state, player, action, during) {
       const paid = kind === "sacrifice" ? sacrificeOne(state, id, events) : moveOne(state, id, kind === "exile" ? "exile" : "graveyard", events, {owner: state.objects[id].owner});
       if (kind === "discard" && paid !== null) events[events.length - 1].data.fields.discarded = true;
     }
+    /* What it beheld from the hand, revealed to every player as the cost is paid (CR 701.4a, 701.20a); it stays in the hand. */
+    for (const id of beholding) if (state.objects[id]?.zone === "hand") events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: player}}));
     /* Escape's other cards, and a graveyard alternative cost's, exiled as the rest of the cost is paid (CR 601.2h). */
     for (const id of [...exiling, ...othersExiling]) if (state.objects[id]) moveOne(state, id, "exile", events, {owner: state.objects[id].owner});
     /* And a flashback cost's creatures, tapped; and a convoke's (CR 702.51c: they convoked it), for no mana; and the creatures

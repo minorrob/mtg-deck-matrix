@@ -200,6 +200,8 @@ const SMOKE_FIXTURES = Object.freeze({
   "Smoke Instant": {types: ["Instant"], manaCost: "{0}", colors: ["U"], spell: {id: "s", text: "Target player draws a card.", targets: [{what: "player"}], effects: [{effect: "draw", count: 1, who: {target: 0}}]}},
   /* A free creature the card's own player casts, so a card aimed at its controller's creature spell has one to answer. */
   "Smoke Whelp": {types: ["Creature"], manaCost: "{0}", power: 1, toughness: 1},
+  /* A changeling card, every creature type (CR 702.73a), in the hand of a card that beholds ("behold an Elf", CR 701.4a). */
+  "Smoke Changeling": {types: ["Creature"], subtypes: ["Shapeshifter"], manaCost: "{1}", keywords: ["Changeling"], power: 1, toughness: 1},
 });
 
 /**
@@ -236,7 +238,9 @@ export function smokeScenario(script) {
   const extra = ((script.abilities ?? []).find((a) => a?.kind === "spell")?.additionalCost ?? [])
     .flatMap((a) => (a?.atom === "oneOf" && Array.isArray(a.options) ? a.options.flat() : [a]));
   /* As many cards as its discard takes ("discard two cards", Cathartic Reunion). */
-  const fodderHand = Array.from({length: Math.max(0, ...extra.filter((a) => a?.atom === "discard").map((a) => a.count ?? 1))}, () => "Smoke Charm");
+  const fodderHand = [...Array.from({length: Math.max(0, ...extra.filter((a) => a?.atom === "discard").map((a) => a.count ?? 1))}, () => "Smoke Charm"),
+    /* And as many changeling cards as it beholds, to reveal (CR 701.4a). */
+    ...Array.from({length: Math.max(0, ...extra.filter((a) => a?.atom === "behold").map((a) => a.count ?? 1))}, () => "Smoke Changeling")];
   /* A card aimed at its caster's own things ("target creature you control") gets something of the caster's to aim at. */
   const ownTargets = (script.abilities ?? []).some((a) => aims(a).some((t) => JSON.stringify(t).includes('"controller":"you"'))
     /* An Aura's target is its Enchant's: "Enchant creature you control" (Super State). */

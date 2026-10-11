@@ -211,7 +211,8 @@ const countValid = (count) => Boolean(count) && typeof count === "object" && !Ar
   && (count.min === undefined || (Number.isInteger(count.min) && count.min >= 0))
   && (count.max === undefined || (Number.isInteger(count.max) && count.max >= 1 && count.max >= (count.min ?? 0)));
 
-function checkAbility(ability, path, errors) {
+/* `permanent`: the card is a permanent card, whose spell ability may say only its additional cost (below). */
+function checkAbility(ability, path, errors, {permanent = false} = {}) {
   if (!ability || typeof ability !== "object") {
     errors.push({path, message: "An ability is an object"});
     return;
@@ -286,7 +287,10 @@ function checkAbility(ability, path, errors) {
   const effectful = ["spell", "activated", "triggered"].includes(ability.kind);
   if (effectful) {
     const effects = ability.effects ?? [];
-    if (effects.length === 0)
+    /* A permanent spell's effect is its entering (CR 608.3): a permanent card's spell ability says only "as an additional cost
+       to cast this spell, ..." (Lys Alana Dignitary; CR 601.2b), and has no effects of its own (cards/index.mjs). */
+    const additionalOnly = permanent && ability.kind === "spell" && Array.isArray(ability.additionalCost) && ability.additionalCost.length > 0;
+    if (effects.length === 0 && !additionalOnly)
       errors.push({path: `${path}.effects`, message: `A ${ability.kind} ability with no effects is a definition somebody did not finish`});
     effects.forEach((effect, index) => checkEffect(effect, `${path}.effects[${index}]`, errors));
   }
@@ -411,7 +415,8 @@ export function validateScript(script) {
   if (!Array.isArray(script.abilities)) {
     errors.push({path: "abilities", message: "A script has an abilities list, empty for a vanilla card"});
   } else {
-    script.abilities.forEach((ability, index) => checkAbility(ability, `abilities[${index}]`, errors));
+    const permanent = Array.isArray(script.identity?.types) && !script.identity.types.some((t) => t === "Instant" || t === "Sorcery");
+    script.abilities.forEach((ability, index) => checkAbility(ability, `abilities[${index}]`, errors, {permanent}));
   }
 
   /* A NONMODAL DOUBLE-FACED CARD (CR 712.2): one that transforms says so, `layout: "transform"`, beside its back face; a

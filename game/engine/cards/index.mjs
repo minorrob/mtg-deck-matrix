@@ -79,7 +79,16 @@ const countedTarget = (spec) => Boolean(spec) && typeof spec === "object" && spe
    ("Flashback--Tap three untapped white creatures you control", Battle Screech: `tapCreature`, its `count` and `selector`),
    and cards to discard ("Flashback--{1}{U/R}{U/R}, Discard a card", Twinned Vision: `discard`, its `count`), each card its
    own offer as an additional cost's discard is (rules/actions.mjs, additionalChoices). */
-const FLASHBACK_ATOMS = ["mana", "payLife", "tapCreature", "discard"];
+const FLASHBACK_ATOMS = ["mana", "payLife", "tapCreature", "discard", "behold"];
+/* BEHOLD (CR 701.4a): "behold an Elf", "behold three Elementals" -- what may be beheld, a selector, and how many (1 or more),
+   in an additional cost or a flashback cost (rules/actions.mjs, beholdChoices). Never optional, and one to a card: its cast
+   asks one question of it. */
+function beholdProblems(atom) {
+  if (atom?.atom !== "behold") return [];
+  let fits = Boolean(atom.selector) && typeof atom.selector === "object" && (atom.count === undefined || (Number.isInteger(atom.count) && atom.count >= 1)) && atom.optional === undefined;
+  try { if (fits) compileSelector({...atom.selector, what: "card"}); } catch { fits = false; }
+  return fits ? [] : ["behold: what may be beheld (a selector) and how many, 1 or more, never optional"];
+}
 /* Life paid as a number (CR 119.4): only an activated ability's cost counts it as it is paid (rules/actions.mjs, costPayment;
    War Room) -- an alternative cost's life and a mana ability's are read before anything is counted. */
 const fixedLife = (atom) => atom?.atom !== "payLife" || (Number.isInteger(atom.amount) && atom.amount >= 0);
@@ -848,7 +857,7 @@ export function compileScript(script) {
        instant or sorcery: "if the resulting spell is an instant or sorcery spell". */
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "flashback") {
       const cost = Array.isArray(ability.cost) ? ability.cost : [];
-      if (!cost.length || !cost.every((atom) => FLASHBACK_ATOMS.includes(atom?.atom) && fixedLife(atom) && plainDiscard(atom)))
+      if (!cost.length || !cost.every((atom) => FLASHBACK_ATOMS.includes(atom?.atom) && fixedLife(atom) && plainDiscard(atom) && !beholdProblems(atom).length))
         problems.push(`${ability.text}: a flashback cost of ${FLASHBACK_ATOMS.join(" and ")} only, and at least one`);
       const taps = cost.filter((atom) => atom?.atom === "tapCreature");
       if (taps.length > 1 || taps.some((atom) => !(Number.isInteger(atom.count) && atom.count >= 1) || !atom.selector || typeof atom.selector !== "object"))
@@ -974,6 +983,10 @@ export function compileScript(script) {
 
     if (ability.kind === "spell") {
       if (spell) problems.push("a second spell ability: one card, one spell");
+      /* A PERMANENT CARD'S ADDITIONAL COST (CR 601.2b): "as an additional cost to cast this spell, behold an Elf or pay {2}" (Lys
+         Alana Dignitary) -- its spell ability says that and nothing else: the permanent spell's effect is entering (CR 608.3). */
+      if (!(identity.types ?? []).some((t) => t === "Instant" || t === "Sorcery") && ((ability.effects ?? []).length || (ability.targets ?? []).length || !(ability.additionalCost ?? []).length))
+        problems.push("a permanent card's spell ability says only its additional cost: no targets and no effects");
       for (const atom of ability.additionalCost ?? []) {
         /* "Blight 1 or pay {3}" (Bogslither's Embrace): a choice between two or more additional costs, each a list of the atoms
            below or mana, each choice its own offer (rules/actions.mjs, additionalVariants). */
@@ -985,13 +998,15 @@ export function compileScript(script) {
               let parsed = null;
               try { parsed = parseManaCost(one.cost ?? ""); } catch { /* refused below */ }
               if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`oneOf: ${JSON.stringify(one.cost ?? "")} is no mana to pay`);
-            } else if (!["discard", "sacrifice", "blight"].includes(one?.atom)) problems.push(`${one?.atom ?? "an additional cost"}: an additional cost nothing pays yet`);
+            } else if (!["discard", "sacrifice", "blight", "behold"].includes(one?.atom)) problems.push(`${one?.atom ?? "an additional cost"}: an additional cost nothing pays yet`);
+            problems.push(...beholdProblems(one));
             if (one?.atom === "blight" && !(Number.isInteger(one.count ?? 1) && (one.count ?? 1) >= 1)) problems.push("blight: an additional cost of 1 or more -1/-1 counters");
             if (one?.optional !== undefined) problems.push("oneOf: one of a choice is never optional");
           }
           continue;
         }
-        if (!["discard", "sacrifice", "blight", "tapCreature"].includes(atom?.atom)) problems.push(`${atom?.atom ?? "an additional cost"}: an additional cost nothing pays yet`);
+        if (!["discard", "sacrifice", "blight", "tapCreature", "behold"].includes(atom?.atom)) problems.push(`${atom?.atom ?? "an additional cost"}: an additional cost nothing pays yet`);
+        problems.push(...beholdProblems(atom));
         /* "Discard two cards" (Cathartic Reunion): a whole number of cards, 1 or more (rules/actions.mjs, additionalChoices). */
         if (atom?.atom === "discard" && atom.count !== undefined && !(Number.isInteger(atom.count) && atom.count >= 1)) problems.push("discard: an additional cost of 1 or more cards");
         /* "Tap any number of untapped creatures you control" (Burn at the Stake): `count: "any"` and the creatures it may tap, a
@@ -1215,6 +1230,10 @@ export function compileScript(script) {
   if (enchant && spell) problems.push("an Aura's spell is its Enchant target, and it has no other");
   /* The Aura as a spell: its one target, nothing done as it resolves -- it enters attached (stack.mjs). */
   if (enchant) spell = {id: "enchant", text: enchant.text, targets: [enchant.target], effects: [], ...(enchant.hostile ? {hostile: true} : {})};
+  /* One behold to a card (rules/actions.mjs asks one question of it): among its additional costs and its flashback cost. */
+  const beholds = [...(spell?.additionalCost ?? []).flatMap((a) => (a?.atom === "oneOf" ? (a.options ?? []).flat() : [a])),
+    ...abilities.filter((a) => a.kind === "static" && a.rule === "flashback").flatMap((a) => a.cost ?? [])].filter((a) => a?.atom === "behold");
+  if (beholds.length > 1) problems.push("one behold to a card, among its additional costs and its flashback cost");
   /* "This spell costs {1} less to cast if it targets a creature with flying" (Swampsnare Trap; CR 601.2c, then 601.2f): costed
      for each way to choose its targets (rules/actions.mjs, aimsFor) -- a spell with targets chosen as it is offered, never
      counted ones picked after, nor its modes' (a modal spell's targets are its modes', none of its own). */

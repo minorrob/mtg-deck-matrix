@@ -2355,9 +2355,9 @@
   "Keyword actions (CR 701)": {
    "tally": {
     "built": 22,
-    "partial": 3,
+    "partial": 4,
     "named": 1,
-    "missing": 44
+    "missing": 43
    },
    "entries": [
     {
@@ -2930,11 +2930,12 @@
      "kind": "keyword action",
      "rule": "701.4",
      "name": "Behold",
-     "engine": null,
-     "status": "missing",
+     "engine": "(the rules modules)",
+     "status": "partial",
      "forge": null,
      "top": 0,
      "all": 0,
+     "note": "as a cost: an additional cost or a flashback cost's; as an effect, not yet",
      "blocks": 0,
      "alone": 0
     },

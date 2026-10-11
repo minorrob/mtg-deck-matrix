@@ -131,11 +131,14 @@ function main() {
     Scry: {engine: "scry"}, Search: {engine: "chooseCard", forge: ["ChangeZone"]}, Shuffle: {engine: "shuffle"}, Surveil: {engine: "surveil"},
     "Tap and Untap": {engine: "tap", forge: ["Tap", "Untap", "TapAll", "UntapAll"]}, Transform: {engine: "setState", forge: ["SetState"]},
     Proliferate: {engine: "proliferate"}, Amass: {engine: "amass"}, Connive: {engine: "connive"}, Discover: {engine: "discover"},
+    /* Train C (p3-costs): behold as a cost -- an additional cost, a flashback cost's (rules/actions.mjs) -- not yet as an
+       effect's "you may behold ... If you do". */
+    Behold: {core: true, partial: true, note: "as a cost: an additional cost or a flashback cost's; as an effect, not yet"},
   };
   const forgeApiFor = (name, spec) => spec?.forge ?? [...ALL.apis.keys()].filter((api) => api.toLowerCase() === name.replace(/[^A-Za-z]/g, "").toLowerCase());
   const keywordActions = cr.keywordActions.map(({rule, name}) => {
     const spec = ACTIONS[name], forge = forgeApiFor(name, spec);
-    const status = spec?.core ? "built" : !spec?.engine ? "missing" : isBuilt(spec.engine) ? (spec.partial ? "partial" : "built") : isPrimitive(spec.engine) ? "named" : "missing";
+    const status = spec?.core ? (spec.partial ? "partial" : "built") : !spec?.engine ? "missing" : isBuilt(spec.engine) ? (spec.partial ? "partial" : "built") : isPrimitive(spec.engine) ? "named" : "missing";
     const sum = (m) => forge.reduce((n, api) => n + (m.get(api) ?? 0), 0);
     const engineKey = spec?.engine ? `api:${spec.engine}` : null;
     return entry({kind: "keyword action", rule, name, engine: spec?.core ? "(the rules modules)" : spec?.engine ?? null, status, forge: forge.join(", ") || null,
