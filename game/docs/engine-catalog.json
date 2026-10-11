@@ -11,15 +11,15 @@
   "cards": 3238,
   "defined": 1242,
   "provisional": 27,
-  "everyRule": 2580
+  "everyRule": 2583
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 59,
+    "built": 60,
     "partial": 0,
     "named": 5,
-    "missing": 130
+    "missing": 129
    },
    "entries": [
     {
@@ -614,13 +614,13 @@
      "kind": "keyword ability",
      "rule": "702.62",
      "name": "Suspend",
-     "engine": null,
-     "status": "missing",
+     "engine": "Suspend",
+     "status": "built",
      "forge": "Suspend",
      "top": 3,
      "all": 72,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",

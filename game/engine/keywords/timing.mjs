@@ -42,7 +42,9 @@ export const KEYWORD_FAMILIES = Object.freeze({
   /** Unearth (CR 702.84a), an activated ability of the card in its owner's graveyard at sorcery speed: returned with haste,
       exiled at the next end step, and exiled instead should it leave the battlefield any other way (cards/index.mjs;
       effects/permanents.mjs, afterwards; rules/replacement.mjs). */
-  zones: Object.freeze(["Flashback", "Escape", "Rebound", "Unearth"]),
+  /** Suspend (CR 702.62a), from its owner's hand: a special action exiling it with its time counters for its suspend cost,
+      at the timing it could be cast (rules/actions.mjs); then one removed each upkeep, and the free cast (rules/trigger.mjs). */
+  zones: Object.freeze(["Flashback", "Escape", "Rebound", "Unearth", "Suspend"]),
   /** What happens as a spell is cast: Storm (CR 702.40a), "when you cast this spell, copy it for each spell cast before
       it this turn" -- a triggered ability of the spell (rules/actions.mjs). */
   cast: Object.freeze(["Storm"]),

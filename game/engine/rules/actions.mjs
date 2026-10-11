@@ -1252,6 +1252,28 @@ function faceUpOffers(state, player) {
   return offers;
 }
 
+/* SUSPEND N--[COST] FROM THE HAND (CR 702.62a): "If you could begin to cast this card by putting it onto the stack from your
+   hand, you may pay [cost] and exile it with N time counters on it. This action doesn't use the stack" -- a special action
+   (CR 116.2f), offered when the card could be cast from its owner's hand now: at its own timing (a sorcery's, unless it has
+   flash or is given it) and with nothing forbidding the cast (702.62c), whether or not its mana cost could be paid. Its cost
+   is paid from the pool -- not mana only for spells, since no spell is cast -- each way the pool pays it its own offer
+   (`payWith`), which mana being the player's to say (X8b). Exiled, the card is suspended (702.62b): rules/trigger.mjs then
+   removes a time counter at each of its owner's upkeeps and offers the free cast as the last goes. */
+const suspendOf = (object) => (object?.abilities ?? []).find((a) => a.kind === "static" && a.rule === "suspend") ?? null;
+const suspendCost = (suspend) => parseManaCost((suspend.cost ?? []).find((a) => a.atom === "mana")?.cost ?? "");
+function suspendOffers(state, player) {
+  const offers = [];
+  const sorceryTime = player === state.activePlayer && MAIN_PHASES.includes(state.phase) && state.stack.length === 0;
+  for (const id of cardsIn(state, "hand", player)) {
+    const object = state.objects[id], suspend = suspendOf(object);
+    if (!suspend || castForbidden(state, player, id)) continue;
+    if (sorcerySpeed(object) && !hasFlash(state, id) && !flashGranted(state, player, id) && !sorceryTime) continue;
+    const ways = paymentOptions(state.players[player].manaPool, suspendCost(suspend), {life: state.players[player].life}, PAY_CHOICES);
+    for (const way of ways) offers.push({kind: "suspend", objectId: id, label: object.card, text: suspend.text, payment: way, ...(ways.length > 1 ? {payWith: paymentKey(way)} : {})});
+  }
+  return offers;
+}
+
 export function legalActions(state, player) {
   /* It only reads: every object it derives, derived once (rules/layers.mjs, deriving). */
   return deriving(state, () => offers(state, player));
@@ -1306,6 +1328,8 @@ function offers(state, player) {
     ...cardsIn(state, "graveyard", player).filter((id) => alternativeCosts(state, player, id).some((w) => w.fromGraveyard)).map((id) => ({id, from: "graveyard", graveyardCost: true})),
   ];
   for (const entry of castable) actions.push(...castOffers(state, player, entry, tappable));
+  /* Suspend, from the hand (CR 702.62a): a special action, where its card could be cast. */
+  actions.push(...suspendOffers(state, player));
   /* CR 715.3a: a permission weighs the Adventure's own characteristics. Its main face may
      exceed Maralen's limit even when the Adventure is eligible, or the converse. */
   const adventurers = new Set([...castable.filter(e => !e.flashback && !e.escape).map(e => e.id),
@@ -2176,6 +2200,25 @@ function performOffered(state, player, action, during) {
     /* And by its player, whatever becomes of the permanent (CR 400.7): "if you've activated a loyalty ability this turn"
        (Kiora of Salt and Sand; script/condition.mjs, `loyaltyThisTurn`). */
     if (ability.loyalty !== undefined) state.players[player].loyaltyThisTurn = (state.players[player].loyaltyThisTurn ?? 0) + 1;
+    return events;
+  }
+
+  /* SUSPENDED (CR 702.62a): its cost paid from the pool, the way its player chose when there was more than one, and the card
+     exiled with its time counters -- suspended there (702.62b). A special action: nothing goes on the stack, and its player
+     receives priority afterward (CR 116.3). */
+  if (action.kind === "suspend") {
+    const events = [];
+    const object = state.objects[action.objectId];
+    const suspend = suspendOf(object);
+    const payment = chosenPayment(state.players[player].manaPool, suspendCost(suspend), {life: state.players[player].life}, action.payWith);
+    if (!payment) throw new Error(`${object.card} cannot be suspended with that mana now: choose one of the ways your pool pays its suspend cost`);
+    spend(state.players[player].manaPool, payment.mana);
+    if (payment.life > 0) changeLife(state, player, -payment.life, events);
+    const exiled = moveOne(state, action.objectId, "exile", events, {owner: object.owner});
+    if (exiled !== null && state.objects[exiled]?.zone === "exile") {
+      state.objects[exiled].counters.time = (state.objects[exiled].counters.time ?? 0) + suspend.count;
+      state.objects[exiled].suspended = true;
+    }
     return events;
   }
 

@@ -183,7 +183,9 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   /* Embalm (CR 702.128): a token copy from the graveyard (cards/index.mjs). */
   "embalm",
   /* Tiered (CR 702.183): each mode its own additional cost (keywords/timing.mjs). */
-  "tiered"];
+  "tiered",
+  /* Suspend (CR 702.62), from the hand (keywords/timing.mjs). */
+  "suspend"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

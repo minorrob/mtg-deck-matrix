@@ -898,6 +898,22 @@ export function compileScript(script) {
       keywords.push("Embalm");
       return;
     }
+    /* SUSPEND N--[COST] (CR 702.62a; Knight of Old Benalia): its first ability, "if you could begin to cast this card by putting
+       it onto the stack from your hand, you may pay [cost] and exile it with N time counters on it", kept as a static the card
+       carries in its owner's hand (rules/actions.mjs offers the special action there). Its other two -- a time counter removed
+       at its owner's upkeep, and the free cast when the last is (a creature so cast with haste) -- are those of every suspended
+       card in exile (rules/trigger.mjs, rules/stack.mjs). A number, 1 or more, and a mana cost. */
+    if (word === "suspend") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      let parsed = null;
+      try { parsed = cost.length === 1 && cost[0]?.atom === "mana" ? parseManaCost(cost[0].cost ?? "") : null; } catch { /* refused below */ }
+      if (!(Number.isInteger(ability.amount) && ability.amount >= 1) || !parsed || !parsed.symbols.length || parsed.variable > 0)
+        problems.push(`${ability.text}: suspend is a number of time counters, 1 or more, and a mana cost`);
+      if ((identity.types ?? []).includes("Land")) problems.push(`${ability.text}: suspend on a land, which is never cast`);
+      abilities.push({id, kind: "static", rule: "suspend", text: ability.text, count: ability.amount ?? 0, cost: structuredClone(cost), affects: {what: "card", self: true}});
+      keywords.push("Suspend");
+      return;
+    }
     /* ENCORE (CR 702.141a): an activated ability of the card in its owner's graveyard, at sorcery speed (rules/actions.mjs
        offers it there), its cost the mana and the card exiled: for each opponent, a token copy of the card with haste that
        attacks that opponent this turn if able, sacrificed at the beginning of the next end step. "This card" is that card in

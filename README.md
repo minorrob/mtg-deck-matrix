@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 400 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 401 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1270,6 +1270,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-surge-freerunning` - `tests/engine-surge-freerunning.mjs`: surge (Reckless Bushwhacker) and freerunning (Monastery Raid), alternative costs after another spell or an Assassin's or commander's combat damage this turn, and "if its cost was paid"
 - `engine-embalm` - `tests/engine-embalm.mjs`: embalm (Anointer Priest), from its owner's graveyard as a sorcery, the card exiled, a white Zombie token copy of it with no mana cost
 - `engine-tiered` - `tests/engine-tiered.mjs`: tiered (Cloud's Limit Break), one mode with its own cost added, each mode its own cast, a mode's target controlled by different players
+- `engine-suspend-hand` - `tests/engine-suspend-hand.mjs`: suspend from the hand (Knight of Old Benalia), a special action at the timing it could be cast, exiled with its time counters and suspended
 
 ## Design and execution record
 
