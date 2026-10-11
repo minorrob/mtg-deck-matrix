@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1256,
+  "defined": 1258,
   "provisional": 27,
-  "everyRule": 2604
+  "everyRule": 2605
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -4387,8 +4387,8 @@
      "forge": "ChooseSource",
      "top": 1,
      "all": 67,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",

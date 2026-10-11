@@ -370,6 +370,13 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
         types: object.types, abilities: object.abilities, x: entry.x ?? 0, escaped: entry.escaped === true, kicked: entry.kicked ?? 0})
       : null;
     const arrived = moveObject(state, entry.objectId, to, ["graveyard", "library"].includes(to) ? owner : null);
+    /* A SHIELD THIS SPELL MADE deals its damage as the card it became ("Deflecting Palm deals that much damage", a
+       prevention effect's `dealer`; effects/permanents.mjs) -- and one whose chosen source is this spell, a permanent spell,
+       applies to the permanent it becomes (CR 609.7a). */
+    for (const effect of state.effects ?? []) {
+      if (effect.dealer === entry.objectId) effect.dealer = arrived;
+      if (to === "battlefield" && Array.isArray(effect.sources) && effect.sources.includes(entry.objectId)) effect.sources = effect.sources.map((id) => (id === entry.objectId ? arrived : id));
+    }
     /* Rebound's delayed trigger (CR 702.88a, 603.7d: its controller the spell's): at the beginning of THEIR next upkeep, the
        card in exile -- the object it now is, so one that leaves exile meanwhile is not cast (CR 400.7) -- may be cast
        without paying its mana cost, as the trigger resolves (CR 608.2g; effects/asking.mjs, `play`), or left there for good. */

@@ -1255,6 +1255,57 @@ export const changeTargets = {
   },
 };
 
+/* ---- chooseSource: "the next time a source of your choice would deal damage to you this turn" (Deflecting Palm) ----
+   CR 609.7a: chosen as the effect is made, from a permanent; a spell on the stack, a permanent spell included; an object an
+   object on the stack refers to -- the source of an ability there, a target -- or one a delayed trigger waiting to trigger
+   does; or a face-up object in the command zone. Each while it is still an object: one gone from where it was is a new
+   object, or none, and damage from a source that has left is dealt by no object the rules can still name (NAMED: what an
+   ability of a departed source deals is sourceless here, as protection reads it too). Remembered for the effects after it.
+   Nothing to choose, and nothing is asked. */
+function sourcesToChoose(state) {
+  const found = [];
+  const add = (id) => { if (id !== null && id !== undefined && state.objects[id] && !found.includes(id)) found.push(id); };
+  for (const id of state.zones.battlefield) add(id);
+  /* Each entry's card: a spell's own object, an ability's source. */
+  for (const entry of state.stack) {
+    add(entry.cardId);
+    for (const t of (entry.targets ?? []).flat()) if (t?.kind === "object") add(t.id);
+  }
+  for (const delayed of state.delayedTriggers ?? []) add(delayed.source);
+  for (const id of state.zones.command.flat()) if (state.objects[id]?.faceDown !== true) add(id);
+  return found;
+}
+export const chooseSource = {
+  open(state, params, context) {
+    const sources = sourcesToChoose(state);
+    if (!sources.length) return false;
+    state.awaiting = {kind: "effect-choice", effect: "chooseSource", player: context.controller, sources};
+    return true;
+  },
+  choice(state, awaiting) {
+    const whose = (id) => {
+      const o = state.objects[id], holder = o.zone === "battlefield" ? controllerOf(state, id) : o.controller;
+      return holder === awaiting.player ? "" : ` (${state.players[holder]?.name ?? `Seat ${holder + 1}`}'s)`;
+    };
+    const where = (id) => ({stack: ", a spell", command: ", in the command zone", graveyard: ", in a graveyard", exile: ", in exile", hand: ", in a hand", library: ", in a library"})[state.objects[id].zone] ?? "";
+    const options = awaiting.sources.filter((id) => state.objects[id]).map((id, index) => ({index, label: `${targetName(state, {kind: "object", id})}${where(id)}${whose(id)}`, cardId: id}));
+    for (const option of options) {
+      const alike = options.filter((o) => o.label === option.label);
+      if (alike.length > 1) alike.forEach((o, n) => { o.label = `${o.label} (${n + 1})`; });
+    }
+    return {id: `chooseSource:${state.turn}:${awaiting.player}`, title: "Choose a source of damage", mode: "one", min: 1, max: 1, options};
+  },
+  apply(state, awaiting, indices) {
+    const option = chooseSource.choice(state, awaiting).options[(indices ?? [])[0]];
+    if (!option) throw new Error("Invalid selection");
+    return {events: [], remembered: [option.cardId]};
+  },
+  /* Its chooser has left the game: the spell left with them (CR 800.4a), and no shield is theirs to make. */
+  left() {
+    return {events: [], remembered: []};
+  },
+};
+
 /* ---- attackWhom: a creature put onto the battlefield attacking, with more than one defending player or planeswalker it
    could attack (CR 508.4): which one, its controller's choice as it enters -- a question for each, in the order they were made.
    Queued by what made them (effects/permanents.mjs, enterAttacking); never written in a card script. ---- */
@@ -1853,4 +1904,4 @@ export const chooseInstead = {
 };
 
 export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, orderCounters, orderDraws,
-  conniveWhich, manaColors, counterKind, orderDestruction, chooseInstead});
+  conniveWhich, manaColors, counterKind, orderDestruction, chooseInstead, chooseSource});
