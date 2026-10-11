@@ -719,6 +719,15 @@ export function compileScript(script) {
       keywords.push("Flanking");
       return;
     }
+    /* RIOT (CR 702.136a; Ghor-Clan Wrecker): "You may have this permanent enter with an additional +1/+1 counter on it. If you
+       don't, it gains haste" -- a replacement on its own entering, its controller asked once it is there (rules/replacement.mjs,
+       rules/entering.mjs). Each instance works separately (702.136b). Only on a card that enters as a permanent. */
+    if (word === "riot") {
+      if ((identity.types ?? []).some((t) => t === "Instant" || t === "Sorcery")) problems.push(`${ability.text}: riot on a card that never enters the battlefield`);
+      abilities.push({id, kind: "replacement", text: ability.text, watches: {event: "enters", who: "self"}, change: {riot: true}});
+      keywords.push("Riot");
+      return;
+    }
     /* UMBRA ARMOR (CR 702.89a): "If enchanted permanent would be destroyed, instead remove all damage marked on it and destroy
        this Aura" -- the static `umbra-armor` on the Aura, read wherever a permanent would be destroyed (effects/zones.mjs,
        destructionReplaced). Only on an Aura. */

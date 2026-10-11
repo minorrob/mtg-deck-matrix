@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 396 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 397 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1266,6 +1266,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-x11-unearth` - `tests/engine-x11-unearth.mjs`: unearth (Salvation Colossus), from the graveyard at sorcery speed for mana or energy, and exiled at the end step or instead of leaving any other way
 - `engine-x11-ascend` - `tests/engine-x11-ascend.mjs`: ascend (Wayward Swordtooth), the city's blessing at ten permanents for the rest of the game, a permanent's and a spell's, and "unless you have the city's blessing"
 - `engine-split-second` - `tests/engine-split-second.mjs`: split second (Siege Smash), nothing cast and no ability but a mana ability activated while it is on the stack; triggers and special actions go on
+- `engine-riot` - `tests/engine-riot.mjs`: riot (Ghor-Clan Wrecker), a +1/+1 counter or haste, its controller's choice as it enters however it enters, each instance its own
 
 ## Design and execution record
 

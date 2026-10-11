@@ -293,6 +293,10 @@ function applyOne(state, {holderId, ability}, proposal, dry = false) {
   /* "As this artifact enters, choose a creature type", "choose Khans or Dragons": a question for its controller once it is
      there, the answer kept as the permanent's `chosen` (rules/entering.mjs). */
   if (ability.change?.choose) next.asks = [...(next.asks ?? []), {choose: structuredClone(ability.change.choose)}];
+  /* RIOT (CR 702.136a; Ghor-Clan Wrecker): "you may have this permanent enter with an additional +1/+1 counter on it. If you
+     don't, it gains haste" -- its controller's choice, asked once it is there (rules/entering.mjs); each instance its own
+     (702.136b), as each effect applies once (CR 614.5). */
+  if (ability.change?.riot === true) next.asks = [...(next.asks ?? []), {riot: true}];
   /* "You may have this creature enter as a copy of any creature on the battlefield" (CR 614.1c, 707.9): which one is asked
      once it is there, its arrival waiting for the answer (rules/entering.mjs) -- "except", "until end of turn", "tapped". */
   if (ability.change?.copyOf) next.asks = [...(next.asks ?? []), {copyOf: structuredClone(ability.change.copyOf),

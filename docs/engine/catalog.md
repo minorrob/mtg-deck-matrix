@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 54 | 0 | 5 | 135 |
+| Keyword abilities (CR 702) | 194 | 55 | 0 | 5 | 134 |
 | Keyword actions (CR 701) | 70 | 22 | 3 | 1 | 44 |
 | Effects | 192 | 70 | 1 | 2 | 119 |
 | Triggers | 138 | 20 | 4 | 2 | 112 |
@@ -207,7 +207,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.98 | Unleash | — | missing | 0 | 14 | 0 | 0 |
 | 702.161 | Living Metal | — | missing | 0 | 13 | 0 | 0 |
 | 702.26 | Phasing | — | missing | 0 | 13 | 0 | 0 |
-| 702.136 | Riot | — | missing | 0 | 13 | 0 | 0 |
+| 702.136 | Riot | Riot | built | 0 | 13 | 0 | 0 |
 | 702.72 | Champion | — | missing | 0 | 12 | 0 | 0 |
 | 702.135 | Afterlife | Afterlife | built | 0 | 11 | 0 | 0 |
 | 702.78 | Conspire | — | missing | 0 | 11 | 0 | 0 |

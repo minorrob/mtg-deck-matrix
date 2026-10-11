@@ -57,6 +57,9 @@ export const KEYWORD_FAMILIES = Object.freeze({
       "each" effects, written out by the card, and no targets (cards/index.mjs, rules/actions.mjs, rules/stack.mjs): built
       for Winds of Abandon, credited with Mizzium Mortars and Vandalblast. */
   pay: Object.freeze(["Convoke", "Evoke", "Prowl", "Escalate", "Overload"]),
+  /** How a permanent enters: Riot (CR 702.136a), with a +1/+1 counter or with haste, its controller's choice as it arrives --
+      a replacement on its own entering (cards/index.mjs, rules/replacement.mjs), asked once it is there (rules/entering.mjs). */
+  enter: Object.freeze(["Riot"]),
 });
 
 /**
