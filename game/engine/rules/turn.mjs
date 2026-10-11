@@ -35,7 +35,7 @@
  *   CR 500.4: mana pools empty at the end of every step and phase, not at end of turn.
  */
 
-import {cardsIn, moveObject, eventCard, recordDraw} from "../state/index.mjs";
+import {cardsIn, moveObject, eventCard, recordDraw, recordDiscard} from "../state/index.mjs";
 import {attackers, blockers, combatDamage, endCombat} from "./combat.mjs";
 import {checkStateBasedActions, gameOver, finishCommanderReplacement, legendChoice, finishLegendRule, finishDestructionChoice} from "./sba.mjs";
 import {destructionChoice} from "../script/effects/zones.mjs";
@@ -197,13 +197,21 @@ const skipsFirstDraw = (state) =>
 /* CR 500.4. Reported only when there was something to empty: an empty pool emptying again is not
    news, and a board that announces it every step buries what matters. */
 function emptyManaPools(state, events) {
+  /* Mana its player does not lose until end of combat (firebending, CR 702.189a; script/effects/resources.mjs): kept as a
+     combat step but the last ends, and lost as the combat phase ends (500.5a). Kept no more than the pool holds of it:
+     the plain mana is spent first -- the two pay the same, and the kept mana lasts longer -- as rules/restricted-mana.mjs
+     spends plain mana before rider mana. */
+  const combatGoesOn = state.phase.startsWith("COMBAT_") && state.phase !== "COMBAT_END";
   for (const player of state.players) {
     /* And the mana that could be spent only on some things (rules/restricted-mana.mjs). */
     emptyRestricted(player);
-    const total = Object.values(player.manaPool).reduce((a, b) => a + b, 0);
+    const kept = combatGoesOn ? Object.fromEntries(Object.entries(player.combatMana ?? {}).map(([color, n]) => [color, Math.min(n, player.manaPool[color])]).filter(([, n]) => n > 0)) : {};
+    if (Object.keys(kept).length) player.combatMana = kept;
+    else delete player.combatMana;
+    const had = Object.fromEntries(Object.entries(player.manaPool).map(([color, n]) => [color, n - (kept[color] ?? 0)]));
+    const total = Object.values(had).reduce((a, b) => a + b, 0);
     if (total === 0) continue;
-    const had = {...player.manaPool};
-    for (const color of Object.keys(player.manaPool)) player.manaPool[color] = 0;
+    for (const color of Object.keys(player.manaPool)) player.manaPool[color] = kept[color] ?? 0;
     events.push(event("GameEventManaPool", state, {player: {playerId: player.id, name: player.name}, emptied: had}));
   }
 }
@@ -266,7 +274,7 @@ export function awaitingChoice(state) {
 function choiceFor(state) {
   const awaiting = state.awaiting;
   if (!awaiting) return null;
-  if (awaiting.kind === "mulligan-decision" || awaiting.kind === "mulligan-bottom")
+  if (awaiting.kind === "mulligan-decision" || awaiting.kind === "mulligan-bottom" || awaiting.kind === "opening-hand")
     return mulliganChoice(state, awaiting);
   if (awaiting.kind === "effect-choice") return resolutionChoice(state, awaiting);
   if (awaiting.kind === "commander-replacement") return commanderChoice(state, awaiting);
@@ -361,7 +369,7 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
   /* The mulligan is the one decision that consumes randomness, because keeping or not decides
      whether a library is shuffled. A generator is a closure and game state is plain data (§3.2.4),
      so the stream is handed in rather than held. */
-  if (awaiting.kind === "mulligan-decision" || awaiting.kind === "mulligan-bottom")
+  if (awaiting.kind === "mulligan-decision" || awaiting.kind === "mulligan-bottom" || awaiting.kind === "opening-hand")
     return resolveMulligan(state, awaiting, indices, rng);
 
   /* A card effect that stopped half way through. `extra` carries what generic indices cannot --
@@ -477,6 +485,7 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
     const card = cardRef(state, id);
     const owner = state.objects[id].owner;
     const discarded = moveObject(state, id, "graveyard", owner);
+    recordDiscard(state, awaiting.player);
     events.push(event("GameEventCardChangeZone", state, {
       card,
       from: {zoneType: ZONE_LABEL.hand, player: {playerId: awaiting.player}},
@@ -504,6 +513,11 @@ function arrive(state, events) {
     ...(state.phase === "UNTAP" && state.extraTurn === true ? {extraTurn: true} : {}),
   }));
   if (state.phase === "UNTAP") untap(state, events);
+  /* "Until your next end step, you may play those cards" (Shadow Urchin; script/effects/zones.mjs, mayPlay): over as that
+     player's next end step begins (CR 513.1, 611.2a) -- this turn's, for one made before it began; one made during it lasts
+     to their next. Before anything triggers at its beginning, or anyone has priority in it. */
+  if (state.phase === "END_OF_TURN" && (state.effects ?? []).some((e) => e.until === "your-next-end-step"))
+    state.effects = state.effects.filter((e) => !(e.until === "your-next-end-step" && e.sourceController === state.activePlayer));
   if (state.phase === "DRAW" && !skipsFirstDraw(state) && !state.players[state.activePlayer].lost) {
     /* CR 504.1 makes the draw a turn-based action, not a choice. A table that asks for the beat (item 13) holds it
        until the player's click: the same card, at the player's moment, and priority after it (CR 504.2). */
@@ -528,6 +542,12 @@ function arrive(state, events) {
     events.push(...combatDamage.deal(state, {step: "regular"}));
   if (state.phase === "COMBAT_END") events.push(...endCombat(state));
   if (state.phase === "CLEANUP") cleanup(state, events);
+  /* A STEP WHOSE TURN-BASED ACTION STOPS TO ASK -- declaring attackers or blockers (CR 508.1, 509.1), the held draw, a
+     division of combat damage -- HAS BEGUN ALL THE SAME: what triggered as it began has triggered (CR 603.2), and waits for
+     the answer and a player's priority to go on the stack (CR 603.3). Read now, since priority is granted on the answer's
+     events alone: "at the beginning of the declare attackers step on your next turn" (Meandering Towershell), "at the
+     beginning of your draw step" under the held draw, were lost. */
+  if (state.awaiting) collectTriggers(state, events);
   state.passes = 0;
   grantStepPriority(state, events);
 }
@@ -702,6 +722,8 @@ export function advance(state) {
     for (const player of state.players) {
       if (player.lostThisTurn) player.lostThisTurn = 0;
       if (player.drawnThisTurn) player.drawnThisTurn = 0;
+      /* And the cards each discarded (state/index.mjs, recordDiscard). */
+      if (player.discardedThisTurn) player.discardedThisTurn = 0;
       /* And the loyalty abilities each activated (rules/actions.mjs). */
       if (player.loyaltyThisTurn) player.loyaltyThisTurn = 0;
       /* And what each gained and made this turn (script/amount.mjs, lifeGainedThisTurn, tokensCreatedThisTurn). */
@@ -717,6 +739,11 @@ export function advance(state) {
       if (player.combatDamagedThisTurn) player.combatDamagedThisTurn = false;
       /* And the sources each controlled that dealt combat damage to a player, with their creature types (prowl, CR 702.76a). */
       if (player.combatDamageSources) delete player.combatDamageSources;
+      /* And the creatures that died under each one's control (state/index.mjs, morbid), whether each was dealt noncombat
+         damage (effects/resources.mjs), and the times each scried or surveilled (effects/asking.mjs): script/amount.mjs. */
+      if (player.diedThisTurn) player.diedThisTurn = 0;
+      if (player.noncombatDamagedThisTurn) player.noncombatDamagedThisTurn = false;
+      if (player.scriedThisTurn) player.scriedThisTurn = 0;
     }
     next = 0;
   }

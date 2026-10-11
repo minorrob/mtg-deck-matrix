@@ -91,6 +91,7 @@ export function askEntering(state) {
     const copies = q.copyOf ? copyChoices(state, q, object) : null;
     if (copies && !copies.length) { arrived(state, q); queue.shift(); continue; }
     state.awaiting = {kind: "entering-choice", player: object.controller, objectId: q.objectId, life: q.life ?? 0, ...(q.reveal ? {reveal: q.reveal} : {}), ...(choices ? {choose: choices} : {}),
+      ...(q.riot === true ? {riot: true} : {}),
       ...(copies ? {copyOf: copies, copy: q.copy ?? {}} : {})};
     return true;
   }
@@ -104,6 +105,10 @@ export function enteringChoice(state, awaiting) {
   if (awaiting.copyOf) return {id: `entering-copy:${awaiting.objectId}`, title: `${name}: enter as a copy?`, mode: "one", min: 1, max: 1,
     options: [...awaiting.copyOf.map((id, index) => ({index, label: state.objects[id]?.card ?? "?", cardId: id, copyOf: id})),
       {index: awaiting.copyOf.length, label: "No copy", cardId: awaiting.objectId, copyOf: null}]};
+  /* Riot (CR 702.136a): a +1/+1 counter, or haste -- one or the other, the controller's to choose. */
+  if (awaiting.riot) return {id: `entering-riot:${awaiting.objectId}`, title: `${name}: riot`, mode: "one", min: 1, max: 1,
+    options: [{index: 0, label: `${name} enters with a +1/+1 counter`, cardId: awaiting.objectId, riot: "counter"},
+      {index: 1, label: `${name} gains haste`, cardId: awaiting.objectId, riot: "haste"}]};
   if (awaiting.choose) return {id: `entering-choose:${awaiting.objectId}`, title: `${name}: choose`, mode: "one", min: 1, max: 1,
     options: awaiting.choose.map((label, index) => ({index, label, cardId: awaiting.objectId, chosen: label}))};
   /* A reveal: one option per card that could be shown, and not revealing (the player's own hand: nobody else is asked). */
@@ -151,6 +156,21 @@ export function resolveEnteringChoice(state, awaiting, indices) {
     /* Revealed to everyone (CR 701.20a): the card is named in the history; it stays in the hand. */
     events.push({kind: "GameEventCardRevealed", data: {turn: state.turn, phase: state.phase, fields: {card: {cardId: option.reveal, name: state.objects[option.reveal].card, owner: awaiting.player}, player: {playerId: awaiting.player}}}});
     state.objects[awaiting.objectId].tapped = false;
+  }
+  /* Riot (CR 702.136a): the counter, put on it as it entered (CR 122.6) by its controller (122.6a) -- "twice that many instead"
+     sees it -- and said, as an entering counter is (enteredWith); or haste, for as long as it is this permanent (CR 400.7),
+     in layer 6 (CR 613.1f). */
+  const riot = state.objects[awaiting.objectId];
+  if (option.riot === "counter" && riot) {
+    const was = riot.counters["+1/+1"] ?? 0;
+    riot.counters["+1/+1"] = was + countersPlaced(state, awaiting.objectId, "+1/+1", 1, riot.controller);
+    events.push({kind: "GameEventCardCounters", data: {turn: state.turn, phase: state.phase, fields: {card: eventCard(state, awaiting.objectId), type: "+1/+1", oldValue: was, newValue: riot.counters["+1/+1"]}}});
+  }
+  if (option.riot === "haste" && riot) {
+    const timestamp = state.nextTimestamp;
+    state.nextTimestamp += 1;
+    (state.effects ??= []).push({id: `riot-haste:${awaiting.objectId}:${timestamp}`, layer: 6, affects: {ids: [awaiting.objectId]}, apply: {addKeywords: ["Haste"]}, until: null,
+      sourceController: riot.controller, timestamp});
   }
   /* What was chosen as it entered, kept on the permanent for its abilities to read ("$chosen", script/chosen.mjs). */
   if (option.chosen !== undefined && state.objects[awaiting.objectId]) state.objects[awaiting.objectId].chosen = option.chosen;

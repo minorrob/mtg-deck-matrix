@@ -35,7 +35,7 @@
  * replay and in a room woken mid-game alike.
  */
 
-import {housePilot, meetRequirements} from "./house-pilot.mjs";
+import {housePilot, meetRequirements, withinBudget} from "./house-pilot.mjs";
 import {atLeast} from "./odds.mjs";
 import {createRng} from "../rng.mjs";
 
@@ -220,8 +220,10 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
     for (const t of action.targets ?? []) {
       if (Array.isArray(t)) {on += 1; continue;}
       if (t?.kind === "choose") {on += (t.of ?? 1) > 0 ? 1 : 0; continue;}
-      const card = t.kind === "player" ? null : where.get(t.id);
-      const theirs = t.kind === "player" ? t.id !== seat : (card?.controller ?? seat) !== seat;
+      const card = t.kind === "object" ? where.get(t.id) : null;
+      /* An ability on the stack (Bolt Bend): its controller, as the stack shows it -- its stack id names no card. */
+      const theirs = t.kind === "player" ? t.id !== seat : t.kind === "ability" ? ((view.stack ?? []).find((e) => e.stackId === t.id)?.playerId ?? seat) !== seat
+        : (card?.controller ?? seat) !== seat;
       if (theirs !== (action.hostile === true)) continue;
       on += 1;
       value += card ? worth(card) : 0;
@@ -392,12 +394,16 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
         return {value, set, p};
       };
       /* The plans, the most aggressive first: a tie goes to the attack, as L0 would make it. */
-      const candidates = [ready, ready.filter((r) => !walls.some((b) => mayBlock(b, r.c) && fight(r.c, b).attackerDies && !fight(r.c, b).blockerDies))];
+      /* Each no more than it can pay for (an attack tax, CR 508.1h; the record's `budget`): the strongest kept first. */
+      const paid = (set) => (r) => withinBudget(choice, [...set, r].map((x) => x.o.index));
+      const affordable = (set) => set.slice().sort((a, b) => power(b.c) - power(a.c) || a.o.index - b.o.index).reduce((kept, r) => (paid(kept)(r) ? [...kept, r] : kept), [])
+        .sort((a, b) => a.o.index - b.o.index);
+      const candidates = [ready, ready.filter((r) => !walls.some((b) => mayBlock(b, r.c) && fight(r.c, b).attackerDies && !fight(r.c, b).blockerDies))].map(affordable);
       /* Greedily, one creature at a time while the plan improves: on a board of a few creatures only. */
       if (ready.length <= 10) {
         let set = [], now = score(set).value;
         for (;;) {
-          const next = ready.filter((r) => !set.includes(r)).map((r) => ({r, v: score([...set, r]).value})).sort((a, b) => b.v - a.v)[0];
+          const next = ready.filter((r) => !set.includes(r) && paid(set)(r)).map((r) => ({r, v: score([...set, r]).value})).sort((a, b) => b.v - a.v)[0];
           if (!next || next.v <= now) break;
           set = [...set, next.r]; now = next.v;
         }

@@ -49,9 +49,9 @@
  * with the same targets, and an action survives a round trip through JSON to a pilot across a network.
  */
 
-import {compileSelector, selectMatching} from "./filter.mjs";
+import {compileSelector, selectMatching, creatureTypesOf, shareCreatureType} from "./filter.mjs";
 import {powerOf, toughnessOf, controllerOf} from "../rules/layers.mjs";
-import {namesChosen, withChosen} from "./chosen.mjs";
+import {namesChosen, withChosen, namesChosenColor, withChosenColor} from "./chosen.mjs";
 import {valueCostOf, shownName} from "../state/index.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {amountOf, AMOUNT_PARAMS} from "./amount.mjs";
@@ -68,8 +68,13 @@ export const TARGET_CHOICES_MAX = 4096;
  *                               main phase, you may exile up to one other target" (Return to Dust, {cast: {mainPhase: true}})
  *   `differentControllers`     a counted target's choices each controlled by a different player ("up to two target
  *                               artifacts and/or enchantments controlled by different players", Protector of the Wastes)
+ *   `share`                    a counted target's choices together: "graveyard", all from a single graveyard ("up to two
+ *                               target cards from a single graveyard", Unlicensed Hearse); "creature type", a creature type
+ *                               all of them have ("two target creature cards that share a creature type", Unbury)
  * None is part of what a target may be (the selector), so each is set aside beside `count`. */
-export const SPEC_KEYS = Object.freeze(["count", "distinctFrom", "onlyIf", "differentControllers"]);
+export const SPEC_KEYS = Object.freeze(["count", "distinctFrom", "onlyIf", "differentControllers", "share"]);
+/** What a counted target's choices may share (`share`). */
+export const SHARES = Object.freeze(["graveyard", "creature type"]);
 const selectorOf = (spec) => Object.fromEntries(Object.entries(spec && typeof spec === "object" ? spec : {}).filter(([key]) => !SPEC_KEYS.includes(key)));
 
 /** A target spec's alternatives, each a targeting selector (CR 115.2); its count, if it has one, is not part of them. */
@@ -79,14 +84,18 @@ export function targetAlternatives(spec) {
   return list.map((selector) => ({...selector, target: true}));
 }
 
-/** A counted target's bounds, `{min, max}` (`max` null for "any number"), or null for a single target. */
-export function countOf(spec) {
+/** A counted target's bounds, `{min, max}` (`max` null for "any number"), or null for a single target. "Up to that many
+    target ..." (Bloodthirsty Adversary's reflexive trigger, `max: "X"`): the X it was made with (CR 603.12, 107.3). */
+export function countOf(spec, context = {}) {
   const count = spec && typeof spec === "object" ? spec.count : undefined;
-  return count && typeof count === "object" ? {min: count.min ?? 0, max: count.max ?? null} : null;
+  return count && typeof count === "object" ? {min: count.min ?? 0, max: count.max === "X" ? Math.max(0, context?.x ?? 0) : count.max ?? null} : null;
 }
 /** The placeholder a counted target holds in an offer until its controller picks (rules/turn.mjs, "choose-targets"), and
     how many there are to pick from (`of`): "up to two" with none to pick does nothing, for a pilot weighing the offer. */
-export const choosing = (spec, of) => ({kind: "choose", ...countOf(spec), ...(of !== undefined ? {of} : {})});
+/* And, for one whose choices share something (`share`), which of its candidates it picks among -- the group it was offered
+   with (shareGroups) -- and that group's words. */
+export const choosing = (spec, of, context = {}, group = null) => ({kind: "choose", ...countOf(spec, context), ...(of !== undefined ? {of} : {}),
+  ...(group ? {group: [...group.ids], groupLabel: group.label} : {})});
 export const isChoosing = (t) => Boolean(t) && !Array.isArray(t) && t.kind === "choose";
 
 const COUNT_WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
@@ -100,7 +109,8 @@ export function countWords({min = 0, max = null} = {}) {
   return `${inWords(min)} ${max === min + 1 ? "or" : "to"} ${inWords(max)} targets`;
 }
 
-const kindOf = (selector) => ((selector.what ?? "permanent") === "player" ? "player" : "object");
+/* An ability on the stack (CR 115.2, script/filter.mjs) is no object: chosen as `{kind: "ability", id}`, its entry's stack id. */
+const kindOf = (selector) => ((selector.what ?? "permanent") === "player" ? "player" : selector.what === "ability" ? "ability" : "object");
 
 /* The targets chosen for other instances of "target" that this one must differ from (`distinctFrom`), as the offer or the
    stack entry holds them so far (`context.chosenTargets`, or the way being built). */
@@ -118,6 +128,43 @@ export function targetCandidates(state, spec, context) {
     }
   }
   return found;
+}
+
+/* A COUNTED TARGET'S CHOICES TOGETHER (`share`; CR 115.1, 601.2c). "Up to two target cards from a single graveyard"
+   (Unlicensed Hearse): one graveyard's cards. "Two target creature cards that share a creature type" (Unbury): a creature
+   type every one of them has -- a changeling has every one (CR 702.73a). Its candidates in groups that hold together, each
+   offered as its own way to aim it: a graveyard (its owner's, CR 400.3), or a creature type a candidate has, the changelings
+   with every one; a group too small for the least it must choose is none. The cards are then picked within the group, and
+   whatever is picked is held to the rule again (shareProblem) -- so every legal choice has its way, and no other. */
+function shareGroups(state, spec, candidates) {
+  const objects = candidates.filter((c) => c.kind === "object" && state.objects[c.id]).map((c) => c.id);
+  if (spec.share === "graveyard") {
+    const owners = [...new Set(objects.map((id) => state.objects[id].owner))].sort((a, b) => a - b);
+    return owners.map((owner) => ({key: `graveyard:${owner}`, label: `from ${state.players[owner]?.name ?? `Seat ${owner + 1}`}'s graveyard`,
+      ids: objects.filter((id) => state.objects[id].owner === owner)}));
+  }
+  const types = new Map(objects.map((id) => [id, creatureTypesOf(state, id)]));
+  const named = [...new Set([...types.values()].flatMap((t) => t.types))].sort();
+  const groups = named.map((type) => ({key: `creature type:${type}`, label: `that share a creature type: ${type}`,
+    ids: objects.filter((id) => types.get(id).every || types.get(id).types.includes(type))}));
+  /* Changelings that name no creature type of their own share every one, with each other. */
+  const every = objects.filter((id) => types.get(id).every);
+  if (!named.length && every.length) groups.push({key: "creature type:every", label: "that share a creature type", ids: every});
+  return groups;
+}
+/* A counted target's candidates within the group its placeholder was offered with -- every candidate, without one. */
+function groupCandidates(state, spec, context, placeholder) {
+  const all = targetCandidates(state, spec, context);
+  return Array.isArray(placeholder?.group) ? all.filter((c) => c.kind === "object" && placeholder.group.includes(c.id)) : all;
+}
+/** Why a counted target's choices do not hold together as its `share` says, in words, or null (CR 601.2c). */
+export function shareProblem(state, spec, chosen, name) {
+  const objects = (chosen ?? []).filter((t) => t?.kind === "object" && state.objects[t.id]).map((t) => t.id);
+  if (spec?.share === "graveyard" && new Set(objects.map((id) => state.objects[id].owner)).size > 1)
+    return `${name}'s targets must be in a single graveyard: choose them all from one player's graveyard.`;
+  if (spec?.share === "creature type" && objects.length > 1 && !shareCreatureType(state, objects))
+    return `${name}'s targets must share a creature type: choose cards with a creature type in common.`;
+  return null;
 }
 
 /* Whether a spec's target is one the ability has at all: an `onlyIf` that holds as it is cast or put on the stack. */
@@ -139,10 +186,20 @@ export function targetChoices(state, specs, context) {
     const candidates = targetCandidates(state, spec, context);
     /* A counted target is one placeholder in each way, picked once the offer is taken -- or no way at all, when fewer than
        its least are there to choose (CR 601.2c). */
-    const count = countOf(spec);
+    const count = countOf(spec, context);
     if (count) {
       if (candidates.length < count.min) return [];
-      choices = choices.map((chosen) => [...chosen, choosing(spec, candidates.filter((c) => !otherThan(spec, chosen).some((o) => sameTarget(o, c))).length)]);
+      const free = (chosen) => candidates.filter((c) => !otherThan(spec, chosen).some((o) => sameTarget(o, c)));
+      /* Whose choices share something (`share`): a way for each group large enough -- and with none, "up to" still the one
+         way of choosing nothing. */
+      if (spec.share) {
+        choices = choices.flatMap((chosen) => {
+          const groups = shareGroups(state, spec, free(chosen)).filter((group) => group.ids.length >= count.min);
+          return groups.length ? groups.map((group) => [...chosen, choosing(spec, group.ids.length, context, group)]) : count.min === 0 ? [[...chosen, choosing(spec, 0, context)]] : [];
+        });
+        continue;
+      }
+      choices = choices.map((chosen) => [...chosen, choosing(spec, free(chosen).length, context)]);
       continue;
     }
     const next = [];
@@ -160,9 +217,10 @@ export function targetChoices(state, specs, context) {
  * as it allows or there are. Each option is one candidate (`targets: [it]`, `hostile` for a pilot's aim), a permanent said
  * with whose it is when it is not the chooser's, and two that would read alike numbered.
  */
-export function countedChoice(state, spec, context, {id, name, hostile = false}) {
-  const count = countOf(spec) ?? {min: 1, max: 1};
-  const candidates = targetCandidates(state, spec, context);
+export function countedChoice(state, spec, context, {id, name, hostile = false, placeholder = null}) {
+  const count = countOf(spec, context) ?? {min: 1, max: 1};
+  /* Within the group it was offered with (`share`): one graveyard's cards, or those with the creature type. */
+  const candidates = groupCandidates(state, spec, context, placeholder);
   const options = candidates.map((c, index) => {
     const whose = c.kind === "object" && state.objects[c.id] && controllerOf(state, c.id) !== context.controller ? ` (${state.players[controllerOf(state, c.id)]?.name}'s)` : "";
     return {index, label: `${targetName(state, c)}${whose}`, ...(c.kind === "object" ? {cardId: c.id} : {playerId: c.id}), targets: [c], hostile,
@@ -175,7 +233,7 @@ export function countedChoice(state, spec, context, {id, name, hostile = false})
   /* "Controlled by different players" (`differentControllers`): at most one of each player's, refused with what to do instead
      (controller.mjs reads `capped`; both pilots keep to it). */
   const capped = spec?.differentControllers === true ? differentControllersCap(state, options, name) : null;
-  return {id, title: `${name}: choose ${countWords(count)}${capped ? ", each controlled by a different player" : ""}`, mode: "many", min: Math.min(count.min, options.length),
+  return {id, title: `${name}: choose ${countWords(count)}${placeholder?.groupLabel ? ` ${placeholder.groupLabel}` : ""}${capped ? ", each controlled by a different player" : ""}`, mode: "many", min: Math.min(count.min, options.length),
     max: count.max === null ? options.length : Math.min(count.max, options.length), options, ...(capped ? {capped} : {})};
 }
 
@@ -218,7 +276,10 @@ export function recheckTargets(state, specs, chosen, context) {
   const targets = (specs ?? []).map((spec, index) => {
     const was = (chosen ?? [])[index];
     if (Array.isArray(was)) {
-      const kept = was.filter((t) => stillLegal(state, spec, t, context));
+      let kept = was.filter((t) => stillLegal(state, spec, t, context));
+      /* "That share a creature type" (CR 608.2b): those still legal that no longer have one in common are none of them
+         legal -- each no longer shares one with the others. One left alone shares with nothing, and stays. */
+      if (shareProblem(state, spec, kept, "")) kept = [];
       had += was.length; legal += kept.length;
       return kept;
     }
@@ -286,6 +347,9 @@ function objectsOf(value, context) {
 function playersOf(value, context, state = null) {
   /* "That player": the one who cast, was dealt the damage, or drew (trigger.mjs). */
   if (value === "that player") return context.about?.player !== undefined && context.about.player !== null ? [context.about.player] : [];
+  /* "That attacking player draws a card" (Breena, the Demagogue): the player whose attack the trigger is about (rules/trigger.mjs,
+     `attacker`), as Combat Calligrapher's token's controller is. */
+  if (value === "attacking player") return Number.isInteger(context.about?.attacker) ? [context.about.attacker] : [];
   /* "It deals 1 damage to its controller" (Vengeful Ancestor, batch 75): the controller of what the trigger is about -- the
      attacking creature -- now, while it is on the battlefield; gone, the one it last had (CR 608.2h), as it attacked. */
   if (value === "that card's controller") {
@@ -307,7 +371,9 @@ function playersOf(value, context, state = null) {
    ability's permanent chose as it entered -- wherever an effect names it. */
 export function bindEffect(effect, context, state = null) {
   if (!effect || typeof effect !== "object") return effect;
-  const bound = namesChosen(effect) ? withChosen(effect, context.chosen) : {...effect};
+  const chosen = namesChosen(effect) ? withChosen(effect, context.chosen) : {...effect};
+  /* And "that color", chosen earlier in this resolution (script/chosen.mjs, "$chosenColor"). */
+  const bound = namesChosenColor(effect) ? withChosenColor(chosen, context.chosenColor) : chosen;
   /* Facts first: a number for an amount, a player where a player goes. */
   for (const [key, value] of Object.entries(bound)) {
     /* Who chooses by `ownerOf` is the owner as the object now is (below), not a fact read as the resolution began. */
@@ -317,6 +383,14 @@ export function bindEffect(effect, context, state = null) {
     else if (fact === undefined) delete bound[key];
     else bound[key] = fact;
   }
+  /* "THE PLAYER OR PLANESWALKER THAT CREATURE IS ATTACKING" (Raid Bombardment, Myr Battlesphere; CR 506.3, 508.1b): what the
+     creature an attack trigger is about attacks, as it attacked when the ability triggered (rules/trigger.mjs) -- the
+     planeswalker, while it is still on the battlefield (gone, nothing is dealt the damage, CR 506.4c), or else the player. */
+  if (bound.who === "attacked") {
+    const walker = context.about?.planeswalker;
+    if (walker === undefined || walker === null) bound.who = "that player";
+    else { bound.who = []; bound.targets = !state || state.objects[walker]?.zone === "battlefield" ? [walker] : []; }
+  }
   if ("targets" in bound) bound.targets = objectsOf(bound.targets, context);
   /* "Destroy all creatures with power greater than target creature's power" (Fell the Mighty; CR 608.2h): a selector's
      `power.moreThan`, a fact about a target, read as the resolution began -- a number, or null when that target is no
@@ -325,28 +399,46 @@ export function bindEffect(effect, context, state = null) {
     const fact = factValue(bound.selector.power.moreThan, context);
     bound.selector = {...bound.selector, power: {...bound.selector.power, moreThan: Number.isInteger(fact) ? fact : null}};
   }
+  /* "Each opponent may sacrifice a permanent of their choice that shares a card type with it" (Braids, Arisen Nightmare; CR
+     608.2h): `sharesCardTypeWith` "moved" bound to the card types of what the effect before it moved, as each last existed
+     (effects/asking.mjs, sacrifice's `movedWas`) -- a land animated into a creature shares both. */
+  if (bound.selector && typeof bound.selector === "object" && bound.selector.sharesCardTypeWith === "moved")
+    bound.selector = {...bound.selector, sharesCardTypeWith: [...new Set((context.movedWas ?? []).flatMap((was) => was.types ?? []))]};
   /* "Exile target player's graveyard": a selector's controller bound to the target player, or to nobody. */
   if (bound.selector && typeof bound.selector === "object" && isRef(bound.selector.controller)) {
     const [player] = playersOf(bound.selector.controller, context);
     bound.selector = {...bound.selector, controller: player ?? -1};
   }
   if ("spells" in bound) bound.spells = objectsOf(bound.spells, context);
+  /* "Create a Royal Role token attached to that creature" (Royal Treatment): what the token enters attached to. */
+  if ("attachedTo" in bound) bound.attachedTo = objectsOf(bound.attachedTo, context);
   /* "Until this card is cast from exile" (Emrakul, the Exigent Doom): which card's cast ends it. */
   if ("untilCast" in bound) bound.untilCast = objectsOf(bound.untilCast, context);
   /* "Counter that spell or ability" (ward): the stack entry the trigger is about, by its stack id (rules/trigger.mjs). */
   if (bound.stack === "that") bound.stack = context.about?.stackId !== undefined && context.about.stackId !== null ? [context.about.stackId] : [];
+  /* "Change the target of target spell or ability" (Bolt Bend): the stack entries among target n -- an ability by its own
+     stack id, a spell by its entry's. */
+  if (isRef(bound.stack)) {
+    const chosen = [].concat((context.targets ?? [])[bound.stack.target] ?? []).filter(Boolean);
+    bound.stack = chosen.map((t) => (t.kind === "ability" ? t.id : t.kind === "object" ? state?.stack.find((e) => e.objectId === t.id)?.stackId : undefined)).filter((id) => id !== undefined);
+  }
   /* Where the damage comes from, when it is not the spell: "target creature you control deals damage ..." (damageAll). */
   if ("from" in bound) bound.from = objectsOf(bound.from, context);
   /* What is attached, when it is not the ability's source: "you may attach it to target creature you control" (Sigarda's
      Aid, "it" the Equipment that entered). Gone, it is nothing -- never the source in its place. */
-  if (typeof bound.source === "string") { const [id] = objectsOf(bound.source, context); bound.source = id ?? -1; }
+  /* "Attach target Equipment you control to up to one target creature you control" (Iron Hills Stalwart; CR 701.3a): one of
+     the ability's targets -- illegal as it resolves, it is nothing, and nothing moves (CR 608.2b). */
+  if (typeof bound.source === "string" || isRef(bound.source)) { const [id] = objectsOf(bound.source, context); bound.source = id ?? -1; }
   if ("who" in bound) bound.who = playersOf(bound.who, context, state);
   /* "Target opponent creates a 1/1 Spirit" (Forbidden Orchard): a token's controller, a target player -- or no one. "That
-     creature's controller creates a 1/1 Myr" (Genesis Chamber): the controller of what the trigger is about. */
-  if (isRef(bound.controller) || bound.controller === "that card's controller") { const [player] = playersOf(bound.controller, context, state); bound.controller = player ?? -1; }
+     creature's controller creates a 1/1 Myr" (Genesis Chamber): the controller of what the trigger is about. "Each opponent
+     creates a 1/1 white Human creature token" (Slaughter Specialist; CR 111.2), "each opponent may create X ... tokens"
+     (Tempt with Vengeance): "that player", the one a repetition is about (effects/index.mjs, repeatFor). */
+  if (isRef(bound.controller) || bound.controller === "that card's controller" || bound.controller === "that player") { const [player] = playersOf(bound.controller, context, state); bound.controller = player ?? -1; }
   /* "That attacking player creates a ... token" (Combat Calligrapher): the player whose attack the trigger is about. */
   if (bound.controller === "attacking player") bound.controller = Number.isInteger(context.about?.attacker) ? context.about.attacker : -1;
-  if (isRef(bound.toPlayer)) {
+  /* "At the beginning of each player's upkeep, that player gains control of Alexios": the player the trigger is about. */
+  if (isRef(bound.toPlayer) || bound.toPlayer === "that player") {
     const [player] = playersOf(bound.toPlayer, context);
     if (player === undefined) delete bound.toPlayer; else bound.toPlayer = player;
   }
@@ -380,21 +472,39 @@ export function bindEffect(effect, context, state = null) {
  * reveal cards ... until you reveal that many creature cards" (Synthetic Destiny).
  */
 const THIS_WAY = ["rememberedCount", "lifeLostThisWay", "cardTypesAmong"];
-export function rememberNow(effects, context, {keepThat = false, state = null} = {}) {
+/* An effect's counts of this resolution ("that many" of what the effect before it did), counted now. */
+function thisWayNow(bound, context, state) {
+  for (const key of AMOUNT_PARAMS)
+    if (bound[key] && typeof bound[key] === "object" && THIS_WAY.some((kind) => kind in bound[key])) bound[key] = amountOf(state, bound[key], context);
+  return bound;
+}
+/* Each effect, and those nested in it -- a branch's, a repetition's, a modal's modes' -- as `one` makes it. */
+function walkEffects(effects, one) {
   const walk = (effect) => {
     if (!effect || typeof effect !== "object") return effect;
-    const kept = {};
-    if (keepThat) for (const key of ["targets", "spells", "who", "toPlayer", "chooser"])
-      if (["that card", "that player", "that card's controller"].includes(effect[key])) kept[key] = effect[key];
-    const bound = {...bindEffect(effect, context), ...kept};
-    for (const key of AMOUNT_PARAMS)
-      if (bound[key] && typeof bound[key] === "object" && THIS_WAY.some((kind) => kind in bound[key])) bound[key] = amountOf(state, bound[key], context);
+    const bound = one(effect);
     for (const key of ["effects", "then", "otherwise"]) if (Array.isArray(bound[key])) bound[key] = bound[key].map(walk);
     if (Array.isArray(bound.modes)) bound.modes = bound.modes.map((mode) => ({...mode, effects: (mode.effects ?? []).map(walk)}));
     return bound;
   };
   return (effects ?? []).map(walk);
 }
+export function rememberNow(effects, context, {keepThat = false, state = null} = {}) {
+  return walkEffects(effects, (effect) => {
+    const kept = {};
+    if (keepThat) for (const key of ["targets", "spells", "who", "toPlayer", "chooser"])
+      if (["that card", "that player", "that card's controller"].includes(effect[key])) kept[key] = effect[key];
+    return thisWayNow({...bindEffect(effect, context), ...kept}, context, state);
+  });
+}
+
+/**
+ * A REFLEXIVE TRIGGER'S "THAT MANY" (CR 603.12): "When one or more nonland cards are exiled this way, put that many +1/+1
+ * counters on target attacking creature" (Augusta, Order Returned) -- how many the resolution that made it did, counted
+ * as it triggers, while there is that resolution to count; by the time it resolves there is only its own (effects/
+ * permanents.mjs, immediateTrigger). Nothing else is bound: its targets are its own, chosen as it goes on the stack.
+ */
+export const countThisWay = (effects, context, state) => walkEffects(effects, (effect) => thisWayNow({...effect}, context, state));
 
 /**
  * A MODAL SPELL'S CHOSEN MODES AS ONE SCRIPT (CR 700.2): their targets in the order chosen, and their effects with each
@@ -436,7 +546,9 @@ export function targetRefs(effects) {
 
 /* The primitives that do something TO what they are aimed at. Read by a pilot choosing among an offer's targets --
    aim these at an opponent's things, the rest at your own -- and by nothing in the rules. */
-const HOSTILE = new Set(["destroy", "dealDamage", "moveZone", "tap", "counterSpell", "loseLife", "discard", "mill", "removeCounter"]);
+const HOSTILE = new Set(["destroy", "dealDamage", "moveZone", "tap", "counterSpell", "loseLife", "discard", "mill", "removeCounter",
+  /* "Target player loses the game" (CR 104.3e): aimed at an opponent. */
+  "loseGame"]);
 
 /** Whether an ability's effects are aimed against what they target: a removal spell, not a pump. */
 export function isHostile(effects) {
@@ -459,8 +571,13 @@ export function targetName(state, chosen) {
   if (!chosen) return "";
   /* A counted target: its chosen, said together; a placeholder, what is still to be chosen. */
   if (Array.isArray(chosen)) return chosen.length ? chosen.map((t) => targetName(state, t)).join(" and ") : "no target";
-  if (chosen.kind === "choose") return countWords(chosen);
+  if (chosen.kind === "choose") return `${countWords(chosen)}${chosen.groupLabel ? ` ${chosen.groupLabel}` : ""}`;
   if (chosen.kind === "player") return state.players[chosen.id]?.name ?? `Seat ${chosen.id + 1}`;
+  /* An ability on the stack: its source's, as the stack says it (a face-down source's has no name, CR 708.2a). */
+  if (chosen.kind === "ability") {
+    const entry = state.stack.find((e) => e.stackId === chosen.id);
+    return entry ? `${entry.faceDown || !entry.name ? "An" : `${entry.name}'s`} ${entry.kind === "trigger" ? "triggered" : "activated"} ability` : "an ability, now gone";
+  }
   /* A face-down permanent has no name (CR 708.2a): it is said to be face down. */
   return shownName(state.objects[chosen.id]);
 }

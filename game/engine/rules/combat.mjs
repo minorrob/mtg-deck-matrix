@@ -57,7 +57,7 @@ import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf, de
 import {isCreatureType} from "../keywords/types.mjs";
 import {givePoison, changeLife, infects, addCounters, damagePermanent} from "../script/effects/resources.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
-import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack as restricted, cantGainLife, attackerCaps, defenderLifted, attacksEachCombat} from "./statics.mjs";
+import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack as restricted, cantGainLife, lifeGained, attackerCaps, defenderLifted, attacksEachCombat} from "./statics.mjs";
 import {paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits} from "./mana.mjs";
 import {recordCommanderDamage} from "./commander.mjs";
 import {damageAssignmentProblem} from "../controller.mjs";
@@ -256,6 +256,7 @@ export const attackers = {
     /* "OTHER GOBLIN CREATURES YOU CONTROL ATTACK EACH COMBAT IF ABLE" (CR 508.1d): which must be among the attackers, said in
        the record with what to do instead -- every answerer held to it by controller.mjs, and a pilot able to keep to it. */
     const requires = requiresOf(state, options);
+    const budget = taxBudget(state, awaiting.player, options);
     return {
       id: `declare-attackers:${state.turn}`,
       title: "Declare attackers",
@@ -271,6 +272,7 @@ export const attackers = {
       exclusiveBy: "cardId",
       ...(capped ? {capped} : {}),
       ...(requires.length ? {requires} : {}),
+      ...(budget ? {budget} : {}),
       options,
     };
   },
@@ -366,6 +368,22 @@ const taxUnits = (state, player, picked) => {
   const attacking = new Set(picked.map((o) => o.cardId));
   return paymentUnits(state, player).filter((u) => !(u.from === "tap" && attacking.has(u.id) && !hasNow(state, u.id, "Vigilance")));
 };
+/* AN ATTACK TAX THE PLAYER CAN'T PAY (CR 508.1d, 508.1h; Propaganda with no mana, and a Goblin that must attack): said in the
+   record, so every answerer -- the pilots, the room's least answer -- declares only what can be paid for. Each option's
+   `mana` is what declaring it takes from the mana the player could pay with: its tax, and one more when the creature is
+   one of those sources and attacking taps it (taxUnits). A declaration can be paid for just when its options' `mana`
+   totals no more than the record's `budget.most`, every unit the player has. No tax on any option, and no budget. */
+function taxBudget(state, player, options) {
+  const taxes = options.map((o) => attackTax(state, [o]));
+  if (!taxes.some((n) => n > 0)) return null;
+  const units = paymentUnits(state, player);
+  const tapped = new Set(units.filter((u) => u.from === "tap").map((u) => u.id).filter((id) => !hasNow(state, id, "Vigilance")));
+  options.forEach((o, i) => {
+    const mana = taxes[i] + (tapped.has(o.cardId) ? 1 : 0);
+    if (mana > 0) o.mana = mana;
+  });
+  return {by: "mana", most: units.length};
+}
 
 /* The attack, declared: who attacks whom, tapped (CR 508.1f), and said. */
 function declareAttacks(state, player, picked, events) {
@@ -688,6 +706,10 @@ export const combatDamage = {
       /* What follows a prevention -- "each opponent mills that many cards" -- immediately afterward (CR 615.5). */
       if (hit.prevented === true || hit.amount <= 0) { events.push(...runFollowUps(state, hit)); continue; }
       hit.source = raw.source;
+      /* The source has dealt damage, and combat damage (CR 510.2), to a player or a permanent, for as long as it is this
+         object (CR 400.7): "has hexproof as long as they haven't dealt combat damage yet" (Ruric Thar, Magecrusher; script/
+         filter.mjs, hasDealtDamage and hasDealtCombatDamage). A hit prevented in full was never dealt (above). */
+      Object.assign(state.objects[hit.source], {hasDealtDamage: true, hasDealtCombatDamage: true});
       /* INFECT (CR 702.90b-c, batch 78): poison counters to a player, -1/-1 counters to a creature, in place of the rest. */
       const infect = infects(state, hit.source);
       if (hit.toPlayer !== undefined && hit.toPlayer !== null) {
@@ -704,8 +726,9 @@ export const combatDamage = {
            who controlled it, with its creature types as it dealt it (a changeling's, every one). turn.mjs clears it. */
         if (state.objects[hit.source]) {
           const dealer = controllerOf(state, hit.source);
+          /* And freerunning's (CR 702.173a): whether it was a commander -- one under this player's control, as it dealt it. */
           if (state.players[dealer]) (state.players[dealer].combatDamageSources ??= []).push({types: subtypesOf(state, hit.source).filter(isCreatureType),
-            every: everyCreatureTypeOf(state, hit.source)});
+            every: everyCreatureTypeOf(state, hit.source), ...(state.objects[hit.source].commander === true ? {commander: true} : {})});
         }
         /* The damage is a loss of life (CR 120.3a), counted as one this turn (batch 78: it was not) -- or, with infect, as
            many poison counters. */
@@ -739,9 +762,11 @@ export const combatDamage = {
         /* Unless its controller can't gain life (CR 119.7): the damage is dealt, and no life gained. */
         if (gains !== undefined && !cantGainLife(state, gains)) {
           const before = state.players[gains].life;
-          state.players[gains].life += linked;
+          /* "You gain twice that much life instead" (Rhox Faithmender; rules/statics.mjs, lifeGained). */
+          const gained = lifeGained(state, gains, linked);
+          state.players[gains].life += gained;
           /* Life gained this turn, as every other gain is kept (effects/resources.mjs changeLife). */
-          state.players[gains].gainedThisTurn = (state.players[gains].gainedThisTurn ?? 0) + linked;
+          state.players[gains].gainedThisTurn = (state.players[gains].gainedThisTurn ?? 0) + gained;
           events.push(event("GameEventPlayerLivesChanged", state, {
             player: {playerId: gains, name: state.players[gains].name},
             oldLives: before, newLives: state.players[gains].life, lifelink: true,

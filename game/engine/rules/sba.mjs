@@ -44,7 +44,7 @@
  * implemented is worse than a missing one.
  */
 
-import {moveObject, removeObject, PER_PLAYER, PUBLIC_ZONES, eventCard, rememberExileLooker} from "../state/index.mjs";
+import {moveObject, removeObject, PER_PLAYER, PUBLIC_ZONES, eventCard, rememberExileLooker, recordDeath} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
 import {lastKnown, toughnessOf, typesOf, keywordsOf, controllerOf, deriving} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
@@ -53,7 +53,7 @@ import {sacrificeOne, moveOne, returnExiledUntil, leavingRef, destructionReplace
 import {changeLife} from "../script/effects/resources.mjs";
 import {enduringStories, citysBlessings} from "../keywords/designations.mjs";
 import {preparedCopyStays} from "../script/effects/attributes.mjs";
-import {endControlChange, nextRecord} from "../script/effects/permanents.mjs";
+import {endControlChange, nextRecord, endCounterDurations} from "../script/effects/permanents.mjs";
 import {protectedFrom} from "./protection.mjs";
 import {answerForDeparted, goOnWithout} from "./turn.mjs";
 
@@ -157,6 +157,21 @@ function removePlayerFromBoard(state, playerId, events) {
     moveOne(state, entry.objectId, "exile", events);
   }
 }
+/**
+ * A PLAYER WHO HAS LOST LEAVES THE GAME (CR 104.5, 800.4a): marked out, said, and everything of theirs gone -- as a
+ * state-based action finds the loss (above), or at once as an effect says they lose (script/effects/resources.mjs,
+ * loseGame; CR 104.3e), which is no state-based action.
+ */
+export function leaveGame(state, player, reason, events) {
+  player.lost = true;
+  player.lostTo = reason;
+  events.push(event("GameEventPlayerLivesChanged", state, {
+    player: {playerId: player.id, name: player.name},
+    oldLives: player.life, newLives: player.life, lost: true, lossReason: reason,
+  }));
+  removePlayerFromBoard(state, player.id, events);
+}
+
 /* A spell or ability that was resolving has left the stack with the player who left (800.4a): nothing is left of it to
    resolve, and a question it was asking anyone is withdrawn. */
 function cutShort(state) {
@@ -169,7 +184,33 @@ function cutShort(state) {
  *
  * @returns {Array} events for the caller to journal
  */
+/* An Aura put into its owner's graveyard by a state-based action (CR 704.5m, 704.5z): through the replacements and with its
+   last known information, so "when this Aura is put into a graveyard" still sees it. Unlike an Equipment, it does not
+   stay. */
+function auraToGraveyard(state, id, events) {
+  const object = state.objects[id];
+  const host = object.attachedTo === null || object.attachedTo === undefined ? null : state.objects[object.attachedTo];
+  if (host) host.attachments = (host.attachments ?? []).filter((a) => a !== id);
+  const card = cardRef(state, id);
+  const leftBehind = lastKnown(state, id);
+  const {proposal} = applyReplacements(state, {event: "zone-change", objectId: id, from: "battlefield", to: "graveyard", player: object.controller});
+  const fell = moveObject(state, id, proposal.to, PER_PLAYER.includes(proposal.to) ? object.owner : null);
+  /* An Aura that is a creature too, put there (CR 303.4d), dies (CR 700.4; state/index.mjs). */
+  recordDeath(state, leftBehind, proposal.to);
+  events.push(event("GameEventCardChangeZone", state, {
+    card, leftBehind,
+    /* What it became (CR 400.7e): an Aura's "return it to its owner's hand" finds the card in the graveyard. */
+    ...(PUBLIC_ZONES.includes(proposal.to) ? {becomes: fell} : {}),
+    from: {zoneType: "Battlefield", player: {playerId: object.controller}},
+    to: {zoneType: ZONE_LABEL[proposal.to] ?? proposal.to, player: {playerId: object.owner}},
+  }));
+  /* What it exiled "until this Aura leaves the battlefield", back (CR 610.3; Ossification). */
+  returnExiledUntil(state, id, events, leftBehind);
+}
+
 export function checkStateBasedActions(state) {
+  /* "For as long as that land has a blight counter on it" (CR 611.2b): over, for an object with none (effects/permanents.mjs). */
+  endCounterDurations(state);
   /* Continuous control changes also confer hideaway's look permission (CR 406.3, 702.75a). Record it before a state-based
      action can remove the source or an effect granting control; projections only read these permissions. */
   for (const source of new Set(state.zones.exile.filter((id) => state.objects[id]?.faceDown === true)
@@ -228,31 +269,36 @@ export function checkStateBasedActions(state) {
       if (!object.enchant) continue;
       const host = object.attachedTo === null || object.attachedTo === undefined ? null : state.objects[object.attachedTo];
       if (host && host.zone === "battlefield" && host.id !== id && matchesSelector(object.enchant, state, object.attachedTo, {controller: object.controller, source: id})) continue;
-      if (host) host.attachments = (host.attachments ?? []).filter((a) => a !== id);
-      const card = cardRef(state, id);
-      const leftBehind = lastKnown(state, id);
-      const {proposal} = applyReplacements(state, {event: "zone-change", objectId: id, from: "battlefield", to: "graveyard", player: object.controller});
-      const fell = moveObject(state, id, proposal.to, PER_PLAYER.includes(proposal.to) ? object.owner : null);
-      events.push(event("GameEventCardChangeZone", state, {
-        card, leftBehind,
-        /* What it became (CR 400.7e): an Aura's "return it to its owner's hand" finds the card in the graveyard. */
-        ...(PUBLIC_ZONES.includes(proposal.to) ? {becomes: fell} : {}),
-        from: {zoneType: "Battlefield", player: {playerId: object.controller}},
-        to: {zoneType: ZONE_LABEL[proposal.to] ?? proposal.to, player: {playerId: object.owner}},
-      }));
-      /* What it exiled "until this Aura leaves the battlefield", back (CR 610.3; Ossification). */
-      returnExiledUntil(state, id, events, leftBehind);
+      auraToGraveyard(state, id, events);
       acted = true;
+    }
+
+    /* CR 704.5z (303.7a): a permanent with two or more Roles attached that one player controls -- each but the one with the
+       latest timestamp is put into its owner's graveyard ("if you control another Role on it, put that one into the
+       graveyard", Royal Treatment), as an Aura put there is. Another player's Role on it stays. */
+    for (const id of [...state.zones.battlefield]) {
+      const roles = (state.objects[id]?.attachments ?? []).filter((a) => state.objects[a]?.zone === "battlefield" && (state.objects[a].subtypes ?? []).includes("Role"));
+      for (const player of new Set(roles.map((a) => controllerOf(state, a)))) {
+        const theirs = roles.filter((a) => controllerOf(state, a) === player);
+        if (theirs.length < 2) continue;
+        const newest = theirs.reduce((a, b) => (state.objects[b].timestamp > state.objects[a].timestamp ? b : a));
+        for (const role of theirs) if (role !== newest) auraToGraveyard(state, role, events);
+        acted = true;
+      }
     }
 
     /* CR 704.5n: an Equipment attached to a permanent that has gone, or is no longer a creature, becomes unattached and
        stays on the battlefield. */
+    /* CR 704.5p: a creature attached to anything, or a permanent that is neither an Aura nor an Equipment, becomes unattached
+       too -- an Equipment or an Aura that became a copy of a creature (Mirrorform) -- and an Equipment that is also a creature
+       can't equip (CR 301.5c). An Aura still attached here is one the check above found legal. */
     for (const id of state.zones.battlefield) {
       const object = state.objects[id];
       if (object.attachedTo === null || object.attachedTo === undefined) continue;
       const host = state.objects[object.attachedTo];
       const equipment = (object.subtypes ?? []).includes("Equipment");
-      if (host && host.zone === "battlefield" && (!equipment || typesOf(state, object.attachedTo).includes("Creature"))
+      const attachable = !typesOf(state, id).includes("Creature") && (Boolean(object.enchant) || equipment);
+      if (host && host.zone === "battlefield" && attachable && (!equipment || typesOf(state, object.attachedTo).includes("Creature"))
         /* Nor enchanted or equipped by one it has protection from (CR 702.16c-d): unattached here, an Aura then put into
            its owner's graveyard by the check above, as an Aura attached to nothing (CR 704.5m). */
         && !protectedFrom(state, {card: object.attachedTo}, id)) continue;
@@ -329,6 +375,8 @@ export function checkStateBasedActions(state) {
         const destination = proposal.to;
         const died = moveObject(state, id, destination, destination === "graveyard" || destination === "hand" || destination === "library"
           ? object.owner : null);
+        /* Died, unless a replacement sent it elsewhere (CR 700.4; state/index.mjs). */
+        recordDeath(state, leftBehind, destination);
         events.push(event("GameEventCardChangeZone", state, {
           card,
           leftBehind,
@@ -353,6 +401,8 @@ export function checkStateBasedActions(state) {
       const leftBehind = lastKnown(state, id);
       const {proposal} = applyReplacements(state, {event: "zone-change", objectId: id, from: "battlefield", to: "graveyard", player: object.controller});
       const went = moveObject(state, id, proposal.to, PER_PLAYER.includes(proposal.to) ? object.owner : null);
+      /* A planeswalker that is a creature too dies as it is put there (CR 700.4; state/index.mjs). */
+      recordDeath(state, leftBehind, proposal.to);
       events.push(event("GameEventCardChangeZone", state, {
         card, leftBehind, ...(PUBLIC_ZONES.includes(proposal.to) ? {becomes: went} : {}),
         from: {zoneType: "Battlefield", player: {playerId: object.controller}},
@@ -379,13 +429,7 @@ export function checkStateBasedActions(state) {
       /* "You can't lose the game" (Darksteel Angel; CR 104.3, 104.2b): no state-based action takes the game from its
          controller -- conceding still does (CR 104.3a). */
       if (reason !== "conceded" && playerRuled(state, "cant-lose", player.id)) continue;
-      player.lost = true;
-      player.lostTo = reason;
-      events.push(event("GameEventPlayerLivesChanged", state, {
-        player: {playerId: player.id, name: player.name},
-        oldLives: player.life, newLives: player.life, lost: true, lossReason: reason,
-      }));
-      removePlayerFromBoard(state, player.id, events);
+      leaveGame(state, player, reason, events);
       acted = true;
     }
 

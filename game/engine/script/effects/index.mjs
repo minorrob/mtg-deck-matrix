@@ -32,7 +32,7 @@ import {controllerOf, typesOf} from "../../rules/layers.mjs";
 import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sacrificeAll, digUntil, peekAndReveal, shuffle, exileUntil, mayPlay, manifest} from "./zones.mjs";
 import {
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
-  putCounter, putCounterAll, removeCounter, proliferate, damageAll, fight, poison, winGame, multiplyCounters,
+  putCounter, putCounterAll, removeCounter, proliferate, damageAll, fight, poison, winGame, loseGame, multiplyCounters,
   exchangeLife, damageEach, moveCounters,
 } from "./resources.mjs";
 import {
@@ -82,7 +82,7 @@ export const TOP_25 = Object.freeze([
  * `effects/asking.mjs`, driven by `resolution.mjs`. Putting a throwing stub in the registry would
  * have made "is this built" answer yes to something no caller can use.
  */
-export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "surveil", "discard", "modal", "chooseCard", "proliferate", "sacrifice", "populate", "amass", "unlessPays", "copySpell", "chooseType", "play", "changeTargets", "empowerJace", "twoPiles",
+export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "surveil", "discard", "modal", "chooseCard", "proliferate", "sacrifice", "populate", "amass", "unlessPays", "copySpell", "chooseType", "chooseColor", "play", "changeTargets", "empowerJace", "twoPiles", "chooseSource", "vote",
   /* Connive (CR 701.50): which permanent connives next, and what its controller discards. */
   "connive"]);
 
@@ -154,8 +154,8 @@ export const EFFECTS = Object.freeze({
   poison,
   /* Batch 65: a land made a creature, its counters, and its return. */
   earthbend,
-  /* Batch 68: "you win the game". */
-  winGame,
+  /* Batch 68: "you win the game". Train C phase 2 (p6-combat): "that player loses the game" (CR 104.3e). */
+  winGame, loseGame,
   /* Batch 69: goad. */
   goad,
   /* Batch 72: one way or the other, and a reflexive trigger ("when you do"). */

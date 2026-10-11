@@ -30,8 +30,9 @@ import {ruleChanged} from "../rules/statics.mjs";
 
 /** The family of §3.1, so `engine-coverage` counts these as behavior and not as words. */
 export const KEYWORD_FAMILIES = Object.freeze({
-  /** When a spell may be cast, and when a permanent may act. */
-  timing: Object.freeze(["Flash", "Haste"]),
+  /** When a spell may be cast, and when a permanent may act. Split second (CR 702.61a; Siege Smash): while a spell with it
+      is on the stack, no other spell is cast and no ability but a mana ability is activated (splitSecondOnStack). */
+  timing: Object.freeze(["Flash", "Haste", "Split Second"]),
   /** Where a spell may be cast from: Flashback (CR 702.34a), from its owner's graveyard for its flashback cost, then
       exiled. rules/actions.mjs offers the cast, rules/stack.mjs and effects/zones.mjs exile it. Escape (CR 702.138a), from
       its owner's graveyard for its escape cost, mana and "exile N other cards from your graveyard" picked as the cast is
@@ -41,7 +42,9 @@ export const KEYWORD_FAMILIES = Object.freeze({
   /** Unearth (CR 702.84a), an activated ability of the card in its owner's graveyard at sorcery speed: returned with haste,
       exiled at the next end step, and exiled instead should it leave the battlefield any other way (cards/index.mjs;
       effects/permanents.mjs, afterwards; rules/replacement.mjs). */
-  zones: Object.freeze(["Flashback", "Escape", "Rebound", "Unearth"]),
+  /** Suspend (CR 702.62a), from its owner's hand: a special action exiling it with its time counters for its suspend cost,
+      at the timing it could be cast (rules/actions.mjs); then one removed each upkeep, and the free cast (rules/trigger.mjs). */
+  zones: Object.freeze(["Flashback", "Escape", "Rebound", "Unearth", "Suspend"]),
   /** What happens as a spell is cast: Storm (CR 702.40a), "when you cast this spell, copy it for each spell cast before
       it this turn" -- a triggered ability of the spell (rules/actions.mjs). */
   cast: Object.freeze(["Storm"]),
@@ -54,8 +57,21 @@ export const KEYWORD_FAMILIES = Object.freeze({
       cast for it (rules/stack.mjs). Escalate (CR 702.120a), an additional cost for each mode chosen beyond the first, paid with
       the rest of the cost (rules/actions.mjs). Overload (CR 702.96a-b), an alternative cost whose cast carries the spell's
       "each" effects, written out by the card, and no targets (cards/index.mjs, rules/actions.mjs, rules/stack.mjs): built
-      for Winds of Abandon, credited with Mizzium Mortars and Vandalblast. */
-  pay: Object.freeze(["Convoke", "Evoke", "Prowl", "Escalate", "Overload"]),
+      for Winds of Abandon, credited with Mizzium Mortars and Vandalblast. Spectacle (CR 702.137a), an alternative cost
+      offered once an opponent of its caster lost life this turn (cards/index.mjs; script/amount.mjs). */
+  /** Surge (CR 702.117a) and freerunning (CR 702.173a), alternative costs offered once its caster has cast another spell
+      this turn, or one of their Assassins or commanders dealt a player combat damage (script/condition.mjs; rules/combat.mjs
+      keeps the damage), what each casts marked as cast for it (`paidFor`; rules/actions.mjs, rules/stack.mjs). */
+  /** Tiered (CR 702.183a): one mode chosen as it is cast, and that mode's cost paid besides (cards/index.mjs puts the costs
+      among the spell's additional costs; rules/actions.mjs makes each mode its own cast). */
+  /** Disguise (CR 702.168a): cast face down for {3}, a 2/2 with ward {2}, and turned face up for its disguise cost
+      (rules/actions.mjs, state/index.mjs). */
+  pay: Object.freeze(["Convoke", "Evoke", "Prowl", "Escalate", "Overload", "Spectacle", "Surge", "Freerunning", "Tiered", "Disguise"]),
+  /** How a permanent enters: Riot (CR 702.136a), with a +1/+1 counter or with haste, its controller's choice as it arrives --
+      a replacement on its own entering (cards/index.mjs, rules/replacement.mjs), asked once it is there (rules/entering.mjs).
+      Compleated (CR 702.150a): two fewer loyalty counters for each Phyrexian symbol of its cost its caster paid with life
+      (rules/replacement.mjs, enteringModifications). */
+  enter: Object.freeze(["Riot", "Compleated"]),
 });
 
 /**
@@ -80,6 +96,17 @@ export function summoningSick(state, id) {
 export function sickForAbilities(state, id) {
   return summoningSick(state, id) && !ruleChanged(state, "activate-as-though-haste", id);
 }
+
+/**
+ * SPLIT SECOND (CR 702.61a; Siege Smash): whether a spell with it is on the stack -- as it is there, its keywords derived.
+ * While one is, no player may cast another spell or activate an ability that is not a mana ability: rules/actions.mjs offers
+ * nothing else, and casts nothing as an effect resolves. Mana abilities and special actions (a face-down permanent turned
+ * face up) stay open, and triggered abilities trigger and go on the stack as ever (702.61b). Copied, a copy has it too
+ * (CR 707.2). Instances are redundant (702.61c).
+ */
+/* An ability on the stack has no object of its own (rules/stack.mjs, pushAbility): only a spell, or a copy of one, has it. */
+export const splitSecondOnStack = (state) => state.stack.some((entry) => state.objects[entry.objectId] !== undefined
+  && keywordsOf(state, entry.objectId).includes("Split Second"));
 
 /** CR 702.8a: this card may be cast any time its controller could cast an instant. */
 export const hasFlash = (state, id) => keywordsOf(state, id).includes("Flash");

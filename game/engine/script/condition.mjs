@@ -46,9 +46,23 @@
  *                                      kept of its controller's sources this turn
  *   {prowled: true|false}              its own permanent was cast for its prowl cost, or was not (CR 702.76a; rules/stack.mjs):
  *                                      "if its prowl cost was paid" (Latchkey Faerie)
+ *   {surge: true}                      surge's "if you or one of your teammates has cast another spell this turn" (CR
+ *                                      702.117a): its controller has cast a spell this turn (there are no teams here)
+ *   {freerunning: true}                freerunning's "if a player was dealt combat damage this turn by a creature that, at
+ *                                      the time it dealt that damage, was an Assassin creature or a commander under your
+ *                                      control" (CR 702.173a): what rules/combat.mjs kept of its controller's sources
+ *   {paidFor: "surge"|"freerunning"}   the spell resolving, or its own permanent, was cast for that cost (CR 702.117a,
+ *                                      702.173a; rules/actions.mjs, rules/stack.mjs): "if its surge cost was paid" --
+ *                                      its source gone, as the trigger saw it (CR 608.2h)
  *   {opponentPoisonAtLeast: 3}         an opponent of its controller, still in the game, has at least that many poison
  *                                      counters (CR 122.1f): Corrupted's "as long as an opponent has three or more poison
  *                                      counters" (Skrelv's Hive; an ability word, CR 207.2c, with no rules meaning of its own)
+ *   {spentFrom: selector}              mana from a source the selector describes, as that source was as it made the mana
+ *                                      (CR 106.3), was spent to cast the spell the trigger is about (CR 601.2h): "if mana from
+ *                                      a Treasure was spent to cast it" (Smaug, Wicked Worm)
+ *   {lifeAboveAnotherOpponent: "that player"}  the player a trigger is about has more life than another opponent of its
+ *                                      controller still in the game (CR 119.1, 800.4a): "if that opponent has more life than
+ *                                      another of your opponents" (Breena, the Demagogue) -- with no other, it has not
  *
  * The keys are closed, like every other grammar here: an unknown one is refused at the schema rather than read as true.
  */
@@ -66,7 +80,15 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   /* Evolve's comparison (CR 702.100a); prowl's damage, and its cost paid (CR 702.76a). */
   "evolves", "prowl", "prowled",
   /* Ascend's city's blessing (CR 702.131). */
-  "citysBlessing"];
+  "citysBlessing",
+  /* Surge (CR 702.117a) and freerunning (CR 702.173a), and the cost a spell was cast for. */
+  "surge", "freerunning", "paidFor",
+  /* Breena, the Demagogue's "more life than another of your opponents" (CR 119.1). */
+  "lifeAboveAnotherOpponent",
+  /* Smaug, Wicked Worm's "if mana from a Treasure was spent to cast it" (CR 106.3, 601.2h). */
+  "spentFrom"];
+/* The alternative costs a spell may be marked as cast for (cards/index.mjs; rules/actions.mjs). */
+const PAID_FOR = ["surge", "freerunning"];
 /* Where a permanent may have come from, for `cameFrom`: a library (effects/zones.mjs and rules/stack.mjs record it). */
 const CAME_FROM = ["library"];
 /* The mana a condition may ask was spent to cast its object: the five colors and colorless (CR 106.1). */
@@ -148,7 +170,7 @@ function castHolds(rule, cast) {
 
 /** Whether a condition holds now, for an ability controlled by `controller` on object `source`. No condition holds. */
 export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined, excessDamage = undefined, rememberedControllers = undefined,
-  movedWas = undefined, searched = undefined, lastKnown = undefined} = {}) {
+  movedWas = undefined, searched = undefined, lastKnown = undefined, paidFor = undefined} = {}) {
   if (!condition) return true;
   /* "If you search your library this way" (Claim Jumper): a search made earlier in this resolution (script/resolution.mjs). */
   if (condition.searched === true && searched !== true) return false;
@@ -168,8 +190,10 @@ export function conditionHolds(state, condition, {controller, source = null, abo
     }
   }
   if (condition.cast !== undefined && !castHolds(condition.cast, cast)) return false;
-  /* "Khans -- ...": what its permanent chose as it entered (the Sieges). */
-  if (condition.chosen !== undefined && (source === null || state.objects[source]?.chosen !== condition.chosen)) return false;
+  /* "Khans -- ...": what its permanent chose as it entered (the Sieges) -- or, gone, as it last was: Outpost Siege destroyed
+     with the creatures its Dragons watches sees them leave (CR 603.10a; rules/trigger.mjs passes its last known
+     information). Asked as it triggers, never as it resolves (rules/trigger.mjs, scriptOf). */
+  if (condition.chosen !== undefined && ((source !== null && state.objects[source] ? state.objects[source].chosen : lastKnown?.chosen) ?? null) !== condition.chosen) return false;
   /* "Sacrifice it unless it escaped" (Uro; CR 702.138b): whether its own permanent was cast with escape (rules/stack.mjs). */
   if (condition.escaped !== undefined && ((source !== null && state.objects[source]?.escaped === true) !== condition.escaped)) return false;
   /* "If its evoke cost was paid" (CR 702.74a): whether its own permanent was cast for its evoke cost (rules/stack.mjs). */
@@ -245,7 +269,10 @@ export function conditionHolds(state, condition, {controller, source = null, abo
       /* "If excess damage was dealt this way" (Violent Echoes): what the damage before it left (script/resolution.mjs). */
       ...(excessDamage !== undefined ? {excessDamage} : {}),
       /* "For each creature exiled this way, its controller ..." (Winds of Abandon): who controlled what was remembered. */
-      ...(rememberedControllers !== undefined ? {rememberedControllers} : {})};
+      ...(rememberedControllers !== undefined ? {rememberedControllers} : {}),
+      /* "If another creature died this turn" (Chain Assassination): what the effect before it moved, as each last existed
+         there, counted out of the deaths ({movedCount}). */
+      ...(movedWas !== undefined ? {movedWas} : {})};
     const n = amountOf(state, condition.compare.count, counted), than = (v) => amountOf(state, v, counted);
     if (condition.compare.atLeast !== undefined && n < than(condition.compare.atLeast)) return false;
     if (condition.compare.atMost !== undefined && n > than(condition.compare.atMost)) return false;
@@ -260,6 +287,15 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   if (condition.citysBlessing !== undefined && hasCitysBlessing(state, controller) !== condition.citysBlessing) return false;
   /* Prowl's cost may be paid (CR 702.76a): asked of the card as its cast is offered (rules/actions.mjs, alternativeCosts). */
   if (condition.prowl === true && !prowlable(state, controller, source)) return false;
+  /* Surge (CR 702.117a): its controller has cast another spell this turn -- asked as this one's cast is offered, before it
+     is counted among them (rules/actions.mjs). */
+  if (condition.surge === true && !((state.players[controller]?.castThisTurn ?? []).length > 0)) return false;
+  /* Freerunning (CR 702.173a): combat damage to a player this turn by one of its controller's creatures that was an
+     Assassin -- a changeling is every creature type (CR 702.73a) -- or a commander, as it dealt it (rules/combat.mjs). */
+  if (condition.freerunning === true && !(state.players[controller]?.combatDamageSources ?? []).some((dealt) => dealt.commander === true || dealt.every === true || dealt.types.includes("Assassin"))) return false;
+  /* "If its surge cost was paid", "if this spell's freerunning cost was paid": the spell as it resolves (`cast`), its own
+     permanent, or -- that permanent gone -- the trigger's record of it (rules/trigger.mjs). */
+  if (condition.paidFor !== undefined && (cast?.paidFor ?? (source !== null && source !== undefined ? state.objects[source]?.paidFor : undefined) ?? paidFor) !== condition.paidFor) return false;
   /* "If its prowl cost was paid" (CR 702.76a): whether its own permanent was cast for it (rules/stack.mjs). */
   if (condition.prowled !== undefined && (state.objects[source]?.prowled === true) !== condition.prowled) return false;
   /* Evolve's comparison (CR 702.100a): as it triggers, and again as it resolves (CR 603.4). */
@@ -272,6 +308,20 @@ export function conditionHolds(state, condition, {controller, source = null, abo
      is no opponent (CR 800.4a). */
   if (condition.opponentPoisonAtLeast !== undefined
     && !state.players.some((p) => p.id !== controller && !p.lost && (p.poison ?? 0) >= condition.opponentPoisonAtLeast)) return false;
+  /* "If mana from a Treasure was spent to cast it" (Smaug, Wicked Worm): the sources of the mana spent to cast the spell the
+     trigger is about, as each was as it made the mana (rules/actions.mjs, `spentFrom`) -- or, the spell gone, as it last was
+     on the stack (`about.was`, rules/trigger.mjs; CR 608.2h). One the selector describes is enough. */
+  if (condition.spentFrom !== undefined) {
+    const spell = about?.card !== undefined && about.card !== null ? state.objects[about.card] : undefined;
+    if (!(spell?.spentFrom ?? about?.was?.spentFrom ?? []).some((was) => matchesLastKnown(condition.spentFrom, was, {controller, source}))) return false;
+  }
+  /* "If that opponent has more life than another of your opponents" (Breena, the Demagogue): the player the trigger is about,
+     against each opponent of the controller still in the game (CR 800.4a) -- one with less is enough (that player is never
+     less than itself), and none is no such opponent. */
+  if (condition.lifeAboveAnotherOpponent === "that player") {
+    const them = state.players[about?.player];
+    if (!them || !state.players.some((p) => p.id !== controller && !p.lost && p.life < them.life)) return false;
+  }
   /* "If you have 40 or more life" (Felidar Sovereign). */
   if (condition.lifeAtLeast !== undefined && state.players[controller].life < condition.lifeAtLeast) return false;
   /* "If it's not your turn, you may exile a blue card from your hand rather than pay this spell's mana cost". */
@@ -303,11 +353,18 @@ export function conditionProblems(condition) {
   if ("yourTurn" in condition && condition.yourTurn !== true) problems.push("yourTurn is true");
   if ("enduringStory" in condition && typeof condition.enduringStory !== "boolean") problems.push("enduringStory is true or false");
   if ("citysBlessing" in condition && typeof condition.citysBlessing !== "boolean") problems.push("citysBlessing is true or false");
+  if ("lifeAboveAnotherOpponent" in condition && condition.lifeAboveAnotherOpponent !== "that player") problems.push("lifeAboveAnotherOpponent is \"that player\": the player the trigger is about");
+  if ("spentFrom" in condition) {
+    try { matchesLastKnown(condition.spentFrom ?? {}, {}, {}); } catch (error) { problems.push(`What spentFrom asks of the mana's source: ${error.message}`); }
+  }
   if ("notYourTurn" in condition && condition.notYourTurn !== true) problems.push("notYourTurn is true");
   if ("loyaltyThisTurn" in condition && condition.loyaltyThisTurn !== true) problems.push("loyaltyThisTurn is true");
   if ("evolves" in condition && condition.evolves !== true) problems.push("evolves is true");
   if ("prowl" in condition && condition.prowl !== true) problems.push("prowl is true");
   if ("prowled" in condition && typeof condition.prowled !== "boolean") problems.push("prowled is true or false");
+  if ("surge" in condition && condition.surge !== true) problems.push("surge is true");
+  if ("freerunning" in condition && condition.freerunning !== true) problems.push("freerunning is true");
+  if ("paidFor" in condition && !PAID_FOR.includes(condition.paidFor)) problems.push(`paidFor is the alternative cost a spell was cast for: ${PAID_FOR.join(", ")}`);
   if ("opponentPoisonAtLeast" in condition && !(Number.isInteger(condition.opponentPoisonAtLeast) && condition.opponentPoisonAtLeast >= 1))
     problems.push("opponentPoisonAtLeast is a whole number of poison counters, 1 or more");
   if ("graveyardTypes" in condition && !(Number.isInteger(condition.graveyardTypes) && condition.graveyardTypes >= 1)) problems.push("graveyardTypes is a whole number of card types, 1 or more");
