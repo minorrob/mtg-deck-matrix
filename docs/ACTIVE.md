@@ -924,6 +924,12 @@ sees (board and hand, or board only), and the person's spending over the last 24
   the question being asked out.
 - **Proof:** `advisor` 56 checks, `coach` 60, `settings-r3` 56, `table-board` 250, `advisor-page` 9; 26 breaks caught.
 
+**#698 merged on main d32d42ca on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 3a123909 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 05:09:41 UTC as
+version 848671e7, its `play-worker.js` byte-identical to the release's dry-run bundle (2,824,874 bytes, sha256
+dbfa9625…). Its AI bindings are the Coach's alone, as before: the AI Coach settings are on staging, and the advisor
+they steer is still shut.
+
 **M3: monitoring, built (2026-10-11).** The Worker writes one line for each answer the operator should hear about,
 through `serve()` around `handle()` (`cloud/worker.mjs`, `opsLine`): every 5xx with its status (a 503 is a feature
 switched off, and the alerts leave it out), and a save refused as a sync conflict. A line names the route's resource,
