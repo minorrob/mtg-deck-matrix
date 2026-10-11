@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sureshot Sower",
+    "oracleId": "5bbc9d7d-91bd-4a58-8d19-f7be650720b7",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Archer"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "Reach\n{3}{G}, Discard this card: Destroy target creature with flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Reach",
+      "keyword": "reach"
+    },
+    {
+      "kind": "activated",
+      "text": "{3}{G}, Discard this card: Destroy target creature with flying.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{G}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "zone": "hand",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "keywords": [
+            "Flying"
+          ]
+        }
+      ]
+    }
+  ]
+}

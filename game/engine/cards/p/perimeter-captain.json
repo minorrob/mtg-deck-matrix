@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Perimeter Captain",
+    "oracleId": "05608055-d97a-4c8f-833d-47b3dd1ea255",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 0,
+    "toughness": 4
+  },
+  "oracleText": "Defender\nWhenever a creature you control with defender blocks, you may gain 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender",
+      "keyword": "defender"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature you control with defender blocks, you may gain 2 life.",
+      "trigger": {
+        "on": "blocks",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "keywords": [
+            "Defender"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 2
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

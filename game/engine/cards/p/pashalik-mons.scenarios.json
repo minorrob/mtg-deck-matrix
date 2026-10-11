@@ -1,0 +1,249 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Pashalik Mons",
+  "fixtures": {
+    "Goblin Grunt": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{3}{R}, sacrifice a Goblin: two 1/1 red Goblins -- and that Goblin dying has Pashalik deal 1 damage to Maya",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Pashalik Mons",
+            "Goblin Grunt",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Pashalik Mons",
+          "sacrifice": "Goblin Grunt"
+        },
+        {
+          "choose": [
+            "Maya"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Pashalik Mons",
+            "Goblin",
+            "Goblin",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Goblin",
+            "power": 1,
+            "toughness": 1
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Goblin Grunt"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pashalik Mons itself dies: it deals 1 damage to Maya",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Pashalik Mons",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Lightning Bolt",
+          "targets": [
+            {
+              "card": "Pashalik Mons"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Maya"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Pashalik Mons",
+            "Lightning Bolt"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A Bear of Rob's dying, and a Goblin of Maya's, trigger nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Pashalik Mons",
+            "Bear",
+            "Mountain",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt",
+            "Lightning Bolt"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin Grunt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Lightning Bolt",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Lightning Bolt",
+          "targets": [
+            {
+              "card": "Goblin Grunt"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Goblin Grunt"
+          ]
+        }
+      ]
+    }
+  ]
+}

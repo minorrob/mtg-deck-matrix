@@ -1,0 +1,339 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mind Meanderer",
+  "fixtures": {
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Jace": {
+      "types": [
+        "Planeswalker"
+      ],
+      "subtypes": [
+        "Jace"
+      ],
+      "manaCost": "{2}{U}{U}",
+      "colors": [
+        "U"
+      ],
+      "loyalty": 3
+    },
+    "Chandra": {
+      "types": [
+        "Planeswalker"
+      ],
+      "subtypes": [
+        "Chandra"
+      ],
+      "manaCost": "{2}{R}{R}",
+      "colors": [
+        "R"
+      ],
+      "loyalty": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters and fights Maya's Ogre: the Ogre dies, the Meanderer survives 3 damage",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mind Meanderer"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Mind Meanderer"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Ogre (Maya's)"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Ogre (Maya's)"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Forest",
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bear",
+            "Mind Meanderer"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Up to one: it may fight nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mind Meanderer"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Mind Meanderer"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": []
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Forest",
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Mind Meanderer"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Vigilance while Rob controls a Jace; not beside a Chandra, nor a Jace of Maya's",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mind Meanderer",
+            "Chandra"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Jace"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Mind Meanderer",
+                "has": [
+                  "Flying"
+                ],
+                "lacks": [
+                  "Vigilance"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Mind Meanderer"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Mind Meanderer"
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "With a Jace of his own, it attacks without tapping",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mind Meanderer",
+            "Jace"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Mind Meanderer",
+                "has": [
+                  "Flying",
+                  "Vigilance"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Mind Meanderer"
+          ],
+          "at": "Maya"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Mind Meanderer",
+          "is": false
+        }
+      ]
+    }
+  ]
+}
