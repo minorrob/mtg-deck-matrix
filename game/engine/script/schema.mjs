@@ -351,6 +351,13 @@ function checkAbility(ability, path, errors) {
        the planeswalkers they control too. Attacking one of those is not attacking them (rules/statics.mjs). */
     if (ability.planeswalkers !== undefined && (ability.planeswalkers !== true || !(ability.rule === "attack-tax" || (ability.rule === "cant-attack" && ability.defender === "you"))))
       errors.push({path: `${path}.planeswalkers`, message: "\"Or planeswalkers you control\" is planeswalkers: true, on a tax on attacking you or a restriction on attacking you"});
+    /* "During combat, players can't cast spells or activate abilities that aren't mana abilities" (Yuriko, Blade of the
+       Mighty; CR 506.1): `duringCombat` true, on a cast or an activation forbidden -- and an activation forbidden only then,
+       its one built form (rules/statics.mjs, activationForbidden). */
+    if (ability.duringCombat !== undefined && (ability.duringCombat !== true || !["cant-cast", "cant-activate"].includes(ability.rule)))
+      errors.push({path: `${path}.duringCombat`, message: "\"During combat\" is duringCombat: true, on a cant-cast or cant-activate static"});
+    if (ability.rule === "cant-activate" && ability.duringCombat !== true)
+      errors.push({path, message: "An activation forbidden is forbidden during combat (duringCombat: true), its one form built"});
     if (ability.rule === "cant-be-blocked-by") {
       if (!ability.by && ability.byPowerBelowSource !== true) errors.push({path, message: "\"Can't be blocked by\" says by what: `by`, or `byPowerBelowSource`"});
       if (ability.by) checkSelector(ability.by, `${path}.by`, errors, {choice: true});

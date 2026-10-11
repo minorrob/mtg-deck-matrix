@@ -189,6 +189,9 @@ function subjects(state, event, condition, sourceId, controller) {
     return [{player: attacker, ...(those ? {cards: those} : {})}];
   }
   if (condition.on === "GameEventAttackersDeclared") {
+    /* "Whenever a creature you control attacks alone" (Thoughtweft Imbuer; CR 506.5): it is the only creature declared as an
+       attacker -- the event names every one declared, and one put onto the battlefield attacking never was (CR 508.4). */
+    if (condition.alone && (fields.attackers ?? []).length !== 1) return [];
     const matched = (fields.attackers ?? []).filter((a) => fits(state, a.card?.cardId, condition, sourceId, controller))
       /* "Attacks for the first time each turn": its first attack this turn is this one (rules/combat.mjs counts them). */
       .filter((a) => !condition.firstTime || usesThisTurn(state, a.card?.cardId, "attacked") === 1)
@@ -197,7 +200,9 @@ function subjects(state, event, condition, sourceId, controller) {
       .filter((a) => condition.defender !== "opponent" || (a.defender?.playerId !== undefined && a.defender.playerId !== controller
         && (!a.defender.planeswalker || condition.planeswalkers === true)))
       /* "Whenever a creature attacks you or a planeswalker you control" (Jace, Reality Sculptor): `defender` "you". */
-      .filter((a) => condition.defender !== "you" || (a.defender?.playerId === controller && (!a.defender.planeswalker || condition.planeswalkers === true)));
+      .filter((a) => condition.defender !== "you" || (a.defender?.playerId === controller && (!a.defender.planeswalker || condition.planeswalkers === true)))
+      /* "Attacks a player alone" (Jiang Yanggu, Alone; Yuriko): a player, not a planeswalker of theirs (CR 506.3). */
+      .filter((a) => condition.defender !== "player" || (a.defender?.playerId !== undefined && !a.defender.planeswalker));
     /* "Whenever a player attacks with three or more creatures" (Aurelia): the attack as a whole, counted -- one event
        declares every attacker (CR 508.1). */
     if (condition.atLeast && matched.length < condition.atLeast) return [];

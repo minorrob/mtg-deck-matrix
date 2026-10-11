@@ -36,6 +36,8 @@
  *   {lesserOf: [amount, amount]}         the least of them: "greater than this creature's power or toughness" (increment)
  *   {tappedThisWay: true}                how many creatures this spell's additional cost tapped as it was cast -- "three times
  *                                        the number of creatures tapped this way" (Burn at the Stake; rules/actions.mjs)
+ *   {cardsDiscardedThisTurn: "you"}      how many cards that player ("you", "that player") has discarded this turn -- "for each
+ *                                        card you've discarded this turn" (Jiang Yanggu, Alone; state/index.mjs keeps it)
  *
  * and any of them may say `atMost` ("{1} less IF you control a creature with flying": the count, at most 1), `times` and
  * `plus`: "twice X", "1 plus the number of ...", and `times: -1` for "-X/-X" and
@@ -61,7 +63,7 @@ import {valueCostOf, commanderKeyOf} from "../state/index.mjs";
 export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "toughnessOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
   "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn", "playersDealtCombatDamage", "cardTypesAmong", "manaSpent",
   "permanentsEnteredThisTurn", "excessDamage", "lesserOf", "kicked", "differentPowers", "commanderCasts", "cardsLeftGraveyardThisTurn",
-  "countersRemovedThisWay", "movedCount", "tappedThisWay"]);
+  "countersRemovedThisWay", "movedCount", "tappedThisWay", "cardsDiscardedThisTurn"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "filter", "controlledBy"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -77,7 +79,7 @@ export function amountProblems(value) {
   const problems = [];
   for (const key of Object.keys(value)) if (!AMOUNT_KINDS.includes(key) && !AMOUNT_EXTRAS.includes(key)) problems.push(`An amount has no key ${JSON.stringify(key)}`);
   if ("countersOn" in value && typeof value.counter !== "string") problems.push("Counting counters says which kind: {countersOn, counter}");
-  for (const key of ["lifeGainedThisTurn", "tokensCreatedThisTurn", "permanentsLeftThisTurn", "permanentsEnteredThisTurn", "cardsLeftGraveyardThisTurn"]) if (key in value && !["you", "that player"].includes(value[key])) problems.push(`${key} is "you" or "that player"`);
+  for (const key of ["lifeGainedThisTurn", "tokensCreatedThisTurn", "permanentsLeftThisTurn", "permanentsEnteredThisTurn", "cardsLeftGraveyardThisTurn", "cardsDiscardedThisTurn"]) if (key in value && !["you", "that player"].includes(value[key])) problems.push(`${key} is "you" or "that player"`);
   /* What entered, as it was (rules/trigger.mjs keeps it): a filter of what a last known snapshot answers, and only there. */
   if ("filter" in value) {
     if (!("permanentsEnteredThisTurn" in value)) problems.push("Only permanentsEnteredThisTurn takes a filter");
@@ -272,6 +274,13 @@ export function amountOf(state, value, context = {}) {
   else if ("cardsLeftGraveyardThisTurn" in value) {
     const player = playerOf(value.cardsLeftGraveyardThisTurn, context);
     n = player !== null ? state.players[player]?.leftGraveyardThisTurn ?? 0 : 0;
+  }
+  /* "For each card you've discarded this turn" (Jiang Yanggu, Alone; CR 701.9a): how many cards that player has discarded,
+     the one discarded earlier in this resolution among them (state/index.mjs counts each as it is discarded, rules/turn.mjs
+     clears it as a turn begins). */
+  else if ("cardsDiscardedThisTurn" in value) {
+    const player = playerOf(value.cardsDiscardedThisTurn, context);
+    n = player !== null ? state.players[player]?.discardedThisTurn ?? 0 : 0;
   }
   /* "The number of creatures that entered the battlefield under your control this turn" (Kinbinding), and "another
      creature" (Wary Farmer, `another`: not this one): what entered under that player's control, as it entered (rules/

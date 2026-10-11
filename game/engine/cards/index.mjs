@@ -71,7 +71,9 @@ const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "trig
   "more-counters",
   /* "Can't ... block unless you control seven or more lands" (Topiary Stomper, CR 509.1b): read as each blocker is checked
      (rules/combat.mjs canBlock, through rules/statics.mjs ruleChanged, which asks every rule's condition). */
-  "cant-block"];
+  "cant-block",
+  /* An activation forbidden (CR 602.5; rules/statics.mjs, activationForbidden), as a cast forbidden is. */
+  "cant-activate"];
 
 /* What a flashback cost may be made of (CR 702.34a): mana, life ("Flashback--{1}{U}, Pay 3 life"), and creatures to tap
    ("Flashback--Tap three untapped white creatures you control", Battle Screech: `tapCreature`, its `count` and `selector`). */
@@ -234,12 +236,16 @@ const TRIGGERS = {
        ability's controller attacked (`each: "defender"`, `defender: "opponent"`), about that player and the attacking one. */
     ...(t.each === "defender" && t.defender === "opponent" ? {defender: "opponent"} : {})}),
   /* "Whenever this creature attacks", "whenever a creature you control attacks": once per attacker (CR 508.1m). */
-  attacks: (t) => (ARRIVALS.includes(t.who ?? "self") ? {on: "GameEventAttackersDeclared", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {}),
+  attacks: (t) => (ARRIVALS.includes(t.who ?? "self") && [undefined, "opponent", "you", "player"].includes(t.defender) && [undefined, true].includes(t.alone)
+    ? {on: "GameEventAttackersDeclared", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {}),
     /* "Attack one of your opponents" -- "or a planeswalker they control" (`planeswalkers`, CR 506.3); "attacks with three or
-       more creatures" (rules/trigger.mjs). */
+       more creatures" (rules/trigger.mjs). "Attacks a player" (`defender: "player"`, Jiang Yanggu, Alone): a player, never a
+       planeswalker (CR 506.3). */
     ...(t.defender ? {defender: t.defender} : {}), ...(t.planeswalkers === true ? {planeswalkers: true} : {}), ...(t.atLeast ? {atLeast: t.atLeast} : {}),
     /* "Whenever Aurelia attacks for the first time each turn" (rules/trigger.mjs). */
-    ...(t.firstTime ? {firstTime: true} : {})} : null),
+    ...(t.firstTime ? {firstTime: true} : {}),
+    /* "Whenever a creature you control attacks alone" (Thoughtweft Imbuer; CR 506.5): the only creature declared. */
+    ...(t.alone === true ? {alone: true} : {})} : null),
   /* "Whenever this Vehicle attacks or blocks" (Smuggler's Copter; CR 509.3a): "whenever [a creature] blocks" -- once each
      combat for each creature declared as a blocker, however many it blocks; "whenever [a creature] blocks a creature"
      (`each: "attacker"`, 509.3b) once for each attacking creature it blocks. `who` and `filter` the blocker, read as blockers

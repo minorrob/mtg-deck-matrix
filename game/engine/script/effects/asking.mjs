@@ -26,7 +26,7 @@
  * unwind across the pause and rebuild itself.
  */
 
-import {cardsIn, moveObject, addObject, valueCostOf, rememberExileLooker, usesThisTurn, recordUse} from "../../state/index.mjs";
+import {cardsIn, moveObject, addObject, valueCostOf, rememberExileLooker, usesThisTurn, recordUse, recordDiscard} from "../../state/index.mjs";
 import {compileSelector} from "../filter.mjs";
 import {event, cardRef, moveOne, playersFor, sacrificeOne, destructionQuestion, destructionChoice} from "./zones.mjs";
 import {proliferate as giveEachAnother, addCounters, putCounter, moveCounters} from "./resources.mjs";
@@ -384,6 +384,7 @@ function discardOne(state, id, player, events) {
   const card = cardRef(state, id);
   const owner = state.objects[id].owner;
   const discarded = moveObject(state, id, "graveyard", owner);
+  recordDiscard(state, player);
   events.push(event("GameEventCardChangeZone", state, {
     card,
     becomes: discarded,
