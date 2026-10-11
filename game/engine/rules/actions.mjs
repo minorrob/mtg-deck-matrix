@@ -52,12 +52,12 @@
  * `sacrifice` of the source itself; a card with any other is refused at prepare (cards/index.mjs).
  */
 
-import {cardsIn, moveObject, usesThisTurn, recordUse, showFace, showAdventure, turnFaceUp, eventCard, commanderKeyOf, recordDiscard} from "../state/index.mjs";
+import {cardsIn, moveObject, usesThisTurn, recordUse, showFace, showAdventure, shownFaceDown, turnFaceUp, eventCard, commanderKeyOf, recordDiscard} from "../state/index.mjs";
 import {pushSpell, pushAbility, becameTarget} from "./stack.mjs";
 import {addMana, spend, parseManaCost, automaticPayment, canPay, chosenPayment, paymentOptions, paymentKey, paymentWords, PAY_CHOICES, manaValue, poolSize, tapPlans, convokeCanPay, convokePayments} from "./mana.mjs";
 import {commanderTax, recordCommanderCast, commanderIdentity} from "./commander.mjs";
 import {COLORS, MANA_KEYS} from "./mana.mjs";
-import {sickForAbilities, hasFlash} from "../keywords/timing.mjs";
+import {sickForAbilities, hasFlash, splitSecondOnStack} from "../keywords/timing.mjs";
 import {targetChoices, targetName, isHostile, modalScript, isChoosing, countOf, targetCandidates, countedChoice, inWords, differentControllersProblem} from "../script/bind.mjs";
 import {moveOne, sacrificeOne, mill} from "../script/effects/zones.mjs";
 import {compileSelector, matchesSelector, selectMatching} from "../script/filter.mjs";
@@ -190,7 +190,8 @@ function convokeCost(state, player, action) {
   return {...cost, generic: cost.generic + x};
 }
 /* A cast's own question, or what it costs, weighed as the card is cast: as its Adventure, when it is cast as one (CR 715.3a). */
-const asCast = (state, action, fn) => (action?.adventure === true ? withAdventure(state, action.objectId, fn) : fn());
+/* And face down, when it is cast with disguise (CR 702.168b). */
+const asCast = (state, action, fn) => (action?.adventure === true ? withAdventure(state, action.objectId, fn) : action?.disguise === true ? withFaceDown(state, action.objectId, fn) : fn());
 /* The ways the pool pays the rest once the creatures a convoke picked have paid their part (rules/mana.mjs,
    convokePayments): each untapped and the caster's, none twice -- refused otherwise, before anything is tapped, saying what
    to do instead. `cost` is the total cost, as the payment reckons it; the question reckons it as convokeCost does. */
@@ -267,7 +268,8 @@ function castTerms(state, player, action) {
   /* Flashback (CR 702.34a): its cost rather than the mana cost, life and all. */
   const back = action.flashback ? flashbackCost(state, player, action.objectId) : null;
   /* Its alternative cost (CR 118.9), asked again now. */
-  const way = action.alternative !== undefined ? alternativeCosts(state, player, action.objectId).find((w) => w.index === action.alternative) ?? null : null;
+  const way = action.disguise === true ? DISGUISE_WAY
+    : action.alternative !== undefined ? alternativeCosts(state, player, action.objectId).find((w) => w.index === action.alternative) ?? null : null;
   /* Escape (CR 702.138a): its cost's mana rather than the mana cost, and the other cards its caster picked. */
   const fled = action.escape !== undefined ? escapeWays(state, player, action.objectId).find((w) => w.kind === action.escape) ?? null : null;
   /* Cast from a graveyard or a library by a permanent's permission (play-from): the one the caster chose, or the one there
@@ -484,7 +486,9 @@ export function alternativeCosts(state, player, id) {
       ...(ability.overload ? {overload: ability.overload} : {}),
       ...(ability.zone === "graveyard" ? {fromGraveyard: true, exileOthers: others} : {}),
       /* Prowl (CR 702.76a): the permanent it becomes was cast for it (rules/stack.mjs). */
-      ...(ability.prowl === true ? {prowl: true} : {})}];
+      ...(ability.prowl === true ? {prowl: true} : {}),
+      /* Surge (CR 702.117a), freerunning (CR 702.173a): the keyword whose cost this is, for "if its surge cost was paid". */
+      ...(typeof ability.paidFor === "string" ? {paidFor: ability.paidFor} : {})}];
   });
 }
 
@@ -521,6 +525,11 @@ function additionalVariants(costs) {
     }
     if (atom?.atom === "multikicker") {
       variants = variants.flatMap((v) => Array.from({length: MULTIKICK_MOST + 1}, (_, k) => ({...v, mana: v.mana + (atom.cost ?? "").repeat(k), kicked: k})));
+      continue;
+    }
+    /* TIERED (CR 702.183a): one mode, and its cost -- each mode its own variant, that mode alone (withModes), its cost added. */
+    if (atom?.atom === "tiered") {
+      variants = variants.flatMap((v) => (atom.costs ?? []).map((cost, tier) => ({...v, mana: v.mana + cost, tier})));
       continue;
     }
     const options = atom?.atom === "oneOf" ? atom.options ?? [] : [[atom]];
@@ -580,8 +589,8 @@ function additionalChoices(state, player, spellId, costs) {
    when its condition holds now ("if you control a commander as you cast this spell, you may choose both instead") --
    and per way to choose the chosen modes' targets (601.2c), in the order of the modes. A mode is chosen once (700.2d). */
 /* `exactly`: so many modes and no other number (escalate's variant, additionalVariants; the compiler holds it to what the spell
-   allows, cards/index.mjs). */
-function withModes(state, base, modal, context, exactly = null) {
+   allows, cards/index.mjs). `only`: that one mode and no other (tiered's variant, CR 702.183a: its cost is that mode's). */
+function withModes(state, base, modal, context, exactly = null, only = null) {
   const least = exactly ?? Math.max(1, modal.choose ?? 1);
   const most = exactly ?? Math.min(modal.modes.length, modal.more && conditionHolds(state, modal.more.condition, context) ? modal.more.choose : modal.upTo ?? least);
   const picks = [];
@@ -590,7 +599,8 @@ function withModes(state, base, modal, context, exactly = null) {
     if (chosen.length === most) return;
     for (let i = from; i < modal.modes.length; i += 1) pick(i + 1, [...chosen, i]);
   };
-  pick(0, []);
+  if (Number.isInteger(only)) picks.push([only]);
+  else pick(0, []);
   return picks.flatMap((modes) => {
     const {targets: specs, effects} = modalScript(modal, modes);
     const hostile = isHostile(effects);
@@ -1220,6 +1230,20 @@ function withAdventure(state, id, fn) {
   finally { if (state.objects[id]?.face === "adventure") showAdventure(state, id, false); }
 }
 
+/* DISGUISE (CR 702.168a-b): "You may cast this card as a 2/2 face-down creature with ward {2}, no name, no subtypes, and no
+   mana cost by paying {3} rather than paying its mana cost" -- an alternative cost (CR 118.9), from any zone it could be cast
+   from. The card is weighed as that face-down spell for the length of `fn` (state/index.mjs, shownFaceDown): its cost, its
+   timing, and every rule that reads a spell, the face-down spell's (702.168b), with its derivations made afresh -- and as
+   itself again after, unless `fn` cast it: it is then a new object, a face-down spell on the stack (rules/stack.mjs). */
+const disguiseOf = (card) => (card?.abilities ?? []).find((a) => a.kind === "static" && a.rule === "disguise") ?? null;
+const DISGUISE_WAY = Object.freeze({mana: "{3}", life: 0, extra: [], evoke: false, disguise: true});
+function withFaceDown(state, id, fn) {
+  const card = state.objects[id];
+  state.objects[id] = shownFaceDown(card);
+  try { return derivingAfresh(state, fn); }
+  finally { if (state.objects[id]?.disguised === true && state.objects[id].zone !== "stack") state.objects[id] = card; }
+}
+
 /* WHERE AN ADVENTURE MAY BE CAST FROM (CR 715.3, 715.3d): its owner's hand, the command zone (a commander, CR 903.8), or
    another zone by a permission other than the Adventure's own exile -- "you may cast the creature later from exile" casts
    it as itself only (`notAdventure`, rules/stack.mjs). A permanent's permission ("you may cast creature spells from the top
@@ -1234,7 +1258,9 @@ function adventureFrom(state, player, id, from) {
    the card shown as one by the caller (withAdventure), so every rule weighs only the Adventure's characteristics (715.3a). */
 /* `graveyardCost`: cast from the graveyard for an alternative cost that says so (Squee, Dubious Monarch) -- that cost only,
    never its mana cost, which nothing lets it be cast for from there. */
-function castOffers(state, player, {id, from, flashback, escape, via = null, adventure = false, graveyardCost = false}, tappable) {
+/* `disguise`: cast face down for {3} (CR 702.168a), the card shown face down by the caller (withFaceDown) -- that cost
+   alone, never with another alternative cost (CR 118.9a): a free cast, or the Citadel's life. */
+function castOffers(state, player, {id, from, flashback, escape, via = null, adventure = false, graveyardCost = false, disguise = false}, tappable) {
   const actions = [];
   const object = state.objects[id];
   /* A free alternative cost can make a costless spell castable, never a land (CR 305.9). */
@@ -1244,7 +1270,8 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
      alternative cost (CR 118.6a), and this is one: its mana value, 0, in life. */
   const permit = !flashback && !escape && ["graveyard", "library", "exile"].includes(from) ? playPermission(state, player, id, "spell", via) : null;
   const lifeCost = lifeInstead(object, permit);
-  if (!object.manaCost && lifeCost === null && !(permit?.ability.free || freeCast(state, player, id))) return actions;
+  if (disguise && (lifeCost !== null || permit?.ability.free)) return actions;
+  if (!object.manaCost && lifeCost === null && !disguise && !(permit?.ability.free || freeCast(state, player, id))) return actions;
   if (lifeCost !== null && lifeCost > state.players[player].life) return actions;
   /* "Can't cast" (castForbidden): from a graveyard, during its controller's turn, more than one each turn. */
   if (castForbidden(state, player, id)) return actions;
@@ -1257,7 +1284,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
      each turn", so the player decides which spell spends it. */
   /* Its own alternative costs (CR 118.9), each an offer of its own -- never with flashback, escape, a free cast or the
      Citadel's life, each an alternative cost too (118.9a). */
-  const alternatives = flashback || escape || lifeCost !== null || permit?.ability.free ? [] : alternativeCosts(state, player, id);
+  const alternatives = disguise ? [DISGUISE_WAY] : flashback || escape || lifeCost !== null || permit?.ability.free ? [] : alternativeCosts(state, player, id);
   /* The flashback cost instead of the mana cost, and its life: a player can pay life only if their total is at least
      that much (CR 119.4). */
   const back = flashback ? flashbackCost(state, player, id) : null;
@@ -1267,7 +1294,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
   /* How it would be cast, for a target it has only if ("if you cast this spell during your main phase", script/bind.mjs). */
   const cast = {from, mainPhase: player === state.activePlayer && MAIN_PHASES.includes(state.phase)};
   /* Cast from the graveyard by its own alternative cost, that cost alone; otherwise the mana cost and every other one. */
-  for (const way of graveyardCost ? alternatives.filter((w) => w.fromGraveyard) : [null, ...alternatives.filter((w) => !w.fromGraveyard)]) {
+  for (const way of graveyardCost ? alternatives.filter((w) => w.fromGraveyard) : disguise ? alternatives : [null, ...alternatives.filter((w) => !w.fromGraveyard)]) {
   if (way && way.life > state.players[player].life) continue;
   /* The flashback cost's discard (Twinned Vision) is chosen with the cast, as an alternative cost's card exiled from the hand is. */
   for (const variant of additionalVariants([...(object.spell?.additionalCost ?? []), ...(way?.extra ?? []), ...(back?.extra ?? [])])) {
@@ -1317,7 +1344,8 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
        offer (`riders`, rules/restricted-mana.mjs). */
     for (const riders of (convoke || autoTap || payWays ? null : riderChoices(state, player, {spell: id}, payment?.mana ?? {})) ?? [undefined])
     for (const costChoice of paysFor) {
-      const base = {kind: "cast", objectId: id, label: object.card, payment: convoke || payWays ? null : payment, from, tax, ...(X !== null ? {x: X} : {}), ...(autoTap && !convoke ? {autoTap: true} : {}),
+      /* Face down, it has no name (CR 708.2a): the offer, its caster's alone, names the card they cast so. */
+      const base = {kind: "cast", objectId: id, label: way?.disguise ? object.faceDownCard.card : object.card, payment: convoke || payWays ? null : payment, from, tax, ...(X !== null ? {x: X} : {}), ...(autoTap && !convoke ? {autoTap: true} : {}),
         ...(payWays && !convoke ? {payWays: true} : {}),
         ...(convoke ? {convoke: true} : {}), ...(variant.mana ? {extraMana: variant.mana} : {}), ...(variant.kicked ? {kicked: variant.kicked} : {}),
         ...(tapsAny ? {tapAny: true} : {}), ...(beholds ? {behold: beholds.count ?? 1} : {}),
@@ -1325,11 +1353,11 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
         ...(variant.escalate ? {escalate: variant.escalate} : {}), ...(variant.escalateTap ? {escalateTap: variant.escalateTap.count} : {}),
         /* A set of cards ("discard two cards") names each one. */
         ...(costChoice ? {costChoice, costNames: Object.values(costChoice).flatMap((c) => [].concat(c).map((one) => state.objects[one].card))} : {}),
-        ...(freely ? {free: true} : {}), ...(back ? {flashback: true} : {}), ...(fled ? {escape: fled.kind} : {}), ...(way ? {alternative: way.index} : {}),
+        ...(freely ? {free: true} : {}), ...(back ? {flashback: true} : {}), ...(fled ? {escape: fled.kind} : {}), ...(way?.disguise ? {disguise: true} : way ? {alternative: way.index} : {}),
         ...viaOf(state, via), ...(lifeCost !== null ? {lifeInstead: lifeCost} : {}), ...ridersOffer(state, riders),
         /* Cast as its Adventure (CR 715.3): another action than the card cast as itself. */
         ...(adventure ? {adventure: true} : {})};
-      actions.push(...(object.spell?.modal && !way?.overload ? withModes(state, base, object.spell.modal, {controller: player, source: id}, variant.escalate !== undefined ? variant.escalate + 1 : null)
+      actions.push(...(object.spell?.modal && !way?.overload ? withModes(state, base, object.spell.modal, {controller: player, source: id}, variant.escalate !== undefined ? variant.escalate + 1 : null, variant.tier ?? null)
         : withTargets(state, base, way?.overload ?? object.spell, {controller: player, source: id, cast}, aim)));
     }
   }
@@ -1344,17 +1372,46 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
    107.3, nothing chooses it), from the pool as an activated ability's is. Its label names the card, for the one player it
    is offered to, who may look at it (CR 708.5). An instant or sorcery card, or a card with no mana cost, can't be turned
    face up this way (701.40b, 701.40g). */
-function faceUpCost(state, player, id) {
+/* AND FOR ITS DISGUISE COST (CR 702.168d): a face-down permanent whose card has disguise, any time its controller has
+   priority -- `disguise`, that cost paid. One cast face down with disguise is turned face up that way alone; a manifested one
+   either way (CR 701.40b). */
+function faceUpCost(state, player, id, disguise = false) {
   const real = state.objects[id].faceDownCard;
-  if (!(real.types ?? []).includes("Creature") || !real.manaCost) return null;
-  return automaticPayment({...state.players[player].manaPool}, parseManaCost(real.manaCost), {life: state.players[player].life, x: 0});
+  const cost = disguise ? disguiseOf(real)?.cost.find((a) => a.atom === "mana")?.cost ?? null
+    : state.objects[id].disguised !== true && (real.types ?? []).includes("Creature") ? real.manaCost : null;
+  if (!cost) return null;
+  return automaticPayment({...state.players[player].manaPool}, parseManaCost(cost), {life: state.players[player].life, x: 0});
 }
 function faceUpOffers(state, player) {
   const offers = [];
   for (const id of state.zones.battlefield) {
     if (state.objects[id].faceDown !== true || characteristicsOf(state, id).controller !== player) continue;
-    const payment = faceUpCost(state, player, id);
-    if (payment) offers.push({kind: "turn-face-up", objectId: id, label: state.objects[id].faceDownCard.card, text: "Turn face up", payment});
+    for (const disguise of [false, true]) {
+      const payment = faceUpCost(state, player, id, disguise);
+      if (payment) offers.push({kind: "turn-face-up", objectId: id, label: state.objects[id].faceDownCard.card, text: "Turn face up", payment, ...(disguise ? {disguise: true} : {})});
+    }
+  }
+  return offers;
+}
+
+/* SUSPEND N--[COST] FROM THE HAND (CR 702.62a): "If you could begin to cast this card by putting it onto the stack from your
+   hand, you may pay [cost] and exile it with N time counters on it. This action doesn't use the stack" -- a special action
+   (CR 116.2f), offered when the card could be cast from its owner's hand now: at its own timing (a sorcery's, unless it has
+   flash or is given it) and with nothing forbidding the cast (702.62c), whether or not its mana cost could be paid. Its cost
+   is paid from the pool -- not mana only for spells, since no spell is cast -- each way the pool pays it its own offer
+   (`payWith`), which mana being the player's to say (X8b). Exiled, the card is suspended (702.62b): rules/trigger.mjs then
+   removes a time counter at each of its owner's upkeeps and offers the free cast as the last goes. */
+const suspendOf = (object) => (object?.abilities ?? []).find((a) => a.kind === "static" && a.rule === "suspend") ?? null;
+const suspendCost = (suspend) => parseManaCost((suspend.cost ?? []).find((a) => a.atom === "mana")?.cost ?? "");
+function suspendOffers(state, player) {
+  const offers = [];
+  const sorceryTime = player === state.activePlayer && MAIN_PHASES.includes(state.phase) && state.stack.length === 0;
+  for (const id of cardsIn(state, "hand", player)) {
+    const object = state.objects[id], suspend = suspendOf(object);
+    if (!suspend || castForbidden(state, player, id)) continue;
+    if (sorcerySpeed(object) && !hasFlash(state, id) && !flashGranted(state, player, id) && !sorceryTime) continue;
+    const ways = paymentOptions(state.players[player].manaPool, suspendCost(suspend), {life: state.players[player].life}, PAY_CHOICES);
+    for (const way of ways) offers.push({kind: "suspend", objectId: id, label: object.card, text: suspend.text, payment: way, ...(ways.length > 1 ? {payWith: paymentKey(way)} : {})});
   }
   return offers;
 }
@@ -1387,6 +1444,9 @@ function offers(state, player) {
   const mana = manaOffers(state, player);
   actions.push(...mana);
   actions.push(...faceUpOffers(state, player));
+  /* SPLIT SECOND (CR 702.61a-b): a spell with it on the stack, and nothing else is cast or activated -- passing, the mana
+     abilities and the special actions above are all there is. */
+  if (splitSecondOnStack(state)) return actions;
   /* What a cast could tap, read once and only if a cast asks (castTapPlans). */
   let units = null;
   const tappable = () => (units ??= tapUnits(state, player, mana));
@@ -1410,6 +1470,19 @@ function offers(state, player) {
     ...cardsIn(state, "graveyard", player).filter((id) => alternativeCosts(state, player, id).some((w) => w.fromGraveyard)).map((id) => ({id, from: "graveyard", graveyardCost: true})),
   ];
   for (const entry of castable) actions.push(...castOffers(state, player, entry, tappable));
+  /* Disguise (CR 702.168a): face down for {3}, from wherever the card could be cast as that face-down spell -- its owner's
+     hand, the command zone (a commander), or a zone a permission opens to it, the permission weighed face down too: Mystic
+     Forge's "colorless spells" takes it in, Thundermane Dragon's "power 4 or greater" does not (702.168b). Never for
+     flashback or escape, other alternative costs (CR 118.9a): a card in a graveyard with no permission is not offered. */
+  const disguisable = new Set([...castable.map((e) => e.id), ...allPlayPermissions(state, player).flatMap(({ability}) => permittedFrom(state, player, ability))]);
+  for (const id of disguisable) {
+    if (!disguiseOf(state.objects[id])) continue;
+    const from = state.objects[id].zone;
+    actions.push(...withFaceDown(state, id, () => (["hand", "command"].includes(from) ? [null] : playPermission(state, player, id, "spell") !== null ? permissionWays(state, player, id, "spell") : [])
+      .flatMap((via) => castOffers(state, player, {id, from, via, disguise: true}, tappable))));
+  }
+  /* Suspend, from the hand (CR 702.62a): a special action, where its card could be cast. */
+  actions.push(...suspendOffers(state, player));
   /* CR 715.3a: a permission weighs the Adventure's own characteristics. Its main face may
      exceed Maralen's limit even when the Adventure is eligible, or the converse. */
   const adventurers = new Set([...castable.filter(e => !e.flashback && !e.escape).map(e => e.id),
@@ -1557,6 +1630,8 @@ export function castChoicesNow(state, player, id) {
 function choicesNow(state, player, id) {
   const object = state.objects[id];
   if (!object || (object.types ?? []).includes("Land") || object.enchant || (object.spell?.additionalCost ?? []).length || castForbidden(state, player, id)) return [];
+  /* Nor while a spell with split second is on the stack (CR 702.61a): no spell is cast then, as an effect resolves either. */
+  if (splitSecondOnStack(state)) return [];
   const base = {kind: "cast", objectId: id, label: object.card, payment: {mana: {}, life: 0}, from: object.zone, tax: 0};
   const context = {controller: player, source: id};
   /* NAMED: a spell with a counted target ("up to two target creatures") is not cast this way yet -- its targets would be a
@@ -1791,6 +1866,8 @@ function perform(state, player, action, during = null) {
   /* CAST AS AN ADVENTURE (CR 715.3): the card shown as its Adventure from here on -- its targets, its cost, the spell put on
      the stack -- and as itself again if it is not cast after all (a question asked first, a cost refused). */
   if (action?.kind === "cast" && action.adventure === true) return withAdventure(state, action.objectId, () => performOffered(state, player, action, during));
+  /* CAST WITH DISGUISE (CR 702.168b): shown face down from here on, and put on the stack so (rules/stack.mjs). */
+  if (action?.kind === "cast" && action.disguise === true) return withFaceDown(state, action.objectId, () => performOffered(state, player, action, during));
   return performOffered(state, player, action, during);
 }
 
@@ -2082,7 +2159,13 @@ function performOffered(state, player, action, during) {
       ...((convoke?.ids ?? []).length ? {convoked: [...convoke.ids]} : {}),
       /* How many creatures its additional cost tapped: "three times the number of creatures tapped this way" (Burn at the
          Stake; script/amount.mjs, `tappedThisWay`). */
-      ...(action.tapAny === true ? {tapped: tappedAny.length} : {})};
+      ...(action.tapAny === true ? {tapped: tappedAny.length} : {}),
+      /* Cast for its surge or freerunning cost (CR 702.117a, 702.173a): "if this spell's freerunning cost was paid"
+         (script/condition.mjs, `paidFor`), and the permanent it becomes (rules/stack.mjs). */
+      ...(way?.paidFor ? {paidFor: way.paidFor} : {}),
+      /* The Phyrexian mana symbols of its cost paid with life, two life each (CR 107.4f): compleated reads it as the permanent
+         enters (CR 702.150a; rules/replacement.mjs). */
+      ...(payment.life > 0 ? {phyrexianLife: payment.life / 2} : {})};
     /* Kicked that many times (multikicker, CR 702.33c): the permanent it becomes knows it as it enters (rules/stack.mjs). */
     if (action.kicked) entry.kicked = action.kicked;
     /* Cast as an Adventure (CR 715.3): exiled as it resolves, and castable as itself from there (rules/stack.mjs, 715.3d). */
@@ -2335,13 +2418,32 @@ function performOffered(state, player, action, during) {
     return events;
   }
 
+  /* SUSPENDED (CR 702.62a): its cost paid from the pool, the way its player chose when there was more than one, and the card
+     exiled with its time counters -- suspended there (702.62b). A special action: nothing goes on the stack, and its player
+     receives priority afterward (CR 116.3). */
+  if (action.kind === "suspend") {
+    const events = [];
+    const object = state.objects[action.objectId];
+    const suspend = suspendOf(object);
+    const payment = chosenPayment(state.players[player].manaPool, suspendCost(suspend), {life: state.players[player].life}, action.payWith);
+    if (!payment) throw new Error(`${object.card} cannot be suspended with that mana now: choose one of the ways your pool pays its suspend cost`);
+    spend(state.players[player].manaPool, payment.mana);
+    if (payment.life > 0) changeLife(state, player, -payment.life, events);
+    const exiled = moveOne(state, action.objectId, "exile", events, {owner: object.owner});
+    if (exiled !== null && state.objects[exiled]?.zone === "exile") {
+      state.objects[exiled].counters.time = (state.objects[exiled].counters.time ?? 0) + suspend.count;
+      state.objects[exiled].suspended = true;
+    }
+    return events;
+  }
+
   /* TURNED FACE UP (CR 701.40b): the card shown to every player -- a creature card, and its mana cost -- that cost paid,
      and the permanent turned face up (state/index.mjs, turnFaceUp). A special action: nothing goes on the stack, and its
      player receives priority afterward (CR 116.3; applyAction). */
   if (action.kind === "turn-face-up") {
     const events = [];
     /* Recomputed, as a cast's payment is: what pays it, now. */
-    const payment = faceUpCost(state, player, action.objectId);
+    const payment = faceUpCost(state, player, action.objectId, action.disguise === true);
     spend(state.players[player].manaPool, payment.mana);
     if (payment.life > 0) changeLife(state, player, -payment.life, events);
     turnFaceUp(state, action.objectId);

@@ -304,6 +304,10 @@ function applyOne(state, {holderId, ability}, proposal, dry = false) {
   /* "As this artifact enters, choose a creature type", "choose Khans or Dragons": a question for its controller once it is
      there, the answer kept as the permanent's `chosen` (rules/entering.mjs). */
   if (ability.change?.choose) next.asks = [...(next.asks ?? []), {choose: structuredClone(ability.change.choose)}];
+  /* RIOT (CR 702.136a; Ghor-Clan Wrecker): "you may have this permanent enter with an additional +1/+1 counter on it. If you
+     don't, it gains haste" -- its controller's choice, asked once it is there (rules/entering.mjs); each instance its own
+     (702.136b), as each effect applies once (CR 614.5). */
+  if (ability.change?.riot === true) next.asks = [...(next.asks ?? []), {riot: true}];
   /* "You may have this creature enter as a copy of any creature on the battlefield" (CR 614.1c, 707.9): which one is asked
      once it is there, its arrival waiting for the answer (rules/entering.mjs) -- "except", "until end of turn", "tapped". */
   if (ability.change?.copyOf) next.asks = [...(next.asks ?? []), {copyOf: structuredClone(ability.change.copyOf),
@@ -440,7 +444,7 @@ export function applyReplacements(state, proposal, {orders = [], askable = false
  *
  * @returns {{tapped: boolean, counters: object}}
  */
-export function enteringModifications(state, {objectId, player, types, abilities, x = 0, escaped = false, kicked = 0}) {
+export function enteringModifications(state, {objectId, player, types, abilities, x = 0, escaped = false, kicked = 0, phyrexianLife = 0}) {
   const {proposal} = applyReplacements(state, {
     event: "enters", objectId, player, types: types ?? [], x, escaped, kicked,
     entering: {abilities: abilities ?? []},
@@ -450,6 +454,10 @@ export function enteringModifications(state, {objectId, player, types, abilities
      planeswalker has. */
   const counters = {...(proposal.counters ?? {})}, loyalty = state.objects[objectId]?.loyalty;
   if ((types ?? []).includes("Planeswalker") && Number.isInteger(loyalty)) counters.loyalty = (counters.loyalty ?? 0) + loyalty;
+  /* Compleated (CR 702.150a): two fewer for each Phyrexian symbol of its cost its caster paid with life (`phyrexianLife`,
+     rules/actions.mjs), if it would enter with any. */
+  if (phyrexianLife > 0 && counters.loyalty > 0 && (state.objects[objectId]?.keywords ?? []).includes("Compleated"))
+    counters.loyalty = Math.max(0, counters.loyalty - 2 * phyrexianLife);
   return {tapped: proposal.tapped === true, counters, asks: proposal.asks ?? [], designations: proposal.designations ?? []};
 }
 

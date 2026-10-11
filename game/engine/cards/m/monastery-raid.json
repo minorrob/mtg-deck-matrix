@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Monastery Raid",
+    "oracleId": "62f4a2db-6d7c-487b-be37-22f06c1e779e",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Freerunning {X}{R} (You may cast this spell for its freerunning cost if you dealt combat damage to a player this turn with an Assassin or commander.)\nExile the top two cards of your library. If this spell's freerunning cost was paid, exile the top X cards of your library instead. You may play the exiled cards until the end of your next turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Freerunning {X}{R}",
+      "keyword": "freerunning",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{X}{R}"
+        }
+      ]
+    },
+    {
+      "kind": "spell",
+      "text": "Exile the top two cards of your library. If this spell's freerunning cost was paid, exile the top X cards of your library instead. You may play the exiled cards until the end of your next turn.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "paidFor": "freerunning"
+          },
+          "then": [
+            {
+              "effect": "moveZone",
+              "fromTop": "X",
+              "to": "exile",
+              "remember": true
+            },
+            {
+              "effect": "mayPlay",
+              "targets": "remembered",
+              "until": "your-next-end"
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "moveZone",
+              "fromTop": 2,
+              "to": "exile",
+              "remember": true
+            },
+            {
+              "effect": "mayPlay",
+              "targets": "remembered",
+              "until": "your-next-end"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

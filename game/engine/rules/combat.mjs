@@ -708,8 +708,9 @@ export const combatDamage = {
            who controlled it, with its creature types as it dealt it (a changeling's, every one). turn.mjs clears it. */
         if (state.objects[hit.source]) {
           const dealer = controllerOf(state, hit.source);
+          /* And freerunning's (CR 702.173a): whether it was a commander -- one under this player's control, as it dealt it. */
           if (state.players[dealer]) (state.players[dealer].combatDamageSources ??= []).push({types: subtypesOf(state, hit.source).filter(isCreatureType),
-            every: everyCreatureTypeOf(state, hit.source)});
+            every: everyCreatureTypeOf(state, hit.source), ...(state.objects[hit.source].commander === true ? {commander: true} : {})});
         }
         /* The damage is a loss of life (CR 120.3a), counted as one this turn (batch 78: it was not) -- or, with infect, as
            many poison counters. */

@@ -51,7 +51,7 @@
 
 import {compileSelector, selectMatching} from "./filter.mjs";
 import {powerOf, toughnessOf, controllerOf} from "../rules/layers.mjs";
-import {namesChosen, withChosen} from "./chosen.mjs";
+import {namesChosen, withChosen, namesChosenColor, withChosenColor} from "./chosen.mjs";
 import {valueCostOf, shownName} from "../state/index.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {amountOf, AMOUNT_PARAMS} from "./amount.mjs";
@@ -307,7 +307,9 @@ function playersOf(value, context, state = null) {
    ability's permanent chose as it entered -- wherever an effect names it. */
 export function bindEffect(effect, context, state = null) {
   if (!effect || typeof effect !== "object") return effect;
-  const bound = namesChosen(effect) ? withChosen(effect, context.chosen) : {...effect};
+  const chosen = namesChosen(effect) ? withChosen(effect, context.chosen) : {...effect};
+  /* And "that color", chosen earlier in this resolution (script/chosen.mjs, "$chosenColor"). */
+  const bound = namesChosenColor(effect) ? withChosenColor(chosen, context.chosenColor) : chosen;
   /* Facts first: a number for an amount, a player where a player goes. */
   for (const [key, value] of Object.entries(bound)) {
     /* Who chooses by `ownerOf` is the owner as the object now is (below), not a fact read as the resolution began. */

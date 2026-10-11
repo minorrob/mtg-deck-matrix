@@ -175,6 +175,12 @@ export const STATIC_RULES = Object.freeze({
   /** Rebound (CR 702.88a): the keyword kept as this static (cards/index.mjs), read as the spell leaves the stack: cast from
       its owner's hand and resolved, it is exiled and may be cast free at its caster's next upkeep (Ephemerate). */
   "rebound": "rules/stack.mjs",
+  /** Suspend N--[cost] (CR 702.62a): the keyword kept as this static (cards/index.mjs), read in its owner's hand: the
+      special action that exiles it with N time counters for its cost, offered where it could be cast (rules/actions.mjs). */
+  "suspend": "rules/actions.mjs",
+  /** Disguise [cost] (CR 702.168a): the keyword kept as this static (cards/index.mjs), read where the card could be cast --
+      cast face down for {3} -- and on the face-down permanent, turned face up for its cost (rules/actions.mjs). */
+  "disguise": "rules/actions.mjs",
   /** Paradigm (CR 702.192a): the keyword kept as this static (cards/index.mjs), read as the spell resolves -- the delayed
       trigger made the first time a spell of its name resolves for its controller, and the spell exiled. rules/stack.mjs. */
   "paradigm": "rules/stack.mjs",
@@ -732,6 +738,12 @@ export function cantBeBlockedBy(state, attackerId, blockerId) {
       if (ability.by && matchesSelector(ability.by, state, blockerId, context)) return true;
       if (ability.byPowerBelowSource === true && powerOf(state, blockerId) < powerOf(state, holderId)) return true;
     }
+  }
+  /* And an effect for a while (effectUntil's `rule: "cant-be-blocked-by"`): "it can't be blocked by creatures of that color
+     this turn" (Skrelv, Defector Mite) -- the attackers it names, the blockers its `by` describes, "you" its controller. */
+  for (const effect of state.effects ?? []) {
+    if (effect.rule !== "cant-be-blocked-by" || !(effect.affects?.ids ?? []).includes(attackerId)) continue;
+    if (matchesSelector({what: "permanent", ...(effect.by ?? {})}, state, blockerId, {controller: effect.sourceController})) return true;
   }
   return false;
 }

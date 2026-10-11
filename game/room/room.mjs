@@ -47,6 +47,7 @@
 import {createState, addObject, shownName} from "../engine/state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../engine/rules/turn.mjs";
 import {legalActions, applyAction, nothingToDo, escapeWays, flashbackCost, tappersInWords, castTapPlans, tapWords} from "../engine/rules/actions.mjs";
+import {paymentWords} from "../engine/rules/mana.mjs";
 import {passPriority} from "../engine/rules/priority.mjs";
 import {gameOver, concede} from "../engine/rules/sba.mjs";
 import {beginMulligans} from "../engine/rules/mulligan.mjs";
@@ -188,7 +189,13 @@ export function offerDetails(state, seat, actions) {
     if (a.x !== undefined) parts.push(`X = ${a.x}`);
     /* A manifested permanent of the seat's own turned face up for its card's mana cost (CR 701.40b): the label is the card,
        which only this seat is offered (CR 708.5). */
-    if (a.kind === "turn-face-up") parts.push(`turn face up for ${state.objects[a.objectId]?.faceDownCard?.manaCost ?? "its mana cost"}`);
+    /* Or for its disguise cost (CR 702.168d), said as its card says it. */
+    if (a.kind === "turn-face-up") parts.push(a.disguise ? `turn face up for its disguise cost, ${(state.objects[a.objectId]?.faceDownCard?.abilities ?? []).find((b) => b.rule === "disguise")?.cost?.[0]?.cost ?? ""}`
+      : `turn face up for ${state.objects[a.objectId]?.faceDownCard?.manaCost ?? "its mana cost"}`);
+    /* Cast face down with disguise (CR 702.168a): as a 2/2 with ward {2}, for {3}. */
+    if (a.kind === "cast" && a.disguise) parts.push("face down for {3}, a 2/2 with ward {2}");
+    /* Suspended from the hand (CR 702.62a): its words ("Suspend 5--{W}"), and the mana that pays, when that is a choice. */
+    if (a.kind === "suspend") parts.push(a.payWith !== undefined ? `${a.text ?? "suspend"}, paying ${paymentWords(a.payment)}` : a.text ?? "suspend");
     /* A counted target (script/bind.mjs): what is still to be picked ("up to two targets"), or the ones picked. */
     const aimed = (t) => (!t ? "" : Array.isArray(t) ? (t.length ? t.map(aimed).join(" and ") : "no target") : t.kind === "choose" ? countWords(t)
       : t.kind === "player" ? player(t.id) : object(t.id, plain));
@@ -207,7 +214,8 @@ export function offerDetails(state, seat, actions) {
       const ability = state.objects[a.objectId]?.abilities?.[a.alternative];
       const cost = ability?.cost ?? [];
       const mana = cost.find((c) => c.atom === "mana")?.cost, life = cost.filter((c) => c.atom === "payLife").reduce((n, c) => n + (c.amount ?? 0), 0);
-      parts.push([ability?.evoke ? (mana ? `evoke for ${mana}` : "evoke") : mana ? `for ${mana} instead` : (life || cost.length ? "instead of its mana cost" : "without paying its mana cost"),
+      /* Surge and freerunning by their names too (CR 702.117a, 702.173a): what it is cast for is what its text asks about. */
+      parts.push([ability?.evoke ? (mana ? `evoke for ${mana}` : "evoke") : ability?.paidFor && mana ? `${ability.paidFor} for ${mana}` : mana ? `for ${mana} instead` : (life || cost.length ? "instead of its mana cost" : "without paying its mana cost"),
         life ? `paying ${life} life` : null].filter(Boolean).join(", "));
     }
     /* "Without paying its mana cost", beside the paid cast of the same card (rules/actions.mjs). */

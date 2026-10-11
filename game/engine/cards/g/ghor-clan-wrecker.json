@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ghor-Clan Wrecker",
+    "oracleId": "b113285c-80b2-46dd-874e-201d26979518",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warrior"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Riot (This creature enters with your choice of a +1/+1 counter or haste.)\nMenace (This creature can't be blocked except by two or more creatures.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Riot",
+      "keyword": "riot"
+    },
+    {
+      "kind": "keyword",
+      "text": "Menace",
+      "keyword": "menace"
+    }
+  ]
+}

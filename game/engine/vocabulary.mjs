@@ -83,7 +83,7 @@ export const PRIMITIVES = Object.freeze({
   ]),
   flow: Object.freeze([
     "modal", "sequence", "repeatFor", "branch", "delayedTrigger", "immediateTrigger", "counterSpell",
-    "copySpell", "addTurn", "chooseCard", "chooseType", "genericChoice", "twoPiles", "connive",
+    "copySpell", "addTurn", "chooseCard", "chooseType", "chooseColor", "genericChoice", "twoPiles", "connive",
     "investigate", "cleanup", "addPhase", "changeTargets",
   ]),
 });
@@ -179,7 +179,25 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
      phase after the first time one of its name resolves (rules/stack.mjs). */
   "paradigm",
   /* Train C: spectacle (CR 702.137; Light Up the Stage), an alternative cost once an opponent lost life this turn. */
-  "spectacle"];
+  "spectacle",
+  /* Train C, phase 2 (p5-keywords): split second (CR 702.61; keywords/timing.mjs), riot (CR 702.136). */
+  "split second", "riot",
+  /* Surge (CR 702.117) and freerunning (CR 702.173): alternative costs (keywords/timing.mjs). */
+  "surge", "freerunning",
+  /* Embalm (CR 702.128): a token copy from the graveyard (cards/index.mjs). */
+  "embalm",
+  /* Tiered (CR 702.183): each mode its own additional cost (keywords/timing.mjs). */
+  "tiered",
+  /* Suspend (CR 702.62), from the hand (keywords/timing.mjs). */
+  "suspend",
+  /* Partner with [name] (CR 702.124j): a deck rule and a trigger as it enters (cards/index.mjs). */
+  "partner with",
+  /* Firebending N (CR 702.189): an attack trigger, its mana kept until end of combat (cards/index.mjs, rules/turn.mjs). */
+  "firebending",
+  /* Compleated (CR 702.150): fewer loyalty counters for Phyrexian mana paid with life (rules/replacement.mjs). */
+  "compleated",
+  /* Disguise (CR 702.168): cast face down for {3}, turned face up for its cost (rules/actions.mjs). */
+  "disguise"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

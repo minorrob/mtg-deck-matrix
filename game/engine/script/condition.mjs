@@ -46,6 +46,14 @@
  *                                      kept of its controller's sources this turn
  *   {prowled: true|false}              its own permanent was cast for its prowl cost, or was not (CR 702.76a; rules/stack.mjs):
  *                                      "if its prowl cost was paid" (Latchkey Faerie)
+ *   {surge: true}                      surge's "if you or one of your teammates has cast another spell this turn" (CR
+ *                                      702.117a): its controller has cast a spell this turn (there are no teams here)
+ *   {freerunning: true}                freerunning's "if a player was dealt combat damage this turn by a creature that, at
+ *                                      the time it dealt that damage, was an Assassin creature or a commander under your
+ *                                      control" (CR 702.173a): what rules/combat.mjs kept of its controller's sources
+ *   {paidFor: "surge"|"freerunning"}   the spell resolving, or its own permanent, was cast for that cost (CR 702.117a,
+ *                                      702.173a; rules/actions.mjs, rules/stack.mjs): "if its surge cost was paid" --
+ *                                      its source gone, as the trigger saw it (CR 608.2h)
  *   {opponentPoisonAtLeast: 3}         an opponent of its controller, still in the game, has at least that many poison
  *                                      counters (CR 122.1f): Corrupted's "as long as an opponent has three or more poison
  *                                      counters" (Skrelv's Hive; an ability word, CR 207.2c, with no rules meaning of its own)
@@ -66,7 +74,11 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   /* Evolve's comparison (CR 702.100a); prowl's damage, and its cost paid (CR 702.76a). */
   "evolves", "prowl", "prowled",
   /* Ascend's city's blessing (CR 702.131). */
-  "citysBlessing"];
+  "citysBlessing",
+  /* Surge (CR 702.117a) and freerunning (CR 702.173a), and the cost a spell was cast for. */
+  "surge", "freerunning", "paidFor"];
+/* The alternative costs a spell may be marked as cast for (cards/index.mjs; rules/actions.mjs). */
+const PAID_FOR = ["surge", "freerunning"];
 /* Where a permanent may have come from, for `cameFrom`: a library (effects/zones.mjs and rules/stack.mjs record it). */
 const CAME_FROM = ["library"];
 /* The mana a condition may ask was spent to cast its object: the five colors and colorless (CR 106.1). */
@@ -148,7 +160,7 @@ function castHolds(rule, cast) {
 
 /** Whether a condition holds now, for an ability controlled by `controller` on object `source`. No condition holds. */
 export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined, excessDamage = undefined, rememberedControllers = undefined,
-  movedWas = undefined, searched = undefined, lastKnown = undefined} = {}) {
+  movedWas = undefined, searched = undefined, lastKnown = undefined, paidFor = undefined} = {}) {
   if (!condition) return true;
   /* "If you search your library this way" (Claim Jumper): a search made earlier in this resolution (script/resolution.mjs). */
   if (condition.searched === true && searched !== true) return false;
@@ -262,6 +274,15 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   if (condition.citysBlessing !== undefined && hasCitysBlessing(state, controller) !== condition.citysBlessing) return false;
   /* Prowl's cost may be paid (CR 702.76a): asked of the card as its cast is offered (rules/actions.mjs, alternativeCosts). */
   if (condition.prowl === true && !prowlable(state, controller, source)) return false;
+  /* Surge (CR 702.117a): its controller has cast another spell this turn -- asked as this one's cast is offered, before it
+     is counted among them (rules/actions.mjs). */
+  if (condition.surge === true && !((state.players[controller]?.castThisTurn ?? []).length > 0)) return false;
+  /* Freerunning (CR 702.173a): combat damage to a player this turn by one of its controller's creatures that was an
+     Assassin -- a changeling is every creature type (CR 702.73a) -- or a commander, as it dealt it (rules/combat.mjs). */
+  if (condition.freerunning === true && !(state.players[controller]?.combatDamageSources ?? []).some((dealt) => dealt.commander === true || dealt.every === true || dealt.types.includes("Assassin"))) return false;
+  /* "If its surge cost was paid", "if this spell's freerunning cost was paid": the spell as it resolves (`cast`), its own
+     permanent, or -- that permanent gone -- the trigger's record of it (rules/trigger.mjs). */
+  if (condition.paidFor !== undefined && (cast?.paidFor ?? (source !== null && source !== undefined ? state.objects[source]?.paidFor : undefined) ?? paidFor) !== condition.paidFor) return false;
   /* "If its prowl cost was paid" (CR 702.76a): whether its own permanent was cast for it (rules/stack.mjs). */
   if (condition.prowled !== undefined && (state.objects[source]?.prowled === true) !== condition.prowled) return false;
   /* Evolve's comparison (CR 702.100a): as it triggers, and again as it resolves (CR 603.4). */
@@ -310,6 +331,9 @@ export function conditionProblems(condition) {
   if ("evolves" in condition && condition.evolves !== true) problems.push("evolves is true");
   if ("prowl" in condition && condition.prowl !== true) problems.push("prowl is true");
   if ("prowled" in condition && typeof condition.prowled !== "boolean") problems.push("prowled is true or false");
+  if ("surge" in condition && condition.surge !== true) problems.push("surge is true");
+  if ("freerunning" in condition && condition.freerunning !== true) problems.push("freerunning is true");
+  if ("paidFor" in condition && !PAID_FOR.includes(condition.paidFor)) problems.push(`paidFor is the alternative cost a spell was cast for: ${PAID_FOR.join(", ")}`);
   if ("opponentPoisonAtLeast" in condition && !(Number.isInteger(condition.opponentPoisonAtLeast) && condition.opponentPoisonAtLeast >= 1))
     problems.push("opponentPoisonAtLeast is a whole number of poison counters, 1 or more");
   if ("graveyardTypes" in condition && !(Number.isInteger(condition.graveyardTypes) && condition.graveyardTypes >= 1)) problems.push("graveyardTypes is a whole number of card types, 1 or more");

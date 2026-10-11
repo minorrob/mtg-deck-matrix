@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 419 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 432 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1289,6 +1289,19 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-waterbend` - `tests/engine-waterbend.mjs`: waterbend as an activated ability's cost (CR 701.67; Giant Koi, Foggy Swamp Vinebender), artifacts and creatures tapped for its generic mana, never for an increase on it
 - `engine-cant-cast-self` - `tests/engine-cant-cast-self.mjs`: a card's own "you can't cast this spell unless ..." (Proft, Sinister Mastermind's threshold), read wherever it would be cast from
 - `engine-unless-tap` - `tests/engine-unless-tap.mjs`: "you may tap another untapped Merfolk you control. When you do, ..." (Meanders Guide; CR 118.12a, 603.12), each permanent its own option
+- `engine-split-second` - `tests/engine-split-second.mjs`: split second (Siege Smash), nothing cast and no ability but a mana ability activated while it is on the stack; triggers and special actions go on
+- `engine-riot` - `tests/engine-riot.mjs`: riot (Ghor-Clan Wrecker), a +1/+1 counter or haste, its controller's choice as it enters however it enters, each instance its own
+- `engine-surge-freerunning` - `tests/engine-surge-freerunning.mjs`: surge (Reckless Bushwhacker) and freerunning (Monastery Raid), alternative costs after another spell or an Assassin's or commander's combat damage this turn, and "if its cost was paid"
+- `engine-embalm` - `tests/engine-embalm.mjs`: embalm (Anointer Priest), from its owner's graveyard as a sorcery, the card exiled, a white Zombie token copy of it with no mana cost
+- `engine-tiered` - `tests/engine-tiered.mjs`: tiered (Cloud's Limit Break), one mode with its own cost added, each mode its own cast, a mode's target controlled by different players
+- `engine-suspend-hand` - `tests/engine-suspend-hand.mjs`: suspend from the hand (Knight of Old Benalia), a special action at the timing it could be cast, exiled with its time counters and suspended
+- `engine-protection-multicolored` - `tests/engine-protection-multicolored.mjs`: protection from multicolored (Argentum Masticore), and "sacrifice it unless you discard a card; when you discard a card this way", about the card discarded
+- `engine-hexproof-from` - `tests/engine-hexproof-from.mjs`: a color chosen as it resolves (Skrelv, Defector Mite), hexproof from that color and unblockable by creatures of it until end of turn
+- `engine-partner-with` - `tests/engine-partner-with.mjs`: partner with [name] (for Pir, Imaginative Rascal), two commanders that name each other, and the trigger as it enters: its target player may search their library for the card it names
+- `engine-firebending` - `tests/engine-firebending.mjs`: firebending (Fire Nation Cadets), whenever it attacks N {R} kept as combat's steps end, no more than is left, and lost as combat ends; each instance its own; the Cadets' only while a Lesson is in its controller's graveyard
+- `engine-compleated` - `tests/engine-compleated.mjs`: compleated (Vraska, Betrayal's Sting), two fewer loyalty counters for each Phyrexian symbol its caster paid with life, never fewer than none; a creature made a Treasure artifact for good, and a target player's poison counters counted to nine
+- `engine-disguise` - `tests/engine-disguise.mjs`: disguise (Arno Dorian, Bayek of Siwa), a card cast face down for {3}, a nameless 2/2 with ward {2} on the stack and the battlefield, never named to another seat; turned face up for its disguise cost alone, a special action
+- `engine-adventure-asking` - `tests/engine-adventure-asking.mjs`: asking what an adventurer card may do changes nothing, the card shown as itself again with no empty subtypes, supertypes or colors kept
 
 ## Design and execution record
 

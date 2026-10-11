@@ -6,7 +6,8 @@
  * A static ability `rule: "protection"` on a permanent: `affects` the permanents that have it, read as they are now
  * (rules/layers.mjs, staticAffects); `players: "you"`, its controller has it too (CR 702.16j); `from` the quality --
  * `{types: [...]}`, a card type, which may be the one its permanent chose as it entered ("$chosen", script/chosen.mjs),
- * or "everything" (CR 702.16j), or `{colors: [...]}`, a color -- "protection from black" (Karmic Guide), the keyword compiled
+ * or "everything" (CR 702.16j), or `{colors: [...]}`, a color -- "protection from black" (Karmic Guide), or `{multicolored:
+ * true}`, two or more colors (CR 105.2b; Argentum Masticore) -- the keyword compiled
  * to this static on its own permanent (cards/index.mjs). A source has the quality when it is an object of one of those card
  * types or colors, as it now is.
  *
@@ -45,7 +46,23 @@ function hasQuality(state, from, sourceId) {
   const types = onBattlefield ? typesOf(state, sourceId) : (state.objects[sourceId].types ?? []);
   if ((from?.types ?? []).some((type) => types.includes(type))) return true;
   const colors = onBattlefield ? colorsOf(state, sourceId) : (state.objects[sourceId].colors ?? []);
+  /* "Protection from multicolored" (Argentum Masticore): a source of two or more colors (CR 105.2b). */
+  if (from?.multicolored === true && colors.length >= 2) return true;
   return (from?.colors ?? []).some((color) => colors.includes(color));
+}
+
+/**
+ * HEXPROOF FROM [QUALITY] (CR 702.11d; Skrelv, Defector Mite): "This permanent can't be the target of [quality] spells your
+ * opponents control or abilities your opponents control from [quality] sources" -- an effect for a while (effectUntil's
+ * `rule: "hexproof-from"`, its `colors`; "hexproof from that color until end of turn"), over the permanents it names. Whether
+ * `id` has it from `sourceId` -- the spell, or the ability's source -- of one of those colors as it now is, for a spell or
+ * ability of `chooser`'s, an opponent of its controller (script/filter.mjs asks as a target is chosen, and again as it
+ * resolves). A hexproof from ability is a hexproof ability (702.11d).
+ */
+export function hexproofFrom(state, id, chooser, sourceId) {
+  if (sourceId === null || sourceId === undefined || !state.objects[sourceId] || controllerOf(state, id) === chooser) return false;
+  const colors = state.objects[sourceId].zone === "battlefield" ? colorsOf(state, sourceId) : (state.objects[sourceId].colors ?? []);
+  return (state.effects ?? []).some((e) => e.rule === "hexproof-from" && (e.affects?.ids ?? []).includes(id) && (e.colors ?? []).some((c) => colors.includes(c)));
 }
 
 /**

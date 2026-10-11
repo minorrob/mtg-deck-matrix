@@ -590,6 +590,8 @@ export function collectTriggers(state, events) {
                again as it resolves (CR 603.4), when its source may be gone -- sacrificed for its evoke cost -- and is then read
                as it last was (CR 608.2h). What was spent to cast an object never changes while it exists. */
             ...(object.spent ? {spent: {...object.spent}} : {}),
+            /* And the alternative cost it was cast for (rules/stack.mjs, `paidFor`), as it triggers, for the same reason. */
+            ...(typeof object.paidFor === "string" ? {paidFor: object.paidFor} : {}),
             /* What it is about ("that player", "that card", "that much"), when the event says. */
             ...(about.card !== undefined || about.player !== undefined || about.amount !== undefined ? {about} : {}),
             /* What it does, from the card script (phase 2.4), carried to the stack with it. */
@@ -937,6 +939,7 @@ function putOnStack(state, triggers) {
          this creature". Only its own departure: another creature's last state is what "that creature" means, not "this". */
       lastKnown: trigger.cause && trigger.cause.cardId === trigger.source?.cardId && !state.objects[trigger.source.cardId] ? trigger.cause : null,
       spent: trigger.spent ?? null,
+      paidFor: trigger.paidFor ?? null,
       x: trigger.x ?? null,
       /* A delayed trigger's source, as it was when the trigger was made (CR 701.27f). */
       sourceTransforms: trigger.sourceTransforms,

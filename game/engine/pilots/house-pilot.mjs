@@ -147,7 +147,7 @@ export function housePilot({seat, cards = () => null} = {}) {
         a spell, a face-down card turned up -- and no mana it would tap, which it does only in its own main phase with
         the stack empty. The room then passes for it without working out its view (game/room/room.mjs). */
     passes(actions, stackSize) {
-      return !actions.some((a) => a.kind === "play-land" || a.kind === "cast" || a.kind === "turn-face-up" || (a.kind === "activate" && a.loyalty !== undefined)
+      return !actions.some((a) => a.kind === "play-land" || a.kind === "cast" || a.kind === "turn-face-up" || a.kind === "suspend" || (a.kind === "activate" && a.loyalty !== undefined)
         || (a.kind === "activate-mana" && stackSize === 0));
     },
 
@@ -171,6 +171,10 @@ export function housePilot({seat, cards = () => null} = {}) {
       const untapped = actions.filter((a) => a.kind === "activate-mana" && !a.costChoice);
       if (best && best.x !== undefined && untapped.length && view.turnPlayerId === seat && MAIN.includes(view.phase) && view.stackSize === 0) return untapped[0];
       if (best) return best;
+      /* A card suspended from its hand (CR 702.62a), when the pool already pays its suspend cost and nothing is cast: it comes
+         back free in a few turns. */
+      const suspend = actions.find((a) => a.kind === "suspend");
+      if (suspend) return suspend;
       /* A manifested creature card of its own turned face up (CR 701.40b), when the pool already pays and nothing is cast. */
       const faceUp = actions.find((a) => a.kind === "turn-face-up");
       if (faceUp) return faceUp;

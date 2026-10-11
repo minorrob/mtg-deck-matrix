@@ -197,13 +197,21 @@ const skipsFirstDraw = (state) =>
 /* CR 500.4. Reported only when there was something to empty: an empty pool emptying again is not
    news, and a board that announces it every step buries what matters. */
 function emptyManaPools(state, events) {
+  /* Mana its player does not lose until end of combat (firebending, CR 702.189a; script/effects/resources.mjs): kept as a
+     combat step but the last ends, and lost as the combat phase ends (500.5a). Kept no more than the pool holds of it:
+     the plain mana is spent first -- the two pay the same, and the kept mana lasts longer -- as rules/restricted-mana.mjs
+     spends plain mana before rider mana. */
+  const combatGoesOn = state.phase.startsWith("COMBAT_") && state.phase !== "COMBAT_END";
   for (const player of state.players) {
     /* And the mana that could be spent only on some things (rules/restricted-mana.mjs). */
     emptyRestricted(player);
-    const total = Object.values(player.manaPool).reduce((a, b) => a + b, 0);
+    const kept = combatGoesOn ? Object.fromEntries(Object.entries(player.combatMana ?? {}).map(([color, n]) => [color, Math.min(n, player.manaPool[color])]).filter(([, n]) => n > 0)) : {};
+    if (Object.keys(kept).length) player.combatMana = kept;
+    else delete player.combatMana;
+    const had = Object.fromEntries(Object.entries(player.manaPool).map(([color, n]) => [color, n - (kept[color] ?? 0)]));
+    const total = Object.values(had).reduce((a, b) => a + b, 0);
     if (total === 0) continue;
-    const had = {...player.manaPool};
-    for (const color of Object.keys(player.manaPool)) player.manaPool[color] = 0;
+    for (const color of Object.keys(player.manaPool)) player.manaPool[color] = kept[color] ?? 0;
     events.push(event("GameEventManaPool", state, {player: {playerId: player.id, name: player.name}, emptied: had}));
   }
 }

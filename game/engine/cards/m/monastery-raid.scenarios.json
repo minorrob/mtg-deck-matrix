@@ -1,0 +1,406 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Monastery Raid",
+  "fixtures": {
+    "Cutthroat": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Assassin"
+      ],
+      "manaCost": "{1}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 2,
+      "toughness": 1
+    },
+    "Hasty General": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Soldier"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "keywords": [
+        "Haste"
+      ],
+      "supertypes": [
+        "Legendary"
+      ]
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "No combat damage this turn: only its mana cost; cast for {2}{R}, the top two exiled -- a Forest Rob may play, until the end of his next turn",
+      "library": [
+        "Forest",
+        "Bear",
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Monastery Raid"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Monastery Raid"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "cast": "Monastery Raid",
+          "alternative": false
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Forest",
+                "Bear"
+              ]
+            },
+            {
+              "offers": {
+                "kind": "play-land",
+                "card": "Forest"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "play-land",
+                "card": "Forest"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "play-land",
+            "card": "Forest"
+          },
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Forest",
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Rob's Assassin dealt Maya combat damage: freerunning offered for each X; cast with X = 3, the top three exiled instead",
+      "library": [
+        "Forest",
+        "Bear",
+        "Island",
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Monastery Raid"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cutthroat",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Cutthroat"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 38
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Monastery Raid"
+              },
+              "count": 5
+            }
+          ]
+        },
+        {
+          "cast": "Monastery Raid",
+          "alternative": 0,
+          "x": 3
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Forest",
+            "Bear",
+            "Island"
+          ]
+        },
+        {
+          "offers": {
+            "kind": "play-land",
+            "card": "Island"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "Rob's commander dealt the damage: freerunning offered; X = 1 exiles the top card only",
+      "library": [
+        "Forest",
+        "Bear",
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "Hasty General"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Monastery Raid"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Hasty General"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Hasty General"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Monastery Raid",
+          "alternative": 0,
+          "x": 1
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A Bear that is neither an Assassin nor a commander dealt the damage: no freerunning",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Monastery Raid"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Monastery Raid"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Siege Smash",
+    "oracleId": "4e07d30a-d29a-49bc-ab49-41ea4116a18c",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.)\nChoose one —\n• Destroy target artifact.\n• Target creature gets +3/+2 and gains trample until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Split second",
+      "keyword": "split second"
+    },
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Destroy target artifact.\n• Target creature gets +3/+2 and gains trample until end of turn.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Destroy target artifact.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Artifact"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "destroy",
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Target creature gets +3/+2 and gains trample until end of turn.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "pump",
+                  "targets": {
+                    "target": 0
+                  },
+                  "power": 3,
+                  "toughness": 2,
+                  "keywords": [
+                    "Trample"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
