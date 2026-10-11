@@ -208,18 +208,21 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
   assert.notEqual(result.result?.reason,'ended early');
   eq(current(maya).result,result.result,'separate browser sessions agree on result');
   ok(reloaded,'reconnect exercised during a pending game');
-  for(const [person,seat] of [[rob,0],[maya,1]]) {
-    const views=viewsAt(person.email,id);
-    ok(views.every(v=>v.state.players.every((p,s)=>s===seat || ['Hand','Library'].every(z=>(p.zones[z]?.cards??[]).every(c=>!c.name)))),`seat ${seat}: all ${views.length} frames hide other hands and libraries`);
-    await person.page.locator('.cm-board-over').waitFor({timeout:10000});
-    await shot(person.page,`${DECK_ID.toLowerCase()}-natural-end-seat${seat}`);
-  }
   /* The record each person downloads from the game-over panel: on a playtest table, the whole game. */
   if (RECORDS) for (const [person,seat] of [[rob,0],[maya,1]]) {
     const [download] = await Promise.all([person.page.waitForEvent('download',{timeout:15000}), person.page.click('.cm-board-over [data-action=board-record]')]);
     const record = JSON.parse(readFileSync(await download.path(),'utf8'));
     eq([record.kind,record.matchId],['full',result.matchId ?? record.matchId],`seat ${seat}: the game-over panel downloads the full record`);
     writeFileSync(path.join(RECORDS,'records',`${record.matchId}-seat${seat}.json`), JSON.stringify(record));
+  }
+  for(const [person,seat] of [[rob,0],[maya,1]]) {
+    const views=viewsAt(person.email,id);
+    /* A name in another seat's hand or library, said by card, zone, owner and turn: some the rules show (a card
+       revealed, a library's top played revealed), which tools/playtest-triage.mjs's oracle judges from the record. */
+    const shown=views.flatMap((v)=>v.state.players.flatMap((p,s)=>s===seat?[]:['Hand','Library'].flatMap((z)=>(p.zones[z]?.cards??[]).filter((c)=>c.name).map((c)=>({turn:v.state.turn,owner:s,zone:z,name:c.name})))));
+    ok(!shown.length,`seat ${seat}: all ${views.length} frames hide other hands and libraries${shown.length?` -- but ${shown.length} named a card there, first ${JSON.stringify(shown[0])}`:''}`);
+    await person.page.locator('.cm-board-over').waitFor({timeout:10000});
+    await shot(person.page,`${DECK_ID.toLowerCase()}-natural-end-seat${seat}`);
   }
   const room=tableFor(id).room;
   console.log(JSON.stringify({checks,actions,turns:result.state.turn,result:result.result,refusals:room.refusals},null,2));
