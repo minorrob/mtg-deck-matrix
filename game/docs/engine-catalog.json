@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1255,
+  "defined": 1256,
   "provisional": 27,
-  "everyRule": 2603
+  "everyRule": 2604
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -4075,8 +4075,8 @@
      "forge": "StoreSVar",
      "top": 6,
      "all": 68,
-     "blocks": 6,
-     "alone": 2
+     "blocks": 5,
+     "alone": 1
     },
     {
      "kind": "effect",

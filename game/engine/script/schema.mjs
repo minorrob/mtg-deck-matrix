@@ -169,6 +169,10 @@ function checkEffect(effect, path, errors) {
   /* "If a permanent spell is countered this way, exile it instead" (Thranduil's Decree): a permanent spell's place instead. */
   if (name === "counterSpell" && effect.permanentTo !== undefined && effect.permanentTo !== "exile")
     errors.push({path: `${path}.permanentTo`, message: "A countered permanent spell goes to exile instead: `permanentTo: \"exile\"`"});
+  /* "Each opponent may ...": the mode that is doing so, kept for "for each opponent who does" (script/amount.mjs). */
+  if (name === "modal") (effect.modes ?? []).forEach((mode, m) => {
+    if (mode?.did !== undefined && mode.did !== true) errors.push({path: `${path}.modes[${m}].did`, message: "A mode that is doing what was offered says `did: true`"});
+  });
   /* "For as long as it remains exiled": a permission only for a card in exile now. */
   if (name === "mayPlay" && effect.zone !== undefined && effect.zone !== "exile")
     errors.push({path: `${path}.zone`, message: "mayPlay's zone is \"exile\": a card there now, for as long as it remains exiled"});

@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 422 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 423 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1292,6 +1292,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-attack-tax-answers` - `tests/engine-attack-tax-answers.mjs`: an attack tax the attacker can't pay (CR 508.1d, 508.1h): the declare-attackers record says what each attack takes from the mana there is, and L0, L1, the random pilot and the room's least answer declare only what can be paid for -- a required Goblin goes where it is free
 - `engine-counter-exile-cast` - `tests/engine-counter-exile-cast.mjs`: a permanent spell countered and exiled instead, and cast free for as long as it remains exiled (Thranduil's Decree; CR 701.6a, 611.2b, 400.7): what the counter moved remembered, a permission only for a card in exile now
 - `engine-ability-target` - `tests/engine-ability-target.mjs`: an ability on the stack as a target (Bolt Bend; CR 115.2, 115.5, 115.7a, 115.9a): chosen by its stack entry, by whose and "with a single target", gone once it leaves; an effect's stack entries; its new target held to the ability's own requirements; the room's offer and the pilots' aim read off the stack
+- `engine-tempting-offer` - `tests/engine-tempting-offer.mjs`: a tempting offer (Tempt with Vengeance; CR 207.2c, 101.4, 800.4b, 800.4g): each opponent asked a "may" in turn order, those who did kept and counted (playersWhoDid, X for each with times X), one who leaves answered for, given nothing and not counted
 
 ## Design and execution record
 

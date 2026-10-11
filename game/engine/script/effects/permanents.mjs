@@ -387,8 +387,9 @@ export function createToken(state, params, context) {
   if (!spec) throw new Error(`No predefined token named ${params.token.predefined}`);
   const count = params.count ?? 1;
   const controller = params.controller ?? context.controller;
-  /* A target player who is no longer one creates nothing. */
-  if (!state.players[controller]) return events;
+  /* A target player who is no longer one creates nothing -- nor one who has left the game (CR 800.4b: no token is created
+     under their control; Tempt with Vengeance's "may create" answered for them, CR 800.4g). */
+  if (!state.players[controller] || state.players[controller].lost) return events;
   const made = [];
   /* "Twice that many of those tokens instead" (Anointed Procession), artifact tokens made Dragons instead (Draconic Visitor):
      what is made, and how many (rules/statics.mjs, tokensCreated). */

@@ -358,7 +358,8 @@ export function bindEffect(effect, context, state = null) {
   if ("who" in bound) bound.who = playersOf(bound.who, context, state);
   /* "Target opponent creates a 1/1 Spirit" (Forbidden Orchard): a token's controller, a target player -- or no one. "That
      creature's controller creates a 1/1 Myr" (Genesis Chamber): the controller of what the trigger is about. */
-  if (isRef(bound.controller) || bound.controller === "that card's controller") { const [player] = playersOf(bound.controller, context, state); bound.controller = player ?? -1; }
+  /* "Each opponent may create X ... tokens" (Tempt with Vengeance): that opponent's, the player a repetition is about. */
+  if (isRef(bound.controller) || bound.controller === "that card's controller" || bound.controller === "that player") { const [player] = playersOf(bound.controller, context, state); bound.controller = player ?? -1; }
   /* "That attacking player creates a ... token" (Combat Calligrapher): the player whose attack the trigger is about. */
   if (bound.controller === "attacking player") bound.controller = Number.isInteger(context.about?.attacker) ? context.about.attacker : -1;
   /* "At the beginning of each player's upkeep, that player gains control of Alexios": the player the trigger is about. */

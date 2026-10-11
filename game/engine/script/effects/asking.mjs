@@ -525,10 +525,15 @@ export const modal = {
     const modes = (params.modes ?? []).filter((mode) => !(done && mode.once === true));
     if (modes.length === 0 || (done && modes.every((mode) => !(mode.effects ?? []).length))) return false;
     const choose = Math.min(params.choose ?? 1, modes.length);
+    const chooser = Number.isInteger(params.chooser) ? params.chooser : context.controller;
     state.awaiting = {
       /* Usually the controller's; "its controller may draw up to two cards" is that player's (`chooser`, bound to them). */
-      kind: "effect-choice", effect: "modal", player: Number.isInteger(params.chooser) ? params.chooser : context.controller,
-      modes: modes.map((mode) => ({text: mode.text ?? "", effects: structuredClone(mode.effects ?? []), ...(mode.once === true ? {once: true} : {})})),
+      kind: "effect-choice", effect: "modal", player: chooser,
+      /* "EACH OPPONENT MAY ... FOR EACH OPPONENT WHO DOES" (Tempt with Vengeance's tempting offer; CR 207.2c, 101.4): a mode that
+         says `did` is the player doing so, kept for the effects after it (script/amount.mjs, playersWhoDid) -- the player asked,
+         `doer`, even when another chooses for one who has left the game (CR 800.4g; resolution.mjs, chooseInstead). */
+      ...(modes.some((mode) => mode.did === true) ? {doer: chooser} : {}),
+      modes: modes.map((mode) => ({text: mode.text ?? "", effects: structuredClone(mode.effects ?? []), ...(mode.once === true ? {once: true} : {}), ...(mode.did === true ? {did: true} : {})})),
       choose,
       /* A "you may" asks in the card's own words (cards/index.mjs): its sentence, then Yes or No. */
       ...(params.title ? {title: String(params.title)} : {}),
@@ -561,7 +566,9 @@ export const modal = {
     const chosen = (indices ?? []).map((index) => awaiting.modes[index]).filter(Boolean);
     /* Taken: done once this turn ("do this only once each turn"). */
     if (awaiting.onceOf && chosen.some((mode) => mode.once === true)) recordUse(state, awaiting.onceOf.source, awaiting.onceOf.key);
-    return {events: [], splice: chosen.flatMap((mode) => mode.effects)};
+    /* Done by the player asked, if they are still in the game: one who has left does nothing (CR 800.4b). */
+    const did = chosen.some((mode) => mode.did === true) && Number.isInteger(awaiting.doer) && !state.players[awaiting.doer]?.lost;
+    return {events: [], splice: chosen.flatMap((mode) => mode.effects), ...(did ? {did: awaiting.doer} : {})};
   },
 
   /* Its chooser has left the game ("target opponent may draw a card", Tataru Taru): a choice other than paying, so another

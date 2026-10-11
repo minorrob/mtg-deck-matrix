@@ -48,9 +48,12 @@
  *   {commanderColors: "you"}             the number of colors in your commanders' color identity (CR 903.4; War Room) --
  *                                        undefined for a player with no commander (903.4f), so a cost of it is unpayable
  *                                        (commanderless, below)
+ *   {playersWhoDid: true}                how many players did what this resolution offered them ("each opponent may ...
+ *                                        for each opponent who does", Tempt with Vengeance; effects/asking.mjs, modal's `did`)
  *
  * and any of them may say `atMost` ("{1} less IF you control a creature with flying": the count, at most 1), `times` and
- * `plus`: "twice X", "1 plus the number of ...", and `times: -1` for "-X/-X" and
+ * `plus`: "twice X", "1 plus the number of ...", `times: "X"` for "X ... for each" (X tokens for each opponent who does),
+ * and `times: -1` for "-X/-X" and
  * "-1/-1 for each Swamp you control" -- the only way an amount comes out below nothing; every other is at least 0.
  * A selector counted may be a choice, `{anyOf: [...]}` with what the alternatives share: "Squirrels, Bats, Lizards,
  * and Rats you control", each counted once.
@@ -77,7 +80,7 @@ export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf"
   "countersRemovedThisWay", "movedCount", "tappedThisWay", "cardsDiscardedThisTurn",
   /* What happened this turn, and this game (Train C): the records state/index.mjs, rules/combat.mjs and the effects keep. */
   "creaturesDiedThisTurn", "cardsDrawnThisTurn", "playersDealtNoncombatDamage", "scriedOrSurveilledThisTurn", "spellsCastThisTurn", "spellsCastThisGame",
-  "commanderColors"]);
+  "commanderColors", "playersWhoDid"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "filter", "controlledBy", "named"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -126,7 +129,8 @@ export function amountProblems(value) {
   if ("lesserOf" in value && !(Array.isArray(value.lesserOf) && value.lesserOf.length >= 2)) problems.push("lesserOf is two or more amounts");
   else if ("lesserOf" in value) for (const one of value.lesserOf) problems.push(...amountProblems(one).map((p) => `lesserOf: ${p}`));
   if ("devotion" in value && !(Array.isArray(value.devotion) && value.devotion.length && value.devotion.every((c) => COLORS.includes(c)))) problems.push("Devotion is to one or more colors: {devotion: [\"B\"]}");
-  for (const key of ["times", "plus", "atMost"]) if (key in value && !Number.isInteger(value[key])) problems.push(`An amount's ${key} is a whole number`);
+  for (const key of ["times", "plus", "atMost"]) if (key in value && !Number.isInteger(value[key]) && !(key === "times" && value[key] === "X")) problems.push(`An amount's ${key} is a whole number${key === "times" ? ', or "X"' : ""}`);
+  if ("playersWhoDid" in value && value.playersWhoDid !== true) problems.push("playersWhoDid is true");
   if ("if" in value) {
     problems.push(...conditionProblems(value.if).map((p) => `An amount's condition: ${p}`));
     for (const key of ["then", "else"]) if (key in value) problems.push(...amountProblems(value[key]));
@@ -198,6 +202,8 @@ export function amountOf(state, value, context = {}) {
     ...(context.lastKnown ? {lastKnown: context.lastKnown} : {})};
   let n = 0;
   if ("x" in value) n = Math.max(0, context.x ?? 0);
+  /* "For each opponent who does" (Tempt with Vengeance): the players who did what this resolution offered (CR 207.2c). */
+  else if ("playersWhoDid" in value) n = (context.whoDid ?? []).length;
   /* "A charge counter on it for each time it was kicked" (Everflowing Chalice; multikicker, CR 702.33c). */
   else if ("kicked" in value) n = context.kicked ?? 0;
   /* The creatures its additional cost tapped, as the spell was cast (CR 601.2h): what the cast recorded; a copy was not cast
@@ -409,8 +415,10 @@ export function amountOf(state, value, context = {}) {
     n = id !== null && state.objects[id] ? (state.objects[id].zone === "battlefield" ? characteristicsOf(state, id).colors : state.objects[id].colors ?? []).length : 0;
   }
   /* `atMost`: "{1} less if you control a creature with flying" is the count of them, at most 1. */
-  const total = Math.min(value.atMost ?? Infinity, n) * (value.times ?? 1) + (value.plus ?? 0);
-  return (value.times ?? 1) < 0 ? total : Math.max(0, total);
+  /* `times: "X"`: X for each ("X ... tokens for each opponent who does"), X chosen as it was cast (CR 107.3a). */
+  const times = value.times === "X" ? Math.max(0, context.x ?? 0) : value.times ?? 1;
+  const total = Math.min(value.atMost ?? Infinity, n) * times + (value.plus ?? 0);
+  return times < 0 ? total : Math.max(0, total);
 }
 
 /** The parameters of an effect that take a number, and so may take a count -- "the top X cards" (`fromTop`, Villainous
