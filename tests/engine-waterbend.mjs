@@ -17,6 +17,7 @@ import {projectFor} from "../game/engine/projection.mjs";
 import {housePilot} from "../game/engine/pilots/house-pilot.mjs";
 import {compileScript} from "../game/engine/cards/index.mjs";
 import {loadCardIndex} from "../game/tools/engine-cards.mjs";
+import {addRider, ridersOf} from "../game/engine/rules/restricted-mana.mjs";
 
 let checks = 0;
 const eq = (a, b, m) => { assert.deepEqual(a, b, m); checks += 1; };
@@ -159,6 +160,27 @@ const bendOffer = (s, id) => activations(s, id).find((a) => a.waterbend === true
     ok(problems(ability(cost, more)).some((p) => /waterbend cost is a permanent's ability's only mana/.test(p)), `refused: ${why}`);
   eq([costAtomBuilt({atom: "waterbend", cost: "{3}"}), costAtomBuilt({atom: "waterbend", cost: "{2}{U}"}), costAtomBuilt({atom: "waterbend", cost: "{X}"}), costAtomBuilt({atom: "waterbend", cost: "{0}"}),
     costAtomBuilt({atom: "waterbend", cost: "nonsense"})], [true, false, false, false, false], "generic mana only, at least {1}");
+}
+
+{
+  /* The rest paid with rider mana (Path of Ancestry's; rules/restricted-mana.mjs). The offer that waterbends cannot know its
+     mana until the permanents are picked, so it names no rider mana: what is left is paid as any cost but a spell's is,
+     the plain mana first and the rider mana after (a library game, 2026-10-11: the offer said "none of it" for a cost it
+     took as nothing, and an AI seat's waterbend was refused part-way, its ability already on the stack). */
+  const s = table();
+  const koi = put(s, card("Giant Koi"), 0, "battlefield"), fresh = put(s, creature("Fresh"), 0, "battlefield");
+  const path = put(s, {card: "Path", types: ["Land"]}, 0, "battlefield");
+  s.players[0].manaPool.C = (s.players[0].manaPool.C ?? 0) + 2;
+  addRider(s, 0, {C: 2}, {spell: {types: ["Creature"]}, effects: [], text: "scry 1"}, path);
+  const offer = bendOffer(s, koi);
+  eq(offer.riders, undefined, "the waterbend offer names no rider mana: its mana is not known until the permanents are picked");
+  applyAction(s, 0, offer);
+  const choice = awaitingChoice(s);
+  eq([choice.min, choice.max], [1, 2], "one to tap at least, the pool's two paying the rest; two at most, of the Koi and the creature");
+  const pick = choice.options.find((o) => o.cardId === fresh).index;
+  resolveAwaiting(s, [pick]);
+  eq([s.stack.length, s.players[0].manaPool.C ?? 0, ridersOf(s, 0).length, s.objects[fresh].tapped], [1, 0, 0, true],
+    "taken: the creature tapped for {1}, the rider mana paying the other {2}, and the ability on the stack");
 }
 
 console.log(`engine-waterbend: ${checks} checks passed`);

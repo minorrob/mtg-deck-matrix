@@ -36,6 +36,13 @@
  *   node tools/fuzz-live.mjs --backup <crankmagic-backup.json> --decks "<deck 1>|<deck 2>|<deck 3>|<deck 4>"
  *        [--humans 0,1] [--seeds 1-50] [--replay] [--leaks] [--json <out.json>]
  *
+ * ROB'S WHOLE LIBRARY, NOT ONLY HIS SEVEN DECKS (G1-L, 2026-10-11). G1's 1,400 games played the seven decks' 477 cards;
+ * the rest of his library was proven by its cards' scenarios alone, and two bugs lived there that only a game finds (a
+ * change of control for good its room could not save; a waterbend paid with rider mana, which stalled a table). `--library`
+ * plays, for each seed, four Commander decks made from the library (data/live-load.json's cards) by decksFromLibrary:
+ *
+ *   node tools/fuzz-live.mjs --library [--humans 0] [--level normal] [--seeds 1-50] [--replay] [--leaks] [--json <out.json>]
+ *
  * Exit 0 when every game is clean, 1 when any is not, 2 on a usage error. The card source is the cloud table's own
  * (cloud/game-room.mjs `tableCards`): a deck with a card the table cannot play is refused by name, as at the table. */
 import {readFileSync, writeFileSync} from "node:fs";
@@ -67,6 +74,41 @@ export function decksFromBackup(backup, names) {
     }
     return {name: deck.name, commander: [...commanders].map(cardName).filter(Boolean), cards: cards.filter(Boolean)};
   });
+}
+
+/**
+ * FOUR COMMANDER DECKS FROM A LIBRARY, FOR ONE SEED (G1-L). `library`: card names; `oracle`: a name's oracle card ({type, ci,
+ * layout}); `cards`: the table's card source, so only cards the table can play are used. A commander is a legendary
+ * creature (not a meld card) the table plays; its 99 are the library's playable cards in its color identity (CR 903.4),
+ * none twice (903.5b), twelve lands and up to 62 other cards drawn at random, then basics of its colors, or Wastes for a
+ * colorless one, to 99 (903.5a). The same seed makes the same decks.
+ */
+export const LIBRARY_BASICS = {W: "Plains", U: "Island", B: "Swamp", R: "Mountain", G: "Forest"};
+export function decksFromLibrary(seed, {library, oracle, cards, count = 4}) {
+  const basics = new Set([...Object.values(LIBRARY_BASICS), "Wastes"]);
+  const playable = library.filter((n) => !basics.has(n) && oracle(n) && (() => {try {return Boolean(cards(n));} catch {return false;}})());
+  const front = (n) => oracle(n).type.split("//")[0];
+  const isLand = (n) => /\bLand\b/.test(front(n));
+  const commanders = playable.filter((n) => /Legendary/.test(oracle(n).type) && /Creature/.test(front(n)) && oracle(n).layout !== "meld");
+  const within = (ci, n) => (oracle(n).ci || []).every((c) => ci.includes(c));
+  const rng = createRng(`library-${seed}`);
+  const shuffle = (xs) => {const a = [...xs]; for (let i = a.length - 1; i > 0; i -= 1) {const j = rng.int(i + 1); [a[i], a[j]] = [a[j], a[i]];} return a;};
+  const pool = [...commanders], chosen = [];
+  while (chosen.length < count && pool.length) chosen.push(pool.splice(rng.int(pool.length), 1)[0]);
+  return chosen.map((commander) => {
+    const ci = oracle(commander).ci || [];
+    const mine = playable.filter((n) => n !== commander && within(ci, n));
+    const deck = [...shuffle(mine.filter(isLand)).slice(0, 12), ...shuffle(mine.filter((n) => !isLand(n))).slice(0, 62)];
+    const colors = ci.length ? ci : [null];
+    for (let i = 0; deck.length < 99; i += 1) deck.push(colors[i % colors.length] ? LIBRARY_BASICS[colors[i % colors.length]] : "Wastes");
+    return {name: commander, commander: [commander], cards: deck};
+  });
+}
+/** Rob's library as decksFromLibrary takes it: data/live-load.json's cards, read with the oracle data. */
+export function libraryFrom(root = new URL("..", import.meta.url)) {
+  const read = (rel) => JSON.parse(readFileSync(new URL(rel, root), "utf8"));
+  const oracle = new Map(read("data/engine/oracle.json").cards.map((c) => [c.name, c]));
+  return {library: Object.keys(read("data/live-load.json").metadata), oracle: (n) => oracle.get(n)};
 }
 
 /* A person at the table: answers what they are shown, from a stream of their own. */
@@ -310,6 +352,13 @@ export async function playGame({decks, seed, cards, humans = [], levels = [], ma
     ...(replay ? {replay: await replayMatch({storage, matchId, ...(cards ? {cards} : {}), ...(pilot ? {pilot} : {})})} : {})};
 }
 
+/** A game played, or the exception it threw, said with its seed: one game's exception is that game unclean, and a run of
+    many seeds goes on to the next (a library sweep found its first stall at seed 229 of 300). */
+export async function playSafely(options) {
+  try {return {game: await playGame(options)};}
+  catch (error) {return {exception: String(error?.message ?? error)};}
+}
+
 /** Whether a game counts as clean, and why not when it does not. */
 export function verdict(game) {
   const problems = [];
@@ -345,19 +394,24 @@ const seedsFrom = (spec) => spec.split(",").flatMap((part) => {
 
 async function main(argv) {
   const arg = (name, fallback) => {const i = argv.indexOf(`--${name}`); return i >= 0 ? argv[i + 1] : fallback;};
-  const backupPath = arg("backup"), deckNames = arg("decks");
-  if (!backupPath || !deckNames) {console.error("usage: node tools/fuzz-live.mjs --backup <file> --decks \"A|B|C|D\" [--humans 0,1] [--seeds 1-50] [--json <out>]"); return 2;}
+  const backupPath = arg("backup"), deckNames = arg("decks"), fromLibrary = argv.includes("--library");
+  if (!fromLibrary && (!backupPath || !deckNames)) {console.error("usage: node tools/fuzz-live.mjs --backup <file> --decks \"A|B|C|D\" [--humans 0,1] [--seeds 1-50] [--json <out>], or --library [--level normal] in place of --backup and --decks"); return 2;}
   const {tableCards} = await import("../cloud/game-room.mjs");
-  const decks = decksFromBackup(JSON.parse(readFileSync(backupPath, "utf8")), deckNames.split("|"));
+  const library = fromLibrary ? libraryFrom() : null;
+  const fixed = fromLibrary ? null : decksFromBackup(JSON.parse(readFileSync(backupPath, "utf8")), deckNames.split("|"));
   const humansSpec = arg("humans", "");
   const humans = humansSpec ? humansSpec.split(",").map(Number) : [];
+  const level = arg("level", null), levels = level ? [0, 1, 2, 3].map((i) => (humans.includes(i) ? null : level)) : [];
   const seeds = seedsFrom(arg("seeds", "1-50"));
-  decks.forEach((d, i) => console.log(`s${i} ${NAMES[i]} (${humans.includes(i) ? "human" : "house"}): ${d.name}`));
+  if (fixed) fixed.forEach((d, i) => console.log(`s${i} ${NAMES[i]} (${humans.includes(i) ? "human" : "house"}): ${d.name}`));
   const rows = [];
   for (const seed of seeds) {
-    const game = await playGame({decks, seed, cards: tableCards, humans, replay: argv.includes("--replay"), leaks: argv.includes("--leaks")});
+    const decks = fixed ?? decksFromLibrary(seed, {...library, cards: tableCards});
+    if (!fixed) console.log(`seed ${seed}: ${decks.map((d, i) => `s${i} ${d.name}`).join(" · ")}`);
+    const {game, exception} = await playSafely({decks, seed, cards: tableCards, humans, levels, replay: argv.includes("--replay"), leaks: argv.includes("--leaks"), ...(fixed ? {} : {matchId: `lib-${seed}`})});
+    if (exception) {console.log(`seed ${seed}: threw: ${exception}`); rows.push({seed, ...(fixed ? {} : {decks: decks.map((d) => d.name)}), exception, clean: false}); continue;}
     console.log(describe(game));
-    rows.push({seed, status: game.status, result: game.result, turns: game.turns, decisions: game.decisions, ms: game.ms, longestWait: game.longestWait, refusals: game.refusals,
+    rows.push({seed, ...(fixed ? {} : {decks: decks.map((d) => d.name)}), status: game.status, result: game.result, turns: game.turns, decisions: game.decisions, ms: game.ms, longestWait: game.longestWait, refusals: game.refusals,
       personRefused: game.personRefused.length, loopsStopped: game.loopsStopped, ...(game.replay ? {replaySame: game.replay.same} : {}), ...(game.leaks ? {leaks: game.leaks, leakChecks: game.leakChecks} : {}),
       clean: verdict(game).clean});
   }
@@ -365,7 +419,7 @@ async function main(argv) {
   const terms = [argv.includes("--replay") ? "replayed identically" : "", argv.includes("--leaks") ? "no seat sent a card it may not know" : ""].filter(Boolean);
   console.log(`${clean} of ${rows.length} games clean (finished, refusals counted from the match's start, none refused${terms.length ? `, ${terms.join(", ")}` : ""})`);
   const out = arg("json");
-  if (out) writeFileSync(out, JSON.stringify({decks: decks.map((d) => d.name), humans, node: process.version, rows}, null, 2));
+  if (out) writeFileSync(out, JSON.stringify({...(fixed ? {decks: fixed.map((d) => d.name)} : {library: true}), humans, level, node: process.version, rows}, null, 2));
   return clean === rows.length ? 0 : 1;
 }
 
