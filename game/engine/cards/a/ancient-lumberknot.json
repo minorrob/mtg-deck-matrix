@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ancient Lumberknot",
+    "oracleId": "d714f1f6-539e-4a2a-b738-226854d7ff09",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Treefolk"
+    ],
+    "manaCost": "{2}{B}{G}",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "power": 1,
+    "toughness": 4
+  },
+  "oracleText": "Each creature you control with toughness greater than its power assigns combat damage equal to its toughness rather than its power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Each creature you control with toughness greater than its power assigns combat damage equal to its toughness rather than its power.",
+      "rule": "combat-damage-by-toughness",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "toughnessOverPower": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Inspiring Overseer",
+  "scenarios": [
+    {
+      "name": "It enters: 1 life and a card; it flies",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Inspiring Overseer"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Inspiring Overseer"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            },
+            {
+              "seat": 0,
+              "zone": "hand",
+              "count": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 41
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Inspiring Overseer",
+            "has": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
