@@ -263,6 +263,9 @@ export function resolveTop(state, effect = null, rng = null) {
     entry.stage = "resolving";
     return events;
   }
+  /* Its controller lost the game as it resolved ("you lose the game", CR 104.3e): it left the stack with them (CR 800.4a,
+     rules/sba.mjs leaveGame), and nothing of it is left to finish -- nor did it resolve. */
+  if (state.players[entry.playerId]?.lost && !state.stack.includes(entry)) return events;
   return finishTop(state, entry, events, false);
 }
 

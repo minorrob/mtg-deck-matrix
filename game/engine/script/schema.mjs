@@ -111,6 +111,9 @@ function checkEffect(effect, path, errors) {
      anyone "this combat" (Legion Warboss) -- effects/permanents.mjs, afterwards. */
   if (effect.mustAttack !== undefined && !["that player", "this combat"].includes(effect.mustAttack))
     errors.push({path: `${path}.mustAttack`, message: "What it must attack is \"that player\" (this turn) or anyone \"this combat\""});
+  /* "Each player with exactly 13 life loses the game" (Triskaidekaphobia; effects/resources.mjs): a life total, a whole number. */
+  if (effect.withLife !== undefined && (name !== "loseGame" || !Number.isInteger(effect.withLife)))
+    errors.push({path: `${path}.withLife`, message: "\"With exactly N life\" is withLife: a whole number, on loseGame"});
   /* "The player or planeswalker that creature is attacking" (Raid Bombardment; script/bind.mjs): damage, to that one alone. */
   if (effect.who === "attacked" && (name !== "dealDamage" || effect.targets !== undefined))
     errors.push({path: `${path}.who`, message: "\"The player or planeswalker it's attacking\" (who: \"attacked\") is dealt damage, by dealDamage with no other target"});

@@ -24,7 +24,7 @@ import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
 import {typesOf, powerOf, toughnessOf, keywordsOf, isKeywordCounter, controllerOf} from "../../rules/layers.mjs";
 import {cantGainLife, countersPlaced, playerCountersPlaced} from "../../rules/statics.mjs";
-import {playerRuled} from "../../rules/sba.mjs";
+import {playerRuled, leaveGame} from "../../rules/sba.mjs";
 import {amountOf} from "../amount.mjs";
 import {recordUse} from "../../state/index.mjs";
 
@@ -377,6 +377,22 @@ export function winGame(state, params, context) {
   /* "Your opponents can't win the game" (Darksteel Angel; CR 104.2b): a player one of whose opponents has it does not. */
   for (const id of playersFor(state, params.who ?? "you", context.controller)) if (!playerRuled(state, "opponents-cant-win", id, {opponents: true})) state.players[id].won = true;
   return [];
+}
+
+/**
+ * `loseGame` -- "that player loses the game" (Strixhaven Stadium), "each player with exactly 13 life loses the game"
+ * (Triskaidekaphobia; CR 104.3e; Forge's LosesGame): each player `who` names -- with `withLife`, only those whose life total
+ * is exactly that now -- found first, then all of them losing together (CR 104.4a: all who remain losing at once is a draw).
+ * Each leaves the game as it happens, everything of theirs with them (CR 104.5, 800.4a; rules/sba.mjs leaveGame): no
+ * state-based action. One for whom "you can't lose the game" holds (Darksteel Angel) does not lose -- then, or later.
+ */
+export function loseGame(state, params, context) {
+  const events = [];
+  const losing = playersFor(state, params.who ?? "you", context.controller)
+    .filter((id) => params.withLife === undefined || state.players[id].life === params.withLife)
+    .filter((id) => !playerRuled(state, "cant-lose", id));
+  for (const id of losing) leaveGame(state, state.players[id], "effect", events);
+  return events;
 }
 
 /** `putCounter` — CR 121. */

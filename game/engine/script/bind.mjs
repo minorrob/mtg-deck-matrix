@@ -444,7 +444,9 @@ export function targetRefs(effects) {
 
 /* The primitives that do something TO what they are aimed at. Read by a pilot choosing among an offer's targets --
    aim these at an opponent's things, the rest at your own -- and by nothing in the rules. */
-const HOSTILE = new Set(["destroy", "dealDamage", "moveZone", "tap", "counterSpell", "loseLife", "discard", "mill", "removeCounter"]);
+const HOSTILE = new Set(["destroy", "dealDamage", "moveZone", "tap", "counterSpell", "loseLife", "discard", "mill", "removeCounter",
+  /* "Target player loses the game" (CR 104.3e): aimed at an opponent. */
+  "loseGame"]);
 
 /** Whether an ability's effects are aimed against what they target: a removal spell, not a pump. */
 export function isHostile(effects) {

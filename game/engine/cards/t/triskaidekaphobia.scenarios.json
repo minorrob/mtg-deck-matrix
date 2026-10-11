@@ -1,0 +1,344 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Triskaidekaphobia",
+  "fixtures": {
+    "Blast": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{C}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Blast deals 27 damage to target player.",
+        "targets": [
+          {
+            "what": "player"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 27,
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Singe": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{C}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Singe deals 28 damage to target player.",
+        "targets": [
+          {
+            "what": "player"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 28,
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya at exactly 13: Rob chooses the first mode at his upkeep, and she loses the game",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blast"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Triskaidekaphobia"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Blast",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 13
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Each player with exactly 13 life loses the game, then each player gains 1 life.",
+                  "Each player with exactly 13 life loses the game, then each player loses 1 life."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Each player with exactly 13 life loses the game, then each player gains 1 life."
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "event": "GameEventPlayerLivesChanged",
+          "where": {
+            "player": {
+              "playerId": 1,
+              "name": "Maya"
+            },
+            "lost": true,
+            "lossReason": "effect"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nobody at 13, the second mode: each player loses 1 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Triskaidekaphobia"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "choose": [
+            "Each player with exactly 13 life loses the game, then each player loses 1 life."
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "seat": 1,
+          "life": 39
+        }
+      ]
+    },
+    {
+      "name": "Maya at 12, the first mode: nobody at 13 when it is checked; then each gains 1, and Maya at 13 stays in",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Singe"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Triskaidekaphobia"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Singe",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "choose": [
+            "Each player with exactly 13 life loses the game, then each player gains 1 life."
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 41
+        },
+        {
+          "seat": 1,
+          "life": 13
+        }
+      ]
+    },
+    {
+      "name": "Three players, Rob himself at 13: he loses and leaves the game, and his ability goes with him -- nobody gains 1 life",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blast"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Triskaidekaphobia"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Blast",
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 4,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "choose": [
+            "Each player with exactly 13 life loses the game, then each player gains 1 life."
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "event": "GameEventPlayerLivesChanged",
+          "where": {
+            "player": {
+              "playerId": 0,
+              "name": "Rob"
+            },
+            "lost": true,
+            "lossReason": "effect"
+          }
+        },
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 2,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

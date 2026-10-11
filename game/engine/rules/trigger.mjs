@@ -242,6 +242,8 @@ function subjects(state, event, condition, sourceId, controller) {
     if (toPermanent && !(state.objects[damaged] && characteristicsOf(state, damaged).types.includes("Planeswalker"))) return [];
     const to = toPermanent ? state.objects[damaged].controller : fields.target?.playerId, source = fields.source?.cardId;
     if (condition.to === "opponent" && to === controller) return [];
+    /* "Whenever a creature deals combat damage to you" (Strixhaven Stadium): this ability's controller, and no one else. */
+    if (condition.to === "you" && to !== controller) return [];
     if (!fits(state, source, condition, sourceId, controller)) return [];
     /* "Create that many Treasure tokens": the damage dealt (CR 120.3), with who dealt it and to whom. */
     return [{card: source, player: to, amount: fields.amount ?? 0}];
