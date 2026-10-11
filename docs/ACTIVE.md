@@ -907,7 +907,11 @@ ticked one is saved as the deck's linked upgrade; nothing else changes.
 - **Rob's, left:** the privacy wording in `docs/ai-door.md` ("The deck advisor"), then staging's profile switches it on;
   the eval with his key, and the swaps he would refuse.
 
-**#697 merged on main c9f87a3f on green Actions.** AI-4's staging release is recorded with AI-6's.
+**#697 merged on main c9f87a3f on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 819748c2 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 04:25:44 UTC as
+version 37a15ed9, its `play-worker.js` byte-identical to the release's dry-run bundle (2,814,318 bytes, sha256
+b02a0dcf…). Its AI bindings are the Coach's alone: `AI_ADVISE` is not set, so the advisor stays shut on staging
+until Rob approves its privacy wording.
 
 **AI-6: AI Coach settings, built (2026-10-11).** One panel, from Settings (its own card, *AI Coach*) and from the
 board's *Tools ▾ › AI Coach settings…*, saved with the person's preferences and synced with the library. Six controls:
