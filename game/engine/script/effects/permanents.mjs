@@ -619,6 +619,11 @@ function fixedAt(state, selector, context) {
 }
 
 export function effectUntil(state, params, context) {
+  /* "For as long as this Saga remains on the battlefield" (Old Fat Spider Can't See Me; CR 611.2b): `until: "this leaves"`,
+     ended as its source leaves the battlefield (endWhileSourceRemains) -- a duration that never starts with the source gone
+     from it before this resolves (rules/stack.mjs leaves the source null then), and the effect does nothing. */
+  const whileHere = params.until === "this leaves";
+  if (whileHere && (context.source === null || context.source === undefined || state.objects[context.source]?.zone !== "battlefield")) return [];
   /* "That creature's owner can't cast spells with the same name as that creature until your next turn" (Reflector Mage):
      a rule changed for players, not objects -- `who`, bound as it resolves ({ownerOf: {target: 0}}, script/bind.mjs) -- and
      the spells it forbids by `named`, that creature's name as it resolves ({nameOf: {target: 0}}; CR 201.2a). Read where a
@@ -681,9 +686,21 @@ export function effectUntil(state, params, context) {
     /* "Until this card is cast from exile" (Emrakul, the Exigent Doom): `untilCast` the card, as `until: "ever"` otherwise is,
        until that cast (rules/actions.mjs). */
     ...(Array.isArray(params.untilCast) && params.untilCast.length ? {untilCast: params.untilCast[0]} : {}),
+    ...(whileHere ? {source: context.source} : {}),
     sourceController: context.controller,
   });
   return [];
+}
+
+/**
+ * A PERMANENT HAS LEFT THE BATTLEFIELD (`departed`, its id there): each effect lasting "for as long as" it remained there
+ * ends (CR 611.2b; effectUntil's `until: "this leaves"`, Old Fat Spider Can't See Me) -- wherever it went, it is a new
+ * object (CR 400.7), and coming back does not bring the effect back. Called with every departure, after controlSourceLeft
+ * has given back what a control change lasting as long took (effects/zones.mjs, returnExiledUntil).
+ */
+export function endWhileSourceRemains(state, departed) {
+  if ((state.effects ?? []).some((e) => e.until === "this leaves" && e.source === departed))
+    state.effects = state.effects.filter((e) => !(e.until === "this leaves" && e.source === departed));
 }
 
 /**

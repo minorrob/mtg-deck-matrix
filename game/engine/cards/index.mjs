@@ -1116,6 +1116,11 @@ export function compileScript(script) {
         if (effect.rule !== "prevent-damage" || !Array.isArray(effect.then)) problems.push("effectUntil: `then` is what follows a prevention shield's prevention, a list");
         for (const inner of Array.isArray(effect.then) ? effect.then : []) if (!EFFECTS[inner?.effect]) problems.push(`effectUntil: ${inner?.effect} follows a prevention, and it asks a question or is not built`);
       }
+      /* "For as long as this Saga remains on the battlefield" (CR 611.2b): a duration effectUntil keeps with its source and
+         ends as that leaves (effects/permanents.mjs, endWhileSourceRemains), as gainControl and exileUntil keep theirs -- no
+         other effect's, and not a rule changed for players' casting, which keeps no source. */
+      if (effect.until === "this leaves" && !(["gainControl", "exileUntil"].includes(effect.effect) || (effect.effect === "effectUntil" && effect.rule !== "cant-cast")))
+        problems.push(`${effect.effect}: "for as long as this remains on the battlefield" (until "this leaves") is effectUntil's, gainControl's and exileUntil's`);
       /* "You may play that card" until a time (effects/zones.mjs): this turn, or the end of its controller's next turn. */
       if (effect.effect === "mayPlay") {
         if (!MAY_PLAY_UNTIL.includes(effect.until ?? "end-of-turn")) problems.push(`mayPlay: until ${MAY_PLAY_UNTIL.join(" or ")}`);

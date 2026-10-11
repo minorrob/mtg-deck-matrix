@@ -19,7 +19,7 @@
 
 import {holdArrival, enteredWith} from "../../rules/entering.mjs";
 import {prepare} from "./attributes.mjs";
-import {afterwards, delayedTrigger, enchantable, enchantOnArrival, controlSourceLeft} from "./permanents.mjs";
+import {afterwards, delayedTrigger, enchantable, enchantOnArrival, controlSourceLeft, endWhileSourceRemains} from "./permanents.mjs";
 import {typesOf} from "../../rules/layers.mjs";
 import {moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard, rememberExileLooker, recordDraw, recordDeath} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
@@ -218,6 +218,8 @@ export function returnExiledUntil(state, departed, events, leftBehind = null) {
   if (leftBehind) keepLastKnown(state, departed, leftBehind);
   /* And control gained "for as long as" it remained on the battlefield ends with it (CR 611.2b; Sower of Temptation). */
   controlSourceLeft(state, departed, events);
+  /* And every other effect lasting for as long as it remained there (Old Fat Spider Can't See Me). */
+  endWhileSourceRemains(state, departed);
   const due = (state.exiledUntil ?? []).filter((link) => link.source === departed);
   if (!due.length) return;
   state.exiledUntil = state.exiledUntil.filter((link) => link.source !== departed);

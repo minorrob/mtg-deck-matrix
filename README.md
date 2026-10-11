@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 463 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 464 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1333,6 +1333,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-unless-times` - `tests/engine-unless-times.mjs`: a cost paid any number of times and "that many" after it (Bloodthirsty Adversary; CR 118.12a, 601.2h, 603.12): each count the mana pays offered, the cost that many times over paid as one, the reflexive trigger's X and "up to X" targets
 - `engine-pay-mana-play` - `tests/engine-pay-mana-play.mjs`: casting what this creature exiled as it attacks, its mana cost paid (Boiling Rock Rioter; CR 607.2a, 608.2g, 601.2g-h, 605.3a): an Ally exiled with this creature cast from the pool and its caster's plain sources, colored symbols and all, the ways to pay asked; an {X} or unpayable one not offered; a tap cost that may tap its own source unless it says another
 - `engine-next-end-step` - `tests/engine-next-end-step.mjs`: "until your next end step, you may play those cards" (Shadow Urchin; CR 513.1, 611.2a) -- over as its controller's next end step begins: this turn's if made before it, the next if made during it, never another player's; "until the end of your next turn" lasting through it
+- `engine-source-remains` - `tests/engine-source-remains.mjs`: "for as long as this Saga remains on the battlefield" (Old Fat Spider Can't See Me; CR 611.2b, 400.7) -- a layer's effect or a prevention kept with its source and over as it leaves, however it goes (its owner leaving the game among them), never back with it, never started without it
 
 ## Design and execution record
 
