@@ -55,7 +55,7 @@
               },
               "upTo": true,
               "to": "hand",
-              "reveal": true,
+              "reveal": "taken",
               "rest": "bottom",
               "random": true
             }
@@ -81,7 +81,7 @@
               },
               "upTo": true,
               "to": "hand",
-              "reveal": true,
+              "reveal": "taken",
               "rest": "bottom",
               "random": true
             }

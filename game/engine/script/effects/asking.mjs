@@ -261,7 +261,19 @@ export const surveil = {
    top of your library. You may exile a nonland card from among them. Put the rest on the bottom of your library in a
    random order. You may cast the exiled card" (The Key to the Vault): `selector`, what may be taken (the others are
    shown, not offered); `upTo`, "you may" -- none is a choice; `remember`, what was taken, for the effects after it;
-   `random`, the rest in a random order from the game's stream. The cards are looked at, by their controller only. */
+   `random`, the rest in a random order from the game's stream. The cards are looked at, by their controller only --
+   unless they are revealed (CR 701.20a), shown to every player: `reveal: true`, "reveal the top four cards of your
+   library" (Satyr Wayfinder, Mulch), every card it looks at, said in the journal and, while its controller chooses, in
+   every seat's view of that library's top (projection.mjs, `looks`; gone once the dig is done); `reveal: "taken"`, "you
+   may reveal a permanent card from among them and put it into your hand" (Boughside Wanderers), the cards taken alone,
+   said as they are taken. */
+const revealedEvents = (state, player, ids) => ids.map((id) => event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: player}}));
+/* The revealed cards' place in every seat's view, while the choice is open, and its end. */
+function showRevealed(state, player, ids) {
+  const seats = state.players.filter((p) => !p.lost).map((p) => p.id);
+  state.looks = [...(state.looks ?? []), ...seats.map((viewer) => ({viewer, owner: player, ids: [...ids], revealed: true}))];
+}
+const unshowRevealed = (state, player) => { if (state.looks) state.looks = state.looks.filter((l) => !(l.revealed === true && l.owner === player)); };
 /* What dig does with the cards not taken: "the bottom" is a library move -- in a random order when the card says so, else
    in the order they were looked at; anywhere else is an ordinary zone change. */
 function digRest(state, player, cards, {rest, random}, rng, events) {
@@ -301,10 +313,16 @@ function digMoved(state, awaiting, chosen, events) {
   return found;
 }
 function digTaken(state, awaiting, chosen, rng) {
-  const events = [];
+  const events = digRevealing(state, awaiting, chosen);
   const found = digMoved(state, awaiting, chosen, events);
   digRest(state, awaiting.player, awaiting.cards.filter((id) => !chosen.includes(id)), awaiting, rng, events);
   return awaiting.remember ? {events, remembered: found} : events;
+}
+/* As the choice is answered: the revealed cards no longer shown in the seats' views (the dig is done with them), and the
+   cards taken revealed, when that is what it reveals. */
+function digRevealing(state, awaiting, chosen) {
+  if (awaiting.revealed) unshowRevealed(state, awaiting.player);
+  return awaiting.revealTaken ? revealedEvents(state, awaiting.player, chosen) : [];
 }
 export const dig = {
   open(state, params, context, rng = null) {
@@ -315,18 +333,22 @@ export const dig = {
     const fitting = fits ? looked.filter((id) => fits(state, id, {controller: context.controller, source: context.source ?? null})) : looked;
     const budget = params.totalManaValueAtMost;
     const offered = budget === undefined ? fitting : fitting.filter((id) => cardManaValue(state, id) <= budget);
+    /* "Reveal the top four": each card, revealed before anything is taken (CR 701.20a). */
+    const revealed = params.reveal === true ? revealedEvents(state, context.controller, looked) : [];
     /* Nothing among them that may be taken: nobody is asked, and the rest go where they go. */
     if (offered.length === 0) {
-      const events = [];
+      const events = [...revealed];
       digRest(state, context.controller, looked, {rest: params.rest ?? "bottom", random: params.random === true}, rng, events);
       return {events};
     }
+    if (revealed.length) { state.resolving?.events.push(...revealed); showRevealed(state, context.controller, looked); }
     const take = Math.min(params.take ?? 1, offered.length);
     state.awaiting = {
       kind: "effect-choice", effect: "dig", player: context.controller, cards: looked, offered,
       ...(budget !== undefined ? {budget, picked: []} : {}),
       take, min: params.upTo === true ? 0 : take,
       to: params.to ?? "hand", rest: params.rest ?? "bottom",
+      ...(revealed.length ? {revealed: true} : {}), ...(params.reveal === "taken" ? {revealTaken: true} : {}),
       ...(params.random === true ? {random: true} : {}), ...(params.remember ? {remember: true} : {}),
       ...(params.faceDown === true && (params.to ?? "hand") === "exile" ? {faceDown: true} : {}),
       ...(params.link === true && context.source !== null && context.source !== undefined ? {link: context.source} : {}),
@@ -365,11 +387,11 @@ export const dig = {
       state.awaiting = next;
       return {events: [], again: true};
     }
-    const events = [];
     const offered = awaiting.offered ?? awaiting.cards;
     const chosen = (indices ?? []).map((index) => offered[index]);
     if (chosen.some((id) => id === undefined) || new Set(chosen).size !== chosen.length || chosen.length < (awaiting.min ?? awaiting.take) || chosen.length > awaiting.take)
       throw new Error("Invalid selection");
+    const events = digRevealing(state, awaiting, chosen);
     const taken = new Set(chosen);
     const found = digMoved(state, awaiting, chosen, events);
     digRest(state, awaiting.player, awaiting.cards.filter((id) => !taken.has(id)), awaiting, rng, events);
