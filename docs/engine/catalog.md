@@ -21,7 +21,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Keyword abilities (CR 702) | 194 | 54 | 0 | 5 | 135 |
 | Keyword actions (CR 701) | 70 | 22 | 5 | 1 | 42 |
 | Effects | 192 | 71 | 1 | 2 | 118 |
-| Triggers | 138 | 23 | 4 | 2 | 109 |
+| Triggers | 138 | 24 | 4 | 2 | 108 |
 | Static abilities | 77 | 14 | 2 | 0 | 61 |
 | Replacement effects | 34 | 0 | 6 | 0 | 28 |
 | Costs | 26 | 5 | 2 | 10 | 9 |
@@ -586,7 +586,7 @@ The things that alone hold back the most of the most-played cards.
 | PlaneswalkedTo | — | missing | 0 | 57 | 0 | 0 |
 | CrankContraption | — | missing | 0 | 45 | 0 | 0 |
 | Mutates | — | missing | 0 | 32 | 0 | 0 |
-| Transformed | — | missing | 0 | 30 | 0 | 0 |
+| Transformed | transformed | built | 0 | 30 | 0 | 0 |
 | Scry | — | missing | 0 | 23 | 0 | 0 |
 | BecomeMonstrous | becomes monstrous | built | 0 | 19 | 0 | 0 |
 | RolledDie | — | missing | 0 | 19 | 0 | 0 |

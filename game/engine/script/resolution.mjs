@@ -139,8 +139,11 @@ export function runResolution(state, rng = null) {
     }
     /* "ADD ONE MANA OF ANY COLOR FOR EACH ..." as an effect resolves (Coalition Relic; CR 106.3): which color each is, its
        controller's to say (effects/asking.mjs, manaColors) -- how many counted now, as the effect reaches the head. */
+    /* "Add two mana of any one color. Spend this mana only to cast spells with mana value 4 or greater" (Ashling, Rimebound):
+       one color for all of it (`oneColor`), and what it may pay for (`spendOnly`), carried to the question. */
     if (effect?.effect === "addMana" && effect.anyColor === true && effect.mana === undefined) {
-      resolving.queue[0] = {effect: "manaColors", count: Number.isInteger(effect.count) ? effect.count : 1};
+      resolving.queue[0] = {effect: "manaColors", count: Number.isInteger(effect.count) ? effect.count : 1, ...(effect.oneColor === true ? {oneColor: true} : {}),
+        ...(effect.spendOnly ? {spendOnly: effect.spendOnly} : {})};
       continue;
     }
     if (effect?.effect === "empowerJace") {

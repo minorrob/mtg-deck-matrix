@@ -117,6 +117,8 @@ export const TRIGGER_EVENTS = Object.freeze([
   "crime committed",
   /* A state trigger, "when this artifact has twenty or more charge counters on it" (CR 603.8; Train C, w2c-hands-triggers). */
   "state",
+  /* "Whenever this creature transforms into Ashling, Rimebound" (CR 701.27e; Train C, w2c-hands-triggers). */
+  "transformed",
 ]);
 
 /** The cost atoms of §12.2. The two symbolic ones are named; the rest are structural. */

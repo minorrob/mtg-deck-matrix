@@ -125,6 +125,8 @@ function subjects(state, event, condition, sourceId, controller) {
     const scrier = fields.player?.playerId;
     return whoseIs(condition.scrier ?? "you", scrier, controller) ? [{player: scrier}] : [];
   }
+  /* "Whenever this creature transforms into Ashling, Rimebound" (CR 701.27e): this permanent, the face it has just after. */
+  if (condition.on === "GameEventCardTransformed") return fields.card?.cardId === sourceId && fields.to === condition.into ? [{card: sourceId}] : [];
   /* "Whenever you commit a crime" (CR 700.13): who did. */
   if (condition.on === "GameEventCrimeCommitted") {
     const criminal = fields.player?.playerId;

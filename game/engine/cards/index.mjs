@@ -252,6 +252,9 @@ const TRIGGERS = {
   /* A STATE TRIGGER (CR 603.8): "when this artifact has twenty or more charge counters on it" (Darksteel Reactor) -- `state`, a
      condition of script/condition.mjs's grammar (script/schema.mjs holds it to it), triggering while it holds (rules/trigger.mjs). */
   state: (t) => ({on: "state", state: t.state}),
+  /* "Whenever this creature transforms into Ashling, Rekindled" (CR 701.27e): this permanent transforming, `into` the face
+     it then has, by name -- not entering transformed (CR 712.14a), which is no transforming. This one's own alone. */
+  transformed: (t) => ((t.who ?? "self") === "self" && typeof t.into === "string" ? {on: "GameEventCardTransformed", who: "self", into: t.into} : null),
   /* "Whenever you activate a loyalty ability" (Ajani Unrelenting; CR 606, 602.2): a loyalty ability put on the stack by
      you (`activator`), any permanent's; "if you removed two or more loyalty counters to activate it" (`removedAtLeast`,
      its cost, CR 606.4). About the permanent and the player. */
@@ -1024,6 +1027,10 @@ export function compileScript(script) {
       if (effect.effect === "addMana" && effect.spendOnly !== undefined && !spendOnlyValid(effect.spendOnly))
         problems.push(`addMana: a spending restriction says what it pays for -- a spell, an ability of a permanent or of a source anywhere, or more than one, each a selector (${SPEND_ONLY_KEYS.join(", ")})`);
       if (effect.effect === "addMana") problems.push(...whenSpentProblems(effect));
+      /* "Add two mana of any one color" as an ability resolves (Ashling, Rimebound; script/resolution.mjs): of any color,
+         more than one of it, one color for all. */
+      if (effect.effect === "addMana" && effect.oneColor !== undefined && !(effect.oneColor === true && effect.anyColor === true && effect.mana === undefined && effect.count >= 2))
+        problems.push("addMana: oneColor is true, beside anyColor and a count of 2 or more -- that many mana, all of one color");
       /* "Target opponent reveals their hand. You choose a nonland card from it. That player discards that card" (Render
          Speechless; effects/asking.mjs): a discard chosen by this effect's controller (`chooser: "you"`, CR 701.9b) is from a
          hand revealed (`reveal: true`, CR 701.20a) -- the two together, and one card or more of it; "any number" is the

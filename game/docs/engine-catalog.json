@@ -5522,10 +5522,10 @@
   },
   "Triggers": {
    "tally": {
-    "built": 23,
+    "built": 24,
     "partial": 4,
     "named": 2,
-    "missing": 109
+    "missing": 108
    },
    "entries": [
     {
@@ -6240,8 +6240,8 @@
      "kind": "trigger",
      "rule": null,
      "name": "Transformed",
-     "engine": null,
-     "status": "missing",
+     "engine": "transformed",
+     "status": "built",
      "forge": "Transformed",
      "top": 0,
      "all": 30,

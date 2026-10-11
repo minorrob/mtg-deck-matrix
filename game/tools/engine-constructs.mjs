@@ -79,6 +79,8 @@ export const FORGE_TRIGGER = {
   CommitCrime: "crime committed",
   /* A state trigger (Train C, w2c-hands-triggers; CR 603.8): "when this artifact has twenty or more charge counters on it". */
   Always: "state",
+  /* "Whenever this creature transforms into ..." (Train C, w2c-hands-triggers; CR 701.27e). */
+  Transformed: "transformed",
 };
 
 /* Forge static and replacement modes the engine can execute today. `Continuous` is an anthem or a

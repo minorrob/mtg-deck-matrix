@@ -1174,26 +1174,29 @@ export const manaColors = {
   open(state, params, context) {
     const count = Math.max(0, Number.isInteger(params.count) ? params.count : 1);
     if (count === 0 || !state.players[context.controller]) return false;
-    state.awaiting = {kind: "effect-choice", effect: "manaColors", player: context.controller, count, chosen: [], source: context.source ?? null};
+    state.awaiting = {kind: "effect-choice", effect: "manaColors", player: context.controller, count, chosen: [], source: context.source ?? null,
+      ...(params.oneColor === true ? {oneColor: true} : {}), ...(params.spendOnly ? {spendOnly: params.spendOnly} : {})};
     return true;
   },
   choice(state, awaiting) {
     const name = awaiting.source !== null ? state.objects[awaiting.source]?.card : null;
     return {id: `manaColors:${awaiting.player}:${state.turn}:${awaiting.chosen.length}`,
-      title: `${name ? `${name}: a` : "A"}dd one mana of any color${awaiting.count > 1 ? ` (${awaiting.chosen.length + 1} of ${awaiting.count})` : ""}`,
+      title: awaiting.oneColor ? `${name ? `${name}: a` : "A"}dd ${awaiting.count} mana of any one color`
+        : `${name ? `${name}: a` : "A"}dd one mana of any color${awaiting.count > 1 ? ` (${awaiting.chosen.length + 1} of ${awaiting.count})` : ""}`,
       mode: "one", min: 1, max: 1, options: MANA_COLORS.map(([, label], index) => ({index, label}))};
   },
   apply(state, awaiting, indices) {
     const picked = (indices ?? []).length === 1 ? MANA_COLORS[indices[0]] : undefined;
     if (!picked) throw new Error("Choose one color for the mana");
-    const chosen = [...awaiting.chosen, picked[0]];
+    /* Of one color: the color once, for all of it. */
+    const chosen = awaiting.oneColor ? Array.from({length: awaiting.count}, () => picked[0]) : [...awaiting.chosen, picked[0]];
     if (chosen.length < awaiting.count) {
       state.awaiting = {...awaiting, chosen};
       return {events: [], again: true};
     }
     const mana = {};
     for (const color of chosen) mana[color] = (mana[color] ?? 0) + 1;
-    return {events: addMana(state, {mana}, {controller: awaiting.player, source: awaiting.source})};
+    return {events: addMana(state, {mana, ...(awaiting.spendOnly ? {spendOnly: awaiting.spendOnly} : {})}, {controller: awaiting.player, source: awaiting.source})};
   },
 };
 
