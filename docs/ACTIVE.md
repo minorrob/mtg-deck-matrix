@@ -7,7 +7,7 @@ staging with its deployed bytes compared:
 - AI-4, the deck advisor (#697);
 - AI-6, AI Coach settings (#698);
 - M3's monitoring (#699);
-- Train C, Rob's library: 1,130 of his 1,132 cards play (#700);
+- Train C, Rob's library: 1,130 of his 1,132 cards play (#700), and 1,131 with Gandalf since (the Gandalf record below);
 - the A11y pass (#701).
 
 It then ran G-B again on main bf0e9d21, with all of it in (the rows below): the journeys, the gallery and the A11y checks pass;
@@ -37,7 +37,7 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | Gate item | State | Proof, or whose step |
 | --- | --- | --- |
 | G-A: G1, 1,400 games | **done: 1,400 of 1,400 clean** | PR #686's head ccb250d1: every game finished, none refused, every replay identical, 0 leaks in 105,656 checks of every seat's view |
-| G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**, with a daily cap of its own ($1.50, released at 905394dc); **AI-2's L1 built** (Normal and Easy, measured against L0: Normal 61%, Easy 56%, L0 itself 51%); **the LLM seat built behind its switch**, its privacy wording Rob's to approve; **AI-5 built and on staging** (each deck says whether the table can play it; Play this deck); **AI-4, the deck advisor, built behind its switch**, its privacy wording Rob's to approve; **AI-3's Train C done: 1,130 of Rob's 1,132 cards play** (the two left, each with its reason), Rob's to confirm; **AI-6, AI Coach settings, built** | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
+| G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**, with a daily cap of its own ($1.50, released at 905394dc); **AI-2's L1 built** (Normal and Easy, measured against L0: Normal 61%, Easy 56%, L0 itself 51%); **the LLM seat built behind its switch**, its privacy wording Rob's to approve; **AI-5 built and on staging** (each deck says whether the table can play it; Play this deck); **AI-4, the deck advisor, built behind its switch**, its privacy wording Rob's to approve; **AI-3: 1,131 of Rob's 1,132 cards play** (Train C, then Gandalf; the one left, Extrapolate the Impossible, does nothing in Commander), Rob's to confirm; **AI-6, AI Coach settings, built** | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
 | G-A: M3's monitoring and backups | **monitoring built** (Workers Logs keeps the Worker's own 5xx and sync-conflict lines; `tools/ops-week.mjs`, the weekly check); Time Travel confirmed, 30 days | **Rob:** the two alerts and their email; R2 turned on, the nightly copy's window and what deletion promises (`docs/ops.md`) |
 | G-A: the A11y pass | **done**: WCAG 2.1 AA on the board and the lobby, measured from the screen's pixels; and words on the accent at 4.5:1 across the app (the item left) | `tests/a11y-board.mjs` 288 checks, 72 breaks caught (the A11y record below); `tests/a11y-app.mjs` 48 checks, 9 breaks caught |
 | G-B: the whole gate green twice on main | **done again, with G-A complete** | dispatched Tests runs on main 74f715c7 (G-A's items in, and the drop check's race fixed): **2579 and 2580, both green**. Before them, on bf0e9d21: 2572 green, 2573 red once in `table-board`'s drop check, root-caused to a race in the board and fixed (#702, the race record below). Earlier: 2499 on def8fa89 and 2503 on eff40fdc, both green |
@@ -997,7 +997,7 @@ before Train C; 305 of the other 307 are now defined, each with scenarios that c
   307, and a few cards beside them (a second Danitha, Gandalf the White) whose clauses the areas were named for.
 - **The two left, and why:** Gandalf, Goblins' Bane // Flameshape (playing a face-down exiled card, CR 406.3a, isn't
   built) and Extrapolate the Impossible (nothing outside the game in Commander, CR 903.5e and 903.11, so it does
-  nothing there).
+  nothing there). Gandalf has been defined since (the Gandalf record below), so 1,131 play.
 - **Proof:** check-cards 2,041 definitions, 3,868 scenarios, 0 failed; about 80 new engine suites, every engine, room
   and game suite green; 1,381 breaks, every one caught; G1's shape on a sample, 140 games: **140 of 140 clean** (seven pods, each with a person in seat 0 and all house, seeds 1-10, `--replay --leaks`): every game finished, none refused, every replay identical, 0 leaks in 8,774 checks of every seat's view; the person's longest wait in a game, median 0.16 s, 90th percentile 0.40 s, at most 1.2 s.
 - **Rob's, left:** confirm the library plays as he expects (AI-3 asks "learned and confirmed"); the two cards above.
@@ -1126,3 +1126,51 @@ They now sit on `--accent-fill`. `tests/a11y-app.mjs` reads each such rule in al
 own primary buttons: 48 checks, failing in 20 places before. `tools/a11y-app-breaks.py`: 9 breaks, every one caught.
 A tenth found the list row's own primary rule dead (its detail is drawn inside the app, where the app's rule wins),
 so it was removed.
+
+**#706 merged on main fa7cbc7d on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 2f21208a (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 16:24:17 UTC as
+version 1baa83a9. Its `play-worker.js` is byte-identical to the release's dry-run bundle and to #705's (3,302,092
+bytes): #706 changed the browser's files only. Its AI bindings are the Coach's alone. `tools/staging-check.mjs
+--expect fa7cbc7` exits 0, seating the session's token as `service:e07b4fed5ab9`.
+
+**Gandalf, Goblins' Bane // Flameshape: 1,131 of Rob's 1,132 cards play (2026-10-11).** Train C's one card left for
+want of an engine piece. Flameshape looks at the top two cards and exiles them face down; while they remain exiled
+their controller may play them if they control a Wizard. What was built for it:
+- **Playing a card exiled face down (CR 406.3a).** It is offered by its real characteristics: a land under the land
+  drop's rules; a spell by its own cost, timing, targets, modes and alternative costs; an adventurer card as its
+  Adventure too. It turns face up and is revealed as it is played. It is weighed face up only while its offers and
+  questions are, the way Adventures and disguise already are, and is put back untouched unless played.
+- **Hidden until played.** Only a player who may look at it is offered it (the projection's own `mayLookAt`, now
+  exported). Every other seat sees a face-down card, in the projection and to G1's leak judge. Flameshape's controller
+  may keep looking, as CR 406.3 lets a player who looked at a card and exiled it face down.
+- **"If you control a Wizard":** an `onlyIf` on the play permission, checked each time the card would be played, so
+  a Wizard leaving removes the offer. The permission names the object, so it ends as the card leaves exile.
+- **Two fixes the card needed:** an Adventure card exiled face down kept its Adventure (a manifested one leaving the
+  battlefield had lost it too); and *nothing to do* now sees a face-down card the player could cast.
+- **Proof:** check-cards 2,042 definitions, 3,876 scenarios, 0 failed. `tests/engine-face-down-play.mjs` (new), 52
+  checks. `breaks-flameshape.py`: 31 breaks, every one caught, on the worker's base and again on the merge with
+  #706. A smoke run, not committed: eight four-seat room games with Gandalf leading red decks and a person in seat 0,
+  `--replay --leaks`. All 8 were clean, with 0 leaks in 1,367 checks of every seat's view; Flameshape was cast 95
+  times, and 8 spells and 10 lands were played from face down.
+- **Left:** Extrapolate the Impossible, which does nothing in Commander. Not built, because no defined card needs it:
+  - casting a face-down exiled card face down (CR 708.4);
+  - playing a face-down card one may not look at (CR 406.4);
+  - an effect that plays the card as it resolves.
+
+  The offers are proven down to the table's words for them (the room's `offerDetails`, in `engine-face-down-play`),
+  not yet in a browser: Gandalf is in Rob's library but not in his seven decks, and those are what the browser suites
+  play.
+
+**Found on the way, and fixed: control gained for good broke the room's save.** `gainControl` wrote `until:
+undefined` for a change for good. `storage.mjs` refuses a checkpoint that JSON would change, since the room could not
+wake from it. So a room would stop saving the moment one of these resolved: Agent of Treachery; Alexios, Deimos of
+Kosmos; Archmage's Charm; Hellkite Tyrant; Humble Defector. None is in Rob's seven decks, which is why G1's 1,400
+games never met it; but all five are defined, so an invitee's deck could bring one.
+- **The fix:** a change for good now says no duration at all (`effects/permanents.mjs`).
+- **The checks:**
+  - `engine-control`: the state of a change for good reads back from JSON as it is.
+  - `engine-cards`: every card scenario's state is now checked the way a room's save checks it, with the storage's
+    own `lostIn`, now exported. On main without the fix, this check names exactly those five cards' 7 scenarios, and
+    nothing else in the 3,869. With the fix, none of the 3,876 lose anything.
+  - `breaks-control-for-good.py`: 2 breaks, both caught. The `engine-cards` check also fails on its own with the fix
+    reverted.

@@ -594,11 +594,11 @@ compiler and the AI reconciliation for every card; the extraction design is writ
 - **Proof:** `tests/engine-*`: a learned script passes the four checks; a deliberately wrong script fails each
   check; the lobby suite: a deck with unknown cards shows learning and then ready; the refusal with instructions
   for a card that fails; the eval: the seven decks' cards against their oracle text.
-- **Status, 2026-10-11: Rob's library learned, by hand rather than by the loader (Train C).** 1,130 of the 1,132
-  cards in his library play: phase 1's 167 cards, then the engine pieces the rest needed and 138 more, each card with
-  scenarios that can fail (`docs/ACTIVE.md`, Train C). Two are left, each with its reason: Gandalf, Goblins' Bane //
-  Flameshape (playing a face-down exiled card, CR 406.3a) and Extrapolate the Impossible (nothing outside the game in
-  Commander). The loader above stays the design for cards beyond Rob's library; **Rob's:** confirming the library.
+- **Status, 2026-10-11: Rob's library learned, by hand rather than by the loader (Train C, then Gandalf).** 1,131
+  of the 1,132 cards in his library play: phase 1's 167 cards, then the engine pieces the rest needed and 138 more,
+  each card with scenarios that can fail (`docs/ACTIVE.md`, Train C); then Gandalf, Goblins' Bane // Flameshape, with
+  playing a face-down exiled card (CR 406.3a). One is left, with its reason: Extrapolate the Impossible (nothing
+  outside the game in Commander, so it does nothing there). The loader above stays the design for cards beyond Rob's library; **Rob's:** confirming the library.
 
 ### AI-4. The deck advisor: sound changes from a very low-cost model
 
