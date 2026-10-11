@@ -665,15 +665,22 @@ export function destructionReplaced(state, id, events, {noRegenerate = false, ch
  */
 export function destroy(state, params, context) {
   const events = [];
+  /* "Destroy target creature. If another creature died this turn, draw a card" (Chain Assassination; Train C phase 2):
+     `remember`, what it put into a graveyard -- not the indestructible, the regenerated, nor one some replacement sent
+     elsewhere -- and each as it last existed on the battlefield (`movedWas`, CR 608.2h), as moveZone keeps them, so what
+     follows can count it out ({movedCount}, script/amount.mjs). */
+  const destroyed = [], destroyedWas = [];
   for (const id of params.targets ?? []) {
     if (!state.objects[id]) continue;
     if (keywordsOf(state, id).includes("Indestructible")) continue;
     /* A regeneration shield replaces the destruction (CR 701.19a), unless "it can't be regenerated" (`noRegenerate`); an Aura's
        umbra armor does (CR 702.89a) -- the one its controller chose, when several would (destructionReplaced). */
     if (destructionReplaced(state, id, events, {noRegenerate: params.noRegenerate === true, chosen: params.destructionAnswers?.[id]})) continue;
-    moveOne(state, id, "graveyard", events);
+    const before = params.remember ? lastKnown(state, id) : null;
+    const moved = moveOne(state, id, "graveyard", events);
+    if (before && moved !== null && state.objects[moved]?.zone === "graveyard") { destroyed.push(moved); destroyedWas.push(before); }
   }
-  void context;
+  if (params.remember) { context.remembered = destroyed; context.movedWas = destroyedWas; }
   return events;
 }
 
