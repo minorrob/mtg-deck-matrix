@@ -474,6 +474,11 @@ function additionalVariants(costs) {
       variants = variants.flatMap((v) => Array.from({length: MULTIKICK_MOST + 1}, (_, k) => ({...v, mana: v.mana + (atom.cost ?? "").repeat(k), kicked: k})));
       continue;
     }
+    /* TIERED (CR 702.183a): one mode, and its cost -- each mode its own variant, that mode alone (withModes), its cost added. */
+    if (atom?.atom === "tiered") {
+      variants = variants.flatMap((v) => (atom.costs ?? []).map((cost, tier) => ({...v, mana: v.mana + cost, tier})));
+      continue;
+    }
     const options = atom?.atom === "oneOf" ? atom.options ?? [] : [[atom]];
     variants = variants.flatMap((v) => options.map((option) => ({...v, atoms: [...v.atoms, ...option.filter((a) => a.atom !== "mana")],
       mana: v.mana + option.filter((a) => a.atom === "mana").map((a) => a.cost ?? "").join("")})));
@@ -531,8 +536,8 @@ function additionalChoices(state, player, spellId, costs) {
    when its condition holds now ("if you control a commander as you cast this spell, you may choose both instead") --
    and per way to choose the chosen modes' targets (601.2c), in the order of the modes. A mode is chosen once (700.2d). */
 /* `exactly`: so many modes and no other number (escalate's variant, additionalVariants; the compiler holds it to what the spell
-   allows, cards/index.mjs). */
-function withModes(state, base, modal, context, exactly = null) {
+   allows, cards/index.mjs). `only`: that one mode and no other (tiered's variant, CR 702.183a: its cost is that mode's). */
+function withModes(state, base, modal, context, exactly = null, only = null) {
   const least = exactly ?? Math.max(1, modal.choose ?? 1);
   const most = exactly ?? Math.min(modal.modes.length, modal.more && conditionHolds(state, modal.more.condition, context) ? modal.more.choose : modal.upTo ?? least);
   const picks = [];
@@ -541,7 +546,8 @@ function withModes(state, base, modal, context, exactly = null) {
     if (chosen.length === most) return;
     for (let i = from; i < modal.modes.length; i += 1) pick(i + 1, [...chosen, i]);
   };
-  pick(0, []);
+  if (Number.isInteger(only)) picks.push([only]);
+  else pick(0, []);
   return picks.flatMap((modes) => {
     const {targets: specs, effects} = modalScript(modal, modes);
     const hostile = isHostile(effects);
@@ -1216,7 +1222,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
         ...(adventure ? {adventure: true} : {})};
       /* How it would be cast, for a target it has only if ("if you cast this spell during your main phase", script/bind.mjs). */
       const cast = {from, mainPhase: player === state.activePlayer && MAIN_PHASES.includes(state.phase)};
-      actions.push(...(object.spell?.modal && !way?.overload ? withModes(state, base, object.spell.modal, {controller: player, source: id}, variant.escalate !== undefined ? variant.escalate + 1 : null)
+      actions.push(...(object.spell?.modal && !way?.overload ? withModes(state, base, object.spell.modal, {controller: player, source: id}, variant.escalate !== undefined ? variant.escalate + 1 : null, variant.tier ?? null)
         : withTargets(state, base, way?.overload ?? object.spell, {controller: player, source: id, cast})));
     }
   }

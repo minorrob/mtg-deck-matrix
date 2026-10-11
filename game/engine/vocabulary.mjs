@@ -181,7 +181,9 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   /* Surge (CR 702.117) and freerunning (CR 702.173): alternative costs (keywords/timing.mjs). */
   "surge", "freerunning",
   /* Embalm (CR 702.128): a token copy from the graveyard (cards/index.mjs). */
-  "embalm"];
+  "embalm",
+  /* Tiered (CR 702.183): each mode its own additional cost (keywords/timing.mjs). */
+  "tiered"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

@@ -59,7 +59,9 @@ export const KEYWORD_FAMILIES = Object.freeze({
   /** Surge (CR 702.117a) and freerunning (CR 702.173a), alternative costs offered once its caster has cast another spell
       this turn, or one of their Assassins or commanders dealt a player combat damage (script/condition.mjs; rules/combat.mjs
       keeps the damage), what each casts marked as cast for it (`paidFor`; rules/actions.mjs, rules/stack.mjs). */
-  pay: Object.freeze(["Convoke", "Evoke", "Prowl", "Escalate", "Overload", "Surge", "Freerunning"]),
+  /** Tiered (CR 702.183a): one mode chosen as it is cast, and that mode's cost paid besides (cards/index.mjs puts the costs
+      among the spell's additional costs; rules/actions.mjs makes each mode its own cast). */
+  pay: Object.freeze(["Convoke", "Evoke", "Prowl", "Escalate", "Overload", "Surge", "Freerunning", "Tiered"]),
   /** How a permanent enters: Riot (CR 702.136a), with a +1/+1 counter or with haste, its controller's choice as it arrives --
       a replacement on its own entering (cards/index.mjs, rules/replacement.mjs), asked once it is there (rules/entering.mjs). */
   enter: Object.freeze(["Riot"]),

@@ -509,6 +509,8 @@ export function compileScript(script) {
   let multikicker = null;
   /* Escalate's cost (CR 702.120a), put on the spell once its modes are known (below). */
   let escalate = null;
+  /* Tiered (CR 702.183a): each mode's own cost, put on the spell once its modes are known (below). */
+  let tiered = false;
 
   /* "ENCHANT CREATURE" (CR 702.5, 303.4): an Aura spell targets what it will enchant, and the permanent may be attached
      only to what the same words describe. One keyword ability, `target` its selector; `hostile` when the Aura is a
@@ -821,6 +823,14 @@ export function compileScript(script) {
       keywords.push(word === "surge" ? "Surge" : "Freerunning");
       return;
     }
+    /* TIERED (CR 702.183a; Cloud's Limit Break): "Choose one. As an additional cost to cast this spell, pay the cost associated
+       with that mode" -- each mode's cost written on the mode (`cost`, its mana), kept for the spell among its additional
+       costs (below; rules/actions.mjs, additionalVariants): each mode its own cast, its cost added. */
+    if (word === "tiered") {
+      tiered = true;
+      keywords.push("Tiered");
+      return;
+    }
     /* ESCALATE (CR 702.120a): "for each mode you choose beyond the first as you cast this spell, you pay an additional [cost]"
        -- mana, "tap an untapped creature you control" (Collective Effort), or both: kept for the spell, among its additional
        costs (below; rules/actions.mjs, additionalVariants). */
@@ -1046,7 +1056,7 @@ export function compileScript(script) {
       const only = (ability.effects ?? []).length === 1 ? ability.effects[0] : null;
       const modal = only?.effect === "modal" && only.chooser === undefined
         ? {choose: only.choose ?? 1, ...(only.chooseMore ? {more: structuredClone(only.chooseMore)} : {}), ...(only.chooseUpTo ? {upTo: only.chooseUpTo} : {}),
-          modes: (only.modes ?? []).map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? []}))} : null;
+          modes: (only.modes ?? []).map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? [], ...(m.cost !== undefined ? {cost: m.cost} : {})}))} : null;
       if (modal && (ability.targets ?? []).length) problems.push("a modal spell chosen as it is cast names its targets in its modes, not beside them");
       spell = {id, text: ability.text, targets: ability.targets ?? [], effects: ability.effects, ...(modal ? {modal} : {}), ...(ability.additionalCost ? {additionalCost: ability.additionalCost} : {})};
       return;
@@ -1240,6 +1250,15 @@ export function compileScript(script) {
   const oneOrMore = Boolean(spell?.modal) && (spell.modal.choose ?? 1) === 1 && (spell.modal.upTo ?? 1) > 1;
   if (escalate !== null && !oneOrMore) problems.push("Escalate is on a spell whose modes are chosen as it is cast, one or more of them");
   if (escalate !== null && oneOrMore) spell = {...spell, additionalCost: [...(spell.additionalCost ?? []), {atom: "escalate", ...escalate, most: Math.min(spell.modal.upTo, spell.modal.modes.length) - 1}]};
+  /* Tiered's (CR 702.183a), on a spell whose one mode is chosen as it is cast: each mode's cost, mana, in the modes' order --
+     and a mode's cost is tiered's alone. */
+  const modeCosts = spell?.modal ? spell.modal.modes.map((m) => m.cost) : [];
+  const manaOnly = (cost) => { try { return typeof cost === "string" && parseManaCost(cost).variable === 0 && /^(\{[^}]+\})+$/.test(cost); } catch { return false; } };
+  if (tiered && !(spell?.modal && (spell.modal.choose ?? 1) === 1 && spell.modal.upTo === undefined && spell.modal.more === undefined))
+    problems.push("Tiered is on a spell whose one mode is chosen as it is cast");
+  else if (tiered && !modeCosts.every(manaOnly)) problems.push("Tiered: each mode says its cost, mana (`cost`, \"{0}\" for none)");
+  else if (tiered) spell = {...spell, additionalCost: [...(spell.additionalCost ?? []), {atom: "tiered", costs: modeCosts}]};
+  if (!tiered && modeCosts.some((cost) => cost !== undefined)) problems.push("a mode's own cost is tiered's: the spell says Tiered (CR 702.183a)");
   /* Multikicker's additional cost, on the spell -- a permanent's too, whose spell does nothing else (CR 608.3). */
   if (multikicker !== null) spell = {...(spell ?? {id: "multikicker", text: "Multikicker", targets: [], effects: []}), additionalCost: [...(spell?.additionalCost ?? []), {atom: "multikicker", cost: multikicker}]};
 

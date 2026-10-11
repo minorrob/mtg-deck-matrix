@@ -11,15 +11,15 @@
   "cards": 3238,
   "defined": 1242,
   "provisional": 27,
-  "everyRule": 2579
+  "everyRule": 2580
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 58,
+    "built": 59,
     "partial": 0,
     "named": 5,
-    "missing": 131
+    "missing": 130
    },
    "entries": [
     {
@@ -1370,13 +1370,13 @@
      "kind": "keyword ability",
      "rule": "702.183",
      "name": "Tiered",
-     "engine": null,
-     "status": "missing",
+     "engine": "Tiered",
+     "status": "built",
      "forge": "Tiered",
      "top": 1,
      "all": 7,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
