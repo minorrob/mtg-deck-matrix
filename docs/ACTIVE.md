@@ -1147,9 +1147,14 @@ their controller may play them if they control a Wizard. What was built for it:
   a Wizard leaving removes the offer. The permission names the object, so it ends as the card leaves exile.
 - **Two fixes the card needed:** an Adventure card exiled face down kept its Adventure (a manifested one leaving the
   battlefield had lost it too); and *nothing to do* now sees a face-down card the player could cast.
+- **Found by CI on the PR, and fixed:** the guard that offers a face-down card only to a player who may look at it
+  held every face-down card to it, and disguise weighs a library's top shown face down through the same permission.
+  So Mystic Forge could no longer cast a disguise card face down from the top of the library (`engine-disguise`, which
+  the worker had not run). The guard is now for a card exiled face down only, as the rule it follows is.
 - **Proof:** check-cards 2,042 definitions, 3,876 scenarios, 0 failed. `tests/engine-face-down-play.mjs` (new), 52
-  checks. `breaks-flameshape.py`: 31 breaks, every one caught, on the worker's base and again on the merge with
-  #706. A smoke run, not committed: eight four-seat room games with Gandalf leading red decks and a person in seat 0,
+  checks. `breaks-flameshape.py`: 32 breaks, every one caught, with `engine-disguise` among its suites and a break
+  for the guard's reach. All 359 engine, room and game suites pass here; `engine-room-games` missed its time budget
+  once at a load average of 17 and passed alone. A smoke run, not committed: eight four-seat room games with Gandalf leading red decks and a person in seat 0,
   `--replay --leaks`. All 8 were clean, with 0 leaks in 1,367 checks of every seat's view; Flameshape was cast 95
   times, and 8 spells and 10 lands were played from face down.
 - **Left:** Extrapolate the Impossible, which does nothing in Commander. Not built, because no defined card needs it:

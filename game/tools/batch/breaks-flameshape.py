@@ -11,6 +11,7 @@ SUITES = [
     'tests/engine-adventure.mjs',
     'tests/engine-manifest.mjs',
     'tests/board-choices.mjs',
+    'tests/engine-disguise.mjs',
 ]
 IDENTITY = '((s, i, f) => f())'
 BREAKS = [
@@ -37,7 +38,10 @@ BREAKS = [
     ('a named permission played while closed', 'game/engine/rules/actions.mjs',
      'if (ability.ids && permissionOpen(state, player, ability, source))', 'if (ability.ids)'),
     ('offered to a player who may not look', 'game/engine/rules/actions.mjs',
-     '  if (state.objects[id]?.faceDown === true && !mayLookAt(state, state.objects[id], player)) return false;\n', ''),
+     '  if (state.objects[id]?.faceDown === true && state.objects[id].zone === "exile" && !mayLookAt(state, state.objects[id], player)) return false;\n', ''),
+    # Only a card exiled face down is held to who may look at it: a library's top shown face down for disguise is not.
+    ('any face-down card held to mayLookAt', 'game/engine/rules/actions.mjs',
+     'faceDown === true && state.objects[id].zone === "exile" && !mayLookAt(', 'faceDown === true && !mayLookAt('),
     ('permission weighs the face-down card', 'game/engine/rules/actions.mjs',
      'return withFaceUp(state, id, () => permitsShown(state, player, ability, id, kind, source));',
      'return permitsShown(state, player, ability, id, kind, source);'),

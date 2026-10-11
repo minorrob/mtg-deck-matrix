@@ -1039,9 +1039,10 @@ const permissionOpen = (state, player, ability, source) => (!ability.yourTurn ||
   && conditionHolds(state, ability.condition, {controller: player, source});
 /* A card exiled face down (CR 406.3a-b) -- the one face-down card a permission can name: none names a permanent or a spell --
    is weighed as the card it is (withFaceUp), and only for a player who may look at it (projection.mjs, mayLookAt): the one
-   asked is the one who may see what the offer names. */
+   asked is the one who may see what the offer names. A card shown face down elsewhere -- weighed for disguise from the top of
+   a library (Mystic Forge, CR 702.168b) -- is its own player's card, and weighed as disguise weighs it. */
 const permits = (state, player, ability, id, kind, source) => {
-  if (state.objects[id]?.faceDown === true && !mayLookAt(state, state.objects[id], player)) return false;
+  if (state.objects[id]?.faceDown === true && state.objects[id].zone === "exile" && !mayLookAt(state, state.objects[id], player)) return false;
   return withFaceUp(state, id, () => permitsShown(state, player, ability, id, kind, source));
 };
 const permitsShown = (state, player, ability, id, kind, source) => {
