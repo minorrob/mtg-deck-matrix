@@ -134,6 +134,9 @@ function main() {
     /* Train C (p3-costs): behold as a cost -- an additional cost, a flashback cost's (rules/actions.mjs) -- not yet as an
        effect's "you may behold ... If you do". */
     Behold: {core: true, partial: true, note: "as a cost: an additional cost or a flashback cost's; as an effect, not yet"},
+    /* And waterbend (CR 701.67a) as an activated ability's cost, artifacts and creatures tapped for its generic mana -- not yet
+       as a spell's additional cost (701.67b), nor "whenever you waterbend" (701.67c). */
+    Waterbend: {core: true, partial: true, note: "as an activated ability's cost; as a spell's additional cost, and its trigger, not yet"},
   };
   const forgeApiFor = (name, spec) => spec?.forge ?? [...ALL.apis.keys()].filter((api) => api.toLowerCase() === name.replace(/[^A-Za-z]/g, "").toLowerCase());
   const keywordActions = cr.keywordActions.map(({rule, name}) => {
@@ -184,7 +187,7 @@ const PARTIAL_TRIGGERS = new Set([...BROAD_TRIGGERS, "DamageDone"]);
     RemoveAnyCounter: ["removeAnyCounter", "named"], ExileFromGrave: ["exileFromGraveyard", "named"], tapXType: ["tapUntapped", "named"],
     Reveal: ["reveal", "named"], Return: ["returnToHand", "named"], Draw: ["draw", "named"], Mill: ["mill", "named"],
     ExileFromHand: [null, "missing"], ExileAnyGrave: [null, "missing"], Exile: [null, "missing"], PayEnergy: [null, "missing"], Exert: [null, "missing"],
-    CollectEvidence: [null, "missing"], Waterbend: [null, "missing"], Blight: [null, "missing"], DamageYou: [null, "missing"], ExiledMoveToGrave: [null, "missing"],
+    CollectEvidence: [null, "missing"], Waterbend: ["waterbend", "partial"], Blight: [null, "missing"], DamageYou: [null, "missing"], ExiledMoveToGrave: [null, "missing"],
   };
   const costs = Object.entries(COSTS).filter(([forge]) => ALL.costs.has(forge) || TOP.costs.has(forge)).map(([forge, [engine, status]]) =>
     entry({kind: "cost", rule: null, name: forge, engine, status, forge, top: TOP.costs.get(forge) ?? 0, all: ALL.costs.get(forge) ?? 0}));

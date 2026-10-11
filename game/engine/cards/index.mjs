@@ -1084,6 +1084,11 @@ export function compileScript(script) {
          targets are not the ability's, below). */
       if (/"target":/.test(JSON.stringify(ability.costLess ?? null)) && (ability.zone !== undefined || !(ability.targets ?? []).length || ability.targets.some(countedTarget)))
         problems.push(`${ability.text}: a cost read from its target is a permanent's ability's, with its targets chosen as it is offered`);
+      /* WATERBEND (CR 701.67a-b): a permanent's ability's whole mana cost, once -- beside no other mana, which tapping could not
+         pay, nor {T}, the source tapped for both -- offered where a permanent's abilities are (rules/actions.mjs). */
+      const bend = cost.filter((atom) => atom?.atom === "waterbend");
+      if (bend.length > 1 || (bend.length && (ability.zone !== undefined || cost.some((atom) => atom?.atom === "mana" || atom?.atom === "{T}"))))
+        problems.push(`${ability.text}: a waterbend cost is a permanent's ability's only mana, once, without {T}`);
       /* EQUIP (CR 702.6a): "Equip [cost]" is "[Cost]: Attach this permanent to target creature you control. Activate only as a
          sorcery" -- an activated ability the card writes out, known by its words, for what reads equip abilities ("equip
          abilities you activate that target this creature cost {2} less", Dwarven Mauler; rules/statics.mjs). */

@@ -19,12 +19,12 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 53 | 0 | 5 | 136 |
-| Keyword actions (CR 701) | 70 | 22 | 4 | 1 | 43 |
+| Keyword actions (CR 701) | 70 | 22 | 5 | 1 | 42 |
 | Effects | 192 | 70 | 1 | 2 | 119 |
 | Triggers | 138 | 20 | 4 | 2 | 112 |
 | Static abilities | 77 | 14 | 2 | 0 | 61 |
 | Replacement effects | 34 | 0 | 5 | 0 | 29 |
-| Costs | 26 | 5 | 1 | 10 | 10 |
+| Costs | 26 | 5 | 2 | 10 | 9 |
 | Options and conditions | 37 | 23 | 5 | 0 | 9 |
 | Amounts the game counts | 188 | 18 | 1 | 0 | 169 |
 | Choices | 15 | 12 | 0 | 0 | 3 |
@@ -324,7 +324,7 @@ The things that alone hold back the most of the most-played cards.
 | 701.54 | The Ring Tempts You | — | missing | 0 | 0 | 0 | 0 |
 | 701.11 | Triple | — | missing | 0 | 0 | 0 | 0 |
 | 701.49 | Venture into the Dungeon | — | missing | 0 | 0 | 0 | 0 |
-| 701.67 | Waterbend | — | missing | 0 | 0 | 0 | 0 |
+| 701.67 | Waterbend (as an activated ability's cost; as a spell's additional cost, and its trigger, not yet) | (the rules modules) | partial | 0 | 0 | 0 | 0 |
 
 ## Effects
 
@@ -809,7 +809,7 @@ The things that alone hold back the most of the most-played cards.
 | RemoveAnyCounter | removeAnyCounter | named | 6 | 39 | 0 | 0 |
 | PayEnergy | — | missing | 4 | 120 | 0 | 0 |
 | Exert | — | missing | 2 | 36 | 0 | 0 |
-| Waterbend | — | missing | 2 | 27 | 0 | 0 |
+| Waterbend | waterbend | partial | 2 | 27 | 0 | 0 |
 | ExileAnyGrave | — | missing | 1 | 18 | 0 | 0 |
 | Q | {Q} | named | 1 | 18 | 0 | 0 |
 | Mill | mill | named | 1 | 9 | 0 | 0 |

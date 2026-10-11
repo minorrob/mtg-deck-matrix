@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 398 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 399 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1268,6 +1268,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-cost-targets` - `tests/engine-cost-targets.mjs`: a cost read from its targets (Magnificent End, Warrior's Blades, Dwarven Mauler), each way to choose them costed and offered on its own (CR 601.2c, 601.2f)
 - `engine-cost-atoms` - `tests/engine-cost-atoms.mjs`: three cost atoms -- a +1/+1 counter from a creature you control (Bolrac-Clan Crusher), a discard in a flashback cost (Twinned Vision), and life counted as it is paid, unpayable without a commander (War Room; CR 903.4f)
 - `engine-behold` - `tests/engine-behold.mjs`: behold as a cost (CR 701.4a; Lys Alana Dignitary, Kindle the Inner Flame), a permanent chosen or a card revealed from the hand, which ones asked once the cast is taken
+- `engine-waterbend` - `tests/engine-waterbend.mjs`: waterbend as an activated ability's cost (CR 701.67; Giant Koi, Foggy Swamp Vinebender), artifacts and creatures tapped for its generic mana, never for an increase on it
 
 ## Design and execution record
 

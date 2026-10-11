@@ -2355,9 +2355,9 @@
   "Keyword actions (CR 701)": {
    "tally": {
     "built": 22,
-    "partial": 4,
+    "partial": 5,
     "named": 1,
-    "missing": 43
+    "missing": 42
    },
    "entries": [
     {
@@ -3195,11 +3195,12 @@
      "kind": "keyword action",
      "rule": "701.67",
      "name": "Waterbend",
-     "engine": null,
-     "status": "missing",
+     "engine": "(the rules modules)",
+     "status": "partial",
      "forge": null,
      "top": 0,
      "all": 0,
+     "note": "as an activated ability's cost; as a spell's additional cost, and its trigger, not yet",
      "blocks": 0,
      "alone": 0
     }
@@ -8540,9 +8541,9 @@
   "Costs": {
    "tally": {
     "built": 5,
-    "partial": 1,
+    "partial": 2,
     "named": 10,
-    "missing": 10
+    "missing": 9
    },
    "entries": [
     {
@@ -8765,8 +8766,8 @@
      "kind": "cost",
      "rule": null,
      "name": "Waterbend",
-     "engine": null,
-     "status": "missing",
+     "engine": "waterbend",
+     "status": "partial",
      "forge": "Waterbend",
      "top": 2,
      "all": 27,
