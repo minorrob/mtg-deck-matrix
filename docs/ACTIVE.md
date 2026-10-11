@@ -1036,3 +1036,13 @@ would have come back at the next read, two seconds on.
   `crankmagic-table.js`).
 - **Checks:** `table-board` 251 checks; `tools/table-away-breaks.py` 6 breaks, every one caught.
 - The timeout's message still says what Maya's flag read and what her socket last brought, should it fail again.
+
+**Freyalise's Elf Druid, a mana ability (2026-10-11; Claude on Personal-HP, `claude/gallant-williams-342c9c`).** The +2's
+token wrote "{T}: Add {G}." as a card's activated ability, and createToken makes a token's abilities as written, so the
+token offered a stack-using `activate` rather than an `activate-mana` (CR 605.1a). It is now `kind: "mana"`, as the
+Treasure's is; a fourth scenario taps it for {G} on turn 3 (pool {G}, stack empty); and the compiler refuses a token's
+mana ability written as a card's, by name. Of 218 token specs in 2,014 scripts, it was the only one.
+- **Checks:** check-cards 2,041 definitions and 3,869 scenarios, 0 failed; `engine-cards` 54, `engine-cards-pb9` 28,
+  `engine-learned` 253, `engine-mana-withheld` 48; definitions, coverage and catalog `--check` current.
+- **Breaks:** the old form with the guard in place is refused (NOT PLAYABLE, its three scenarios fail); with the guard
+  off, only the new scenario fails ("Rob is not offered activate-mana Elf Druid").
