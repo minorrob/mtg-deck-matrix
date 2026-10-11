@@ -1,0 +1,155 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Blossom-Blessed Angel // Seed Suture",
+  "scenarios": [
+    {
+      "name": "A 2/4 flier with vigilance, prepared; Seed Suture for {G/W} on the Angel itself: a 3/5, and 1 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blossom-Blessed Angel // Seed Suture"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Blossom-Blessed Angel"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Seed Suture"
+              ]
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Blossom-Blessed Angel",
+                "has": [
+                  "Flying",
+                  "Vigilance"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Seed Suture"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Blossom-Blessed Angel"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Seed Suture",
+          "targets": [
+            {
+              "card": "Blossom-Blessed Angel"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Blossom-Blessed Angel",
+            "power": 3,
+            "toughness": 5
+          }
+        },
+        {
+          "seat": 0,
+          "life": 41
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "Vigilance: it attacks and stays untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Blossom-Blessed Angel // Seed Suture"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Blossom-Blessed Angel"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Blossom-Blessed Angel",
+          "is": false
+        },
+        {
+          "seat": 1,
+          "life": 38
+        }
+      ]
+    }
+  ]
+}

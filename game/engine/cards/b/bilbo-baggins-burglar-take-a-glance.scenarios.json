@@ -1,0 +1,186 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Bilbo Baggins, Burglar // Take a Glance",
+  "scenarios": [
+    {
+      "name": "Take a Glance: scry 2, the Island to the bottom; on an adventure, then Bilbo cast from exile draws the Forest",
+      "library": [
+        "Island",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bilbo Baggins, Burglar // Take a Glance"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Take a Glance"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Island",
+                  "Forest"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Bilbo Baggins, Burglar"
+              ]
+            },
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": []
+            }
+          ]
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bilbo Baggins, Burglar"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bilbo Baggins, Burglar",
+            "power": 2,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cast from hand as itself: Bilbo enters and Rob draws a card",
+      "library": [
+        "Swamp"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bilbo Baggins, Burglar // Take a Glance"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bilbo Baggins, Burglar"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Bilbo Baggins, Burglar"
+          ]
+        }
+      ]
+    }
+  ]
+}

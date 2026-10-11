@@ -1,0 +1,262 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Smaug, the Great Calamity // Spew Flame",
+  "fixtures": {
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Big Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{5}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 6,
+      "toughness": 6
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Spew Flame: 5 damage to Maya's 5/5 Giant, which dies; then Smaug from exile, a 5/5 flier",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Mountain",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Smaug, the Great Calamity // Spew Flame"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Giant",
+            "Big Giant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Spew Flame"
+              },
+              "count": 2,
+              "targets": [
+                [
+                  "Giant"
+                ],
+                [
+                  "Big Giant"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Spew Flame",
+          "targets": [
+            {
+              "card": "Giant"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "zone": "graveyard",
+              "cards": [
+                "Giant"
+              ]
+            },
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Smaug, the Great Calamity"
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Smaug, the Great Calamity"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Smaug, the Great Calamity",
+            "has": [
+              "Flying"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Smaug, the Great Calamity",
+            "power": 5,
+            "toughness": 5
+          }
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Big Giant"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A 6/6 survives Spew Flame's 5",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Smaug, the Great Calamity // Spew Flame"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Big Giant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Spew Flame",
+          "targets": [
+            {
+              "card": "Big Giant"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Big Giant"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": []
+        }
+      ]
+    }
+  ]
+}

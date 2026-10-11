@@ -1,0 +1,100 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "An Unexpected Party // At the Door",
+    "oracleId": "38503d34-f4f9-4eeb-9b1e-4fec1df921b3",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As this enchantment enters, choose a creature type.\nCreatures you control of the chosen type get +2/+2.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "As this enchantment enters, choose a creature type.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "choose": "creature type"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Creatures you control of the chosen type get +2/+2.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "subtypes": [
+          "$chosen"
+        ]
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 2
+      }
+    }
+  ],
+  "adventure": {
+    "identity": {
+      "name": "At the Door",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [
+        "Adventure"
+      ],
+      "manaCost": "{X}{2}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Create X 2/2 red Dwarf creature tokens. (Then exile this card. You may cast the enchantment later from exile.)",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Create X 2/2 red Dwarf creature tokens.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": "X",
+            "token": {
+              "name": "Dwarf",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Dwarf"
+              ],
+              "colors": [
+                "R"
+              ],
+              "power": 2,
+              "toughness": 2
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
