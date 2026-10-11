@@ -264,12 +264,16 @@ export function checkStateBasedActions(state) {
 
     /* CR 704.5n: an Equipment attached to a permanent that has gone, or is no longer a creature, becomes unattached and
        stays on the battlefield. */
+    /* CR 704.5p: a creature attached to anything, or a permanent that is neither an Aura nor an Equipment, becomes unattached
+       too -- an Equipment or an Aura that became a copy of a creature (Mirrorform) -- and an Equipment that is also a creature
+       can't equip (CR 301.5c). An Aura still attached here is one the check above found legal. */
     for (const id of state.zones.battlefield) {
       const object = state.objects[id];
       if (object.attachedTo === null || object.attachedTo === undefined) continue;
       const host = state.objects[object.attachedTo];
       const equipment = (object.subtypes ?? []).includes("Equipment");
-      if (host && host.zone === "battlefield" && (!equipment || typesOf(state, object.attachedTo).includes("Creature"))
+      const attachable = !typesOf(state, id).includes("Creature") && (Boolean(object.enchant) || equipment);
+      if (host && host.zone === "battlefield" && attachable && (!equipment || typesOf(state, object.attachedTo).includes("Creature"))
         /* Nor enchanted or equipped by one it has protection from (CR 702.16c-d): unattached here, an Aura then put into
            its owner's graveyard by the check above, as an Aura attached to nothing (CR 704.5m). */
         && !protectedFrom(state, {card: object.attachedTo}, id)) continue;

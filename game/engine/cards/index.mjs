@@ -1015,6 +1015,10 @@ export function compileScript(script) {
         problems.push("removeCounter: upTo goes with counters of any kinds (`counter: \"any\"`)");
       if (effect.effect === "removeCounter" && effect.counter === "any" && !(Number.isInteger(effect.count) && effect.count >= 1 && [undefined, true].includes(effect.upTo) && effect.removing === undefined))
         problems.push("removeCounter: counters of any kinds are a number of them, 1 or more, `upTo: true` or exactly -- which ones asked as it resolves");
+      /* "From among those cards" wherever each went (Spirit of Resilience): a choice among cards an earlier part named
+         (effects/asking.mjs, chooseCard) -- never a search of every zone. */
+      if (effect.effect === "chooseCard" && effect.zone === "any" && effect.among === undefined)
+        problems.push("chooseCard: any zone is among cards named before it (`among`), never a search");
       if (effect.effect === "repeatFor" && (effect.effects ?? []).some((inner) => inner?.effect === "removeCounter" && inner.counter === "any"))
         problems.push("repeatFor: which counters of any kinds to remove is asked, and what repeats here does not ask it");
       /* "Spend this mana only to cast instant and sorcery spells" (effects/resources.mjs), "only to cast a creature spell of

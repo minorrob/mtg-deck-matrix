@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 423 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 424 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1293,6 +1293,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-attach-target` - `tests/engine-attach-target.mjs`: "attach target Equipment you control to up to one target creature you control" (Iron Hills Stalwart; CR 701.3) -- the targeted Equipment moves, from where it was; nothing moves for an illegal target, none chosen, or protection
 - `engine-counters-removed` - `tests/engine-counters-removed.mjs`: "remove up to three counters from another target creature or planeswalker" (Mabel, Bitter Recluse; CR 122.1, 608.2d) -- of any kinds, which ones its controller chooses as it resolves, counted after; unasked where there is no choice
 - `engine-graveyard-abilities` - `tests/engine-graveyard-abilities.mjs`: "Thranduil has all activated abilities of all Elf cards in your graveyard" (CR 613.1f) -- its controller's graveyard as it now is, a changeling card among them, one ability each, "this creature" the holder
+- `engine-copy-set` - `tests/engine-copy-set.mjs`: copies of a set and of a card from among those that left a graveyard (Mirrorform, Spirit of Resilience; CR 707.2, 611.2c, 400.7e) -- each matched as it begins; what that leaves attached unattached (CR 704.5p, 301.5c); a card where it is now
 
 ## Design and execution record
 

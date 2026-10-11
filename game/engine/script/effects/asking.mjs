@@ -1341,11 +1341,17 @@ export const chooseCard = {
     /* Exile is one zone for every player (CR 406.1): a card there of the kind the selector says -- "a card exiled with this
        artifact" (`exiledWith`, script/filter.mjs) -- whoever owns it, face up (a face-down one has no characteristics,
        406.3a, so no selector with a quality fits it). */
-    const pool = (among ? amongIds.filter((id) => state.objects[id]?.zone === zone) : onField ? [...state.zones.battlefield] : cardsIn(state, zone, zone === "exile" ? null : player))
+    /* "An artifact or creature card from among those cards" (Spirit of Resilience, cards that left a graveyard): `zone: "any"`
+       beside `among`, each wherever it went -- a public zone, the one a leaving trigger can find it in (CR 400.7e) -- and read
+       as it is there (CR 608.2h). */
+    const anywhere = zone === "any";
+    const pool = (among ? amongIds.filter((id) => (anywhere ? state.objects[id] !== undefined : state.objects[id]?.zone === zone)) : onField ? [...state.zones.battlefield] : cardsIn(state, zone, zone === "exile" ? null : player))
       .filter((id) => !except?.has(id));
     /* "For each player, choose a creature that player controls" (The Eternal Wanderer): the player a repetition is about,
        for a selector's "that player" (script/resolution.mjs, repeatFor). */
-    const fitting = pool.filter((id) => matchers.some((m) => m(state, id, {controller: player, source: context.source, ...(context.about ? {about: context.about} : {})})));
+    const fits = (id) => (anywhere ? alternatives.map((one) => compileSelector({...one, what: "card", zone: state.objects[id].zone})) : matchers)
+      .some((m) => m(state, id, {controller: player, source: context.source, ...(context.about ? {about: context.about} : {})}));
+    const fitting = pool.filter(fits);
     /* "Up to four cards with different names" (Gifts Ungiven): one of each name offered -- which of two identical cards in a
        library is found changes nothing, and no answer can then name two of a name. */
     const cards = params.differentNames === true ? fitting.filter((id, i) => fitting.findIndex((other) => state.objects[other].card === state.objects[id].card) === i) : fitting;
@@ -1390,6 +1396,8 @@ export const chooseCard = {
       title: awaiting.zone === "battlefield" ? (awaiting.max > 1 ? "Choose permanents" : "Choose a permanent")
         /* A card in exile -- "a card exiled with this artifact" -- is chosen, not searched for. */
         : awaiting.zone === "exile" ? (awaiting.max > 1 ? "Choose cards in exile" : "Choose a card in exile")
+        /* Among cards wherever they went (Spirit of Resilience): chosen, not searched for. */
+        : awaiting.zone === "any" ? (awaiting.max > 1 ? "Choose cards from among them" : "Choose a card from among them")
         : awaiting.max === 0 ? `Search your ${ZONE_WORD[awaiting.zone]}: nothing to find` : `Search your ${ZONE_WORD[awaiting.zone]}`,
       mode: awaiting.max <= 1 ? (awaiting.min === 0 ? "many" : "one") : "many",
       min: awaiting.min,

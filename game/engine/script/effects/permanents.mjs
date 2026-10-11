@@ -339,8 +339,12 @@ export function copyOnto(state, id, fromId, {except = {}, keep = [], until = nul
   showCopy(object);
   return true;
 }
+/* "Each nonland permanent you control becomes a copy of target non-Aura permanent" (Mirrorform): `selector`, what becomes
+   the copy in the source's place -- each permanent it matches as the effect begins (CR 611.2c). The target among them
+   becomes a copy of itself, which changes nothing, so the rest copy it as it was (CR 707.2). */
 export function becomeCopy(state, params, context) {
-  copyOnto(state, context.source, (params.targets ?? [])[0], {except: params.except ?? {}, keep: params.keep ?? [], until: params.until ?? null});
+  const ids = params.selector ? selectMatching(state, params.selector, context) : [context.source];
+  for (const id of ids) copyOnto(state, id, (params.targets ?? [])[0], {except: params.except ?? {}, keep: params.keep ?? [], until: params.until ?? null});
   return [];
 }
 /** "Until end of turn": those copy effects end (rules/turn.mjs, the cleanup step). */
