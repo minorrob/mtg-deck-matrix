@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "War Room",
+    "oracleId": "71c52bf5-2a5d-488e-8b15-7ef290e4b77d",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {C}.\n{3}, {T}, Pay life equal to the number of colors in your commanders' color identity: Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{3}, {T}, Pay life equal to the number of colors in your commanders' color identity: Draw a card.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "payLife",
+          "amount": {
+            "commanderColors": "you"
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

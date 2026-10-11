@@ -78,9 +78,27 @@ const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "trig
      (Platypus-Bear; CR 702.3b): rules/statics.mjs defenderLifted asks it as attackers are offered. */
   "attacks-despite-defender"];
 
-/* What a flashback cost may be made of (CR 702.34a): mana, life ("Flashback--{1}{U}, Pay 3 life"), and creatures to tap
-   ("Flashback--Tap three untapped white creatures you control", Battle Screech: `tapCreature`, its `count` and `selector`). */
-const FLASHBACK_ATOMS = ["mana", "payLife", "tapCreature"];
+/* A target picked after the offer is taken ("up to two target creatures", script/bind.mjs): not chosen with it. */
+const countedTarget = (spec) => Boolean(spec) && typeof spec === "object" && spec.count !== undefined;
+/* What a flashback cost may be made of (CR 702.34a): mana, life ("Flashback--{1}{U}, Pay 3 life"), creatures to tap
+   ("Flashback--Tap three untapped white creatures you control", Battle Screech: `tapCreature`, its `count` and `selector`),
+   and cards to discard ("Flashback--{1}{U/R}{U/R}, Discard a card", Twinned Vision: `discard`, its `count`), each card its
+   own offer as an additional cost's discard is (rules/actions.mjs, additionalChoices). */
+const FLASHBACK_ATOMS = ["mana", "payLife", "tapCreature", "discard", "behold"];
+/* BEHOLD (CR 701.4a): "behold an Elf", "behold three Elementals" -- what may be beheld, a selector, and how many (1 or more),
+   in an additional cost or a flashback cost (rules/actions.mjs, beholdChoices). Never optional, and one to a card: its cast
+   asks one question of it. */
+function beholdProblems(atom) {
+  if (atom?.atom !== "behold") return [];
+  let fits = Boolean(atom.selector) && typeof atom.selector === "object" && (atom.count === undefined || (Number.isInteger(atom.count) && atom.count >= 1)) && atom.optional === undefined;
+  try { if (fits) compileSelector({...atom.selector, what: "card"}); } catch { fits = false; }
+  return fits ? [] : ["behold: what may be beheld (a selector) and how many, 1 or more, never optional"];
+}
+/* Life paid as a number (CR 119.4): only an activated ability's cost counts it as it is paid (rules/actions.mjs, costPayment;
+   War Room) -- an alternative cost's life and a mana ability's are read before anything is counted. */
+const fixedLife = (atom) => atom?.atom !== "payLife" || (Number.isInteger(atom.amount) && atom.amount >= 0);
+/* A flashback cost's discard: any card, a number of them -- never a card of a kind, nor "discard this card". */
+const plainDiscard = (atom) => atom?.atom !== "discard" || (atom.self === undefined && atom.selector === undefined && (atom.count === undefined || (Number.isInteger(atom.count) && atom.count >= 1)));
 /* How long "you may play that card" lasts (script/effects/zones.mjs, mayPlay): this turn, until the end of your next turn,
    or for as long as it remains there ("ever": a card that moves is a new object, CR 400.7, Emrakul, the Exigent Doom). */
 const MAY_PLAY_UNTIL = ["end-of-turn", "your-next-end", "ever"];
@@ -351,7 +369,7 @@ function manaAbility(ability, id) {
   const [first, ...then] = ability.effects ?? [];
   if (first?.effect !== "addMana") return (ability.effects ?? []).some((e) => e?.effect === "addMana") ? "unbuilt" : null;
   const cost = ability.cost ?? [];
-  if ((ability.targets ?? []).length || !cost.every((a) => ["{T}", "mana", "payLife"].includes(a?.atom) || (a?.atom === "sacrifice" && (a.self === true || a.selector))
+  if ((ability.targets ?? []).length || !cost.every((a) => (["{T}", "mana", "payLife"].includes(a?.atom) && fixedLife(a)) || (a?.atom === "sacrifice" && (a.self === true || a.selector))
     || (["addCounters", "removeCounters"].includes(a?.atom) && a.self === true && typeof a.counter === "string")
     /* "{T}, Mill a card: Add {C}" (Millikin): its controller's top N cards, milled as the cost is paid (CR 701.17). */
     || (a?.atom === "mill" && Number.isInteger(a.count ?? 1) && (a.count ?? 1) >= 1)
@@ -866,7 +884,7 @@ export function compileScript(script) {
        instant or sorcery: "if the resulting spell is an instant or sorcery spell". */
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "flashback") {
       const cost = Array.isArray(ability.cost) ? ability.cost : [];
-      if (!cost.length || !cost.every((atom) => FLASHBACK_ATOMS.includes(atom?.atom)))
+      if (!cost.length || !cost.every((atom) => FLASHBACK_ATOMS.includes(atom?.atom) && fixedLife(atom) && plainDiscard(atom) && !beholdProblems(atom).length))
         problems.push(`${ability.text}: a flashback cost of ${FLASHBACK_ATOMS.join(" and ")} only, and at least one`);
       const taps = cost.filter((atom) => atom?.atom === "tapCreature");
       if (taps.length > 1 || taps.some((atom) => !(Number.isInteger(atom.count) && atom.count >= 1) || !atom.selector || typeof atom.selector !== "object"))
@@ -946,7 +964,7 @@ export function compileScript(script) {
     }
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "evoke") {
       const cost = Array.isArray(ability.cost) ? ability.cost : [];
-      if (!cost.length || !cost.every((atom) => EVOKE_ATOMS.includes(atom?.atom) && (atom.atom !== "exileFromHand" || (atom.selector && typeof atom.selector === "object"))))
+      if (!cost.length || !cost.every((atom) => EVOKE_ATOMS.includes(atom?.atom) && fixedLife(atom) && (atom.atom !== "exileFromHand" || (atom.selector && typeof atom.selector === "object"))))
         problems.push(`${ability.text}: an evoke cost of ${EVOKE_ATOMS.join(", ")} (a card exiled from the hand by a selector), and at least one`);
       if ((identity.types ?? []).some((t) => ["Instant", "Sorcery", "Land"].includes(t))) problems.push(`${ability.text}: evoke on a card that never enters from the stack`);
       abilities.push({id, kind: "static", rule: "alternative-cost", evoke: true, text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
@@ -999,6 +1017,10 @@ export function compileScript(script) {
 
     if (ability.kind === "spell") {
       if (spell) problems.push("a second spell ability: one card, one spell");
+      /* A PERMANENT CARD'S ADDITIONAL COST (CR 601.2b): "as an additional cost to cast this spell, behold an Elf or pay {2}" (Lys
+         Alana Dignitary) -- its spell ability says that and nothing else: the permanent spell's effect is entering (CR 608.3). */
+      if (!(identity.types ?? []).some((t) => t === "Instant" || t === "Sorcery") && ((ability.effects ?? []).length || (ability.targets ?? []).length || !(ability.additionalCost ?? []).length))
+        problems.push("a permanent card's spell ability says only its additional cost: no targets and no effects");
       for (const atom of ability.additionalCost ?? []) {
         /* "Blight 1 or pay {3}" (Bogslither's Embrace): a choice between two or more additional costs, each a list of the atoms
            below or mana, each choice its own offer (rules/actions.mjs, additionalVariants). */
@@ -1010,13 +1032,15 @@ export function compileScript(script) {
               let parsed = null;
               try { parsed = parseManaCost(one.cost ?? ""); } catch { /* refused below */ }
               if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`oneOf: ${JSON.stringify(one.cost ?? "")} is no mana to pay`);
-            } else if (!["discard", "sacrifice", "blight"].includes(one?.atom)) problems.push(`${one?.atom ?? "an additional cost"}: an additional cost nothing pays yet`);
+            } else if (!["discard", "sacrifice", "blight", "behold"].includes(one?.atom)) problems.push(`${one?.atom ?? "an additional cost"}: an additional cost nothing pays yet`);
+            problems.push(...beholdProblems(one));
             if (one?.atom === "blight" && !(Number.isInteger(one.count ?? 1) && (one.count ?? 1) >= 1)) problems.push("blight: an additional cost of 1 or more -1/-1 counters");
             if (one?.optional !== undefined) problems.push("oneOf: one of a choice is never optional");
           }
           continue;
         }
-        if (!["discard", "sacrifice", "blight", "tapCreature"].includes(atom?.atom)) problems.push(`${atom?.atom ?? "an additional cost"}: an additional cost nothing pays yet`);
+        if (!["discard", "sacrifice", "blight", "tapCreature", "behold"].includes(atom?.atom)) problems.push(`${atom?.atom ?? "an additional cost"}: an additional cost nothing pays yet`);
+        problems.push(...beholdProblems(atom));
         /* "Discard two cards" (Cathartic Reunion): a whole number of cards, 1 or more (rules/actions.mjs, additionalChoices). */
         if (atom?.atom === "discard" && atom.count !== undefined && !(Number.isInteger(atom.count) && atom.count >= 1)) problems.push("discard: an additional cost of 1 or more cards");
         /* "Tap any number of untapped creatures you control" (Burn at the Stake): `count: "any"` and the creatures it may tap, a
@@ -1088,7 +1112,22 @@ export function compileScript(script) {
       const chosenModes = sole?.effect === "modal" && sole.chooser === undefined && (sole.modes ?? []).some((m) => (m.targets ?? []).length)
         ? {choose: sole.choose ?? 1, modes: sole.modes.map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? []}))} : null;
       if (chosenModes && (ability.targets ?? []).length) problems.push(`${ability.text}: a modal activated ability names its targets in its modes, not beside them`);
-      abilities.push({id, kind: "activated", text: ability.text, cost, targets: ability.targets ?? [], ...(chosenModes ? {modal: chosenModes} : {}),
+      /* "This ability costs {1} less to activate for each +1/+1 counter on the creature it targets" (Warrior's Blades; CR 601.2c,
+         then 601.2f): a reduction read from a target, costed for each way to choose its targets (rules/actions.mjs, abilityAims)
+         -- a permanent's ability, its targets chosen with the offer: never counted ones, picked after, nor its modes' (whose
+         targets are not the ability's, below). */
+      if (/"target":/.test(JSON.stringify(ability.costLess ?? null)) && (ability.zone !== undefined || !(ability.targets ?? []).length || ability.targets.some(countedTarget)))
+        problems.push(`${ability.text}: a cost read from its target is a permanent's ability's, with its targets chosen as it is offered`);
+      /* WATERBEND (CR 701.67a-b): a permanent's ability's whole mana cost, once -- beside no other mana, which tapping could not
+         pay, nor {T}, the source tapped for both -- offered where a permanent's abilities are (rules/actions.mjs). */
+      const bend = cost.filter((atom) => atom?.atom === "waterbend");
+      if (bend.length > 1 || (bend.length && (ability.zone !== undefined || cost.some((atom) => atom?.atom === "mana" || atom?.atom === "{T}"))))
+        problems.push(`${ability.text}: a waterbend cost is a permanent's ability's only mana, once, without {T}`);
+      /* EQUIP (CR 702.6a): "Equip [cost]" is "[Cost]: Attach this permanent to target creature you control. Activate only as a
+         sorcery" -- an activated ability the card writes out, known by its words, for what reads equip abilities ("equip
+         abilities you activate that target this creature cost {2} less", Dwarven Mauler; rules/statics.mjs). */
+      const equip = /^Equip\b/.test(ability.text ?? "");
+      abilities.push({id, kind: "activated", text: ability.text, cost, targets: ability.targets ?? [], ...(chosenModes ? {modal: chosenModes} : {}), ...(equip ? {equip: true} : {}),
         effects: ability.effects, ...(loyalty !== undefined ? {loyalty, timing: "sorcery"} : ability.timing ? {timing: ability.timing} : {}), ...(ability.zone === "hand" ? {zone: "hand"} : {}),
         /* "{W}, Exile this card from your graveyard: ..." (Goldmeadow Nomad): an ability of the card in its owner's graveyard,
            offered there as encore's is (rules/actions.mjs). */
@@ -1190,7 +1229,7 @@ export function compileScript(script) {
        {3}{R} and exiling four other cards from your graveyard", Squee, Dubious Monarch), other cards of it to exile, a number
        (rules/actions.mjs, alternativeCosts). */
     if (ability.kind === "static" && ability.rule === "alternative-cost") {
-      for (const atom of ability.cost ?? []) if (!["mana", "payLife", "exileFromHand", "sacrifice"].includes(atom?.atom) || (atom.atom === "sacrifice" && !atom.selector))
+      for (const atom of ability.cost ?? []) if (!["mana", "payLife", "exileFromHand", "sacrifice"].includes(atom?.atom) || (atom.atom === "sacrifice" && !atom.selector) || !fixedLife(atom))
         if (!(ability.zone === "graveyard" && atom?.atom === "exileFromGraveyard" && atom.self !== true && Number.isInteger(atom.count) && atom.count >= 1))
           problems.push(`${ability.text}: an alternative cost of ${atom?.atom ?? "something"} nothing pays yet`);
       if (ability.zone !== undefined && ability.zone !== "graveyard") problems.push(`${ability.text}: an alternative cost is cast from where it is, or from the graveyard (\`zone: "graveyard"\`)`);
@@ -1233,6 +1272,16 @@ export function compileScript(script) {
   if (enchant && spell) problems.push("an Aura's spell is its Enchant target, and it has no other");
   /* The Aura as a spell: its one target, nothing done as it resolves -- it enters attached (stack.mjs). */
   if (enchant) spell = {id: "enchant", text: enchant.text, targets: [enchant.target], effects: [], ...(enchant.hostile ? {hostile: true} : {})};
+  /* One behold to a card (rules/actions.mjs asks one question of it): among its additional costs and its flashback cost. */
+  const beholds = [...(spell?.additionalCost ?? []).flatMap((a) => (a?.atom === "oneOf" ? (a.options ?? []).flat() : [a])),
+    ...abilities.filter((a) => a.kind === "static" && a.rule === "flashback").flatMap((a) => a.cost ?? [])].filter((a) => a?.atom === "behold");
+  if (beholds.length > 1) problems.push("one behold to a card, among its additional costs and its flashback cost");
+  /* "This spell costs {1} less to cast if it targets a creature with flying" (Swampsnare Trap; CR 601.2c, then 601.2f): costed
+     for each way to choose its targets (rules/actions.mjs, aimsFor) -- a spell with targets chosen as it is offered, never
+     counted ones picked after, nor its modes' (a modal spell's targets are its modes', none of its own). */
+  if (abilities.some((a) => a.kind === "static" && a.rule === "this-costs-less" && a.targeting !== undefined)
+    && (!spell || !(spell.targets ?? []).length || spell.targets.some(countedTarget)))
+    problems.push("a spell that costs less for what it targets has targets chosen as it is offered: none counted, and no modes");
   /* Escalate's (CR 702.120a), on a spell whose modes are chosen as it is cast, "choose one or more": its cost once for each mode
      beyond the first, as many as the spell allows (rules/actions.mjs, additionalVariants and withModes). */
   const oneOrMore = Boolean(spell?.modal) && (spell.modal.choose ?? 1) === 1 && (spell.modal.upTo ?? 1) > 1;

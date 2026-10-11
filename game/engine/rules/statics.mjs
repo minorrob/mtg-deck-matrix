@@ -53,7 +53,8 @@ export const STATIC_RULES = Object.freeze({
   "spells-cost-less": "rules/actions.mjs",
   /** CR 601.2f: "Noncreature spells cost {1} more to cast" (Thalia), "spells your opponents cast cost {2} more" (God-
       Pharaoh's Statue): `caster` any (the default), you or opponent; `affects` the spell; `amount`. actions.mjs, castCost.
-      "Spells that target this creature cost more" waits for a cost read with the targets chosen. "During your turn, spells
+      "Spells that target this creature cost more" is not built: a spell's own reduction reads its chosen targets
+      (costReduction's `targets`), and costIncrease reads none yet. "During your turn, spells
       your opponents cast cost {1} more" (Tithe Taker): its `condition`, asked at each cast. */
   "spells-cost-more": "rules/actions.mjs",
   /** CR 602.2b, 601.2f: "During your turn, ... abilities your opponents activate cost {1} more to activate unless they're
@@ -63,8 +64,15 @@ export const STATIC_RULES = Object.freeze({
   "abilities-cost-more": "rules/actions.mjs",
   /** CR 601.2f, the card's own: "This spell costs {1} less to cast for each creature on the battlefield" (Vanquish the
       Horde), "{X} less, where X is the total power of creatures you control" (Ghalta). Read from the card wherever it
-      is cast from, by actions.mjs through costReduction; its `amount` may be counted (script/amount.mjs). */
+      is cast from, by actions.mjs through costReduction; its `amount` may be counted (script/amount.mjs). "If it targets
+      a tapped creature" (Magnificent End): `targeting`, a selector one of its chosen targets must fit -- its targets are
+      chosen before its total cost is determined (CR 601.2c, 601.2f), so each way to choose them is costed on its own. */
   "this-costs-less": "rules/actions.mjs",
+  /** CR 602.2b, 601.2f: "Equip abilities you activate that target this creature cost {2} less to activate" (Dwarven
+      Mauler): `affects`, what one of the ability's chosen targets must be ("this creature", `self`), `amount` generic mana,
+      for its controller's equip abilities (CR 702.6a). actions.mjs, as each way to choose an equip ability's target is costed
+      (equipCostReduction, below). */
+  "equip-costs-less": "rules/actions.mjs",
   /** CR 509.1b: "Target creature can't be blocked this turn" (Rogue's Passage), "creatures with power 2 or less can't be
       blocked". keywords/combat.mjs, as each blocker is checked. */
   "cant-be-blocked": "keywords/combat.mjs",
@@ -134,6 +142,10 @@ export const STATIC_RULES = Object.freeze({
   "doesnt-untap": "rules/turn.mjs",
   /** "Lands you control enter untapped" (Horizon Explorer): entersUntapped, as a land arrives. effects/zones.mjs. */
   "lands-enter-untapped": "script/effects/zones.mjs",
+  /** "Threshold -- You can't cast this spell unless there are seven or more cards in your graveyard" (Proft, Sinister
+      Mastermind; CR 601.2): the card's own restriction, `unless` the condition that lets it be cast, asked of its caster
+      wherever the card would be cast from -- a hand, the command zone, a graveyard. castForbidden, below. */
+  "cant-cast-self": "rules/actions.mjs",
   /** "You may cast this card from your graveyard or from exile" (Squee): the card's own, read where it is. rules/actions.mjs. */
   "cast-self-from": "rules/actions.mjs",
   /** "You have hexproof" (Crystal Barricade; CR 702.11c): its controller can't be the target of spells or abilities their
@@ -258,6 +270,9 @@ export function freeCast(state, player, cardId) {
 export function castForbidden(state, player, cardId) {
   const object = state.objects[cardId];
   if (!object) return false;
+  /* THE CARD'S OWN (cant-cast-self): "you can't cast this spell unless there are seven or more cards in your graveyard". */
+  for (const own of object.abilities ?? [])
+    if (own.kind === "static" && own.rule === "cant-cast-self" && !conditionHolds(state, own.unless, {controller: player, source: cardId})) return true;
   /* AN EFFECT WITH A DURATION (effects/permanents.mjs, effectUntil's `rule: "cant-cast"`): "that creature's owner can't cast
      spells with the same name as that creature until your next turn" (Reflector Mage) -- the players it names, and the
      spells `spells` describes (a name, CR 201.2a), from any zone they would be cast from. */
@@ -752,9 +767,14 @@ export function playerStatics(state, rule, player) {
  * HOW MUCH LESS A SPELL COSTS (CR 601.2f). Every "spells cost {N} less" static ability on the battlefield whose spell
  * selector (`affects`) fits this card, cast by whom it says (`caster`: you, the default, opponent, or any): the
  * generic mana it takes off, summed. The selector is read against the card where it is being cast from, so "a red
- * spell" finds the red card in a hand or a command zone.
+ * spell" finds the red card in a hand or a command zone. `targets`: the spell's chosen targets, for its own reduction that
+ * reads them ("if it targets an attacking creature"); none chosen, and that reduction takes nothing off.
  */
-export function costReduction(state, player, cardId) {
+/* Whether one of the chosen targets is an object the selector describes, read from the side of `context` (CR 601.2c: the
+   targets are chosen before the total cost is determined, 601.2f). A player target is never one. */
+const targetsFit = (state, selector, targets, context) => (targets ?? []).some((t) => t?.kind === "object" && state.objects[t.id]
+  && matchesSelector(selector, state, t.id, context));
+export function costReduction(state, player, cardId, targets = null) {
   const object = state.objects[cardId];
   if (!object) return 0;
   let total = 0;
@@ -783,8 +803,31 @@ export function costReduction(state, player, cardId) {
       total += amountOf(state, ability.amount ?? 1, {controller: holder.controller, source: holderId});
     }
   }
-  for (const ability of object.abilities ?? [])
-    if (ability.kind === "static" && ability.rule === "this-costs-less") total += amountOf(state, ability.amount ?? 1, {controller: player, source: cardId});
+  for (const ability of object.abilities ?? []) {
+    if (ability.kind !== "static" || ability.rule !== "this-costs-less") continue;
+    /* "This spell costs {3} less to cast if it targets a tapped creature" (Magnificent End): only for targets that fit. */
+    if (ability.targeting && !targetsFit(state, ability.targeting, targets, {controller: player, source: cardId})) continue;
+    total += amountOf(state, ability.amount ?? 1, {controller: player, source: cardId});
+  }
+  return total;
+}
+
+/**
+ * HOW MUCH LESS AN EQUIP ABILITY COSTS FOR THE TARGETS CHOSEN (CR 702.6a; 602.2b, 601.2f): every `equip-costs-less` static of
+ * a permanent the activating player controls -- "equip abilities you activate that target this creature cost {2} less to
+ * activate" (Dwarven Mauler) -- whose `affects` one of the chosen targets fits, read from that permanent's side ("this
+ * creature" its `self`). Generic mana, summed; actions.mjs reads it for an equip ability only.
+ */
+export function equipCostReduction(state, player, targets) {
+  let total = 0;
+  for (const holderId of state.zones.battlefield) {
+    if (controllerOf(state, holderId) !== player) continue;
+    for (const ability of abilitiesOf(state, holderId)) {
+      if (ability.kind !== "static" || ability.rule !== "equip-costs-less") continue;
+      const context = {controller: player, source: holderId};
+      if (targetsFit(state, ability.affects, targets, context)) total += amountOf(state, ability.amount ?? 0, context);
+    }
+  }
   return total;
 }
 

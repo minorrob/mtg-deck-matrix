@@ -148,6 +148,13 @@ function checkEffect(effect, path, errors) {
     if (effect.sacrifice !== undefined || effect.discard !== undefined)
       errors.push({path: `${path}.returnToHand`, message: "An \"unless\" cost returns a permanent, sacrifices one or discards a card: one of them"});
   }
+  /* "You may tap another untapped Merfolk you control" (Meanders Guide): a selector of the payer's permanents, the cost's only
+     part beside mana or life. */
+  if (name === "unlessPays" && effect.tap !== undefined) {
+    checkSelector(effect.tap, `${path}.tap`, errors);
+    if (effect.sacrifice !== undefined || effect.discard !== undefined || effect.returnToHand !== undefined)
+      errors.push({path: `${path}.tap`, message: "An \"unless\" cost taps a permanent, returns one, sacrifices one or discards a card: one of them"});
+  }
   /* "You may pay {X}. When you do, ..." (Halo Forager): X chosen as it is paid, so no amount beside it, and only a "you may". */
   if (name === "unlessPays" && effect.amountX !== undefined && !(effect.amountX === true && effect.ifPaid === true && effect.amount === undefined && effect.mana === undefined))
     errors.push({path: `${path}.amountX`, message: "\"You may pay {X}\" is `amountX: true` with `ifPaid: true`, and no amount or mana beside it"});
@@ -221,7 +228,8 @@ const countValid = (count) => Boolean(count) && typeof count === "object" && !Ar
   && (count.min === undefined || (Number.isInteger(count.min) && count.min >= 0))
   && (count.max === undefined || (Number.isInteger(count.max) && count.max >= 1 && count.max >= (count.min ?? 0)));
 
-function checkAbility(ability, path, errors) {
+/* `permanent`: the card is a permanent card, whose spell ability may say only its additional cost (below). */
+function checkAbility(ability, path, errors, {permanent = false} = {}) {
   if (!ability || typeof ability !== "object") {
     errors.push({path, message: "An ability is an object"});
     return;
@@ -296,7 +304,10 @@ function checkAbility(ability, path, errors) {
   const effectful = ["spell", "activated", "triggered"].includes(ability.kind);
   if (effectful) {
     const effects = ability.effects ?? [];
-    if (effects.length === 0)
+    /* A permanent spell's effect is its entering (CR 608.3): a permanent card's spell ability says only "as an additional cost
+       to cast this spell, ..." (Lys Alana Dignitary; CR 601.2b), and has no effects of its own (cards/index.mjs). */
+    const additionalOnly = permanent && ability.kind === "spell" && Array.isArray(ability.additionalCost) && ability.additionalCost.length > 0;
+    if (effects.length === 0 && !additionalOnly)
       errors.push({path: `${path}.effects`, message: `A ${ability.kind} ability with no effects is a definition somebody did not finish`});
     effects.forEach((effect, index) => checkEffect(effect, `${path}.effects[${index}]`, errors));
   }
@@ -391,6 +402,13 @@ function checkAbility(ability, path, errors) {
     /* "Twice that much life instead" (rules/statics.mjs, lifeGained): how many times, 2 or more. */
     if (ability.rule === "more-life" && !(Number.isInteger(ability.times) && ability.times >= 2))
       errors.push({path: `${path}.times`, message: "More life instead says how many times as much: a whole number, 2 or more"});
+    /* A card's own restriction on casting it (Proft, Sinister Mastermind): what lets it be cast, a condition, said. */
+    if (ability.rule === "cant-cast-self") {
+      if (ability.unless === undefined) errors.push({path: `${path}.unless`, message: "\"You can't cast this spell unless ...\" says what: `unless`, a condition"});
+      else for (const message of conditionProblems(ability.unless)) errors.push({path: `${path}.unless`, message});
+    }
+    /* What a chosen target must be for the spell to cost less (CR 601.2f): "if it targets an attacking creature" (Run Behind). */
+    if (ability.rule === "this-costs-less" && ability.targeting !== undefined) checkSelector(ability.targeting, `${path}.targeting`, errors);
     if (ability.rule === "cant-be-blocked-by") {
       if (!ability.by && ability.byPowerBelowSource !== true) errors.push({path, message: "\"Can't be blocked by\" says by what: `by`, or `byPowerBelowSource`"});
       if (ability.by) checkSelector(ability.by, `${path}.by`, errors, {choice: true});
@@ -449,7 +467,8 @@ export function validateScript(script) {
   if (!Array.isArray(script.abilities)) {
     errors.push({path: "abilities", message: "A script has an abilities list, empty for a vanilla card"});
   } else {
-    script.abilities.forEach((ability, index) => checkAbility(ability, `abilities[${index}]`, errors));
+    const permanent = Array.isArray(script.identity?.types) && !script.identity.types.some((t) => t === "Instant" || t === "Sorcery");
+    script.abilities.forEach((ability, index) => checkAbility(ability, `abilities[${index}]`, errors, {permanent}));
   }
 
   /* A NONMODAL DOUBLE-FACED CARD (CR 712.2): one that transforms says so, `layout: "transform"`, beside its back face; a

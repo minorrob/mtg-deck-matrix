@@ -899,7 +899,8 @@ function costWords(awaiting) {
   if (awaiting.amountX) return "pay {X}";
   const paid = [awaiting.mana ?? null, awaiting.amount > 0 ? `{${awaiting.amount}}` : null, lifeAsked(awaiting) ? `${awaiting.life} life` : null].filter(Boolean);
   const other = awaiting.discard ? "discard a card" : awaiting.sacrificeCount ? `sacrifice ${awaiting.sacrificeCount} permanents` : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}`
-    : awaiting.returnToHand ? `return ${otherNoun(awaiting.returnToHand)} you control to its owner's hand` : null;
+    : awaiting.returnToHand ? `return ${otherNoun(awaiting.returnToHand)} you control to its owner's hand`
+    : awaiting.tap ? `tap ${otherNoun(awaiting.tap).replace(/^(a|another) /, "$1 untapped ").replace(/^a untapped/, "an untapped")} you control` : null;
   return [other, paid.length ? `pay ${paid.join(" and ")}` : null].filter(Boolean).join(" and ") || `pay {${awaiting.amount}}`;
 }
 /* "YOU MAY PAY {X}" (Halo Forager; `amountX`, CR 107.3f): X is the payer's to choose as it resolves -- each amount their pool
@@ -930,6 +931,14 @@ function payOptions(state, awaiting) {
     return mine.map((id) => ({label: `Sacrifice ${state.objects[id].card}${also}`, pay: true, sacrifice: id, cardId: id}));
   }
   if (awaiting.discard) return cardsIn(state, "hand", player).map((id) => ({label: `Discard ${state.objects[id].card}${also}`, pay: true, discard: id, cardId: id}));
+  /* "YOU MAY TAP ANOTHER UNTAPPED MERFOLK YOU CONTROL. WHEN YOU DO, ..." (Meanders Guide; CR 118.12a, 603.12): each untapped
+     permanent of the payer's the selector describes its own option -- `another` not the ability's source -- and not paying.
+     Which one is the payer's choice. */
+  if (awaiting.tap) {
+    const fits = compileSelector({...awaiting.tap, what: "permanent", controller: "you"});
+    return state.zones.battlefield.filter((id) => !state.objects[id].tapped && fits(state, id, {controller: player, source: awaiting.source}))
+      .map((id) => ({label: `Tap ${state.objects[id].card}${also}`, pay: true, tap: id, cardId: id}));
+  }
   /* "UNLESS YOU RETURN ANOTHER CREATURE YOU CONTROL TO ITS OWNER'S HAND" (Faerie Impostor; CR 118.12a, a cost other than
      mana): each permanent of the payer's the selector describes its own option -- `another` not the ability's source --
      and none, and not paying is all there is. Which one is the payer's choice (AGENTS.md: the players decide). */
@@ -955,6 +964,7 @@ export const unlessPays = {
       ...(params.life !== undefined ? {life: params.life} : {}), ...(params.discard ? {discard: params.discard} : {}), ...(params.sacrifice ? {sacrifice: structuredClone(params.sacrifice)} : {}),
       ...(params.sacrificeCount ? {sacrificeCount: params.sacrificeCount} : {}),
       ...(params.returnToHand ? {returnToHand: structuredClone(params.returnToHand)} : {}),
+      ...(params.tap ? {tap: structuredClone(params.tap)} : {}),
       ...(params.amountX === true ? {amountX: true} : {}),
       effects: structuredClone(params.effects ?? []), source: context.source ?? null,
       /* "You may pay {1}. If you do, ...": the effects when it is paid, not when it is not. */
@@ -1051,6 +1061,12 @@ function unlessPaid(state, awaiting, option, events) {
     if (moveOne(state, option.discard, "graveyard", events, {owner: awaiting.player}) !== null) events[events.length - 1].data.fields.discarded = true;
   }
   for (const id of option.sacrifice === undefined ? [] : [].concat(option.sacrifice)) if (state.objects[id]) sacrificeOne(state, id, events);
+  /* Tapped, as a cost is paid -- an option of the answer's own question, asked again as it is answered (apply), so one
+     tapped meanwhile is no longer among them (CR 118.3). */
+  if (option.tap !== undefined) {
+    state.objects[option.tap].tapped = true;
+    events.push(event("GameEventCardTapped", state, {card: cardRef(state, option.tap), tapped: true}));
+  }
   /* Returned to its owner's hand (CR 400.3), as a cost is paid: still there and still the payer's, or it cannot be. */
   if (option.bounce !== undefined) {
     if (state.objects[option.bounce]?.zone !== "battlefield" || controllerOf(state, option.bounce) !== awaiting.player) throw new Error("That permanent can no longer be returned to its owner's hand");

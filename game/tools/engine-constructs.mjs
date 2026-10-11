@@ -343,7 +343,9 @@ export const FORGE_COUNTS = Object.freeze({
   TriggerRememberAmount: {name: "An amount the trigger carries", status: "missing"},
   ChosenNumber: {name: "A number a player chose", status: "missing"},
   CardManaCost: {name: "This card's mana value", status: "missing"},
-  ColorsColorIdentity: {name: "Colors in your commanders' identity", status: "missing"},
+  /* Train C (p3-costs; War Room): "pay life equal to the number of colors in your commanders' color identity" -- the union of
+     their identities (CR 903.4), undefined and a cost of it unpayable without a commander (903.4f). */
+  ColorsColorIdentity: {name: "Colors in your commanders' identity", status: "built", engine: "amount {commanderColors: \"you\"} (script/amount.mjs); a cost of it unpayable without a commander"},
   CommanderCastFromCommandZone: {name: "Times your commander was cast from the command zone", status: "missing"},
   Converge: {name: "Colors of mana spent (converge)", status: "missing"},
   /* Rob's Priority Batch 10.3, its twenty-first slice: the mana spent to cast an object, by color (rules/actions.mjs). */

@@ -131,11 +131,17 @@ function main() {
     Scry: {engine: "scry"}, Search: {engine: "chooseCard", forge: ["ChangeZone"]}, Shuffle: {engine: "shuffle"}, Surveil: {engine: "surveil"},
     "Tap and Untap": {engine: "tap", forge: ["Tap", "Untap", "TapAll", "UntapAll"]}, Transform: {engine: "setState", forge: ["SetState"]},
     Proliferate: {engine: "proliferate"}, Amass: {engine: "amass"}, Connive: {engine: "connive"}, Discover: {engine: "discover"},
+    /* Train C (p3-costs): behold as a cost -- an additional cost, a flashback cost's (rules/actions.mjs) -- not yet as an
+       effect's "you may behold ... If you do". */
+    Behold: {core: true, partial: true, note: "as a cost: an additional cost or a flashback cost's; as an effect, not yet"},
+    /* And waterbend (CR 701.67a) as an activated ability's cost, artifacts and creatures tapped for its generic mana -- not yet
+       as a spell's additional cost (701.67b), nor "whenever you waterbend" (701.67c). */
+    Waterbend: {core: true, partial: true, note: "as an activated ability's cost; as a spell's additional cost, and its trigger, not yet"},
   };
   const forgeApiFor = (name, spec) => spec?.forge ?? [...ALL.apis.keys()].filter((api) => api.toLowerCase() === name.replace(/[^A-Za-z]/g, "").toLowerCase());
   const keywordActions = cr.keywordActions.map(({rule, name}) => {
     const spec = ACTIONS[name], forge = forgeApiFor(name, spec);
-    const status = spec?.core ? "built" : !spec?.engine ? "missing" : isBuilt(spec.engine) ? (spec.partial ? "partial" : "built") : isPrimitive(spec.engine) ? "named" : "missing";
+    const status = spec?.core ? (spec.partial ? "partial" : "built") : !spec?.engine ? "missing" : isBuilt(spec.engine) ? (spec.partial ? "partial" : "built") : isPrimitive(spec.engine) ? "named" : "missing";
     const sum = (m) => forge.reduce((n, api) => n + (m.get(api) ?? 0), 0);
     const engineKey = spec?.engine ? `api:${spec.engine}` : null;
     return entry({kind: "keyword action", rule, name, engine: spec?.core ? "(the rules modules)" : spec?.engine ?? null, status, forge: forge.join(", ") || null,
@@ -167,8 +173,8 @@ const PARTIAL_TRIGGERS = new Set([...BROAD_TRIGGERS, "DamageDone"]);
 
   /* Static abilities and replacement effects. */
   const statics = [...ALL.statics.keys()].map((mode) => entry({kind: "static", rule: null, name: mode, engine: FORGE_STATIC[mode] ?? null,
-    /* Continuous is every layer effect, some built; ReduceCost is "spells cost {N} less" (built) and "this spell costs
-     {X} less" (not yet). */
+    /* Continuous is every layer effect, some built; ReduceCost is "spells cost {N} less", "this spell costs {X} less" and
+     "costs {1} less if it targets ..." (built), beside forms Forge writes that are not. */
   status: FORGE_STATIC[mode] ? (["Continuous", "ReduceCost"].includes(mode) ? "partial" : "built") : "missing", forge: mode, top: TOP.statics.get(mode) ?? 0, all: ALL.statics.get(mode) ?? 0, ...byKey(`static:${mode}`)}));
   const replacements = [...ALL.replacements.keys()].map((mode) => entry({kind: "replacement", rule: null, name: mode, engine: FORGE_REPLACEMENT[mode] ?? null,
     status: FORGE_REPLACEMENT[mode] ? "partial" : "missing", forge: mode, top: TOP.replacements.get(mode) ?? 0, all: ALL.replacements.get(mode) ?? 0, ...byKey(`replacement:${mode}`)}));
@@ -181,7 +187,7 @@ const PARTIAL_TRIGGERS = new Set([...BROAD_TRIGGERS, "DamageDone"]);
     RemoveAnyCounter: ["removeAnyCounter", "named"], ExileFromGrave: ["exileFromGraveyard", "named"], tapXType: ["tapUntapped", "named"],
     Reveal: ["reveal", "named"], Return: ["returnToHand", "named"], Draw: ["draw", "named"], Mill: ["mill", "named"],
     ExileFromHand: [null, "missing"], ExileAnyGrave: [null, "missing"], Exile: [null, "missing"], PayEnergy: [null, "missing"], Exert: [null, "missing"],
-    CollectEvidence: [null, "missing"], Waterbend: [null, "missing"], Blight: [null, "missing"], DamageYou: [null, "missing"], ExiledMoveToGrave: [null, "missing"],
+    CollectEvidence: [null, "missing"], Waterbend: ["waterbend", "partial"], Blight: [null, "missing"], DamageYou: [null, "missing"], ExiledMoveToGrave: [null, "missing"],
   };
   const costs = Object.entries(COSTS).filter(([forge]) => ALL.costs.has(forge) || TOP.costs.has(forge)).map(([forge, [engine, status]]) =>
     entry({kind: "cost", rule: null, name: forge, engine, status, forge, top: TOP.costs.get(forge) ?? 0, all: ALL.costs.get(forge) ?? 0}));

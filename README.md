@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 413 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 419 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1283,6 +1283,12 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-tokens-replaced` - `tests/engine-tokens-replaced.mjs`: tokens created, replaced -- twice that many (Anointed Procession), Dragons instead of artifact tokens (Draconic Visitor) -- whose control, copies, the effect's own words on what is made instead
 - `engine-draws-replaced` - `tests/engine-draws-replaced.mjs`: an opponent's two or more draws replaced, one each (Alms Collector), and whose of two players' asked of the drawing player before anything is drawn
 - `engine-cant-be-sacrificed` - `tests/engine-cant-be-sacrificed.mjs`: "can't be sacrificed" (Alexios, Deimos of Kosmos) -- told to, nothing happens; never among the choices of an effect or a cost -- and whose control and counter "that player" is
+- `engine-cost-targets` - `tests/engine-cost-targets.mjs`: a cost read from its targets (Magnificent End, Warrior's Blades, Dwarven Mauler), each way to choose them costed and offered on its own (CR 601.2c, 601.2f)
+- `engine-cost-atoms` - `tests/engine-cost-atoms.mjs`: three cost atoms -- a +1/+1 counter from a creature you control (Bolrac-Clan Crusher), a discard in a flashback cost (Twinned Vision), and life counted as it is paid, unpayable without a commander (War Room; CR 903.4f)
+- `engine-behold` - `tests/engine-behold.mjs`: behold as a cost (CR 701.4a; Lys Alana Dignitary, Kindle the Inner Flame), a permanent chosen or a card revealed from the hand, which ones asked once the cast is taken
+- `engine-waterbend` - `tests/engine-waterbend.mjs`: waterbend as an activated ability's cost (CR 701.67; Giant Koi, Foggy Swamp Vinebender), artifacts and creatures tapped for its generic mana, never for an increase on it
+- `engine-cant-cast-self` - `tests/engine-cant-cast-self.mjs`: a card's own "you can't cast this spell unless ..." (Proft, Sinister Mastermind's threshold), read wherever it would be cast from
+- `engine-unless-tap` - `tests/engine-unless-tap.mjs`: "you may tap another untapped Merfolk you control. When you do, ..." (Meanders Guide; CR 118.12a, 603.12), each permanent its own option
 
 ## Design and execution record
 

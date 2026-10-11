@@ -1,0 +1,229 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Twinned Vision",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Cast from the hand: one card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Twinned Vision"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Twinned Vision"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Twinned Vision"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Flashback for {1}{U/R}{U/R} and a card discarded, one offer for each card: two cards drawn, and it is exiled",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Twinned Vision"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Mountain",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Twinned Vision"
+              },
+              "count": 2,
+              "costs": [
+                [
+                  "Bear"
+                ],
+                [
+                  "Ogre"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Twinned Vision",
+          "discard": "Ogre"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Ogre"
+              ]
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 3
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Twinned Vision"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre"
+          ]
+        },
+        {
+          "event": "GameEventCardChangeZone",
+          "where": {
+            "discarded": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "No card to discard: no flashback, whatever the mana",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Twinned Vision"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Mountain",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Twinned Vision"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

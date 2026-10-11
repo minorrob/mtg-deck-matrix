@@ -1,0 +1,245 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "War Room",
+  "fixtures": {
+    "Azorius Captain": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human"
+      ],
+      "manaCost": "{W}{U}",
+      "colors": [
+        "W",
+        "U"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "supertypes": [
+        "Legendary"
+      ]
+    },
+    "Golem Captain": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Golem"
+      ],
+      "manaCost": "{3}",
+      "colors": [],
+      "power": 3,
+      "toughness": 3,
+      "supertypes": [
+        "Legendary"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Its mana ability: {T} for {C} -- and, tapped, its draw is not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "Azorius Captain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "War Room",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "War Room"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "pool": {
+                "C": 1
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "War Room"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "Its draw: {3} and {T}, 2 life for two colors, and a card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "Azorius Captain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "War Room",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "War Room"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "tapped": "War Room"
+        }
+      ]
+    },
+    {
+      "name": "A colorless commander: 0 life paid, and the card drawn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "Golem Captain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "War Room",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "War Room"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "No commander: the number of colors is undefined, and the cost unpayable (CR 903.4f)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "War Room",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "War Room"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

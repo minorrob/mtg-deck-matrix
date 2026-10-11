@@ -1,0 +1,274 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Foggy Swamp Vinebender",
+  "fixtures": {
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Goblin": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{1}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 2,
+      "toughness": 1
+    },
+    "Beast": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{2}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Waterbend {5}: three mana and two artifacts and creatures tapped, a +1/+1 counter",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Foggy Swamp Vinebender",
+            "Rock",
+            "Bear",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Foggy Swamp Vinebender",
+          "waterbend": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Foggy Swamp Vinebender",
+                  "Rock",
+                  "Bear"
+                ],
+                "min": 2
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Rock",
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Foggy Swamp Vinebender",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Foggy Swamp Vinebender",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "C": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Only during Rob's turn: on Maya's, not offered",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Foggy Swamp Vinebender",
+            "Rock",
+            "Bear",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Foggy Swamp Vinebender",
+            "seat": 0
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Too few to tap and too little mana: two of five is not enough",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Foggy Swamp Vinebender",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Foggy Swamp Vinebender"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "A creature with power 3 may block it: Maya's 3/3 does, and both die",
+      "at": {
+        "turn": 3,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Foggy Swamp Vinebender"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin",
+            "Beast"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Foggy Swamp Vinebender"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Beast",
+              "Foggy Swamp Vinebender"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Beast"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Foggy Swamp Vinebender"
+          ]
+        }
+      ]
+    }
+  ]
+}

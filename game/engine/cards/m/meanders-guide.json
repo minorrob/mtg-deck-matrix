@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Meanders Guide",
+    "oracleId": "8229954b-e1ef-4503-8443-2356e2a87663",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Merfolk",
+      "Scout"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "Whenever this creature attacks, you may tap another untapped Merfolk you control. When you do, return target creature card with mana value 3 or less from your graveyard to the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks, you may tap another untapped Merfolk you control. When you do, return target creature card with mana value 3 or less from your graveyard to the battlefield.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "you",
+          "tap": {
+            "subtypes": [
+              "Merfolk"
+            ],
+            "another": true
+          },
+          "ifPaid": true,
+          "effects": [
+            {
+              "effect": "immediateTrigger",
+              "text": "When you do, return target creature card with mana value 3 or less from your graveyard to the battlefield.",
+              "targets": [
+                {
+                  "what": "card",
+                  "zone": "graveyard",
+                  "controller": "you",
+                  "types": [
+                    "Creature"
+                  ],
+                  "manaValue": {
+                    "max": 3
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": {
+                    "target": 0
+                  },
+                  "to": "battlefield"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,253 defined and playable today; 2,601 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,254 defined and playable today; 2,602 with every
 mechanic built, so only their definitions are left to write; 27 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -19,14 +19,14 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 54 | 0 | 5 | 135 |
-| Keyword actions (CR 701) | 70 | 22 | 3 | 1 | 44 |
+| Keyword actions (CR 701) | 70 | 22 | 5 | 1 | 42 |
 | Effects | 192 | 71 | 1 | 2 | 118 |
 | Triggers | 138 | 20 | 4 | 2 | 112 |
 | Static abilities | 77 | 14 | 2 | 0 | 61 |
 | Replacement effects | 34 | 0 | 6 | 0 | 28 |
-| Costs | 26 | 5 | 1 | 10 | 10 |
+| Costs | 26 | 5 | 2 | 10 | 9 |
 | Options and conditions | 37 | 23 | 5 | 0 | 9 |
-| Amounts the game counts | 188 | 21 | 2 | 0 | 165 |
+| Amounts the game counts | 188 | 22 | 2 | 0 | 164 |
 | Choices | 15 | 12 | 0 | 0 | 3 |
 | Other keyword constructs | 16 | 9 | 0 | 1 | 6 |
 
@@ -302,7 +302,7 @@ The things that alone hold back the most of the most-played cards.
 | 701.2 | Activate | (the rules modules) | built | 0 | 0 | 0 | 0 |
 | 701.46 | Adapt | — | missing | 0 | 0 | 0 | 0 |
 | 701.45 | Assemble | — | missing | 0 | 0 | 0 | 0 |
-| 701.4 | Behold | — | missing | 0 | 0 | 0 | 0 |
+| 701.4 | Behold (as a cost: an additional cost or a flashback cost's; as an effect, not yet) | (the rules modules) | partial | 0 | 0 | 0 | 0 |
 | 701.39 | Bolster | — | missing | 0 | 0 | 0 | 0 |
 | 701.5 | Cast | (the rules modules) | built | 0 | 0 | 0 | 0 |
 | 701.59 | Collect Evidence | — | missing | 0 | 0 | 0 | 0 |
@@ -324,7 +324,7 @@ The things that alone hold back the most of the most-played cards.
 | 701.54 | The Ring Tempts You | — | missing | 0 | 0 | 0 | 0 |
 | 701.11 | Triple | — | missing | 0 | 0 | 0 | 0 |
 | 701.49 | Venture into the Dungeon | — | missing | 0 | 0 | 0 | 0 |
-| 701.67 | Waterbend | — | missing | 0 | 0 | 0 | 0 |
+| 701.67 | Waterbend (as an activated ability's cost; as a spell's additional cost, and its trigger, not yet) | (the rules modules) | partial | 0 | 0 | 0 | 0 |
 
 ## Effects
 
@@ -809,7 +809,7 @@ The things that alone hold back the most of the most-played cards.
 | RemoveAnyCounter | removeAnyCounter | named | 6 | 39 | 0 | 0 |
 | PayEnergy | — | missing | 4 | 120 | 0 | 0 |
 | Exert | — | missing | 2 | 36 | 0 | 0 |
-| Waterbend | — | missing | 2 | 27 | 0 | 0 |
+| Waterbend | waterbend | partial | 2 | 27 | 0 | 0 |
 | ExileAnyGrave | — | missing | 1 | 18 | 0 | 0 |
 | Q | {Q} | named | 1 | 18 | 0 | 0 |
 | Mill | mill | named | 1 | 9 | 0 | 0 |
@@ -930,7 +930,7 @@ The things that alone hold back the most of the most-played cards.
 | — | MaxOppDamageThisTurn | — | missing | 1 | 2 | 1 | 1 |
 | — | BloodthirstAmount | — | missing | 1 | 1 | 1 | 1 |
 | — | CardNumAttacksThisTurn | — | missing | 1 | 1 | 1 | 1 |
-| — | Colors in your commanders' identity | — | missing | 1 | 1 | 1 | 1 |
+| — | Colors in your commanders' identity | amount {commanderColors: "you"} (script/amount.mjs); a cost of it unpayable without a commander | built | 1 | 1 | 0 | 0 |
 | — | FinishedEndOfTurnsThisTurn | — | missing | 1 | 1 | 1 | 0 |
 | — | NonCombatDamageThisTurn | — | missing | 1 | 1 | 1 | 1 |
 | — | Domain | — | missing | 0 | 66 | 0 | 0 |

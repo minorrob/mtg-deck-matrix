@@ -45,6 +45,9 @@
  *   {lifeLostThisTurn: "opponents"}      the life every opponent lost this turn, together
  *   {cardsDiscardedThisTurn: "you"}      how many cards that player ("you", "that player") has discarded this turn -- "for each
  *                                        card you've discarded this turn" (Jiang Yanggu, Alone; state/index.mjs keeps it)
+ *   {commanderColors: "you"}             the number of colors in your commanders' color identity (CR 903.4; War Room) --
+ *                                        undefined for a player with no commander (903.4f), so a cost of it is unpayable
+ *                                        (commanderless, below)
  *
  * and any of them may say `atMost` ("{1} less IF you control a creature with flying": the count, at most 1), `times` and
  * `plus`: "twice X", "1 plus the number of ...", and `times: -1` for "-X/-X" and
@@ -65,6 +68,7 @@ import {selectMatching, compileSelector, matchesLastKnown} from "./filter.mjs";
 import {powerOf, toughnessOf, characteristicsOf, controllerOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {valueCostOf, commanderKeyOf} from "../state/index.mjs";
+import {commanderIdentity, hasCommander} from "../rules/commander.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
 export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "toughnessOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
@@ -72,9 +76,14 @@ export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf"
   "permanentsEnteredThisTurn", "excessDamage", "lesserOf", "kicked", "differentPowers", "commanderCasts", "cardsLeftGraveyardThisTurn",
   "countersRemovedThisWay", "movedCount", "tappedThisWay", "cardsDiscardedThisTurn",
   /* What happened this turn, and this game (Train C): the records state/index.mjs, rules/combat.mjs and the effects keep. */
-  "creaturesDiedThisTurn", "cardsDrawnThisTurn", "playersDealtNoncombatDamage", "scriedOrSurveilledThisTurn", "spellsCastThisTurn", "spellsCastThisGame"]);
+  "creaturesDiedThisTurn", "cardsDrawnThisTurn", "playersDealtNoncombatDamage", "scriedOrSurveilledThisTurn", "spellsCastThisTurn", "spellsCastThisGame",
+  "commanderColors"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "filter", "controlledBy", "named"];
 const COLORS = ["W", "U", "B", "R", "G"];
+
+/** Whether an amount is undefined for its player (CR 903.4f): one of the colors in their commanders' color identity, for a
+    player with no commander. A cost that refers to it can't be paid (rules/actions.mjs). */
+export const commanderless = (state, value, context) => isCounted(value) && "commanderColors" in value && !hasCommander(state, context.controller);
 
 /** Whether a value is a counted amount rather than a plain number. */
 export const isCounted = (value) => value === "X" || (value !== null && typeof value === "object" && !Array.isArray(value) && AMOUNT_KINDS.some((k) => k in value));
@@ -112,6 +121,7 @@ export function amountProblems(value) {
   if ("commanderCasts" in value && value.commanderCasts !== "that card") problems.push('commanderCasts is "that card"');
   if ("countersRemovedThisWay" in value && value.countersRemovedThisWay !== true) problems.push("countersRemovedThisWay is true");
   if ("tappedThisWay" in value && value.tappedThisWay !== true) problems.push("tappedThisWay is true");
+  if ("commanderColors" in value && value.commanderColors !== "you") problems.push('commanderColors is "you"');
   if ("controlledBy" in value && !("rememberedCount" in value && value.controlledBy === "that player")) problems.push('controlledBy is "that player", of a rememberedCount');
   if ("lesserOf" in value && !(Array.isArray(value.lesserOf) && value.lesserOf.length >= 2)) problems.push("lesserOf is two or more amounts");
   else if ("lesserOf" in value) for (const one of value.lesserOf) problems.push(...amountProblems(one).map((p) => `lesserOf: ${p}`));
@@ -193,6 +203,8 @@ export function amountOf(state, value, context = {}) {
   /* The creatures its additional cost tapped, as the spell was cast (CR 601.2h): what the cast recorded; a copy was not cast
      (CR 707.10) and tapped none. */
   else if ("tappedThisWay" in value) n = context.cast?.tapped ?? 0;
+  /* "The number of colors in your commanders' color identity" (War Room; CR 903.4): the union of their identities. */
+  else if ("commanderColors" in value) n = commanderIdentity(state, context.controller).length;
   /* "Greater than this creature's power or toughness" (increment, Berta): the lesser of them. */
   else if ("lesserOf" in value) n = Math.min(...value.lesserOf.map((one) => amountOf(state, one, context)));
   else if ("count" in value) n = matching(state, value.count, who).length;

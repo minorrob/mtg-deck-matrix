@@ -1,0 +1,91 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Uneasy Partings",
+    "oracleId": "15211eaa-d906-4b95-8942-2f49d3cb4b81",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This spell costs {1} less to cast if it targets an attacking nontoken creature.\nTarget creature's owner puts it on their choice of the top or bottom of their library.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell costs {1} less to cast if it targets an attacking nontoken creature.",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": 1,
+      "targeting": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "attacking": true,
+        "token": false
+      }
+    },
+    {
+      "kind": "spell",
+      "text": "Target creature's owner puts it on their choice of the top or bottom of their library.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "modal",
+          "chooser": {
+            "ownerOf": {
+              "target": 0
+            }
+          },
+          "choose": 1,
+          "modes": [
+            {
+              "text": "On the top",
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": {
+                    "target": 0
+                  },
+                  "to": "library",
+                  "top": true
+                }
+              ]
+            },
+            {
+              "text": "On the bottom",
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": {
+                    "target": 0
+                  },
+                  "to": "library"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
