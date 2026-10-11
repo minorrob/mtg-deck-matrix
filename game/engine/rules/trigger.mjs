@@ -41,8 +41,11 @@
  * DELAYED TRIGGERS (CR 603.7), created by a resolving effect: "at the beginning of the next end step" (M4 phase 3,
  * batch 13), "at the beginning of the next turn's upkeep", "at end of combat" and "at the beginning of the declare attackers
  * step on your next turn" (Train C, p6-combat), and on an event -- "when that creature dies this turn",
- * "whenever a creature dies this turn" (batch 17). Other moments ("when you next cast a creature spell") are not yet. WHAT IS DEFERRED AND NAMED: state triggers (CR 603.8), which trigger
- * while a condition holds rather than on an event.
+ * "whenever a creature dies this turn" (batch 17). Other moments ("when you next cast a creature spell") are not yet.
+ *
+ * STATE TRIGGERS (CR 603.8; Train C): "when this artifact has twenty or more charge counters on it, you win the game"
+ * (Darksteel Reactor) -- a trigger on a state, not an event (`on: "state"`, its `state` a condition), read whenever what
+ * triggers is read, and not again while it waits or is on the stack.
  */
 
 import {conditionHolds} from "../script/condition.mjs";
@@ -719,6 +722,19 @@ export function collectTriggers(state, events) {
         if (times) again.push({at: state.pendingTriggers.length - 1, times});
         if (ability.trigger.batch) opened(`${gone.cardId}:${ability.id}`, about);
       }
+    }
+  }
+  /* STATE TRIGGERS (CR 603.8): each permanent's, the moment its state holds -- and not again until that triggering has left
+     the stack, so not while it waits to go on it or is there. One whose permanent left and came back is a new object's. */
+  for (const id of state.zones.battlefield) {
+    const object = state.objects[id];
+    for (const own of abilitiesNow(id)) {
+      const ability = chosenFor(own, object);
+      if (ability.kind !== "triggered" || ability.trigger?.on !== "state") continue;
+      if (state.pendingTriggers.some((t) => t.source.cardId === id && t.abilityId === ability.id) || state.stack.some((e) => e.cardId === id && e.abilityId === ability.id)) continue;
+      if (!conditionHolds(state, ability.trigger.state, {controller: object.controller, source: id})) continue;
+      state.pendingTriggers.push({abilityId: ability.id, text: ability.text ?? ability.id, controller: object.controller, source: {cardId: id, name: object.card}, cause: null,
+        optional: ability.optional === true, ...scriptOf(ability)});
     }
   }
   /* What was made during this action has now been read past (CR 603.7a), and waits for the next. */

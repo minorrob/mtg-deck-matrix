@@ -115,6 +115,8 @@ export const TRIGGER_EVENTS = Object.freeze([
   "proliferated",
   /* "Whenever you commit a crime" (CR 700.13; Train C, w2c-hands-triggers). */
   "crime committed",
+  /* A state trigger, "when this artifact has twenty or more charge counters on it" (CR 603.8; Train C, w2c-hands-triggers). */
+  "state",
 ]);
 
 /** The cost atoms of §12.2. The two symbolic ones are named; the rest are structural. */

@@ -249,6 +249,9 @@ const TRIGGERS = {
   /* "Whenever you commit a crime" (Bandit's Haul; CR 700.13): a spell, an activated ability or a triggered ability of
      `criminal`'s -- you, opponent or any -- aimed at an opponent of theirs or what is that opponent's (rules/stack.mjs). */
   "crime committed": (t) => ({on: "GameEventCrimeCommitted", criminal: t.criminal ?? "you"}),
+  /* A STATE TRIGGER (CR 603.8): "when this artifact has twenty or more charge counters on it" (Darksteel Reactor) -- `state`, a
+     condition of script/condition.mjs's grammar (script/schema.mjs holds it to it), triggering while it holds (rules/trigger.mjs). */
+  state: (t) => ({on: "state", state: t.state}),
   /* "Whenever you activate a loyalty ability" (Ajani Unrelenting; CR 606, 602.2): a loyalty ability put on the stack by
      you (`activator`), any permanent's; "if you removed two or more loyalty counters to activate it" (`removedAtLeast`,
      its cost, CR 606.4). About the permanent and the player. */

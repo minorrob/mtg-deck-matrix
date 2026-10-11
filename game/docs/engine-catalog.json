@@ -11,7 +11,7 @@
   "cards": 3238,
   "defined": 1255,
   "provisional": 27,
-  "everyRule": 2607
+  "everyRule": 2609
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -5522,10 +5522,10 @@
   },
   "Triggers": {
    "tally": {
-    "built": 22,
+    "built": 23,
     "partial": 4,
     "named": 2,
-    "missing": 110
+    "missing": 109
    },
    "entries": [
     {
@@ -5892,13 +5892,13 @@
      "kind": "trigger",
      "rule": null,
      "name": "Always",
-     "engine": null,
-     "status": "missing",
+     "engine": "state",
+     "status": "built",
      "forge": "Always",
      "top": 2,
      "all": 62,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",

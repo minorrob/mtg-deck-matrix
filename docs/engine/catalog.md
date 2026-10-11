@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,255 defined and playable today; 2,607 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,255 defined and playable today; 2,609 with every
 mechanic built, so only their definitions are left to write; 27 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -21,7 +21,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Keyword abilities (CR 702) | 194 | 54 | 0 | 5 | 135 |
 | Keyword actions (CR 701) | 70 | 22 | 5 | 1 | 42 |
 | Effects | 192 | 71 | 1 | 2 | 118 |
-| Triggers | 138 | 22 | 4 | 2 | 110 |
+| Triggers | 138 | 23 | 4 | 2 | 109 |
 | Static abilities | 77 | 14 | 2 | 0 | 61 |
 | Replacement effects | 34 | 0 | 6 | 0 | 28 |
 | Costs | 26 | 5 | 2 | 10 | 9 |
@@ -557,7 +557,7 @@ The things that alone hold back the most of the most-played cards.
 | FullyUnlock | — | missing | 3 | 17 | 3 | 1 |
 | RingTemptsYou | — | missing | 3 | 9 | 3 | 0 |
 | Blocks | blocks | built | 2 | 127 | 0 | 0 |
-| Always | — | missing | 2 | 62 | 2 | 2 |
+| Always | state | built | 2 | 62 | 0 | 0 |
 | DamageDealtOnce | — | missing | 2 | 48 | 2 | 1 |
 | DiscardedAll | discarded | built | 2 | 22 | 0 | 0 |
 | DamageAll | — | missing | 2 | 9 | 2 | 2 |
