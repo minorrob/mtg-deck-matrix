@@ -169,6 +169,9 @@ function checkEffect(effect, path, errors) {
   /* "If a permanent spell is countered this way, exile it instead" (Thranduil's Decree): a permanent spell's place instead. */
   if (name === "counterSpell" && effect.permanentTo !== undefined && effect.permanentTo !== "exile")
     errors.push({path: `${path}.permanentTo`, message: "A countered permanent spell goes to exile instead: `permanentTo: \"exile\"`"});
+  /* A vote (CR 701.38): two or more choices, each words of their own. */
+  if (name === "vote" && !(Array.isArray(effect.choices) && effect.choices.length >= 2 && effect.choices.every((c) => typeof c === "string" && c.length) && new Set(effect.choices).size === effect.choices.length))
+    errors.push({path: `${path}.choices`, message: "A vote is among two or more choices, each its own words"});
   /* "Each opponent may ...": the mode that is doing so, kept for "for each opponent who does" (script/amount.mjs). */
   if (name === "modal") (effect.modes ?? []).forEach((mode, m) => {
     if (mode?.did !== undefined && mode.did !== true) errors.push({path: `${path}.modes[${m}].did`, message: "A mode that is doing what was offered says `did: true`"});

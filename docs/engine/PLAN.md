@@ -653,7 +653,8 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
   `investigate`, `cleanup` (end-of-effect bookkeeping, not a card-visible primitive), `addPhase` (an additional
   combat, main or beginning phase, CR 500.8; added in M4 phase 3, batch 33), `changeTargets` (a spell's single target
   changed, CR 115.7; batch 65), `chooseSource` ("a source of your choice", CR 609.7a: a permanent, a spell, an object
-  one on the stack refers to; Train C phase 2, 2026-10-11).
+  one on the stack refers to; Train C phase 2, 2026-10-11), `vote` (each player in turn order from you votes for one of
+  the choices, counted by choice, CR 701.38; Train C phase 2, 2026-10-11).
 - Triggers: zone change (enters, dies, leaves, exiled), phase and step, attacks, attackers declared, blocks, spell
   cast, damage dealt (and once), discarded, drawn, land played, becomes target, sacrificed, tapped for mana (added in
   M4 phase 3, batch 51; one that adds mana is a mana ability, CR 605.1b), counter added (and once), life gained, life

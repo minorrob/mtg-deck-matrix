@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 424 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 425 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1294,6 +1294,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-ability-target` - `tests/engine-ability-target.mjs`: an ability on the stack as a target (Bolt Bend; CR 115.2, 115.5, 115.7a, 115.9a): chosen by its stack entry, by whose and "with a single target", gone once it leaves; an effect's stack entries; its new target held to the ability's own requirements; the room's offer and the pilots' aim read off the stack
 - `engine-tempting-offer` - `tests/engine-tempting-offer.mjs`: a tempting offer (Tempt with Vengeance; CR 207.2c, 101.4, 800.4b, 800.4g): each opponent asked a "may" in turn order, those who did kept and counted (playersWhoDid, X for each with times X), one who leaves answered for, given nothing and not counted
 - `engine-prevention-shields` - `tests/engine-prevention-shields.mjs`: a player's prevention shields (Inkshield, Deflecting Palm; CR 609.7a, 615.5, 615.8, 616.1): who they shield, a source chosen, used up once, what follows dealt by the card the spell became, ordered with the other effects by the player dealt the damage
+- `engine-vote` - `tests/engine-vote.mjs`: voting (Fateful Tempest's council's dilemma; CR 701.38, 800.4a): each player from the caster in turn order, the votes so far in the question, one who has left casting none; the votes for a choice and the total mana value of what was milled counted
 
 ## Design and execution record
 

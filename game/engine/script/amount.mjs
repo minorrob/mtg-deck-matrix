@@ -50,6 +50,10 @@
  *                                        (commanderless, below)
  *   {playersWhoDid: true}                how many players did what this resolution offered them ("each opponent may ...
  *                                        for each opponent who does", Tempt with Vengeance; effects/asking.mjs, modal's `did`)
+ *   {votes: choice}                      the votes cast for that choice in this resolution's vote ("a card for each past
+ *                                        vote", Fateful Tempest; CR 701.38; effects/asking.mjs, vote)
+ *   {totalManaValue: "remembered"}       the mana values of what the effect before it remembered, added together ("the total
+ *                                        mana value of cards milled this way")
  *
  * and any of them may say `atMost` ("{1} less IF you control a creature with flying": the count, at most 1), `times` and
  * `plus`: "twice X", "1 plus the number of ...", `times: "X"` for "X ... for each" (X tokens for each opponent who does),
@@ -80,7 +84,7 @@ export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf"
   "countersRemovedThisWay", "movedCount", "tappedThisWay", "cardsDiscardedThisTurn",
   /* What happened this turn, and this game (Train C): the records state/index.mjs, rules/combat.mjs and the effects keep. */
   "creaturesDiedThisTurn", "cardsDrawnThisTurn", "playersDealtNoncombatDamage", "scriedOrSurveilledThisTurn", "spellsCastThisTurn", "spellsCastThisGame",
-  "commanderColors", "playersWhoDid"]);
+  "commanderColors", "playersWhoDid", "votes", "totalManaValue"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "filter", "controlledBy", "named"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -131,6 +135,8 @@ export function amountProblems(value) {
   if ("devotion" in value && !(Array.isArray(value.devotion) && value.devotion.length && value.devotion.every((c) => COLORS.includes(c)))) problems.push("Devotion is to one or more colors: {devotion: [\"B\"]}");
   for (const key of ["times", "plus", "atMost"]) if (key in value && !Number.isInteger(value[key]) && !(key === "times" && value[key] === "X")) problems.push(`An amount's ${key} is a whole number${key === "times" ? ', or "X"' : ""}`);
   if ("playersWhoDid" in value && value.playersWhoDid !== true) problems.push("playersWhoDid is true");
+  if ("votes" in value && !(typeof value.votes === "string" && value.votes.length)) problems.push("votes names the choice voted for");
+  if ("totalManaValue" in value && value.totalManaValue !== "remembered") problems.push('totalManaValue is "remembered"');
   if ("if" in value) {
     problems.push(...conditionProblems(value.if).map((p) => `An amount's condition: ${p}`));
     for (const key of ["then", "else"]) if (key in value) problems.push(...amountProblems(value[key]));
@@ -204,6 +210,13 @@ export function amountOf(state, value, context = {}) {
   if ("x" in value) n = Math.max(0, context.x ?? 0);
   /* "For each opponent who does" (Tempt with Vengeance): the players who did what this resolution offered (CR 207.2c). */
   else if ("playersWhoDid" in value) n = (context.whoDid ?? []).length;
+  /* "For each past vote" (Fateful Tempest; CR 701.38): this resolution's votes for that choice. */
+  else if ("votes" in value) n = context.votes?.[value.votes] ?? 0;
+  /* "The total mana value of cards milled this way" (CR 202.3): what the effect before it remembered, as the cards are now. */
+  else if ("totalManaValue" in value) n = (context.remembered ?? []).reduce((sum, id) => {
+    const cost = state.objects[id] ? valueCostOf(state.objects[id]) : null;
+    return sum + (cost ? manaValue(parseManaCost(cost)) : 0);
+  }, 0);
   /* "A charge counter on it for each time it was kicked" (Everflowing Chalice; multikicker, CR 702.33c). */
   else if ("kicked" in value) n = context.kicked ?? 0;
   /* The creatures its additional cost tapped, as the spell was cast (CR 601.2h): what the cast recorded; a copy was not cast

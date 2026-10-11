@@ -1306,6 +1306,46 @@ export const chooseSource = {
   },
 };
 
+/* ---- vote: "starting with you, each player votes for past or present" (Fateful Tempest's council's dilemma; CR 701.38) ----
+   Each player in the game votes for one of the choices -- words with no rules meaning (701.38b) -- starting with the
+   effect's controller and going on in turn order (701.38a), each seeing the votes cast before theirs. The votes are kept,
+   counted by choice, for the effects after it (`votes`, script/resolution.mjs; script/amount.mjs, `{votes: choice}`). A
+   player who has left the game is no longer a player to vote (CR 800.4a): asked, they are answered for as no vote (`left`;
+   script/resolution.mjs, answerDeparted), and the next is asked. */
+const tallied = (votes, choices) => Object.fromEntries(choices.map((c) => [c, votes.filter((v) => v.choice === c).length]));
+export const vote = {
+  open(state, params, context) {
+    const seats = state.players.length, choices = [...new Set(params.choices ?? [])];
+    const voters = Array.from({length: seats}, (_, k) => (context.controller + k) % seats);
+    if (choices.length < 2) return false;
+    state.awaiting = {kind: "effect-choice", effect: "vote", player: voters[0], voters: voters.slice(1), choices, votes: [], ...(params.title ? {title: String(params.title)} : {})};
+    return true;
+  },
+  choice(state, awaiting) {
+    const tally = tallied(awaiting.votes, awaiting.choices);
+    const sofar = awaiting.votes.length ? ` -- so far ${awaiting.choices.map((c) => `${c} ${tally[c]}`).join(", ")}` : "";
+    return {id: `vote:${state.turn}:${awaiting.player}:${awaiting.votes.length}`, title: `${awaiting.title ?? "Vote"}${sofar}`, mode: "one", min: 1, max: 1,
+      options: awaiting.choices.map((c, index) => ({index, label: c}))};
+  },
+  apply(state, awaiting, indices) {
+    const choice = awaiting.choices[(indices ?? [])[0]];
+    if (choice === undefined) throw new Error("Invalid selection");
+    return vote.next(state, {...awaiting, votes: [...awaiting.votes, {player: awaiting.player, choice}]});
+  },
+  /* The next player asked, or the votes counted. */
+  next(state, awaiting) {
+    const rest = awaiting.voters;
+    if (rest.length) {
+      state.awaiting = {...awaiting, player: rest[0], voters: rest.slice(1)};
+      return {events: [], again: true};
+    }
+    return {events: [], votes: tallied(awaiting.votes, awaiting.choices)};
+  },
+  left(state, awaiting) {
+    return vote.next(state, awaiting);
+  },
+};
+
 /* ---- attackWhom: a creature put onto the battlefield attacking, with more than one defending player or planeswalker it
    could attack (CR 508.4): which one, its controller's choice as it enters -- a question for each, in the order they were made.
    Queued by what made them (effects/permanents.mjs, enterAttacking); never written in a card script. ---- */
@@ -1904,4 +1944,4 @@ export const chooseInstead = {
 };
 
 export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, orderCounters, orderDraws,
-  conniveWhich, manaColors, counterKind, orderDestruction, chooseInstead, chooseSource});
+  conniveWhich, manaColors, counterKind, orderDestruction, chooseInstead, chooseSource, vote});
