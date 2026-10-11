@@ -100,8 +100,9 @@ const fixedLife = (atom) => atom?.atom !== "payLife" || (Number.isInteger(atom.a
 /* A flashback cost's discard: any card, a number of them -- never a card of a kind, nor "discard this card". */
 const plainDiscard = (atom) => atom?.atom !== "discard" || (atom.self === undefined && atom.selector === undefined && (atom.count === undefined || (Number.isInteger(atom.count) && atom.count >= 1)));
 /* How long "you may play that card" lasts (script/effects/zones.mjs, mayPlay): this turn, until the end of your next turn,
-   or for as long as it remains there ("ever": a card that moves is a new object, CR 400.7, Emrakul, the Exigent Doom). */
-const MAY_PLAY_UNTIL = ["end-of-turn", "your-next-end", "ever"];
+   until your next end step (Shadow Urchin; CR 513.1, rules/turn.mjs), or for as long as it remains there ("ever": a card
+   that moves is a new object, CR 400.7, Emrakul, the Exigent Doom). */
+const MAY_PLAY_UNTIL = ["end-of-turn", "your-next-end", "your-next-end-step", "ever"];
 /* What an evoke cost may be made of (CR 702.74a): what an alternative cost is paid with (rules/actions.mjs) -- mana
    ("Evoke {2}{U}", Mulldrifter), and a card exiled from the hand ("Evoke--Exile a red card from your hand", Fury). */
 const EVOKE_ATOMS = ["mana", "payLife", "exileFromHand"];

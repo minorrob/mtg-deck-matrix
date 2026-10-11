@@ -513,6 +513,11 @@ function arrive(state, events) {
     ...(state.phase === "UNTAP" && state.extraTurn === true ? {extraTurn: true} : {}),
   }));
   if (state.phase === "UNTAP") untap(state, events);
+  /* "Until your next end step, you may play those cards" (Shadow Urchin; script/effects/zones.mjs, mayPlay): over as that
+     player's next end step begins (CR 513.1, 611.2a) -- this turn's, for one made before it began; one made during it lasts
+     to their next. Before anything triggers at its beginning, or anyone has priority in it. */
+  if (state.phase === "END_OF_TURN" && (state.effects ?? []).some((e) => e.until === "your-next-end-step"))
+    state.effects = state.effects.filter((e) => !(e.until === "your-next-end-step" && e.sourceController === state.activePlayer));
   if (state.phase === "DRAW" && !skipsFirstDraw(state) && !state.players[state.activePlayer].lost) {
     /* CR 504.1 makes the draw a turn-based action, not a choice. A table that asks for the beat (item 13) holds it
        until the player's click: the same card, at the player's moment, and priority after it (CR 504.2). */
