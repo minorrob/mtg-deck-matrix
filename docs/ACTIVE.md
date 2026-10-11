@@ -1,5 +1,26 @@
 # Who holds the work
 
+## 2026-10-11: G-A built, G-B proved again with it, the rest waits on Rob
+
+This session (Claude, a cloud container) built the rest of G-A and merged each piece on the gate, released to
+staging with its deployed bytes compared:
+- AI-4, the deck advisor (#697);
+- AI-6, AI Coach settings (#698);
+- M3's monitoring (#699);
+- Train C, Rob's library: 1,130 of his 1,132 cards play (#700);
+- the A11y pass (#701).
+
+It then ran G-B again on main bf0e9d21, with all of it in (the rows below): the journeys, the gallery and the A11y checks pass;
+the gate passed once and failed once in one `table-board` check, now instrumented and re-running. **What is left is Rob's:**
+- the privacy wording for *AI players on Claude* and *The deck advisor* (`docs/ai-door.md`);
+- the advisor's eval with his key;
+- confirming his library plays as he expects;
+- M3's two alerts and their email, and R2 with the nightly copy's window and deletion promise (`docs/ops.md`);
+- G-C's four agents' access (M8);
+- then G-D (Grok Bot), G-E (his invites) and G-F (his review and production go).
+
+Part 7's first sentence waits on G-A's approvals and G-C's agents.
+
 ## RESUMED, 2026-10-08: the review-response session (Claude, a cloud container), on Rob's "Keep building"
 
 The review-response session paused on 2026-10-06 at 97% of the week's usage (Rob: pause at 90% and "write up a
@@ -11,7 +32,7 @@ here, on the same branch and PR #669, building on Codex's commit. **`docs/handof
 handoff's §3 says, five workers by engine area (permissions and attack statics; effects, counts and triggers; memory;
 keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of the week's usage, pause and hand off.
 
-**Where the gates stand, 2026-10-10** (Part 7 of `docs/plan-to-done-2026-09-30.md`; the records below are the proof):
+**Where the gates stand, 2026-10-11** (Part 7 of `docs/plan-to-done-2026-09-30.md`; the records below are the proof):
 
 | Gate item | State | Proof, or whose step |
 | --- | --- | --- |
@@ -19,14 +40,15 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**, with a daily cap of its own ($1.50, released at 905394dc); **AI-2's L1 built** (Normal and Easy, measured against L0: Normal 61%, Easy 56%, L0 itself 51%); **the LLM seat built behind its switch**, its privacy wording Rob's to approve; **AI-5 built and on staging** (each deck says whether the table can play it; Play this deck); **AI-4, the deck advisor, built behind its switch**, its privacy wording Rob's to approve; **AI-3's Train C done: 1,130 of Rob's 1,132 cards play** (the two left, each with its reason), Rob's to confirm; **AI-6, AI Coach settings, built** | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
 | G-A: M3's monitoring and backups | **monitoring built** (Workers Logs keeps the Worker's own 5xx and sync-conflict lines; `tools/ops-week.mjs`, the weekly check); Time Travel confirmed, 30 days | **Rob:** the two alerts and their email; R2 turned on, the nightly copy's window and what deletion promises (`docs/ops.md`) |
 | G-A: the A11y pass | **done**: WCAG 2.1 AA on the board and the lobby, measured from the screen's pixels | `tests/a11y-board.mjs` 288 checks, 72 breaks caught (the A11y record below) |
-| G-B: the whole gate green twice on main | done | dispatched Tests runs on main, every suite: 2499 on def8fa89 and 2503 on eff40fdc, both green |
+| G-B: the whole gate green twice on main | **again with G-A complete: once green, once red; re-running** | dispatched Tests runs on main bf0e9d21 (AI-4, AI-6, M3, Train C and the A11y pass in): run 2572 green; run 2573 red once, in `table-board`'s drop check (Maya not told within 10 s that Rob dropped). Not reproduced in seven local runs, a full CI-shaped run among them; the check now says why when it times out, and two more runs on main follow this merge. Before: 2499 on def8fa89 and 2503 on eff40fdc, both green |
 | G-B: `play-e2e` under wrangler dev | done | 35 checks at every staging release |
 | G-B: hidden information in every frame | done | `play-journeys` reads every frame to both people; G1's oracle 102,879 checks, no leak |
 | G-B: the five-second rule | **done** | over a real network, Rob on staging (2026-10-10): ten turns against the AI, the longest wait *"about 3 seconds"*; here, `play-journeys` median 280 ms, longest 1.0 s; G1's 700 games with a person: each game's longest wait a median 172 ms, 99th percentile 1.6 s, the worst 3.5 s, none over 5 s |
-| G-B: `play-journeys` with the seven decks | done | 82 checks (PRs #681, #682): every view at 1280, 1400, 1920, 2560 and the phone, the Coach's stub, the record |
-| G-B: `crankmagic-journeys` and the tours | done | `journeys.mjs`: geometry 138, workshop 504, tour-walk 61 steps (PR #683) |
+| G-B: `play-journeys` with the seven decks | done, again on bf0e9d21 | 82 checks: every view at 1280, 1400, 1920, 2560 and the phone, the Coach's stub, the record (PRs #681, #682; run again 2026-10-11) |
+| G-B: `crankmagic-journeys` and the tours | done, again on bf0e9d21 | `journeys.mjs`: geometry 138, workshop 504, tour-walk 7 tours and 61 steps (2026-10-11) |
 | G-B: the browser and device matrix | **done** | `docs/uat/browser-matrix.md`: Chrome, Edge and WebKit on Personal-HP (2026-10-01); the phones, held sideways, by Rob on staging (2026-10-10): *"phones work"* |
-| G-B: screenshots to Rob | done | the published gallery "CrankMagic Board Sizes" (the session's report) |
+| G-B: screenshots to Rob | done, refreshed | the gallery "CrankMagic Board Sizes", version 2: both tables, every view at four sizes and the phone, from bf0e9d21 after the A11y pass |
+| G-B: the A11y pass's checks | done | `tests/a11y-board.mjs` 288 checks on the merge with Train C (the A11y record below) |
 | G-C: staging from main, version read back | **done**, signed in too | the G-C records below; and `tools/staging-check.mjs` signed in as the session-check token (A5; 2026-10-10): staging serves 2125854a, both pages say so, `/api/me` seats the token |
 | G-C: the harness note for Grok Bot | done | `docs/playtest-harness.md`, held to the page by `tests/playtest-harness.mjs` (PR #681) |
 | G-C: the four agents' access | not set | **Rob** (M8) |
@@ -992,3 +1014,8 @@ failed in 172 places; it now passes 288 checks.
   column as it scrolls now.
 - **Left:** "token" and "summoning sick" in a card's name (the engine's projection carries neither); primary buttons
   outside Play on the light and steel-cobalt themes (an app-wide token change).
+
+**#701 merged on main bf0e9d21 on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 03a69b16 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 11:17:16 UTC as
+version 51634bdc, its `play-worker.js` byte-identical to the release's dry-run bundle and to #700's (3,301,891 bytes,
+sha256 f236861e…): the A11y pass changed the browser's files only. Its AI bindings are the Coach's alone.
