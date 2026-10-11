@@ -1,0 +1,161 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Stalactite Dagger",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Elf Lord": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "abilities": [
+        {
+          "id": "lord",
+          "kind": "static",
+          "text": "Other Elf creatures you control get +1/+1.",
+          "layer": 7,
+          "sublayer": "c",
+          "affects": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Elf"
+            ],
+            "controller": "you",
+            "another": true
+          },
+          "apply": {
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: a 1/1 changeling Shapeshifter, which his Elf lord makes a 2/2; equipped, his Bear is every creature type: an Elf, a 4/4",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Stalactite Dagger"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bear",
+            "Elf Lord"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Stalactite Dagger"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Stalactite Dagger",
+                "Bear",
+                "Elf Lord",
+                "Shapeshifter",
+                "Wastes",
+                "Wastes",
+                "Wastes",
+                "Wastes"
+              ]
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Shapeshifter",
+                "power": 2,
+                "toughness": 2
+              }
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Bear",
+                "power": 2,
+                "toughness": 2
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Stalactite Dagger",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 4,
+            "toughness": 4
+          }
+        }
+      ]
+    }
+  ]
+}

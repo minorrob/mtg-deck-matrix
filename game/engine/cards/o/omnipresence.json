@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Omnipresence",
+    "oracleId": "8dad1fa8-3533-4e3c-b9b3-fcd57b20a33d",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}{G}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You may cast spells with mana value less than or equal to the number of creatures you control from your hand without paying their mana costs.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may cast spells with mana value less than or equal to the number of creatures you control from your hand without paying their mana costs.",
+      "rule": "cast-without-paying",
+      "affects": {},
+      "zones": [
+        "hand"
+      ],
+      "manaValueAtMost": {
+        "count": {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      }
+    }
+  ]
+}

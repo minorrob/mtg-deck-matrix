@@ -1,0 +1,105 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Stalactite Dagger",
+    "oracleId": "064c3269-c012-4fc7-84c3-5f147a82a03c",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When this Equipment enters, create a 1/1 colorless Shapeshifter creature token with changeling. (It's every creature type.)\nEquipped creature gets +1/+1 and is all creature types.\nEquip {2} ({2}: Attach to target creature you control. Equip only as a sorcery.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this Equipment enters, create a 1/1 colorless Shapeshifter creature token with changeling.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Shapeshifter",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Shapeshifter"
+            ],
+            "colors": [],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Changeling"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +1/+1 and is all creature types.",
+      "layer": 7,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      },
+      "sublayer": "c"
+    },
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +1/+1 and is all creature types.",
+      "layer": 4,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "allCreatureTypes": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Equip {2}",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rolling Stones",
+    "oracleId": "7ce533d0-8b6e-46d8-b21e-a2932bdffb67",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Wall creatures can attack as though they didn't have defender.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Wall creatures can attack as though they didn't have defender.",
+      "rule": "attacks-despite-defender",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Wall"
+        ]
+      }
+    }
+  ]
+}
