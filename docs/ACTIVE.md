@@ -970,6 +970,12 @@ before Train C; 305 of the other 307 are now defined, each with scenarios that c
   turn-based action asks (a held draw, declare attackers or blockers) -- live tables; a negative printed power read as
   null; an adventurer card changed just by listing what it may do; an attack tax the house pilot couldn't pay.
 
+**#700 merged on main cd3c794a on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 6eac25f9 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 10:10:30 UTC as
+version 0261051e, its `play-worker.js` byte-identical to the release's dry-run bundle (3,301,891 bytes, sha256
+f236861e…; it grew with the engine from 2,825,718, and is 647 KiB gzipped). Its AI bindings are the Coach's alone. So
+staging's table plays 1,130 of Rob's 1,132 library cards.
+
 **The A11y pass: WCAG 2.1 AA on the board and the lobby (2026-10-11).** The new suite, run first against the base,
 failed in 172 places; it now passes 288 checks.
 - **Contrast (1.4.3, 1.4.11):** each word is measured from the screen's pixels over all 30 playmats, both themes and
