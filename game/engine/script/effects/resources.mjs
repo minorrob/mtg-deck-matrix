@@ -408,6 +408,10 @@ const COUNTING = Object.freeze({putCounter, putCounterAll});
 function counterPlacements(state, params, context, all) {
   const kind = params.counter ?? "+1/+1", count = params.count ?? 1;
   const ids = all ? selectMatching(state, params.selector ?? {what: "permanent"}, context) : params.targets ?? [];
+  /* "Put this creature's counters on that token" (Ambitious Augmenter's dies trigger): each kind its source had as it last
+     existed, as many (CR 608.2h) -- put on as counters are, so what changes counters put on changes these too. */
+  if (params.countersOf === "self")
+    return ids.flatMap((id) => Object.entries(context.lastKnown?.counters ?? {}).map(([had, n]) => ({id, kind: had, count: n})));
   return ids.map((id) => ({id, kind, count}));
 }
 /** Which placement an answer belongs to: the permanent, and the kind. */
