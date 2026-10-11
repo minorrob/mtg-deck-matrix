@@ -43,6 +43,9 @@ export const STATIC_RULES = Object.freeze({
   "can-be-commander": "cards/index.mjs",
   /** CR 510.1a's exception: assigns combat damage equal to its toughness rather than its power. combat.mjs. */
   "combat-damage-by-toughness": "rules/combat.mjs",
+  /** CR 510.1a's other exception: "If Loot's power is negative, he assigns combat damage as though his power were positive"
+      (Loot, the Anomaly): `affects` the creature, its power's size assigned when it is below zero. combatDamageOf, below. */
+  "negative-power-as-positive": "rules/combat.mjs",
   /** CR 402.2's exception: "You have no maximum hand size" (Reliquary Tower, Thought Vessel). turn.mjs, at cleanup. */
   "no-maximum-hand-size": "rules/turn.mjs",
   /** CR 601.2f: "Artifact spells you cast cost {1} less to cast" (the Medallions, Foundry Inspector). actions.mjs. */
@@ -709,5 +712,9 @@ export function ruleChanged(state, rule, id) {
  * so. Every place combat reads an amount -- the unblocked hit, the blocker's, the assignment total, trample's
  * excess -- reads it here, so the four cannot disagree.
  */
-export const combatDamageOf = (state, id) =>
-  (ruleChanged(state, "combat-damage-by-toughness", id) ? toughnessOf(state, id) : powerOf(state, id));
+export const combatDamageOf = (state, id) => {
+  if (ruleChanged(state, "combat-damage-by-toughness", id)) return toughnessOf(state, id);
+  const power = powerOf(state, id);
+  /* "As though his power were positive" (Loot, the Anomaly): a power of -2 assigns 2 -- where CR 510.1a would assign none. */
+  return power < 0 && ruleChanged(state, "negative-power-as-positive", id) ? -power : power;
+};

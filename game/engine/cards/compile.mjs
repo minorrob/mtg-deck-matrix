@@ -38,7 +38,8 @@ export const COMPILED_SCHEMA = "CrankCompiledCard@1";
 /** The oracle facts a script is held to, hashed: a card whose text changes is learned again (PLAN §3.4). */
 export const oracleHash = (card) => hashState({name: card.name, mana: card.mana ?? null, type: card.type ?? "", text: card.text ?? ""});
 
-const num = (v) => (v !== null && v !== undefined && /^\d+$/.test(String(v)) ? Number(v) : null);
+/* A printed number, below zero too (Loot, the Anomaly's -2/4; CR 208.1); a star (*) is no number. */
+const num = (v) => (v !== null && v !== undefined && /^-?\d+$/.test(String(v)) ? Number(v) : null);
 const SUPERTYPES = ["Legendary", "Basic", "Snow", "World"];
 
 /** The printed facts, from the oracle record and never from the model. A modal double-faced card's are its front face's

@@ -108,7 +108,8 @@ class Batch:
     def _identity(face, name, oracle_id=None, ci=None):
         left, _, right = face['type'].partition(' — ')
         words = left.split()
-        num = lambda v: int(v) if v is not None and re.fullmatch(r'\d+', v) else None
+        # A printed power may be below zero (Loot, the Anomaly's -2/4); a star (*) is no number.
+        num = lambda v: int(v) if v is not None and re.fullmatch(r'-?\d+', v) else None
         sup = [w for w in words if w in SUPERTYPES]
         return {
             'name': name, **({'oracleId': oracle_id} if oracle_id else {}), **({'supertypes': sup} if sup else {}), 'types': [w for w in words if w not in SUPERTYPES],

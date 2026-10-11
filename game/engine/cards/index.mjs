@@ -73,7 +73,10 @@ const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "trig
      (rules/combat.mjs canBlock, through rules/statics.mjs ruleChanged, which asks every rule's condition). */
   "cant-block",
   /* An activation forbidden (CR 602.5; rules/statics.mjs, activationForbidden), as a cast forbidden is. */
-  "cant-activate"];
+  "cant-activate",
+  /* "As long as there is a Lesson card in your graveyard, this creature can attack as though it didn't have defender"
+     (Platypus-Bear; CR 702.3b): rules/statics.mjs defenderLifted asks it as attackers are offered. */
+  "attacks-despite-defender"];
 
 /* What a flashback cost may be made of (CR 702.34a): mana, life ("Flashback--{1}{U}, Pay 3 life"), and creatures to tap
    ("Flashback--Tap three untapped white creatures you control", Battle Screech: `tapCreature`, its `count` and `selector`). */
@@ -1149,6 +1152,9 @@ export function compileScript(script) {
     /* A layer static's `affects` is read by the layers' own matcher: a key it does not read is refused, not ignored. */
     if (ability.kind === "static" && ability.layer !== undefined)
       for (const key of Object.keys(ability.affects ?? {})) if (!LAYER_AFFECTS_KEYS.includes(key)) problems.push(`${ability.text}: a layer static's affects has no key ${JSON.stringify(key)}`);
+    /* "Attacking creatures you control" (rules/layers.mjs): attacking, never "not attacking", which the layers do not read. */
+    if (ability.kind === "static" && ability.layer !== undefined && ability.affects?.attacking !== undefined && ability.affects.attacking !== true)
+      problems.push(`${ability.text}: a layer static's affects says attacking: true, or nothing of attacking`);
     /* Escape given ("each nonland card in your graveyard has escape. The escape cost is equal to the card's mana cost plus
        exile three other cards from your graveyard", Underworld Breach): to the cards `affects` describes (the schema asks
        for it), its cost the cards to exile. */
