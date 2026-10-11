@@ -232,6 +232,14 @@ function objectCtx() {
   eq((await call("POST", `/api/tables/${id}/explode`, {body: {}})).status, 404, "an unknown action is 404");
   eq((await call("GET", `/api/tables/${id}/ready`)).status, 405, "an action is a POST");
   eq((await call("POST", `/api/tables/${id}/join`, {as: MAYA, body: "x".repeat(70 * 1024)})).status, 400, "a body larger than a table needs is refused at the door");
+  /* A DECK'S READINESS BEFORE ANY TABLE (AI-5): the front door asks one object which names a table cannot play -- an object
+     named so that no table's id can be it, so it never holds a table -- and the answer is the names alone. */
+  const known = await call("POST", "/api/tables/known", {body: {names: ["Mountain", "No Such Card", "Mountain"]}});
+  eq([known.status, known.json], [200, {unknown: ["No Such Card"]}], "asked with no table which names a table cannot play, the door answers with those names alone");
+  ok(objects.has("cards-known") && !/^[a-z0-9]{8,40}$/.test("cards-known"), "asked of one object whose name no table's id can be");
+  eq((await call("GET", "/api/tables/known")).status, 405, "the question is a POST");
+  eq((await call("POST", "/api/tables/known", {body: "x".repeat(70 * 1024)})).status, 400, "and one larger than a table needs is refused at the door");
+  eq((await call("POST", "/api/tables/known", {body: {names: ["Mountain"]}, env: base})).status, 503, "and without Play's binding it is shut with the rest");
 }
 
 /* THE TABLE'S RULES (Rob, 2026-09-30; docs/plan-to-done-2026-09-30.md, B3): the host sets the starting life and a bracket
