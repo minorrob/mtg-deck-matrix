@@ -36,7 +36,7 @@ ready and mergeable. Nothing has been merged or deployed.
 
 After the first two conditions are satisfied, the read-only check is
 `node tools/staging-check.mjs --expect <staged-source-commit>`. It verifies
-`version.json`, both page version tags and `/api/me` as `service:session-checks`.
+`version.json`, both page version tags and `/api/me` as the token's own `service:` identity.
 It does not prove a WebSocket game or a human friend's Access sign-in.
 
 ## Supported cloud runner investigation
@@ -56,8 +56,11 @@ evidence. No such workflow or credential configuration has been installed or
 run by this investigation. Nothing should run this job on fork pull requests
 or expose credentials in output/artifacts.
 
-All admitted service tokens map to the same `service:session-checks` identity
-in `cloud/access.mjs`; using one token twice cannot prove two distinct people.
+All admitted service tokens mapped to the same `service:session-checks` identity
+in `cloud/access.mjs`; using one token twice could not prove two distinct people.
+Since 2026-10-11 each admitted token is an identity of its own (`service:` and
+twelve hex of its client id's SHA-256), so two tokens are two seats; one token
+used twice is still one.
 An automated seat plus house pilots can prove a networked game. A friend's
 own allowlisted sign-in remains a separate gate. This path does not require
 Personal-HP to stay online, and it does not change or bypass Access policy.

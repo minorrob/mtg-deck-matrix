@@ -88,8 +88,9 @@ eq((await call("GET", "/api/me", {jwt: await token({aud: ["another-app"]})})).st
 eq((await call("GET", "/api/me", {jwt: await token({iss: "https://elsewhere.cloudflareaccess.com"})})).status, 401, "a token from another team: 401");
 eq((await call("GET", "/api/me", {jwt: await token({exp: NOW / 1000 - 120})})).status, 401, "an expired token: 401");
 eq((await call("GET", "/api/me", {jwt: await token({email: undefined, common_name: "service-token-id"})})).status, 401, "a service token, which names no person: 401");
-/* WHERE A RELEASE SEATS A SERVICE TOKEN (SERVICE_SEATS, staging only; the review response's L6): the session's checks,
-   one identity no person can be -- and still only a token Access signed for this application. */
+/* WHERE A RELEASE SEATS A SERVICE TOKEN (SERVICE_SEATS, staging only; the review response's L6, M8's agents): each
+   token Access admitted its own identity, which no person can be -- and still only a token Access signed for this
+   application. */
 {
   const seated = async (jwt) => {
     const response = await handle(new Request("https://crankmagic.test/api/me", {headers: {"cf-access-jwt-assertion": jwt}}), {...env, SERVICE_SEATS: "on"}, {fetchImpl, now: clock});
@@ -97,7 +98,11 @@ eq((await call("GET", "/api/me", {jwt: await token({email: undefined, common_nam
     return {status: response.status, json: text ? JSON.parse(text) : null};
   };
   const me = await seated(await token({email: undefined, common_name: "service-token-id"}));
-  eq([me.status, me.json?.email], [200, "service:session-checks"], "seated: a service token Access admitted is the session's checks, named as no person's address");
+  eq([me.status, /^service:[0-9a-f]{12}$/.test(me.json?.email ?? "")], [200, true], "seated: a service token Access admitted is a test identity, named as no person's address");
+  ok(!me.json.email.includes("service-token-id"), "and its name doesn't repeat the token's client id");
+  eq((await seated(await token({email: undefined, common_name: "service-token-id"}))).json?.email, me.json.email, "the same token is the same identity on every request");
+  const others = await Promise.all(["agent-2-id", "agent-3-id", "agent-4-id"].map(async (id) => (await seated(await token({email: undefined, common_name: id}))).json?.email));
+  eq(new Set([me.json.email, ...others]).size, 4, "and four tokens are four identities: four agents can take four seats (M8)");
   eq((await seated(await token({email: undefined}))).status, 401, "a token naming neither a person nor a service token: still 401");
   eq((await seated(await token({email: undefined, common_name: "service-token-id", aud: ["another-app"]}))).status, 401, "a service token for another Access application: still 401");
   eq((await seated(await token({}))).json?.email, "rob@example.com", "and a person is still themself");
