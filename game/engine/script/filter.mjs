@@ -190,6 +190,14 @@ export function creatureTypesOf(state, id) {
   return {every: everyCreatureTypeOf(state, id) === true, types: subtypes.filter(isCreatureType)};
 }
 
+/** Whether objects have a creature type in common: one each of them has, a changeling having every one (CR 702.73a). */
+export function shareCreatureType(state, ids) {
+  const types = ids.map((id) => creatureTypesOf(state, id));
+  const named = [...new Set(types.flatMap((t) => t.types))];
+  if (types.every((t) => t.every)) return true;
+  return named.some((type) => types.every((t) => t.every || t.types.includes(type)));
+}
+
 /* A player with hexproof (CR 702.11c): a permanent of theirs with the static "you have hexproof" (rules/statics.mjs). */
 const playerHasHexproof = (state, player) => state.zones.battlefield.some((id) => controllerOf(state, id) === player
   && (state.objects[id].abilities ?? []).some((a) => a.kind === "static" && a.rule === "player-hexproof"));

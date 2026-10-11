@@ -24,7 +24,7 @@ import {typesOf} from "../../rules/layers.mjs";
 import {moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard, rememberExileLooker, recordDraw, recordDeath} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf, controllerOf, abilitiesOf} from "../../rules/layers.mjs";
-import {selectMatching, compileSelector, matchesSelector} from "../filter.mjs";
+import {selectMatching, compileSelector, matchesSelector, shareCreatureType} from "../filter.mjs";
 import {applyReplacements, enteringModifications, regenerated} from "../../rules/replacement.mjs";
 import {cantBeCountered, entersUntapped, countersPlaced, drawsInstead, cantBeSacrificed} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
@@ -303,7 +303,14 @@ export function sacrificeAll(state, params, context) {
   /* "Each player sacrifices all creatures they control not chosen this way" (The Eternal Wanderer): `except` what the
      effect before it remembered. */
   const spared = params.except === "remembered" ? new Set(context.remembered ?? []) : null;
-  const doomed = state.zones.battlefield.filter((id) => !spared?.has(id) && players.includes(state.objects[id].controller) && matches(state, id, {controller: state.objects[id].controller, source: context.source ?? null}));
+  /* "Then each player sacrifices all other creatures they control that don't share a creature type with the chosen creature
+     they control" (Winnowing; CR 205.3m, 702.73a): `exceptSharing` "creature type", those that share one with a remembered
+     creature their controller controls are spared too -- each as it now is, a changeling sharing every one; one chosen that
+     has since left is a new object (CR 400.7), and nothing is kin to it. */
+  const kin = (id) => params.exceptSharing === "creature type" && [...spared].some((chosen) => state.objects[chosen]
+    && state.objects[chosen].controller === state.objects[id].controller && shareCreatureType(state, [chosen, id]));
+  const doomed = state.zones.battlefield.filter((id) => !spared?.has(id) && players.includes(state.objects[id].controller) && matches(state, id, {controller: state.objects[id].controller, source: context.source ?? null})
+    && !kin(id));
   for (const id of doomed) if (state.objects[id]) sacrificeOne(state, id, events);
   return events;
 }

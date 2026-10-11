@@ -49,7 +49,7 @@
  * with the same targets, and an action survives a round trip through JSON to a pilot across a network.
  */
 
-import {compileSelector, selectMatching, creatureTypesOf} from "./filter.mjs";
+import {compileSelector, selectMatching, creatureTypesOf, shareCreatureType} from "./filter.mjs";
 import {powerOf, toughnessOf, controllerOf} from "../rules/layers.mjs";
 import {namesChosen, withChosen} from "./chosen.mjs";
 import {valueCostOf, shownName} from "../state/index.mjs";
@@ -160,16 +160,9 @@ export function shareProblem(state, spec, chosen, name) {
   const objects = (chosen ?? []).filter((t) => t?.kind === "object" && state.objects[t.id]).map((t) => t.id);
   if (spec?.share === "graveyard" && new Set(objects.map((id) => state.objects[id].owner)).size > 1)
     return `${name}'s targets must be in a single graveyard: choose them all from one player's graveyard.`;
-  if (spec?.share === "creature type" && objects.length > 1 && !sharedCreatureType(state, objects))
+  if (spec?.share === "creature type" && objects.length > 1 && !shareCreatureType(state, objects))
     return `${name}'s targets must share a creature type: choose cards with a creature type in common.`;
   return null;
-}
-/* Whether objects have a creature type in common: one each of them has, a changeling having every one (CR 702.73a). */
-function sharedCreatureType(state, ids) {
-  const types = ids.map((id) => creatureTypesOf(state, id));
-  const named = [...new Set(types.flatMap((t) => t.types))];
-  if (types.every((t) => t.every)) return true;
-  return named.some((type) => types.every((t) => t.every || t.types.includes(type)));
 }
 
 /* Whether a spec's target is one the ability has at all: an `onlyIf` that holds as it is cast or put on the stack. */

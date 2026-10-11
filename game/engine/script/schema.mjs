@@ -208,6 +208,10 @@ function checkEffect(effect, path, errors) {
       else effect.ifNot.forEach((child, index) => checkEffect(child, `${path}.ifNot[${index}]`, errors));
     }
   }
+  /* "All other creatures they control that don't share a creature type with the chosen creature they control" (Winnowing;
+     effects/zones.mjs, sacrificeAll): `exceptSharing` "creature type", beside `except` "remembered" -- what it is shared with. */
+  if (effect.exceptSharing !== undefined && !(name === "sacrificeAll" && effect.exceptSharing === "creature type" && effect.except === "remembered"))
+    errors.push({path: `${path}.exceptSharing`, message: "What a sacrifice of all spares by sharing it with a creature chosen is exceptSharing: \"creature type\", on sacrificeAll beside except: \"remembered\""});
   /* A branch's test: a condition, and there must be one. */
   if (name === "branch") {
     if (effect.if === undefined) errors.push({path: `${path}.if`, message: "A branch says what decides it: `if`, a condition"});
