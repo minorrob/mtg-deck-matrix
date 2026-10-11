@@ -11,15 +11,15 @@
   "cards": 3238,
   "defined": 1242,
   "provisional": 27,
-  "everyRule": 2578
+  "everyRule": 2579
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 55,
+    "built": 57,
     "partial": 0,
     "named": 5,
-    "missing": 134
+    "missing": 132
    },
    "entries": [
     {
@@ -1298,13 +1298,13 @@
      "kind": "keyword ability",
      "rule": "702.173",
      "name": "Freerunning",
-     "engine": null,
-     "status": "missing",
+     "engine": "Freerunning",
+     "status": "built",
      "forge": "Freerunning",
      "top": 1,
      "all": 12,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -1898,8 +1898,8 @@
      "kind": "keyword ability",
      "rule": "702.117",
      "name": "Surge",
-     "engine": null,
-     "status": "missing",
+     "engine": "Surge",
+     "status": "built",
      "forge": "Surge",
      "top": 0,
      "all": 11,

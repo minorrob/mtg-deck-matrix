@@ -306,11 +306,13 @@ export function compileSelector(selector) {
       if (state.objects[context.source]?.attachedTo !== id) return false;
     }
 
-    /* CR 109.5 */
+    /* CR 109.5 -- "other": another than the source, or, an ability's source gone, another than what it was as it last
+       existed (`lastKnown`, which the stack keeps for it: CR 113.7a, 608.2h) -- Reckless Bushwhacker's "other creatures you
+       control", the Bushwhacker shocked in response: every creature its controller still controls. */
     if (selector.another === true) {
-      if (context.source === undefined || context.source === null)
-        throw new Error("A selector using `another` needs the source it is another than (CR 109.5)");
-      if (id === context.source) return false;
+      const self = context.source ?? context.lastKnown?.cardId ?? null;
+      if (self === null) throw new Error("A selector using `another` needs the source it is another than (CR 109.5)");
+      if (id === self) return false;
     }
 
     if (selector.manaValue && !matchesManaValue(state, id, selector.manaValue, context)) return false;

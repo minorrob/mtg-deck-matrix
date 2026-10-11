@@ -56,7 +56,10 @@ export const KEYWORD_FAMILIES = Object.freeze({
       the rest of the cost (rules/actions.mjs). Overload (CR 702.96a-b), an alternative cost whose cast carries the spell's
       "each" effects, written out by the card, and no targets (cards/index.mjs, rules/actions.mjs, rules/stack.mjs): built
       for Winds of Abandon, credited with Mizzium Mortars and Vandalblast. */
-  pay: Object.freeze(["Convoke", "Evoke", "Prowl", "Escalate", "Overload"]),
+  /** Surge (CR 702.117a) and freerunning (CR 702.173a), alternative costs offered once its caster has cast another spell
+      this turn, or one of their Assassins or commanders dealt a player combat damage (script/condition.mjs; rules/combat.mjs
+      keeps the damage), what each casts marked as cast for it (`paidFor`; rules/actions.mjs, rules/stack.mjs). */
+  pay: Object.freeze(["Convoke", "Evoke", "Prowl", "Escalate", "Overload", "Surge", "Freerunning"]),
   /** How a permanent enters: Riot (CR 702.136a), with a +1/+1 counter or with haste, its controller's choice as it arrives --
       a replacement on its own entering (cards/index.mjs, rules/replacement.mjs), asked once it is there (rules/entering.mjs). */
   enter: Object.freeze(["Riot"]),

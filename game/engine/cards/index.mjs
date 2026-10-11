@@ -805,6 +805,22 @@ export function compileScript(script) {
       keywords.push("Prowl");
       return;
     }
+    /* SURGE [COST] (CR 702.117a; Reckless Bushwhacker): "You may pay [cost] rather than pay this spell's mana cost as you cast
+       this spell if you or one of your teammates has cast another spell this turn" -- an alternative cost (CR 118.9; rules/
+       actions.mjs offers it), its condition `surge` (script/condition.mjs). FREERUNNING [COST] (CR 702.173a; Monastery Raid):
+       the same, "if a player was dealt combat damage this turn by a creature that, at the time it dealt that damage, was an
+       Assassin creature or a commander under your control" -- its condition `freerunning`. Each marks what it casts as cast
+       for it (`paidFor`; rules/actions.mjs, rules/stack.mjs), for "if its surge cost was paid", "if this spell's freerunning
+       cost was paid" (script/condition.mjs, `paidFor`). A mana cost, which may have {X} ("Freerunning {X}{R}"). */
+    if (word === "surge" || word === "freerunning") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      let parsed = null;
+      try { parsed = cost.length === 1 && cost[0]?.atom === "mana" ? parseManaCost(cost[0].cost ?? "") : null; } catch { /* refused below */ }
+      if (!parsed || !parsed.symbols.length) problems.push(`${ability.text}: a ${word} cost of mana, once`);
+      abilities.push({id, kind: "static", rule: "alternative-cost", paidFor: word, condition: {[word]: true}, text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
+      keywords.push(word === "surge" ? "Surge" : "Freerunning");
+      return;
+    }
     /* ESCALATE (CR 702.120a): "for each mode you choose beyond the first as you cast this spell, you pay an additional [cost]"
        -- mana, "tap an untapped creature you control" (Collective Effort), or both: kept for the spell, among its additional
        costs (below; rules/actions.mjs, additionalVariants). */

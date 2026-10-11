@@ -3,7 +3,7 @@
   "card": "Ghor-Clan Wrecker",
   "scenarios": [
     {
-      "name": "Riot, the counter: it enters a 3/3 with a +1/+1 counter, no haste, and cannot attack this turn",
+      "name": "Riot, the counter: it enters a 3/3 with a +1/+1 counter and no haste, and is a 3/3 still on Rob's next turn",
       "setup": [
         {
           "seat": 0,
@@ -95,15 +95,28 @@
         },
         {
           "to": {
-            "turn": 1,
-            "phase": "MAIN2"
+            "turn": 3,
+            "phase": "MAIN1"
           }
         }
       ],
       "expect": [
         {
-          "seat": 1,
-          "life": 40
+          "seat": 0,
+          "stats": {
+            "card": "Ghor-Clan Wrecker",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Ghor-Clan Wrecker",
+            "lacks": [
+              "Haste"
+            ]
+          }
         }
       ]
     },

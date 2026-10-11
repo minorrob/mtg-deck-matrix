@@ -207,7 +207,8 @@ export function offerDetails(state, seat, actions) {
       const ability = state.objects[a.objectId]?.abilities?.[a.alternative];
       const cost = ability?.cost ?? [];
       const mana = cost.find((c) => c.atom === "mana")?.cost, life = cost.filter((c) => c.atom === "payLife").reduce((n, c) => n + (c.amount ?? 0), 0);
-      parts.push([ability?.evoke ? (mana ? `evoke for ${mana}` : "evoke") : mana ? `for ${mana} instead` : (life || cost.length ? "instead of its mana cost" : "without paying its mana cost"),
+      /* Surge and freerunning by their names too (CR 702.117a, 702.173a): what it is cast for is what its text asks about. */
+      parts.push([ability?.evoke ? (mana ? `evoke for ${mana}` : "evoke") : ability?.paidFor && mana ? `${ability.paidFor} for ${mana}` : mana ? `for ${mana} instead` : (life || cost.length ? "instead of its mana cost" : "without paying its mana cost"),
         life ? `paying ${life} life` : null].filter(Boolean).join(", "));
     }
     /* "Without paying its mana cost", beside the paid cast of the same card (rules/actions.mjs). */

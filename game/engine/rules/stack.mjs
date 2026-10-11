@@ -124,7 +124,7 @@ export function pushSpell(state, objectId, {controller, targets = [], permanent 
  * `sourceId` may be null for an ability whose source has already left the battlefield, which is a
  * legal position (CR 113.7a) rather than a bug.
  */
-export function pushAbility(state, {sourceId = null, controller, abilityId, kind = "ability", targets = [], script = null, about = null, x = null, lastKnown = null, spent = null, sourceTransforms = undefined} = {}) {
+export function pushAbility(state, {sourceId = null, controller, abilityId, kind = "ability", targets = [], script = null, about = null, x = null, lastKnown = null, spent = null, paidFor = null, sourceTransforms = undefined} = {}) {
   if (!abilityId) throw new Error("An ability on the stack needs an abilityId, or nothing can resolve it");
   const source = sourceId === null ? null : state.objects[sourceId];
   const entry = entryFor(state, {
@@ -142,6 +142,9 @@ export function pushAbility(state, {sourceId = null, controller, abilityId, kind
   if (lastKnown) entry.lastKnown = structuredClone(lastKnown);
   /* The mana spent to cast its source, as it triggered (rules/trigger.mjs): its "if" is asked again as it resolves. */
   if (spent) entry.spent = {...spent};
+  /* And the alternative cost its source was cast for, as it triggered (rules/trigger.mjs): "if its surge cost was paid" is
+     asked again as it resolves, its source perhaps gone (CR 603.4, 608.2h). */
+  if (typeof paidFor === "string") entry.paidFor = paidFor;
   /* "Transform Venat" (CR 701.27f): how many times a double-faced source had transformed as its ability was put on the
      stack -- or, a delayed trigger's, as it was made (effects/permanents.mjs) -- for an instruction to transform it to be
      ignored once it has since. */
@@ -255,7 +258,7 @@ export function resolveTop(state, effect = null, rng = null) {
   /* An intervening "if" asked again as it resolves (CR 603.4): false now, and the ability does nothing. A triggered
      ability's own condition only -- "activate only if" was asked as it was activated (CR 602.5b) and is not again. */
   if (entry.kind === "trigger" && script.condition && !conditionHolds(state, script.condition, {controller: entry.playerId, source, about: entry.about ?? undefined,
-    ...(entry.spent ? {spent: entry.spent} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {})})) return finishTop(state, entry, events, false);
+    ...(entry.spent ? {spent: entry.spent} : {}), ...(entry.paidFor ? {paidFor: entry.paidFor} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {})})) return finishTop(state, entry, events, false);
   /* What its effects need to know about their targets, read once, now (CR 608.2h). */
   const outcome = beginResolution(state, script.effects, {...context, targets, facts: factsOf(state, targets)}, rng);
   events.push(...outcome.events);
@@ -399,6 +402,9 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     if (to === "battlefield" && entry.evoked) state.objects[arrived].evoked = true;
     /* And for its prowl cost (CR 702.76a): "if its prowl cost was paid" (script/condition.mjs, `prowled`). */
     if (to === "battlefield" && entry.prowled) state.objects[arrived].prowled = true;
+    /* And for its surge cost (CR 702.117a), or another that says so (rules/actions.mjs): "if its surge cost was paid"
+       (script/condition.mjs, `paidFor`). A new object after it moves again (CR 400.7) was cast for nothing. */
+    if (to === "battlefield" && entry.cast?.paidFor) state.objects[arrived].paidFor = entry.cast.paidFor;
     /* Cast from suspend: haste, while it is this permanent (CR 702.62a). */
     if (to === "battlefield" && entry.fromSuspend && (state.objects[arrived].types ?? []).includes("Creature"))
       (state.effects ??= []).push({id: `suspend-haste:${arrived}`, layer: 6, affects: {ids: [arrived]}, apply: {addKeywords: ["Haste"]}, until: null, sourceController: entry.playerId});

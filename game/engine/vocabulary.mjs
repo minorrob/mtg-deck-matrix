@@ -177,7 +177,9 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
      phase after the first time one of its name resolves (rules/stack.mjs). */
   "paradigm",
   /* Train C, phase 2 (p5-keywords): split second (CR 702.61; keywords/timing.mjs), riot (CR 702.136). */
-  "split second", "riot"];
+  "split second", "riot",
+  /* Surge (CR 702.117) and freerunning (CR 702.173): alternative costs (keywords/timing.mjs). */
+  "surge", "freerunning"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

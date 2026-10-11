@@ -433,7 +433,9 @@ export function alternativeCosts(state, player, id) {
       ...(ability.overload ? {overload: ability.overload} : {}),
       ...(ability.zone === "graveyard" ? {fromGraveyard: true, exileOthers: others} : {}),
       /* Prowl (CR 702.76a): the permanent it becomes was cast for it (rules/stack.mjs). */
-      ...(ability.prowl === true ? {prowl: true} : {})}];
+      ...(ability.prowl === true ? {prowl: true} : {}),
+      /* Surge (CR 702.117a), freerunning (CR 702.173a): the keyword whose cost this is, for "if its surge cost was paid". */
+      ...(typeof ability.paidFor === "string" ? {paidFor: ability.paidFor} : {})}];
   });
 }
 
@@ -1929,7 +1931,10 @@ function performOffered(state, player, action, during) {
       ...((convoke?.ids ?? []).length ? {convoked: [...convoke.ids]} : {}),
       /* How many creatures its additional cost tapped: "three times the number of creatures tapped this way" (Burn at the
          Stake; script/amount.mjs, `tappedThisWay`). */
-      ...(action.tapAny === true ? {tapped: tappedAny.length} : {})};
+      ...(action.tapAny === true ? {tapped: tappedAny.length} : {}),
+      /* Cast for its surge or freerunning cost (CR 702.117a, 702.173a): "if this spell's freerunning cost was paid"
+         (script/condition.mjs, `paidFor`), and the permanent it becomes (rules/stack.mjs). */
+      ...(way?.paidFor ? {paidFor: way.paidFor} : {})};
     /* Kicked that many times (multikicker, CR 702.33c): the permanent it becomes knows it as it enters (rules/stack.mjs). */
     if (action.kicked) entry.kicked = action.kicked;
     /* Cast as an Adventure (CR 715.3): exiled as it resolves, and castable as itself from there (rules/stack.mjs, 715.3d). */
