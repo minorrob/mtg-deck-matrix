@@ -97,6 +97,62 @@
   }
   const libraryDecks = () => (C.state.decks || []).filter((d) => !d.archived && (d.commanders || []).length);
 
+  /* ---- YOUR DECKS AND THE TABLE (AI-5, docs/plan-to-done-2026-09-30.md) ----
+     A deck says whether the table can play it, on its tile and its page, before any table is opened: the Worker is asked
+     which of its card names a table cannot play yet (POST /api/tables/known, cloud/tables.mjs), and each answer is kept
+     for the page's life, so the decks hub asks once for every deck. Play this deck on the deck page opens a new table with
+     the deck at your seat, or brings it to the table you are already seated at; New from Wizards' Play it makes the precon
+     a deck and does the same. Only where Play is in the cloud: elsewhere C.play is never open, and nothing is shown. */
+  const knownNames = new Map();   /* a card name -> whether a table can play it, as the Worker said */
+  const KNOWN_BATCH = 1000;   /* names per question: well under the table's 2000 and the door's 64 KB */
+  async function unknownOf(names) {
+    const ask = [...new Set(names)].filter((n) => n && !knownNames.has(n));
+    for (let i = 0; i < ask.length; i += KNOWN_BATCH) {
+      const part = ask.slice(i, i + KNOWN_BATCH);
+      const unknown = new Set((await api("POST", "/api/tables/known", {names: part})).unknown || []);
+      for (const n of part) knownNames.set(n, !unknown.has(n));
+    }
+    return names.filter((n) => knownNames.get(n) === false);
+  }
+  /* A deck's readiness for the table: its commander(s) and every other card by name, and those a table cannot play yet. */
+  async function readiness(deck) {
+    const read = deckForTable(deck), all = [...read.commander, ...read.cards];
+    const missing = [...new Set(await unknownOf(all))];
+    return {total: all.length, unknown: missing, count: all.filter((n) => missing.includes(n)).length};
+  }
+  const readinessText = (r) => r.count ? `${r.total - r.count} of ${r.total} known · ${r.count} to learn` : `Playable at the table · all ${r.total} cards known`;
+  const playable = (deck) => !deck.archived && (deck.commanders || []).length > 0;
+  C.play = {
+    open: cloudPlay,
+    /* The decks hub: each tile's slot says "Playable at the table", or how many of its cards are still to learn. */
+    async tiles() {
+      if (!cloudPlay()) return;
+      const slots = [...document.querySelectorAll("[data-play-for]")];
+      const decks = slots.map((el) => (C.state.decks || []).find((d) => d.id === el.dataset.playFor)).filter((d) => d && playable(d));
+      try {await unknownOf(decks.flatMap((d) => {const r = deckForTable(d); return [...r.commander, ...r.cards];}));} catch {return;}
+      for (const d of decks) {
+        const el = document.querySelector(`[data-play-for="${CSS.escape(d.id)}"]`), r = await readiness(d);
+        if (!el) continue;
+        el.textContent = r.count ? `${r.count} card${r.count === 1 ? "" : "s"} to learn for the table` : "Playable at the table";
+        el.classList.toggle("is-playable", !r.count);
+        el.hidden = false;
+      }
+    },
+    /* The deck page: the readiness line, and Play this deck when the table can play every card. */
+    async deck(d) {
+      const el = document.getElementById("cm-deck-play");
+      if (!el || !cloudPlay() || !playable(d)) return;
+      let r;
+      try {r = await readiness(d);} catch {return;}
+      el.innerHTML = `<span class="cm-deck-play-line">${e(readinessText(r))}</span>`
+        + (r.count ? ` <span class="cm-muted">The table cannot play ${r.unknown.length === 1 ? "this one" : "these"} yet: ${e(r.unknown.slice(0, 6).join(", "))}${r.unknown.length > 6 ? ", …" : ""}.</span>`
+          : ` ${b("Play this deck", "deck-play", {deck: d.id}, true, {cls: "compact"})}`);
+      el.classList.toggle("is-playable", !r.count);
+      el.hidden = false;
+    },
+  };
+  actions["deck-play"] = (el) => C.go("table", {deck: el.dataset.deck});
+
   /* ---- the lobby ---- */
   function seatState(s, t) {
     if (!s.occupied) return s.invited ? "invited" : "empty";
@@ -234,7 +290,7 @@
     /* Play, with a game of yours on (item 19): straight back to it, in place of this page in the history. */
     const live = !id && C.board && C.board.live && C.board.live();
     if (live) {location.replace(`#table?id=${encodeURIComponent(live.tableId)}`); return;}
-    if (!id) return newTable();
+    if (!id) return newTable(params.get("deck"));
     let stop = false, timer = null;
     const tick = () => {
       const seconds = document.getElementById("cm-table-seconds");
@@ -266,17 +322,31 @@
   }
 
   /* ---- a new table ---- */
-  function newTable() {
+  function newTable(deckId = null) {
     const row = (n) => `<div class="cm-table-new-seat"><span>Seat ${n}</span>
       <select name="kind${n}" aria-label="Seat ${n}"><option value="human"${n === 2 ? " selected" : ""}>A person I will invite</option><option value="ai">An AI · Normal</option><option value="ai-easy">An AI · Easy</option><option value="none"${n > 2 ? " selected" : ""}>Nobody</option></select>
       <input name="name${n}" maxlength="60" placeholder="${n === 2 ? "Their name" : "Name (optional)"}" aria-label="Seat ${n} name"></div>`;
     C.main.innerHTML = C.pageHead("Play", "", "table") + `<section class="v-panel cm-table-new"><h2>New table</h2>
       <p class="cm-muted">You sit in seat 1 as the host. Each other seat is a person you invite, an AI, or nobody; a table seats two to four.</p>
-      <form id="cm-table-new"><label>Your name at the table<input name="hostName" maxlength="60" required></label>${row(2)}${row(3)}${row(4)}
+      <form id="cm-table-new"><div class="cm-table-new-deck" id="cm-table-new-deck" hidden></div><label>Your name at the table<input name="hostName" maxlength="60" required></label>${row(2)}${row(3)}${row(4)}
       <div class="cm-actions">${b("Create the table", "table-create", {}, true)}</div></form></section>`;
+    const bring = deckId ? libraryDecks().find((d) => d.id === deckId) : null;
+    if (bring) bringing(bring);
     const kept = seatKept();
-    if (kept) waitingSeat(kept);
+    if (kept) waitingSeat(kept, bring);
     offerClaude();
+  }
+  /* PLAY THIS DECK (AI-5): the deck you came with is said above the seats and goes to your seat once the table is made --
+     only if the table can play every card of it; otherwise the page says which it cannot, and you choose another there. */
+  async function bringing(deck) {
+    let r;
+    try {r = await readiness(deck);} catch {return;}
+    const box = document.getElementById("cm-table-new-deck");
+    if (!box) return;
+    box.innerHTML = r.count
+      ? `<p class="cm-note cm-warning">${e(deck.name)} cannot be played at the table yet: ${r.count} of its cards ${r.count === 1 ? "is" : "are"} not in the rules engine (${e(r.unknown.slice(0, 6).join(", "))}${r.unknown.length > 6 ? ", …" : ""}). Create the table and choose another deck there.</p>`
+      : `<p>You bring <strong>${e(deck.name)}</strong> to seat 1.</p><input type="hidden" name="deck" value="${e(deck.id)}">`;
+    box.hidden = false;
   }
   /* AN AI ON CLAUDE (AI-2), offered beside Normal and Easy only where this person may seat one (GET /api/ai-seat). */
   async function offerClaude() {
@@ -290,7 +360,7 @@
     }
   }
   /* The kept seat, if it is still yours and its game not over: said first, above New table. */
-  async function waitingSeat(id) {
+  async function waitingSeat(id, bring = null) {
     let table;
     try {({table} = await api("GET", tableUrl(id)));}
     catch (error) {if (error.status === 403 || error.status === 404 || error.status === 410) keepSeat(null); return;}
@@ -302,7 +372,21 @@
     form.closest(".cm-table-new").insertAdjacentHTML("beforebegin", `<section class="v-panel cm-table-back" id="cm-table-back"><h2>Your seat is waiting</h2>
       <p>You have a seat at ${whose}${table.phase === "playing" ? ", and its game is on" : ", and its game has not started yet"}.</p>
       <div class="cm-actions">${b("Back to your table", "table-back", {table: table.tableId}, true)}</div></section>`);
+    /* With a deck to bring, and the game not yet begun: bring it to your seat there instead of a new table (AI-5). */
+    const mine = table.seats.find((s) => s && s.you);
+    if (!bring || !mine || !["selecting", "countdown"].includes(table.phase)) return;
+    let r;
+    try {r = await readiness(bring);} catch {return;}
+    const actionsRow = document.querySelector("#cm-table-back .cm-actions");
+    if (r.count || !actionsRow) return;
+    actionsRow.insertAdjacentHTML("beforeend", b(`Bring ${bring.name} there`, "table-bring", {table: table.tableId, seat: String(mine.seatId), deck: bring.id}));
   }
+  actions["table-bring"] = async (el) => {
+    const deck = libraryDecks().find((d) => d.id === el.dataset.deck);
+    if (!deck) throw Error("That deck is not in your library any more.");
+    await api("POST", `${tableUrl(el.dataset.table)}/deck`, {seatId: Number(el.dataset.seat), deck: deckForTable(deck)});
+    C.go("table", {id: el.dataset.table});
+  };
   actions["table-back"] = (el) => C.go("table", {id: el.dataset.table});
   actions["table-create"] = async () => {
     const form = document.getElementById("cm-table-new");
@@ -315,6 +399,12 @@
       : {kind: v[`kind${n}`], name: v[`name${n}`]}));
     if (!seats.length) throw Error("A table needs at least one other seat: a person or an AI.");
     const {table} = await api("POST", "/api/tables", {hostName: v.hostName, seats});
+    /* The deck you came with (Play this deck, AI-5) takes your seat now; if the table refuses it, its lobby says why. */
+    const bring = v.deck ? libraryDecks().find((d) => d.id === v.deck) : null;
+    if (bring) {
+      try {await api("POST", `${tableUrl(table.tableId)}/deck`, {seatId: 0, deck: deckForTable(bring)});}
+      catch (error) {C.notice(`${bring.name} did not take your seat: ${error.message}`, true);}
+    }
     C.go("table", {id: table.tableId});
   };
 

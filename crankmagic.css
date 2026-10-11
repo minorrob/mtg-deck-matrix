@@ -3097,6 +3097,22 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 .cm-precon-tile ul{flex-direction:column;flex-wrap:nowrap;gap:4px}
 #matrix-v2 .cm-precon-tile .cm-precon-chip{width:100%;padding:4px 10px;gap:0}
 .cm-precon-tile .cm-precon-chip strong{font-size:12px}
+/* AI-5: New from Wizards' Play it beside its chip; and a deck's word on the table, on its tile and its page. */
+.cm-precon-latest li{display:flex;align-items:center;gap:2px}
+/* In the hub's narrow New from Wizards tile, Play it sits at the chip's top right, beside the deck's name, so the
+   commander's line keeps the chip's whole width for its name and colors. */
+.cm-precon-tile li{position:relative}
+.cm-precon-tile li .cm-precon-chip{flex:1 1 auto;min-width:0}
+.cm-precon-tile .cm-precon-chip strong{padding-right:46px}
+#matrix-v2 .cm-precon-tile .cm-precon-play{position:absolute;top:2px;right:4px}
+/* The commander's name gives way to its colors (it ellipsizes, as written below): a flex item never shrinks under its
+   own content unless told it may, so a long name with four colors ran out of the chip. */
+.cm-precon-tile .cm-precon-chip span,.cm-precon-tile .cm-precon-chip em{min-width:0}
+#matrix-v2 .cm-precon-play{font-size:12px;padding:4px 6px;min-height:0;white-space:nowrap}
+.cm-tile-play{font-size:12px;color:color-mix(in srgb,var(--poster-ink) 80%,transparent);pointer-events:none}
+.cm-tile-play.is-playable{font-weight:600}
+.cm-deck-play{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:10px}
+.cm-deck-play-line{font-weight:600}
 .cm-precon-tile .cm-precon-chip span{font-size:11px;flex-wrap:nowrap}
 .cm-precon-chip em{font-style:normal;min-width:0}
 .cm-precon-tile .cm-precon-chip em{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
