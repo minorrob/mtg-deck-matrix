@@ -343,4 +343,34 @@ eq(me.headers.get("x-content-type-options") + " " + me.headers.get("cache-contro
   eq([once.status, twice.status], [200, 429], "and the per-network rate limit holds it like every other request");
 }
 
+/* MONITORING (M3): the line each answer the operator should hear about leaves for Workers Logs -- a 5xx with its
+   status, a save refused as a conflict -- through the Worker's whole path, and never the person or what was sent. */
+{
+  const {serve, opsLine} = await import("../cloud/worker.mjs");
+  const served = async (method, path, {as = "ops@example.com", body, on = env} = {}) => {
+    const lines = [], log = {log: (x) => lines.push(["log", x]), error: (x) => lines.push(["error", x])};
+    const init = {method, headers: {"cf-access-jwt-assertion": await token({email: as}), ...(body ? {"content-type": "application/json", "x-crankmagic": "sync"} : {})}};
+    if (body) init.body = JSON.stringify(body);
+    const response = await serve(new Request(`https://crankmagic.test${path}`, init), on, {fetchImpl, now: clock}, log);
+    return {status: response.status, lines};
+  };
+  const first = await served("PUT", "/api/library", {body: {...library(1), parent: null}});
+  eq([first.status, first.lines], [200, []], "a save that lands leaves no line");
+  const again = await served("PUT", "/api/library", {body: {...library(2), parent: null}});
+  eq([again.status, again.lines], [409, [["log", {ops: "sync-conflict", status: 409, method: "PUT", route: "/api/library"}]]],
+    "a save refused because the library moved on: one sync-conflict line, the route and nothing of the person's");
+  const broken = await served("GET", "/api/me", {on: {...env, DB: {prepare() {throw new TypeError("no such table: users ops@example.com");}}}});
+  const [[level, line]] = broken.lines;
+  eq([broken.status, level, line.ops, line.status, line.route, line.error], [500, "error", "5xx", 500, "/api/me", "TypeError"],
+    "an error the Worker did not expect: a 500 to the person, and a 5xx line with the error's name");
+  ok(/worker\.mjs/.test(line.at) && !/ops@example|no such table/.test(JSON.stringify(line)),
+    `where it was thrown (${line.at.slice(0, 60)}…), never its message, which can carry what was sent`);
+  const shut = await served("GET", "/api/tables/T7Q2/lobby");
+  eq([shut.status, shut.lines.map(([, l]) => [l.ops, l.status, l.route])], [503, [["5xx", 503, "/api/tables"]]],
+    "a feature switched off: its 503 logged by status, for an alert to leave out, and the table's id folded away");
+  eq(opsLine(new Request("https://crankmagic.test/api/join/T7Q2/SECRETCODE"), 502).route, "/api/join", "an invitation's code is never in a line");
+  eq(opsLine(new Request("https://crankmagic.test/api/ai/advise", {method: "POST"}), 409), null, "a 409 that is not a save (the advisor's library not in the cloud yet) is not a conflict");
+  eq(opsLine(new Request("https://crankmagic.test/api/library"), 404), null, "nor is any other answer under 500");
+}
+
 console.log(`cloud-worker: ${checks} checks passed — Access tokens verified, writes from the app only, the head moves only from where a device left it, nothing crosses between people.`);

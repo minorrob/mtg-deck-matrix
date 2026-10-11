@@ -17,6 +17,7 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | --- | --- | --- |
 | G-A: G1, 1,400 games | **done: 1,400 of 1,400 clean** | PR #686's head ccb250d1: every game finished, none refused, every replay identical, 0 leaks in 105,656 checks of every seat's view |
 | G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**, with a daily cap of its own ($1.50, released at 905394dc); **AI-2's L1 built** (Normal and Easy, measured against L0: Normal 61%, Easy 56%, L0 itself 51%); **the LLM seat built behind its switch**, its privacy wording Rob's to approve; **AI-5 built and on staging** (each deck says whether the table can play it; Play this deck); **AI-4, the deck advisor, built behind its switch**, its privacy wording Rob's to approve; **AI-3's Train C running** (Rob's library: 825 of 1,132 cards playable, 307 being defined); **AI-6, AI Coach settings, built** | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
+| G-A: M3's monitoring and backups | **monitoring built** (Workers Logs keeps the Worker's own 5xx and sync-conflict lines; `tools/ops-week.mjs`, the weekly check); Time Travel confirmed, 30 days | **Rob:** the two alerts and their email; R2 turned on, the nightly copy's window and what deletion promises (`docs/ops.md`) |
 | G-B: the whole gate green twice on main | done | dispatched Tests runs on main, every suite: 2499 on def8fa89 and 2503 on eff40fdc, both green |
 | G-B: `play-e2e` under wrangler dev | done | 35 checks at every staging release |
 | G-B: hidden information in every frame | done | `play-journeys` reads every frame to both people; G1's oracle 102,879 checks, no leak |
@@ -922,3 +923,14 @@ sees (board and hand, or board only), and the person's spending over the last 24
 - **The Coach's:** *My board only* sends the question with the hand withheld, and the table's brief leaves the hand and
   the question being asked out.
 - **Proof:** `advisor` 56 checks, `coach` 60, `settings-r3` 56, `table-board` 250, `advisor-page` 9; 26 breaks caught.
+
+**M3: monitoring, built (2026-10-11).** The Worker writes one line for each answer the operator should hear about,
+through `serve()` around `handle()` (`cloud/worker.mjs`, `opsLine`): every 5xx with its status (a 503 is a feature
+switched off, and the alerts leave it out), and a save refused as a sync conflict. A line names the route's resource,
+never the person, an id or what was sent. Each cloud release turns Workers Logs on with those lines only: the
+platform's per-request line, which carries the request's headers, stays off, and `tools/release-pages.mjs` refuses a
+release that would keep it. `tools/ops-week.mjs` is the weekly check, and it only reads. Run on staging today: no
+incidents, 3 people, 24 versions, Time Travel back to the database's birth (its 30-day window), and R2 not on.
+- **Proof:** `cloud-worker` 117 checks, `ops-week` 23, `release-pages` 210; 30 breaks caught.
+- **Rob's, left:** the two alerts with his email; R2 on, and the nightly copy's window and deletion promise
+  (`docs/ops.md`).

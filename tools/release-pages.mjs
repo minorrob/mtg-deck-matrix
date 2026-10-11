@@ -180,6 +180,9 @@ export const LIMITS_PER_MINUTE = Object.freeze({ip: 240, person: 120});
    is still served straight from the assets, uninvoiced -- with its D1 database and its Access settings.
    The Worker's source ships in the release tree for wrangler to bundle, and .assetsignore keeps it (and the
    migrations) from being published as files. */
+/* Workers Logs for a cloud release (M3): the Worker's own lines, and never the platform's per-request one. */
+export const OBSERVABILITY = {enabled: true, head_sampling_rate: 1, logs: {enabled: true, invocation_logs: false}};
+
 export const HOST_FILES = {
   cloudflare: ({date, origin, profile}) => ({
     "wrangler.jsonc": JSON.stringify({
@@ -197,6 +200,10 @@ export const HOST_FILES = {
           {name: "LIMIT_IP", namespace_id: profile.cloud.limits.ip, simple: {limit: LIMITS_PER_MINUTE.ip, period: 60}},
           {name: "LIMIT_PERSON", namespace_id: profile.cloud.limits.person, simple: {limit: LIMITS_PER_MINUTE.person, period: 60}},
         ],
+        /* Monitoring (M3, docs/ops.md): Workers Logs keeps the Worker's own lines -- each 5xx and each sync conflict,
+           cloud/worker.mjs opsLine -- for its alerts to count. Not the platform's line for every request, which
+           carries its headers, Access's signed assertion of who is asking among them. */
+        observability: OBSERVABILITY,
       } : {}),
       /* Play: each table is a Durable Object (SQLite-backed, which every plan has), made once by this migration. */
       ...(profile.cloud && profile.tables ? {
@@ -418,6 +425,8 @@ export function verify(built, profile) {
         if (!binding || !/^[1-9][0-9]*$/.test(binding.namespace_id || "") || binding.namespace_id !== profile.cloud.limits[name === "LIMIT_IP" ? "ip" : "person"] || binding.simple?.limit !== limit || binding.simple?.period !== 60)
           problems.push(`wrangler.jsonc does not rate-limit /api/* with ${name} at ${limit} a minute`);
       }
+      if (config?.observability?.logs?.invocation_logs !== false) problems.push("wrangler.jsonc keeps the platform's line for every request in Workers Logs, with its headers -- Access's signed assertion of who is asking among them");
+      else if (JSON.stringify(config.observability) !== JSON.stringify(OBSERVABILITY)) problems.push("wrangler.jsonc does not keep the Worker's monitoring lines in Workers Logs, so its alerts would count nothing");
       const namespaces = (config?.ratelimits || []).map((r) => r.namespace_id);
       if (new Set(namespaces).size !== namespaces.length) problems.push("wrangler.jsonc counts two rate limits in one namespace");
       if (config?.vars && "ACCESS_JWKS" in config.vars) problems.push("wrangler.jsonc hands the Worker its own signing keys (ACCESS_JWKS) -- that is for the local end-to-end run only");
