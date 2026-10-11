@@ -18,7 +18,7 @@
  *   {schema: "CrankCardScenarios@1", card, fixtures?: {name: object}, scenarios: [{
  *     name, seats?: 2..4, at?: {turn, phase}, library?: [names],
  *     setup: [{seat, zone, cards, sick?}]   (a card put in the command zone is that seat's commander),
- *     steps: [ {play|tap|cast|activate|turnFaceUp: name, seat?, targets?: [{card, seat?} | {player}] | "any", ability?, mana?, x?, optional?}
+ *     steps: [ {play|tap|cast|activate|turnFaceUp: name, seat?, targets?: [{card, seat?} | {player} | {ability}] | "any", ability?, mana?, x?, optional?}
  *            | {resolve: true} | {settle: true} | {pass: n} | {to: {turn, phase}} | {answer: [indices]} | {expect: [...]}
  *            | {attack: [names], at?} | {block: [[blocker, attacker], ...]} | {choose: [labels]} ],
  *   (`targets: "any"` takes the first legal aim; `optional` skips a move the rules do not offer; `settle` answers every
@@ -146,6 +146,8 @@ export function runScenario(scenario, cards, fixtures = {}) {
          is picked once the offer is taken (CR 601.2c; script/bind.mjs). */
       if (Array.isArray(w)) return isChoosing(t);
       if (w.player !== undefined) return t.kind === "player" && t.id === w.player;
+      /* An ability on the stack (Bolt Bend's target), by its source's name: `{ability: "Prodigal Pyromancer"}`. */
+      if (w.ability !== undefined) return t.kind === "ability" && state.stack.find((e) => e.stackId === t.id)?.name === w.ability;
       return t.kind === "object" && targetName(state, t) === w.card && (w.seat === undefined || state.objects[t.id].controller === w.seat);
     });
   };

@@ -220,8 +220,10 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
     for (const t of action.targets ?? []) {
       if (Array.isArray(t)) {on += 1; continue;}
       if (t?.kind === "choose") {on += (t.of ?? 1) > 0 ? 1 : 0; continue;}
-      const card = t.kind === "player" ? null : where.get(t.id);
-      const theirs = t.kind === "player" ? t.id !== seat : (card?.controller ?? seat) !== seat;
+      const card = t.kind === "object" ? where.get(t.id) : null;
+      /* An ability on the stack (Bolt Bend): its controller, as the stack shows it -- its stack id names no card. */
+      const theirs = t.kind === "player" ? t.id !== seat : t.kind === "ability" ? ((view.stack ?? []).find((e) => e.stackId === t.id)?.playerId ?? seat) !== seat
+        : (card?.controller ?? seat) !== seat;
       if (theirs !== (action.hostile === true)) continue;
       on += 1;
       value += card ? worth(card) : 0;

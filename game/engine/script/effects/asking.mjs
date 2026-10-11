@@ -1151,8 +1151,11 @@ function retargetOptions(state, question) {
   /* A counted target's list holding its one target (changeTargets): that one. */
   const was = entry.targets[question.index];
   const current = (Array.isArray(was) ? was[0] : was) ?? null;
-  const others = targetCandidates(state, spec, {controller: entry.playerId, source: entry.objectId})
-    .filter((c) => !(c.kind === "object" && c.id === entry.objectId))
+  /* An ability's source is the object it came from (entry.cardId), while it is still that object (CR 113.7a). */
+  const source = entry.objectId ?? (entry.cardId !== null && state.objects[entry.cardId] ? entry.cardId : null);
+  const others = targetCandidates(state, spec, {controller: entry.playerId, source, ...(entry.about ? {about: entry.about} : {}), ...(entry.x !== undefined ? {x: entry.x} : {})})
+    /* Never itself (CR 115.5): a spell its own object, an ability its own entry. */
+    .filter((c) => !(c.kind === "object" && c.id === entry.objectId) && !(c.kind === "ability" && c.id === entry.stackId))
     .filter((c) => !(current && c.kind === current.kind && c.id === current.id));
   return {entry, current, others};
 }
@@ -1213,7 +1216,8 @@ export const copySpell = {
    has and nobody is asked. */
 export const changeTargets = {
   open(state, params, context) {
-    const entry = state.stack.find((e) => e.objectId !== null && (params.spells ?? []).includes(e.objectId));
+    /* The spell it names by its object (`spells`), or the spell or ability by its stack entry (`stack`, Bolt Bend). */
+    const entry = state.stack.find((e) => (e.objectId !== null && (params.spells ?? []).includes(e.objectId)) || (Array.isArray(params.stack) && params.stack.includes(e.stackId)));
     if (!entry) return false;
     /* "With a single target" (its own targeting asked that): the one there is -- a counted target's list holding one
        included, the others empty. */

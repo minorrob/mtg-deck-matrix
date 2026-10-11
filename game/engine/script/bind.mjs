@@ -100,7 +100,8 @@ export function countWords({min = 0, max = null} = {}) {
   return `${inWords(min)} ${max === min + 1 ? "or" : "to"} ${inWords(max)} targets`;
 }
 
-const kindOf = (selector) => ((selector.what ?? "permanent") === "player" ? "player" : "object");
+/* An ability on the stack (CR 115.2, script/filter.mjs) is no object: chosen as `{kind: "ability", id}`, its entry's stack id. */
+const kindOf = (selector) => ((selector.what ?? "permanent") === "player" ? "player" : selector.what === "ability" ? "ability" : "object");
 
 /* The targets chosen for other instances of "target" that this one must differ from (`distinctFrom`), as the offer or the
    stack entry holds them so far (`context.chosenTargets`, or the way being built). */
@@ -343,6 +344,12 @@ export function bindEffect(effect, context, state = null) {
   if ("untilCast" in bound) bound.untilCast = objectsOf(bound.untilCast, context);
   /* "Counter that spell or ability" (ward): the stack entry the trigger is about, by its stack id (rules/trigger.mjs). */
   if (bound.stack === "that") bound.stack = context.about?.stackId !== undefined && context.about.stackId !== null ? [context.about.stackId] : [];
+  /* "Change the target of target spell or ability" (Bolt Bend): the stack entries among target n -- an ability by its own
+     stack id, a spell by its entry's. */
+  if (isRef(bound.stack)) {
+    const chosen = [].concat((context.targets ?? [])[bound.stack.target] ?? []).filter(Boolean);
+    bound.stack = chosen.map((t) => (t.kind === "ability" ? t.id : t.kind === "object" ? state?.stack.find((e) => e.objectId === t.id)?.stackId : undefined)).filter((id) => id !== undefined);
+  }
   /* Where the damage comes from, when it is not the spell: "target creature you control deals damage ..." (damageAll). */
   if ("from" in bound) bound.from = objectsOf(bound.from, context);
   /* What is attached, when it is not the ability's source: "you may attach it to target creature you control" (Sigarda's
@@ -472,6 +479,11 @@ export function targetName(state, chosen) {
   if (Array.isArray(chosen)) return chosen.length ? chosen.map((t) => targetName(state, t)).join(" and ") : "no target";
   if (chosen.kind === "choose") return countWords(chosen);
   if (chosen.kind === "player") return state.players[chosen.id]?.name ?? `Seat ${chosen.id + 1}`;
+  /* An ability on the stack: its source's, as the stack says it (a face-down source's has no name, CR 708.2a). */
+  if (chosen.kind === "ability") {
+    const entry = state.stack.find((e) => e.stackId === chosen.id);
+    return entry ? `${entry.faceDown || !entry.name ? "An" : `${entry.name}'s`} ${entry.kind === "trigger" ? "triggered" : "activated"} ability` : "an ability, now gone";
+  }
   /* A face-down permanent has no name (CR 708.2a): it is said to be face down. */
   return shownName(state.objects[chosen.id]);
 }

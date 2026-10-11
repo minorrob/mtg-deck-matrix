@@ -130,7 +130,9 @@ export function housePilot({seat, cards = () => null} = {}) {
        nothing to pick ("up to two target creatures you control", with none). */
     if (Array.isArray(t)) return n + 1;
     if (t?.kind === "choose") return n + ((t.of ?? 1) > 0 ? 1 : 0);
-    const theirs = t.kind === "player" ? t.id !== seat : (controllerIn(view, t.id) ?? seat) !== seat;
+    /* An ability on the stack (Bolt Bend): its controller, as the stack shows it -- its stack id names no card. */
+    const theirs = t.kind === "player" ? t.id !== seat : t.kind === "ability" ? ((view.stack ?? []).find((e) => e.stackId === t.id)?.playerId ?? seat) !== seat
+      : (controllerIn(view, t.id) ?? seat) !== seat;
     return n + (theirs === (action.hostile === true) ? 1 : 0);
   }, 0);
 

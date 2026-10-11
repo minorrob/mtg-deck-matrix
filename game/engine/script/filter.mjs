@@ -122,7 +122,25 @@ export function matchesSelector(selector, state, id, context = {}) {
 }
 
 /** What a selector can be about. */
-const WHAT = ["permanent", "card", "player", "spell"];
+const WHAT = ["permanent", "card", "player", "spell", "ability"];
+
+/* AN ABILITY ON THE STACK (CR 113.7a, 115.2: "target spell or ability", Bolt Bend): no object, so it is named by its stack
+   entry, `id` the entry's stack id -- an activated or triggered ability's, never a spell's. What may be asked of it: who
+   controls it (`controller`), and "with a single target" (`singleTarget`, CR 115.9a: one object or player chosen in all).
+   Nothing gives an ability hexproof or protection, so being a target asks nothing more (`target`). */
+const ABILITY_KEYS = ["what", "controller", "singleTarget", "target"];
+const abilityMatcher = (selector) => {
+  const extra = Object.keys(selector).filter((key) => !ABILITY_KEYS.includes(key));
+  if (extra.length) throw new Error(`An ability on the stack is chosen by ${ABILITY_KEYS.join(", ")}, not ${extra.join(", ")}`);
+  return (state, id, context = {}) => {
+    const entry = state.stack.find((e) => e.stackId === id);
+    if (!entry || entry.kind === "spell") return false;
+    if (selector.controller === "you" && entry.playerId !== context.controller) return false;
+    if (selector.controller === "opponent" && entry.playerId === context.controller) return false;
+    if (selector.singleTarget === true && (entry.targets ?? []).flat().filter(Boolean).length !== 1) return false;
+    return true;
+  };
+};
 
 /* Where each `what` looks by default. A permanent is on the battlefield and nowhere else
    (CR 110.1) — a card in a hand is a card, not a permanent, and conflating them is how a "destroy
@@ -229,6 +247,7 @@ export function compileSelector(selector) {
   }
   assertGrammar(selector);
   const what = selector.what ?? "permanent";
+  if (what === "ability") return abilityMatcher(selector);
 
   return function matches(state, id, context = {}) {
     const chooser = context.controller;
@@ -483,6 +502,8 @@ export function selectMatching(state, selector, context = {}) {
   const match = compileSelector(selector);
   const what = selector.what ?? "permanent";
   if (what === "player") return state.players.map((p) => p.id).filter((id) => match(state, id, context));
+  /* Abilities on the stack, by their entries' stack ids, from the bottom of the stack up. */
+  if (what === "ability") return state.stack.map((e) => e.stackId).filter((id) => match(state, id, context));
 
   const zone = selector.zone ?? DEFAULT_ZONE[what];
   const candidates = zone === "battlefield" || zone === "stack" || zone === "exile"
