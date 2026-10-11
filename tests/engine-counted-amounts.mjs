@@ -354,7 +354,7 @@ eq(["Converge", "TotalCommanderCastFromCommandZone"].map((kind) => FORGE_COUNTS[
   "credited: converge, and every cast of your commanders from the command zone");
 eq(FORGE_COUNTS.RememberedSize.status, "missing", "not credited: Forge's remembered count holds players as well, which nothing here remembers");
 eq(missingFor({counts: ["Converge", "TotalCommanderCastFromCommandZone"]}), [], "and a card counting them is held back by neither");
-for (const name of ["Pox Plague", "Dark Matter Manipulator", "Borrowed Knowledge", "Jeska's Will", "Release to Memory", "Augusta, Order Returned", "Sundering Archaic", "Tam, the Possibility"])
+for (const name of ["Pox Plague", "Dark Matter Manipulator", "Borrowed Knowledge", "Jeska's Will", "Release to Memory", "Augusta, Order Returned", "Sundering Archaic", "Tam, the Possibility", "Awaken the Erstwhile"])
   ok(index.resolve(name)?.playable === true, `${name} is defined and playable`);
 
 console.log(`engine-counted-amounts: ${checks} checks passed -- half and per; each player's own count; a target player's zone; a whole hand remembered; a remembered count filtered and carried into a reflexive trigger; converge; planeswalker types and proliferate X times; your commanders' casts.`);
