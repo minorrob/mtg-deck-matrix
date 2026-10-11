@@ -39,7 +39,7 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | G-A: G1, 1,400 games | **done: 1,400 of 1,400 clean** | PR #686's head ccb250d1: every game finished, none refused, every replay identical, 0 leaks in 105,656 checks of every seat's view |
 | G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**, with a daily cap of its own ($1.50, released at 905394dc); **AI-2's L1 built** (Normal and Easy, measured against L0: Normal 61%, Easy 56%, L0 itself 51%); **the LLM seat built behind its switch**, its privacy wording Rob's to approve; **AI-5 built and on staging** (each deck says whether the table can play it; Play this deck); **AI-4, the deck advisor, built behind its switch**, its privacy wording Rob's to approve; **AI-3's Train C done: 1,130 of Rob's 1,132 cards play** (the two left, each with its reason), Rob's to confirm; **AI-6, AI Coach settings, built** | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
 | G-A: M3's monitoring and backups | **monitoring built** (Workers Logs keeps the Worker's own 5xx and sync-conflict lines; `tools/ops-week.mjs`, the weekly check); Time Travel confirmed, 30 days | **Rob:** the two alerts and their email; R2 turned on, the nightly copy's window and what deletion promises (`docs/ops.md`) |
-| G-A: the A11y pass | **done**: WCAG 2.1 AA on the board and the lobby, measured from the screen's pixels | `tests/a11y-board.mjs` 288 checks, 72 breaks caught (the A11y record below) |
+| G-A: the A11y pass | **done**: WCAG 2.1 AA on the board and the lobby, measured from the screen's pixels; and words on the accent at 4.5:1 across the app (the item left) | `tests/a11y-board.mjs` 288 checks, 72 breaks caught (the A11y record below); `tests/a11y-app.mjs` 48 checks, 9 breaks caught |
 | G-B: the whole gate green twice on main | **done again, with G-A complete** | dispatched Tests runs on main 74f715c7 (G-A's items in, and the drop check's race fixed): **2579 and 2580, both green**. Before them, on bf0e9d21: 2572 green, 2573 red once in `table-board`'s drop check, root-caused to a race in the board and fixed (#702, the race record below). Earlier: 2499 on def8fa89 and 2503 on eff40fdc, both green |
 | G-B: `play-e2e` under wrangler dev | done | 35 checks at every staging release |
 | G-B: hidden information in every frame | done | `play-journeys` reads every frame to both people; G1's oracle 102,879 checks, no leak |
@@ -1025,8 +1025,8 @@ failed in 172 places; it now passes 288 checks.
 - **Proof:** `tests/a11y-board.mjs` 288 checks, 72 breaks caught; `table-board`, `table-lobby`, `browser-geometry`,
   `page-budget`, `play-journeys` (82) and the rest green. `table-board`'s Coach-under-the-log check measures the side
   column as it scrolls now.
-- **Left:** "token" and "summoning sick" in a card's name (the engine's projection carries neither); primary buttons
-  outside Play on the light and steel-cobalt themes (an app-wide token change).
+- **Left:** "token" and "summoning sick" in a card's name (the engine's projection carries neither). The primary
+  buttons outside Play, on the light and steel-cobalt themes, are done: see the record of 2026-10-11 below.
 
 **#701 merged on main bf0e9d21 on green Actions; staging released.** `tools/release-staging.sh` released it to
 `release/cloud-staging` 03a69b16 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 11:17:16 UTC as
@@ -1106,3 +1106,23 @@ of every seat's view.** Two findings are open, in the run's own CSV, as the agen
   - The rules show some such names (a revealed card, a library's top played revealed), and G1's oracle found no leak
     in its 1,400 games, so the harness's simpler check may be the stricter.
   - The records now come first, and the check names the card, so the next one can be ruled from its record.
+
+**#705 merged on main 46407e27 on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 625fce97 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 15:39:52 UTC as
+version cc02a843. Its `play-worker.js` is byte-identical to the release's dry-run bundle and to #704's (3,302,092
+bytes): #705 changed the browser's files only. Its AI bindings are the Coach's alone. `tools/staging-check.mjs
+--expect 46407e2` exits 0, seating the session's token as `service:e07b4fed5ab9`.
+
+**Words on the accent, across the app (2026-10-11): the A11y pass's item left.** The pass darkened the accent under
+words on the board and in the lobby (`--accent-fill`). The rest of the app's words on the accent read 3.86:1 on Felt &
+Cream and 3.98:1 on Steel & Cobalt:
+- the primary buttons and the v-primary;
+- the shop's chosen tab and the graph's chosen mode;
+- the skip link;
+- the landing's step numbers and closing panel;
+- the build's current step.
+
+They now sit on `--accent-fill`. `tests/a11y-app.mjs` reads each such rule in all four themes, and the Decks page's
+own primary buttons: 48 checks, failing in 20 places before. `tools/a11y-app-breaks.py`: 9 breaks, every one caught.
+A tenth found the list row's own primary rule dead (its detail is drawn inside the app, where the app's rule wins),
+so it was removed.
