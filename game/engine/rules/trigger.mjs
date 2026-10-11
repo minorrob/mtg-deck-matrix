@@ -521,6 +521,14 @@ export function manaTriggered(state, event) {
       if (adds) made.push({player: fields.player?.playerId, mana: adds, source: id});
     }
   }
+  /* And a DELAYED triggered mana ability (CR 603.7, 605.1b): "until end of turn, whenever you tap a Mountain for mana, add an
+     additional {R}" (Molten Tide) -- made by a resolving spell, its controller's, while it lasts. A mana ability is
+     activated after whatever made it, so nothing it sees came first (CR 603.7a). */
+  for (const d of state.delayedTriggers ?? []) {
+    const mana = d.on?.manaAbility;
+    if (!mana || !tappedForMana(state, fields, d.on, d.source, d.controller)) continue;
+    made.push({player: d.controller, mana: {...mana.mana}, source: d.source});
+  }
   return made;
 }
 
@@ -678,7 +686,8 @@ export function collectTriggers(state, events) {
        creature (`watch`, the object it was as the trigger was made); "whenever a creature dies this turn" every time,
        until the turn ends (turn.mjs, cleanup). Not on the action that made it (CR 603.7a): that one is `fresh`. */
     for (const d of [...(state.delayedTriggers ?? [])]) {
-      if (!d.on || d.fresh) continue;
+      /* A delayed triggered mana ability happened with the mana ability that triggered it (manaTriggered). */
+      if (!d.on || d.fresh || d.on.manaAbility) continue;
       if (d.watch !== undefined && (d.watch === null || event.data?.fields?.card?.cardId !== d.watch)) continue;
       for (const about of subjects(state, event, d.on, d.source, d.controller)) {
         state.pendingTriggers.push({

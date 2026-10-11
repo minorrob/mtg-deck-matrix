@@ -481,6 +481,12 @@ function withDelayedTriggers(abilities, problems) {
         const compile = TRIGGERS[when.on];
         const on = compile ? compile({...when, who: named ? "any" : when.who}) : null;
         if (!on) problems.push(`${when.on}: a delayed trigger the engine does not watch for yet`);
+        /* A DELAYED TRIGGERED MANA ABILITY (CR 605.1b): one that waits on a mana ability and adds a fixed mana, with no target
+           -- "until end of turn, whenever you tap a Mountain for mana, add an additional {R}" (Molten Tide). Not put on the
+           stack: what it adds is added with the mana ability that triggered it (rules/trigger.mjs, manaTriggered). */
+        const [adds] = rest.effects ?? [];
+        if (on?.on === "GameEventManaPool" && (rest.effects ?? []).length === 1 && MANA(adds?.mana)
+          && Object.values(adds.mana).every((n) => Number.isInteger(n))) on.manaAbility = {mana: {...adds.mana}};
         out = {...rest, on: on ?? {on: null}, ...(named ? {watch: when.who} : {})};
       } else if (!DELAYED_MOMENTS.includes(out.at ?? "end step")) problems.push(`${out.at}: a moment no delayed trigger waits for yet`);
     }
