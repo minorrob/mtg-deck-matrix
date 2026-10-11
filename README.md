@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 427 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 430 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1297,6 +1297,9 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-roles` - `tests/engine-roles.mjs`: Role tokens (Royal Treatment; CR 303.7, 303.4i, 704.5z) -- a Royal Role created attached, not created for what it could not enchant, and one player's newest Role alone on a permanent
 - `engine-counters-onto` - `tests/engine-counters-onto.mjs`: "move any number of +1/+1 counters from this creature onto other creatures" (Forgotten Ancient; CR 122.5) -- where each goes asked a counter at a time, then all moved at once, one placement on each; all or nothing
 - `engine-counter-duration` - `tests/engine-counter-duration.mjs`: "for as long as that land has a blight counter on it, it loses all land types and abilities" (Ultima, Origin of Oblivion; CR 611.2b, 205.3i) -- applied while it has the counter, over for good once it does not; every land type lost, a land creature's creature types kept
+- `engine-dig-by-type` - `tests/engine-dig-by-type.mjs`: a dig's cards to zones by card type (Zimone's Experiment; CR 701.20a) -- lands onto the battlefield tapped, creatures into hand, a land creature with the lands, the taken alone revealed
+- `engine-search-steps` - `tests/engine-search-steps.mjs`: a search a card at a time (Krosan Verge, Myriad Landscape; CR 701.23b, 701.23h) -- a description for each card, or sharing a land type; found together, shuffled once
+- `engine-unless-exile` - `tests/engine-unless-exile.mjs`: "you may exile this spell and four cards named Sphinx's Approach from your graveyard. If you do" (CR 118.12a, 707.10a) -- offered only when it can be paid, which four asked; and its deck rule (CR 100.2a)
 
 ## Design and execution record
 

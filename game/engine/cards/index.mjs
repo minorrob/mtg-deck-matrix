@@ -1029,6 +1029,31 @@ export function compileScript(script) {
       /* "It loses all land types" (CR 205.3i): a type change, layer 4. */
       if (effect.effect === "effectUntil" && effect.apply?.removeLandTypes !== undefined && !(effect.apply.removeLandTypes === true && effect.layer === 4))
         problems.push("effectUntil: removeLandTypes is true, in layer 4 (CR 613.1d)");
+      /* A dig's cards to zones by card type (Zimone's Experiment; effects/asking.mjs, dig): each destination card types and a
+         zone, onto the battlefield tapped or not. */
+      if (effect.effect === "dig" && effect.toByType !== undefined && !(Array.isArray(effect.toByType) && effect.toByType.length
+        && effect.toByType.every((w) => Array.isArray(w?.types) && w.types.length && ["hand", "battlefield", "graveyard", "exile"].includes(w.to)
+          && Object.keys(w).every((k) => ["types", "to", "tapped"].includes(k)) && (w.tapped === undefined || (w.tapped === true && w.to === "battlefield")))))
+        problems.push("dig: toByType is a list of {types, to, tapped?} -- card types, a zone, and tapped only onto the battlefield");
+      /* A search a card at a time (Krosan Verge, Myriad Landscape; effects/asking.mjs, chooseCard): of a library, `searches` a
+         description for each card, or `sharing: "land type"` with two or more of the selector's. */
+      if (effect.effect === "chooseCard" && (effect.searches !== undefined || effect.sharing !== undefined)) {
+        if ((effect.zone ?? "library") !== "library") problems.push("chooseCard: a search a card at a time is of a library");
+        if (effect.searches !== undefined && !(Array.isArray(effect.searches) && effect.searches.length >= 2 && effect.sharing === undefined && effect.selector === undefined && effect.count === undefined))
+          problems.push("chooseCard: searches is two or more descriptions, one for each card, with no selector, count or sharing of its own");
+        if (effect.sharing !== undefined && !(effect.sharing === "land type" && effect.selector !== undefined && effect.count === 2))
+          problems.push("chooseCard: sharing is \"land type\", among two of a selector's");
+        for (const one of effect.searches ?? []) try { compileSelector({...one, what: "card", zone: "library"}); } catch (e) { problems.push(`chooseCard: ${e.message}`); }
+      }
+      /* "You may exile this spell and four cards named Sphinx's Approach from your graveyard. If you do" (effects/asking.mjs,
+         unlessPays): a number of the graveyard's cards a selector describes, and the spell itself -- a spell's alone. */
+      if (effect.effect === "unlessPays" && (effect.exileFromGraveyard !== undefined || effect.exileSelf !== undefined)) {
+        const g = effect.exileFromGraveyard;
+        if (!(g && Number.isInteger(g.count) && g.count >= 1 && g.count <= 10 && typeof g.selector?.named === "string" && Object.keys(g).every((k) => ["count", "selector"].includes(k))))
+          problems.push("unlessPays: exileFromGraveyard is {count, selector}, one to ten of the graveyard's cards of a name (`named`)");
+        else try { compileSelector({...g.selector, what: "card", zone: "graveyard"}); } catch (e) { problems.push(`unlessPays: ${e.message}`); }
+        if (effect.exileSelf !== undefined && !(effect.exileSelf === true && ability.kind === "spell")) problems.push("unlessPays: exileSelf is true, on a spell (\"exile this spell\")");
+      }
       /* "From among those cards" wherever each went (Spirit of Resilience): a choice among cards an earlier part named
          (effects/asking.mjs, chooseCard) -- never a search of every zone. */
       if (effect.effect === "chooseCard" && effect.zone === "any" && effect.among === undefined)
@@ -1261,6 +1286,9 @@ export function compileScript(script) {
           problems.push(`${ability.text}: an alternative cost of ${atom?.atom ?? "something"} nothing pays yet`);
       if (ability.zone !== undefined && ability.zone !== "graveyard") problems.push(`${ability.text}: an alternative cost is cast from where it is, or from the graveyard (\`zone: "graveyard"\`)`);
     }
+    /* "A deck can have any number of cards named <this card>" (CR 100.2a): said of the card's own name, or no card says it. */
+    if (ability.kind === "static" && ability.rule === "any-number-in-deck" && ability.text !== `A deck can have any number of cards named ${identity.name}.`)
+      problems.push(`${ability.text}: any number of a card in a deck is the card's own words, of its own name`);
     /* What follows a prevention is done at once, inside the damage event (CR 615.5): nothing in it may stop to ask. */
     if (ability.kind === "replacement") for (const effect of ability.change?.then ?? [])
       if (!EFFECTS[effect?.effect]) problems.push(`${ability.text}: ${effect?.effect} follows a prevention, and it asks a question or is not built`);

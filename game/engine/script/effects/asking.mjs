@@ -33,6 +33,7 @@ import {proliferate as giveEachAnother, addCounters, putCounter, moveCounters, r
 import {makeCopies, afterwards, joinAttack, attackPlaces, attachTo, createToken, effectUntil, COPY_KEYS} from "./permanents.mjs";
 import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits, unlessPlans, planWords, payPlan} from "../../rules/mana.mjs";
 import {typesOf, characteristicsOf, everyCreatureTypeOf, controllerOf} from "../../rules/layers.mjs";
+import {isLandType} from "../../keywords/types.mjs";
 import {pushCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
 import {loseLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";
 import {damageOrderChoice} from "../../rules/replacement.mjs";
@@ -306,7 +307,11 @@ function digMoved(state, awaiting, chosen, events) {
   const taken = new Set(chosen), found = [];
   for (const id of awaiting.cards) {
     if (!taken.has(id)) continue;
-    const moved = moveOne(state, id, awaiting.to, events, {owner: awaiting.player,
+    /* "Put all land cards revealed this way onto the battlefield tapped and put all creature cards revealed this way into your
+       hand" (Zimone's Experiment; `toByType`): each to the first destination whose card types it has -- a land creature is a
+       land card, and the lands come first. */
+    const where = awaiting.toByType?.find((w) => w.types.some((type) => (state.objects[id].types ?? []).includes(type))) ?? {to: awaiting.to};
+    const moved = moveOne(state, id, where.to, events, {owner: awaiting.player, ...(where.tapped === true ? {tapped: true} : {}),
       ...(awaiting.faceDown ? {faceDown: true, lookers: [awaiting.player], ...(awaiting.link !== undefined ? {exiledBy: awaiting.link} : {})} : {})});
     if (moved !== null && state.objects[moved]) found.push(moved);
   }
@@ -355,6 +360,7 @@ export const dig = {
       to: params.to ?? "hand", rest: params.rest ?? "bottom",
       ...(revealed.length ? {revealed: true} : {}), ...(params.reveal === "taken" ? {revealTaken: true} : {}),
       ...(params.random === true ? {random: true} : {}), ...(params.remember ? {remember: true} : {}),
+      ...(Array.isArray(params.toByType) ? {toByType: structuredClone(params.toByType)} : {}),
       ...(params.faceDown === true && (params.to ?? "hand") === "exile" ? {faceDown: true} : {}),
       ...(params.link === true && context.source !== null && context.source !== undefined ? {link: context.source} : {}),
     };
@@ -371,7 +377,8 @@ export const dig = {
     }
     return {
       id: `dig:${awaiting.cards.join(",")}`,
-      title: awaiting.to === "exile" ? `Choose ${awaiting.min === 0 ? "up to " : ""}${awaiting.take} to exile${awaiting.faceDown ? " face down" : ""}`
+      title: awaiting.toByType ? `Choose ${awaiting.min === 0 ? "up to " : ""}${awaiting.take} to reveal`
+        : awaiting.to === "exile" ? `Choose ${awaiting.min === 0 ? "up to " : ""}${awaiting.take} to exile${awaiting.faceDown ? " face down" : ""}`
         : `Choose ${awaiting.min === 0 ? "up to " : ""}${awaiting.take} to put into your ${awaiting.to}`,
       mode: awaiting.take === 1 && awaiting.min === 1 ? "one" : "many",
       min: awaiting.min ?? awaiting.take,
@@ -895,7 +902,20 @@ const lifeAsked = (awaiting) => awaiting.life > 0 || (awaiting.life === 0 && !(a
 const noun = (selector) => (selector?.subtypes?.length ? `a ${selector.subtypes[0]}` : selector?.types?.length ? `a ${selector.types[0].toLowerCase()}` : "a permanent");
 /* "Another creature you control" (Faerie Impostor): `another` read against the "unless" ability's own source. */
 const otherNoun = (selector) => (selector?.another === true ? noun(selector).replace(/^a /, "another ") : noun(selector));
-function costWords(awaiting) {
+/* "Exile this spell and four cards named Sphinx's Approach from your graveyard" (`exileSelf`, `exileFromGraveyard`): the
+   cards of the payer's graveyard its selector describes, and the spell itself -- a card on the stack, as it resolves; a copy
+   is no card to exile (CR 707.10a), so with one there is no paying. */
+const NUMBER_WORDS = [null, "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
+const graveyardToExile = (state, awaiting) => {
+  const fits = compileSelector({...awaiting.exileFromGraveyard.selector, what: "card", zone: "graveyard"});
+  return cardsIn(state, "graveyard", awaiting.player).filter((id) => fits(state, id, {controller: awaiting.player, source: awaiting.source}));
+};
+const exileWords = (state, awaiting) => {
+  const {count, selector} = awaiting.exileFromGraveyard, self = awaiting.exileSelf ? `${state.objects[awaiting.source].card} and ` : "";
+  return `exile ${self}${NUMBER_WORDS[count]} card${count === 1 ? "" : "s"} named ${selector.named} from your graveyard`;
+};
+function costWords(awaiting, state) {
+  if (awaiting.exileFromGraveyard) return exileWords(state, awaiting);
   if (awaiting.amountX) return "pay {X}";
   const paid = [awaiting.mana ?? null, awaiting.amount > 0 ? `{${awaiting.amount}}` : null, lifeAsked(awaiting) ? `${awaiting.life} life` : null].filter(Boolean);
   const other = awaiting.discard ? "discard a card" : awaiting.sacrificeCount ? `sacrifice ${awaiting.sacrificeCount} permanents` : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}`
@@ -931,6 +951,14 @@ function payOptions(state, awaiting) {
     return mine.map((id) => ({label: `Sacrifice ${state.objects[id].card}${also}`, pay: true, sacrifice: id, cardId: id}));
   }
   if (awaiting.discard) return cardsIn(state, "hand", player).map((id) => ({label: `Discard ${state.objects[id].card}${also}`, pay: true, discard: id, cardId: id}));
+  if (awaiting.exileFromGraveyard) {
+    const cards = graveyardToExile(state, awaiting);
+    /* Having said they pay, with more than that many there: which ones. */
+    if (awaiting.exiling) return cards.map((id) => ({label: state.objects[id].card, cardId: id}));
+    const selfOk = !awaiting.exileSelf || state.objects[awaiting.source].copy !== true;
+    const words = exileWords(state, awaiting);
+    return selfOk && cards.length >= awaiting.exileFromGraveyard.count ? [{label: `${words[0].toUpperCase()}${words.slice(1)}`, pay: true, exileMany: true}] : [];
+  }
   /* "YOU MAY TAP ANOTHER UNTAPPED MERFOLK YOU CONTROL. WHEN YOU DO, ..." (Meanders Guide; CR 118.12a, 603.12): each untapped
      permanent of the payer's the selector describes its own option -- `another` not the ability's source -- and not paying.
      Which one is the payer's choice. */
@@ -958,6 +986,9 @@ export const unlessPays = {
     /* "You may pay {4}. If you do, ..." (Mana Vault), mana alone, by a player who cannot pay it: no choice to make, and
        nothing happens. */
     if (params.ifPaid && !params.life && !params.discard && !params.sacrifice && !params.returnToHand && !canPayGeneric(state, payer, Math.max(0, params.amount ?? 0))) return false;
+    /* "You may exile this spell and four cards named Sphinx's Approach": with fewer there, or this spell no card to exile,
+       there is no paying it, and nothing is asked. */
+    if (params.exileFromGraveyard && !payOptions(state, {player: payer, amount: 0, exileFromGraveyard: params.exileFromGraveyard, exileSelf: params.exileSelf === true, source: context.source ?? null}).length) return false;
     state.awaiting = {kind: "effect-choice", effect: "unlessPays", player: payer, ...(params.amountX === true ? {} : {amount: Math.max(0, params.amount ?? 0)}),
       /* "For each age counter on it" (cumulative upkeep with colored symbols, CR 702.24a): the cost that many times, counted now. */
       ...(typeof params.mana === "string" && params.mana ? {mana: params.manaTimes === undefined ? params.mana : params.mana.repeat(amountOf(state, params.manaTimes, context))} : {}),
@@ -966,6 +997,7 @@ export const unlessPays = {
       ...(params.returnToHand ? {returnToHand: structuredClone(params.returnToHand)} : {}),
       ...(params.tap ? {tap: structuredClone(params.tap)} : {}),
       ...(params.amountX === true ? {amountX: true} : {}),
+      ...(params.exileFromGraveyard ? {exileFromGraveyard: structuredClone(params.exileFromGraveyard), ...(params.exileSelf === true ? {exileSelf: true} : {})} : {}),
       effects: structuredClone(params.effects ?? []), source: context.source ?? null,
       /* "You may pay {1}. If you do, ...": the effects when it is paid, not when it is not. */
       ...(params.ifPaid ? {ifPaid: true} : {}),
@@ -984,12 +1016,15 @@ export const unlessPays = {
       return {id: `unless-plan:${awaiting.player}:${state.turn}`, title: `Pay ${awaiting.mana}: choose the mana`, mode: "one", min: 1, max: 1,
         options: plans.map((plan, index) => ({index, label: planWords(units, plan)}))};
     }
+    /* Having said they exile that many, with more there: which ones. */
+    if (awaiting.exiling) return {id: `unless-exile:${awaiting.player}:${state.turn}`, title: `Choose ${NUMBER_WORDS[awaiting.exileFromGraveyard.count]} cards to exile`,
+      mode: "many", min: awaiting.exileFromGraveyard.count, max: awaiting.exileFromGraveyard.count, options: payOptions(state, awaiting).map((option, index) => ({index, ...option}))};
     /* Having said they sacrifice that many: which ones. */
     if (awaiting.sacrificing) return {id: `unless-sacrifice:${awaiting.player}:${state.turn}`, title: `Choose ${awaiting.sacrificeCount} permanents to sacrifice`, mode: "many",
       min: awaiting.sacrificeCount, max: awaiting.sacrificeCount, options: payOptions(state, awaiting).map((option, index) => ({index, ...option}))};
     const source = awaiting.source !== null ? state.objects[awaiting.source]?.card : null;
     const pays = payOptions(state, awaiting).map((option, index) => ({index, ...option}));
-    return {id: `unless:${awaiting.player}:${state.turn}:${awaiting.amount ?? "X"}`, title: `${source ? `${source}: ` : ""}${costWords(awaiting)}?`, mode: "one", min: 1, max: 1,
+    return {id: `unless:${awaiting.player}:${state.turn}:${awaiting.amount ?? "X"}`, title: `${source ? `${source}: ` : ""}${costWords(awaiting, state)}?`, mode: "one", min: 1, max: 1,
       options: [...pays, {index: pays.length, label: "Don't pay", pay: false}]};
   },
   apply(state, awaiting, indices) {
@@ -1006,6 +1041,13 @@ export const unlessPays = {
       const {choosingPlan, ...rest} = awaiting;
       return unlessPays.paid(state, rest, choosingPlan.option, payPlan(state, awaiting.player, units, plan));
     }
+    if (awaiting.exiling) {
+      const ids = payOptions(state, awaiting).map((o) => o.cardId);
+      const chosen = [...new Set(indices ?? [])].map((i) => ids[i]);
+      if (chosen.length !== (indices ?? []).length || chosen.length !== awaiting.exileFromGraveyard.count || chosen.some((id) => id === undefined)) throw new Error("Invalid selection");
+      const {exiling, ...rest} = awaiting;
+      return unlessPaid(state, rest, {...exiling.option, exile: chosen}, []);
+    }
     if (awaiting.sacrificing) {
       const ids = payOptions(state, awaiting).map((o) => o.cardId);
       const chosen = [...new Set(indices ?? [])].map((i) => ids[i]);
@@ -1017,6 +1059,13 @@ export const unlessPays = {
     if (!option) throw new Error("Invalid selection");
     if (option.sacrificeMany) {
       state.awaiting = {...awaiting, sacrificing: {option}};
+      return {events: [], again: true};
+    }
+    /* Exactly that many there: no choice of which (they are those). More: which ones, asked next. */
+    if (option.exileMany) {
+      const cards = graveyardToExile(state, awaiting);
+      if (cards.length === awaiting.exileFromGraveyard.count) return unlessPaid(state, awaiting, {...option, exile: cards}, []);
+      state.awaiting = {...awaiting, exiling: {option}};
       return {events: [], again: true};
     }
     if (!option.pay) return unpaid(awaiting);
@@ -1061,6 +1110,12 @@ function unlessPaid(state, awaiting, option, events) {
     if (moveOne(state, option.discard, "graveyard", events, {owner: awaiting.player}) !== null) events[events.length - 1].data.fields.discarded = true;
   }
   for (const id of option.sacrifice === undefined ? [] : [].concat(option.sacrifice)) if (state.objects[id]) sacrificeOne(state, id, events);
+  /* Exiled, as a cost is paid: this spell, off the stack as it resolves -- nothing then puts it in a graveyard (rules/stack.mjs)
+     -- and the cards chosen from the graveyard. */
+  if (option.exile !== undefined) {
+    if (awaiting.exileSelf) moveOne(state, awaiting.source, "exile", events);
+    for (const id of option.exile) moveOne(state, id, "exile", events);
+  }
   /* Tapped, as a cost is paid -- an option of the answer's own question, asked again as it is answered (apply), so one
      tapped meanwhile is no longer among them (CR 118.3). */
   if (option.tap !== undefined) {
@@ -1316,6 +1371,20 @@ const hasQuality = (selector) => Object.keys(selector ?? {}).some((k) => !["what
  * rest. `shuffle` shuffles the library after (CR 701.24), before a card put "on top" is put there. The question is
  * always asked, even of a library with nothing to find: the player still searches, and the shuffle still happens.
  */
+/* "SEARCH YOUR LIBRARY FOR A FOREST CARD AND A PLAINS CARD" (Krosan Verge; `searches`, a description for each card) and "FOR UP
+   TO TWO BASIC LAND CARDS THAT SHARE A LAND TYPE" (Myriad Landscape; `sharing: "land type"`, `count` of the selector's): one
+   search (CR 701.23h), a card at a time -- each question offers the cards the next description fits, or the selector's that
+   share a land type with every card found before it (CR 205.3i) -- and what it found goes where the search puts it,
+   together, once the last is asked. Each has a quality, so each may find nothing (CR 701.23b); one after the first with
+   nothing to find is not asked, and with `sharing`, finding none ends it. */
+const landTypesOf = (state, id) => (state.objects[id]?.subtypes ?? []).filter(isLandType);
+const sharesLandType = (state, a, b) => landTypesOf(state, a).some((type) => landTypesOf(state, b).includes(type));
+function stepCards(state, awaiting) {
+  const {searches, sharing, selector, pool, step, found, source} = awaiting.steps;
+  const fits = compileSelector({...(searches ? searches[step] : selector), what: "card", zone: awaiting.zone});
+  return pool.filter((id) => !found.includes(id) && fits(state, id, {controller: awaiting.player, source})
+    && (sharing !== "land type" || found.every((other) => sharesLandType(state, other, id))));
+}
 export const chooseCard = {
   open(state, params, context, rng = null) {
     const zone = params.zone ?? "library";
@@ -1373,6 +1442,11 @@ export const chooseCard = {
       ...(params.gains || params.gainsUntilEndOfTurn || params.atEndStep ? {then: {gains: params.gains, gainsUntilEndOfTurn: params.gainsUntilEndOfTurn, atEndStep: params.atEndStep},
         source: context.source ?? null} : {}),
     };
+    if (Array.isArray(params.searches) || params.sharing === "land type") {
+      state.awaiting = {...awaiting, cards: pool, steps: {searches: params.searches ?? null, sharing: params.sharing ?? null, selector: params.selector ?? null, pool,
+        step: 0, total: params.searches ? params.searches.length : count, found: [], source: context.source ?? null}};
+      return true;
+    }
     /* "Exile a card from your graveyard AT RANDOM" (Advanced Reconstruction): nobody chooses -- each card is picked by the
        game's random stream (rng.mjs), as a random discard's is (CR 701.9b), and nobody is asked. Nothing there, nothing. */
     if (params.random === true) {
@@ -1390,6 +1464,12 @@ export const chooseCard = {
   },
 
   choice(state, awaiting) {
+    if (awaiting.steps) {
+      const cards = stepCards(state, awaiting), {step, total, found} = awaiting.steps;
+      return {id: `chooseCard:${awaiting.player}:${state.turn}:${awaiting.cards.length}:${step}`,
+        title: `Search your ${ZONE_WORD[awaiting.zone]}: card ${step + 1} of ${total}${found.length ? ` (${found.map((id) => state.objects[id].card).join(", ")} found)` : ""}`,
+        mode: "many", min: 0, max: Math.min(1, cards.length), options: cardOptions(state, cards)};
+    }
     return {
       id: `chooseCard:${awaiting.player}:${state.turn}:${awaiting.cards.length}`,
       /* A permanent is chosen, not searched for. */
@@ -1407,6 +1487,19 @@ export const chooseCard = {
   },
 
   apply(state, awaiting, indices, extra = {}, rng = null) {
+    if (awaiting.steps) {
+      const picked = (indices ?? []).map((index) => stepCards(state, awaiting)[index]);
+      if (picked.length > 1 || picked.some((id) => id === undefined)) throw new Error("Invalid selection");
+      const next = {...awaiting, steps: {...awaiting.steps, found: [...awaiting.steps.found, ...picked], step: awaiting.steps.step + 1}};
+      const over = awaiting.steps.sharing && !picked.length;
+      while (!over && next.steps.step < next.steps.total && !stepCards(state, next).length) next.steps = {...next.steps, step: next.steps.step + 1};
+      if (!over && next.steps.step < next.steps.total) {
+        state.awaiting = next;
+        return {events: [], again: true};
+      }
+      const {steps, ...rest} = next;
+      return chooseCard.apply(state, {...rest, cards: steps.found, min: steps.found.length, max: steps.found.length}, steps.found.map((id, i) => i), extra, rng);
+    }
     const events = [];
     const chosen = (indices ?? []).map((index) => awaiting.cards[index]);
     if (chosen.length < awaiting.min || chosen.length > awaiting.max || chosen.some((id) => id === undefined) || new Set(chosen).size !== chosen.length)
