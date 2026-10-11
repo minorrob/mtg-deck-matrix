@@ -67,8 +67,9 @@ export function memoryStorage() {
   };
 }
 
-/* Where a value would not survive JSON: a key holding undefined (dropped), a number that is not finite (null). */
-function lostIn(value, path) {
+/* Where a value would not survive JSON: a key holding undefined (dropped), a number that is not finite (null). Null when
+   nothing would; tests/engine-cards.mjs asks it of every card scenario's state, as a room's save would. */
+export function lostIn(value, path) {
   if (typeof value === "number" && !Number.isFinite(value)) return `${path} is ${value}`;
   if (!value || typeof value !== "object") return null;
   for (const [key, v] of Object.entries(value)) {

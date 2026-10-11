@@ -44,7 +44,7 @@
  * anything is written, naming every card it cannot play (docs/decisions-2026-09-25.md, M4: "refused by name;
  * compiled once M7 lands"). Today that is the basic lands, as it is for the engine itself.
  */
-import {createState, addObject, shownName} from "../engine/state/index.mjs";
+import {createState, addObject, shownName, shownFaceUp} from "../engine/state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../engine/rules/turn.mjs";
 import {legalActions, applyAction, nothingToDo, escapeWays, flashbackCost, tappersInWords, castTapPlans, tapWords} from "../engine/rules/actions.mjs";
 import {paymentWords} from "../engine/rules/mana.mjs";
@@ -177,6 +177,9 @@ export function offerDetails(state, seat, actions) {
     try { const c = characteristicsOf(state, id); if (c.power !== null && c.power !== undefined) shape = ` ${c.power}/${c.toughness}`; } catch { /* no shape */ }
     return `${name}${whose}${shape}${o.tapped ? ", tapped" : ""}`;
   };
+  /* A card exiled face down that the seat may play, said as the card it is -- its modes, its alternative costs (CR 406.3a;
+     rules/actions.mjs, withFaceUp): only a player who may look at it is offered it. */
+  const card = (id) => { const o = state.objects[id]; return o?.faceDown === true && o.zone === "exile" ? shownFaceUp(o) : o; };
   const MANA = ["W", "U", "B", "R", "G", "C"];
   const manaText = (mana) => MANA.flatMap((k) => Array.from({length: mana?.[k] ?? 0}, () => `{${k}}`)).join("");
   const abilities = new Map();
@@ -187,7 +190,7 @@ export function offerDetails(state, seat, actions) {
     if (a.kind === "activate" && a.text && ((abilities.get(a.objectId)?.size ?? 0) > 1 || state.objects[a.objectId]?.zone === "graveyard")) parts.push(`“${a.text}”`);
     /* The modes chosen as it is cast (CR 700.2), in the card's words. */
     /* And an activated ability's, chosen as it is activated (Aetheric Amplifier): its own modes' words. */
-    const modal = a.kind === "activate" ? (state.objects[a.objectId]?.abilities ?? []).find((b) => b.id === a.abilityId)?.modal : state.objects[a.objectId]?.spell?.modal;
+    const modal = a.kind === "activate" ? (state.objects[a.objectId]?.abilities ?? []).find((b) => b.id === a.abilityId)?.modal : card(a.objectId)?.spell?.modal;
     if (Array.isArray(a.modes)) parts.push(a.modes.map((i) => modal?.modes?.[i]?.text ?? `mode ${i + 1}`).join(" + "));
     if (a.x !== undefined) parts.push(`X = ${a.x}`);
     /* A manifested permanent of the seat's own turned face up for its card's mana cost (CR 701.40b): the label is the card,
@@ -214,7 +217,7 @@ export function offerDetails(state, seat, actions) {
     /* An alternative cost (CR 118.9): what is paid instead of the mana cost -- an evoke cost by its name (CR 702.74a), as
        the permanent will be sacrificed as it enters. */
     if (a.alternative !== undefined) {
-      const ability = state.objects[a.objectId]?.abilities?.[a.alternative];
+      const ability = card(a.objectId)?.abilities?.[a.alternative];
       const cost = ability?.cost ?? [];
       const mana = cost.find((c) => c.atom === "mana")?.cost, life = cost.filter((c) => c.atom === "payLife").reduce((n, c) => n + (c.amount ?? 0), 0);
       /* Surge and freerunning by their names too (CR 702.117a, 702.173a): what it is cast for is what its text asks about. */

@@ -383,8 +383,13 @@ export function moveZone(state, params, context, rng = null) {
     const to = (params.commanderHome ?? []).includes(id) ? "command" : params.to ?? "graveyard";
     if (state.objects[id]?.zone === "battlefield") leftBy.set(id, controllerOf(state, id));
     const before = params.remember && state.objects[id]?.zone === "battlefield" ? lastKnown(state, id) : null;
+    /* "Look at the top two cards of your library and exile them face down" (Flameshape; `faceDown`, into exile only): cards
+       with no characteristics there, named to nobody as they move (CR 406.3a) -- and, looked at first (`look`), seen by this
+       effect's controller for as long as they remain exiled (CR 406.3: "if a player is instructed to look at a card and then
+       exile it face down ... that player may continue to look at that card"; projection.mjs, `lookers`). */
     const moved = params.sacrifice === true ? sacrificeOne(state, id, events) : moveOne(state, id, to, events, {tapped: params.tapped === true, transformed: params.transformed === true,
-      ...(params.withCounters ? {counters: params.withCounters} : {})});
+      ...(params.withCounters ? {counters: params.withCounters} : {}),
+      ...(params.faceDown === true ? {faceDown: true, lookers: params.look === true ? [context.controller] : []} : {})});
     if (before && moved !== null && state.objects[moved]?.zone === (params.sacrifice === true ? "graveyard" : to)) movedWas.push(before);
     /* What it is now, for `remember`: what it became -- or, exiled and returned at once, the permanent that came back
        ("if that creature is a Bird", Splash Portal, batch 79), set below. */
@@ -483,6 +488,10 @@ export function manifest(state, params, context) {
  * "your-next-end-step", as that player's next end step begins ("until your next end step", Shadow Urchin; rules/turn.mjs).
  * `spellsOnly` for "you may cast that card". It names objects, as `remembered` binds them: a card that moves becomes a new
  * object (CR 400.7) and leaves the permission behind -- played, or put back into a library.
+ * `onlyIf`, a condition on the permission (script/condition.mjs): "for as long as they remain exiled, you may play them IF
+ * YOU CONTROL A WIZARD" (Flameshape) -- asked of its player whenever a card would be played through it (rules/actions.mjs,
+ * permissionOpen), not once now, which an effect's own `condition` would be. A card exiled face down is played as the card it
+ * is (CR 406.3a; rules/actions.mjs, withFaceUp).
  */
 export function mayPlay(state, params, context) {
   /* "For as long as it remains exiled" (Thranduil's Decree, `zone: "exile"`): only a card there now -- one put elsewhere never
@@ -497,7 +506,8 @@ export function mayPlay(state, params, context) {
     name: state.objects[context.source]?.card ?? context.lastKnown?.name ?? "Effect",
     ...(params.free === true ? {free: true} : {}),
     ...(params.graveyardToLibraryBottom === true ? {graveyardToLibraryBottom: true} : {}),
-    ...(params.spellsOnly === true ? {spellsOnly: true} : {}), until: params.until ?? "end-of-turn", madeOnTurn: state.turn, sourceController: player});
+    ...(params.spellsOnly === true ? {spellsOnly: true} : {}), ...(params.onlyIf !== undefined ? {onlyIf: structuredClone(params.onlyIf)} : {}),
+    until: params.until ?? "end-of-turn", madeOnTurn: state.turn, sourceController: player});
   return [];
 }
 

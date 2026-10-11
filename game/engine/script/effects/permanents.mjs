@@ -727,7 +727,7 @@ export function gainControl(state, params, context) {
     /* Kept even for good, and even when it changes nothing: a later change outlasts the earlier ones in layer 2 (CR 613.7),
        but its player may leave the game and the earlier ones decide again (CR 800.4a). */
     (state.effects ??= []).push({id: `control-returns:${id}:${state.effects.length}`, rule: "control-returns", affects: {ids: [id]},
-      apply: {controller: object.controller}, to, until: params.until, ...(params.until === "this leaves" ? {source} : {}), sourceController: context.controller});
+      apply: {controller: object.controller}, to, ...(params.until ? {until: params.until} : {}), ...(params.until === "this leaves" ? {source} : {}), sourceController: context.controller});
     rememberExileLooker(state, id, controllerOf(state, id));
     if (object.controller !== to) object.controlledSinceTurn = state.turn;
     object.controller = to;
