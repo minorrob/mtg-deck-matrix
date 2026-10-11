@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Eerie Ultimatum",
+    "oracleId": "5674f6ae-ed5d-441e-a534-b5dd415165fd",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{W}{W}{B}{B}{B}{G}{G}",
+    "colors": [
+      "B",
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "G",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Return any number of permanent cards with different names from your graveyard to the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Return any number of permanent cards with different names from your graveyard to the battlefield.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "graveyard",
+          "selector": {
+            "nonTypes": [
+              "Instant",
+              "Sorcery"
+            ]
+          },
+          "upTo": true,
+          "differentNames": true,
+          "count": {
+            "count": {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you"
+            }
+          },
+          "to": "battlefield"
+        }
+      ]
+    }
+  ]
+}
