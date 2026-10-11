@@ -41,7 +41,7 @@ const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1; console.log(`  
 const DECK_ID = process.env.REAL_DECK_ID || "D5";
 assert.ok(/^(D2|D5)$/.test(DECK_ID), "REAL_DECK_ID must be D2 or D5, the completed committed deck lists");
 /* REAL_FIRST numbers the first table, so runs side by side play different pods under different match ids. */
-const GAMES = Number(process.env.REAL_GAMES || 1), FIRST = Number(process.env.REAL_FIRST || 1), RECORDS = process.env.RECORDS || "";
+const PODS = !!process.env.REAL_GAMES, GAMES = Number(process.env.REAL_GAMES || 1), FIRST = Number(process.env.REAL_FIRST || 1), RECORDS = process.env.RECORDS || "";
 assert.ok(Number.isInteger(GAMES) && GAMES >= 1 && Number.isInteger(FIRST) && FIRST >= 1, "REAL_GAMES is a number of tables, and REAL_FIRST the first one's number, each 1 or more");
 if (RECORDS) mkdirSync(path.join(RECORDS, "records"), {recursive: true});
 const SHOTS = process.env.UAT_SHOTS || "";
@@ -185,7 +185,7 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
   async function answer(person, seat) {
     if (!await people[seat]()) return false;
     actions++;
-    if(actions%25===0) console.log(`${GAMES === 1 ? DECK_ID : `table ${n}`} browser: ${actions} actions, turn ${current(person).state.turn}`);
+    if(actions%25===0) console.log(`${!PODS ? DECK_ID : `table ${n}`} browser: ${actions} actions, turn ${current(person).state.turn}`);
     return true;
   }
   for(let i=0;i<3000;i++) {
@@ -203,7 +203,7 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
     if(!moved) await rob.page.waitForTimeout(100);
   }
   const result=current(rob);
-  eq(result.status,'finished',`table ${n}: the real ${GAMES === 1 ? DECK_ID : 'decks\''} game finishes naturally`);
+  eq(result.status,'finished',`table ${n}: the real ${!PODS ? DECK_ID : 'decks\''} game finishes naturally`);
   eq(current(maya).status,'finished','second browser sees the same natural end');
   assert.notEqual(result.result?.reason,'ended early');
   eq(current(maya).result,result.result,'separate browser sessions agree on result');
@@ -232,7 +232,7 @@ try {
   const rob=await person(ROB,{width:1400,height:900});
   const maya=await person(MAYA,{width:1280,height:720});
   /* One table of the one deck; or n tables, the seven decks four at a time. */
-  for (let n = FIRST; n < FIRST + GAMES; n += 1) await journey(n,rob,maya,GAMES === 1 ? [deck,deck,deck,deck] : [0,1,2,3].map((j)=>DECKS[(n-1+j)%DECKS.length]));
+  for (let n = FIRST; n < FIRST + GAMES; n += 1) await journey(n,rob,maya,!PODS ? [deck,deck,deck,deck] : [0,1,2,3].map((j)=>DECKS[(n-1+j)%DECKS.length]));
 } finally {for (const alarm of alarms) clearInterval(alarm); await close();}
 console.log(`${DECK_ID} real browser: ${checks} checks passed`);
 process.exit(0);
