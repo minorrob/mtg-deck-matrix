@@ -566,8 +566,9 @@ export function collectTriggers(state, events) {
   };
   /* The board does not change while this reads it: each permanent's abilities are read once, for every event. */
   const abilitiesNow = abilitiesReader(state);
-  /* The cards in graveyards with a triggered ability that works there (WATCHING_ZONES), read once for every event. */
-  const fromGraveyards = state.zones.graveyard.flat().filter((id) => (state.objects[id]?.abilities ?? []).some((a) => a.kind === "triggered" && a.zone === "graveyard"));
+  /* The cards in graveyards with a triggered ability that works there (WATCHING_ZONES): found once, as the first event is read. */
+  let fromGraveyards = null;
+  const inGraveyards = () => (fromGraveyards ??= state.zones.graveyard.flat().filter((id) => (state.objects[id]?.abilities ?? []).some((a) => a.kind === "triggered" && a.zone === "graveyard")));
   for (const event of events ?? []) {
     /* An arrival waiting to be told what it is a copy of triggers once it is (rules/entering.mjs). */
     if (event.data?.fields?.awaitingCopy === true) continue;
@@ -583,7 +584,7 @@ export function collectTriggers(state, events) {
     const castSpell = event.kind === "GameEventSpellAbilityCast" && event.data?.fields?.sa?.isSpell ? state.stack.find((e) => e.stackId === event.data.fields.sa.stackId)?.objectId : undefined;
     const justCast = castSpell !== undefined && state.objects[castSpell] ? [castSpell] : [];
     for (const zone of [...WATCHING_ZONES, "graveyard", "cycled", "discarded", "cast"]) {
-      for (const id of zone === "cycled" ? wentTo : zone === "discarded" ? discardedTo : zone === "cast" ? justCast : zone === "graveyard" ? fromGraveyards : state.zones[zone]) {
+      for (const id of zone === "cycled" ? wentTo : zone === "discarded" ? discardedTo : zone === "cast" ? justCast : zone === "graveyard" ? inGraveyards() : state.zones[zone]) {
         const object = state.objects[id];
         /* A permanent's abilities now, the ones given it included (layers.mjs); a card's elsewhere. */
         for (const own of abilitiesNow(id)) {
@@ -736,12 +737,14 @@ export function collectTriggers(state, events) {
     }
   }
   /* STATE TRIGGERS (CR 603.8): each permanent's, the moment its state holds -- and not again until that triggering has left
-     the stack, so not while it waits to go on it or is there. One whose permanent left and came back is a new object's. */
-  for (const id of state.zones.battlefield) {
+     the stack, so not while it waits to go on it or is there. One whose permanent left and came back is a new object's. A
+     state comes to hold only by something happening, so it is read as what happened is: with no events nothing has, and
+     the board is not read again (each permanent's abilities derived once, for the events above). */
+  if ((events ?? []).length) for (const id of state.zones.battlefield) {
     const object = state.objects[id];
     for (const own of abilitiesNow(id)) {
+      if (own.kind !== "triggered" || own.trigger?.on !== "state") continue;
       const ability = chosenFor(own, object);
-      if (ability.kind !== "triggered" || ability.trigger?.on !== "state") continue;
       if (state.pendingTriggers.some((t) => t.source.cardId === id && t.abilityId === ability.id) || state.stack.some((e) => e.cardId === id && e.abilityId === ability.id)) continue;
       if (!conditionHolds(state, ability.trigger.state, {controller: object.controller, source: id})) continue;
       state.pendingTriggers.push({abilityId: ability.id, text: ability.text ?? ability.id, controller: object.controller, source: {cardId: id, name: object.card}, cause: null,

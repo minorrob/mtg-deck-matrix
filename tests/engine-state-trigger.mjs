@@ -13,6 +13,7 @@ import {createState, addObject} from "../game/engine/state/index.mjs";
 import {beginGame, advance} from "../game/engine/rules/turn.mjs";
 import {passPriority} from "../game/engine/rules/priority.mjs";
 import {collectTriggers, openTriggers} from "../game/engine/rules/trigger.mjs";
+import {runEffects} from "../game/engine/script/effects/index.mjs";
 import {compileScript} from "../game/engine/cards/index.mjs";
 import {loadCardIndex} from "../game/tools/engine-cards.mjs";
 import {missingFor} from "../game/tools/engine-constructs.mjs";
@@ -38,32 +39,38 @@ function table() {
 }
 const on = (s, o, seat) => addObject(s, {...o, owner: seat, controller: seat}, "battlefield", null);
 const waiting = (s, id) => (s.pendingTriggers ?? []).filter((t) => t.source.cardId === id).length + s.stack.filter((e) => e.cardId === id).length;
+/* Charge counters put on (or, a negative count, removed from) a permanent by an effect: what happened, read for triggers. */
+const charge = (s, id, count) => collectTriggers(s, runEffects(s, [{effect: count >= 0 ? "putCounter" : "removeCounter", targets: [id], counter: "charge", count: Math.abs(count)}], {controller: 0, source: null}));
+/* A permanent put onto the battlefield by an effect, as it would be. */
+const arrive = (s, o, seat) => { const id = addObject(s, {...o, owner: seat, controller: seat}, "hand", seat); collectTriggers(s, runEffects(s, [{effect: "moveZone", targets: [id], to: "battlefield"}], {controller: seat, source: null})); };
 const resolveTop = (s) => { const top = s.stack.at(-1)?.stackId; for (let n = 0; n < 6 && s.stack.some((e) => e.stackId === top) && !s.awaiting; n += 1) passPriority(s); };
 
 {
-  /* Nineteen: nothing. Twenty: once -- and not again as what triggers is read again, waiting or on the stack. */
+  /* Nineteen: nothing. Twenty: once -- and not again as what happens is read again, waiting or on the stack. */
   const s = table();
   const reactor = on(s, card(REACTOR), 0);
-  s.objects[reactor].counters.charge = 19;
-  collectTriggers(s, []);
+  charge(s, reactor, 19);
   eq(waiting(s, reactor), 0, "nineteen: nothing");
   s.objects[reactor].counters.charge = 20;
-  collectTriggers(s, []); collectTriggers(s, []);
-  eq(waiting(s, reactor), 1, "twenty: one, read twice");
-  openTriggers(s);
-  s.objects[reactor].counters.charge = 21;
   collectTriggers(s, []);
-  eq([s.stack.length, waiting(s, reactor)], [1, 1], "on the stack: still one, with a twenty-first counter");
+  eq(waiting(s, reactor), 0, "twenty, with nothing seen happening: not read yet");
+  charge(s, reactor, 1);
+  charge(s, reactor, 1);
+  eq(waiting(s, reactor), 1, "a counter put on, then another: one, waiting");
+  openTriggers(s);
+  charge(s, reactor, 1);
+  eq([s.stack.length, waiting(s, reactor)], [1, 1], "on the stack: still one, with another counter");
   /* The counters gone before it resolves: no intervening "if" -- it resolves, and he wins (CR 603.8 is no 603.4). */
-  s.objects[reactor].counters.charge = 0;
+  charge(s, reactor, -23);
+  eq(s.objects[reactor].counters.charge ?? 0, 0, "every counter removed");
   resolveTop(s);
   eq(gameOver(s)?.winner, 0, "resolved: Rob wins");
 }
 {
   /* A state still holding once it has resolved triggers again (CR 603.8); the Bear arriving ends it. */
   const s = table();
-  const loner = on(s, LONER, 0);
-  collectTriggers(s, []);
+  arrive(s, LONER, 0);
+  const loner = s.zones.battlefield.find((id) => s.objects[id].card === "Loner");
   openTriggers(s);
   resolveTop(s);
   eq([s.players[0].life, waiting(s, loner)], [41, 1], "resolved, and alone still: 1 life, and it triggers again");
@@ -75,8 +82,8 @@ const resolveTop = (s) => { const top = s.stack.at(-1)?.stackId; for (let n = 0;
   /* Two Reactors at twenty: one each. */
   const s = table();
   const a = on(s, card(REACTOR), 0), b = on(s, card(REACTOR), 1);
-  s.objects[a].counters.charge = 20; s.objects[b].counters.charge = 25;
-  collectTriggers(s, []);
+  s.objects[b].counters.charge = 25;
+  charge(s, a, 20);
   eq([waiting(s, a), waiting(s, b), s.pendingTriggers.map((t) => t.controller).sort()], [1, 1, [0, 1]], "each its own, each its controller's");
 }
 {
