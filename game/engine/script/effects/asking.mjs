@@ -904,6 +904,7 @@ const noun = (selector) => (selector?.subtypes?.length ? `a ${selector.subtypes[
 const otherNoun = (selector) => (selector?.another === true ? noun(selector).replace(/^a /, "another ") : noun(selector));
 function costWords(awaiting) {
   if (awaiting.amountX) return "pay {X}";
+  if (awaiting.timesAny) return `pay ${awaiting.mana} any number of times`;
   const paid = [awaiting.mana ?? null, awaiting.amount > 0 ? `{${awaiting.amount}}` : null, lifeAsked(awaiting) ? `${awaiting.life} life` : null].filter(Boolean);
   const other = awaiting.discard ? "discard a card" : awaiting.sacrificeCount ? `sacrifice ${awaiting.sacrificeCount} permanents` : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}`
     : awaiting.returnToHand ? `return ${otherNoun(awaiting.returnToHand)} you control to its owner's hand`
@@ -917,8 +918,19 @@ function xOptions(state, player) {
   for (let x = 0; canPayGeneric(state, player, x); x += 1) options.push({label: `Pay {${x}}`, pay: true, x});
   return options;
 }
+/* "YOU MAY PAY {2}{R} ANY NUMBER OF TIMES" (Bloodthirsty Adversary; `timesAny`, CR 118.12a, 601.2g-h's payment repeated):
+   how many times is the payer's to choose -- each count their pool and plain mana sources could pay, once and up -- and
+   what follows knows it ("when you pay this cost one or more times ... that many", `paidX`, script/resolution.mjs). */
+const TIMES = ["once", "twice"];
+function timesOptions(state, awaiting) {
+  const options = [];
+  for (let n = 1; unlessPlans(state, awaiting.player, awaiting.mana.repeat(n), 1).plans.length; n += 1)
+    options.push({label: `Pay ${awaiting.mana} ${TIMES[n - 1] ?? `${n} times`}`, pay: true, times: n});
+  return options;
+}
 function payOptions(state, awaiting) {
   if (awaiting.amountX && awaiting.amount === undefined) return xOptions(state, awaiting.player);
+  if (awaiting.timesAny && awaiting.paidTimes === undefined) return timesOptions(state, awaiting);
   const {player} = awaiting, amount = awaiting.amount ?? 0, life = awaiting.life ?? 0;
   if (amount > 0 && !canPayGeneric(state, player, amount)) return [];
   if (awaiting.mana && !unlessPlans(state, player, awaiting.mana, 1).plans.length) return [];
@@ -965,6 +977,8 @@ export const unlessPays = {
     /* "You may pay {4}. If you do, ..." (Mana Vault), mana alone, by a player who cannot pay it: no choice to make, and
        nothing happens. */
     if (params.ifPaid && !params.life && !params.discard && !params.sacrifice && !params.returnToHand && !canPayGeneric(state, payer, Math.max(0, params.amount ?? 0))) return false;
+    /* Any number of times, by a player who cannot pay it once: likewise nothing to choose. */
+    if (params.timesAny === true && !unlessPlans(state, payer, String(params.mana ?? ""), 1).plans.length) return false;
     state.awaiting = {kind: "effect-choice", effect: "unlessPays", player: payer, ...(params.amountX === true ? {} : {amount: Math.max(0, params.amount ?? 0)}),
       /* "For each age counter on it" (cumulative upkeep with colored symbols, CR 702.24a): the cost that many times, counted now. */
       ...(typeof params.mana === "string" && params.mana ? {mana: params.manaTimes === undefined ? params.mana : params.mana.repeat(amountOf(state, params.manaTimes, context))} : {}),
@@ -973,6 +987,7 @@ export const unlessPays = {
       ...(params.returnToHand ? {returnToHand: structuredClone(params.returnToHand)} : {}),
       ...(params.tap ? {tap: structuredClone(params.tap)} : {}),
       ...(params.amountX === true ? {amountX: true} : {}),
+      ...(params.timesAny === true ? {timesAny: true} : {}),
       effects: structuredClone(params.effects ?? []), source: context.source ?? null,
       /* "You may pay {1}. If you do, ...": the effects when it is paid, not when it is not. */
       ...(params.ifPaid ? {ifPaid: true} : {}),
@@ -1029,6 +1044,8 @@ export const unlessPays = {
     if (!option.pay) return unpaid(awaiting);
     /* The X chosen is the amount paid. */
     if (option.x !== undefined) return unlessPays.paid(state, {...awaiting, amount: option.x}, option);
+    /* So many times: the cost that many times over, paid as one (CR 601.2h). */
+    if (option.times !== undefined) return unlessPays.paid(state, {...awaiting, mana: awaiting.mana.repeat(option.times), paidTimes: option.times}, option);
     return unlessPays.paid(state, awaiting, option);
   },
   /* Paying, with the option chosen: its mana, then the rest. `spent`, what a mana cost with colors was already paid with. */
@@ -1079,7 +1096,7 @@ function unlessPaid(state, awaiting, option, events) {
     if (state.objects[option.bounce]?.zone !== "battlefield" || controllerOf(state, option.bounce) !== awaiting.player) throw new Error("That permanent can no longer be returned to its owner's hand");
     moveOne(state, option.bounce, "hand", events);
   }
-  if (awaiting.ifPaid) return {events, splice: structuredClone(awaiting.effects), ...(awaiting.amountX ? {paidX: awaiting.amount} : {})};
+  if (awaiting.ifPaid) return {events, splice: structuredClone(awaiting.effects), ...(awaiting.amountX ? {paidX: awaiting.amount} : awaiting.timesAny ? {paidX: awaiting.paidTimes} : {})};
   /* "If they do, you create a Lander token" (Divert Disaster): what paying leads to. */
   return awaiting.whenPaid ? {events, splice: structuredClone(awaiting.whenPaid)} : events;
 }

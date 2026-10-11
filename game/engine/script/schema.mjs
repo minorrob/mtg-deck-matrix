@@ -103,7 +103,13 @@ function checkEffect(effect, path, errors) {
   for (const message of conditionProblems(effect.condition)) errors.push({path: `${path}.condition`, message});
   /* A reflexive trigger's own targets (CR 603.12): selectors, and every `{target: n}` its effects name declared among them. */
   if (name === "immediateTrigger") {
-    for (const [index, selector] of (effect.targets ?? []).entries()) checkSelector(selector, `${path}.targets[${index}]`, errors, {choice: true});
+    for (const [index, spec] of (effect.targets ?? []).entries()) {
+      /* A counted one ("up to that many target ...", CR 601.2c): its count beside the selector, its most a number or X. */
+      const {count, ...selector} = spec && typeof spec === "object" ? spec : {};
+      if (count !== undefined && !countValid(count, {x: true}))
+        errors.push({path: `${path}.targets[${index}].count`, message: "A reflexive trigger's target count is `{min, max}`, its max a whole number or \"X\" (up to that many)"});
+      checkSelector(spec && typeof spec === "object" ? selector : spec, `${path}.targets[${index}]`, errors, {choice: true});
+    }
     for (const n of targetRefs(effect.effects ?? []))
       if (n < 0 || n >= (effect.targets ?? []).length) errors.push({path: `${path}.effects`, message: `A reflexive trigger's effect names target ${n}, and it declares ${(effect.targets ?? []).length}`});
   }
@@ -156,6 +162,11 @@ function checkEffect(effect, path, errors) {
       errors.push({path: `${path}.tap`, message: "An \"unless\" cost taps a permanent, returns one, sacrifices one or discards a card: one of them"});
   }
   /* "You may pay {X}. When you do, ..." (Halo Forager): X chosen as it is paid, so no amount beside it, and only a "you may". */
+  /* "You may pay {2}{R} any number of times. When you pay this cost one or more times, ..." (Bloodthirsty Adversary): a mana
+     cost, how many times chosen as it is paid, so no amount beside it, and only a "you may". */
+  if (name === "unlessPays" && effect.timesAny !== undefined && !(effect.timesAny === true && effect.ifPaid === true && typeof effect.mana === "string" && effect.mana.length
+    && effect.amount === undefined && effect.amountX === undefined && effect.manaTimes === undefined))
+    errors.push({path: `${path}.timesAny`, message: "\"You may pay a cost any number of times\" is `timesAny: true` with `ifPaid: true` and a `mana` cost, nothing else to pay beside it"});
   if (name === "unlessPays" && effect.amountX !== undefined && !(effect.amountX === true && effect.ifPaid === true && effect.amount === undefined && effect.mana === undefined))
     errors.push({path: `${path}.amountX`, message: "\"You may pay {X}\" is `amountX: true` with `ifPaid: true`, and no amount or mana beside it"});
   if (name === "play" && effect.exileInstead !== undefined && effect.exileInstead !== true)
@@ -238,10 +249,11 @@ function checkSelector(selector, path, errors, {choice = false} = {}) {
 }
 
 /* A target's count: `min` a whole number (0 when absent), `max` a whole number at least 1 and at least `min`, or absent. */
-const countValid = (count) => Boolean(count) && typeof count === "object" && !Array.isArray(count)
+/* `x`: "up to that many" -- a reflexive trigger's `max: "X"`, the X it was made with (Bloodthirsty Adversary). */
+const countValid = (count, {x = false} = {}) => Boolean(count) && typeof count === "object" && !Array.isArray(count)
   && Object.keys(count).every((k) => k === "min" || k === "max")
   && (count.min === undefined || (Number.isInteger(count.min) && count.min >= 0))
-  && (count.max === undefined || (Number.isInteger(count.max) && count.max >= 1 && count.max >= (count.min ?? 0)));
+  && (count.max === undefined || (x && count.max === "X" && (count.min ?? 0) === 0) || (Number.isInteger(count.max) && count.max >= 1 && count.max >= (count.min ?? 0)));
 
 /* `permanent`: the card is a permanent card, whose spell ability may say only its additional cost (below). */
 function checkAbility(ability, path, errors, {permanent = false} = {}) {

@@ -79,14 +79,15 @@ export function targetAlternatives(spec) {
   return list.map((selector) => ({...selector, target: true}));
 }
 
-/** A counted target's bounds, `{min, max}` (`max` null for "any number"), or null for a single target. */
-export function countOf(spec) {
+/** A counted target's bounds, `{min, max}` (`max` null for "any number"), or null for a single target. "Up to that many
+    target ..." (Bloodthirsty Adversary's reflexive trigger, `max: "X"`): the X it was made with (CR 603.12, 107.3). */
+export function countOf(spec, context = {}) {
   const count = spec && typeof spec === "object" ? spec.count : undefined;
-  return count && typeof count === "object" ? {min: count.min ?? 0, max: count.max ?? null} : null;
+  return count && typeof count === "object" ? {min: count.min ?? 0, max: count.max === "X" ? Math.max(0, context?.x ?? 0) : count.max ?? null} : null;
 }
 /** The placeholder a counted target holds in an offer until its controller picks (rules/turn.mjs, "choose-targets"), and
     how many there are to pick from (`of`): "up to two" with none to pick does nothing, for a pilot weighing the offer. */
-export const choosing = (spec, of) => ({kind: "choose", ...countOf(spec), ...(of !== undefined ? {of} : {})});
+export const choosing = (spec, of, context = {}) => ({kind: "choose", ...countOf(spec, context), ...(of !== undefined ? {of} : {})});
 export const isChoosing = (t) => Boolean(t) && !Array.isArray(t) && t.kind === "choose";
 
 const COUNT_WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
@@ -140,10 +141,10 @@ export function targetChoices(state, specs, context) {
     const candidates = targetCandidates(state, spec, context);
     /* A counted target is one placeholder in each way, picked once the offer is taken -- or no way at all, when fewer than
        its least are there to choose (CR 601.2c). */
-    const count = countOf(spec);
+    const count = countOf(spec, context);
     if (count) {
       if (candidates.length < count.min) return [];
-      choices = choices.map((chosen) => [...chosen, choosing(spec, candidates.filter((c) => !otherThan(spec, chosen).some((o) => sameTarget(o, c))).length)]);
+      choices = choices.map((chosen) => [...chosen, choosing(spec, candidates.filter((c) => !otherThan(spec, chosen).some((o) => sameTarget(o, c))).length, context)]);
       continue;
     }
     const next = [];
@@ -162,7 +163,7 @@ export function targetChoices(state, specs, context) {
  * with whose it is when it is not the chooser's, and two that would read alike numbered.
  */
 export function countedChoice(state, spec, context, {id, name, hostile = false}) {
-  const count = countOf(spec) ?? {min: 1, max: 1};
+  const count = countOf(spec, context) ?? {min: 1, max: 1};
   const candidates = targetCandidates(state, spec, context);
   const options = candidates.map((c, index) => {
     const whose = c.kind === "object" && state.objects[c.id] && controllerOf(state, c.id) !== context.controller ? ` (${state.players[controllerOf(state, c.id)]?.name}'s)` : "";
