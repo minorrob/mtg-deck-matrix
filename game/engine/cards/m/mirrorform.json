@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mirrorform",
+    "oracleId": "81cb888c-c4d3-45a2-a03e-bfd91a2af2be",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each nonland permanent you control becomes a copy of target non-Aura permanent.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each nonland permanent you control becomes a copy of target non-Aura permanent.",
+      "targets": [
+        {
+          "what": "permanent",
+          "nonSubtypes": [
+            "Aura"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "becomeCopy",
+          "selector": {
+            "what": "permanent",
+            "nonTypes": [
+              "Land"
+            ],
+            "controller": "you"
+          },
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

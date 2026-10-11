@@ -492,17 +492,21 @@ export function multiplyCounters(state, params, context) {
     Intimidation): `counter: "all"`, every kind it has, all of each. "Remove all charge counters from this artifact"
     (Coalition Relic): `all: true`, every counter of the kind named. And how many it removed, for "for each charge counter
     removed this way" after it (`countersRemoved`, read by the amount `countersRemovedThisWay`, script/amount.mjs): none
-    removed is 0 (CR 122.1, 608.2c). */
+    removed is 0 (CR 122.1, 608.2c). "Remove up to three counters from another target creature or planeswalker" (Mabel,
+    Bitter Recluse): `counter: "any"`, which ones its controller's choice, asked first (effects/asking.mjs, countersToRemove)
+    and done with the answer, `removing`, how many of each kind -- never decided here. */
 export function removeCounter(state, params, context) {
+  if (params.counter === "any" && params.removing === undefined)
+    throw new Error("removeCounter of any kinds asks its controller which counters: run it through resolution.mjs");
   const events = [];
   let removed = 0;
   for (const id of params.targets ?? []) {
     const object = state.objects[id];
     if (!object) continue;
-    const kinds = params.counter === "all" ? Object.keys(object.counters ?? {}) : [params.counter ?? "+1/+1"];
+    const kinds = params.counter === "all" ? Object.keys(object.counters ?? {}) : params.counter === "any" ? Object.keys(params.removing) : [params.counter ?? "+1/+1"];
     for (const kind of kinds) {
       const before = object.counters[kind] ?? 0;
-      const after = params.counter === "all" || params.all === true ? 0 : Math.max(0, before - (params.count ?? 1));
+      const after = params.counter === "all" || params.all === true ? 0 : Math.max(0, before - (params.counter === "any" ? params.removing[kind] : params.count ?? 1));
       if (after === before) continue;
       object.counters[kind] = after;
       removed += before - after;
@@ -527,6 +531,8 @@ export function removeCounter(state, params, context) {
 export function moveCounters(state, params, context) {
   const events = [];
   if (params.counter === "chosen") throw new Error("moveCounters with a chosen kind of counter asks its controller which: run it through resolution.mjs");
+  /* "Onto other creatures" (Forgotten Ancient): where each goes is asked (effects/asking.mjs, countersOnto), never decided here. */
+  if (params.onto !== undefined) throw new Error("moveCounters onto permanents its controller chooses asks where: run it through resolution.mjs");
   const [from] = params.from ?? [], [to] = params.targets ?? [];
   const kind = params.counter ?? "+1/+1", n = Math.max(0, params.count ?? 1);
   if (from === undefined || to === undefined || from === to || n === 0) return events;

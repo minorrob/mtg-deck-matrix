@@ -26,7 +26,7 @@
  * A table refuses it at prepare, never on the turn it is drawn.
  */
 
-import {ADDED_PHASES} from "../script/effects/permanents.mjs";
+import {ADDED_PHASES, PREDEFINED_TOKENS} from "../script/effects/permanents.mjs";
 import {isCounted} from "../script/amount.mjs";
 import {validateScript, SCRIPT_SCHEMA} from "../script/schema.mjs";
 import {isBuilt, NEEDS_A_DECISION, EFFECTS, REPEAT_EACH} from "../script/effects/index.mjs";
@@ -1106,6 +1106,58 @@ export function compileScript(script) {
       /* "That player ... puts a +1/+1 counter on it" (Alexios): who puts them, the player a trigger is about. */
       if (effect.effect === "putCounter" && effect.puts !== undefined && effect.puts !== "that player")
         problems.push("putCounter: puts is \"that player\", the player the trigger is about putting them");
+      /* "Remove up to three counters from another target creature or planeswalker" (Mabel, Bitter Recluse): of any kinds, a
+         number of them in all, "up to" (`upTo`) or exactly -- which ones asked as it resolves (effects/asking.mjs,
+         countersToRemove), so never where nothing can ask, and never with its answer (`removing`) written in. */
+      if (effect.effect === "removeCounter" && effect.counter !== "any" && (effect.upTo !== undefined || effect.removing !== undefined))
+        problems.push("removeCounter: upTo goes with counters of any kinds (`counter: \"any\"`)");
+      if (effect.effect === "removeCounter" && effect.counter === "any" && !(Number.isInteger(effect.count) && effect.count >= 1 && [undefined, true].includes(effect.upTo) && effect.removing === undefined))
+        problems.push("removeCounter: counters of any kinds are a number of them, 1 or more, `upTo: true` or exactly -- which ones asked as it resolves");
+      /* "Create a Royal Role token attached to that creature" (Royal Treatment; CR 303.4i): an Aura token, one, created attached
+         to one object -- a target, or what the effect is about (effects/permanents.mjs, createToken). */
+      if (effect.effect === "createToken" && effect.attachedTo !== undefined && !(PREDEFINED_TOKENS[effect.token?.predefined]?.enchant && (effect.count ?? 1) === 1
+        && (Number.isInteger(effect.attachedTo?.target) || ["that card", "remembered"].includes(effect.attachedTo))))
+        problems.push("createToken: a token created attached is one Aura token (a Role), attached to a target or what the effect is about");
+      /* "For as long as that land has a blight counter on it" (Ultima, Origin of Oblivion), "for as long as it has a vow counter
+         on it" (Promise of Loyalty): a kind of counter, on what the effect names (`targets`), and no other end -- `until:
+         "ever"` (effects/permanents.mjs, endCounterDurations; rules/statics.mjs). */
+      if (effect.whileCounter !== undefined && !(effect.effect === "effectUntil" && typeof effect.whileCounter === "string" && effect.whileCounter
+        && effect.targets !== undefined && effect.until === "ever"))
+        problems.push("effectUntil: \"for as long as it has a counter\" is whileCounter, a kind, on its targets with until \"ever\"");
+      /* "It loses all land types" (CR 205.3i): a type change, layer 4. */
+      if (effect.effect === "effectUntil" && effect.apply?.removeLandTypes !== undefined && !(effect.apply.removeLandTypes === true && effect.layer === 4))
+        problems.push("effectUntil: removeLandTypes is true, in layer 4 (CR 613.1d)");
+      /* A dig's cards to zones by card type (Zimone's Experiment; effects/asking.mjs, dig): each destination card types and a
+         zone, onto the battlefield tapped or not. */
+      if (effect.effect === "dig" && effect.toByType !== undefined && !(Array.isArray(effect.toByType) && effect.toByType.length
+        && effect.toByType.every((w) => Array.isArray(w?.types) && w.types.length && ["hand", "battlefield", "graveyard", "exile"].includes(w.to)
+          && Object.keys(w).every((k) => ["types", "to", "tapped"].includes(k)) && (w.tapped === undefined || (w.tapped === true && w.to === "battlefield")))))
+        problems.push("dig: toByType is a list of {types, to, tapped?} -- card types, a zone, and tapped only onto the battlefield");
+      /* A search a card at a time (Krosan Verge, Myriad Landscape; effects/asking.mjs, chooseCard): of a library, `searches` a
+         description for each card, or `sharing: "land type"` with two or more of the selector's. */
+      if (effect.effect === "chooseCard" && (effect.searches !== undefined || effect.sharing !== undefined)) {
+        if ((effect.zone ?? "library") !== "library") problems.push("chooseCard: a search a card at a time is of a library");
+        if (effect.searches !== undefined && !(Array.isArray(effect.searches) && effect.searches.length >= 2 && effect.sharing === undefined && effect.selector === undefined && effect.count === undefined))
+          problems.push("chooseCard: searches is two or more descriptions, one for each card, with no selector, count or sharing of its own");
+        if (effect.sharing !== undefined && !(effect.sharing === "land type" && effect.selector !== undefined && effect.count === 2))
+          problems.push("chooseCard: sharing is \"land type\", among two of a selector's");
+        for (const one of effect.searches ?? []) try { compileSelector({...one, what: "card", zone: "library"}); } catch (e) { problems.push(`chooseCard: ${e.message}`); }
+      }
+      /* "You may exile this spell and four cards named Sphinx's Approach from your graveyard. If you do" (effects/asking.mjs,
+         unlessPays): a number of the graveyard's cards a selector describes, and the spell itself -- a spell's alone. */
+      if (effect.effect === "unlessPays" && (effect.exileFromGraveyard !== undefined || effect.exileSelf !== undefined)) {
+        const g = effect.exileFromGraveyard;
+        if (!(g && Number.isInteger(g.count) && g.count >= 1 && g.count <= 10 && typeof g.selector?.named === "string" && Object.keys(g).every((k) => ["count", "selector"].includes(k))))
+          problems.push("unlessPays: exileFromGraveyard is {count, selector}, one to ten of the graveyard's cards of a name (`named`)");
+        else try { compileSelector({...g.selector, what: "card", zone: "graveyard"}); } catch (e) { problems.push(`unlessPays: ${e.message}`); }
+        if (effect.exileSelf !== undefined && !(effect.exileSelf === true && ability.kind === "spell")) problems.push("unlessPays: exileSelf is true, on a spell (\"exile this spell\")");
+      }
+      /* "From among those cards" wherever each went (Spirit of Resilience): a choice among cards an earlier part named
+         (effects/asking.mjs, chooseCard) -- never a search of every zone. */
+      if (effect.effect === "chooseCard" && effect.zone === "any" && effect.among === undefined)
+        problems.push("chooseCard: any zone is among cards named before it (`among`), never a search");
+      if (effect.effect === "repeatFor" && (effect.effects ?? []).some((inner) => inner?.effect === "removeCounter" && inner.counter === "any"))
+        problems.push("repeatFor: which counters of any kinds to remove is asked, and what repeats here does not ask it");
       /* "Spend this mana only to cast instant and sorcery spells" (effects/resources.mjs), "only to cast a creature spell of
          the chosen type" (a mana ability's, cards/index.mjs manaAbility): what the mana may pay for, read here for both. */
       if (effect.effect === "addMana" && effect.spendOnly !== undefined && !spendOnlyValid(effect.spendOnly))
@@ -1352,6 +1404,9 @@ export function compileScript(script) {
           problems.push(`${ability.text}: an alternative cost of ${atom?.atom ?? "something"} nothing pays yet`);
       if (ability.zone !== undefined && ability.zone !== "graveyard") problems.push(`${ability.text}: an alternative cost is cast from where it is, or from the graveyard (\`zone: "graveyard"\`)`);
     }
+    /* "A deck can have any number of cards named <this card>" (CR 100.2a): said of the card's own name, or no card says it. */
+    if (ability.kind === "static" && ability.rule === "any-number-in-deck" && ability.text !== `A deck can have any number of cards named ${identity.name}.`)
+      problems.push(`${ability.text}: any number of a card in a deck is the card's own words, of its own name`);
     /* What follows a prevention is done at once, inside the damage event (CR 615.5): nothing in it may stop to ask. */
     if (ability.kind === "replacement") for (const effect of ability.change?.then ?? [])
       if (!EFFECTS[effect?.effect]) problems.push(`${ability.text}: ${effect?.effect} follows a prevention, and it asks a question or is not built`);
@@ -1368,6 +1423,14 @@ export function compileScript(script) {
       const wanted = ability.apply.topCardAbilities;
       if (!wanted || typeof wanted !== "object" || Object.keys(wanted).some((k) => k !== "subtypes") || !Array.isArray(wanted.subtypes))
         problems.push(`${ability.text}: what the top card must be is {subtypes: [...]}`);
+    }
+    /* "Thranduil has all activated abilities of all Elf cards in your graveyard": those cards' (rules/layers.mjs,
+       graveyardGrant), in layer 6, what they must be a list of subtypes. */
+    if (ability.kind === "static" && ability.apply?.graveyardAbilities !== undefined) {
+      if (ability.layer !== 6) problems.push(`${ability.text}: abilities are given in layer 6 (CR 613.1f)`);
+      const wanted = ability.apply.graveyardAbilities;
+      if (!wanted || typeof wanted !== "object" || Object.keys(wanted).some((k) => k !== "subtypes") || !Array.isArray(wanted.subtypes) || !wanted.subtypes.length)
+        problems.push(`${ability.text}: what the graveyard's cards must be is {subtypes: [...]}`);
     }
     if (ability.kind === "static" && ability.apply?.addAbilities !== undefined) {
       if (ability.layer !== 6) problems.push(`${ability.text}: abilities are given in layer 6 (CR 613.1f)`);

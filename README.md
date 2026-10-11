@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 433 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 445 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1304,6 +1304,17 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-adventure-asking` - `tests/engine-adventure-asking.mjs`: asking what an adventurer card may do changes nothing, the card shown as itself again with no empty subtypes, supertypes or colors kept
 - `engine-counted-amounts` - `tests/engine-counted-amounts.mjs`: amounts counted as printed -- half and "for every seven", rounded down (Pox Plague, Dark Matter Manipulator), each player's own count for a discard or a sacrifice, a target player's hand (Borrowed Knowledge, Jeska's Will), a whole hand remembered, a remembered count filtered and carried into a reflexive trigger (Release to Memory, Augusta, Order Returned), converge (Sundering Archaic), planeswalker types and proliferate X times (Tam, the Possibility), your commanders' casts
 - `engine-another-died` - `tests/engine-another-died.mjs`: "if another creature died this turn" (Chain Assassination), the deaths this turn less what the destroy killed, as a destroy remembers it -- not the indestructible, nor one exiled instead
+- `engine-each-player-creates` - `tests/engine-each-player-creates.mjs`: "each opponent creates a 1/1 white Human creature token" (Slaughter Specialist; CR 111.2) -- a token made for "that player" of a repetition, theirs to control and own, in turn order, none for a player gone
+- `engine-attach-target` - `tests/engine-attach-target.mjs`: "attach target Equipment you control to up to one target creature you control" (Iron Hills Stalwart; CR 701.3) -- the targeted Equipment moves, from where it was; nothing moves for an illegal target, none chosen, or protection
+- `engine-counters-removed` - `tests/engine-counters-removed.mjs`: "remove up to three counters from another target creature or planeswalker" (Mabel, Bitter Recluse; CR 122.1, 608.2d) -- of any kinds, which ones its controller chooses as it resolves, counted after; unasked where there is no choice
+- `engine-graveyard-abilities` - `tests/engine-graveyard-abilities.mjs`: "Thranduil has all activated abilities of all Elf cards in your graveyard" (CR 613.1f) -- its controller's graveyard as it now is, a changeling card among them, one ability each, "this creature" the holder
+- `engine-copy-set` - `tests/engine-copy-set.mjs`: copies of a set and of a card from among those that left a graveyard (Mirrorform, Spirit of Resilience; CR 707.2, 611.2c, 400.7e) -- each matched as it begins; what that leaves attached unattached (CR 704.5p, 301.5c); a card where it is now
+- `engine-roles` - `tests/engine-roles.mjs`: Role tokens (Royal Treatment; CR 303.7, 303.4i, 704.5z) -- a Royal Role created attached, not created for what it could not enchant, and one player's newest Role alone on a permanent
+- `engine-counters-onto` - `tests/engine-counters-onto.mjs`: "move any number of +1/+1 counters from this creature onto other creatures" (Forgotten Ancient; CR 122.5) -- where each goes asked a counter at a time, then all moved at once, one placement on each; all or nothing
+- `engine-counter-duration` - `tests/engine-counter-duration.mjs`: "for as long as that land has a blight counter on it, it loses all land types and abilities" (Ultima, Origin of Oblivion; CR 611.2b, 205.3i) -- applied while it has the counter, over for good once it does not; every land type lost, a land creature's creature types kept
+- `engine-dig-by-type` - `tests/engine-dig-by-type.mjs`: a dig's cards to zones by card type (Zimone's Experiment; CR 701.20a) -- lands onto the battlefield tapped, creatures into hand, a land creature with the lands, the taken alone revealed
+- `engine-search-steps` - `tests/engine-search-steps.mjs`: a search a card at a time (Krosan Verge, Myriad Landscape; CR 701.23b, 701.23h) -- a description for each card, or sharing a land type; found together, shuffled once
+- `engine-unless-exile` - `tests/engine-unless-exile.mjs`: "you may exile this spell and four cards named Sphinx's Approach from your graveyard. If you do" (CR 118.12a, 707.10a) -- offered only when it can be paid, which four asked; and its deck rule (CR 100.2a)
 
 ## Design and execution record
 

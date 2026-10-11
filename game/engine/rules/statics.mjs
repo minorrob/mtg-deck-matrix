@@ -42,6 +42,10 @@ export const STATIC_RULES = Object.freeze({
       definition says `canBeCommander` (cards/index.mjs), and the table holds a deck's commander to it (room/table.mjs,
       commanderLegal). */
   "can-be-commander": "cards/index.mjs",
+  /** CR 100.2a, 903.5b's exception: "A deck can have any number of cards named Sphinx's Approach" -- a rule of the deck, not
+      of the game, which nothing in a game reads: the compiler holds it to the card's own name (cards/index.mjs), and it stays
+      among the definition's abilities for a deck held to the rule that every card but a basic land has a different name. */
+  "any-number-in-deck": "cards/index.mjs",
   /** CR 510.1a's exception: assigns combat damage equal to its toughness rather than its power. combat.mjs. */
   "combat-damage-by-toughness": "rules/combat.mjs",
   /** CR 510.1a's other exception: "If Loot's power is negative, he assigns combat damage as though his power were positive"

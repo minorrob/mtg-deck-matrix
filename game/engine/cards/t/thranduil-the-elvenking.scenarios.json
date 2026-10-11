@@ -1,0 +1,531 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Thranduil, the Elvenking",
+  "fixtures": {
+    "Elf Pumper": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf",
+        "Warrior"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "p",
+          "kind": "activated",
+          "text": "{1}: This creature gets +1/+1 until end of turn.",
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{1}"
+            }
+          ],
+          "targets": [],
+          "effects": [
+            {
+              "effect": "pump",
+              "targets": "self",
+              "power": 1,
+              "toughness": 1
+            }
+          ]
+        }
+      ]
+    },
+    "Bear Pumper": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "p",
+          "kind": "activated",
+          "text": "{1}: This creature gets +1/+1 until end of turn.",
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{1}"
+            }
+          ],
+          "targets": [],
+          "effects": [
+            {
+              "effect": "pump",
+              "targets": "self",
+              "power": 1,
+              "toughness": 1
+            }
+          ]
+        }
+      ]
+    },
+    "Mimic Pumper": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Shapeshifter"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "p",
+          "kind": "activated",
+          "text": "{1}: This creature gets +1/+1 until end of turn.",
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{1}"
+            }
+          ],
+          "targets": [],
+          "effects": [
+            {
+              "effect": "pump",
+              "targets": "self",
+              "power": 1,
+              "toughness": 1
+            }
+          ]
+        }
+      ],
+      "keywords": [
+        "Changeling"
+      ]
+    },
+    "Elf Revenant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf",
+        "Spirit"
+      ],
+      "manaCost": "{1}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "r",
+          "kind": "activated",
+          "zone": "graveyard",
+          "text": "{2}: Return this card from your graveyard to your hand.",
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{2}"
+            }
+          ],
+          "targets": [],
+          "effects": [
+            {
+              "effect": "moveZone",
+              "targets": "self",
+              "to": "hand"
+            }
+          ]
+        }
+      ]
+    },
+    "Elf Lord": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf",
+        "Noble"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "supertypes": [
+        "Legendary"
+      ]
+    },
+    "Elf Scout": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf",
+        "Scout"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Kill": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Llanowar Elves in Rob's graveyard: Thranduil taps for {G}; Maya's Llanowar Elves gives it nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Thranduil, the Elvenking"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Llanowar Elves"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Llanowar Elves"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Thranduil, the Elvenking"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "tap": "Thranduil, the Elvenking"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Thranduil, the Elvenking"
+        }
+      ]
+    },
+    {
+      "name": "No Elf card in the graveyard, no ability; an Elf card put there, and it has the ability (+1/+1 for {1}: 6/7)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Thranduil, the Elvenking",
+            "Wastes",
+            "Wastes",
+            "Elf Pumper"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Kill"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear Pumper"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Thranduil, the Elvenking"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "cast": "Kill",
+          "targets": [
+            {
+              "card": "Elf Pumper"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Thranduil, the Elvenking"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "activate": "Thranduil, the Elvenking"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Thranduil, the Elvenking",
+            "power": 6,
+            "toughness": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "Two Elf cards' abilities are two; a changeling card is an Elf card; an ability that works only from a graveyard is not offered on Thranduil",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Thranduil, the Elvenking"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Elf Pumper",
+            "Mimic Pumper",
+            "Elf Revenant",
+            "Bear Pumper"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Thranduil, the Elvenking"
+              },
+              "count": 2
+            },
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Elf Revenant"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "activate": "Thranduil, the Elvenking"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Thranduil, the Elvenking"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Thranduil, the Elvenking",
+            "power": 7,
+            "toughness": 8
+          }
+        }
+      ]
+    },
+    {
+      "name": "Another legendary Elf enters: draw two, then discard a card; a nonlegendary Elf: nothing",
+      "library": [
+        "Island",
+        "Mountain"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Thranduil, the Elvenking",
+            "Forest",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Elf Scout",
+            "Elf Lord"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Elf Scout"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            },
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": [
+                "Elf Lord"
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Elf Lord"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": [
+                "Island",
+                "Mountain"
+              ]
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Mountain"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Mountain"
+          ]
+        }
+      ]
+    }
+  ]
+}

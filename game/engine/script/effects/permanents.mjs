@@ -64,6 +64,17 @@ export const PREDEFINED_TOKENS = Object.freeze({
       {id: "jace-draw", kind: "activated", text: "\u22123: Draw a card.", targets: [], loyalty: -3, timing: "sorcery",
         cost: [{atom: "removeCounters", self: true, counter: "loyalty", count: 3}], effects: [{effect: "draw", count: 1}]},
     ]},
+  /* CR 111.10m (Royal Treatment): a Role (CR 303.7) -- a colorless Aura Role enchantment token with enchant creature, named
+     Royal, "Enchanted creature gets +1/+1 and has ward {1}" (its ward the triggered ability the keyword is, as a card's
+     compiles; cards/index.mjs). Created attached to what it enchants (createToken's `attachedTo`). */
+  "Royal Role": {name: "Royal", types: ["Enchantment"], subtypes: ["Aura", "Role"], colors: [], enchant: {what: "permanent", types: ["Creature"]},
+    abilities: [
+      {id: "royal-pt", kind: "static", text: "Enchanted creature gets +1/+1 and has ward {1}.", layer: 7, sublayer: "c",
+        affects: {what: "permanent", attachedBy: "self"}, apply: {power: 1, toughness: 1}},
+      {id: "royal-ward", kind: "static", text: "Enchanted creature gets +1/+1 and has ward {1}.", layer: 6, affects: {what: "permanent", attachedBy: "self"},
+        apply: {addKeywords: ["Ward"], addAbilities: [{id: "ward", kind: "triggered", text: "ward {1}", trigger: {on: "GameEventBecomesTarget", who: "self", by: "opponent"},
+          effects: [{effect: "unlessPays", who: "that player", amount: 1, effects: [{effect: "counterSpell", stack: "that"}]}]}]}},
+    ]},
   /* CR 111.10v (Splinter, the Mentor) */
   Mutagen: {name: "Mutagen", types: ["Artifact"], subtypes: ["Mutagen"],
     abilities: [{id: "mutagen", kind: "activated", text: "{1}, {T}, Sacrifice this token: Put a +1/+1 counter on target creature. Activate only as a sorcery.",
@@ -340,10 +351,32 @@ export function copyOnto(state, id, fromId, {except = {}, keep = [], until = nul
   showCopy(object);
   return true;
 }
+/* "Each nonland permanent you control becomes a copy of target non-Aura permanent" (Mirrorform): `selector`, what becomes
+   the copy in the source's place -- each permanent it matches as the effect begins (CR 611.2c). The target among them
+   becomes a copy of itself, which changes nothing, so the rest copy it as it was (CR 707.2). */
 export function becomeCopy(state, params, context) {
-  copyOnto(state, context.source, (params.targets ?? [])[0], {except: params.except ?? {}, keep: params.keep ?? [], until: params.until ?? null});
+  const ids = params.selector ? selectMatching(state, params.selector, context) : [context.source];
+  for (const id of ids) copyOnto(state, id, (params.targets ?? [])[0], {except: params.except ?? {}, keep: params.keep ?? [], until: params.until ?? null});
   return [];
 }
+/**
+ * "FOR AS LONG AS THAT LAND HAS A BLIGHT COUNTER ON IT" (Ultima, Origin of Oblivion; CR 611.2b): a layer's effect lasting while
+ * each object it affects has a counter of a kind (`whileCounter`) ends for an object with none -- for good, so a counter put
+ * on again later does not bring it back -- and with none left, it is over. Run as the game is checked (rules/sba.mjs); the
+ * layers apply it only while the counter is there, in between. A rule changed for a while (`rule`, Promise of Loyalty's
+ * "can't attack") reads its counter where the rule is asked (rules/statics.mjs).
+ */
+export function endCounterDurations(state) {
+  const over = new Set();
+  for (const e of state.effects ?? []) {
+    if (!e.whileCounter || e.rule || !Array.isArray(e.affects?.ids)) continue;
+    const ids = e.affects.ids.filter((id) => (state.objects[id]?.counters?.[e.whileCounter] ?? 0) > 0);
+    if (!ids.length) over.add(e);
+    else if (ids.length < e.affects.ids.length) e.affects = {...e.affects, ids};
+  }
+  if (over.size) state.effects = state.effects.filter((e) => !over.has(e));
+}
+
 /** "Until end of turn": those copy effects end (rules/turn.mjs, the cleanup step). */
 export function endCopies(state) {
   for (const id of state.zones.battlefield) {
@@ -390,11 +423,17 @@ export function createToken(state, params, context) {
   const controller = params.controller ?? context.controller;
   /* A target player who is no longer one creates nothing. */
   if (!state.players[controller]) return events;
+  /* "Create a Royal Role token attached to that creature" (Royal Treatment): `attachedTo`, an object bound as a target is --
+     an Aura token created attached to what its Enchant could not enchant, or to nothing, is not created (CR 303.4i). An Aura
+     token's alone: the compiler refuses it of any other (cards/index.mjs). */
+  const [host] = params.attachedTo ?? [];
+  if (params.attachedTo !== undefined && !enchantable(state, spec.enchant, controller).includes(host)) return events;
   const made = [];
   /* "Twice that many of those tokens instead" (Anointed Procession), artifact tokens made Dragons instead (Draconic Visitor):
      what is made, and how many (rules/statics.mjs, tokensCreated). */
   const {count: many, instead} = tokensCreated(state, controller, count, spec);
   for (let i = 0; i < many; i += 1) made.push(makeToken(state, instead ?? spec, controller, params, context, events));
+  if (params.attachedTo !== undefined) for (const id of made) attachTo(state, id, host);
   /* "They gain haste until end of turn" (Ovika), and the rest a made permanent may gain (afterwards). */
   afterwards(state, made, {...params, controller}, context);
   /* "Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all OTHER creatures" (Martial Coup): the
@@ -422,6 +461,8 @@ function makeToken(state, spec, controller, params, context, events) {
     toughness: sized(spec.toughness),
     keywords: spec.keywords ?? [],
     abilities: spec.abilities ?? [],
+    /* An Aura token's Enchant (a Role's, CR 303.7): what the state-based actions hold it to (CR 704.5m). */
+    ...(spec.enchant ? {enchant: spec.enchant} : {}),
     owner: controller,
     controller,
     token: true,
@@ -607,7 +648,9 @@ export function effectUntil(state, params, context) {
        (Promise of Loyalty): `defender` "you", this effect's controller, `planeswalkers` theirs too (CR 506.3), and
        `whileCounter`, a duration of each creature's own -- while it has that counter (CR 611.2b; rules/statics.mjs). */
     ...(params.rule === "cant-attack" && params.defender === "you" ? {defender: "you", ...(params.planeswalkers === true ? {planeswalkers: true} : {})} : {}),
-    ...(params.rule === "cant-attack" && typeof params.whileCounter === "string" ? {whileCounter: params.whileCounter} : {}),
+    /* And "for as long as that land has a blight counter on it, it loses all land types and abilities" (Ultima, Origin of
+       Oblivion): the same, for a characteristic changed in a layer (rules/layers.mjs). */
+    ...(typeof params.whileCounter === "string" ? {whileCounter: params.whileCounter} : {}),
     apply: params.apply ?? {},
     /* "Until end of turn" (the default), "until your next turn", or "ever": an effect with no duration -- "up to one other
        target creature loses all abilities" (Abigale) -- lasting as long as what it affects does (CR 611.2a; a permanent

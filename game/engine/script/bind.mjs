@@ -341,6 +341,8 @@ export function bindEffect(effect, context, state = null) {
     bound.selector = {...bound.selector, controller: player ?? -1};
   }
   if ("spells" in bound) bound.spells = objectsOf(bound.spells, context);
+  /* "Create a Royal Role token attached to that creature" (Royal Treatment): what the token enters attached to. */
+  if ("attachedTo" in bound) bound.attachedTo = objectsOf(bound.attachedTo, context);
   /* "Until this card is cast from exile" (Emrakul, the Exigent Doom): which card's cast ends it. */
   if ("untilCast" in bound) bound.untilCast = objectsOf(bound.untilCast, context);
   /* "Counter that spell or ability" (ward): the stack entry the trigger is about, by its stack id (rules/trigger.mjs). */
@@ -349,11 +351,15 @@ export function bindEffect(effect, context, state = null) {
   if ("from" in bound) bound.from = objectsOf(bound.from, context);
   /* What is attached, when it is not the ability's source: "you may attach it to target creature you control" (Sigarda's
      Aid, "it" the Equipment that entered). Gone, it is nothing -- never the source in its place. */
-  if (typeof bound.source === "string") { const [id] = objectsOf(bound.source, context); bound.source = id ?? -1; }
+  /* "Attach target Equipment you control to up to one target creature you control" (Iron Hills Stalwart; CR 701.3a): one of
+     the ability's targets -- illegal as it resolves, it is nothing, and nothing moves (CR 608.2b). */
+  if (typeof bound.source === "string" || isRef(bound.source)) { const [id] = objectsOf(bound.source, context); bound.source = id ?? -1; }
   if ("who" in bound) bound.who = playersOf(bound.who, context, state);
   /* "Target opponent creates a 1/1 Spirit" (Forbidden Orchard): a token's controller, a target player -- or no one. "That
-     creature's controller creates a 1/1 Myr" (Genesis Chamber): the controller of what the trigger is about. */
-  if (isRef(bound.controller) || bound.controller === "that card's controller") { const [player] = playersOf(bound.controller, context, state); bound.controller = player ?? -1; }
+     creature's controller creates a 1/1 Myr" (Genesis Chamber): the controller of what the trigger is about. "Each opponent
+     creates a 1/1 white Human creature token" (Slaughter Specialist; CR 111.2): "that player", the one a repetition is about
+     (effects/index.mjs, repeatFor). */
+  if (isRef(bound.controller) || bound.controller === "that card's controller" || bound.controller === "that player") { const [player] = playersOf(bound.controller, context, state); bound.controller = player ?? -1; }
   /* "That attacking player creates a ... token" (Combat Calligrapher): the player whose attack the trigger is about. */
   if (bound.controller === "attacking player") bound.controller = Number.isInteger(context.about?.attacker) ? context.about.attacker : -1;
   /* "At the beginning of each player's upkeep, that player gains control of Alexios": the player the trigger is about. */

@@ -213,6 +213,14 @@ export function runResolution(state, rng = null) {
        counterKind). */
     else if ((effect?.effect === "putCounter" || effect?.effect === "moveCounters") && effect.counter === "chosen")
       resolving.queue[0] = {effect: "counterKind", then: effect};
+    /* "Remove up to three counters from another target creature or planeswalker" (Mabel, Bitter Recluse): which counters,
+       of any kinds, its controller chooses as it resolves (CR 608.2d; effects/asking.mjs, countersToRemove). */
+    else if (effect?.effect === "removeCounter" && effect.counter === "any" && effect.removing === undefined)
+      resolving.queue[0] = {effect: "countersToRemove", then: effect};
+    /* "You may move any number of +1/+1 counters from this creature onto other creatures" (Forgotten Ancient): where each
+       goes, its controller's choice as it resolves (effects/asking.mjs, countersOnto). */
+    else if (effect?.effect === "moveCounters" && effect.onto !== undefined)
+      resolving.queue[0] = {effect: "countersOnto", then: effect};
     /* CR 616.1: counters that two or more effects would change, where the order changes how many -- the permanent's
        controller chooses which applies first, before any is put on (effects/asking.mjs, orderCounters). */
     else if ((asked = counterQuestion(state, effect, resolving.context, effect?.counterOrders ?? {})))

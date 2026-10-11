@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Zimone's Experiment",
+    "oracleId": "5faa9e54-1cc4-48c0-bbfa-a495087c36d6",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Look at the top five cards of your library. You may reveal up to two creature and/or land cards from among them, then put the rest on the bottom of your library in a random order. Put all land cards revealed this way onto the battlefield tapped and put all creature cards revealed this way into your hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Look at the top five cards of your library. You may reveal up to two creature and/or land cards from among them, then put the rest on the bottom of your library in a random order. Put all land cards revealed this way onto the battlefield tapped and put all creature cards revealed this way into your hand.",
+      "effects": [
+        {
+          "effect": "dig",
+          "count": 5,
+          "take": 2,
+          "upTo": true,
+          "reveal": "taken",
+          "random": true,
+          "rest": "bottom",
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "types": [
+                  "Land"
+                ]
+              }
+            ]
+          },
+          "toByType": [
+            {
+              "types": [
+                "Land"
+              ],
+              "to": "battlefield",
+              "tapped": true
+            },
+            {
+              "types": [
+                "Creature"
+              ],
+              "to": "hand"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -27,12 +27,13 @@
  */
 
 import {cardsIn, moveObject, addObject, valueCostOf, rememberExileLooker, usesThisTurn, recordUse, recordDiscard} from "../../state/index.mjs";
-import {compileSelector} from "../filter.mjs";
+import {compileSelector, selectMatching} from "../filter.mjs";
 import {event, cardRef, moveOne, playersFor, sacrificeOne, destructionQuestion, destructionChoice} from "./zones.mjs";
-import {proliferate as giveEachAnother, addCounters, putCounter, moveCounters} from "./resources.mjs";
+import {proliferate as giveEachAnother, addCounters, putCounter, moveCounters, removeCounter} from "./resources.mjs";
 import {makeCopies, afterwards, joinAttack, attackPlaces, attachTo, createToken, effectUntil, COPY_KEYS} from "./permanents.mjs";
 import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits, unlessPlans, planWords, payPlan} from "../../rules/mana.mjs";
 import {typesOf, characteristicsOf, everyCreatureTypeOf, controllerOf} from "../../rules/layers.mjs";
+import {isLandType} from "../../keywords/types.mjs";
 import {pushCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
 import {loseLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";
 import {damageOrderChoice} from "../../rules/replacement.mjs";
@@ -306,7 +307,11 @@ function digMoved(state, awaiting, chosen, events) {
   const taken = new Set(chosen), found = [];
   for (const id of awaiting.cards) {
     if (!taken.has(id)) continue;
-    const moved = moveOne(state, id, awaiting.to, events, {owner: awaiting.player,
+    /* "Put all land cards revealed this way onto the battlefield tapped and put all creature cards revealed this way into your
+       hand" (Zimone's Experiment; `toByType`): each to the first destination whose card types it has -- a land creature is a
+       land card, and the lands come first. */
+    const where = awaiting.toByType?.find((w) => w.types.some((type) => (state.objects[id].types ?? []).includes(type))) ?? {to: awaiting.to};
+    const moved = moveOne(state, id, where.to, events, {owner: awaiting.player, ...(where.tapped === true ? {tapped: true} : {}),
       ...(awaiting.faceDown ? {faceDown: true, lookers: [awaiting.player], ...(awaiting.link !== undefined ? {exiledBy: awaiting.link} : {})} : {})});
     if (moved !== null && state.objects[moved]) found.push(moved);
   }
@@ -355,6 +360,7 @@ export const dig = {
       to: params.to ?? "hand", rest: params.rest ?? "bottom",
       ...(revealed.length ? {revealed: true} : {}), ...(params.reveal === "taken" ? {revealTaken: true} : {}),
       ...(params.random === true ? {random: true} : {}), ...(params.remember ? {remember: true} : {}),
+      ...(Array.isArray(params.toByType) ? {toByType: structuredClone(params.toByType)} : {}),
       ...(params.faceDown === true && (params.to ?? "hand") === "exile" ? {faceDown: true} : {}),
       ...(params.link === true && context.source !== null && context.source !== undefined ? {link: context.source} : {}),
     };
@@ -371,7 +377,8 @@ export const dig = {
     }
     return {
       id: `dig:${awaiting.cards.join(",")}`,
-      title: awaiting.to === "exile" ? `Choose ${awaiting.min === 0 ? "up to " : ""}${awaiting.take} to exile${awaiting.faceDown ? " face down" : ""}`
+      title: awaiting.toByType ? `Choose ${awaiting.min === 0 ? "up to " : ""}${awaiting.take} to reveal`
+        : awaiting.to === "exile" ? `Choose ${awaiting.min === 0 ? "up to " : ""}${awaiting.take} to exile${awaiting.faceDown ? " face down" : ""}`
         : `Choose ${awaiting.min === 0 ? "up to " : ""}${awaiting.take} to put into your ${awaiting.to}`,
       mode: awaiting.take === 1 && awaiting.min === 1 ? "one" : "many",
       min: awaiting.min ?? awaiting.take,
@@ -915,7 +922,20 @@ const lifeAsked = (awaiting) => awaiting.life > 0 || (awaiting.life === 0 && !(a
 const noun = (selector) => (selector?.subtypes?.length ? `a ${selector.subtypes[0]}` : selector?.types?.length ? `a ${selector.types[0].toLowerCase()}` : "a permanent");
 /* "Another creature you control" (Faerie Impostor): `another` read against the "unless" ability's own source. */
 const otherNoun = (selector) => (selector?.another === true ? noun(selector).replace(/^a /, "another ") : noun(selector));
-function costWords(awaiting) {
+/* "Exile this spell and four cards named Sphinx's Approach from your graveyard" (`exileSelf`, `exileFromGraveyard`): the
+   cards of the payer's graveyard its selector describes, and the spell itself -- a card on the stack, as it resolves; a copy
+   is no card to exile (CR 707.10a), so with one there is no paying. */
+const NUMBER_WORDS = [null, "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
+const graveyardToExile = (state, awaiting) => {
+  const fits = compileSelector({...awaiting.exileFromGraveyard.selector, what: "card", zone: "graveyard"});
+  return cardsIn(state, "graveyard", awaiting.player).filter((id) => fits(state, id, {controller: awaiting.player, source: awaiting.source}));
+};
+const exileWords = (state, awaiting) => {
+  const {count, selector} = awaiting.exileFromGraveyard, self = awaiting.exileSelf ? `${state.objects[awaiting.source].card} and ` : "";
+  return `exile ${self}${NUMBER_WORDS[count]} card${count === 1 ? "" : "s"} named ${selector.named} from your graveyard`;
+};
+function costWords(awaiting, state) {
+  if (awaiting.exileFromGraveyard) return exileWords(state, awaiting);
   if (awaiting.amountX) return "pay {X}";
   const paid = [awaiting.mana ?? null, awaiting.amount > 0 ? `{${awaiting.amount}}` : null, lifeAsked(awaiting) ? `${awaiting.life} life` : null].filter(Boolean);
   const other = awaiting.discard ? "discard a card" : awaiting.sacrificeCount ? `sacrifice ${awaiting.sacrificeCount} permanents` : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}`
@@ -951,6 +971,14 @@ function payOptions(state, awaiting) {
     return mine.map((id) => ({label: `Sacrifice ${state.objects[id].card}${also}`, pay: true, sacrifice: id, cardId: id}));
   }
   if (awaiting.discard) return cardsIn(state, "hand", player).map((id) => ({label: `Discard ${state.objects[id].card}${also}`, pay: true, discard: id, cardId: id}));
+  if (awaiting.exileFromGraveyard) {
+    const cards = graveyardToExile(state, awaiting);
+    /* Having said they pay, with more than that many there: which ones. */
+    if (awaiting.exiling) return cards.map((id) => ({label: state.objects[id].card, cardId: id}));
+    const selfOk = !awaiting.exileSelf || state.objects[awaiting.source].copy !== true;
+    const words = exileWords(state, awaiting);
+    return selfOk && cards.length >= awaiting.exileFromGraveyard.count ? [{label: `${words[0].toUpperCase()}${words.slice(1)}`, pay: true, exileMany: true}] : [];
+  }
   /* "YOU MAY TAP ANOTHER UNTAPPED MERFOLK YOU CONTROL. WHEN YOU DO, ..." (Meanders Guide; CR 118.12a, 603.12): each untapped
      permanent of the payer's the selector describes its own option -- `another` not the ability's source -- and not paying.
      Which one is the payer's choice. */
@@ -978,6 +1006,9 @@ export const unlessPays = {
     /* "You may pay {4}. If you do, ..." (Mana Vault), mana alone, by a player who cannot pay it: no choice to make, and
        nothing happens. */
     if (params.ifPaid && !params.life && !params.discard && !params.sacrifice && !params.returnToHand && !canPayGeneric(state, payer, Math.max(0, params.amount ?? 0))) return false;
+    /* "You may exile this spell and four cards named Sphinx's Approach": with fewer there, or this spell no card to exile,
+       there is no paying it, and nothing is asked. */
+    if (params.exileFromGraveyard && !payOptions(state, {player: payer, amount: 0, exileFromGraveyard: params.exileFromGraveyard, exileSelf: params.exileSelf === true, source: context.source ?? null}).length) return false;
     state.awaiting = {kind: "effect-choice", effect: "unlessPays", player: payer, ...(params.amountX === true ? {} : {amount: Math.max(0, params.amount ?? 0)}),
       /* "For each age counter on it" (cumulative upkeep with colored symbols, CR 702.24a): the cost that many times, counted now. */
       ...(typeof params.mana === "string" && params.mana ? {mana: params.manaTimes === undefined ? params.mana : params.mana.repeat(amountOf(state, params.manaTimes, context))} : {}),
@@ -986,6 +1017,7 @@ export const unlessPays = {
       ...(params.returnToHand ? {returnToHand: structuredClone(params.returnToHand)} : {}),
       ...(params.tap ? {tap: structuredClone(params.tap)} : {}),
       ...(params.amountX === true ? {amountX: true} : {}),
+      ...(params.exileFromGraveyard ? {exileFromGraveyard: structuredClone(params.exileFromGraveyard), ...(params.exileSelf === true ? {exileSelf: true} : {})} : {}),
       effects: structuredClone(params.effects ?? []), source: context.source ?? null,
       /* "You may pay {1}. If you do, ...": the effects when it is paid, not when it is not. */
       ...(params.ifPaid ? {ifPaid: true} : {}),
@@ -1004,12 +1036,15 @@ export const unlessPays = {
       return {id: `unless-plan:${awaiting.player}:${state.turn}`, title: `Pay ${awaiting.mana}: choose the mana`, mode: "one", min: 1, max: 1,
         options: plans.map((plan, index) => ({index, label: planWords(units, plan)}))};
     }
+    /* Having said they exile that many, with more there: which ones. */
+    if (awaiting.exiling) return {id: `unless-exile:${awaiting.player}:${state.turn}`, title: `Choose ${NUMBER_WORDS[awaiting.exileFromGraveyard.count]} cards to exile`,
+      mode: "many", min: awaiting.exileFromGraveyard.count, max: awaiting.exileFromGraveyard.count, options: payOptions(state, awaiting).map((option, index) => ({index, ...option}))};
     /* Having said they sacrifice that many: which ones. */
     if (awaiting.sacrificing) return {id: `unless-sacrifice:${awaiting.player}:${state.turn}`, title: `Choose ${awaiting.sacrificeCount} permanents to sacrifice`, mode: "many",
       min: awaiting.sacrificeCount, max: awaiting.sacrificeCount, options: payOptions(state, awaiting).map((option, index) => ({index, ...option}))};
     const source = awaiting.source !== null ? state.objects[awaiting.source]?.card : null;
     const pays = payOptions(state, awaiting).map((option, index) => ({index, ...option}));
-    return {id: `unless:${awaiting.player}:${state.turn}:${awaiting.amount ?? "X"}`, title: `${source ? `${source}: ` : ""}${costWords(awaiting)}?`, mode: "one", min: 1, max: 1,
+    return {id: `unless:${awaiting.player}:${state.turn}:${awaiting.amount ?? "X"}`, title: `${source ? `${source}: ` : ""}${costWords(awaiting, state)}?`, mode: "one", min: 1, max: 1,
       options: [...pays, {index: pays.length, label: "Don't pay", pay: false}]};
   },
   apply(state, awaiting, indices) {
@@ -1026,6 +1061,13 @@ export const unlessPays = {
       const {choosingPlan, ...rest} = awaiting;
       return unlessPays.paid(state, rest, choosingPlan.option, payPlan(state, awaiting.player, units, plan));
     }
+    if (awaiting.exiling) {
+      const ids = payOptions(state, awaiting).map((o) => o.cardId);
+      const chosen = [...new Set(indices ?? [])].map((i) => ids[i]);
+      if (chosen.length !== (indices ?? []).length || chosen.length !== awaiting.exileFromGraveyard.count || chosen.some((id) => id === undefined)) throw new Error("Invalid selection");
+      const {exiling, ...rest} = awaiting;
+      return unlessPaid(state, rest, {...exiling.option, exile: chosen}, []);
+    }
     if (awaiting.sacrificing) {
       const ids = payOptions(state, awaiting).map((o) => o.cardId);
       const chosen = [...new Set(indices ?? [])].map((i) => ids[i]);
@@ -1037,6 +1079,13 @@ export const unlessPays = {
     if (!option) throw new Error("Invalid selection");
     if (option.sacrificeMany) {
       state.awaiting = {...awaiting, sacrificing: {option}};
+      return {events: [], again: true};
+    }
+    /* Exactly that many there: no choice of which (they are those). More: which ones, asked next. */
+    if (option.exileMany) {
+      const cards = graveyardToExile(state, awaiting);
+      if (cards.length === awaiting.exileFromGraveyard.count) return unlessPaid(state, awaiting, {...option, exile: cards}, []);
+      state.awaiting = {...awaiting, exiling: {option}};
       return {events: [], again: true};
     }
     if (!option.pay) return unpaid(awaiting);
@@ -1085,6 +1134,12 @@ function unlessPaid(state, awaiting, option, events) {
     if (discarded !== null) events[events.length - 1].data.fields.discarded = true;
   }
   for (const id of option.sacrifice === undefined ? [] : [].concat(option.sacrifice)) if (state.objects[id]) sacrificeOne(state, id, events);
+  /* Exiled, as a cost is paid: this spell, off the stack as it resolves -- nothing then puts it in a graveyard (rules/stack.mjs)
+     -- and the cards chosen from the graveyard. */
+  if (option.exile !== undefined) {
+    if (awaiting.exileSelf) moveOne(state, awaiting.source, "exile", events);
+    for (const id of option.exile) moveOne(state, id, "exile", events);
+  }
   /* Tapped, as a cost is paid -- an option of the answer's own question, asked again as it is answered (apply), so one
      tapped meanwhile is no longer among them (CR 118.3). */
   if (option.tap !== undefined) {
@@ -1362,6 +1417,20 @@ const hasQuality = (selector) => Object.keys(selector ?? {}).some((k) => !["what
  * rest. `shuffle` shuffles the library after (CR 701.24), before a card put "on top" is put there. The question is
  * always asked, even of a library with nothing to find: the player still searches, and the shuffle still happens.
  */
+/* "SEARCH YOUR LIBRARY FOR A FOREST CARD AND A PLAINS CARD" (Krosan Verge; `searches`, a description for each card) and "FOR UP
+   TO TWO BASIC LAND CARDS THAT SHARE A LAND TYPE" (Myriad Landscape; `sharing: "land type"`, `count` of the selector's): one
+   search (CR 701.23h), a card at a time -- each question offers the cards the next description fits, or the selector's that
+   share a land type with every card found before it (CR 205.3i) -- and what it found goes where the search puts it,
+   together, once the last is asked. Each has a quality, so each may find nothing (CR 701.23b); one after the first with
+   nothing to find is not asked, and with `sharing`, finding none ends it. */
+const landTypesOf = (state, id) => (state.objects[id]?.subtypes ?? []).filter(isLandType);
+const sharesLandType = (state, a, b) => landTypesOf(state, a).some((type) => landTypesOf(state, b).includes(type));
+function stepCards(state, awaiting) {
+  const {searches, sharing, selector, pool, step, found, source} = awaiting.steps;
+  const fits = compileSelector({...(searches ? searches[step] : selector), what: "card", zone: awaiting.zone});
+  return pool.filter((id) => !found.includes(id) && fits(state, id, {controller: awaiting.player, source})
+    && (sharing !== "land type" || found.every((other) => sharesLandType(state, other, id))));
+}
 export const chooseCard = {
   open(state, params, context, rng = null) {
     const zone = params.zone ?? "library";
@@ -1387,11 +1456,17 @@ export const chooseCard = {
     /* Exile is one zone for every player (CR 406.1): a card there of the kind the selector says -- "a card exiled with this
        artifact" (`exiledWith`, script/filter.mjs) -- whoever owns it, face up (a face-down one has no characteristics,
        406.3a, so no selector with a quality fits it). */
-    const pool = (among ? amongIds.filter((id) => state.objects[id]?.zone === zone) : onField ? [...state.zones.battlefield] : cardsIn(state, zone, zone === "exile" ? null : player))
+    /* "An artifact or creature card from among those cards" (Spirit of Resilience, cards that left a graveyard): `zone: "any"`
+       beside `among`, each wherever it went -- a public zone, the one a leaving trigger can find it in (CR 400.7e) -- and read
+       as it is there (CR 608.2h). */
+    const anywhere = zone === "any";
+    const pool = (among ? amongIds.filter((id) => (anywhere ? state.objects[id] !== undefined : state.objects[id]?.zone === zone)) : onField ? [...state.zones.battlefield] : cardsIn(state, zone, zone === "exile" ? null : player))
       .filter((id) => !except?.has(id));
     /* "For each player, choose a creature that player controls" (The Eternal Wanderer): the player a repetition is about,
        for a selector's "that player" (script/resolution.mjs, repeatFor). */
-    const fitting = pool.filter((id) => matchers.some((m) => m(state, id, {controller: player, source: context.source, ...(context.about ? {about: context.about} : {})})));
+    const fits = (id) => (anywhere ? alternatives.map((one) => compileSelector({...one, what: "card", zone: state.objects[id].zone})) : matchers)
+      .some((m) => m(state, id, {controller: player, source: context.source, ...(context.about ? {about: context.about} : {})}));
+    const fitting = pool.filter(fits);
     /* "Up to four cards with different names" (Gifts Ungiven): one of each name offered -- which of two identical cards in a
        library is found changes nothing, and no answer can then name two of a name. */
     const cards = params.differentNames === true ? fitting.filter((id, i) => fitting.findIndex((other) => state.objects[other].card === state.objects[id].card) === i) : fitting;
@@ -1413,6 +1488,11 @@ export const chooseCard = {
       ...(params.gains || params.gainsUntilEndOfTurn || params.atEndStep ? {then: {gains: params.gains, gainsUntilEndOfTurn: params.gainsUntilEndOfTurn, atEndStep: params.atEndStep},
         source: context.source ?? null} : {}),
     };
+    if (Array.isArray(params.searches) || params.sharing === "land type") {
+      state.awaiting = {...awaiting, cards: pool, steps: {searches: params.searches ?? null, sharing: params.sharing ?? null, selector: params.selector ?? null, pool,
+        step: 0, total: params.searches ? params.searches.length : count, found: [], source: context.source ?? null}};
+      return true;
+    }
     /* "Exile a card from your graveyard AT RANDOM" (Advanced Reconstruction): nobody chooses -- each card is picked by the
        game's random stream (rng.mjs), as a random discard's is (CR 701.9b), and nobody is asked. Nothing there, nothing. */
     if (params.random === true) {
@@ -1430,12 +1510,20 @@ export const chooseCard = {
   },
 
   choice(state, awaiting) {
+    if (awaiting.steps) {
+      const cards = stepCards(state, awaiting), {step, total, found} = awaiting.steps;
+      return {id: `chooseCard:${awaiting.player}:${state.turn}:${awaiting.cards.length}:${step}`,
+        title: `Search your ${ZONE_WORD[awaiting.zone]}: card ${step + 1} of ${total}${found.length ? ` (${found.map((id) => state.objects[id].card).join(", ")} found)` : ""}`,
+        mode: "many", min: 0, max: Math.min(1, cards.length), options: cardOptions(state, cards)};
+    }
     return {
       id: `chooseCard:${awaiting.player}:${state.turn}:${awaiting.cards.length}`,
       /* A permanent is chosen, not searched for. */
       title: awaiting.zone === "battlefield" ? (awaiting.max > 1 ? "Choose permanents" : "Choose a permanent")
         /* A card in exile -- "a card exiled with this artifact" -- is chosen, not searched for. */
         : awaiting.zone === "exile" ? (awaiting.max > 1 ? "Choose cards in exile" : "Choose a card in exile")
+        /* Among cards wherever they went (Spirit of Resilience): chosen, not searched for. */
+        : awaiting.zone === "any" ? (awaiting.max > 1 ? "Choose cards from among them" : "Choose a card from among them")
         : awaiting.max === 0 ? `Search your ${ZONE_WORD[awaiting.zone]}: nothing to find` : `Search your ${ZONE_WORD[awaiting.zone]}`,
       mode: awaiting.max <= 1 ? (awaiting.min === 0 ? "many" : "one") : "many",
       min: awaiting.min,
@@ -1445,6 +1533,19 @@ export const chooseCard = {
   },
 
   apply(state, awaiting, indices, extra = {}, rng = null) {
+    if (awaiting.steps) {
+      const picked = (indices ?? []).map((index) => stepCards(state, awaiting)[index]);
+      if (picked.length > 1 || picked.some((id) => id === undefined)) throw new Error("Invalid selection");
+      const next = {...awaiting, steps: {...awaiting.steps, found: [...awaiting.steps.found, ...picked], step: awaiting.steps.step + 1}};
+      const over = awaiting.steps.sharing && !picked.length;
+      while (!over && next.steps.step < next.steps.total && !stepCards(state, next).length) next.steps = {...next.steps, step: next.steps.step + 1};
+      if (!over && next.steps.step < next.steps.total) {
+        state.awaiting = next;
+        return {events: [], again: true};
+      }
+      const {steps, ...rest} = next;
+      return chooseCard.apply(state, {...rest, cards: steps.found, min: steps.found.length, max: steps.found.length}, steps.found.map((id, i) => i), extra, rng);
+    }
     const events = [];
     const chosen = (indices ?? []).map((index) => awaiting.cards[index]);
     if (chosen.length < awaiting.min || chosen.length > awaiting.max || chosen.some((id) => id === undefined) || new Set(chosen).size !== chosen.length)
@@ -1846,6 +1947,110 @@ export const counterKind = {
   },
 };
 
+/* ---- which counters to remove (CR 122.1, 608.2d; Train C, w2d) ----
+
+   "Remove up to three counters from another target creature or planeswalker" (Mabel, Bitter Recluse): a removeCounter of
+   any kinds (`counter: "any"`), `count` of them in all, "up to" (`upTo`) as few as none -- which ones its controller chooses
+   as it resolves, among the counters on its target then; put here by the resolution before it is done
+   (script/resolution.mjs). Each counter is an option, as many of each kind as could be removed; the effect follows with the
+   answer, how many of each kind (`removing`), so "for each counter removed this way" counts them (effects/resources.mjs).
+   Nothing on it, or it gone, and there is nothing to choose; and where every counter there must go, the rules leave no
+   choice: nobody is asked either way. */
+export const countersToRemove = {
+  open(state, params, context) {
+    const then = params.then, [on] = then.targets ?? [], most = Math.max(0, then.count ?? 1);
+    const units = countersOn(state, on).flatMap(({kind, n}) => Array.from({length: Math.min(n, most)}, () => kind));
+    const min = then.upTo === true ? 0 : Math.min(most, units.length);
+    if (min === units.length) {
+      const removing = {};
+      for (const kind of units) removing[kind] = (removing[kind] ?? 0) + 1;
+      return {events: removeCounter(state, {...then, removing}, context)};
+    }
+    state.awaiting = {kind: "effect-choice", effect: "countersToRemove", player: context.controller, on, units, min, max: Math.min(most, units.length), then};
+    return true;
+  },
+  choice(state, awaiting) {
+    const name = state.objects[awaiting.on]?.card ?? "that permanent";
+    const options = awaiting.units.map((kind, index) => ({index, label: `${kind} counter`, cardId: awaiting.on, counter: kind}));
+    for (const option of options) {
+      const alike = options.filter((o) => o.counter === option.counter);
+      if (alike.length > 1 && option === alike[0]) alike.forEach((o, k) => { o.label = `${o.label} (${k + 1})`; });
+    }
+    return {id: `remove-counters:${awaiting.player}:${state.turn}:${awaiting.on}`,
+      title: `Remove ${awaiting.min === 0 ? "up to " : ""}${awaiting.max} counter${awaiting.max === 1 ? "" : "s"} from ${name}`,
+      mode: "many", min: awaiting.min, max: awaiting.max, options};
+  },
+  apply(state, awaiting, indices) {
+    const picked = [...new Set(indices ?? [])];
+    if (picked.length !== (indices ?? []).length || picked.length < awaiting.min || picked.length > awaiting.max || picked.some((i) => awaiting.units[i] === undefined))
+      throw new Error("Invalid selection");
+    const removing = {};
+    for (const i of picked) removing[awaiting.units[i]] = (removing[awaiting.units[i]] ?? 0) + 1;
+    return {events: [], splice: [{...awaiting.then, removing}]};
+  },
+  /* Its controller has left the game, and the ability with them (CR 800.4a): nothing is removed. */
+  left() {
+    return {events: []};
+  },
+};
+
+/* ---- counters moved onto permanents, split (CR 122.5; Train C, w2d) ----
+
+   "You may move any number of +1/+1 counters from this creature onto other creatures" (Forgotten Ancient): a moveCounters
+   onto any of what `onto` describes (`anyNumber`), up to as many of its kind as are on `from`, where each goes its
+   controller's choice -- asked a counter at a time, each permanent `onto` matches an option, and "No more" -- and then
+   every one moved at once: off the source together, and onto each permanent together, so what changes counters put on
+   sees one placement on each (CR 122.6, 616.1). Put here by the resolution before it is done (script/resolution.mjs).
+   Nothing on it, or nothing to move them onto, and nobody is asked. */
+const ontoName = (state, awaiting, id) => {
+  const alike = awaiting.candidates.filter((other) => state.objects[other]?.card === state.objects[id]?.card);
+  return alike.length > 1 ? `${state.objects[id].card} (${alike.indexOf(id) + 1})` : state.objects[id]?.card ?? "A permanent no longer there";
+};
+function countersMovedOnto(state, awaiting) {
+  const events = [], source = state.objects[awaiting.from], kind = awaiting.counter;
+  /* All or nothing (CR 122.5): the source still there with as many, each destination still there. */
+  const plan = awaiting.plan.filter((id) => state.objects[id]?.zone === "battlefield");
+  if (!plan.length || source?.zone !== "battlefield" || (source.counters?.[kind] ?? 0) < plan.length) return events;
+  const before = source.counters[kind];
+  source.counters[kind] = before - plan.length;
+  events.push(event("GameEventCardCounters", state, {card: cardRef(state, awaiting.from), type: kind, oldValue: before, newValue: source.counters[kind]}));
+  for (const id of awaiting.candidates) {
+    const n = plan.filter((to) => to === id).length;
+    if (n > 0) addCounters(state, id, kind, n, events, awaiting.player);
+  }
+  return events;
+}
+export const countersOnto = {
+  open(state, params, context) {
+    const then = params.then, [from] = then.from ?? [], kind = then.counter;
+    const n = from !== undefined && state.objects[from]?.zone === "battlefield" ? state.objects[from].counters?.[kind] ?? 0 : 0;
+    const candidates = selectMatching(state, then.onto, context).filter((id) => id !== from);
+    if (n === 0 || !candidates.length) return false;
+    state.awaiting = {kind: "effect-choice", effect: "countersOnto", player: context.controller, from, counter: kind, remaining: n, candidates, plan: []};
+    return true;
+  },
+  choice(state, awaiting) {
+    const name = state.objects[awaiting.from]?.card ?? "that permanent";
+    const moved = awaiting.plan.length ? `; ${awaiting.plan.length} chosen` : "";
+    return {id: `move-counters:${awaiting.player}:${state.turn}:${awaiting.from}:${awaiting.plan.length}`,
+      title: `Move a ${awaiting.counter} counter from ${name} onto (${awaiting.remaining} left${moved})`, mode: "one", min: 1, max: 1,
+      options: [...awaiting.candidates.map((id, index) => ({index, label: ontoName(state, awaiting, id), cardId: id})), {index: awaiting.candidates.length, label: "No more"}]};
+  },
+  apply(state, awaiting, indices) {
+    const i = Array.isArray(indices) && indices.length === 1 ? indices[0] : undefined;
+    if (!(Number.isInteger(i) && i >= 0 && i <= awaiting.candidates.length)) throw new Error("Invalid selection");
+    if (i === awaiting.candidates.length) return {events: countersMovedOnto(state, awaiting)};
+    const next = {...awaiting, plan: [...awaiting.plan, awaiting.candidates[i]], remaining: awaiting.remaining - 1};
+    if (next.remaining === 0) return {events: countersMovedOnto(state, next)};
+    state.awaiting = next;
+    return {events: [], again: true};
+  },
+  /* Its controller has left the game, and the ability with them (CR 800.4a): nothing moves. */
+  left() {
+    return {events: []};
+  },
+};
+
 /* ---- orderDestruction (CR 616.1): a destroy whose destruction of one permanent two or more effects would replace, ending
    differently -- two Auras with umbra armor, or one and a regeneration shield -- asks that permanent's controller which,
    before anything is destroyed (effects/zones.mjs, destructionQuestion; script/resolution.mjs puts this in the destroy's place
@@ -1886,4 +2091,4 @@ export const chooseInstead = {
 };
 
 export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, chooseColor, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, orderCounters, orderDraws,
-  conniveWhich, manaColors, counterKind, orderDestruction, chooseInstead});
+  conniveWhich, manaColors, counterKind, countersToRemove, countersOnto, orderDestruction, chooseInstead});
