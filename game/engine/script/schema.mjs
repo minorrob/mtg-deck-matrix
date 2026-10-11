@@ -37,7 +37,7 @@ import {compileSelector} from "./filter.mjs";
 import {targetRefs} from "./bind.mjs";
 import {LAYERS} from "../rules/layers.mjs";
 import {STATIC_RULES, CANT_ATTACK_DEFENDERS} from "../rules/statics.mjs";
-import {amountProblems, AMOUNT_PARAMS} from "./amount.mjs";
+import {amountProblems, AMOUNT_PARAMS, isCounted} from "./amount.mjs";
 import {conditionProblems} from "./condition.mjs";
 import {isCreatureType} from "../keywords/types.mjs";
 import {parseManaCost} from "../rules/mana.mjs";
@@ -98,6 +98,12 @@ function checkEffect(effect, path, errors) {
     if (keys.length === 1 && FACT_KEYS.includes(keys[0]) && Number.isInteger(value[keys[0]]?.target)) continue;
     for (const message of amountProblems(value)) errors.push({path: `${path}.${key}`, message});
   }
+  /* "Each player ... discards half the cards in their hand, then sacrifices half the permanents they control" (Pox Plague;
+     effects/asking.mjs): a count counted for each player as they are asked -- on a discard or a sacrifice of a counted
+     amount, nothing whole, at random or kept. */
+  if (effect.perPlayer !== undefined && (effect.perPlayer !== true || !["discard", "sacrifice"].includes(name) || !isCounted(effect.count)
+    || ["all", "random", "keep", "keepTypes", "keepPowerAtMost"].some((key) => effect[key] !== undefined)))
+    errors.push({path: `${path}.perPlayer`, message: "perPlayer is true, on a discard or a sacrifice whose count is counted for each player"});
   /* An effect's own condition ("if this spell was cast from a graveyard", "if you do"; resolution.mjs asks it): closed, as
      an ability's is -- an unknown key refused here rather than read as true. */
   for (const message of conditionProblems(effect.condition)) errors.push({path: `${path}.condition`, message});

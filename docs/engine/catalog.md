@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,256 defined and playable today; 2,627 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,257 defined and playable today; 2,629 with every
 mechanic built, so only their definitions are left to write; 27 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -26,7 +26,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Replacement effects | 34 | 0 | 6 | 0 | 28 |
 | Costs | 26 | 5 | 2 | 10 | 9 |
 | Options and conditions | 37 | 24 | 5 | 0 | 8 |
-| Amounts the game counts | 188 | 22 | 2 | 0 | 164 |
+| Amounts the game counts | 188 | 24 | 2 | 0 | 162 |
 | Choices | 15 | 12 | 0 | 0 | 3 |
 | Other keyword constructs | 16 | 10 | 0 | 1 | 5 |
 
@@ -36,9 +36,9 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 28 | 88 |
-| option | Remembering what an effect moved | — | missing | 21 | 81 |
-| option | You may play or cast a card from another zone | — | missing | 18 | 63 |
+| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 28 | 87 |
+| option | Remembering what an effect moved | — | missing | 21 | 80 |
+| option | You may play or cast a card from another zone | — | missing | 18 | 62 |
 | effect | ReplaceCounter | replaceCounters | named | 9 | 12 |
 | count | What entered or died this turn | — | missing | 9 | 9 |
 | count | Cards in a library | — | missing | 8 | 12 |
@@ -826,14 +826,14 @@ The things that alone hold back the most of the most-played cards.
 | You may, decided by a named player | modal (Yes / No) | partial | 176 | 1499 | 0 | 0 |
 | An effect's condition: if a permanent is present | an effect's condition {present ...} | built | 142 | 1292 | 0 | 0 |
 | Fewer targets than the most ("up to", "any number of") | a target's count {min, max} (script/bind.mjs), picked as a pick-several | built | 126 | 1672 | 0 | 0 |
-| Remembering what an effect moved | — | missing | 124 | 1168 | 81 | 21 |
+| Remembering what an effect moved | — | missing | 124 | 1168 | 80 | 21 |
 | More than one target of a kind ("up to N") | a target's count {min, max} (script/bind.mjs); a count that is X is not built | partial | 123 | 1664 | 0 | 0 |
-| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 88 | 28 |
+| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 87 | 28 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost} | built | 104 | 684 | 0 | 0 |
 | You may (an optional effect, CR 603.5) | modal (Yes / No) | built | 101 | 1094 | 0 | 0 |
-| You may play or cast a card from another zone | — | missing | 99 | 625 | 63 | 18 |
+| You may play or cast a card from another zone | — | missing | 99 | 625 | 62 | 18 |
 | An intervening "if" or "activate only if": a counted value | condition {compare} | built | 79 | 974 | 0 | 0 |
 | An effect's condition: a counted value | condition {compare: {count, atLeast / atMost / moreThan / fewerThan}} | built | 75 | 603 | 0 | 0 |
 | Unless a player pays | unlessPays, by kind | partial | 66 | 677 | 0 | 0 |
@@ -907,10 +907,10 @@ The things that alone hold back the most of the most-played cards.
 | — | ValidStack | — | missing | 2 | 4 | 1 | 1 |
 | — | wasCastFromExile | — | missing | 2 | 4 | 2 | 0 |
 | — | CastTotalManaSpent | — | missing | 1 | 32 | 1 | 1 |
-| — | Colors of mana spent (converge) | — | missing | 1 | 31 | 0 | 0 |
+| — | Colors of mana spent (converge) | amount {colorsSpent: "self"} (rules/actions.mjs records the mana by kind) | built | 1 | 31 | 0 | 0 |
 | — | CardToughness | — | missing | 1 | 20 | 1 | 1 |
 | — | Mana of a color spent to cast it (adamant; "if {G}{G} was spent to cast it") | condition {spent: {color: n}} (script/condition.mjs) | built | 1 | 19 | 0 | 0 |
-| — | TotalCommanderCastFromCommandZone | — | missing | 1 | 16 | 1 | 1 |
+| — | Times you've cast your commanders from the command zone | amount {commanderCasts: "you"} (rules/commander.mjs keeps the casts) | built | 1 | 16 | 0 | 0 |
 | — | YourTurns | — | missing | 1 | 11 | 1 | 1 |
 | — | The city's blessing (ascend) | condition {citysBlessing} (script/condition.mjs) | built | 1 | 10 | 0 | 0 |
 | — | Delirium | — | missing | 1 | 9 | 1 | 1 |

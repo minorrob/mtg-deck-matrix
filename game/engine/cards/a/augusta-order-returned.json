@@ -1,0 +1,107 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Augusta, Order Returned",
+    "oracleId": "a80a1f84-ea49-4c8d-912d-c7036b814a6c",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit",
+      "Advisor"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Flying, vigilance\nWhenever Augusta attacks, each player exiles a card from their graveyard. When one or more nonland cards are exiled this way, put that many +1/+1 counters on target attacking creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Augusta attacks, each player exiles a card from their graveyard. When one or more nonland cards are exiled this way, put that many +1/+1 counters on target attacking creature.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "repeatFor",
+          "each": "player",
+          "effects": [
+            {
+              "effect": "chooseCard",
+              "who": "that player",
+              "zone": "graveyard",
+              "count": 1,
+              "to": "exile",
+              "remember": "add"
+            }
+          ]
+        },
+        {
+          "effect": "immediateTrigger",
+          "text": "When one or more nonland cards are exiled this way, put that many +1/+1 counters on target attacking creature.",
+          "condition": {
+            "compare": {
+              "count": {
+                "rememberedCount": true,
+                "filter": {
+                  "nonTypes": [
+                    "Land"
+                  ]
+                }
+              },
+              "atLeast": 1
+            }
+          },
+          "targets": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "attacking": true
+            }
+          ],
+          "effects": [
+            {
+              "effect": "putCounter",
+              "targets": {
+                "target": 0
+              },
+              "counter": "+1/+1",
+              "count": {
+                "rememberedCount": true,
+                "filter": {
+                  "nonTypes": [
+                    "Land"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

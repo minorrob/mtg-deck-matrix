@@ -391,21 +391,39 @@ export function bindEffect(effect, context, state = null) {
  * reveal cards ... until you reveal that many creature cards" (Synthetic Destiny).
  */
 const THIS_WAY = ["rememberedCount", "lifeLostThisWay", "cardTypesAmong"];
-export function rememberNow(effects, context, {keepThat = false, state = null} = {}) {
+/* An effect's counts of this resolution ("that many" of what the effect before it did), counted now. */
+function thisWayNow(bound, context, state) {
+  for (const key of AMOUNT_PARAMS)
+    if (bound[key] && typeof bound[key] === "object" && THIS_WAY.some((kind) => kind in bound[key])) bound[key] = amountOf(state, bound[key], context);
+  return bound;
+}
+/* Each effect, and those nested in it -- a branch's, a repetition's, a modal's modes' -- as `one` makes it. */
+function walkEffects(effects, one) {
   const walk = (effect) => {
     if (!effect || typeof effect !== "object") return effect;
-    const kept = {};
-    if (keepThat) for (const key of ["targets", "spells", "who", "toPlayer", "chooser"])
-      if (["that card", "that player", "that card's controller"].includes(effect[key])) kept[key] = effect[key];
-    const bound = {...bindEffect(effect, context), ...kept};
-    for (const key of AMOUNT_PARAMS)
-      if (bound[key] && typeof bound[key] === "object" && THIS_WAY.some((kind) => kind in bound[key])) bound[key] = amountOf(state, bound[key], context);
+    const bound = one(effect);
     for (const key of ["effects", "then", "otherwise"]) if (Array.isArray(bound[key])) bound[key] = bound[key].map(walk);
     if (Array.isArray(bound.modes)) bound.modes = bound.modes.map((mode) => ({...mode, effects: (mode.effects ?? []).map(walk)}));
     return bound;
   };
   return (effects ?? []).map(walk);
 }
+export function rememberNow(effects, context, {keepThat = false, state = null} = {}) {
+  return walkEffects(effects, (effect) => {
+    const kept = {};
+    if (keepThat) for (const key of ["targets", "spells", "who", "toPlayer", "chooser"])
+      if (["that card", "that player", "that card's controller"].includes(effect[key])) kept[key] = effect[key];
+    return thisWayNow({...bindEffect(effect, context), ...kept}, context, state);
+  });
+}
+
+/**
+ * A REFLEXIVE TRIGGER'S "THAT MANY" (CR 603.12): "When one or more nonland cards are exiled this way, put that many +1/+1
+ * counters on target attacking creature" (Augusta, Order Returned) -- how many the resolution that made it did, counted
+ * as it triggers, while there is that resolution to count; by the time it resolves there is only its own (effects/
+ * permanents.mjs, immediateTrigger). Nothing else is bound: its targets are its own, chosen as it goes on the stack.
+ */
+export const countThisWay = (effects, context, state) => walkEffects(effects, (effect) => thisWayNow({...effect}, context, state));
 
 /**
  * A MODAL SPELL'S CHOSEN MODES AS ONE SCRIPT (CR 700.2): their targets in the order chosen, and their effects with each

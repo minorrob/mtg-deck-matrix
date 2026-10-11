@@ -360,7 +360,12 @@ export const FORGE_COUNTS = Object.freeze({
      their identities (CR 903.4), undefined and a cost of it unpayable without a commander (903.4f). */
   ColorsColorIdentity: {name: "Colors in your commanders' identity", status: "built", engine: "amount {commanderColors: \"you\"} (script/amount.mjs); a cost of it unpayable without a commander"},
   CommanderCastFromCommandZone: {name: "Times your commander was cast from the command zone", status: "missing"},
-  Converge: {name: "Colors of mana spent (converge)", status: "missing"},
+  /* Train C, phase 2 (w2b-amounts; Vanguard of the Restless): "for each time you've cast your commander from the command zone
+     this game" -- every cast of each of your commanders from there (CR 903.8), as their tax is kept. Its one form, built. */
+  TotalCommanderCastFromCommandZone: {name: "Times you've cast your commanders from the command zone", status: "built", engine: "amount {commanderCasts: \"you\"} (rules/commander.mjs keeps the casts)"},
+  /* Train C, phase 2 (w2b-amounts; Sundering Archaic): the colors among the mana spent to cast its own object (CR 601.2h) --
+     a spell's, a permanent's trigger's (remembered as it triggers, CR 608.2h), and as it enters with counters. */
+  Converge: {name: "Colors of mana spent (converge)", status: "built", engine: "amount {colorsSpent: \"self\"} (rules/actions.mjs records the mana by kind)"},
   /* Rob's Priority Batch 10.3, its twenty-first slice: the mana spent to cast an object, by color (rules/actions.mjs). */
   Adamant: {name: "Mana of a color spent to cast it (adamant; \"if {G}{G} was spent to cast it\")", status: "built", engine: "condition {spent: {color: n}} (script/condition.mjs)"},
   /* Fblthp, the Lost (AI 1's deck): "if it entered from your library or was cast from your library". */

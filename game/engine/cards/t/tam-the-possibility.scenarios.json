@@ -1,0 +1,413 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Tam, the Possibility",
+  "fixtures": {
+    "Jace Walker": {
+      "types": [
+        "Planeswalker"
+      ],
+      "supertypes": [
+        "Legendary"
+      ],
+      "subtypes": [
+        "Jace"
+      ],
+      "manaCost": "{2}{U}",
+      "colors": [
+        "U"
+      ],
+      "loyalty": 3
+    },
+    "Jace Again": {
+      "types": [
+        "Planeswalker"
+      ],
+      "supertypes": [
+        "Legendary"
+      ],
+      "subtypes": [
+        "Jace"
+      ],
+      "manaCost": "{2}{U}",
+      "colors": [
+        "U"
+      ],
+      "loyalty": 4
+    },
+    "Chandra Walker": {
+      "types": [
+        "Planeswalker"
+      ],
+      "supertypes": [
+        "Legendary"
+      ],
+      "subtypes": [
+        "Chandra"
+      ],
+      "manaCost": "{3}{R}",
+      "colors": [
+        "R"
+      ],
+      "loyalty": 4
+    },
+    "Aetherspark": {
+      "types": [
+        "Artifact",
+        "Planeswalker"
+      ],
+      "supertypes": [
+        "Legendary"
+      ],
+      "subtypes": [
+        "Equipment"
+      ],
+      "manaCost": "{4}",
+      "colors": [],
+      "loyalty": 4
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Drake": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Drake"
+      ],
+      "manaCost": "{2}{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A planeswalker spell costs {1} less: the {2}{U} Jace Walker cast for an Island and a Wastes; the {2}{U} Drake, a creature, does not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tam, the Possibility",
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Jace Walker",
+            "Drake"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Drake"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "cast": "Jace Walker"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Tam, the Possibility",
+            "Island",
+            "Wastes",
+            "Jace Walker"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Jace Walker",
+            "counter": "loyalty",
+            "count": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "Two Jaces and a Chandra: two planeswalker types, so Rob proliferates twice -- each Jace and the Chandra two loyalty more",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tam, the Possibility",
+            "Plains",
+            "Island",
+            "Swamp",
+            "Mountain",
+            "Forest",
+            "Jace Walker",
+            "Jace Again",
+            "Chandra Walker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "activate": "Tam, the Possibility"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0,
+            1,
+            2
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Jace Walker",
+            "counter": "loyalty",
+            "count": 5
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Jace Again",
+            "counter": "loyalty",
+            "count": 6
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Chandra Walker",
+            "counter": "loyalty",
+            "count": 6
+          }
+        },
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "tapped": "Tam, the Possibility"
+        }
+      ]
+    },
+    {
+      "name": "The Aetherspark's Equipment is no planeswalker type, and Maya's Chandra is not Rob's: one Jace, so one proliferate",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tam, the Possibility",
+            "Plains",
+            "Island",
+            "Swamp",
+            "Mountain",
+            "Forest",
+            "Jace Walker",
+            "Aetherspark"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Chandra Walker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "activate": "Tam, the Possibility"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0,
+            1
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Jace Walker",
+            "counter": "loyalty",
+            "count": 4
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Aetherspark",
+            "counter": "loyalty",
+            "count": 5
+          }
+        },
+        {
+          "seat": 1,
+          "counters": {
+            "card": "Chandra Walker",
+            "counter": "loyalty",
+            "count": 4
+          }
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "No planeswalker of Rob's: X is 0, so no proliferate -- Maya's Chandra keeps its four loyalty",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tam, the Possibility",
+            "Plains",
+            "Island",
+            "Swamp",
+            "Mountain",
+            "Forest",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Chandra Walker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "activate": "Tam, the Possibility"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "tapped": "Tam, the Possibility"
+        },
+        {
+          "seat": 1,
+          "counters": {
+            "card": "Chandra Walker",
+            "counter": "loyalty",
+            "count": 4
+          }
+        }
+      ]
+    }
+  ]
+}

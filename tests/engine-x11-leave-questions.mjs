@@ -523,7 +523,9 @@ const label = (s, seed, n) => `seed ${seed}, step ${n}, turn ${s.turn}: ${s.awai
 /* At every question, in a copy, played on to the end of the next turn. */
 let forks = 0, duringAnother = 0;
 const kinds = new Set();
-for (const [kind, seed] of [["house", 1], ["house", 2], ["house", 3], ["house", 4], ["random", 5]]) {
+/* Nine games: what is dealt changes with every card defined, and five dealt from the pool as it was after Train C phase 2's
+   w2b-amounts held only four concessions during another player's resolution -- the sweep's reach, not its finding. */
+for (const [kind, seed] of [["house", 1], ["house", 2], ["house", 3], ["house", 4], ["random", 5], ["house", 6], ["house", 7], ["house", 8], ["random", 9]]) {
   const {s, stream, pilot} = begun(kind, seed), ignored = {refused: 0};
   for (let n = 0; n < 20000 && !gameOver(s) && s.turn <= 30; n += 1) {
     if (s.awaiting && !out(s, s.awaiting.player)) {

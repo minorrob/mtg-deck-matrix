@@ -15,6 +15,7 @@
  * every reader of colors -- a selector's `colors` and `colorless`, the layers' color changes after it -- sees none.
  */
 import {CREATURE_TYPES} from "./creature-types.mjs";
+import {PLANESWALKER_TYPES} from "./planeswalker-types.mjs";
 
 /** The family of §3.1, so `engine-coverage` counts these as behavior and not as words. */
 export const KEYWORD_FAMILIES = Object.freeze({
@@ -27,6 +28,11 @@ export const KEYWORD_FAMILIES = Object.freeze({
 const TYPES = new Set(CREATURE_TYPES);
 /** Whether a subtype is a creature type. */
 export const isCreatureType = (subtype) => TYPES.has(subtype);
+/* The planeswalker types (CR 205.3j; keywords/planeswalker-types.mjs, read from the oracle data as the creature types are):
+   what "the number of planeswalker types among planeswalkers you control" counts (Tam, the Possibility; script/amount.mjs). */
+const WALKERS = new Set(PLANESWALKER_TYPES);
+/** Whether a subtype is a planeswalker type. */
+export const isPlaneswalkerType = (subtype) => WALKERS.has(subtype);
 /** Whether printed keywords make an object every creature type (rules/layers.mjs starts from this). */
 export const everyCreatureType = (keywords) => (keywords ?? []).includes("Changeling");
 /** Whether an object with these subtypes -- every creature type, or not -- has `subtype`. */

@@ -19,7 +19,7 @@
 
 import {addObject, transformObject, rememberExileLooker, COPY_KEYS} from "../../state/index.mjs";
 import {selectMatching, compileSelector} from "../filter.mjs";
-import {bindEffect, rememberNow} from "../bind.mjs";
+import {bindEffect, rememberNow, countThisWay} from "../bind.mjs";
 import {amountOf} from "../amount.mjs";
 import {event, cardRef, moveOne} from "./zones.mjs";
 import {typesOf, controllerOf} from "../../rules/layers.mjs";
@@ -856,7 +856,8 @@ export function immediateTrigger(state, params, context) {
     /* And the X of the resolution that made it (Halo Forager's "you may pay {X}. When you do, ... with mana value X"):
        what its targets and effects read as X (rules/trigger.mjs). */
     ...(Number.isInteger(context.x) ? {x: context.x} : {}),
-    script: {targets: structuredClone(params.targets ?? []), effects: structuredClone(params.effects ?? [])}});
+    /* "Put that many +1/+1 counters" (Augusta, Order Returned): what this resolution did, counted now (script/bind.mjs). */
+    script: {targets: structuredClone(params.targets ?? []), effects: structuredClone(countThisWay(params.effects, context, state))}});
   return [];
 }
 

@@ -766,7 +766,10 @@ function targeting(state, stackId) {
   /* What it is about, for a target described by it: "target creature that player controls" (Mistblade Shinobi). */
   /* With what it has been aimed at so far: "a second target creature you control" (script/bind.mjs, distinctFrom). */
   /* And its X, for a target "with mana value X" (Halo Forager's reflexive trigger). */
-  return {entry, context: {controller: entry.playerId, source, ...(entry.about ? {about: entry.about} : {}), ...(Number.isInteger(entry.x) ? {x: entry.x} : {}), chosenTargets: entry.targets ?? []}};
+  /* And the mana spent to cast its source, as it triggered: converge's "with mana value less than or equal to the number of
+     colors of mana spent to cast this creature" (Sundering Archaic; script/amount.mjs, colorsSpent), its source gone. */
+  return {entry, context: {controller: entry.playerId, source, ...(entry.about ? {about: entry.about} : {}), ...(Number.isInteger(entry.x) ? {x: entry.x} : {}),
+    ...(entry.spent ? {spent: entry.spent} : {}), chosenTargets: entry.targets ?? []}};
 }
 
 /**

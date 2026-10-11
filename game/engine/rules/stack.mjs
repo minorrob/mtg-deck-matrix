@@ -245,6 +245,9 @@ export function resolveTop(state, effect = null, rng = null) {
     ...(entry.sourceTransforms !== undefined ? {sourceTransforms: entry.sourceTransforms} : {}),
     /* What its cost sacrificed, as each last existed: "the sacrificed creature's toughness" (rules/actions.mjs). */
     ...(entry.sacrificed ? {sacrificed: entry.sacrificed} : {}),
+    /* The mana spent to cast its source, as its trigger remembered it: converge's count, its source gone, for its targets
+       asked again (CR 608.2b; script/amount.mjs, colorsSpent). */
+    ...(entry.spent ? {spent: entry.spent} : {}),
     /* What its permanent chose as it entered: "draw a card for each creature of the chosen type". */
     ...(source !== null && state.objects[source]?.chosen !== undefined ? {chosen: state.objects[source].chosen} : {})};
   /* "Another target" asked again with its source gone (Oblivion Ring destroyed with its trigger waiting): another than the

@@ -129,9 +129,12 @@ export function runResolution(state, rng = null) {
     /* "IF YOU WOULD PROLIFERATE, PROLIFERATE TWICE INSTEAD" (Tekuthal, Inquiry Dominus; CR 614.1a, 701.34): replaced as it
        reaches the head, before anything is chosen, by as many proliferates as the replacements make (rules/statics.mjs,
        proliferateTimes) -- each its own choice of permanents and players, one after another (CR 701.34a). */
+    /* "PROLIFERATE X TIMES, where X is the number of planeswalker types among planeswalkers you control" (Tam, the
+       Possibility; CR 701.34a): `count`, counted as it reaches the head (CR 608.2h) -- that many proliferates, one after
+       another, each one the replacements may change; none, and nothing is done. */
     if (effect?.effect === "proliferate" && effect.replaced !== true) {
-      const times = proliferateTimes(state, resolving.context.controller);
-      if (times > 1) {
+      const times = proliferateTimes(state, resolving.context.controller) * (Number.isInteger(effect.count) ? effect.count : 1);
+      if (times !== 1) {
         resolving.queue.shift();
         resolving.queue.unshift(...Array.from({length: times}, () => ({...structuredClone(effect), replaced: true})));
         continue;
