@@ -424,6 +424,8 @@ function manaAbility(ability, id) {
     ...(ability.condition ? {condition: ability.condition} : {}),
     ...(counterCost.length ? {counterCost} : {}), ...(ability.limit ? {limit: ability.limit} : {}),
     ...(first.spendOnly ? {spendOnly: first.spendOnly} : {}),
+    /* "This mana can't be spent to cast spells from your hand" (Heartwood Crafter; CR 106.6, rules/restricted-mana.mjs). */
+    ...(first.cantSpend ? {cantSpend: first.cantSpend} : {}),
     /* "When that mana is spent to cast a creature spell that shares a creature type with your commander, scry 1" (Path of
        Ancestry; CR 106.6): what the mana does when it is spent (rules/restricted-mana.mjs). */
     ...(first.whenSpent ? {whenSpent: first.whenSpent} : {})};
@@ -1018,6 +1020,11 @@ export function compileScript(script) {
       if (effect.effect === "addMana" && effect.spendOnly !== undefined && !spendOnlyValid(effect.spendOnly))
         problems.push(`addMana: a spending restriction says what it pays for -- a spell, an ability of a permanent or of a source anywhere, or more than one, each a selector (${SPEND_ONLY_KEYS.join(", ")})`);
       if (effect.effect === "addMana") problems.push(...whenSpentProblems(effect));
+      /* "This mana can't be spent to cast spells from your hand" (Heartwood Crafter; rules/restricted-mana.mjs): in the pool,
+         the one thing it can't pay for said -- spells cast from its controller's hand -- and with no restriction or rider
+         besides. */
+      if (effect.effect === "addMana" && effect.cantSpend !== undefined && !(JSON.stringify(effect.cantSpend) === '{"castFrom":"hand"}' && effect.spendOnly === undefined && effect.whenSpent === undefined))
+        problems.push('addMana: mana that can\'t be spent on some things says cantSpend {castFrom: "hand"}, spells cast from its controller\'s hand, with no spending restriction or rider besides');
     }
 
     if (ability.kind === "spell") {
@@ -1196,7 +1203,7 @@ export function compileScript(script) {
         && (MANA(adds.mana) || adds.produced === true)) {
         /* What a triggered mana ability adds goes straight to the pool: one that says what its mana may pay for is refused
            until it is carried there. */
-        if (adds.spendOnly !== undefined) problems.push(`${ability.text}: a triggered mana ability whose mana may pay for only some things is not built`);
+        if (adds.spendOnly !== undefined || adds.cantSpend !== undefined) problems.push(`${ability.text}: a triggered mana ability whose mana may pay for only some things is not built`);
         trigger.manaAbility = adds.produced === true ? {produced: true} : {mana: {...adds.mana}};
       }
       /* MODES CHOSEN AS IT IS PUT ON THE STACK (CR 603.3c, 700.2b): a triggered ability whose one effect is a modal -- its

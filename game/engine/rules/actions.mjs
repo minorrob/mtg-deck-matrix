@@ -54,7 +54,7 @@
 
 import {cardsIn, moveObject, usesThisTurn, recordUse, showFace, showAdventure, turnFaceUp, eventCard, commanderKeyOf, recordDiscard} from "../state/index.mjs";
 import {pushSpell, pushAbility, becameTarget} from "./stack.mjs";
-import {addMana, spend, parseManaCost, automaticPayment, canPay, chosenPayment, paymentOptions, paymentKey, paymentWords, PAY_CHOICES, manaValue, poolSize, tapPlans, convokeCanPay, convokePayments} from "./mana.mjs";
+import {spend, parseManaCost, automaticPayment, canPay, chosenPayment, paymentOptions, paymentKey, paymentWords, PAY_CHOICES, manaValue, poolSize, tapPlans, convokeCanPay, convokePayments} from "./mana.mjs";
 import {commanderTax, recordCommanderCast, commanderIdentity} from "./commander.mjs";
 import {COLORS, MANA_KEYS} from "./mana.mjs";
 import {sickForAbilities, hasFlash} from "../keywords/timing.mjs";
@@ -71,7 +71,7 @@ import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
 import {lastKnown, characteristicsOf, abilitiesOf, deriving, derivingAfresh, onceAQuestion, keywordsOf, colorsOf, controllerOf} from "./layers.mjs";
 import {namesChosen, withChosen, chosenFor} from "../script/chosen.mjs";
-import {poolFor, spendFor, addRestricted, addRider, riderChoices, addProvenance} from "./restricted-mana.mjs";
+import {poolFor, spendFor, addRestricted, addRider, riderChoices, addProvenance, addPoolMana} from "./restricted-mana.mjs";
 import {askEntering} from "./entering.mjs";
 import {collectTriggers, openTriggers, manaTriggered} from "./trigger.mjs";
 
@@ -1182,7 +1182,9 @@ export function tapUnits(state, player, offered = manaOffers(state, player)) {
     const ability = abilitiesOf(state, offer.objectId).find((a) => a.id === offer.abilityId);
     if (!ability?.tapSelf || ability.cost || ability.payLife || ability.then || ability.sacrifice || ability.sacrificeSelf || ability.counterCost || ability.spendOnly || ability.millCost
       /* Nor mana that does something when spent (Path of Ancestry): which mana pays is then a choice of its own. */
-      || ability.whenSpent) continue;
+      || ability.whenSpent
+      /* Nor mana that can't be spent to cast spells from the hand (Heartwood Crafter): tapped by its player, it is in the pool. */
+      || ability.cantSpend) continue;
     const made = Object.entries(offer.mana ?? {}).filter(([, n]) => n > 0);
     if (made.length !== 1 || made[0][1] !== 1) continue;
     const color = made[0][0];
@@ -1953,7 +1955,8 @@ function performOffered(state, player, action, during) {
     /* "Spend this mana only to cast a creature spell of the chosen type": beside the pool (rules/restricted-mana.mjs). */
     if (ability.spendOnly) addRestricted(state, player, produced, ability.spendOnly, action.objectId);
     else {
-      addMana(pool, produced);
+      /* "This mana can't be spent to cast spells from your hand" (Heartwood Crafter): in the pool, and remembered beside it. */
+      addPoolMana(state, player, produced, ability.cantSpend, action.objectId);
       /* Its source as it is now, before a sacrifice of its cost (CR 106.3): "mana from a Treasure". */
       addProvenance(state, player, produced, action.objectId);
     }
@@ -1967,7 +1970,7 @@ function performOffered(state, player, action, during) {
     }));
     /* Triggered mana abilities: at once, as part of this one -- "its controller adds an additional {G}". */
     for (const extra of manaTriggered(state, events[events.length - 1])) {
-      addMana(state.players[extra.player].manaPool, extra.mana);
+      addPoolMana(state, extra.player, extra.mana);
       events.push(event("GameEventManaPool", state, {player: {playerId: extra.player, name: state.players[extra.player].name}, produced: {...extra.mana}, source: cardRef(state, extra.source)}));
     }
     /* "This land deals 1 damage to you": part of the same mana ability, so it happens now, off the stack too. */

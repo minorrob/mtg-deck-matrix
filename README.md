@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 427 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 428 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1297,6 +1297,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-player-extremes` - `tests/engine-player-extremes.mjs`: every player's, compared -- the fewest cards in hand among all players (Naktamun Lorespinner), the graveyards with seven or more cards (Master's Councillors), more life than another of your opponents and that attacking player (Breena, the Demagogue) -- players who have left aside (CR 800.4a)
 - `engine-enters-or-leaves` - `tests/engine-enters-or-leaves.mjs`: "if a legendary permanent or an artifact entering or leaving the battlefield causes a triggered ability ... to trigger, that ability triggers an additional time" (Gandalf the White; CR 603.2d, 603.10a) -- every way to leave, as it last existed, a token, its own dies trigger, two at once
 - `engine-mana-provenance` - `tests/engine-mana-provenance.mjs`: "if mana from a Treasure was spent to cast it" (Smaug, Wicked Worm; CR 106.3, 601.2h) -- a mana ability's mana remembered with its source when an ability asks, the spell keeping it, and which mana pays the caster's choice where it is read
+- `engine-mana-withheld` - `tests/engine-mana-withheld.mjs`: "This mana can't be spent to cast spells from your hand" (Heartwood Crafter; CR 106.4, 106.6, 118.12) -- in the pool and remembered beside it: a spell cast from the hand sees the pool less it, anything else spends it first, and a spend the engine is not told of (an "unless" cost, a mana ability's own cost) is read as having spent it first, settled before mana is added again
 
 ## Design and execution record
 
