@@ -940,3 +940,9 @@ incidents, 3 people, 24 versions, Time Travel back to the database's birth (its 
 - **Proof:** `cloud-worker` 117 checks, `ops-week` 23, `release-pages` 210; 30 breaks caught.
 - **Rob's, left:** the two alerts with his email; R2 on, and the nightly copy's window and deletion promise
   (`docs/ops.md`).
+
+**#699 merged on main 65d02094 on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 4a9272a3 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 06:06:09 UTC as
+version 9e463c21, its `play-worker.js` byte-identical to the release's dry-run bundle (2,825,718 bytes, sha256
+efa5ea01…). Its AI bindings are the Coach's alone. **Workers Logs is on for crankmagic-staging as built:** the
+Worker's `script-settings` read `observability.enabled` true, `head_sampling_rate` 1, `logs.invocation_logs` false.
