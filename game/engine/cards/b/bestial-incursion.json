@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bestial Incursion",
+    "oracleId": "bc00f29a-e9d2-4b86-bb22-33b686ac4365",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Create a 4/4 green Beast creature token with trample.\nFlashback {5}{G} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Create a 4/4 green Beast creature token with trample.\nFlashback {5}{G} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Beast",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Beast"
+            ],
+            "colors": [
+              "G"
+            ],
+            "power": 4,
+            "toughness": 4,
+            "keywords": [
+              "Trample"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Flashback {5}{G}",
+      "keyword": "flashback",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{5}{G}"
+        }
+      ]
+    }
+  ]
+}

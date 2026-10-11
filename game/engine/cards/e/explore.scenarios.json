@@ -1,0 +1,145 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Explore",
+  "scenarios": [
+    {
+      "name": "A land played, Explore cast: a card drawn and a second land played -- but not a third",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Explore",
+            "Forest",
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Explore"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": [
+                "Island",
+                "Wastes"
+              ]
+            }
+          ]
+        },
+        {
+          "play": "Island"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "play-land",
+                "card": "Wastes"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The extra land is this turn's only: on Rob's next turn, one land again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Explore",
+            "Island",
+            "Island",
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Explore"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "play": "Island"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "play-land",
+            "card": "Island"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}
