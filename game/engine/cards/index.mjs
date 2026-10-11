@@ -1168,6 +1168,12 @@ export function compileScript(script) {
       if (effect.effect === "createToken" && effect.attachedTo !== undefined && !(PREDEFINED_TOKENS[effect.token?.predefined]?.enchant && (effect.count ?? 1) === 1
         && (Number.isInteger(effect.attachedTo?.target) || ["that card", "remembered"].includes(effect.attachedTo))))
         problems.push("createToken: a token created attached is one Aura token (a Role), attached to a target or what the effect is about");
+      /* A token's abilities are made as they are written (effects/permanents.mjs, makeToken) -- nothing compiles them -- so its
+         mana ability is written as the engine runs one, `kind: "mana"` (the Treasure's in PREDEFINED_TOKENS): written as a
+         card's, "{T}: Add {G}" would be offered on the stack, which a mana ability never uses (CR 605.1a; Freyalise's Elf Druid). */
+      if (effect.effect === "createToken") for (const made of effect.token?.abilities ?? [])
+        if (made?.mana === true || (made?.kind === "activated" && manaAbility(made, made.id) !== null))
+          problems.push(`createToken: ${made.text ?? "a token's ability"}: a token's mana ability is written as the engine runs it, kind "mana" (as the Treasure's is)`);
       /* "For as long as that land has a blight counter on it" (Ultima, Origin of Oblivion), "for as long as it has a vow counter
          on it" (Promise of Loyalty): a kind of counter, on what the effect names (`targets`), and no other end -- `until:
          "ever"` (effects/permanents.mjs, endCounterDurations; rules/statics.mjs). */
