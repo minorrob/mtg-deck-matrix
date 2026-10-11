@@ -124,6 +124,10 @@ function checkEffect(effect, path, errors) {
      nothing it could say. */
   if (name === "effectUntil" && effect.rule === "cant-cast" && (effect.named === undefined || effect.who === undefined))
     errors.push({path, message: "A cast forbidden for a while names the spells (`named`) and the players (`who`)"});
+  /* "If that creature would die this turn, exile it instead" (rules/replacement.mjs): about what it names, fixed as it
+     resolves -- `targets`, and for this turn. */
+  if (name === "effectUntil" && effect.rule === "exile-if-dies" && (effect.targets === undefined || (effect.until ?? "end-of-turn") !== "end-of-turn"))
+    errors.push({path, message: "\"If it would die this turn, exile it instead\" names what it is about (`targets`), for this turn"});
   /* "Unless you pay {3}{W}{W}" (echo): a mana cost with its colors, `mana`, in place of a generic `amount`, never beside one. */
   if (name === "unlessPays" && effect.mana !== undefined) {
     let parsed = null;

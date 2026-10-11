@@ -78,6 +78,14 @@ function unlessHolds(state, unless, player) {
 /* The replacement effect finality counters make (CR 122.1h): the counted permanent's own, never an ability it could lose. */
 const FINALITY = Object.freeze({id: "finality-counter", kind: "replacement", watches: {event: "zone-change", from: "battlefield", to: "graveyard"}, change: {to: "exile"}});
 
+/* "IF THAT CREATURE WOULD DIE THIS TURN, EXILE IT INSTEAD" (Essence Burn, Combustion Technique; CR 614.1a, 700.4): a spell's
+   effect with a duration (effectUntil's `rule: "exile-if-dies"`, gone at the turn's cleanup) about the objects it named as it
+   resolved -- one that left and came back is a new object (CR 400.7), not one of them. A replacement effect over that
+   object's dying, ordered with the others that apply as any is (CR 616.1); two of them about one object exile it alike, and
+   are one candidate. */
+const EXILE_IF_DIES = Object.freeze({id: "exile-if-dies", kind: "replacement", text: "If it would die this turn, exile it instead",
+  watches: {event: "zone-change", from: "battlefield", to: "graveyard"}, change: {to: "exile"}});
+
 /** Where an effect has to be for it to act on the battlefield (CR 113.6). */
 const ACTING_ZONES = ["battlefield"];
 
@@ -210,6 +218,9 @@ function applicable(state, proposal) {
      that apply as any is (CR 616.1). */
   const moving = proposal.event === "zone-change" ? state.objects[proposal.objectId] : null;
   if ((moving?.counters?.finality ?? 0) > 0 && applies(state, FINALITY, moving, proposal)) found.push({holderId: proposal.objectId, ability: FINALITY});
+  /* And "if it would die this turn, exile it instead" about it (EXILE_IF_DIES). */
+  if ((state.effects ?? []).some((effect) => effect.rule === "exile-if-dies" && effect.affects.ids.includes(proposal.objectId))
+    && applies(state, EXILE_IF_DIES, moving, proposal)) found.push({holderId: proposal.objectId, ability: EXILE_IF_DIES});
   for (const zone of ACTING_ZONES) {
     for (const id of state.zones[zone]) {
       const holder = state.objects[id];

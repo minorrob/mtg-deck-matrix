@@ -161,6 +161,9 @@ export const STATIC_RULES = Object.freeze({
   /** "Prevent all damage that would be dealt to [them] this turn": an effect with a duration only (effectUntil), with
       `apply` {to, by, combat}; rules/replacement.mjs. */
   "prevent-damage": "rules/replacement.mjs",
+  /** "If that creature would die this turn, exile it instead" (Essence Burn, Combustion Technique): an effect with a
+      duration only (effectUntil), about its `targets`; rules/replacement.mjs, applicable. */
+  "exile-if-dies": "rules/replacement.mjs",
   /** CR 509.1b: "Slivers can't be blocked except by Slivers", "can't be blocked by creatures with power 2 or less" (`by`, the
       blockers it can't be blocked by), "creatures with power less than this creature's power can't block creatures you
       control" (`byPowerBelowSource`). keywords/combat.mjs, as each blocker is checked. */
