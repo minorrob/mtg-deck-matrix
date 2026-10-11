@@ -126,6 +126,7 @@ globalThis.CrankBoard = Object.freeze({
   const WENT_MS = 6000;
   let historyOpen = false, historyFilter = "", menuOpen = false, stepsOpen = false, panelOpen = false, paneShut = false, alsoOpen = false;
   let skipping = null;                 /* Skip to end: the turn being skipped through, or null */
+  let preferSaid = null;              /* the way of playing last told to the room: {key, revision} (prefer) */
   /* The Coach: open or not, its thread ({from: "you"|"coach", text} or {divider}), and whether it is "typing". */
   const coach = {open: false, thread: [], typing: false, asked: 0};
   const COACH_PROMPTS = ["What's my best play?", "Who's the threat?", "Plan my next turn", "Explain the stack"];
@@ -197,6 +198,8 @@ globalThis.CrankBoard = Object.freeze({
     try {frame = JSON.parse(data);} catch {return;}
     if (frame.type === "view") adopt(frame.view);
     else if (frame.type === "receipt") {sending = false; draw();}
+    /* A way of playing the room did not take (the AI seats were playing on) is sent again once the game moves (prefer). */
+    else if (frame.type === "refused" && frame.of === "prefer") {if (frame.view) adopt(frame.view, true);}
     else if (frame.type === "refused") {sending = false; C.notice(frame.error || "The table did not take that.", true); if (frame.view) adopt(frame.view, true); else draw();}
     else if (frame.type === "away") {const seat = Number(String(frame.seatId).slice(1)); awaySaid.set(seat, {until: frame.until, at: performance.now()}); heard(seat, frame.until); draw();}
   }
@@ -222,6 +225,19 @@ globalThis.CrankBoard = Object.freeze({
     skip();
     draw();
     fileResult(view);
+    prefer();
+  }
+  /* STOP AT EVERY STEP OF MY TURN (Settings; Rob, 2026-10-11): the person's way of playing, kept with their preferences
+     (`play.stepByStep`) and told to the room whenever a view says otherwise. Once for each wish and revision: a refused
+     wish's view has the revision it was sent at, so it is sent again only when the game moves on. */
+  function prefer() {
+    if (!view || view.status === "finished" || view.continuing || !socket || socket.readyState !== 1) return;
+    const want = (((C.state.preferences || {}).play || {}).stepByStep) === true;
+    if (want === (view.stepByStep === true)) return;
+    const key = `${view.matchId}:${want}`;
+    if (preferSaid && preferSaid.key === key && preferSaid.revision >= view.revision) return;
+    preferSaid = {key, revision: view.revision};
+    socket.send(JSON.stringify({type: "prefer", stepByStep: want}));
   }
   /* What a view sounds like (B8): the moments between it and the last, then the bed for where the game is. Only while
      the board is on the page and the player has pressed it once; the first view of a game is history. */
@@ -315,6 +331,9 @@ globalThis.CrankBoard = Object.freeze({
   const players = () => (view ? view.state.players : []);
   const seatName = (seatId) => ((view.seats.find((s) => s.seatId === seatId) || {}).name || seatId);
   const nameOf = (i) => (i === view.seat ? "You" : (players()[i] || {}).name || `Seat ${i + 1}`);
+  /* The game's turn counts every player's; on your own the strip adds which of yours it is (Rob, 2026-10-11: "It says we
+     are on turn 3, but I only played one land"). The room counts them (game/room/room.mjs, `yourTurn`). */
+  const ordinal = (n) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th"}`;
   const departed = (i) => (view.departures || {})[`s${i}`] || null;
   const visibleCards = (p) => Object.values(p.zones).flatMap((z) => z.cards);
   const commanderOf = (p) => visibleCards(p).find((c) => c.commander && c.name) || null;
@@ -434,9 +453,13 @@ globalThis.CrankBoard = Object.freeze({
   /* ONE BUTTON THAT SAYS WHAT PASSING WILL DO (item 10): the same pass to the room, in the words for now -- Next
      step on your turn with the stack empty, Resolve and the spell's name with something on it, Pass on another
      player's turn. In the draw step of your turn it is Draw a card, and the click draws (item 13). */
+  /* In your own end step it is End turn (Rob, 2026-10-11: "passing the turn to the next player should always require
+     player confirmation"): the room always asks you there (game/room/room.mjs, `endsTurn`). */
   function passLabel() {
     const s = view.state, top = s.stack.length ? s.stack[s.stack.length - 1] : null;
     if (top) return top.name ? `Resolve ${top.name}` : "Let it resolve";
+    const d = view.decision, pass = d && d.kind === "priority" ? d.options.find((o) => o.act === "pass") : null;
+    if (pass && pass.endsTurn) return "End turn";
     return s.turnPlayerId === view.seat ? "Next step" : "Pass";
   }
   function passButton() {
@@ -460,7 +483,7 @@ globalThis.CrankBoard = Object.freeze({
     const conn = status === "open" ? "" : `<span class="cm-board-conn">${status === "reconnecting" ? "Reconnecting…" : "Connecting…"}</span>`;
     return `<header class="cm-board-strip">
       <span class="cm-board-tools">${ib("☰", "board-menu", "Menu", {}, {expanded: menuOpen})}${menuOpen ? menu() : ""}</span>
-      <span class="cm-board-turn">${s.turn ? `Turn ${s.turn} · ${e(turnName)}` : "Before turn 1"}</span>
+      <span class="cm-board-turn"${view.yourTurn ? ` title="Turn ${s.turn} of the game, counting every player's; your ${ordinal(view.yourTurn)} turn"` : ""}>${s.turn ? `Turn ${s.turn} · ${e(turnName)}${view.yourTurn ? ` (your ${ordinal(view.yourTurn)})` : ""}` : "Before turn 1"}</span>
       <span class="cm-board-step">${e(step)}${e(detail)}</span>
       <span class="cm-board-tools">${at < 0 ? "" : `<button type="button" class="cm-board-count" data-action="board-steps" aria-expanded="${stepsOpen}" aria-label="Step ${at + 1} of ${STEPS.length}; show the steps">${at + 1} / ${STEPS.length} ▾</button>`}${stepsOpen ? stepsMenu() : ""}</span>
       <span class="cm-board-prompt">${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}<span class="cm-board-waiting">${e(waitingText())}</span>${conn}</span>
@@ -1396,6 +1419,7 @@ globalThis.CrankBoard = Object.freeze({
       } else if (said() !== before) draw();
       shell(true);
       if (!socket && status !== "reconnecting") connect();
+      prefer();
     },
     /** Whether the board is what this table's page should show. */
     wants(t) {return t.phase === "playing" || (t.tableId === tableId && !!view);},

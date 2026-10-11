@@ -120,6 +120,12 @@ export class GameRoom {
     let frame;
     try {frame = JSON.parse(message);} catch {return send({type: "refused", error: "That message is not JSON."});}
     if (frame && frame.type === "view") return send({type: "view", view: room.view(seatId)});
+    /* A person's way of playing (game/room/room.mjs, prefer): Settings' "stop at every step of my turn". */
+    if (frame && frame.type === "prefer") {
+      try {await room.prefer(seatId, {stepByStep: frame.stepByStep === true});}
+      catch (error) {if (!(error instanceof RoomError)) throw error; return send({type: "refused", of: "prefer", status: error.status, error: error.message, view: room.view(seatId)});}
+      return send({type: "view", view: room.view(seatId)});
+    }
     if (!frame || frame.type !== "act") return send({type: "refused", error: "That message is not one the table reads."});
     const {type, ...request} = frame;
     try {

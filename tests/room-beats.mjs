@@ -8,6 +8,11 @@
  *   Empty    a pod that asks for `passEmpty` never asks a person whose only legal action is to pass with the stack
  *            empty; a step that passes by itself says so in the history, a turn's quiet steps in a row sharing one
  *            line ("Upkeep, Draw step: nothing to do"). Without the flag the room asks as before.
+ *   End      a pod that asks for `endAsks` (Rob, 2026-10-11: "passing the turn to the next player should always require
+ *            player confirmation") asks each person at their own end step, its pass the end of their turn (`endsTurn`);
+ *            a game made before it passes its quiet end steps as it did. And step by step: a person who prefers it
+ *            (`prefer`, Settings) is asked at every step of their own turn, on the tape; and each seat's view says which
+ *            of its own turns this is (`yourTurn`).
  *   Replay   a game with both beats replays from its seed and tape to the same game.
  *   Went by  one person and three AI seats, lands only (Rob, 2026-10-01: "I was just able to continuously draw cards
  *            and play a land after every draw"): the person is asked Draw a card once in each of their turns, four
@@ -17,7 +22,7 @@
  */
 import assert from "node:assert/strict";
 import {randomUUID} from "node:crypto";
-import {memoryStorage} from "../game/engine/storage.mjs";
+import {memoryStorage, createMatchStore} from "../game/engine/storage.mjs";
 import {createState} from "../game/engine/state/index.mjs";
 import {hashState} from "../game/engine/journal.mjs";
 import {createRng} from "../game/engine/rng.mjs";
@@ -97,23 +102,81 @@ async function walk(room, {turns, hook, pick} = {}) {
 /* 3. A STEP WITH NOTHING TO DO PASSES ITSELF, and the draw beat with it. Lands only: after the land drop, nothing. */
 {
   const storage = memoryStorage();
-  const room = await startRoom({storage, matchId: "beat2", cards, seed: "beat-seed-2", pod: {seats: seats({creatures: false}), drawBeat: true, passEmpty: true}});
+  const room = await startRoom({storage, matchId: "beat2", cards, seed: "beat-seed-2", pod: {seats: seats({creatures: false}), drawBeat: true, passEmpty: true, endAsks: true}});
   const asked = [];
   /* each person plays a land when they can, and passes otherwise */
   const land = (d) => d.kind === "priority" ? (d.options.find((o) => o.act === "play-land") || d.options.find((o) => o.act === "pass")).index : 0;
-  await walk(room, {turns: 4, pick: land, hook: (view) => {if (view.decision.kind === "priority") asked.push({phase: view.state.phase, turn: view.state.turn, acts: view.decision.options.map((o) => o.act), stack: view.state.stack.length});}});
-  ok(asked.length > 0 && asked.every((a) => a.stack > 0 || a.acts.some((x) => x !== "pass" && x !== "activate-mana")),
-    `a person is asked for priority only when there is something to do (${asked.length} times, in ${[...new Set(asked.map((a) => a.phase))].join(", ")})`);
-  ok(asked.every((a) => a.phase === "MAIN1" || a.phase === "MAIN2"), "with lands alone that is only a main phase with the land drop unused");
+  await walk(room, {turns: 4, pick: land, hook: (view) => {if (view.decision.kind === "priority") asked.push({phase: view.state.phase, turn: view.state.turn, own: view.state.turnPlayerId === view.seat,
+    acts: view.decision.options.map((o) => o.act), ends: view.decision.options.find((o) => o.act === "pass")?.endsTurn === true, stack: view.state.stack.length});}});
+  /* Their own end step is the one exception: a person's turn ends only when they say so (Rob, 2026-10-11). */
+  const ending = (a) => a.own && a.phase === "END_OF_TURN";
+  ok(asked.length > 0 && asked.every((a) => a.stack > 0 || a.acts.some((x) => x !== "pass" && x !== "activate-mana") || ending(a)),
+    `a person is asked for priority only when there is something to do, or it is their own end step (${asked.length} times, in ${[...new Set(asked.map((a) => a.phase))].join(", ")})`);
+  ok(asked.every((a) => a.phase === "MAIN1" || a.phase === "MAIN2" || ending(a)), "with lands alone that is only a main phase with the land drop unused, and their own end step");
+  /* Each turn ended by its person: asked in their own end step every turn, its pass the end of the turn; never in another's. */
+  const ends = asked.filter(ending);
+  eq([ends.map((a) => a.turn), ends.every((a) => a.ends)], [[1, 2, 3, 4], true], "each person is asked at the end of each of their own turns, and that pass says it ends the turn (endsTurn)");
+  ok(!asked.some((a) => a.phase === "END_OF_TURN" && !a.own) && !asked.some((a) => !ending(a) && a.ends), "never in another's end step, and no other pass ends a turn");
+  /* `endAsks` is kept with the match, as the other beats are: a game made before it -- the same seed, the same play --
+     passes its quiet end steps by itself, as it was played, and so replays as it was played. */
+  {
+    const before = await startRoom({storage: memoryStorage(), matchId: "beat2-before", cards, seed: "beat-seed-2", pod: {seats: seats({creatures: false}), drawBeat: true, passEmpty: true}});
+    const old = [];
+    await walk(before, {turns: 4, pick: land, hook: (view) => {if (view.decision.kind === "priority") old.push(view.state.phase);}});
+    ok(old.length > 0 && !old.includes("END_OF_TURN"), `a game made before endAsks is not asked at its end steps (${[...new Set(old)].join(", ")})`);
+  }
   const lines = room.history.filter((l) => l.mark === "quiet");
   ok(room.history.some((l) => l.turn === 1 && l.mark === "quiet" && l.text === "Upkeep, Draw step: nothing to do"),
     `the first turn's empty upkeep and skipped draw say so in the history, in one line (${lines.filter((l) => l.turn === 1).map((l) => l.text).join(" | ")})`);
-  ok(lines.some((l) => l.turn === 1 && l.text === "Beginning of combat, Declare attackers, End of combat, Main 2, End step: nothing to do"), `and the quiet steps after the land drop, in one line of their own (${lines.filter((l) => l.turn === 1).map((l) => l.text).join(" | ")})`);
+  ok(lines.some((l) => l.turn === 1 && l.text === "Beginning of combat, Declare attackers, End of combat, Main 2: nothing to do"), `and the quiet steps after the land drop, in one line of their own, the end step not among them (${lines.filter((l) => l.turn === 1).map((l) => l.text).join(" | ")})`);
   ok(!lines.some((l) => /^Draw step/.test(l.text) && l.turn > 1), "a draw step where someone drew is not called empty");
 
   /* 4. The same game replays from its seed and tape. */
   const proof = await replayMatch({storage, matchId: "beat2", cards});
   ok(proof.same && proof.tape > 0, `a game with both beats replays from its seed and tape to the same game (${proof.tape} tape entries)`);
+}
+
+/* 4a. STEP BY STEP (Rob, 2026-10-11: "the option to require manual transition from each of the 7 steps"): a person who
+   prefers it is asked at every step of their own turn where anyone gets priority; the other person still is not. Their
+   choice is on the tape, so the game replays; the same choice again is not taped; an AI seat has none to set. */
+{
+  const storage = memoryStorage();
+  let room = await startRoom({storage, matchId: "beat6", cards, seed: "beat-seed-6", pod: {seats: seats({creatures: false}), drawBeat: true, passEmpty: true, endAsks: true}});
+  await room.prefer("rob", {stepByStep: true});
+  const prefers = async () => (await createMatchStore(storage, "beat6").readTape()).filter((e) => e.kind === "prefer").length;
+  const taped = await prefers();
+  await room.prefer("rob", {stepByStep: true});
+  eq([taped, await prefers()], [1, 1], "the choice is taped once; the same choice again is not");
+  eq([room.view("rob").stepByStep, room.view("maya").stepByStep], [true, undefined], "each seat's view says its own way of playing");
+  const asked = [];
+  const land = (d) => d.kind === "priority" ? (d.options.find((o) => o.act === "play-land") || d.options.find((o) => o.act === "pass")).index : 0;
+  const yours = new Map();
+  await walk(room, {turns: 4, pick: land, hook: (view) => {
+    if (view.decision.kind === "priority") asked.push({who: view.seatId, turn: view.state.turn, phase: view.state.phase, own: view.state.turnPlayerId === view.seat});
+    for (const seatId of ["rob", "maya"]) yours.set(`${seatId}:${view.state.turn}`, room.view(seatId).yourTurn ?? null);
+  }});
+  /* Which of their own turns it is (Rob: "it says we are on turn 3, but I only played one land" -- the game's third, his
+     second): said to the seat whose turn it is, and to no other. */
+  eq(["rob:1", "maya:2", "rob:3", "maya:4", "maya:1", "rob:2"].map((k) => yours.get(k)), [1, 1, 2, 2, null, null],
+    "each seat's view says which of its own turns this is -- the game's turns 1 and 3 are Rob's first and second -- and says nothing in another's turn");
+  const robs = [...new Set(asked.filter((a) => a.who === "rob" && a.own && a.turn === 3).map((a) => a.phase))];
+  eq(robs, ["UPKEEP", "DRAW", "MAIN1", "COMBAT_BEGIN", "COMBAT_DECLARE_ATTACKERS", "COMBAT_END", "MAIN2", "END_OF_TURN"], "Rob, step by step, is asked at every step of his own turn where anyone gets priority");
+  eq([...new Set(asked.filter((a) => a.who === "maya" && a.own && a.turn === 4).map((a) => a.phase))].filter((p) => !["MAIN1", "MAIN2"].includes(p)), ["END_OF_TURN"],
+    "Maya, who did not choose it, is asked in her own turn only where there is something to do, and at its end");
+  ok(!asked.some((a) => a.who === "rob" && !a.own && a.phase !== "MAIN1" && a.phase !== "MAIN2"), "and step by step is Rob's own turn only: in Maya's turn he is not asked at its quiet steps");
+  const proof = await replayMatch({storage, matchId: "beat6", cards});
+  ok(proof.same, `the game with the choice on its tape replays to the same game (${proof.tape} tape entries)`);
+  room = await openRoom({storage, matchId: "beat6", cards});
+  eq(room.view("rob").stepByStep, true, "and the choice is kept with the room: opened again, it holds");
+  await room.prefer("rob", {stepByStep: false});
+  eq(room.view("rob").stepByStep, undefined, "turned off, it is gone from the view");
+  /* And `endAsks` is kept with the room too: opened again, Rob's turn 5, no longer step by step, still ends with his pass. */
+  const fifth = [];
+  await walk(room, {turns: 5, pick: land, hook: (view) => {if (view.decision.kind === "priority" && view.seatId === "rob") fifth.push(view.state.phase);}});
+  /* (Its upkeep was asked before he turned it off: a choice takes effect from the next step on.) */
+  ok(fifth.at(-1) === "END_OF_TURN" && !fifth.some((p) => p === "DRAW" || p.startsWith("COMBAT")), `opened again, the end step is still asked, and the quiet steps are not: turn 5 asks Rob ${[...new Set(fifth)].join(", ")}`);
+  const house = await startRoom({storage: memoryStorage(), matchId: "beat7", cards, seed: "beat-seed-7", pod: {seats: [...seats(), {seatId: "ai", name: "House", pilot: "house", ...deck(2)}], passEmpty: true}});
+  await assert.rejects(() => house.prefer("ai", {stepByStep: true}), /An AI seat has no way of playing to set/); checks += 1;
 }
 
 /* 4b. MANA IS SOMETHING TO DO WHILE A SPELL COULD USE IT: with lands out and a creature in hand, a person is asked in
@@ -140,7 +203,7 @@ async function walk(room, {turns, hook, pick} = {}) {
 /* 6. An AI seat draws for itself: no one is asked, and its library goes down by one each of its turns. */
 {
   const storage = memoryStorage();
-  const pod = {seats: [...seats(), {seatId: "ai", name: "House", pilot: "house", ...deck(2)}], drawBeat: true, passEmpty: true};
+  const pod = {seats: [...seats(), {seatId: "ai", name: "House", pilot: "house", ...deck(2)}], drawBeat: true, passEmpty: true, endAsks: true};
   const room = await startRoom({storage, matchId: "beat4", cards, seed: "beat-seed-4", pod});
   const lib = new Map(), turnOf = new Map();
   let askedForAi = 0;
@@ -165,7 +228,7 @@ async function walk(room, {turns, hook, pick} = {}) {
      "a commander is a legendary creature" (CR 903.3), offered only on a playtest table while the engine plays basics. */
   const lands = () => ({commander: ["Wastes"], cards: Array.from({length: 99}, (_, i) => ["Forest", "Island", "Swamp"][i % 3])});
   const pod = {seats: [{seatId: "rob", name: "Rob", pilot: "human", ...lands()}, ...["Ada", "Bo", "Cy"].map((name) => ({seatId: name.toLowerCase(), name, pilot: "house", ...lands()}))],
-    drawBeat: true, passEmpty: true};
+    drawBeat: true, passEmpty: true, endAsks: true};
   const room = await startRoom({storage: memoryStorage(), matchId: "went", cards, seed: "went-seed", pod});
   const draws = [], seen = [], askedIn = new Map();
   let landTurn = null;
@@ -181,8 +244,8 @@ async function walk(room, {turns, hook, pick} = {}) {
     return d.options.find((o) => o.act === "pass").index;
   }});
   eq(draws.map((x) => x.turn), [1, 5, 9, 13], "Rob is asked Draw a card once in each of his turns, four turns apart: in a four-player game the first player draws too (CR 103.8c)");
-  eq([5, 9].map((t) => askedIn.get(t)), [["draw", "priority+land"], ["draw", "priority+land"]],
-    "in each of his turns he is asked twice: Draw a card, then priority with his lands; after one land nothing more is offered (CR 305.2), so the rest of the turn passes by itself");
+  eq([5, 9].map((t) => askedIn.get(t)), [["draw", "priority+land", "priority"], ["draw", "priority+land", "priority"]],
+    "in each of his turns he is asked three times: Draw a card, then priority with his lands, and at its end; after one land nothing more is offered (CR 305.2), so the steps between pass by themselves, and his turn ends when he says so");
   const playedIn = (t) => room.history.filter((l) => l.turn === t && /^Rob played /.test(l.text)).length;
   eq([1, 5, 9].map(playedIn), [1, 1, 1], "the history has one land played by Rob in each of his turns");
   const asked = seen.filter((v) => v.seat === 0);
@@ -293,4 +356,4 @@ async function walk(room, {turns, hook, pick} = {}) {
   }
 }
 
-console.log(`room-beats: ${checks} checks passed — the draw waits for its click and priority follows, a step with nothing to do passes itself and says so, a cast passes for its caster unless they hold priority, and each game replays to the same.`);
+console.log(`room-beats: ${checks} checks passed — the draw waits for its click and priority follows, a step with nothing to do passes itself and says so, but never a person's own end step (endAsks), and every step of their turn is asked of one who plays step by step; a cast passes for its caster unless they hold priority, and each game replays to the same.`);

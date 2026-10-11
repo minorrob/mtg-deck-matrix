@@ -35,6 +35,22 @@ byte with the dry run):**
 Staging serves main 039c86dd. Every gate item that is this side's is done; what is left is Rob's (the list above, and
 G-D's 50 games by Grok Bot once the agents' tokens are in).
 
+### Rob's playtest notes, 2026-10-11
+
+Rob played Focus at staging and sent seven notes with two screenshots. What each was, and where it stands:
+
+| # | Rob's note | What it was | Where it stands |
+|---|---|---|---|
+| 1 | "It says we are on turn 3, but I only played one land" | The strip's turn is the game's, counting every player's: turn 3 was his second. | **Built.** The room counts each seat's own turns (`yourTurn`); the strip reads *Turn 3 · You (your 2nd)*. |
+| 2 | "Passing the turn to the next player should always require player confirmation, never happen automatically" | His end step, with nothing to do, passed by itself, ending his turn. | **Built.** The sixth beat, `endAsks`, kept with the match as the others are: a person's own end step is always asked, and the button there reads **End turn**. A game made before it replays as it was played. |
+| 3 | "It's skipping turns when I didn't play a land" | The data says otherwise: 405 steps passed by themselves in 40 games, and not one was a main phase with the land drop unused. Playing a land is something to do (`nothingToDo`), and a spell is counted with the mana the lands on the mat could make. What he saw was note 2: the turn ending without him. | **Answered** by note 2's fix; no main phase was ever skipped. |
+| 4 | "The option to require manual transition from each of the 7 steps … a toggle in settings" | No such setting. | **Built.** Settings › Play › *Stop at every step of my turn*: kept with his preferences, told to the room by the board, on the tape (`prefer`), so a game replays where it asked. |
+| 5 | "I should also be able to click the card to untap it again" | Mana tapped and not spent cannot be taken back. | **Next.** An *Untap* for a land tapped by its plain mana ability with its mana unspent and nothing since, offered by the room to persons only. |
+| 6 | A *Turn Resources* tab beside *Panel*: by land and card type, how many can be played this turn, how many in all, the mana tapped | Not built. | **Being built** with note 7. |
+| 7 | The right pane lies over the mat; it should sit beside it like the left one, its width dragged within the same bounds | The right pane was an overlay. | **Being built**, with the hover card no taller than the mat (his note of the same day). |
+
+Breaks: `game/tools/batch/breaks-turn-flow.py` (the room, 15) and `breaks-turn-flow-board.py` (the board and Settings, 10).
+
 ## RESUMED, 2026-10-08: the review-response session (Claude, a cloud container), on Rob's "Keep building"
 
 The review-response session paused on 2026-10-06 at 97% of the week's usage (Rob: pause at 90% and "write up a

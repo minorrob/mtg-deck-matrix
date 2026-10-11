@@ -333,8 +333,10 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
          2026-10-09: "resolve all"); and a person's cast passes for them (Rob, 2026-10-09: "I don't want to have to click a
          pop-up to resolve it"). The draw no longer waits for a click (Rob, 2026-10-09: "Draw phase should be resolved
          automatically by drawing a card and progress to the next screen"): a game launched before that keeps its
-         `drawBeat` with its match and replays as it was played. */
-      passEmpty: true, endWhenNoPerson: true, resolveAll: true, passAfterCast: true};
+         `drawBeat` with its match and replays as it was played. And a person's turn ends only when they say so (Rob,
+         2026-10-11: "passing the turn to the next player should always require player confirmation"): their end step is
+         always asked. */
+      passEmpty: true, endWhenNoPerson: true, resolveAll: true, passAfterCast: true, endAsks: true};
       try {
         room = await startRoom({storage: storageForRoom, matchId, cards, pod, seed: `${matchId}:${now}`, slice});
         step({type: "engine-started", launchId: matchId, matchId}, now);

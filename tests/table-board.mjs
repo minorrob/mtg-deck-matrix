@@ -66,7 +66,7 @@ import {readFileSync, mkdirSync} from "node:fs";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
 import {openBrowser, loadLiveState, legendaryNames} from "./uat/browser-runner.mjs";
-import {basicCards} from "../game/room/room.mjs";
+import {basicCards, RoomError} from "../game/room/room.mjs";
 import {GameTable} from "../cloud/game-room.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -255,6 +255,10 @@ try {
   /* B5, item 10: on your own turn with the stack empty, the button says what passing will do. */
   eq((await text(active.page, ".cm-board-strip [data-action=board-pass]")).trim(), "Next step", "on your own turn, with the stack empty, the button reads Next step");
   eq((await text(active.page, ".cm-board-waiting")).trim(), "", "and the strip does not say Your priority beside it: the button carries it");
+  /* Rob, 2026-10-11 ("It says we are on turn 3, but I only played one land"): the game's turn counts every player's, and
+     on your own the strip says which of yours it is. */
+  ok(/^Turn 1 · You \(your 1st\)$/.test((await text(active.page, ".cm-board-turn")).trim()) && !/your/.test(await text(other.page, ".cm-board-turn")),
+    `on your own turn the strip says which of yours it is: "${(await text(active.page, ".cm-board-turn")).trim()}"; on another's, only whose (${(await text(other.page, ".cm-board-turn")).trim()})`);
   /* B6, item 14: THE HAND TRAY. The count beside the ✋, and the hand by type, castable now over in hand -- the same
      fact that lights a card. */
   const trayOf = (page, seat, email) => page.evaluate(([seat, state]) => {
@@ -705,6 +709,17 @@ try {
   await rob.page.click("[data-action=board-view][data-view=focus]");
   await other.page.click(`.cm-board-tile[data-seat='${1 - activeSeat}'] [data-action=board-focus]`);
 
+  /* END TURN (Rob, 2026-10-11: "passing the turn to the next player should always require player confirmation, never
+     happen automatically"): Next step from main 2 lands on the end step, with nothing to do in it, and asks; the button
+     says what passing will do there. */
+  await active.page.click("[data-action=board-pass]");
+  await waitText(active.page, ".cm-board-strip [data-action=board-pass]", /^End turn$/);
+  const ending = views(active === rob ? ROB : MAYA).at(-1);
+  ok(ending.state.phase === "END_OF_TURN" && ending.state.turn === 1 && ending.decision.options.find((o) => o.act === "pass").endsTurn === true && /^End/.test((await text(active.page, ".cm-board-step")).trim()),
+    `the end step of your own turn asks you, nothing to do in it: the button reads End turn (${(await text(active.page, ".cm-board-step")).trim()})`);
+  await active.page.waitForTimeout(800);
+  ok(views(active === rob ? ROB : MAYA).at(-1).state.turn === 1 && (await text(active.page, ".cm-board-strip [data-action=board-pass]")).trim() === "End turn", "and the turn waits there for the click");
+
   /* REFUSED: an answer to a question already gone is refused, in words, and the board takes the room's view. */
   const {server} = routes[active === rob ? ROB : MAYA].at(-1);
   const stale = views(active === rob ? ROB : MAYA).at(-1);
@@ -735,13 +750,14 @@ try {
     && (await text(other.page, ".cm-board-step")).trim() === "Main 1",
     `turn 2's draw happens by itself: nobody is asked Draw a card, the hand is one larger (${handIn(1)} → ${handIn(2)}), and the board is on to Main 1`);
   await shot(other.page, "draw-by-itself-" + (other === rob ? "1400" : "1280"));
+  ok(/^Turn 2 · You \(your 1st\)$/.test((await text(other.page, ".cm-board-turn")).trim()), `the game's turn 2 is the other player's first: "${(await text(other.page, ".cm-board-turn")).trim()}"`);
   ok(await heard(other === rob ? ROB : MAYA, "sfx/sfx_event_draw.mp3"), "and the draw is heard");
   /* Both boards follow into turn 2, and the room asked only where there was something to do (items 10 and 11). */
   await waitText(rob.page, ".cm-board-turn", /Turn 2/);
   await waitText(maya.page, ".cm-board-turn", /Turn 2/);
   const askedIn = new Set([...views(ROB), ...views(MAYA)].filter((v) => v.decision && v.state.turn >= 1 && v.state.turn <= 2).map((v) => v.state.phase));
-  ok(["MAIN1", "MAIN2"].every((p) => askedIn.has(p)) && [...askedIn].every((p) => ["MAIN1", "MAIN2"].includes(p)),
-    `Next step walks the steps into turn 2, on both boards, and the room asked someone only where there was something to do (${[...askedIn].join(", ")}); the rest passed by themselves`);
+  ok(["MAIN1", "MAIN2", "END_OF_TURN"].every((p) => askedIn.has(p)) && [...askedIn].every((p) => ["MAIN1", "MAIN2", "END_OF_TURN"].includes(p)),
+    `Next step walks the steps into turn 2, on both boards, and the room asked someone only where there was something to do, and at the end of their own turn (${[...askedIn].join(", ")}); the rest passed by themselves`);
   /* X8c, HOLD PRIORITY / YIELD: at the turn's end the switch puts itself away, and on the next player's turn the same
      switch is Yield this turn; Tools says what it does, and that until then you hold priority. */
   ok((await text(active.page, "[data-action=board-skip]")).trim() === "Yield this turn", "at the turn's end Skip to end puts itself away, and on the next player's turn it is Yield this turn");
@@ -964,6 +980,18 @@ try {
      side pane"): Maya's tile ringed and marked, and only hers. */
   const tileTurn = await rob.page.evaluate(() => [...document.querySelectorAll(".cm-board-pane .cm-board-turn-mark")].map((m) => ({seat: m.closest(".cm-board-tile").dataset.seat, said: m.getAttribute("aria-label"), ringed: m.closest(".cm-board-tile").classList.contains("is-turn")})));
   eq(tileTurn, [{seat: "1", said: "Maya's turn", ringed: true}], `in Focus, Maya's tile in the side pane is marked as hers to play, and no other (${JSON.stringify(tileTurn)})`);
+  /* STOP AT EVERY STEP OF MY TURN (Settings; Rob, 2026-10-11): kept with the preferences, and told to the room by the board.
+     A room that does not take it (here, made to refuse: the AI seats playing on would) is not a notice, and the board does
+     not say it again at the same point of the game -- else each refusal's view would send it again, for good -- but once
+     the game moves on. */
+  const prefersSent = () => sent[ROB].map((m) => JSON.parse(m)).filter((f) => f.type === "prefer");
+  const prefers0 = prefersSent().length, robRoom = object.room, robPrefer = robRoom.prefer;
+  robRoom.prefer = async () => {throw new RoomError(409, "The AI players are still taking their turns. Your way of playing can be changed once they stop.");};
+  await rob.page.evaluate(() => __cm.commit({type: "preferences", values: {play: {stepByStep: true}}}, {renderView: false}));
+  for (let i = 0; i < 3; i += 1) {await serial(async () => object.broadcast()); await rob.page.waitForTimeout(300);}
+  eq([prefersSent().slice(prefers0).length, views(ROB).at(-1).stepByStep ?? false, /way of playing/.test(await text(rob.page, "#cm-notice"))], [1, false, false],
+    "a way of playing the room refuses is sent once at that point of the game, and said nowhere");
+  robRoom.prefer = robPrefer;
   /* HOLD PRIORITY AFTER I CAST (Tools): holding stays the caster's choice (CR 117.3c), kept on this device and sent with
      the cast. Rob passes Maya's upkeep and draw step; in her main phase she turns it on and casts a creature: she is asked again first,
      Resolve and its name, and then Rob, who holds an instant, may respond. */
@@ -991,6 +1019,16 @@ try {
   await waitText(maya.page, ".cm-board-mat .cm-board-field", new RegExp(heldName));
   ok(true, `then Rob may respond, passes, and ${heldName} resolves onto her battlefield`);
   await maya.page.evaluate(() => localStorage.removeItem("cm-board-hold"));
+  for (let i = 0; i < 40 && !views(ROB).at(-1).stepByStep; i += 1) await rob.page.waitForTimeout(100);
+  eq([prefersSent().slice(prefers0).map((f) => f.stepByStep), views(ROB).at(-1).stepByStep], [[true, true], true],
+    "once the game moved on, it was told again, once, and Rob's view says it back");
+  ok(!views(MAYA).at(-1).stepByStep, "and it is his alone: Maya's view does not carry it");
+  await rob.page.evaluate(() => __cm.commit({type: "preferences", values: {play: {stepByStep: false}}}, {renderView: false}));
+  await serial(async () => object.broadcast());
+  for (let i = 0; i < 40 && views(ROB).at(-1).stepByStep; i += 1) await rob.page.waitForTimeout(100);
+  await serial(async () => object.broadcast());
+  await rob.page.waitForTimeout(300);
+  eq([prefersSent().slice(prefers0).map((f) => f.stepByStep), views(ROB).at(-1).stepByStep ?? false], [[true, true, false], false], "turned off, the same: told once, and the view says it is off");
 
   /* SHAPE, at both widths. */
   for (const [who, width] of [[rob, 1400], [maya, 1280]]) {
