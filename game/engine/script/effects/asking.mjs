@@ -1654,6 +1654,41 @@ export const orderCounters = {
   },
 };
 
+/* ---- whose Alms Collector replaces a draw (CR 616.1) ----
+
+   Maya would draw three cards, and Rob's and Trey's Alms Collectors would each replace it: "instead you and that player each
+   draw a card". Whichever applies first ends it -- Maya then draws one, which neither replaces -- so the two end differently,
+   and Maya chooses (CR 616.1), before any card is drawn. The answer is kept by drawing player (`drawOrders`), and the draw
+   done with it (effects/zones.mjs, draw). Opened only with the question the resolution found (script/resolution.mjs). */
+export const orderDraws = {
+  open(state, params) {
+    const {question} = params;
+    state.awaiting = {kind: "effect-choice", effect: "orderDraws", player: question.player, options: question.options, count: question.count,
+      answers: params.answers, draw: params.draw};
+    return true;
+  },
+  choice(state, awaiting) {
+    const name = (p) => state.players[p].name;
+    /* Each option by its effect's card -- "Rob's Alms Collector" -- and what it does; one whose controller has since left the
+       game, with it, is said to be gone (CR 800.4a). */
+    const card = (you) => state.objects[state.zones.battlefield.find((id) => state.objects[id].controller === you
+      && (state.objects[id].abilities ?? []).some((a) => a.kind === "static" && a.rule === "draws-instead"))]?.card;
+    return {id: `order-draws:${state.turn}:${awaiting.player}`, title: `${name(awaiting.player)} would draw ${awaiting.count} cards: whose replacement applies?`,
+      mode: "one", min: 1, max: 1,
+      options: awaiting.options.map((you, index) => ({index, player: you,
+        label: card(you) ? `${name(you)}'s ${card(you)}: ${name(you)} and ${name(awaiting.player)} each draw a card` : "An effect no longer there"}))};
+  },
+  apply(state, awaiting, indices) {
+    const chosen = Array.isArray(indices) && indices.length === 1 ? awaiting.options[indices[0]] : undefined;
+    if (chosen === undefined) throw new Error("Invalid selection");
+    return {events: [], splice: [{...awaiting.draw, drawOrders: {...awaiting.answers, [awaiting.player]: chosen}}]};
+  },
+  /* The drawing player has left the game: there is no draw of theirs to replace (CR 800.4a), and the rest goes on. */
+  left(state, awaiting) {
+    return {events: [], splice: [{...awaiting.draw, drawOrders: awaiting.answers}]};
+  },
+};
+
 /* ---- connive (CR 701.50; Train B, X11) ----
 
    "Each creature that convoked this spell connives" (Lethal Scheme): several permanents told to connive at once. The first
@@ -1757,5 +1792,5 @@ export const chooseInstead = {
   },
 };
 
-export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, orderCounters,
+export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, orderCounters, orderDraws,
   conniveWhich, manaColors, counterKind, orderDestruction, chooseInstead});

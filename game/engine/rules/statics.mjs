@@ -103,6 +103,10 @@ export const STATIC_RULES = Object.freeze({
   /** "If an effect would create one or more tokens under your control, it creates twice that many of those tokens instead"
       (Anointed Procession; CR 614.1a): `times`. tokensCreated, read where tokens are made (script/effects/permanents.mjs). */
   "more-tokens": "script/effects/permanents.mjs",
+  /** "If an opponent would draw two or more cards, instead you and that player each draw a card" (Alms Collector; CR
+      614.1a): `affects` the players whose draws it replaces, from its controller's side. drawsInstead, read by the draw
+      effect (script/effects/zones.mjs). */
+  "draws-instead": "script/effects/zones.mjs",
   /** "If one or more artifact tokens would be created under your control, that many 5/5 red Dragon creature tokens with
       flying are created instead" (Draconic Visitor): `affects` the tokens it replaces, `token` what is made instead.
       tokensCreated (script/effects/permanents.mjs). */
@@ -314,6 +318,26 @@ export function tokensCreated(state, controller, count, values) {
     }
   }
   return {count: n, instead};
+}
+
+/**
+ * WHO DRAWS INSTEAD (CR 614.1a): "if an opponent would draw two or more cards, instead you and that player each draw a card"
+ * (Alms Collector) -- the controllers of the `draws-instead` statics whose `affects` names `player`, each once, in turn order
+ * from the player after `player`. Two of one controller's end the same; two of different controllers do not, and which
+ * applies is the drawing player's to choose (CR 616.1; effects/asking.mjs, orderDraws). Only for two or more: one card is no
+ * draw it replaces, so the draws made instead are not replaced again.
+ */
+export function drawsInstead(state, player, count) {
+  if (count < 2) return [];
+  const seats = state.players.length, order = (p) => (p - player - 1 + seats) % seats;
+  const found = new Set();
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of holder.abilities ?? [])
+      if (ability.kind === "static" && ability.rule === "draws-instead" && compileSelector({what: "player", ...ability.affects})(state, player, {controller: holder.controller, source: holderId}))
+        found.add(holder.controller);
+  }
+  return [...found].sort((a, b) => order(a) - order(b));
 }
 
 /**
