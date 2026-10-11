@@ -1,0 +1,322 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Warrior's Blades",
+  "fixtures": {
+    "Grower": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "grow",
+          "kind": "activated",
+          "text": "{0}: Put a +1/+1 counter on this creature.",
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{0}"
+            }
+          ],
+          "targets": [],
+          "effects": [
+            {
+              "effect": "putCounter",
+              "targets": "self",
+              "counter": "+1/+1",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: 3 damage to Maya's Ogre, and Rob gains 3 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Warrior's Blades"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Plains",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Warrior's Blades"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Ogre"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 43
+        }
+      ]
+    },
+    {
+      "name": "Equip at a creature with two +1/+1 counters costs {1}; at one with none, all three",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Warrior's Blades",
+            "Grower",
+            "Ogre",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Grower"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Grower"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Grower",
+                "counter": "+1/+1",
+                "count": 2
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Warrior's Blades"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Grower"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Warrior's Blades",
+          "targets": [
+            {
+              "card": "Grower"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Grower",
+                "power": 5,
+                "toughness": 4
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Warrior's Blades"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Grower"
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Ogre",
+            "power": 3,
+            "toughness": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "Four counters take off more than the {3}: the equip costs nothing, never less",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Warrior's Blades",
+            "Grower",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Grower"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Grower"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Grower"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Grower"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Warrior's Blades"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Grower"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Warrior's Blades",
+          "targets": [
+            {
+              "card": "Grower"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Grower",
+            "power": 7,
+            "toughness": 6
+          }
+        }
+      ]
+    }
+  ]
+}

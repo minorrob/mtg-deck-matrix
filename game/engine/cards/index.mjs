@@ -73,6 +73,8 @@ const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "trig
      (rules/combat.mjs canBlock, through rules/statics.mjs ruleChanged, which asks every rule's condition). */
   "cant-block"];
 
+/* A target picked after the offer is taken ("up to two target creatures", script/bind.mjs): not chosen with it. */
+const countedTarget = (spec) => Boolean(spec) && typeof spec === "object" && spec.count !== undefined;
 /* What a flashback cost may be made of (CR 702.34a): mana, life ("Flashback--{1}{U}, Pay 3 life"), and creatures to tap
    ("Flashback--Tap three untapped white creatures you control", Battle Screech: `tapCreature`, its `count` and `selector`). */
 const FLASHBACK_ATOMS = ["mana", "payLife", "tapCreature"];
@@ -1054,7 +1056,17 @@ export function compileScript(script) {
       const chosenModes = sole?.effect === "modal" && sole.chooser === undefined && (sole.modes ?? []).some((m) => (m.targets ?? []).length)
         ? {choose: sole.choose ?? 1, modes: sole.modes.map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? []}))} : null;
       if (chosenModes && (ability.targets ?? []).length) problems.push(`${ability.text}: a modal activated ability names its targets in its modes, not beside them`);
-      abilities.push({id, kind: "activated", text: ability.text, cost, targets: ability.targets ?? [], ...(chosenModes ? {modal: chosenModes} : {}),
+      /* "This ability costs {1} less to activate for each +1/+1 counter on the creature it targets" (Warrior's Blades; CR 601.2c,
+         then 601.2f): a reduction read from a target, costed for each way to choose its targets (rules/actions.mjs, abilityAims)
+         -- a permanent's ability, its targets chosen with the offer: never counted ones, picked after, nor its modes' (whose
+         targets are not the ability's, below). */
+      if (/"target":/.test(JSON.stringify(ability.costLess ?? null)) && (ability.zone !== undefined || !(ability.targets ?? []).length || ability.targets.some(countedTarget)))
+        problems.push(`${ability.text}: a cost read from its target is a permanent's ability's, with its targets chosen as it is offered`);
+      /* EQUIP (CR 702.6a): "Equip [cost]" is "[Cost]: Attach this permanent to target creature you control. Activate only as a
+         sorcery" -- an activated ability the card writes out, known by its words, for what reads equip abilities ("equip
+         abilities you activate that target this creature cost {2} less", Dwarven Mauler; rules/statics.mjs). */
+      const equip = /^Equip\b/.test(ability.text ?? "");
+      abilities.push({id, kind: "activated", text: ability.text, cost, targets: ability.targets ?? [], ...(chosenModes ? {modal: chosenModes} : {}), ...(equip ? {equip: true} : {}),
         effects: ability.effects, ...(loyalty !== undefined ? {loyalty, timing: "sorcery"} : ability.timing ? {timing: ability.timing} : {}), ...(ability.zone === "hand" ? {zone: "hand"} : {}),
         /* "{W}, Exile this card from your graveyard: ..." (Goldmeadow Nomad): an ability of the card in its owner's graveyard,
            offered there as encore's is (rules/actions.mjs). */
@@ -1196,6 +1208,12 @@ export function compileScript(script) {
   if (enchant && spell) problems.push("an Aura's spell is its Enchant target, and it has no other");
   /* The Aura as a spell: its one target, nothing done as it resolves -- it enters attached (stack.mjs). */
   if (enchant) spell = {id: "enchant", text: enchant.text, targets: [enchant.target], effects: [], ...(enchant.hostile ? {hostile: true} : {})};
+  /* "This spell costs {1} less to cast if it targets a creature with flying" (Swampsnare Trap; CR 601.2c, then 601.2f): costed
+     for each way to choose its targets (rules/actions.mjs, aimsFor) -- a spell with targets chosen as it is offered, never
+     counted ones picked after, nor its modes' (a modal spell's targets are its modes', none of its own). */
+  if (abilities.some((a) => a.kind === "static" && a.rule === "this-costs-less" && a.targeting !== undefined)
+    && (!spell || !(spell.targets ?? []).length || spell.targets.some(countedTarget)))
+    problems.push("a spell that costs less for what it targets has targets chosen as it is offered: none counted, and no modes");
   /* Escalate's (CR 702.120a), on a spell whose modes are chosen as it is cast, "choose one or more": its cost once for each mode
      beyond the first, as many as the spell allows (rules/actions.mjs, additionalVariants and withModes). */
   const oneOrMore = Boolean(spell?.modal) && (spell.modal.choose ?? 1) === 1 && (spell.modal.upTo ?? 1) > 1;

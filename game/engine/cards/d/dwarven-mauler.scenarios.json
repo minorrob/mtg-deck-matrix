@@ -1,0 +1,322 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Dwarven Mauler",
+  "fixtures": {
+    "Rod": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [
+        "Equipment"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "abilities": [
+        {
+          "id": "equip",
+          "kind": "activated",
+          "text": "Equip {2}",
+          "equip": true,
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{2}"
+            }
+          ],
+          "timing": "sorcery",
+          "targets": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you"
+            }
+          ],
+          "effects": [
+            {
+              "effect": "attach",
+              "targets": {
+                "target": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": "rod-pump",
+          "kind": "static",
+          "text": "Equipped creature gets +1/+0.",
+          "layer": 7,
+          "sublayer": "c",
+          "affects": {
+            "what": "permanent",
+            "attachedBy": "self"
+          },
+          "apply": {
+            "power": 1,
+            "toughness": 0
+          }
+        }
+      ]
+    },
+    "Hook": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [
+        "Equipment"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "abilities": [
+        {
+          "id": "hook",
+          "kind": "activated",
+          "text": "{2}: Attach this to target creature you control.",
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{2}"
+            }
+          ],
+          "timing": "sorcery",
+          "targets": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you"
+            }
+          ],
+          "effects": [
+            {
+              "effect": "attach",
+              "targets": {
+                "target": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "An equip ability aimed at the Mauler costs {2} less: Equip {2} for nothing, at the Mauler only",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Dwarven Mauler",
+            "Rod",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Rod"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Dwarven Mauler"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Rod",
+          "targets": [
+            {
+              "card": "Dwarven Mauler"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Dwarven Mauler",
+            "power": 3,
+            "toughness": 1
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Ogre",
+            "power": 3,
+            "toughness": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aimed at the Ogre it costs its {2}; and an attaching ability that is no equip ability is never cheaper",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Dwarven Mauler",
+            "Rod",
+            "Hook",
+            "Ogre",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Rod"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Dwarven Mauler"
+                ]
+              ]
+            },
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Hook"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Rod"
+              },
+              "count": 2,
+              "targets": [
+                [
+                  "Dwarven Mauler"
+                ],
+                [
+                  "Ogre"
+                ]
+              ]
+            },
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Hook"
+              },
+              "count": 2
+            }
+          ]
+        },
+        {
+          "activate": "Rod",
+          "targets": [
+            {
+              "card": "Ogre"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 0
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Ogre",
+            "power": 4,
+            "toughness": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "With Warrior's Blades: Equip {3} at the Mauler is {1}, both reductions together",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Dwarven Mauler",
+            "Warrior's Blades",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Warrior's Blades",
+          "targets": [
+            {
+              "card": "Dwarven Mauler"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Dwarven Mauler",
+            "power": 4,
+            "toughness": 2
+          }
+        }
+      ]
+    }
+  ]
+}
