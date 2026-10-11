@@ -16,7 +16,8 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | Gate item | State | Proof, or whose step |
 | --- | --- | --- |
 | G-A: G1, 1,400 games | **done: 1,400 of 1,400 clean** | PR #686's head ccb250d1: every game finished, none refused, every replay identical, 0 leaks in 105,656 checks of every seat's view |
-| G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**, with a daily cap of its own ($1.50, released at 905394dc); **AI-2's L1 built** (Normal and Easy, measured against L0: Normal 61%, Easy 56%, L0 itself 51%); **the LLM seat built behind its switch**, its privacy wording Rob's to approve; AI-3 to AI-6 not built | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
+| G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**, with a daily cap of its own ($1.50, released at 905394dc); **AI-2's L1 built** (Normal and Easy, measured against L0: Normal 61%, Easy 56%, L0 itself 51%); **the LLM seat built behind its switch**, its privacy wording Rob's to approve; **AI-5 built and on staging** (each deck says whether the table can play it; Play this deck); **AI-4, the deck advisor, built behind its switch**, its privacy wording Rob's to approve; **AI-3's Train C running** (Rob's library: 825 of 1,132 cards playable, 307 being defined); **AI-6, AI Coach settings, built** | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
+| G-A: M3's monitoring and backups | **monitoring built** (Workers Logs keeps the Worker's own 5xx and sync-conflict lines; `tools/ops-week.mjs`, the weekly check); Time Travel confirmed, 30 days | **Rob:** the two alerts and their email; R2 turned on, the nightly copy's window and what deletion promises (`docs/ops.md`) |
 | G-B: the whole gate green twice on main | done | dispatched Tests runs on main, every suite: 2499 on def8fa89 and 2503 on eff40fdc, both green |
 | G-B: `play-e2e` under wrangler dev | done | 35 checks at every staging release |
 | G-B: hidden information in every frame | done | `play-journeys` reads every frame to both people; G1's oracle 102,879 checks, no leak |
@@ -865,3 +866,77 @@ byte-identical to the release's dry-run bundle (2,477,269 bytes, sha256 a4eb4129
   rate limit is 120 requests a minute, and the walk polls twice a second on a slow machine. Both of the walk's
   countdown polls now wait out a reply with no table and, if the wait runs out, name the table's last answer
   (`tests/uat/play-e2e.mjs`, `tableUntil`). play-e2e 35 checks.
+
+**AI-5: your decks and the table, connected (2026-10-11).** Each deck now says whether the table can play it, before any
+table is opened. Where Play is in the cloud, a deck's tile reads *Playable at the table* or *13 cards to learn for the
+table*. Its page reads *Playable at the table · all 100 cards known* with **Play this deck**, or *87 of 100 known · 13 to
+learn* and names the cards the table cannot play yet.
+- **The question:** `POST /api/tables/known` (`cloud/tables.mjs`) asks which of a deck's card names a table cannot play,
+  with no table. One object answers it from the engine's cards alone. Its name holds a hyphen, so no table's id can be
+  it. The hub asks once for every deck; the page keeps each answer.
+- **Play this deck** opens New table with *You bring D1 Quintorius Spirits to seat 1.*, and the deck takes your seat once
+  the table is made. Already seated at a table whose game has not begun, it offers **Bring … there** instead. A deck the
+  table cannot play whole is not brought: New table names its cards, and you choose another there.
+- **New from Wizards' Play it** starts the precon's import as its chip does, and once the deck is made goes on to New
+  table with it, in place of the deck's page.
+- Only where Play is in the cloud (`crankmagic-table.js`, `C.play`); production leaves the file out, and nothing shows.
+- In passing: a long commander's name in the hub's narrow New from Wizards tile ran out of its chip (a flex item never
+  shrinks under its content); it now ellipsizes as written.
+- **Proof:**
+  - `table-lobby` 88 checks (13 new), now through the Worker's real front door (`cloud/tables.mjs`): the tiles, the
+    hub asking once, both deck pages, Play this deck to a new table, Bring … there, a deck not brought, and Play it;
+  - `game-table` 159 (the door: the names alone, one object, POST only, the size limit, shut without Play's binding);
+  - precons, decks-hub, deck-page-r3, page-budget, feature-wiring, release-pages, playtest-harness, coach unchanged and
+    green;
+  - **21 breaks: 20 caught.** The one missed was a guard no suite could see: an answer landing after the page moved on
+    writes into a page already gone. It was removed.
+- **Not built:** learning a card at *Prepare decks* (AI-3's online half). Until then *to learn* means the table refuses
+  the deck by name, as Change deck already said.
+
+**#696 merged on main 317be8f0 on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` b56404d4 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 03:18:11 UTC as
+version ba942e7f, its `play-worker.js` byte-identical to the release's dry-run bundle (2,477,826 bytes, sha256
+09f40cf9…). Its AI bindings are the Coach's alone, as before.
+
+**AI-4: the deck advisor, built behind its switch (2026-10-11).** *Ask the AI advisor* under a deck's More menu, where
+the AI door would answer the person. The page sends the deck's id and a goal; the Worker builds the brief itself from
+the person's library as last saved to the cloud, with the catalog's facts slimmed for the Worker, and asks the door's
+model at low effort. Swaps naming a card not in the brief are dropped and counted. Each swap is a row to tick, and a
+ticked one is saved as the deck's linked upgrade; nothing else changes.
+- **Proof:** `advisor` 43 checks (the seven decks' briefs equal the whole catalog's), `advisor-page` 9,
+  `release-pages` 204; 28 breaks caught.
+- **Rob's, left:** the privacy wording in `docs/ai-door.md` ("The deck advisor"), then staging's profile switches it on;
+  the eval with his key, and the swaps he would refuse.
+
+**#697 merged on main c9f87a3f on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 819748c2 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 04:25:44 UTC as
+version 37a15ed9, its `play-worker.js` byte-identical to the release's dry-run bundle (2,814,318 bytes, sha256
+b02a0dcf…). Its AI bindings are the Coach's alone: `AI_ADVISE` is not set, so the advisor stays shut on staging
+until Rob approves its privacy wording.
+
+**AI-6: AI Coach settings, built (2026-10-11).** One panel, from Settings (its own card, *AI Coach*) and from the
+board's *Tools ▾ › AI Coach settings…*, saved with the person's preferences and synced with the library. Six controls:
+cards not owned (off), the person's own first (on), inside the bracket (on), advice short or detailed, what the Coach
+sees (board and hand, or board only), and the person's spending over the last 24 hours against their cap.
+- **The advisor's four** are read by the Worker from the library it holds, never from the page. Cards not owned come
+  from the catalog: Commander-legal, inside the commander's colors and the per-card cap, with ten places of their own.
+- **The Coach's:** *My board only* sends the question with the hand withheld, and the table's brief leaves the hand and
+  the question being asked out.
+- **Proof:** `advisor` 56 checks, `coach` 60, `settings-r3` 56, `table-board` 250, `advisor-page` 9; 26 breaks caught.
+
+**#698 merged on main d32d42ca on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 3a123909 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 05:09:41 UTC as
+version 848671e7, its `play-worker.js` byte-identical to the release's dry-run bundle (2,824,874 bytes, sha256
+dbfa9625…). Its AI bindings are the Coach's alone, as before: the AI Coach settings are on staging, and the advisor
+they steer is still shut.
+
+**M3: monitoring, built (2026-10-11).** The Worker writes one line for each answer the operator should hear about,
+through `serve()` around `handle()` (`cloud/worker.mjs`, `opsLine`): every 5xx with its status (a 503 is a feature
+switched off, and the alerts leave it out), and a save refused as a sync conflict. A line names the route's resource,
+never the person, an id or what was sent. Each cloud release turns Workers Logs on with those lines only: the
+platform's per-request line, which carries the request's headers, stays off, and `tools/release-pages.mjs` refuses a
+release that would keep it. `tools/ops-week.mjs` is the weekly check, and it only reads. Run on staging today: no
+incidents, 3 people, 24 versions, Time Travel back to the database's birth (its 30-day window), and R2 not on.
+- **Proof:** `cloud-worker` 117 checks, `ops-week` 23, `release-pages` 210; 30 breaks caught.
+- **Rob's, left:** the two alerts with his email; R2 on, and the nightly copy's window and deletion promise
+  (`docs/ops.md`).

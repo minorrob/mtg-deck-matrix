@@ -9,6 +9,7 @@
  *   POST /api/tables                         a new table; you host it, in seat 1
  *   GET  /api/tables/:id                     the table as you see it
  *   POST /api/tables/:id/invite|uninvite|join|deck|known|ready|mat|rules|start|cancel|end|concede
+ *   POST /api/tables/known                   which of these card names a table cannot play yet, asked with no table (AI-5)
  *   GET  /api/tables/:id/connect             WebSocket to your seat, once the game is on
  *   GET  /api/tables/:id/record?match=<id>   a finished game's record (M8b; what it holds is the table's call)
  *
@@ -21,6 +22,10 @@
 const TABLE_ID = /^[a-z0-9]{8,40}$/, MATCH_ID = /^[a-z0-9]{8,40}g[1-9][0-9]{0,5}$/;
 const ACTIONS = new Set(["invite", "uninvite", "join", "deck", "known", "ready", "mat", "rules", "start", "cancel", "end", "concede"]);
 const HEADERS = {"content-type": "application/json; charset=utf-8", "cache-control": "no-store"};
+/* The object that answers "which of these cards can a table play" with no table (AI-5). Every table's object answers it
+   from the engine's cards alone (game/room/table.mjs `unknown`), reading no table, so one object answers everyone; its
+   name holds a hyphen, which no table's id can (TABLE_ID), so it is never a table. */
+const KNOWN_OBJECT = "cards-known";
 const reply = (status, value) => new Response(JSON.stringify(value), {status, headers: HEADERS});
 const newTableId = () => crypto.randomUUID().replace(/-/g, "");
 
@@ -45,6 +50,14 @@ export function tables(request, env, who, {newId = newTableId} = {}) {
       try {body = JSON.parse(await json());} catch {return reply(400, {error: "That request is not JSON, or is larger than a table needs."});}
       const tableId = newId();
       return forward(tableId, "/table/create", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({...body, tableId})});
+    }
+    /* A DECK'S READINESS, BEFORE ANY TABLE (AI-5): a deck's tile and its page say whether it is playable at the table, or
+       how many of its cards are still to learn. Names only go in; only the names a table cannot play come back. */
+    if (given === "known" && !action) {
+      if (request.method !== "POST") return reply(405, {error: "Ask which cards a table can play with a POST."});
+      let body;
+      try {body = await json(); JSON.parse(body || "{}");} catch {return reply(400, {error: "That request is not JSON, or is larger than a table needs."});}
+      return forward(KNOWN_OBJECT, "/table/known", {method: "POST", headers: {"content-type": "application/json"}, body: body || "{}"});
     }
     if (!TABLE_ID.test(given)) return reply(404, {error: "There is no such table."});
     if (!action) return request.method === "GET" ? forward(given, "/table") : reply(405, {error: "Read a table with a GET."});

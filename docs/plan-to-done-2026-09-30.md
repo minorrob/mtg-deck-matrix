@@ -637,6 +637,23 @@ sketch strategy considerations and copilot recommendations.
 - **Whether the advisor may name cards Rob does not own is a setting, not a rule** — see AI-6.
 - **Proof:** `tests/ai-door.mjs`: the brief's shape from a fixture library (candidates inside the identity and the
   cap; the weak roles first; never a hidden field); grounding refused; the review flow receives the swaps; the cap.
+- **Status, 2026-10-11: the route and the review built, behind the advisor's own switch** (`AI_ADVISE`, off on staging
+  until Rob approves its privacy wording in `docs/ai-door.md`):
+  - **the route:** `POST /api/ai/advise` takes the deck's id and the goal, nothing more. The Worker builds the brief
+    from the person's latest version in the cloud (`cloud/advise.mjs`): the list reading, its candidates the person's
+    own cards and lists. Each card's facts come from the catalog, slimmed to 287 KB for the Worker
+    (`cloud/advise-cards.mjs`, from `data/cards.json` by `tools/build-advise-cards.mjs`); for each of Rob's seven decks
+    the brief is the one the whole catalog makes. The brief builder is now an ES module the Worker bundles
+    (`cloud/advise-brief.mjs`). The call is the door's model at low effort with a cached instruction, logged as
+    `advise`; grounding drops and counts any swap naming a card not in the brief.
+  - **the review:** *Ask the AI advisor* under a deck's More menu, offered only where `GET /api/ai-advise` says the
+    door would answer. Each swap is a row to tick; a ticked swap is saved as the deck's linked upgrade (the card in, for
+    the card out's slot), and nothing else changes.
+  - **the eval** asks with the shipped body (`adviseBody`), on the door's own models.
+  - **Proof:** `advisor` 43 checks, `advisor-page` 9, `release-pages` 204, `generators` (the card table's `--check`),
+    `coach`, `ai-door`, `cloud-worker`, `advise-brief` unchanged and green; 28 breaks caught.
+  - **Rob's, left:** approve the privacy wording; run the eval with his key (`tests/ai-advise-eval/run.mjs --yes`) and
+    add the swaps he would refuse to its rubric. Cards he does not own wait on AI-6's setting.
 
 ### AI-6. AI Coach Settings, under Tools
 
@@ -661,6 +678,19 @@ to keep it simple."*
   gates do that.
 - **Proof:** `tests/settings-r3.mjs` and the board suite: each control read by the advisor's brief and the Coach's
   request (a card not owned never appears with 1 off; the hand withheld with 5 set to board only); the meter shown.
+- **Status, 2026-10-11: built.** *AI Coach settings…* from Settings (its own card, *AI Coach*) and from the board's
+  Tools, one panel (`crankmagic-settings.js`, `C.aiSettings`), saved as `preferences.aiCoach` and synced with the library.
+  - **1-4, the advisor's**, read by the Worker from the library it holds (`cloud/advise.mjs` `aiSettingsOf`, whose
+    defaults the panel shows): cards not owned only when asked for, from the catalog (Commander-legal, inside the
+    commander's colors and the per-card cap), with ten places of their own beside the person's thirty; the person's
+    own first unless they say otherwise; the bracket's game-changer cap unless lifted; and the advice short or detailed,
+    which the instruction reads.
+  - **5, the Coach's:** *My board only* sends the question with the hand withheld; the table builds the brief with no
+    hand and not the question being asked, whose options name it (`coachBrief`, `?hand=0`), and the Coach is told why;
+    the board's Coach says what it sees.
+  - **6, the meter:** `GET /api/ai-meter`, the person's spending over the last 24 hours against their cap, and the
+    privacy page's AI section.
+  - **Proof:** `advisor` 56 checks, `coach` 60, `settings-r3` 56, `table-board` 250, `advisor-page` 9; 26 breaks caught.
 
 ### AI-5. Your decks and the decks you can play — the connection
 
@@ -681,6 +711,21 @@ table are not yet one thing.
   history line.
 - **Proof:** `tests/decks-hub.mjs` and `tests/deck-page-r3.mjs`: the readiness line and *Play this deck*;
   `tests/table-lobby.mjs`: the deck arrives at the seat; `tests/precons.mjs`: *Play it*.
+- **Status, 2026-10-11: built**, where Play is in the cloud (`crankmagic-table.js`, `C.play`; production leaves it out):
+  - **the readiness:** each tile reads *Playable at the table* or *13 cards to learn for the table*; the deck's page reads
+    *Playable at the table · all 100 cards known*, or *87 of 100 known · 13 to learn* and names the cards the table
+    cannot play yet. It is read from `POST /api/tables/known` (`cloud/tables.mjs`): which names a table cannot play,
+    asked with no table, of one object that answers from the engine's cards alone. The hub asks once for every deck.
+  - **Play this deck** opens New table saying *You bring … to seat 1.*, and seats the deck once the table is made; seated
+    at a table whose game has not begun, it offers *Bring … there*. A deck the table cannot play whole is named with
+    its cards and not brought.
+  - **New from Wizards' Play it:** the precon's import, then the deck, then New table with it.
+  - **Proof:** all of it in `tests/table-lobby.mjs`, the suite that runs staging's own page with Play on (88 checks,
+    13 new, through the Worker's real front door now); the door in `tests/game-table.mjs` (159); the other suites
+    named above unchanged and green. 21 breaks: 20 caught; the one missed was a guard no suite could see (an
+    answer landing after the page moved on writes into a page already gone), so it was removed.
+  - **Left:** *to learn* still means the table refuses the deck by name, until AI-3's online half learns a card at
+    *Prepare decks*; the deck page's Record gaining the game's history line.
 
 ## Part 4 — The order, the estimates, and what Rob decides
 
@@ -745,7 +790,7 @@ where each item now sits against Parts 2 and 3. `docs/plan-groups.md` (the libra
 | Milestone | Open items (`docs/plan-to-100.md`) | Where it sits now |
 | --- | --- | --- |
 | **M2 data** | Live-first reads set by set; stores kept only where §0 says; the adjudication log; the scheduled CR check; About shows every data set's date and stale labels; a game pins its data version; **Rob:** R2 on, the token, the schedule; the bucket; a scheduled refresh; publish to R2 with `current.json`; the Worker serves `/data/*` from R2; the app reads `current.json`; About's "prices refreshed today"; precons in the refresh (done: `tools/refresh.mjs` runs `build-precons.mjs`); split `graph-played.json`; Scryfall's and EDHREC's terms | **Track D (data), after Rob's R2.** The scheduled refresh was to be a GitHub Actions run; Actions is out on billing, so the schedule is either Actions once billing is restored (which also restores CI) or a Cloudflare Cron Trigger calling a refresh Worker — **decision for Rob** (recommended: restore Actions billing; it is the smaller change and CI needs it too) |
-| **M3 ops** | Monitoring (Workers logs, an alert on 5xx and sync conflicts, a weekly check; **Rob:** the alert email); backups (D1 Time Travel's window; a nightly copy to R2); invites (Rob, ongoing; the 50-person cap); how Rob's workbook reaches his library; the program document's sync note | **Track O (operations)**, before the human-invites gate (Part 7, G-E): monitoring and backups are a session; the rest is Rob's |
+| **M3 ops** | Monitoring (Workers logs, an alert on 5xx and sync conflicts, a weekly check; **Rob:** the alert email); backups (D1 Time Travel's window; a nightly copy to R2); invites (Rob, ongoing; the 50-person cap); how Rob's workbook reaches his library; the program document's sync note | **Track O (operations)**, before the human-invites gate (Part 7, G-E): monitoring and backups are a session; the rest is Rob's. **Status, 2026-10-11 (`docs/ops.md`):** Workers Logs keeps the Worker's own line for each 5xx and each sync conflict, never the person or what was sent; the weekly check is `tools/ops-week.mjs`; Time Travel reaches 30 days. **Rob's:** the two alerts and their email, R2 turned on, and the nightly copy's window and what deletion promises |
 | **M4 engine** | Keyword families for the seven decks (2.3); the scenario runner and `cards/index.mjs` (2.4); **tier 0, the 477 cards** (phase 3); PLAN §5/§7 suites (performance budgets, card scenarios, the bridge contract); deck legality against a dated banned list; the CME history event contract; **gate G1** (seven decks, 100 games each against house pilots and random pilots, zero exceptions, identical replays, no leaks, and the conformance suite green); Rob's calls (Forge's role — dropped; unsupported cards — refused by name, compiled once M7 lands) | **The critical path to a real game.** Tier 0's 477 cards become **AI-3's first batch** (the loader run offline by Rob on the seven decks), with the hand-authored scenario tests kept as the loader's eval; the keyword families and the runner stay engine work (three to four sessions); G1 is the gate before Grok Bot plays real decks |
 | **M5 Play** | Card definitions from a store, not bundled; the audio pack; the live hidden-information checks; the speed rule; **Rob:** who plays v1 (decided: the invite list), Workers Paid when CPU passes 10 ms | The store is AI-3's `card_scripts`; **B8, the audio** (below); the checks and the speed rule are the end-to-end test gate (Part 7, G-B) |
 | **M6 door** | Rob's five steps; through the door: LLM seats, the Coach, the workshop's features; the privacy wording | **AI-1, AI-2, AI-4** (Part 3); the steps are Rob's, and gate every AI PR |
@@ -813,12 +858,12 @@ Part 7 after G-B depends on it. AI-5 then joins the library's decks to the table
 **Non-functional.** *Security and privacy:* Access guards the API (the Invited policy), the AI door's own
 application and allowlist, hidden information proved by inspecting every frame, the secrets scan in the gate, the
 privacy page before any AI feature; *reliability:* the room resumes from any decision, sockets reconnect, a dropped
-seat has five minutes, D1's Time Travel — and **monitoring and backups (M3) are the open items**, scheduled before
-human invites; *performance:* the page budgets, the board measured at four sizes, the engine's budgets in PLAN §5,
+seat has five minutes, D1's Time Travel (30 days) — and **M3's monitoring is built** (Workers Logs, the weekly check;
+the alerts and the nightly copy to R2 are Rob's steps, `docs/ops.md`), before human invites; *performance:* the page budgets, the board measured at four sizes, the engine's budgets in PLAN §5,
 Rob's five-second rule measured over the network at G-B; *cost:* the AI caps and the call log, Workers Paid when CPU
 passes 10 ms (Rob), Actions billing (Rob) so CI and the scheduled refresh run; *offline and updates:* the service
 worker's precache and its "new version, Reload" prompt; *data freshness:* M2, waiting on R2; *observability:* the
-AI call log, Workers logs once M3's alerts exist.
+AI call log, and Workers Logs' monitoring lines with the weekly check (`docs/ops.md`).
 
 **Code health.** 182 suites with the browser ones required, run twice on a clean worktree before every merge; the
 ratchets that only go down (raw hex, UK spellings, page budgets, no size steps); one component per thing (the

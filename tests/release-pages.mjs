@@ -73,6 +73,8 @@ eq(wrangler.ratelimits, [
   {name: "LIMIT_IP", namespace_id: "1001", simple: {limit: 240, period: 60}},
   {name: "LIMIT_PERSON", namespace_id: "1002", simple: {limit: 120, period: 60}},
 ], "/api/* is rate-limited per IP and per person (M3)");
+eq(wrangler.observability, {enabled: true, head_sampling_rate: 1, logs: {enabled: true, invocation_logs: false}},
+  "Workers Logs keeps the Worker's own monitoring lines, every one, and not the platform's line for each request (M3)");
 const ignored = built.get(".assetsignore").toString("utf8").split("\n");
 ok([".git", ".wrangler", "wrangler.jsonc", ".assetsignore"].every((f) => ignored.includes(f)), "and .assetsignore keeps the clone's .git, wrangler's scratch folder and the configuration off the site");
 ok([...built.values()].every((b) => b.length <= 25 * 1024 * 1024), "every file fits Cloudflare's 25 MiB");
@@ -89,6 +91,12 @@ ok(!ignored.includes("_headers"), "and _headers is uploaded, since Cloudflare re
 const broken = (edit) => {const copy = new Map(built); edit(copy); return verify(copy, profile);};
 ok(!broken((m) => m).some((p) => p.includes("rate-limit")), "the builder accepts the rate limits it wrote (M3)");
 ok(broken((m) => { const w = JSON.parse(m.get("wrangler.jsonc").toString()); delete w.ratelimits; m.set("wrangler.jsonc", Buffer.from(JSON.stringify(w))); }).some((p) => p.includes("LIMIT_IP")), "and a release without the limits is named");
+const observe = (edit) => broken((m) => { const w = JSON.parse(m.get("wrangler.jsonc").toString()); edit(w); m.set("wrangler.jsonc", Buffer.from(JSON.stringify(w))); });
+ok(!broken((m) => m).some((p) => /Workers Logs/.test(p)), "the builder accepts the logging it wrote (M3)");
+ok(observe((w) => { w.observability.logs.invocation_logs = true; }).some((p) => p.includes("its headers")), "a release that would keep every request's headers in the logs is named");
+ok(observe((w) => { delete w.observability; }).some((p) => p.includes("its headers")), "as is one that leaves it to whatever the dashboard has");
+ok(observe((w) => { w.observability.enabled = false; }).some((p) => p.includes("count nothing")), "and one whose logs are off, so the alerts would count nothing");
+ok(observe((w) => { w.observability.head_sampling_rate = 0.1; }).some((p) => p.includes("count nothing")), "or sampled, so they would miss nine in ten");
 ok(broken((m) => m.delete("data/cards.json")).some((p) => p.includes("data/cards.json")), "a file the worker lists but the release lacks is named");
 ok(broken((m) => m.set("crankmagic-game.js", Buffer.from(""))).some((p) => p.includes("crankmagic-game.js")), "a Play module in the release is named");
 ok(broken((m) => m.set("index.html", Buffer.from(m.get("index.html").toString().replace('content="coming-soon"', 'content="live"')))).some((p) => p.includes("not marked")), "a page that does not say Coming Soon is named");
@@ -223,6 +231,14 @@ const said = new Map([...withPilot].map(([f, b]) => [f, f === "privacy.html" ? B
 ok(!verify(said, pilotProfile).some((p) => p.includes("AI on Claude")), "and one whose privacy policy says it is not");
 const uncappedPilot = playConfig(said, (c) => ({...c, vars: {...c.vars, AI_CAP_PILOT_GAME_CENTS: "0"}}));
 ok(verify(uncappedPilot, {...pilotProfile, ai: {...pilotProfile.ai, pilotGameCents: 0}}).some((p) => p.includes("without a cap for each game")), "nor one without each game's cap");
+/* THE DECK ADVISOR (AI-4): its own switch, from the profile; not on staging until Rob approves what the privacy page says it sends. */
+eq(sw2.vars.AI_ADVISE, undefined, "staging offers no deck advisor yet: its switch is off");
+const advisorProfile = {...stagingProfile, ai: {...stagingProfile.ai, advise: true}};
+eq(aiVars(advisorProfile).AI_ADVISE, "on", "a profile that says so switches it on");
+const withAdvisor = playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_ADVISE: "on"}}));
+ok(verify(withAdvisor, advisorProfile).some((p) => p.includes("the deck advisor is switched on (AI_ADVISE) but privacy.html does not say what it sends")), "a release that offers the advisor where the privacy policy does not say what it sends is refused");
+const advisorSaid = new Map([...withAdvisor].map(([f, b]) => [f, f === "privacy.html" ? Buffer.from(b.toString("utf8").replace("</main>", "<p><strong>The deck advisor.</strong> …</p></main>")) : b]));
+ok(!verify(advisorSaid, advisorProfile).some((p) => p.includes("deck advisor")), "and one whose privacy policy says it is not");
 ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_MODEL: "claude-opus-5-5"}})), {...stagingProfile, ai: {...stagingProfile.ai, model: "claude-opus-5-5"}}).some((p) => p.includes("not one the AI door calls")), "and a profile naming a model dearer than Sonnet, even its own (Rob: Sonnet or the lowest-cost models, always)");
 ok(verify(playConfig(built, (c) => ({...c, durable_objects: sw2.durable_objects})), profile).some((p) => p.includes("release without Play")), "and production binding a table");
 ok(verify(new Map([...sb, [".assetsignore", Buffer.from(sb.get(".assetsignore").toString().replace("game/\n", ""))]]), stagingProfile).some((p) => p.includes("engine's source as files")), "a Play release that would publish the engine's source is named");

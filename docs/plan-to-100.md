@@ -61,8 +61,8 @@ The machinery that keeps the stores fresh:
 
 - [x] **Self-service account deletion.** A Worker route that removes the person's data, a type-to-confirm dialog in Settings (R3.3), and the Access email removal as Rob's runbook step. The privacy page already promises this. *Done in R3.3b: `DELETE /api/account`, Settings › Delete account…, the runbook in `docs/plan-account-cloud.md`; proven by `tests/cloud-worker.mjs`, `tests/settings-r3.mjs` and the real-Worker `tests/uat/cloud-e2e.mjs`. Not live until the next production deploy, on Rob's go.*
 - [x] **Rate limits on `/api/*`**, per identity and per IP. *Done 2026-09-25: Cloudflare's Rate Limiting bindings, 240 a minute per IP (checked before the token) and 120 per person, in each profile's own namespaces; `tools/release-pages.mjs` refuses a cloud release without them, and a refusal says what to do. It reaches crankmagic.com with the next release, on Rob's go.*
-- [ ] **Monitoring:** Workers observability logs, an alert on 5xx and on sync conflicts, and a weekly check. **Rob:** set the alert email.
-- [ ] **Backups:** confirm D1 Time Travel's window, and export a nightly copy to R2 once M2 turns it on.
+- [ ] **Monitoring:** Workers observability logs and the weekly check built (`docs/ops.md`); the alerts on 5xx and on sync conflicts wait on **Rob:** create them, with his email.
+- [ ] **Backups:** D1 Time Travel's window confirmed (30 days, `tools/ops-week.mjs`); the nightly copy to R2 once Rob turns R2 on and chooses its window.
 - [ ] **Rob, ongoing:** invite people through the Access "Invited" policy. The free plan's cap is 50 people; past it, the program's swap point applies.
 - [ ] **Rob:** how his workbook reaches his library now that Load Live is gone. Push it into his account through the API, or make the app the source of truth.
 - [ ] Update the program document: sync ships whole-library snapshots, not a commit log.

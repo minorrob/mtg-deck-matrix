@@ -1,4 +1,4 @@
-/* THE DECK ADVISOR'S BRIEF (AI-4; advise-brief.js) on Rob's committed library.
+/* THE DECK ADVISOR'S BRIEF (AI-4; cloud/advise-brief.mjs) on Rob's committed library.
  *
  *   Shape      a deck's parameters, its measured roles (weakest first) and curve, the hundred with each card's roles,
  *              state, price and rank, the candidates, the constraints; the same role counts the role lens reads.
@@ -22,7 +22,7 @@ import path from "node:path";
 import {ROOT} from "../schema/index.mjs";
 
 const require = createRequire(import.meta.url);
-const B = require(path.join(ROOT, "advise-brief.js"));
+import * as B from "../cloud/advise-brief.mjs";
 const Lens = require(path.join(ROOT, "crankmagic-lens.js"));
 const M = require(path.join(ROOT, "collection-model.js"));
 const Catalog = require(path.join(ROOT, "card-catalog.js"));

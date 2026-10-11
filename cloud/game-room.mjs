@@ -209,7 +209,8 @@ export class GameTable extends GameRoom {
       if (route === "GET /table/record") return reply(200, {record: await t.record(email, url.searchParams.get("match") || undefined)});
       /* The Coach's brief for this person's seat (game/room/coach-brief.mjs). Only the Worker's AI door asks for it: the
          front door (cloud/tables.mjs) forwards no such path. */
-      if (route === "GET /table/brief") return reply(200, {brief: await t.brief(email)});
+      /* `?hand=0`: the person has set the Coach to see their board only (AI-6). */
+      if (route === "GET /table/brief") return reply(200, {brief: await t.brief(email, {hand: url.searchParams.get("hand") !== "0"})});
       if (route === "POST /table/invite") return reply(201, {invite: await t.invite(email, Number((await body()).seatId), now)});
       if (route === "POST /table/uninvite") return reply(200, {table: await t.uninvite(email, Number((await body()).seatId), now)});
       if (route === "POST /table/join") return reply(200, {table: await t.join(email, (await body()).code, now)});

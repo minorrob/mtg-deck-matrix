@@ -11,6 +11,9 @@
  *     their state, the graveyard, the face-up exile and the command zone; the stack; the step; the history's lines;
  *   - their own deck as a list -- the cards it was built with, sorted by name -- and how many cards the library holds.
  *
+ * And, when the person has set the Coach to see their board only (AI-6, AI Coach settings): no hand at all, and not the
+ * question they are being asked, whose options name their hand's cards -- only that the hand is withheld.
+ *
  * And never: another seat's hand or library (the projection cannot carry them), a face-down card that is not theirs,
  * or the library's order -- not even a top card a scry or a look showed them, which the projection keeps for the board.
  * It is built on the Worker's side of the table (cloud/game-room.mjs), never from anything a browser sends.
@@ -33,9 +36,10 @@ const named = (zone) => (zone?.cards ?? []).filter((c) => c.name).map((c) => ({i
 /**
  * @param {object} view   the room's view for the asking seat (game/room/room.mjs, `view(seatId)`)
  * @param {object} deck   that seat's deck as the table holds it: {name, commander: [names], cards: [names]}
+ * @param {{hand?: boolean}} [sees]  false `hand`: the person's board only, their hand withheld
  * @returns {object}      the brief: only what that person may know
  */
-export function coachBrief(view, deck) {
+export function coachBrief(view, deck, {hand = true} = {}) {
   const s = view.state, me = view.seat, names = s.players.map((p) => p.name);
   const own = s.players[me];
   const whose = (id) => (id === null || id === undefined ? null : names[id] ?? null);
@@ -66,9 +70,10 @@ export function coachBrief(view, deck) {
       exile: named(p.zones.Exile),
       command: named(p.zones.Command),
     })),
-    hand: (own.zones.Hand.cards ?? []).filter((c) => c.name).map((c) => ({id: c.cardId, name: c.name, ...(offers.has(c.cardId) ? {now: offers.get(c.cardId)} : {})})),
+    hand: hand ? (own.zones.Hand.cards ?? []).filter((c) => c.name).map((c) => ({id: c.cardId, name: c.name, ...(offers.has(c.cardId) ? {now: offers.get(c.cardId)} : {})})) : [],
+    ...(hand ? {} : {handWithheld: true}),
     stack: (s.stack ?? []).map((e) => ({id: e.cardId, name: e.name ?? "a face-down spell", controller: whose(e.playerId), kind: e.kind})),
-    asked: view.decision ? {title: view.decision.title, kind: view.decision.kind ?? view.decision.mode,
+    asked: hand && view.decision ? {title: view.decision.title, kind: view.decision.kind ?? view.decision.mode,
       options: view.decision.options.slice(0, OPTIONS_SHOWN).map((o) => (o.detail ? `${o.label} ${o.detail}` : o.label))} : null,
     history: (view.history ?? []).slice(-HISTORY_LINES).map((h) => `Turn ${h.turn}: ${h.text}`),
     deck: {name: deck?.name ?? null, cards: [...counted].sort(([a], [b]) => a.localeCompare(b)).map(([name, n]) => (n > 1 ? `${n} ${name}` : name)), library: own.zones.Library.count},

@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 462 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 465 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1102,6 +1102,9 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `crankmagic-audio` — `tests/crankmagic-audio.mjs`
 - `advice-contract` — `tests/advice-contract.mjs` (preparation-only AI requests, evidence references and stale-result rejection)
 - `advise-brief` — `tests/advise-brief.mjs`
+- `advisor` — `tests/advisor.mjs` (the deck advisor through the AI door: the brief built from the person's own library in the cloud, grounded swaps only, on the day's caps)
+- `ops-week` — `tests/ops-week.mjs` (M3's weekly check, `tools/ops-week.mjs`, against a stand-in for Cloudflare's API: it reads and changes nothing, counts the Worker's monitoring lines by kind and status, never reads an address, and names an incident; `docs/ops.md`)
+- `advisor-page` — `tests/advisor-page.mjs` (Ask the AI advisor on a deck's page: offered only where the door would answer, swaps saved as upgrades)
 - `import-flow` — `tests/import-flow.mjs`
 - `deck-holds-cards` — `tests/deck-holds-cards.mjs`
 - `group-templates` — `tests/group-templates.mjs`
