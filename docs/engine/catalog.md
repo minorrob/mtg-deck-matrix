@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,255 defined and playable today; 2,602 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,256 defined and playable today; 2,603 with every
 mechanic built, so only their definitions are left to write; 27 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -36,7 +36,7 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 26 | 89 |
+| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 25 | 88 |
 | option | Remembering what an effect moved | — | missing | 21 | 81 |
 | option | You may play or cast a card from another zone | — | missing | 18 | 63 |
 | effect | ChooseColor | — | missing | 10 | 14 |
@@ -828,7 +828,7 @@ The things that alone hold back the most of the most-played cards.
 | Fewer targets than the most ("up to", "any number of") | a target's count {min, max} (script/bind.mjs), picked as a pick-several | built | 126 | 1672 | 0 | 0 |
 | Remembering what an effect moved | — | missing | 124 | 1168 | 81 | 21 |
 | More than one target of a kind ("up to N") | a target's count {min, max} (script/bind.mjs); a count that is X is not built | partial | 123 | 1664 | 0 | 0 |
-| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 89 | 26 |
+| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 88 | 25 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost} | built | 104 | 684 | 0 | 0 |

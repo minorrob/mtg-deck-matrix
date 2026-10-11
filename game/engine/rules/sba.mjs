@@ -53,7 +53,7 @@ import {sacrificeOne, moveOne, returnExiledUntil, leavingRef, destructionReplace
 import {changeLife} from "../script/effects/resources.mjs";
 import {enduringStories, citysBlessings} from "../keywords/designations.mjs";
 import {preparedCopyStays} from "../script/effects/attributes.mjs";
-import {endControlChange, nextRecord} from "../script/effects/permanents.mjs";
+import {endControlChange, nextRecord, endCounterDurations} from "../script/effects/permanents.mjs";
 import {protectedFrom} from "./protection.mjs";
 import {answerForDeparted, goOnWithout} from "./turn.mjs";
 
@@ -209,6 +209,8 @@ function auraToGraveyard(state, id, events) {
 }
 
 export function checkStateBasedActions(state) {
+  /* "For as long as that land has a blight counter on it" (CR 611.2b): over, for an object with none (effects/permanents.mjs). */
+  endCounterDurations(state);
   /* Continuous control changes also confer hideaway's look permission (CR 406.3, 702.75a). Record it before a state-based
      action can remove the source or an effect granting control; projections only read these permissions. */
   for (const source of new Set(state.zones.exile.filter((id) => state.objects[id]?.faceDown === true)

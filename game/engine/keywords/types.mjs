@@ -29,5 +29,11 @@ const TYPES = new Set(CREATURE_TYPES);
 export const isCreatureType = (subtype) => TYPES.has(subtype);
 /** Whether printed keywords make an object every creature type (rules/layers.mjs starts from this). */
 export const everyCreatureType = (keywords) => (keywords ?? []).includes("Changeling");
+/* The land types (CR 205.3i): "it loses all land types" (Ultima, Origin of Oblivion) takes these, and keeps any other
+   subtype -- a land creature's creature types. "Urza's" as the oracle data writes it. */
+const LAND_TYPES = new Set(["Cave", "Desert", "Forest", "Gate", "Island", "Lair", "Locus", "Mine", "Mountain", "Plains", "Planet", "Power-Plant",
+  "Sphere", "Swamp", "Tower", "Town", "Urza's"]);
+/** Whether a subtype is a land type. */
+export const isLandType = (subtype) => LAND_TYPES.has(subtype);
 /** Whether an object with these subtypes -- every creature type, or not -- has `subtype`. */
 export const hasSubtype = (subtypes, every, subtype) => subtypes.includes(subtype) || (every === true && isCreatureType(subtype));

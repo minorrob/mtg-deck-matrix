@@ -358,6 +358,24 @@ export function becomeCopy(state, params, context) {
   for (const id of ids) copyOnto(state, id, (params.targets ?? [])[0], {except: params.except ?? {}, keep: params.keep ?? [], until: params.until ?? null});
   return [];
 }
+/**
+ * "FOR AS LONG AS THAT LAND HAS A BLIGHT COUNTER ON IT" (Ultima, Origin of Oblivion; CR 611.2b): a layer's effect lasting while
+ * each object it affects has a counter of a kind (`whileCounter`) ends for an object with none -- for good, so a counter put
+ * on again later does not bring it back -- and with none left, it is over. Run as the game is checked (rules/sba.mjs); the
+ * layers apply it only while the counter is there, in between. A rule changed for a while (`rule`, Promise of Loyalty's
+ * "can't attack") reads its counter where the rule is asked (rules/statics.mjs).
+ */
+export function endCounterDurations(state) {
+  const over = new Set();
+  for (const e of state.effects ?? []) {
+    if (!e.whileCounter || e.rule || !Array.isArray(e.affects?.ids)) continue;
+    const ids = e.affects.ids.filter((id) => (state.objects[id]?.counters?.[e.whileCounter] ?? 0) > 0);
+    if (!ids.length) over.add(e);
+    else if (ids.length < e.affects.ids.length) e.affects = {...e.affects, ids};
+  }
+  if (over.size) state.effects = state.effects.filter((e) => !over.has(e));
+}
+
 /** "Until end of turn": those copy effects end (rules/turn.mjs, the cleanup step). */
 export function endCopies(state) {
   for (const id of state.zones.battlefield) {
@@ -629,7 +647,9 @@ export function effectUntil(state, params, context) {
        (Promise of Loyalty): `defender` "you", this effect's controller, `planeswalkers` theirs too (CR 506.3), and
        `whileCounter`, a duration of each creature's own -- while it has that counter (CR 611.2b; rules/statics.mjs). */
     ...(params.rule === "cant-attack" && params.defender === "you" ? {defender: "you", ...(params.planeswalkers === true ? {planeswalkers: true} : {})} : {}),
-    ...(params.rule === "cant-attack" && typeof params.whileCounter === "string" ? {whileCounter: params.whileCounter} : {}),
+    /* And "for as long as that land has a blight counter on it, it loses all land types and abilities" (Ultima, Origin of
+       Oblivion): the same, for a characteristic changed in a layer (rules/layers.mjs). */
+    ...(typeof params.whileCounter === "string" ? {whileCounter: params.whileCounter} : {}),
     apply: params.apply ?? {},
     /* "Until end of turn" (the default), "until your next turn", or "ever": an effect with no duration -- "up to one other
        target creature loses all abilities" (Abigale) -- lasting as long as what it affects does (CR 611.2a; a permanent

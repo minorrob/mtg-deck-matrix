@@ -1020,6 +1020,15 @@ export function compileScript(script) {
       if (effect.effect === "createToken" && effect.attachedTo !== undefined && !(PREDEFINED_TOKENS[effect.token?.predefined]?.enchant && (effect.count ?? 1) === 1
         && (Number.isInteger(effect.attachedTo?.target) || ["that card", "remembered"].includes(effect.attachedTo))))
         problems.push("createToken: a token created attached is one Aura token (a Role), attached to a target or what the effect is about");
+      /* "For as long as that land has a blight counter on it" (Ultima, Origin of Oblivion), "for as long as it has a vow counter
+         on it" (Promise of Loyalty): a kind of counter, on what the effect names (`targets`), and no other end -- `until:
+         "ever"` (effects/permanents.mjs, endCounterDurations; rules/statics.mjs). */
+      if (effect.whileCounter !== undefined && !(effect.effect === "effectUntil" && typeof effect.whileCounter === "string" && effect.whileCounter
+        && effect.targets !== undefined && effect.until === "ever"))
+        problems.push("effectUntil: \"for as long as it has a counter\" is whileCounter, a kind, on its targets with until \"ever\"");
+      /* "It loses all land types" (CR 205.3i): a type change, layer 4. */
+      if (effect.effect === "effectUntil" && effect.apply?.removeLandTypes !== undefined && !(effect.apply.removeLandTypes === true && effect.layer === 4))
+        problems.push("effectUntil: removeLandTypes is true, in layer 4 (CR 613.1d)");
       /* "From among those cards" wherever each went (Spirit of Resilience): a choice among cards an earlier part named
          (effects/asking.mjs, chooseCard) -- never a search of every zone. */
       if (effect.effect === "chooseCard" && effect.zone === "any" && effect.among === undefined)
