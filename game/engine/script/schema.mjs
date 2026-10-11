@@ -351,6 +351,17 @@ function checkAbility(ability, path, errors) {
        the planeswalkers they control too. Attacking one of those is not attacking them (rules/statics.mjs). */
     if (ability.planeswalkers !== undefined && (ability.planeswalkers !== true || !(ability.rule === "attack-tax" || (ability.rule === "cant-attack" && ability.defender === "you"))))
       errors.push({path: `${path}.planeswalkers`, message: "\"Or planeswalkers you control\" is planeswalkers: true, on a tax on attacking you or a restriction on attacking you"});
+    /* How many counters instead (CR 614.1a; rules/statics.mjs, placeCounters): "twice that many" `times`, "that many plus
+       one" `plus`, "half that many, rounded down" `half` -- one of them -- and who must be putting them. */
+    if (ability.rule === "more-counters") {
+      if (["times", "plus", "half"].filter((key) => ability[key] !== undefined).length > 1)
+        errors.push({path, message: "More counters instead is one of times, plus or half"});
+      if (ability.times !== undefined && !(Number.isInteger(ability.times) && ability.times >= 0)) errors.push({path: `${path}.times`, message: "times is a whole number, 0 or more"});
+      if (ability.plus !== undefined && !(Number.isInteger(ability.plus) && ability.plus >= 1)) errors.push({path: `${path}.plus`, message: "plus is a whole number, 1 or more"});
+      if (ability.half !== undefined && ability.half !== true) errors.push({path: `${path}.half`, message: "half is true: half that many, rounded down"});
+      if (ability.putBy !== undefined && !["you", "opponent"].includes(ability.putBy)) errors.push({path: `${path}.putBy`, message: "putBy is \"you\" or \"opponent\": who must be putting them"});
+      if (ability.players !== undefined && ability.players !== true) errors.push({path: `${path}.players`, message: "players is true: a player's counters too"});
+    }
     if (ability.rule === "cant-be-blocked-by") {
       if (!ability.by && ability.byPowerBelowSource !== true) errors.push({path, message: "\"Can't be blocked by\" says by what: `by`, or `byPowerBelowSource`"});
       if (ability.by) checkSelector(ability.by, `${path}.by`, errors, {choice: true});

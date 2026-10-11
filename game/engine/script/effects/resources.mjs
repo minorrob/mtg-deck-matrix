@@ -23,7 +23,7 @@ import {selectMatching} from "../filter.mjs";
 import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
 import {typesOf, powerOf, toughnessOf, keywordsOf, isKeywordCounter, controllerOf} from "../../rules/layers.mjs";
-import {cantGainLife, countersPlaced, playerCountersPlaced} from "../../rules/statics.mjs";
+import {cantGainLife, countersPlaced, playerCountersPlaced, placeCounters} from "../../rules/statics.mjs";
 import {playerRuled} from "../../rules/sba.mjs";
 import {amountOf} from "../amount.mjs";
 import {recordUse} from "../../state/index.mjs";
@@ -275,13 +275,15 @@ export function damagePermanent(state, id, amount, events, {infect = false, by =
   else object.damage += amount;
 }
 
-/* `by`: the player putting them (rules/statics.mjs, countersPlaced) -- an effect's controller, an infect source's. */
-export function addCounters(state, id, kind, count, events, by = null) {
+/* `by`: the player putting them (rules/statics.mjs, countersPlaced) -- an effect's controller, an infect source's.
+   `orders`: the affected player's answers for the order of the effects that change them (CR 616.1; orderCounters). */
+export function addCounters(state, id, kind, count, events, by = null, orders = []) {
   if (count === 0) return;
   const object = state.objects[id];
   if (!object) return;
-  /* "Twice that many instead" (Branching Evolution; "if you would put", Innkeeper's Talent; rules/statics.mjs). */
-  if (object.zone === "battlefield") count = countersPlaced(state, id, kind, count, by);
+  /* "Twice that many instead" (Branching Evolution; "if you would put", Innkeeper's Talent), "that many plus one" (Hardened
+     Scales), "half that many" (Vorinclex): rules/statics.mjs. */
+  if (object.zone === "battlefield") count = countersPlaced(state, id, kind, count, by, orders);
   if (count === 0) return;
   const before = object.counters[kind] ?? 0;
   object.counters[kind] = before + count;
@@ -385,16 +387,45 @@ export function putCounter(state, params, context) {
   /* A kind of counter its controller chooses (`counter: "chosen"`) is asked first, as it resolves (effects/asking.mjs,
      counterKind) -- never decided here, and never put on as a counter named "chosen". */
   if (params.counter === "chosen") throw new Error("putCounter with a chosen kind of counter asks its controller which: run it through resolution.mjs");
-  for (const id of params.targets ?? []) addCounters(state, id, params.counter ?? "+1/+1", params.count ?? 1, events, context.controller);
+  for (const {id, kind, count} of counterPlacements(state, params, context, false))
+    addCounters(state, id, kind, count, events, context.controller, params.counterOrders?.[placementKey(id, kind)] ?? []);
   return events;
 }
 
 /** `putCounterAll` — on everything a selector matches. */
 export function putCounterAll(state, params, context) {
   const events = [];
-  for (const id of selectMatching(state, params.selector ?? {what: "permanent"}, context))
-    addCounters(state, id, params.counter ?? "+1/+1", params.count ?? 1, events, context.controller);
+  for (const {id, kind, count} of counterPlacements(state, params, context, true))
+    addCounters(state, id, kind, count, events, context.controller, params.counterOrders?.[placementKey(id, kind)] ?? []);
   return events;
+}
+
+/* ---- CR 616.1, before counters are put on ----
+
+   The counter effects a resolution can stop to ask about (script/resolution.mjs; effects/asking.mjs, orderCounters), each
+   as the placements it makes -- so the question and the putting see the same ones. */
+const COUNTING = Object.freeze({putCounter, putCounterAll});
+function counterPlacements(state, params, context, all) {
+  const kind = params.counter ?? "+1/+1", count = params.count ?? 1;
+  const ids = all ? selectMatching(state, params.selector ?? {what: "permanent"}, context) : params.targets ?? [];
+  return ids.map((id) => ({id, kind, count}));
+}
+/** Which placement an answer belongs to: the permanent, and the kind. */
+export const placementKey = (id, kind) => `${id}:${kind}`;
+
+/**
+ * The first placement of this counter effect whose replacement effects' order is the affected player's to choose and not
+ * yet chosen (CR 616.1), given `answers` (by placement, `placementKey`): `{player, options, count, id, kind, by, key}`, or
+ * null when there is none. It changes nothing.
+ */
+export function counterQuestion(state, effect, context, answers = {}) {
+  if (!COUNTING[effect?.effect]) return null;
+  for (const {id, kind, count} of counterPlacements(state, effect, context, effect.effect === "putCounterAll")) {
+    const key = placementKey(id, kind);
+    const {question} = placeCounters(state, {id}, kind, count, context.controller, {orders: answers[key] ?? [], askable: true});
+    if (question) return {...question, id, kind, by: context.controller, key};
+  }
+  return null;
 }
 
 /**

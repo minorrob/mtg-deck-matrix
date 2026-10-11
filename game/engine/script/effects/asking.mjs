@@ -38,7 +38,7 @@ import {loseLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";
 import {damageOrderChoice} from "../../rules/replacement.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
 import {commanderTax} from "../../rules/commander.mjs";
-import {cantBeCountered} from "../../rules/statics.mjs";
+import {cantBeCountered, counterOrderChoice} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
 import {castNow, castChoicesNow} from "../../rules/actions.mjs";
 
@@ -1620,6 +1620,40 @@ export const orderDamage = {
   },
 };
 
+/* ---- the order of the effects that change counters put on (CR 616.1) ----
+
+   Two or more replacement effects would change how many counters one effect puts on a permanent, and the order changes
+   how many: Hardened Scales' "plus one" and Branching Evolution's "twice that many", one +1/+1 counter on Rob's Bear -- 4
+   or 3. The permanent's controller chooses which applies first; asked BEFORE any of the effect's counters are put, a
+   placement at a time, and then the effect is done with every answer (`counterOrders`, by placement). The resolution puts
+   this question in front of a putCounter or putCounterAll that has one (script/resolution.mjs); an order that ends the
+   same either way is never asked (rules/statics.mjs, placeCounters). */
+export const orderCounters = {
+  /* Opened only with the question the resolution found in front of it (`question`), so there is always one to ask. */
+  open(state, params) {
+    const {question} = params;
+    state.awaiting = {kind: "effect-choice", effect: "orderCounters", player: question.player, key: question.key, id: question.id, counter: question.kind,
+      count: question.count, by: question.by, options: question.options, answered: (params.answers[question.key] ?? []).length, answers: params.answers, put: params.put};
+    return true;
+  },
+  choice(state, awaiting) {
+    return counterOrderChoice(state, awaiting);
+  },
+  /* The effect itself again, with this answer added, where it stood in the resolution: asked once more while another of
+     its placements is still to be ordered, and done once none is. */
+  apply(state, awaiting, indices) {
+    const chosen = Array.isArray(indices) && indices.length === 1 ? awaiting.options[indices[0]] : undefined;
+    if (chosen === undefined) throw new Error("Invalid selection");
+    const answers = {...awaiting.answers, [awaiting.key]: [...(awaiting.answers[awaiting.key] ?? []), chosen]};
+    return {events: [], splice: [{...awaiting.put, counterOrders: answers}]};
+  },
+  /* The permanent's controller has left the game, and the permanent with them (CR 800.4a): the effect again as it now
+     stands, the rest asked about and put on as before. */
+  left(state, awaiting) {
+    return {events: [], splice: [{...awaiting.put, counterOrders: awaiting.answers}]};
+  },
+};
+
 /* ---- connive (CR 701.50; Train B, X11) ----
 
    "Each creature that convoked this spell connives" (Lethal Scheme): several permanents told to connive at once. The first
@@ -1723,5 +1757,5 @@ export const chooseInstead = {
   },
 };
 
-export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage,
+export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, orderCounters,
   conniveWhich, manaColors, counterKind, orderDestruction, chooseInstead});

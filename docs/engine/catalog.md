@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,242 defined and playable today; 2,575 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,244 defined and playable today; 2,577 with every
 mechanic built, so only their definitions are left to write; 27 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -23,10 +23,10 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Effects | 192 | 70 | 1 | 2 | 119 |
 | Triggers | 138 | 20 | 4 | 2 | 112 |
 | Static abilities | 77 | 14 | 2 | 0 | 61 |
-| Replacement effects | 34 | 0 | 5 | 0 | 29 |
+| Replacement effects | 34 | 0 | 6 | 0 | 28 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
 | Options and conditions | 37 | 23 | 5 | 0 | 9 |
-| Amounts the game counts | 188 | 17 | 1 | 0 | 170 |
+| Amounts the game counts | 188 | 18 | 1 | 0 | 169 |
 | Choices | 15 | 12 | 0 | 0 | 3 |
 | Other keyword constructs | 16 | 9 | 0 | 1 | 6 |
 
@@ -40,6 +40,7 @@ The things that alone hold back the most of the most-played cards.
 | option | Remembering what an effect moved | — | missing | 21 | 83 |
 | option | You may play or cast a card from another zone | — | missing | 17 | 65 |
 | effect | ChooseColor | — | missing | 10 | 14 |
+| effect | ReplaceCounter | replaceCounters | named | 9 | 12 |
 | count | What entered or died this turn | — | missing | 9 | 9 |
 | count | Cards in a library | — | missing | 8 | 12 |
 | count | Spells cast this turn | — | missing | 8 | 12 |
@@ -50,7 +51,6 @@ The things that alone hold back the most of the most-played cards.
 | option | Imprint (a card exiled with this) | — | missing | 6 | 8 |
 | effect | Discover | discover | named | 6 | 6 |
 | count | How many things an effect remembered | — | missing | 5 | 8 |
-| keyword ability | Warp | — | missing | 5 | 7 |
 
 ## Keyword abilities (CR 702)
 
@@ -378,7 +378,7 @@ The things that alone hold back the most of the most-played cards.
 | ImmediateTrigger | immediateTrigger | built | 18 | 313 | 0 | 0 |
 | DigUntil | digUntil | built | 18 | 167 | 0 | 0 |
 | ReplaceToken | — | missing | 17 | 35 | 17 | 0 |
-| ReplaceCounter | replaceCounters | named | 16 | 33 | 14 | 0 |
+| ReplaceCounter | replaceCounters | named | 16 | 33 | 12 | 9 |
 | Fight | fight | built | 15 | 148 | 0 | 0 |
 | WinsGame | winGame | built | 15 | 43 | 0 | 0 |
 | ChooseColor | — | missing | 14 | 132 | 14 | 10 |
@@ -756,7 +756,7 @@ The things that alone hold back the most of the most-played cards.
 | DamageDone | rules/replacement | partial | 22 | 209 | 0 | 0 |
 | Counter | rules/statics | partial | 21 | 110 | 0 | 0 |
 | CreateToken | — | missing | 17 | 32 | 17 | 0 |
-| AddCounter | — | missing | 15 | 30 | 14 | 0 |
+| AddCounter | rules/statics | partial | 15 | 30 | 0 | 0 |
 | Draw | — | missing | 7 | 37 | 7 | 4 |
 | GainLife | — | missing | 6 | 21 | 6 | 1 |
 | Untap | rules/turn | partial | 5 | 157 | 0 | 0 |
@@ -872,7 +872,7 @@ The things that alone hold back the most of the most-played cards.
 | — | Cards in a hand | {count: {what: "card", zone: "hand"}} | built | 26 | 242 | 0 | 0 |
 | — | This card's power | {powerOf: "self"} | built | 25 | 251 | 0 | 0 |
 | — | A comparison ("if you control ...") | {if: condition, then, else}; a modal's chooseMore, as it is cast | built | 17 | 146 | 0 | 0 |
-| — | CounterNum | — | missing | 16 | 32 | 14 | 0 |
+| — | That many counters (the number of counters a replacement changes) | more-counters' times, plus and half (rules/statics.mjs, placeCounters) | built | 16 | 32 | 0 | 0 |
 | — | Cards in a library | — | missing | 13 | 63 | 12 | 8 |
 | — | Spells cast this turn | — | missing | 12 | 139 | 12 | 8 |
 | — | Life you gained this turn | amount {lifeGainedThisTurn} (effects/resources.mjs and rules/combat.mjs keep it) | built | 12 | 84 | 0 | 0 |

@@ -121,7 +121,12 @@ export const FORGE_REPLACEMENT = {Moved: "replacement",
   DamageDone: "rules/replacement",
   /* "If you would proliferate, proliferate twice instead" (Tekuthal, Inquiry Dominus): the static `proliferate-twice`, each
      one doubling its controller's proliferates as one reaches the head of a resolution (script/resolution.mjs). */
-  Proliferate: "script/resolution"};
+  Proliferate: "script/resolution",
+  /* Counters put on a permanent or a player, replaced (Train C, p4-replacements): "twice that many" (Branching Evolution,
+     credited here with no new code for it), "that many plus one" (Hardened Scales), "half that many, rounded down"
+     (Vorinclex) -- for whom they are put on and by whom -- the order of two the affected player's (CR 614.1a, 616.1): the
+     static `more-counters`, rules/statics.mjs, placeCounters; asked in a resolution (effects/asking.mjs, orderCounters). */
+  AddCounter: "rules/statics"};
 
 /* Keywords the engine implements BEHAVIORALLY, as opposed to merely declaring the word. Declaring
    `Flying` in the vocabulary is what lets a card script say it; `keywords/combat.mjs` is what makes
@@ -344,6 +349,8 @@ export const FORGE_COUNTS = Object.freeze({
   Monarch: {name: "The monarch", status: "missing"},
   YourStartingLife: {name: "Your starting life total", status: "missing"},
   DamageAmount: {name: "Damage dealt", status: "built", engine: "{damageDealt: true}: the damage a damage trigger is about, all of an action's together"},
+  /* Train C, p4-replacements: the number a counter replacement changes ("that many plus one", "twice that many"). */
+  CounterNum: {name: "That many counters (the number of counters a replacement changes)", status: "built", engine: "more-counters' times, plus and half (rules/statics.mjs, placeCounters)"},
   AttackersDeclared: {name: "Attackers declared", status: "missing"},
   TimesKicked: {name: "Times kicked", status: "missing"},
   Kicked: {name: "Whether it was kicked", status: "missing"},
