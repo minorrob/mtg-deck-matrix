@@ -1,0 +1,90 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Elenda, the Dusk Rose",
+    "oracleId": "ce35f262-b93f-4409-8b33-26a7ed7abac8",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire",
+      "Knight"
+    ],
+    "manaCost": "{2}{W}{B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Lifelink\nWhenever another creature dies, put a +1/+1 counter on Elenda.\nWhen Elenda dies, create X 1/1 white Vampire creature tokens with lifelink, where X is Elenda's power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Lifelink",
+      "keyword": "lifelink"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another creature dies, put a +1/+1 counter on Elenda.",
+      "trigger": {
+        "on": "dies",
+        "who": "another",
+        "filter": {
+          "types": [
+            "Creature"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When Elenda dies, create X 1/1 white Vampire creature tokens with lifelink, where X is Elenda's power.",
+      "trigger": {
+        "on": "dies"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": {
+            "powerOf": "self"
+          },
+          "token": {
+            "name": "Vampire",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Vampire"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Lifelink"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

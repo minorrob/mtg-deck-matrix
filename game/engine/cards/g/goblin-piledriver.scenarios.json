@@ -1,0 +1,190 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Goblin Piledriver",
+  "fixtures": {
+    "Goblin": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Home Goblin": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Blue Ping": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It attacks beside two Goblins and a Bear: +4/+0, a 5/2; the Goblin left home does not count",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin Piledriver",
+            "Goblin",
+            "Goblin",
+            "Bear",
+            "Home Goblin"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Goblin Piledriver",
+            "Goblin",
+            "Goblin",
+            "Bear"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Goblin Piledriver",
+                "power": 5,
+                "toughness": 2
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 31
+        }
+      ]
+    },
+    {
+      "name": "Protection from blue: a blue spell cannot target it, only the Bear",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin Piledriver",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Blue Ping"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Blue Ping",
+            "seat": 1
+          },
+          "count": 1,
+          "targets": [
+            [
+              "Bear"
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

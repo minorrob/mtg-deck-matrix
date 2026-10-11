@@ -1,0 +1,206 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Elenda, the Dusk Rose",
+  "fixtures": {
+    "Murder": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Their Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "His Bear and Maya's die: two counters, 3/3; then Elenda dies: three 1/1 Vampires with lifelink",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elenda, the Dusk Rose",
+            "Bear",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Murder",
+            "Murder",
+            "Murder"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Murder",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Murder",
+          "targets": [
+            {
+              "card": "Their Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Elenda, the Dusk Rose",
+                "power": 3,
+                "toughness": 3
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Elenda, the Dusk Rose",
+                "has": [
+                  "Lifelink"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Murder",
+          "targets": [
+            {
+              "card": "Elenda, the Dusk Rose"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Vampire",
+            "Vampire",
+            "Vampire"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Vampire",
+            "has": [
+              "Lifelink"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Vampire",
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  ]
+}
