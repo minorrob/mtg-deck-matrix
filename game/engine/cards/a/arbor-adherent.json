@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Arbor Adherent",
+    "oracleId": "9640225a-8f31-495f-b9de-53ed348ff24b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dog",
+      "Druid"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "{T}: Add one mana of any color.\n{T}: Add X mana of any one color, where X is the greatest toughness among other creatures you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add one mana of any color.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add X mana of any one color, where X is the greatest toughness among other creatures you control.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true,
+          "count": {
+            "greatestToughness": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you",
+              "another": true
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

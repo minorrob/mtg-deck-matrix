@@ -1,0 +1,160 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Arbor Adherent",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Wall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 5
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Beside a 0/5 Wall: one mana of any color, or five of one color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Arbor Adherent",
+            "Wall",
+            "Bear"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Arbor Adherent"
+          },
+          "count": 10,
+          "mana": [
+            {
+              "W": 1
+            },
+            {
+              "U": 1
+            },
+            {
+              "B": 1
+            },
+            {
+              "R": 1
+            },
+            {
+              "G": 1
+            },
+            {
+              "W": 5
+            },
+            {
+              "U": 5
+            },
+            {
+              "B": 5
+            },
+            {
+              "R": 5
+            },
+            {
+              "G": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tapped for five green beside the Wall",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Arbor Adherent",
+            "Wall"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Arbor Adherent",
+          "mana": {
+            "G": 5
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 5
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Arbor Adherent"
+        }
+      ]
+    },
+    {
+      "name": "Its own toughness 4 is not counted: beside a 2/2 Bear, X is 2",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Arbor Adherent",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wall"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Arbor Adherent",
+          "mana": {
+            "U": 2
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 2
+          }
+        }
+      ]
+    }
+  ]
+}

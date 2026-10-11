@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Doomed Traveler",
+  "scenarios": [
+    {
+      "name": "Bolted, it dies: a 1/1 white Spirit with flying",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Doomed Traveler",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Lightning Bolt",
+          "targets": [
+            {
+              "card": "Doomed Traveler"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Mountain",
+            "Spirit"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Doomed Traveler",
+            "Lightning Bolt"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Spirit",
+            "has": [
+              "Flying"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Spirit",
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  ]
+}

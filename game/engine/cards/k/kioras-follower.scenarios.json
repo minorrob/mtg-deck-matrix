@@ -1,0 +1,81 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Kiora's Follower",
+  "scenarios": [
+    {
+      "name": "Rob taps his Forest for mana, then untaps it with the Follower",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Kiora's Follower",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Forest"
+            }
+          ]
+        },
+        {
+          "activate": "Kiora's Follower",
+          "targets": [
+            {
+              "card": "Forest"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Forest",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "tapped": "Kiora's Follower"
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Not itself: another permanent only",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Kiora's Follower"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Kiora's Follower"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

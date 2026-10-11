@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Skilled Battlecarver",
+    "oracleId": "4fc7c7a0-bfff-4833-a0d0-a38dc29e9dfb",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warrior"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "During your turn, this creature has first strike.\n{1}{R}: This creature gets +1/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "During your turn, this creature has first strike.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "addKeywords": [
+          "First Strike"
+        ]
+      },
+      "condition": {
+        "yourTurn": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{1}{R}: This creature gets +1/+0 until end of turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{R}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 0
+        }
+      ]
+    }
+  ]
+}
