@@ -11,7 +11,7 @@ staging with its deployed bytes compared:
 - the A11y pass (#701).
 
 It then ran G-B again on main bf0e9d21, with all of it in (the rows below): the journeys, the gallery and the A11y checks pass;
-the gate passed once and failed once in one `table-board` check: root-caused to a race in the board, fixed, and re-running. **What is left is Rob's:**
+the gate failed once in one `table-board` check, root-caused to a race in the board and fixed (#702), then passed twice on main 74f715c7. **What is left is Rob's:**
 - the privacy wording for *AI players on Claude* and *The deck advisor* (`docs/ai-door.md`);
 - the advisor's eval with his key;
 - confirming his library plays as he expects;
@@ -40,7 +40,7 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**, with a daily cap of its own ($1.50, released at 905394dc); **AI-2's L1 built** (Normal and Easy, measured against L0: Normal 61%, Easy 56%, L0 itself 51%); **the LLM seat built behind its switch**, its privacy wording Rob's to approve; **AI-5 built and on staging** (each deck says whether the table can play it; Play this deck); **AI-4, the deck advisor, built behind its switch**, its privacy wording Rob's to approve; **AI-3's Train C done: 1,130 of Rob's 1,132 cards play** (the two left, each with its reason), Rob's to confirm; **AI-6, AI Coach settings, built** | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
 | G-A: M3's monitoring and backups | **monitoring built** (Workers Logs keeps the Worker's own 5xx and sync-conflict lines; `tools/ops-week.mjs`, the weekly check); Time Travel confirmed, 30 days | **Rob:** the two alerts and their email; R2 turned on, the nightly copy's window and what deletion promises (`docs/ops.md`) |
 | G-A: the A11y pass | **done**: WCAG 2.1 AA on the board and the lobby, measured from the screen's pixels | `tests/a11y-board.mjs` 288 checks, 72 breaks caught (the A11y record below) |
-| G-B: the whole gate green twice on main | **again with G-A complete: once green, once red; re-running** | dispatched Tests runs on main bf0e9d21 (AI-4, AI-6, M3, Train C and the A11y pass in): run 2572 green; run 2573 red once, in `table-board`'s drop check (Maya not told within 10 s that Rob dropped). **Root-caused and fixed:** a read of her table the room answered just before Rob dropped, landing just after its "away" frame, took her flag down, and her later reads were held, so it stayed down. Now newest wins: a read asked before the room's frame came leaves the frame's word standing (the race record below). Two more runs on main follow this merge. Before: 2499 on def8fa89 and 2503 on eff40fdc, both green |
+| G-B: the whole gate green twice on main | **done again, with G-A complete** | dispatched Tests runs on main 74f715c7 (G-A's items in, and the drop check's race fixed): **2579 and 2580, both green**. Before them, on bf0e9d21: 2572 green, 2573 red once in `table-board`'s drop check, root-caused to a race in the board and fixed (#702, the race record below). Earlier: 2499 on def8fa89 and 2503 on eff40fdc, both green |
 | G-B: `play-e2e` under wrangler dev | done | 35 checks at every staging release |
 | G-B: hidden information in every frame | done | `play-journeys` reads every frame to both people; G1's oracle 102,879 checks, no leak |
 | G-B: the five-second rule | **done** | over a real network, Rob on staging (2026-10-10): ten turns against the AI, the longest wait *"about 3 seconds"*; here, `play-journeys` median 280 ms, longest 1.0 s; G1's 700 games with a person: each game's longest wait a median 172 ms, 99th percentile 1.6 s, the worst 3.5 s, none over 5 s |
@@ -51,10 +51,23 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | G-B: the A11y pass's checks | done | `tests/a11y-board.mjs` 288 checks on the merge with Train C (the A11y record below) |
 | G-C: staging from main, version read back | **done**, signed in too | the G-C records below; and `tools/staging-check.mjs` signed in as the session-check token (A5; 2026-10-10): staging serves 2125854a, both pages say so, `/api/me` seats the token |
 | G-C: the harness note for Grok Bot | done | `docs/playtest-harness.md`, held to the page by `tests/playtest-harness.mjs` (PR #681) |
-| G-C: the four agents' access | **built; waiting on Rob's four tokens** | at staging each service token Access admits is now an identity of its own, so four agents are four seats (the agents' access record below); how an agent signs in, and **Rob's** five steps, in `docs/playtest-harness.md`; the proof once they're made: `node tools/staging-check.mjs --agents` |
+| G-C: the four agents' access | **built and on staging; waiting on Rob's four tokens** | at staging each service token Access admits is an identity of its own, so four agents are four seats (#704; released, and the session's token now reads back as `service:e07b4fed5ab9`, the agents' access record below); how an agent signs in, and **Rob's** five steps, in `docs/playtest-harness.md`; the proof once they're made: `node tools/staging-check.mjs --agents` |
+| G-D: Grok Bot's UAT (M8) | **ready for the agents; not run** | this side's half built: the triage tool (`tools/playtest-triage.mjs`: every game replayed from its record, every seat's view judged at every answer, M8's exit criteria; 30 checks, 20 breaks caught), the findings' outcome column, the seven decks to paste (`docs/uat/decks/`, held to the library), the run step by step (`docs/uat/playtest-run.md`); a dress rehearsal through the real board under way, two people and two house AIs a table, the seven decks four at a time: 7 games so far, every one replayed to the same journal with no leak in 3,092 checks, and two findings open (the rehearsal record below). **Rob:** the agents' tokens (G-C), then Grok Bot's 50 games |
+| G-E: human invites | **ready for Rob's invites** | `docs/play-invites.md`, *G-E*: Rob's steps (one rule group of invitees for both Access applications), the before-the-first-invite checklist, and how their findings arrive (*Send feedback* names the release and the game). **Rob:** staging's invite list and its block page, the alerts and R2, then the invites |
+| G-F: Rob's review and production | **rehearsed; on Rob's go** | `tools/release-production.sh` and `docs/release-production.md`: the standby, then Play, each built from main, walked and committed locally, and pushed only on Rob's go; the standby rehearsed on main 1aa46cd (`release-acceptance` 23, `production-play-e2e` 27, nothing pushed). **Found:** production's Workers Builds has not deployed `release/pages` (the last deploy was by wrangler, 2026-10-01; the release of 2026-10-03 never went live). **Rob:** that build's settings, his review, each go |
 
-So the first sentence of Part 7 is not yet true: it waits on the agents' access, Rob's, and on AI-2 to AI-6, this
-session's. The network measurement, the phones and the signed-in read-back are done (2026-10-10).
+**What Part 7's two sentences wait on (2026-10-11).** What is this side's is built, merged and on staging: G-A's
+items, G-B twice on main, G-C's release and the agents' access. G-D to G-F are ready and rehearsed.
+- **The first sentence waits only on Rob:**
+  - G-A's approvals: the privacy wording for *AI players on Claude* and *The deck advisor* (`docs/ai-door.md`), the
+    advisor's eval with his key, and confirming his library;
+  - M3's two alerts and their email, and R2 turned on, which the nightly copy and M2's data track wait on
+    (`docs/ops.md`);
+  - G-C's four agents' tokens (`docs/playtest-harness.md`).
+- **The second** then waits on:
+  - G-D: Grok Bot's 50 games, and the fixes;
+  - G-E: Rob's invites;
+  - G-F: Rob's review, and each of his production goes (`docs/release-production.md`).
 
 **Later, 2026-10-08:** the five workers' 45 cards and CR 800.4a merged here (#676); and on Rob's go ("merge Codex's stack") Codex's #670 to #675, reviewed first, merged here too -- every card of the seven decks is now defined; #676 merged on main 09499dcd and #671 to #675 closed as merged through it. The first G1 pass (70 games over seven pods) then found two blockers, each on its own worker: Tegwyll's provisional definition kept D7 off the table (now confirmed, hand-authored, 477 of 477), and a person's answer the engine refuses (Lethal Scheme's convoke) escaped room.act after the tape had recorded it, so the room could not reopen. Codex's records of 2026-10-07 follow, as it left them.
 
@@ -1068,3 +1081,28 @@ staging only (`SERVICE_SEATS`).
   check.
 - Once released, the session's token reads back as its own `service:` identity, and what staging kept under
   `service:session-checks` (test data only) is no longer reached.
+
+**#704 merged on main 5a452aba on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 6bc453a1 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 14:56:09 UTC as
+version edd03cf8, its `play-worker.js` byte-identical to the release's dry-run bundle (3,302,092 bytes). Its AI
+bindings are the Coach's alone. `tools/staging-check.mjs --expect 5a452ab`, signed in as the session's token, exits
+0: staging serves 5a452ab, both pages say so, and `/api/me` seats the token as `service:e07b4fed5ab9`, an identity of
+its own.
+
+**G-D's dress rehearsal, under way (2026-10-11).** It runs `tests/uat/real-deck-game.mjs` with `REAL_GAMES` and
+`RECORDS`:
+- two people through the real board and two house AIs at each table;
+- the seven decks four at a time;
+- playtest tables, as staging's are;
+- both people downloading each game's full record from the game-over panel.
+
+`tools/playtest-triage.mjs` on what is in: **7 games, every one replayed to the same journal, no leak in 3,092 checks
+of every seat's view.** Two findings are open, in the run's own CSV, as the agents will file theirs:
+- **PT-R-01 (S2, ui):** table 19 stopped when *Turns went by*'s OK could not be pressed for 30 s, because the board
+  kept drawing it anew. The board-person now says, when that happens, how often the board was redrawn and what the
+  seat was asked, which tells the board's fault from the harness's.
+- **PT-R-02 (S1, rules until ruled):** table 5 ended naturally, then failed the harness's frames check (a frame to
+  seat 0 named a card in another seat's hand or library) before its record was downloaded.
+  - The rules show some such names (a revealed card, a library's top played revealed), and G1's oracle found no leak
+    in its 1,400 games, so the harness's simpler check may be the stricter.
+  - The records now come first, and the check names the card, so the next one can be ruled from its record.

@@ -1,0 +1,77 @@
+Commander
+1 Shadrix Silverquill
+
+Deck
+1 Abigale, Eloquent First-Year
+1 Adeline, Resplendent Cathar
+1 Angel of Indemnity
+1 Arcane Signet
+1 Austere Command
+1 Bastion of Remembrance
+1 Battle Screech
+1 Boggart Mischief
+1 Castle Ardenvale
+1 Clachan Festival
+1 Combat Calligrapher
+1 Corpse Knight
+1 Cruel Celebrant
+1 Elas il-Kor, Sadistic Pilgrim
+1 Elspeth, Sun's Nemesis
+1 Evolving Wilds
+1 Exotic Orchard
+1 Exsanguinate
+1 Fabled Passage
+1 Fell the Profane // Fell Mire
+1 Fracture
+1 Goldvein Pick
+1 Grave Titan
+1 Hidden Stockpile
+1 Idol of Oblivion
+1 Indulging Patrician
+1 Infernal Grasp
+1 Intangible Virtue
+1 Isolated Chapel
+1 Kambal, Profiteering Mayor
+1 Lingering Souls
+1 Make a Stand
+1 Mind Stone
+1 Ministrant of Obligation
+1 Monologue Tax
+1 Moonshaker Cavalry
+1 Morbid Opportunist
+1 Nadier's Nightblade
+1 Night's Whisper
+1 Nightmare Sower
+1 Odric, Lunarch Marshal
+1 Orzhov Basilica
+1 Orzhov Guildgate
+1 Orzhov Signet
+1 Ossification
+1 Pawn of Ulamog
+1 Pitiless Plunderer
+17 Plains
+1 Priest of Forgotten Gods
+1 Psychosis Crawler
+1 Raise the Alarm
+1 Requiem Angel
+1 Scoured Barrens
+1 Silverquill Charm
+1 Skullclamp
+1 Soul Warden
+1 Spirited Companion
+1 Staff of the Storyteller
+1 Stone by Sunlight
+1 Suture Priest
+11 Swamp
+1 Sword of the Animist
+1 Swords to Plowshares
+1 Temple of Silence
+1 Teysa Karlov
+1 Thought Vessel
+1 Unbreakable Formation
+1 Vault of the Archangel
+1 Village Rites
+1 Weathered Wayfarer
+1 Welcoming Vampire
+1 Woe Strider
+1 Zulaport Cutthroat

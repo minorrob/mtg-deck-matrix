@@ -1,0 +1,88 @@
+Commander
+1 Quintorius, Loremaster
+
+Deck
+1 Advanced Reconstruction
+1 Arcane Signet
+1 Archaeomancer's Map
+1 Bag of Holding
+1 Battlefield Forge
+1 Boros Charm
+1 Boros Signet
+1 Buried Ruin
+1 Cathartic Reunion
+1 Ceaseless Conflict
+1 Clifftop Retreat
+1 Command Tower
+1 Conspiracy Theorist
+1 Containment Construct
+1 Currency Converter
+1 Demand Answers
+1 Emeria, the Sky Ruin
+1 Excava, the Risen Past
+1 Faithless Looting
+1 Fellwar Stone
+1 Fields of Strife
+1 Flashback
+1 Furycalm Snarl
+1 Garrison Excavator
+1 Generous Gift
+1 Getaway Barrel
+1 Ghost Vacuum
+1 Glittering Massif
+1 Hofri Ghostforge
+1 Inspiring Vantage
+1 Iron Hills
+1 Karmic Guide
+1 Knight of the White Orchid
+1 Laelia, the Blade Reforged
+1 Lorehold Archivist // Restore Relic
+1 Lorehold Campus
+1 Lorehold Charm
+1 Lorehold Excavation
+1 Millikin
+1 Mind Stone
+1 Mistveil Plains
+1 Mizzix's Mastery
+8 Mountain
+1 Path to Exile
+1 Perpetual Timepiece
+9 Plains
+1 Primary Research
+1 Quintorius Kand
+1 Quintorius, Field Historian
+1 Quintorius, History Chaser
+1 Radiant Summit
+1 Reckless Impulse
+1 Reconstruct History
+1 Relic Retriever
+1 Remorseful Cleric
+1 Return to Dust
+1 Rip Apart
+1 Rubble Rouser
+1 Rugged Prairie
+1 Sacred Peaks
+1 Salvation Colossus
+1 Selfless Spirit
+1 Serra Paragon
+1 Settle the Wreckage
+1 Sevinne's Reclamation
+1 Skyclave Apparition
+1 Smuggler's Copter
+1 Squee, the Immortal
+1 Stone Quarry
+1 Sun Titan
+1 Sunbaked Canyon
+1 Sunscorched Divide
+1 Swords to Plowshares
+1 Temple of Triumph
+1 Teshar, Ancestor's Apostle
+1 Thrill of Possibility
+1 Tocasia's Welcome
+1 Troop of Ponies
+1 Turbulent Steppe
+1 Valakut Exploration
+1 Venerable Warsinger
+1 Weathered Wayfarer
+1 Wind-Scarred Crag
+1 Winds of Abandon

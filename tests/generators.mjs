@@ -114,6 +114,7 @@ const CHECKABLE = [
   ["tools/sim/rate-decks.mjs", ["--check"]],
   ["tools/build-card-records.mjs", ["--check"]],
   ["tools/data-manifest.mjs", ["--check"]],
+  ["tools/playtest-decks.mjs", ["--check"]],
   ["tools/commander-strategies.mjs", ["--check"]],
   ["tools/build-precons.mjs", ["--check"]],
   /* The deck advisor's card facts for the Worker, slimmed from data/cards.json (AI-4). */

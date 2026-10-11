@@ -18,9 +18,15 @@
  * REAL_DECK_ID=D2 selects the committed Chulane list; this never uses an external backup.
  * REAL_DECKS_REQUIRED=1 refuses a missing browser; UAT_SHOTS=<dir> saves each end screen.
  * This deliberate full-game acceptance run is outside the regular suite inventory.
+ *
+ * G-D'S DRESS REHEARSAL (M8; docs/uat/playtest-findings.md). REAL_GAMES=<n> plays n tables in a row, the seven decks
+ * four at a time (the first table D1-D4, the next D2-D5, and so on round). RECORDS=<run folder> makes every table a
+ * playtest table, as staging's are, and after each natural end both people download the full record from the
+ * board's game-over panel into <run folder>/records/, which tools/playtest-triage.mjs then replays and judges, as it
+ * will Grok Bot's runs. REAL_FIRST=<k> starts at table k, so two runs side by side play other pods, under other ids.
  */
 import assert from "node:assert/strict";
-import {readFileSync, mkdirSync} from "node:fs";
+import {readFileSync, mkdirSync, writeFileSync} from "node:fs";
 import path from "node:path";
 import {openBrowser, loadLiveState, ROOT} from "./browser-runner.mjs";
 import {basicCards} from "../../game/room/room.mjs";
@@ -28,12 +34,17 @@ import {GameTable, tableCards} from "../../cloud/game-room.mjs";
 import {build, worktreeSource} from "../../tools/release-pages.mjs";
 import {joinLocation} from "../../cloud/worker.mjs";
 import {boardPerson} from "./board-person.mjs";
+import {replayRecord} from "../../tools/playtest-triage.mjs";
 
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1; console.log(`  ok  ${m}`);};
 const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1; console.log(`  ok  ${m}`);};
 const DECK_ID = process.env.REAL_DECK_ID || "D5";
 assert.ok(/^(D2|D5)$/.test(DECK_ID), "REAL_DECK_ID must be D2 or D5, the completed committed deck lists");
+/* REAL_FIRST numbers the first table, so runs side by side play different pods under different match ids. */
+const PODS = !!process.env.REAL_GAMES, GAMES = Number(process.env.REAL_GAMES || 1), FIRST = Number(process.env.REAL_FIRST || 1), RECORDS = process.env.RECORDS || "";
+assert.ok(Number.isInteger(GAMES) && GAMES >= 1 && Number.isInteger(FIRST) && FIRST >= 1, "REAL_GAMES is a number of tables, and REAL_FIRST the first one's number, each 1 or more");
+if (RECORDS) mkdirSync(path.join(RECORDS, "records"), {recursive: true});
 const SHOTS = process.env.UAT_SHOTS || "";
 if (SHOTS) mkdirSync(SHOTS, {recursive: true});
 const shot = async (page, name) => {if (SHOTS) await page.screenshot({path: path.join(SHOTS, `${name}.png`)});};
@@ -47,7 +58,7 @@ const cards = tableCards;
 const ROB = "rob@example.com", MAYA = "maya@example.com";
 let clock = Date.parse("2026-09-30T20:00:00Z");
 const objects = new Map(), frames = {[ROB]: [], [MAYA]: []}, sent = {};   /* sent[tableId][email:seat]: the deck the lobby sent */
-let nextId = 0, queue = Promise.resolve();
+let nextId = FIRST - 1, queue = Promise.resolve();
 const serial = (fn) => (queue = queue.then(fn, fn));
 const objectCtx = () => {
   const map = new Map(), sockets = [];
@@ -55,7 +66,8 @@ const objectCtx = () => {
     list: async ({prefix}) => new Map([...map].filter(([k]) => k.startsWith(prefix)).sort()), setAlarm: async () => {}, deleteAlarm: async () => {}},
   acceptWebSocket: (s, tags) => {s.tags = tags; sockets.push(s);}, getWebSockets: () => sockets.filter((s) => !s.closed), getTags: (s) => s.tags};
 };
-const tableFor = (id) => {if (!objects.has(id)) objects.set(id, new GameTable(objectCtx(), {}, {cards, now: () => clock})); return objects.get(id);};
+/* With RECORDS, a playtest table, as the Worker's PLAYTEST_TABLES makes staging's: its record is the whole game. */
+const tableFor = (id) => {if (!objects.has(id)) objects.set(id, new GameTable(objectCtx(), RECORDS ? {PLAYTEST_TABLES: "on"} : {}, {cards, now: () => clock})); return objects.get(id);};
 async function answer(route, email) {
   const req = route.request(), url = new URL(req.url()), method = req.method();
   const m = /^\/api\/tables(?:\/([a-z0-9]+)(?:\/([a-z]+))?)?$/.exec(url.pathname);
@@ -174,7 +186,7 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
   async function answer(person, seat) {
     if (!await people[seat]()) return false;
     actions++;
-    if(actions%25===0) console.log(`${DECK_ID} browser: ${actions} actions, turn ${current(person).state.turn}`);
+    if(actions%25===0) console.log(`${!PODS ? DECK_ID : `table ${n}`} browser: ${actions} actions, turn ${current(person).state.turn}`);
     return true;
   }
   for(let i=0;i<3000;i++) {
@@ -192,14 +204,31 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
     if(!moved) await rob.page.waitForTimeout(100);
   }
   const result=current(rob);
-  eq(result.status,'finished',`real ${DECK_ID} game finishes naturally`);
+  eq(result.status,'finished',`table ${n}: the real ${!PODS ? DECK_ID : 'decks\''} game finishes naturally`);
   eq(current(maya).status,'finished','second browser sees the same natural end');
   assert.notEqual(result.result?.reason,'ended early');
   eq(current(maya).result,result.result,'separate browser sessions agree on result');
   ok(reloaded,'reconnect exercised during a pending game');
+  /* The record each person downloads from the game-over panel: on a playtest table, the whole game. */
+  if (RECORDS) for (const [person,seat] of [[rob,0],[maya,1]]) {
+    const [download] = await Promise.all([person.page.waitForEvent('download',{timeout:15000}), person.page.click('.cm-board-over [data-action=board-record]')]);
+    const record = JSON.parse(readFileSync(await download.path(),'utf8'));
+    eq([record.kind,record.matchId],['full',result.matchId ?? record.matchId],`seat ${seat}: the game-over panel downloads the full record`);
+    writeFileSync(path.join(RECORDS,'records',`${record.matchId}-seat${seat}.json`), JSON.stringify(record));
+    /* And judged at once as the triage will judge it: replayed, every seat's view at every answer read by G1's oracle. */
+    if (seat === 0) {
+      const judged = await replayRecord(record, {cards: tableCards});
+      ok(judged.same && !judged.exception && !judged.leaks.length, `table ${n}: the record replays to the same journal, and no seat was sent a card it may not know (${judged.leakChecks} checks)${judged.leaks.length ? `: ${JSON.stringify(judged.leaks[0])}` : judged.exception ? `: ${judged.exception}` : ''}`);
+    }
+  }
   for(const [person,seat] of [[rob,0],[maya,1]]) {
     const views=viewsAt(person.email,id);
-    ok(views.every(v=>v.state.players.every((p,s)=>s===seat || ['Hand','Library'].every(z=>(p.zones[z]?.cards??[]).every(c=>!c.name)))),`seat ${seat}: all ${views.length} frames hide other hands and libraries`);
+    /* A name in another seat's hand or library, said by card, zone, owner and turn. A library's top is the rules' to
+       show when its owner controls a permanent that plays it revealed (CR 401.4: Conspicuous Snoop); the rest
+       tools/playtest-triage.mjs's oracle judges from the record, above. */
+    const revealsTop=(p)=>(p.zones.Battlefield?.cards??[]).some((c)=>c.name&&(cards(c.name)?.abilities??[]).some((a)=>a.kind==='static'&&a.rule==='top-revealed'));
+    const shown=views.flatMap((v)=>v.state.players.flatMap((p,s)=>s===seat?[]:['Hand','Library'].flatMap((z)=>(p.zones[z]?.cards??[]).filter((c,i)=>c.name&&!(z==='Library'&&i===0&&revealsTop(p))).map((c)=>({turn:v.state.turn,owner:s,zone:z,name:c.name})))));
+    ok(!shown.length,`seat ${seat}: all ${views.length} frames hide other hands and libraries${shown.length?` -- but ${shown.length} named a card there, first ${JSON.stringify(shown[0])}`:''}`);
     await person.page.locator('.cm-board-over').waitFor({timeout:10000});
     await shot(person.page,`${DECK_ID.toLowerCase()}-natural-end-seat${seat}`);
   }
@@ -213,7 +242,8 @@ try {
   const deck=DECKS.find(d=>d.id===`deck:live:${DECK_ID}`); assert.ok(deck);
   const rob=await person(ROB,{width:1400,height:900});
   const maya=await person(MAYA,{width:1280,height:720});
-  await journey(1,rob,maya,[deck,deck,deck,deck]);
+  /* One table of the one deck; or n tables, the seven decks four at a time. */
+  for (let n = FIRST; n < FIRST + GAMES; n += 1) await journey(n,rob,maya,!PODS ? [deck,deck,deck,deck] : [0,1,2,3].map((j)=>DECKS[(n-1+j)%DECKS.length]));
 } finally {for (const alarm of alarms) clearInterval(alarm); await close();}
 console.log(`${DECK_ID} real browser: ${checks} checks passed`);
 process.exit(0);

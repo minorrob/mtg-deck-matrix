@@ -46,7 +46,12 @@ export function boardPerson({page, seat, cards, current, timeout = 15000}) {
     const v = current(), d = v?.decision;
     if (!d || v.status === "finished") return false;
     const closed = await visible(page, "[data-action=board-went-close]");
-    if (closed) await closed.click();
+    /* A timeout here says why: how often the board was drawn anew in two seconds, and what the seat was asked. */
+    if (closed) await closed.click().catch(async (error) => {
+      const redraws = await page.evaluate(() => new Promise((done) => {let n = 0; const host = document.getElementById("cm-board"); if (!host) return done(-1); const o = new MutationObserver(() => {n += 1;}); o.observe(host, {childList: true}); setTimeout(() => {o.disconnect(); done(n);}, 2000);}));
+      const now = current();
+      throw new Error(`seat ${seat}: Turns went by's OK could not be pressed (${error.message.split("\n")[0]}); the board was drawn anew ${redraws} times in 2 s; the seat was asked "${d.title}" (${d.kind}), and the latest view waits on ${now?.waitingOn ?? "no one"} at revision ${now?.revision}`);
+    });
     const at = Date.now();
     if (d.kind === "draw") await click(page, "[data-action=board-draw]:not([disabled])");
     else if (d.kind === "priority") {
