@@ -179,6 +179,51 @@
       ]
     },
     {
+      "name": "+2's Elf Druid, a turn later: {T} adds {G} as a mana ability, off the stack",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Freyalise, Llanowar's Fury"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Freyalise, Llanowar's Fury",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Elf Druid"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        },
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "tapped": "Elf Druid"
+        }
+      ]
+    },
+    {
       "name": "-2: Maya's Rock destroyed, and 1 loyalty left",
       "setup": [
         {

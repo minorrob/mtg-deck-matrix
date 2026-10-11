@@ -56,22 +56,12 @@
             "abilities": [
               {
                 "id": "elf-druid",
-                "kind": "activated",
-                "text": "{T}: Add {G}.",
-                "mana": true,
-                "cost": [
-                  {
-                    "atom": "{T}"
-                  }
-                ],
-                "effects": [
-                  {
-                    "effect": "addMana",
-                    "mana": {
-                      "G": 1
-                    }
-                  }
-                ]
+                "kind": "mana",
+                "tapSelf": true,
+                "produces": {
+                  "G": 1
+                },
+                "text": "{T}: Add {G}."
               }
             ]
           }
