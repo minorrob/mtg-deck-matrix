@@ -21,6 +21,18 @@ the gate failed once in one `table-board` check, root-caused to a race in the bo
 
 Part 7's first sentence waits on G-A's approvals and G-C's agents.
 
+**Later the same day (#702 to #708, each merged on green Actions and released to staging, its worker compared byte for
+byte with the dry run):**
+- G-C's agents' access: each service token staging admits is an identity of its own (#704);
+- G-D to G-F, this side's half: the triage tool, the run's brief, the invites' runbook, and production's release
+  script, rehearsed (#705);
+- words on the accent at 4.5:1 across the app (#706);
+- Gandalf, so 1,131 of Rob's 1,132 cards play, and control for good no longer breaking a room's save (#707);
+- G-D's dress rehearsal: 50 games through the real board, every one replayed with no leak, M8's exit criteria met (#708).
+
+Staging serves main 73279bc0. Every gate item that is this side's is done; what is left is Rob's (the list above, and
+G-D's 50 games by Grok Bot once the agents' tokens are in).
+
 ## RESUMED, 2026-10-08: the review-response session (Claude, a cloud container), on Rob's "Keep building"
 
 The review-response session paused on 2026-10-06 at 97% of the week's usage (Rob: pause at 90% and "write up a
@@ -1224,3 +1236,9 @@ s a game). Both findings are ruled, so the exit criteria are met. Each finding w
 - three on the harness's two findings above.
 
 A table's rerun reuses its match id (`journey0005g1`), which the agents' games on staging will not.
+
+**#708 merged on main 73279bc0 on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 6bedebdd (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 19:32:27 UTC as
+version 44986635. Its `play-worker.js` is byte-identical to the release's dry-run bundle and to #707's (3,305,833
+bytes): #708 changed comments in shipped code only, which the bundle does not carry. Its AI bindings are the Coach's
+alone. `tools/staging-check.mjs --expect 73279bc` exits 0, seating the session's token as `service:e07b4fed5ab9`.
