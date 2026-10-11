@@ -1,0 +1,535 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Painful Truths",
+    "oracleId": "58a2d15f-1b4b-4303-b524-8cc0d1b3e7d2",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Converge — You draw X cards and lose X life, where X is the number of colors of mana spent to cast this spell.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Converge — You draw X cards and lose X life, where X is the number of colors of mana spent to cast this spell.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": {
+            "if": {
+              "spent": {
+                "W": 1
+              }
+            },
+            "then": {
+              "if": {
+                "spent": {
+                  "U": 1
+                }
+              },
+              "then": {
+                "if": {
+                  "spent": {
+                    "B": 1
+                  }
+                },
+                "then": {
+                  "if": {
+                    "spent": {
+                      "R": 1
+                    }
+                  },
+                  "then": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 5,
+                    "else": 4
+                  },
+                  "else": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 4,
+                    "else": 3
+                  }
+                },
+                "else": {
+                  "if": {
+                    "spent": {
+                      "R": 1
+                    }
+                  },
+                  "then": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 4,
+                    "else": 3
+                  },
+                  "else": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 3,
+                    "else": 2
+                  }
+                }
+              },
+              "else": {
+                "if": {
+                  "spent": {
+                    "B": 1
+                  }
+                },
+                "then": {
+                  "if": {
+                    "spent": {
+                      "R": 1
+                    }
+                  },
+                  "then": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 4,
+                    "else": 3
+                  },
+                  "else": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 3,
+                    "else": 2
+                  }
+                },
+                "else": {
+                  "if": {
+                    "spent": {
+                      "R": 1
+                    }
+                  },
+                  "then": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 3,
+                    "else": 2
+                  },
+                  "else": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 2,
+                    "else": 1
+                  }
+                }
+              }
+            },
+            "else": {
+              "if": {
+                "spent": {
+                  "U": 1
+                }
+              },
+              "then": {
+                "if": {
+                  "spent": {
+                    "B": 1
+                  }
+                },
+                "then": {
+                  "if": {
+                    "spent": {
+                      "R": 1
+                    }
+                  },
+                  "then": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 4,
+                    "else": 3
+                  },
+                  "else": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 3,
+                    "else": 2
+                  }
+                },
+                "else": {
+                  "if": {
+                    "spent": {
+                      "R": 1
+                    }
+                  },
+                  "then": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 3,
+                    "else": 2
+                  },
+                  "else": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 2,
+                    "else": 1
+                  }
+                }
+              },
+              "else": {
+                "if": {
+                  "spent": {
+                    "B": 1
+                  }
+                },
+                "then": {
+                  "if": {
+                    "spent": {
+                      "R": 1
+                    }
+                  },
+                  "then": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 3,
+                    "else": 2
+                  },
+                  "else": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 2,
+                    "else": 1
+                  }
+                },
+                "else": {
+                  "if": {
+                    "spent": {
+                      "R": 1
+                    }
+                  },
+                  "then": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 2,
+                    "else": 1
+                  },
+                  "else": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 1,
+                    "else": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "effect": "loseLife",
+          "amount": {
+            "if": {
+              "spent": {
+                "W": 1
+              }
+            },
+            "then": {
+              "if": {
+                "spent": {
+                  "U": 1
+                }
+              },
+              "then": {
+                "if": {
+                  "spent": {
+                    "B": 1
+                  }
+                },
+                "then": {
+                  "if": {
+                    "spent": {
+                      "R": 1
+                    }
+                  },
+                  "then": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 5,
+                    "else": 4
+                  },
+                  "else": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 4,
+                    "else": 3
+                  }
+                },
+                "else": {
+                  "if": {
+                    "spent": {
+                      "R": 1
+                    }
+                  },
+                  "then": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 4,
+                    "else": 3
+                  },
+                  "else": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 3,
+                    "else": 2
+                  }
+                }
+              },
+              "else": {
+                "if": {
+                  "spent": {
+                    "B": 1
+                  }
+                },
+                "then": {
+                  "if": {
+                    "spent": {
+                      "R": 1
+                    }
+                  },
+                  "then": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 4,
+                    "else": 3
+                  },
+                  "else": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 3,
+                    "else": 2
+                  }
+                },
+                "else": {
+                  "if": {
+                    "spent": {
+                      "R": 1
+                    }
+                  },
+                  "then": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 3,
+                    "else": 2
+                  },
+                  "else": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 2,
+                    "else": 1
+                  }
+                }
+              }
+            },
+            "else": {
+              "if": {
+                "spent": {
+                  "U": 1
+                }
+              },
+              "then": {
+                "if": {
+                  "spent": {
+                    "B": 1
+                  }
+                },
+                "then": {
+                  "if": {
+                    "spent": {
+                      "R": 1
+                    }
+                  },
+                  "then": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 4,
+                    "else": 3
+                  },
+                  "else": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 3,
+                    "else": 2
+                  }
+                },
+                "else": {
+                  "if": {
+                    "spent": {
+                      "R": 1
+                    }
+                  },
+                  "then": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 3,
+                    "else": 2
+                  },
+                  "else": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 2,
+                    "else": 1
+                  }
+                }
+              },
+              "else": {
+                "if": {
+                  "spent": {
+                    "B": 1
+                  }
+                },
+                "then": {
+                  "if": {
+                    "spent": {
+                      "R": 1
+                    }
+                  },
+                  "then": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 3,
+                    "else": 2
+                  },
+                  "else": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 2,
+                    "else": 1
+                  }
+                },
+                "else": {
+                  "if": {
+                    "spent": {
+                      "R": 1
+                    }
+                  },
+                  "then": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 2,
+                    "else": 1
+                  },
+                  "else": {
+                    "if": {
+                      "spent": {
+                        "G": 1
+                      }
+                    },
+                    "then": 1,
+                    "else": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

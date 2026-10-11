@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Extended Absence",
+    "oracleId": "973fb1e3-83d5-4763-bea8-799b426a8848",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Exile target creature or planeswalker. Extended Absence deals 1 damage to each opponent and you gain 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Exile target creature or planeswalker. Extended Absence deals 1 damage to each opponent and you gain 1 life.",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile"
+        },
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "who": "opponent"
+        },
+        {
+          "effect": "gainLife",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

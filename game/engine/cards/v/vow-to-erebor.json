@@ -1,0 +1,87 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vow to Erebor",
+    "oracleId": "f8961618-ae68-4d13-84eb-8b5464ce4971",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Untap target creature you control. It gets +2/+2 until end of turn. If it's a Dwarf, you may attach an Equipment you control to it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Untap target creature you control. It gets +2/+2 until end of turn. If it's a Dwarf, you may attach an Equipment you control to it.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "untap",
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 2,
+          "toughness": 2
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "about": "target",
+            "is": {
+              "subtypes": [
+                "Dwarf"
+              ]
+            }
+          },
+          "then": [
+            {
+              "effect": "chooseCard",
+              "zone": "battlefield",
+              "selector": {
+                "subtypes": [
+                  "Equipment"
+                ],
+                "controller": "you"
+              },
+              "upTo": true,
+              "count": 1,
+              "to": "stay",
+              "remember": true
+            },
+            {
+              "effect": "attach",
+              "source": "remembered",
+              "targets": {
+                "target": 0
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,282 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Refute Destiny",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Blue Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Merfolk"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Goblin Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "White Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Soldier"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Blue Walker": {
+      "types": [
+        "Planeswalker"
+      ],
+      "subtypes": [
+        "Tamiyo"
+      ],
+      "manaCost": "{2}{U}",
+      "colors": [
+        "U"
+      ],
+      "loyalty": 4
+    },
+    "Red Walker": {
+      "types": [
+        "Planeswalker"
+      ],
+      "subtypes": [
+        "Chandra"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "loyalty": 4
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Offered at the green and blue ones only; Maya's Bear exiled, and the Rock on top surveilled into the graveyard",
+      "library": [
+        "Rock"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Refute Destiny"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Blue Pal",
+            "Goblin Pal",
+            "White Pal",
+            "Blue Walker",
+            "Red Walker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Refute Destiny"
+              },
+              "count": 3,
+              "targets": [
+                [
+                  "Bear"
+                ],
+                [
+                  "Blue Pal"
+                ],
+                [
+                  "Blue Walker"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Refute Destiny",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Rock"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Rock"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Rock",
+            "Refute Destiny"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        }
+      ]
+    },
+    {
+      "name": "A blue planeswalker exiled; the top card kept",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Refute Destiny"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Blue Walker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Refute Destiny",
+          "targets": [
+            {
+              "card": "Blue Walker"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": []
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Blue Walker"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Refute Destiny"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 20
+        }
+      ]
+    }
+  ]
+}
