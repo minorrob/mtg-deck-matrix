@@ -430,7 +430,9 @@ function spendOnlyValid(only) {
    or "self" -- remembered as the trigger is made (`watch`, effects/permanents.mjs) -- and `thisTurn` for one that lasts
    the turn (CR 603.7b). One that waits for a moment says `at`: "end step" or "upkeep" -- or "your upkeep", the next upkeep
    of its controller's own turn ("exile those creatures at the beginning of your next upkeep", Rally the Ancestors). */
-const DELAYED_MOMENTS = ["end step", "upkeep", "your upkeep"];
+/* "At end of combat" (Wall of Junk; CR 511.2) and "at the beginning of the declare attackers step on your next turn"
+   (Meandering Towershell) too: the next end of combat step, and that step of a turn of its controller's after this one. */
+const DELAYED_MOMENTS = ["end step", "upkeep", "your upkeep", "end of combat", "your next declare attackers"];
 function withDelayedTriggers(abilities, problems) {
   const walk = (effect) => {
     if (!effect || typeof effect !== "object") return effect;

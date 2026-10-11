@@ -529,6 +529,12 @@ function arrive(state, events) {
     events.push(...combatDamage.deal(state, {step: "regular"}));
   if (state.phase === "COMBAT_END") events.push(...endCombat(state));
   if (state.phase === "CLEANUP") cleanup(state, events);
+  /* A STEP WHOSE TURN-BASED ACTION STOPS TO ASK -- declaring attackers or blockers (CR 508.1, 509.1), the held draw, a
+     division of combat damage -- HAS BEGUN ALL THE SAME: what triggered as it began has triggered (CR 603.2), and waits for
+     the answer and a player's priority to go on the stack (CR 603.3). Read now, since priority is granted on the answer's
+     events alone: "at the beginning of the declare attackers step on your next turn" (Meandering Towershell), "at the
+     beginning of your draw step" under the held draw, were lost. */
+  if (state.awaiting) collectTriggers(state, events);
   state.passes = 0;
   grantStepPriority(state, events);
 }

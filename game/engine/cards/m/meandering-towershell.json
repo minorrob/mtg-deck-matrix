@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Meandering Towershell",
+    "oracleId": "45154dc6-ff0a-4e99-8528-689757d1778e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Turtle"
+    ],
+    "manaCost": "{3}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 5,
+    "toughness": 9
+  },
+  "oracleText": "Islandwalk (This creature can't be blocked as long as defending player controls an Island.)\nWhenever this creature attacks, exile it. Return it to the battlefield under your control tapped and attacking at the beginning of the declare attackers step on your next turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Islandwalk",
+      "keyword": "islandwalk"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks, exile it. Return it to the battlefield under your control tapped and attacking at the beginning of the declare attackers step on your next turn.",
+      "trigger": {
+        "on": "attacks"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "delayedTrigger",
+          "at": "your next declare attackers",
+          "text": "Return it to the battlefield under your control tapped and attacking at the beginning of the declare attackers step on your next turn.",
+          "effects": [
+            {
+              "effect": "moveZone",
+              "targets": "remembered",
+              "to": "battlefield",
+              "controller": "you",
+              "tapped": true,
+              "attacking": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

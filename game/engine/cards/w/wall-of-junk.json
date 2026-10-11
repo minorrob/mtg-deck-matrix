@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wall of Junk",
+    "oracleId": "22b0de2d-47a8-4269-ba21-4bc2b4b10b40",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Wall"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 0,
+    "toughness": 7
+  },
+  "oracleText": "Defender (This creature can't attack.)\nWhen this creature blocks, return it to its owner's hand at end of combat. (Return it only if it's on the battlefield.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender",
+      "keyword": "defender"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature blocks, return it to its owner's hand at end of combat.",
+      "trigger": {
+        "on": "blocks"
+      },
+      "effects": [
+        {
+          "effect": "delayedTrigger",
+          "at": "end of combat",
+          "text": "Return it to its owner's hand at end of combat.",
+          "effects": [
+            {
+              "effect": "moveZone",
+              "targets": "self",
+              "to": "hand"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

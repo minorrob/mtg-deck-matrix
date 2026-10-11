@@ -153,6 +153,14 @@ export function defendingPlayers(state, controller) {
   return [...seats.slice(from + 1), ...seats.slice(0, from)].filter((id) => !state.players[id].lost);
 }
 
+/* WHAT A CREATURE PUT ONTO THE BATTLEFIELD ATTACKING MAY ATTACK (CR 508.4): each defending player, then each planeswalker a
+   defending player controls, its controller's choice among them (effects/asking.mjs, attackWhom). */
+export function attackPlaces(state, controller) {
+  const players = defendingPlayers(state, controller);
+  return [...players.map((player) => ({player})), ...players.flatMap((player) => state.zones.battlefield
+    .filter((id) => typesOf(state, id).includes("Planeswalker") && controllerOf(state, id) === player).map((planeswalker) => ({player, planeswalker})))];
+}
+
 /* It attacks that player in this combat -- or that planeswalker of theirs: never declared as an attacker (CR 508.4: no
    "whenever ... attacks" for it), and blocked or not as the combat goes. The player defends now, so they declare blockers. */
 export function joinAttack(state, id, player, planeswalker = undefined) {
@@ -163,14 +171,20 @@ export function joinAttack(state, id, player, planeswalker = undefined) {
 /**
  * "Tapped and attacking" (CR 508.4; Forge's TokenAttacking) -- `attacking` on what makes or moves permanents: "that
  * player", the one the ability is about (Adeline's "attacking that player", ninjutsu's returned attacker's); `true`, the
- * defending player its controller chooses as it enters -- the only one, or asked, a creature at a time (asking.mjs,
- * attackWhom). Only in a combat, only a creature, and only the attacking player's (CR 506.3a-b); a player no longer in
+ * defending player, or planeswalker one controls, its controller chooses as it enters -- the only one, or asked, a creature
+ * at a time (asking.mjs, attackWhom). Only in a combat, only a creature, and only the attacking player's (CR 506.3a-b); a player no longer in
  * the game is attacked by nothing (CR 508.4a).
  */
 export function enterAttacking(state, ids, whom, context, controller) {
-  if (!state.combat || state.combat.attackingPlayerId !== controller) return;
   const creatures = ids.filter((id) => state.objects[id]?.zone === "battlefield" && typesOf(state, id).includes("Creature"));
   if (!creatures.length) return;
+  /* NO CREATURE WAS DECLARED (CR 508.8): one put onto the battlefield attacking in the declare attackers step all the same
+     makes an attack of it -- the declare blockers and combat damage steps then happen (rules/turn.mjs reads the attacks).
+     The active player's, who is the attacking player (CR 506.2, 506.3b), once attackers are declared (Meandering
+     Towershell, back "at the beginning of the declare attackers step"). */
+  if (!state.combat && state.phase === "COMBAT_DECLARE_ATTACKERS" && controller === state.activePlayer)
+    state.combat = {attackingPlayerId: controller, defenders: [], attacks: [], firstStrike: false};
+  if (!state.combat || state.combat.attackingPlayerId !== controller) return;
   if (whom === "that player") {
     const player = context.about?.player, planeswalker = context.about?.planeswalker;
     if (player === controller || !state.players[player] || state.players[player].lost) return;
@@ -180,10 +194,10 @@ export function enterAttacking(state, ids, whom, context, controller) {
     for (const id of creatures) joinAttack(state, id, player, planeswalker);
     return;
   }
-  const players = defendingPlayers(state, controller);
-  if (!players.length) return;
-  /* One defending player, or an effect run outside a resolution with no one to ask: the first in turn order. */
-  if (players.length === 1 || !state.resolving) { for (const id of creatures) joinAttack(state, id, players[0]); return; }
+  const places = attackPlaces(state, controller);
+  if (!places.length) return;
+  /* One place it may attack, or an effect run outside a resolution with no one to ask: the first player in turn order. */
+  if (places.length === 1 || !state.resolving) { for (const id of creatures) joinAttack(state, id, places[0].player, places[0].planeswalker); return; }
   /* Asked next, before the rest of what the ability does. */
   state.resolving.queue.unshift({effect: "attackWhom", tokens: creatures, player: controller});
 }
@@ -838,7 +852,9 @@ export function delayedTrigger(state, params, context) {
       ...(params.untilYourNextTurn ? {untilYourNextTurn: true} : {}), fresh: true}
       /* "At the beginning of YOUR next upkeep" (rebound, CR 702.88a; rules/stack.mjs): its controller's, not the next one's.
          "At the beginning of that player's next end step" (The Eternal Wanderer): a moment of that player's turn only (`player`). */
-      : {at: params.at ?? "end step", ...(params.yours === true ? {yours: true} : {}), ...(Number.isInteger(params.player) ? {player: params.player} : {})}),
+      : {at: params.at ?? "end step", ...(params.yours === true ? {yours: true} : {}), ...(Number.isInteger(params.player) ? {player: params.player} : {}),
+        /* "On your next turn" (Meandering Towershell): a turn after this one (rules/trigger.mjs). */
+        ...(params.at === "your next declare attackers" ? {madeOnTurn: state.turn} : {})}),
     controller: context.controller,
     source: context.source ?? null,
     /* A double-faced source's transforms as this is made: "transform it" from a delayed trigger is ignored once it has

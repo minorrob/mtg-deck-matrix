@@ -39,7 +39,8 @@
  * trigger's controller.
  *
  * DELAYED TRIGGERS (CR 603.7), created by a resolving effect: "at the beginning of the next end step" (M4 phase 3,
- * batch 13), "at the beginning of the next turn's upkeep", and on an event -- "when that creature dies this turn",
+ * batch 13), "at the beginning of the next turn's upkeep", "at end of combat" and "at the beginning of the declare attackers
+ * step on your next turn" (Train C, p6-combat), and on an event -- "when that creature dies this turn",
  * "whenever a creature dies this turn" (batch 17). Other moments ("when you next cast a creature spell") are not yet. WHAT IS DEFERRED AND NAMED: state triggers (CR 603.8), which trigger
  * while a condition holds rather than on an event.
  */
@@ -598,7 +599,10 @@ export function collectTriggers(state, events) {
        next turn's. */
     /* Paradigm's delayed trigger (CR 702.192a), at each of its controller's precombat main phases from then on: the first
        main phase of a turn (CR 505.1a) -- its controller's turns only (`yourTurn`), and again every time (`forever`). */
-    const moment = event.kind === "GameEventTurnPhase" ? {END_OF_TURN: "end step", UPKEEP: "upkeep", MAIN1: "precombat main"}[event.data?.fields?.phase] : undefined;
+    /* "At end of combat" (Wall of Junk; CR 511.2): as the end of combat step begins. "At the beginning of the declare attackers
+       step on your next turn" (Meandering Towershell): that step's beginning, read once attackers are declared (rules/turn.mjs). */
+    const moment = event.kind === "GameEventTurnPhase" ? {END_OF_TURN: "end step", UPKEEP: "upkeep", MAIN1: "precombat main", COMBAT_END: "end of combat",
+      COMBAT_DECLARE_ATTACKERS: "declare attackers"}[event.data?.fields?.phase] : undefined;
     /* SUSPEND (CR 702.62a): at the beginning of its owner's upkeep, a suspended card in exile with a time counter on it has
        one removed -- and when the last is, its owner may cast it without paying its mana cost (a creature so cast has haste,
        rules/actions.mjs). One triggered ability does both, in order. */
@@ -617,8 +621,11 @@ export function collectTriggers(state, events) {
          (Rally the Ancestors, `at: "your upkeep"`): the next upkeep of a turn that is its controller's -- another player's
          upkeep passes it by (CR 603.7). */
       const turnOf = event.data?.fields?.playerTurn?.playerId ?? state.activePlayer;
+      /* "On your next turn" (Meandering Towershell, `at: "your next declare attackers"`): a turn of its controller's begun after
+         the one it was made in -- not an extra combat later this turn (CR 500.8). */
       const due = state.delayedTriggers.filter((d) => (d.at === moment && (!d.yours || d.controller === turnOf) && (!d.yourTurn || d.controller === turnOf) && (d.player === undefined || d.player === turnOf))
-        || (moment === "upkeep" && d.at === "your upkeep" && d.controller === turnOf));
+        || (moment === "upkeep" && d.at === "your upkeep" && d.controller === turnOf)
+        || (moment === "declare attackers" && d.at === "your next declare attackers" && d.controller === turnOf && state.turn > d.madeOnTurn));
       state.delayedTriggers = state.delayedTriggers.filter((d) => !due.includes(d) || d.forever === true);
       for (const d of due) state.pendingTriggers.push({
         abilityId: "delayed", text: d.text ?? (moment === "upkeep" ? "At the beginning of the next upkeep" : "At the beginning of the next end step"), controller: d.controller,

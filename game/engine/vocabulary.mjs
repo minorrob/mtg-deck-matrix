@@ -152,6 +152,8 @@ export const TIER0_KEYWORDS = Object.freeze(TIER0_ALL.filter((word) => !TIER0_CO
 /* Keyword abilities the app already recognizes that tier 0 did not carry. Tier 0 was measured on
    seven decks, so this is growth rather than a correction. */
 const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
+  /* Train C phase 2, p6-combat: islandwalk (CR 702.14; Meandering Towershell), forestwalk's rule for Islands. */
+  "islandwalk",
   /* M4 phase 3, batch 54: an ability of the card in hand (cards/index.mjs). Batch 58: station (CR 702.184). */
   "ninjutsu", "station",
   /* Batch 60: a Saga's reminder line, the lore counter it enters with (CR 714.3a). */
