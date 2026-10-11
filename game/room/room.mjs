@@ -57,7 +57,7 @@ import {createRng} from "../engine/rng.mjs";
 import {createJournal, hashState} from "../engine/journal.mjs";
 import {createController} from "../engine/controller.mjs";
 import {createMatchStore} from "../engine/storage.mjs";
-import {housePilot} from "../engine/pilots/house-pilot.mjs";
+import {housePilot, meetRequirements} from "../engine/pilots/house-pilot.mjs";
 import {scoredPilot, SETTINGS} from "../engine/pilots/scored-pilot.mjs";
 import {agentPilot} from "../engine/pilots/agent-pilot.mjs";
 import {addToHistory} from "./history.mjs";
@@ -155,6 +155,9 @@ export function leastAnswer(choice) {
     return {indices: [], amounts};
   }
   if (choice.mode === "integer") return {indices: [], value: choice.min ?? 0};
+  /* What the record requires ("attacks each combat if able", CR 508.1d), and no more: each where it is free first, and
+     never past what the player can pay for (an attack tax, CR 508.1h; `budget`). */
+  if (Array.isArray(choice.requires) && choice.requires.length) return {indices: meetRequirements(choice, [])};
   return {indices: options.slice(0, Math.max(choice.min ?? 0, choice.mode === "one" || choice.mode === "boolean" ? 1 : 0)).map((o) => o.index)};
 }
 
