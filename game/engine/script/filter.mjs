@@ -66,7 +66,15 @@ export const SELECTOR_KEYS = Object.freeze([
   "hasDealtDamage", "hasDealtCombatDamage",
   /* "Permanent cards in your graveyard that were put there from the battlefield this turn" (Brought Back). */
   "fromBattlefieldThisTurn",
+  /* "Counter target spell with {X} in its mana cost" (Frontline Medic; CR 107.3, 202.1). */
+  "xInManaCost",
+  /* "A permanent of their choice that shares a card type with it" (Braids, Arisen Nightmare; CR 205.2a): with what an effect
+     before it moved, as it last existed. */
+  "sharesCardTypeWith",
 ]);
+
+/** The card types (CR 205.2a). */
+export const CARD_TYPES = Object.freeze(["Artifact", "Battle", "Creature", "Enchantment", "Instant", "Kindred", "Land", "Planeswalker", "Sorcery"]);
 
 /* THE SOURCE A LINK IS KEPT AGAINST (CR 607.2a; effects/zones.mjs, `link`): the ability's source -- or, gone from the
    battlefield since its ability was put on the stack, that object as it last was (CR 113.7a): "if there are cards exiled
@@ -181,6 +189,10 @@ function assertGrammar(selector) {
   for (const key of ["hasDealtDamage", "hasDealtCombatDamage"])
     if (selector[key] !== undefined && typeof selector[key] !== "boolean") throw new Error(`A selector's ${key} is true or false`);
   if (selector.fromBattlefieldThisTurn !== undefined && selector.fromBattlefieldThisTurn !== true) throw new Error("A selector's fromBattlefieldThisTurn is true: a graveyard card put there from the battlefield this turn");
+  if (selector.xInManaCost !== undefined && selector.xInManaCost !== true) throw new Error("A selector's xInManaCost is true: {X} among the symbols of its mana cost");
+  const shared = selector.sharesCardTypeWith;
+  if (shared !== undefined && shared !== "moved" && !(Array.isArray(shared) && shared.every((type) => CARD_TYPES.includes(type))))
+    throw new Error("A selector's sharesCardTypeWith is \"moved\": a card type of what the effect before it moved, as it last existed");
   for (const key of ["otherThan", "sharesCreatureTypeWith"])
     if (selector[key] !== undefined && selector[key] !== "that card") throw new Error(`A selector's ${key} is "that card": the object a trigger is about`);
   if (selector.equipped !== undefined && selector.equipped !== true) throw new Error("A selector's equipped is true: an Equipment is attached to it");
@@ -192,12 +204,20 @@ function assertGrammar(selector) {
 
 /* AN OBJECT'S CREATURE TYPES (CR 205.3m): the subtypes of a creature or a kindred card, through the layers on the
    battlefield and as printed elsewhere; `every` for a changeling (CR 702.73a). A planeswalker's subtypes are not. */
-function creatureTypesOf(state, id) {
+export function creatureTypesOf(state, id) {
   const object = state.objects[id];
   const types = typesOf(state, id);
   if (!types.includes("Creature") && !types.includes("Kindred")) return {every: false, types: []};
   const subtypes = object.zone === "battlefield" ? subtypesOf(state, id) : object.subtypes ?? [];
   return {every: everyCreatureTypeOf(state, id) === true, types: subtypes.filter(isCreatureType)};
+}
+
+/** Whether objects have a creature type in common: one each of them has, a changeling having every one (CR 702.73a). */
+export function shareCreatureType(state, ids) {
+  const types = ids.map((id) => creatureTypesOf(state, id));
+  const named = [...new Set(types.flatMap((t) => t.types))];
+  if (types.every((t) => t.every)) return true;
+  return named.some((type) => types.every((t) => t.every || t.types.includes(type)));
 }
 
 /* A player with hexproof (CR 702.11c): a permanent of theirs with the static "you have hexproof" (rules/statics.mjs). */
@@ -435,6 +455,14 @@ export function compileSelector(selector) {
     /* "Put there from the battlefield this turn" (Brought Back): a graveyard card that arrived from the battlefield on this
        turn -- the mark only a graveyard card has (state/index.mjs, moveObject). */
     if (selector.fromBattlefieldThisTurn === true && !(object.fromBattlefield === true && object.arrivedTurn === state.turn)) return false;
+    /* "Target spell with {X} in its mana cost" (Frontline Medic): an {X} among the symbols of the mana cost it has now (CR
+       107.3, 202.1) -- a spell's on the stack, its X chosen or not; an Adventure cast as one, the Adventure's (CR 715.3b); a
+       copy, the one it copied (CR 707.2). No mana cost, no {X}. */
+    if (selector.xInManaCost === true && !parseManaCost(object.manaCost).symbols.some((symbol) => symbol.kind === "variable" && symbol.name === "X")) return false;
+    /* "That shares a card type with it" (Braids, Arisen Nightmare; CR 205.2a): one of the card types of what the effect before
+       it moved, as each last existed there (CR 608.2h) -- bound to that list as the effect reaches the head of its resolution
+       (script/bind.mjs) -- through the layers now. Unbound ("moved", no card type), it matches nothing. */
+    if (selector.sharesCardTypeWith !== undefined && !typesOf(state, id).some((type) => [].concat(selector.sharesCardTypeWith).includes(type))) return false;
     /* "Untap all creatures that attacked this turn" (Relentless Assault): declared as an attacker in a combat this turn. */
     if (selector.attackedThisTurn === true && usesThisTurn(state, id, "attacked") === 0) return false;
     /* "Four or more +1/+1 counters on it": a number of counters of a kind. */

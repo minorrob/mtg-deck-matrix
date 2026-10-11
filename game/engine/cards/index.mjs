@@ -236,7 +236,10 @@ const TRIGGERS = {
     /* "For each other instant and sorcery spell you've cast before it this turn": counted as it triggers. */
     ...(t.countBefore ? {countBefore: true} : {}),
     /* "An instant or sorcery spell that targets a creature" (Rehearsed Debater): what one of its targets is (rules/trigger.mjs). */
-    ...(t.targets ? {targets: t.targets} : {})}),
+    ...(t.targets ? {targets: t.targets} : {}),
+    /* "An Equipment spell or a spell that targets a creature you control" (Danitha, Sword of Hope): either, each its own
+       `filter` and `targets`. */
+    ...(Array.isArray(t.anyOf) ? {anyOf: t.anyOf.map((one) => ({...(one.filter ? {filter: one.filter} : {}), ...(one.targets ? {targets: one.targets} : {})}))} : {})}),
   /* "Whenever one or more +1/+1 counters are put on Berta" (CR 122.1): counters of `counter` put on this permanent, once
      for each time they are put on, however many. */
   "counter added": (t) => ((t.who ?? "self") === "self" && typeof t.counter === "string" ? {on: "GameEventCardCounters", counterAdded: true, counter: t.counter,
@@ -362,6 +365,8 @@ function effectsIn(list, out = []) {
     effectsIn(effect.otherwise, out);
     /* What follows paying an "unless" cost (Divert Disaster's Lander). */
     effectsIn(effect.whenPaid, out);
+    /* What follows a sacrifice declined (Braids, Arisen Nightmare). */
+    effectsIn(effect.ifNot, out);
   }
   return out;
 }
@@ -434,6 +439,8 @@ function manaAbility(ability, id) {
     ...(ability.condition ? {condition: ability.condition} : {}),
     ...(counterCost.length ? {counterCost} : {}), ...(ability.limit ? {limit: ability.limit} : {}),
     ...(first.spendOnly ? {spendOnly: first.spendOnly} : {}),
+    /* "This mana can't be spent to cast spells from your hand" (Heartwood Crafter; CR 106.6, rules/restricted-mana.mjs). */
+    ...(first.cantSpend ? {cantSpend: first.cantSpend} : {}),
     /* "When that mana is spent to cast a creature spell that shares a creature type with your commander, scry 1" (Path of
        Ancestry; CR 106.6): what the mana does when it is spent (rules/restricted-mana.mjs). */
     ...(first.whenSpent ? {whenSpent: first.whenSpent} : {})};
@@ -487,7 +494,12 @@ function withDelayedTriggers(abilities, problems) {
            stack: what it adds is added with the mana ability that triggered it (rules/trigger.mjs, manaTriggered). */
         const [adds] = rest.effects ?? [];
         if (on?.on === "GameEventManaPool" && (rest.effects ?? []).length === 1 && MANA(adds?.mana)
-          && Object.values(adds.mana).every((n) => Number.isInteger(n))) on.manaAbility = {mana: {...adds.mana}};
+          && Object.values(adds.mana).every((n) => Number.isInteger(n))) {
+          /* Its mana is added to the pool as plain mana: mana that can't be spent on some things (Heartwood Crafter's,
+             rules/restricted-mana.mjs) is not carried there yet. */
+          if (adds.cantSpend !== undefined) problems.push(`${when.on}: a delayed triggered mana ability whose mana can't be spent on some things is not built`);
+          on.manaAbility = {mana: {...adds.mana}};
+        }
         out = {...rest, on: on ?? {on: null}, ...(named ? {watch: when.who} : {})};
       } else if (!DELAYED_MOMENTS.includes(out.at ?? "end step")) problems.push(`${out.at}: a moment no delayed trigger waits for yet`);
     }
@@ -1206,6 +1218,12 @@ export function compileScript(script) {
       if (effect.effect === "addMana" && effect.spendOnly !== undefined && !spendOnlyValid(effect.spendOnly))
         problems.push(`addMana: a spending restriction says what it pays for -- a spell, an ability of a permanent or of a source anywhere, or more than one, each a selector (${SPEND_ONLY_KEYS.join(", ")})`);
       if (effect.effect === "addMana") problems.push(...whenSpentProblems(effect));
+      /* "This mana can't be spent to cast spells from your hand" (Heartwood Crafter; rules/restricted-mana.mjs): in the pool,
+         the one thing it can't pay for said -- spells cast from its controller's hand -- and with no restriction or rider
+         besides, nor kept until end of combat, nor of one color chosen as it resolves (neither carries it yet). */
+      if (effect.effect === "addMana" && effect.cantSpend !== undefined && !(JSON.stringify(effect.cantSpend) === '{"castFrom":"hand"}' && effect.spendOnly === undefined && effect.whenSpent === undefined
+        && effect.untilEndOfCombat === undefined && effect.oneColor === undefined))
+        problems.push('addMana: mana that can\'t be spent on some things says cantSpend {castFrom: "hand"}, spells cast from its controller\'s hand, with no spending restriction, rider, untilEndOfCombat or oneColor besides');
       /* Mana kept until end of combat (firebending): plain mana; restricted mana kept so is not built. */
       if (effect.effect === "addMana" && effect.untilEndOfCombat !== undefined && (effect.untilEndOfCombat !== true || effect.spendOnly !== undefined))
         problems.push("addMana: untilEndOfCombat is true, on mana that is not restricted");
@@ -1388,6 +1406,15 @@ export function compileScript(script) {
         if (ability.trigger.on !== "spell cast") problems.push(`${ability.text}: what a spell targets is read as it is cast, and by no other trigger`);
         else try { compileSelector(ability.trigger.targets); } catch (error) { problems.push(`${ability.text}: ${error.message}`); }
       }
+      /* A choice of spells cast (`anyOf`): each a filter of the spell, of what it targets, or both -- and only that, on a spell
+         cast trigger with neither of its own and no count of the caster's spells this turn, which reads its filter. */
+      if (ability.trigger.anyOf !== undefined) {
+        const alternatives = ability.trigger.anyOf;
+        if (ability.trigger.on !== "spell cast" || !Array.isArray(alternatives) || alternatives.length < 2 || ["filter", "targets", "firstThisTurn", "nthThisTurn", "countBefore"].some((key) => ability.trigger[key] !== undefined)
+          || !alternatives.every((one) => one && typeof one === "object" && Object.keys(one).length && Object.keys(one).every((key) => key === "filter" || key === "targets")))
+          problems.push(`${ability.text}: a choice of spells cast is anyOf, two or more of {filter, targets}, on a spell cast trigger with no filter, targets or count of its own`);
+        else for (const one of alternatives) try { if (one.filter) compileSelector({...one.filter, what: "spell"}); if (one.targets) compileSelector(one.targets); } catch (error) { problems.push(`${ability.text}: ${error.message}`); }
+      }
 
       /* "YOU MAY" (CR 603.5): an optional triggered ability goes on the stack like any other, and as it resolves its
          controller chooses whether to do it -- the card's sentence, Yes or No. Declining does nothing at all, a search
@@ -1408,7 +1435,7 @@ export function compileScript(script) {
         && (MANA(adds.mana) || adds.produced === true)) {
         /* What a triggered mana ability adds goes straight to the pool: one that says what its mana may pay for is refused
            until it is carried there. */
-        if (adds.spendOnly !== undefined) problems.push(`${ability.text}: a triggered mana ability whose mana may pay for only some things is not built`);
+        if (adds.spendOnly !== undefined || adds.cantSpend !== undefined) problems.push(`${ability.text}: a triggered mana ability whose mana may pay for only some things is not built`);
         trigger.manaAbility = adds.produced === true ? {produced: true} : {mana: {...adds.mana}};
       }
       /* MODES CHOSEN AS IT IS PUT ON THE STACK (CR 603.3c, 700.2b): a triggered ability whose one effect is a modal -- its

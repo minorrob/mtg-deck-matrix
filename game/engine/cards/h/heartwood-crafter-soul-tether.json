@@ -1,0 +1,119 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Heartwood Crafter // Soul Tether",
+    "oracleId": "c8b3a070-408e-4a8f-8597-6476eeec0a5f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Artificer"
+    ],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\n{T}: Add {C}. This mana can't be spent to cast spells from your hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This creature enters prepared.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersPrepared": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}. This mana can't be spent to cast spells from your hand.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          },
+          "cantSpend": {
+            "castFrom": "hand"
+          }
+        }
+      ]
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Soul Tether",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{2}{R/G}",
+      "colors": [
+        "R",
+        "G"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Create a Heartwood token. (It's a red and green artifact with \"{T}: Add {R} or {G}.\")",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Create a Heartwood token.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 1,
+            "token": {
+              "name": "Heartwood",
+              "types": [
+                "Artifact"
+              ],
+              "subtypes": [
+                "Heartwood"
+              ],
+              "colors": [
+                "R",
+                "G"
+              ],
+              "abilities": [
+                {
+                  "id": "heartwood",
+                  "kind": "mana",
+                  "tapSelf": true,
+                  "produces": [
+                    {
+                      "R": 1
+                    },
+                    {
+                      "G": 1
+                    }
+                  ],
+                  "text": "{T}: Add {R} or {G}."
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

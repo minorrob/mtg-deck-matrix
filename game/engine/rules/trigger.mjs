@@ -83,7 +83,9 @@ function spellWas(state, spell) {
   const object = state.objects[spell];
   if (!object) return {};
   return {was: {cardId: spell, types: [...(object.types ?? [])], subtypes: [...(object.subtypes ?? [])], supertypes: [...(object.supertypes ?? [])],
-    controller: object.controller, token: object.token === true}};
+    controller: object.controller, token: object.token === true,
+    /* The sources of the mana spent to cast it (CR 106.3): "if mana from a Treasure was spent to cast it" (Smaug). */
+    ...(object.spentFrom ? {spentFrom: structuredClone(object.spentFrom)} : {})}};
 }
 
 /**
@@ -155,13 +157,15 @@ function subjects(state, event, condition, sourceId, controller) {
     if (condition.castFrom && fields.castFrom !== condition.castFrom) return [];
     /* "When you cast this spell" (CR 603.2, Emrakul, the Exigent Doom): this spell's own cast, and no other. */
     if (condition.who === "self" && spell !== sourceId) return [];
-    if (condition.filter && !(state.objects[spell] && matchesSelector({...condition.filter, what: "spell"}, state, spell, {controller, source: sourceId}))) return [];
     /* "An instant or sorcery spell that targets a creature" (Rehearsed Debater): one of what it targets, chosen as it was
        cast (CR 601.2c) and so before it became cast (601.2i), fits `targets`. A player it targets fits no such selector. */
-    if (condition.targets) {
-      const aimed = (state.stack.find((e) => e.stackId === fields.sa?.stackId)?.targets ?? []).flat();
-      if (!aimed.some((t) => t?.kind === "object" && state.objects[t.id] && matchesSelector(condition.targets, state, t.id, {controller, source: sourceId}))) return [];
-    }
+    const aimed = () => (state.stack.find((e) => e.stackId === fields.sa?.stackId)?.targets ?? []).flat();
+    const fitsCast = (one) => (!one.filter || (state.objects[spell] && matchesSelector({...one.filter, what: "spell"}, state, spell, {controller, source: sourceId})))
+      && (!one.targets || aimed().some((t) => t?.kind === "object" && state.objects[t.id] && matchesSelector(one.targets, state, t.id, {controller, source: sourceId})));
+    if (!fitsCast(condition)) return [];
+    /* "Whenever you cast an Equipment spell or a spell that targets a creature you control" (Danitha, Sword of Hope): one of
+       these, each a filter of the spell or of what it targets, or both. */
+    if (condition.anyOf && !condition.anyOf.some(fitsCast)) return [];
     /* "Their first noncreature spell each turn": this is the first of the caster's spells this turn the filter fits. And
        "copy it for each other instant and sorcery spell you've cast before it this turn" (Thousand-Year Storm): how many
        of them came before this one, counted now, as it triggers -- a spell cast later, in response, did not. */
@@ -477,8 +481,12 @@ function triggersAgain(state, event, controller, sourceId, lastSeen = null, depa
 }
 /* The event a trigger triggered on, as a `triggers-again` names it: something entering (what arrived, where it is now),
    dying (as it last was), or attacking. */
+/* "If a legendary permanent or an artifact entering or leaving the battlefield causes a triggered ability ... to trigger"
+   (Gandalf the White; CR 603.2d, 603.6a, 603.10a): "enters or leaves", the arrival as it now is, or a departure to anywhere
+   as it last existed on the battlefield -- only a move from the battlefield keeps that (effects/zones.mjs, `leftBehind`). */
 function causedBy(state, event, cause, context) {
   const fields = event.data?.fields ?? {};
+  if (cause.event === "enters or leaves") return causedBy(state, event, {...cause, event: "enters"}, context) || matchesLastKnown(cause.filter ?? {}, fields.leftBehind, context);
   if (cause.event === "enters") {
     const arrived = fields.enteredAs ?? fields.card?.cardId;
     return event.kind === "GameEventCardChangeZone" && fields.to?.zoneType === "Battlefield" && state.objects[arrived]?.zone === "battlefield"
@@ -885,7 +893,7 @@ function askCounted(state, entry) {
 export function triggerCountedChoice(state, awaiting) {
   const {entry, context} = targeting(state, awaiting.stackId);
   return countedChoice(state, entry.script.targets[awaiting.index], context, {id: `choose-targets:${entry.stackId}:${awaiting.index}`,
-    name: entry.name ?? "A triggered ability", hostile: isHostile(entry.script.effects)});
+    name: entry.name ?? "A triggered ability", hostile: isHostile(entry.script.effects), placeholder: entry.targets[awaiting.index]});
 }
 
 /** The counted target picked; then the next, or the next trigger's targets. */

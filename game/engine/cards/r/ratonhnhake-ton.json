@@ -1,0 +1,127 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ratonhnhaké꞉ton",
+    "oracleId": "a37f8381-83a4-4b6b-8176-c90f6a61da74",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Assassin"
+    ],
+    "manaCost": "{W}{U}{B}",
+    "colors": [
+      "B",
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "U",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "As long as Ratonhnhaké꞉ton hasn't dealt damage yet, it has hexproof and can't be blocked.\nWhenever Ratonhnhaké꞉ton deals combat damage to a player, create a 1/1 black Assassin creature token with menace. When you do, return target Equipment card from your graveyard to the battlefield, then attach it to that token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "As long as Ratonhnhaké꞉ton hasn't dealt damage yet, it has hexproof and can't be blocked.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "self": true,
+        "hasDealtDamage": false
+      },
+      "apply": {
+        "addKeywords": [
+          "Hexproof"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "As long as Ratonhnhaké꞉ton hasn't dealt damage yet, it has hexproof and can't be blocked.",
+      "rule": "cant-be-blocked",
+      "affects": {
+        "what": "permanent",
+        "self": true,
+        "hasDealtDamage": false
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Ratonhnhaké꞉ton deals combat damage to a player, create a 1/1 black Assassin creature token with menace. When you do, return target Equipment card from your graveyard to the battlefield, then attach it to that token.",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "self",
+        "to": "player",
+        "combat": true
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Assassin",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Assassin"
+            ],
+            "colors": [
+              "B"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Menace"
+            ]
+          },
+          "remember": true
+        },
+        {
+          "effect": "immediateTrigger",
+          "about": "remembered",
+          "text": "When you do, return target Equipment card from your graveyard to the battlefield, then attach it to that token.",
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          },
+          "targets": [
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "subtypes": [
+                "Equipment"
+              ]
+            }
+          ],
+          "effects": [
+            {
+              "effect": "moveZone",
+              "targets": {
+                "target": 0
+              },
+              "to": "battlefield",
+              "remember": true
+            },
+            {
+              "effect": "attach",
+              "source": "remembered",
+              "targets": "that card"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

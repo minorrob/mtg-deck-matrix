@@ -253,6 +253,9 @@ export function runResolution(state, rng = null) {
       }
       if (opened && Array.isArray(opened.events)) resolving.events.push(...opened.events);
       resolving.queue.shift();
+      /* Done without asking, with what follows it put in front of the rest: "for each opponent who doesn't" when none could
+         (effects/asking.mjs, sacrifice's `ifNot`). */
+      if (opened && Array.isArray(opened.splice) && opened.splice.length) resolving.queue.unshift(...opened.splice);
       continue;
     }
 
@@ -332,6 +335,8 @@ function carryOn(state, outcome, rng) {
      player controls" remembers each in turn (The Eternal Wanderer). */
   if (!Array.isArray(outcome) && Array.isArray(outcome.remembered)) state.resolving.context.remembered = outcome.rememberAdd === true
     ? [...(state.resolving.context.remembered ?? []), ...outcome.remembered] : outcome.remembered;
+  /* And what it was as it left the battlefield (CR 608.2h): "that shares a card type with it" (Braids; script/bind.mjs). */
+  if (!Array.isArray(outcome) && Array.isArray(outcome.movedWas)) state.resolving.context.movedWas = outcome.movedWas;
   /* "If you search your library this way, shuffle" (Claim Jumper): a library was searched -- whatever it found (CR 701.23). */
   if (!Array.isArray(outcome) && outcome.searched === true) state.resolving.context.searched = true;
   /* "Choose a creature type": the type, for the effects after it ("$chosen", script/bind.mjs). */

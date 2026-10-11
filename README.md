@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 469 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 478 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -949,6 +949,36 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `deck-sources` — `tests/deck-sources.mjs`
 - `docx-writer` — `tests/docx-writer.mjs`
 - `edhrec-client` — `tests/edhrec-client.mjs`
+- `engine-actions` — `tests/engine-actions.mjs`
+- `engine-cast` — `tests/engine-cast.mjs`
+- `engine-combat` — `tests/engine-combat.mjs`
+- `engine-commander` — `tests/engine-commander.mjs`
+- `engine-controller` — `tests/engine-controller.mjs`
+- `engine-effects` — `tests/engine-effects.mjs`
+- `engine-enters` — `tests/engine-enters.mjs`
+- `engine-filter` — `tests/engine-filter.mjs`
+- `engine-gate` — `tests/engine-gate.mjs`
+- `engine-headers` — `tests/engine-headers.mjs`
+- `engine-journal` — `tests/engine-journal.mjs`
+- `engine-keywords` — `tests/engine-keywords.mjs`
+- `engine-layers` — `tests/engine-layers.mjs`
+- `engine-lki` — `tests/engine-lki.mjs`
+- `engine-mana` — `tests/engine-mana.mjs`
+- `engine-mulligan` — `tests/engine-mulligan.mjs`
+- `engine-priority` — `tests/engine-priority.mjs`
+- `engine-projection` — `tests/engine-projection.mjs`
+- `engine-replacement` — `tests/engine-replacement.mjs`
+- `engine-resolution` — `tests/engine-resolution.mjs`
+- `engine-rng` — `tests/engine-rng.mjs`
+- `engine-runtime` — `tests/engine-runtime.mjs`
+- `engine-sba` — `tests/engine-sba.mjs`
+- `engine-schema` — `tests/engine-schema.mjs`
+- `engine-skeleton` — `tests/engine-skeleton.mjs`
+- `engine-stack` — `tests/engine-stack.mjs`
+- `engine-state` — `tests/engine-state.mjs`
+- `engine-trigger` — `tests/engine-trigger.mjs`
+- `engine-turn` — `tests/engine-turn.mjs`
+- `engine-vocabulary` — `tests/engine-vocabulary.mjs`
 - `engine-cards` — `tests/engine-cards.mjs`
 - `engine-catalog` — `tests/engine-catalog.mjs`
 - `engine-deaths` — `tests/engine-deaths.mjs`
@@ -1292,6 +1322,15 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-waterbend` - `tests/engine-waterbend.mjs`: waterbend as an activated ability's cost (CR 701.67; Giant Koi, Foggy Swamp Vinebender), artifacts and creatures tapped for its generic mana, never for an increase on it
 - `engine-cant-cast-self` - `tests/engine-cant-cast-self.mjs`: a card's own "you can't cast this spell unless ..." (Proft, Sinister Mastermind's threshold), read wherever it would be cast from
 - `engine-unless-tap` - `tests/engine-unless-tap.mjs`: "you may tap another untapped Merfolk you control. When you do, ..." (Meanders Guide; CR 118.12a, 603.12), each permanent its own option
+- `engine-spell-x-cost` - `tests/engine-spell-x-cost.mjs`: a spell with {X} in its mana cost, as a selector (Frontline Medic; CR 107.3) -- on the stack whatever X was chosen, in a hand, on the battlefield; {Y} is not {X} -- and battalion as the attack as a whole
+- `engine-shares-card-type` - `tests/engine-shares-card-type.mjs`: "each opponent may sacrifice a permanent that shares a card type with it; for each opponent who doesn't ..." (Braids, Arisen Nightmare) -- the card types of what was sacrificed as it last existed, a sacrifice that may be declined, and what follows each refusal, in turn order
+- `engine-target-groups` - `tests/engine-target-groups.mjs`: a counted target's choices together -- "up to two target cards from a single graveyard" (Unlicensed Hearse), "two target creature cards that share a creature type" (Unbury) -- a way to aim it for each group, picked within it, held to it as cast and as it resolves (CR 601.2c, 608.2b)
+- `engine-sacrifice-sparing` - `tests/engine-sacrifice-sparing.mjs`: "each player sacrifices all other creatures they control that don't share a creature type with the chosen creature they control" (Winnowing; CR 205.3m) -- the chosen creature's kin spared, its controller's only, through the layers, a changeling sharing every type
+- `engine-cast-trigger-choice` - `tests/engine-cast-trigger-choice.mjs`: "whenever you cast an Equipment spell or a spell that targets a creature you control" (Danitha, Sword of Hope; CR 601.2c) -- a spell cast trigger's choice of spells, each a filter of the spell, of what it targets, or both
+- `engine-player-extremes` - `tests/engine-player-extremes.mjs`: every player's, compared -- the fewest cards in hand among all players (Naktamun Lorespinner), the graveyards with seven or more cards (Master's Councillors), more life than another of your opponents and that attacking player (Breena, the Demagogue) -- players who have left aside (CR 800.4a)
+- `engine-enters-or-leaves` - `tests/engine-enters-or-leaves.mjs`: "if a legendary permanent or an artifact entering or leaving the battlefield causes a triggered ability ... to trigger, that ability triggers an additional time" (Gandalf the White; CR 603.2d, 603.10a) -- every way to leave, as it last existed, a token, its own dies trigger, two at once
+- `engine-mana-provenance` - `tests/engine-mana-provenance.mjs`: "if mana from a Treasure was spent to cast it" (Smaug, Wicked Worm; CR 106.3, 601.2h) -- a mana ability's mana remembered with its source when an ability asks, the spell keeping it, and which mana pays the caster's choice where it is read
+- `engine-mana-withheld` - `tests/engine-mana-withheld.mjs`: "This mana can't be spent to cast spells from your hand" (Heartwood Crafter; CR 106.4, 106.6, 118.12) -- in the pool and remembered beside it: a spell cast from the hand sees the pool less it, anything else spends it first, and a spend the engine is not told of (an "unless" cost, a mana ability's own cost) is read as having spent it first, settled before mana is added again
 - `engine-split-second` - `tests/engine-split-second.mjs`: split second (Siege Smash), nothing cast and no ability but a mana ability activated while it is on the stack; triggers and special actions go on
 - `engine-riot` - `tests/engine-riot.mjs`: riot (Ghor-Clan Wrecker), a +1/+1 counter or haste, its controller's choice as it enters however it enters, each instance its own
 - `engine-surge-freerunning` - `tests/engine-surge-freerunning.mjs`: surge (Reckless Bushwhacker) and freerunning (Monastery Raid), alternative costs after another spell or an Assassin's or commander's combat damage this turn, and "if its cost was paid"

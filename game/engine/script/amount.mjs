@@ -49,6 +49,10 @@
  *   {commanderColors: "you"}             the number of colors in your commanders' color identity (CR 903.4; War Room) --
  *                                        undefined for a player with no commander (903.4f), so a cost of it is unpayable
  *                                        (commanderless, below)
+ *   {fewestAmongPlayers: selector}       the fewest the selector counts as any player still in the game sees it ("you" that
+ *                                        player): "if a player has one or fewer cards in hand" (Naktamun Lorespinner)
+ *   {graveyardsWithAtLeast: n}           how many graveyards hold n or more cards: "for each graveyard with seven or more
+ *                                        cards in it" (Master's Councillors)
  *   {playersWhoDid: true}                how many players did what this resolution offered them ("each opponent may ...
  *                                        for each opponent who does", Tempt with Vengeance; effects/asking.mjs, modal's `did`)
  *   {votes: choice}                      the votes cast for that choice in this resolution's vote ("a card for each past
@@ -97,7 +101,9 @@ export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf"
   "creaturesDiedThisTurn", "cardsDrawnThisTurn", "playersDealtNoncombatDamage", "scriedOrSurveilledThisTurn", "spellsCastThisTurn", "spellsCastThisGame",
   "commanderColors", "playersWhoDid", "votes", "totalManaValue",
   /* Train C, phase 2 (w2b-amounts): converge, and the planeswalker types among a set. */
-  "colorsSpent", "planeswalkerTypesAmong"]);
+  "colorsSpent", "planeswalkerTypesAmong",
+  /* Every player's, compared (Train C phase 2, w2a-selectors): the fewest among them, and the graveyards holding so many. */
+  "fewestAmongPlayers", "graveyardsWithAtLeast"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -148,6 +154,7 @@ export function amountProblems(value) {
   if ("countersRemovedThisWay" in value && value.countersRemovedThisWay !== true) problems.push("countersRemovedThisWay is true");
   if ("tappedThisWay" in value && value.tappedThisWay !== true) problems.push("tappedThisWay is true");
   if ("commanderColors" in value && value.commanderColors !== "you") problems.push('commanderColors is "you"');
+  if ("graveyardsWithAtLeast" in value && !(Number.isInteger(value.graveyardsWithAtLeast) && value.graveyardsWithAtLeast >= 1)) problems.push("graveyardsWithAtLeast is a whole number of cards, 1 or more");
   if ("controlledBy" in value && !("rememberedCount" in value && value.controlledBy === "that player")) problems.push('controlledBy is "that player", of a rememberedCount');
   if ("lesserOf" in value && !(Array.isArray(value.lesserOf) && value.lesserOf.length >= 2)) problems.push("lesserOf is two or more amounts");
   else if ("lesserOf" in value) for (const one of value.lesserOf) problems.push(...amountProblems(one).map((p) => `lesserOf: ${p}`));
@@ -161,7 +168,7 @@ export function amountProblems(value) {
     for (const key of ["then", "else"]) if (key in value) problems.push(...amountProblems(value[key]));
   }
   /* What it counts is a selector, held to the selector grammar (script/filter.mjs), a choice of them included. */
-  for (const key of ["count", "greatestPower", "totalPower", "mostAmongOpponents", "differentPowers", "planeswalkerTypesAmong"]) {
+  for (const key of ["count", "greatestPower", "totalPower", "mostAmongOpponents", "differentPowers", "planeswalkerTypesAmong", "fewestAmongPlayers"]) {
     if (!(key in value)) continue;
     const {anyOf, ...shared} = value[key] ?? {};
     try { for (const one of Array.isArray(anyOf) ? anyOf.map((a) => ({...shared, ...a})) : [value[key]]) compileSelector(one); }
@@ -460,6 +467,15 @@ export function amountOf(state, value, context = {}) {
     const opponents = state.players.filter((p) => p.id !== context.controller && !p.lost).map((p) => p.id);
     n = Math.max(0, ...opponents.map((opponent) => matching(state, value.mostAmongOpponents, {...who, controller: opponent}).length));
   }
+  /* "If a player has one or fewer cards in hand" (Naktamun Lorespinner): the fewest the selector counts as each player still in
+     the game sees it ("you" being that player, CR 800.4a) -- a hand of none among them is none. */
+  else if ("fewestAmongPlayers" in value) {
+    const players = state.players.filter((p) => !p.lost).map((p) => p.id);
+    n = players.length ? Math.min(...players.map((player) => matching(state, value.fewestAmongPlayers, {...who, controller: player}).length)) : 0;
+  }
+  /* "+2/+0 for each graveyard with seven or more cards in it" (Master's Councillors; CR 404.1): each player's graveyard -- of
+     the players still in the game, whose cards are still in it (CR 800.4a) -- holding that many or more. */
+  else if ("graveyardsWithAtLeast" in value) n = state.players.filter((p) => !p.lost && state.zones.graveyard[p.id].length >= value.graveyardsWithAtLeast).length;
   /* "Where X is the mana value of that spell" (Ovika): its printed cost, X counted as 0 (CR 202.3). */
   else if ("manaValueOf" in value) {
     const id = objectOf(value.manaValueOf, context);

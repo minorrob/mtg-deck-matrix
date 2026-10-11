@@ -34,7 +34,7 @@
 
 import {isPrimitive, isKeyword, isTriggerEvent} from "../vocabulary.mjs";
 import {compileSelector} from "./filter.mjs";
-import {targetRefs} from "./bind.mjs";
+import {targetRefs, SHARES} from "./bind.mjs";
 import {LAYERS} from "../rules/layers.mjs";
 import {STATIC_RULES, CANT_ATTACK_DEFENDERS} from "../rules/statics.mjs";
 import {amountProblems, AMOUNT_PARAMS, isCounted} from "./amount.mjs";
@@ -237,6 +237,21 @@ function checkEffect(effect, path, errors) {
   /* A designation (alterAttribute, script/effects/attributes.mjs): monstrous or prepared. */
   if (name === "alterAttribute" && !["monstrous", "prepared"].includes(effect.attribute))
     errors.push({path: `${path}.attribute`, message: "alterAttribute gives or takes a designation: \"monstrous\" or \"prepared\""});
+  /* "Each opponent may sacrifice ... For each opponent who doesn't, ..." (Braids, Arisen Nightmare; effects/asking.mjs): a
+     sacrifice that may be declined (`optional`), and what follows for each player who sacrifices nothing (`ifNot`), held to
+     the effect grammar -- only beside `optional`. */
+  if (name === "sacrifice") {
+    if (effect.optional !== undefined && effect.optional !== true) errors.push({path: `${path}.optional`, message: "A sacrifice that may be declined is optional: true"});
+    if (effect.ifNot !== undefined) {
+      if (effect.optional !== true || !Array.isArray(effect.ifNot) || !effect.ifNot.length)
+        errors.push({path: `${path}.ifNot`, message: "What follows a sacrifice declined is a list of effects, beside optional: true"});
+      else effect.ifNot.forEach((child, index) => checkEffect(child, `${path}.ifNot[${index}]`, errors));
+    }
+  }
+  /* "All other creatures they control that don't share a creature type with the chosen creature they control" (Winnowing;
+     effects/zones.mjs, sacrificeAll): `exceptSharing` "creature type", beside `except` "remembered" -- what it is shared with. */
+  if (effect.exceptSharing !== undefined && !(name === "sacrificeAll" && effect.exceptSharing === "creature type" && effect.except === "remembered"))
+    errors.push({path: `${path}.exceptSharing`, message: "What a sacrifice of all spares by sharing it with a creature chosen is exceptSharing: \"creature type\", on sacrificeAll beside except: \"remembered\""});
   /* A branch's test: a condition, and there must be one. */
   if (name === "branch") {
     if (effect.if === undefined) errors.push({path: `${path}.if`, message: "A branch says what decides it: `if`, a condition"});
@@ -288,7 +303,7 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
   /* A target is a selector, or `{anyOf: [...]}` for "any target" (script/bind.mjs) -- either with a `count`, `{min, max}`, for
      "up to N", "any number of", "one or two" (CR 115.1, 601.2c). */
   for (const [index, spec] of (ability.targets ?? []).entries()) {
-    const {count, distinctFrom, onlyIf, differentControllers, ...selector} = spec && typeof spec === "object" ? spec : {};
+    const {count, distinctFrom, onlyIf, differentControllers, share, ...selector} = spec && typeof spec === "object" ? spec : {};
     if (count !== undefined && !countValid(count))
       errors.push({path: `${path}.targets[${index}].count`, message: "A target's count is `{min, max}`: whole numbers, max at least 1 and at least min, or no max for \"any number\""});
     /* "A second target", "up to one other target" (script/bind.mjs, SPEC_KEYS): an earlier target of the same ability. */
@@ -298,6 +313,9 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
     for (const message of conditionProblems(onlyIf)) errors.push({path: `${path}.targets[${index}].onlyIf`, message});
     if (differentControllers !== undefined && !(differentControllers === true && count !== undefined))
       errors.push({path: `${path}.targets[${index}].differentControllers`, message: "\"Controlled by different players\" is differentControllers: true, on a counted target"});
+    /* "From a single graveyard", "that share a creature type" (script/bind.mjs, `share`): on a counted target. */
+    if (share !== undefined && !(SHARES.includes(share) && count !== undefined))
+      errors.push({path: `${path}.targets[${index}].share`, message: `What a counted target's choices share is ${SHARES.map((s) => JSON.stringify(s)).join(" or ")}, on a counted target`});
     if (spec && typeof spec === "object" && "anyOf" in spec) {
       if (!Array.isArray(selector.anyOf) || selector.anyOf.length === 0 || Object.keys(selector).length !== 1)
         errors.push({path: `${path}.targets[${index}]`, message: "A choice of targets is `{anyOf: [selector, ...]}` and nothing else, or that with a count"});
@@ -311,9 +329,11 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
   if (modal) {
     for (const [m, mode] of (modal.modes ?? []).entries()) {
       for (const [index, spec] of (mode.targets ?? []).entries()) {
-        const {count, differentControllers, ...selector} = spec && typeof spec === "object" ? spec : {};
+        const {count, share, differentControllers, ...selector} = spec && typeof spec === "object" ? spec : {};
         if (count !== undefined && !countValid(count))
           errors.push({path: `${path}.effects[0].modes[${m}].targets[${index}].count`, message: "A target's count is `{min, max}`"});
+        if (share !== undefined && !(SHARES.includes(share) && count !== undefined))
+          errors.push({path: `${path}.effects[0].modes[${m}].targets[${index}].share`, message: `What a counted target's choices share is ${SHARES.map((s) => JSON.stringify(s)).join(" or ")}, on a counted target`});
         /* "Any number of target tapped creatures with different controllers" (Cloud's Limit Break's Blade Beam): a mode's
            counted target may say it, as an ability's may (script/bind.mjs). */
         if (differentControllers !== undefined && !(differentControllers === true && count !== undefined))
@@ -408,9 +428,9 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
         errors.push({path: `${path}.${key}`, message: `${key} is true`});
       if (ability.spells && typeof ability.spells === "object") checkSelector(ability.spells, `${path}.spells`, errors, {choice: true});
     }
-    /* What causes a trigger to trigger again: an arrival, a death, an attack (rules/trigger.mjs). */
-    if (ability.rule === "triggers-again" && ability.cause !== undefined && !["enters", "dies", "attacks"].includes(ability.cause?.event))
-      errors.push({path: `${path}.cause`, message: "What causes it to trigger again is an event: enters, dies or attacks"});
+    /* What causes a trigger to trigger again: an arrival, a death, an attack, or an arrival or a departure (rules/trigger.mjs). */
+    if (ability.rule === "triggers-again" && ability.cause !== undefined && !["enters", "dies", "attacks", "enters or leaves"].includes(ability.cause?.event))
+      errors.push({path: `${path}.cause`, message: "What causes it to trigger again is an event: enters, dies, attacks, or enters or leaves"});
     /* A restriction on attacking (CR 508.1c): whom, in its words, and a condition under which it does not apply. */
     if (ability.rule === "cant-attack") {
       if (ability.defender !== undefined && !CANT_ATTACK_DEFENDERS.includes(ability.defender))
