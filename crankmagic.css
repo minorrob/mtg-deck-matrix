@@ -125,7 +125,7 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 .cm-q-tl .cm-seat-detail,.cm-q-bl .cm-seat-detail{text-align:right}
 .cm-seat-name{margin:0;font-weight:600;font-size:13px;line-height:1.25}
 .cm-seat-line{margin:0;color:var(--poster-ink)}
-.cm-seat-name span,.cm-seat-line span{padding:1px 6px;border-radius:5px;background:color-mix(in srgb,var(--poster-ground) 62%,transparent);-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.cm-seat-name span,.cm-seat-line span{padding:1px 6px;border-radius:5px;background:color-mix(in srgb,var(--poster-ground) 76%,transparent);-webkit-box-decoration-break:clone;box-decoration-break:clone}
 /* The player's own four controls, wrapping under their reading. */
 .cm-seat-controls{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .cm-q-tl .cm-seat-controls,.cm-q-bl .cm-seat-controls{justify-content:flex-end}
@@ -189,7 +189,7 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 .cm-table-center>:not(.cm-table-stamp){position:relative;z-index:1}
 .cm-table-head>*{position:relative;z-index:1}
 .cm-table-head{display:flex;align-items:baseline;gap:10px;margin:0 0 4px;line-height:1.2}
-.cm-table-setby-top{margin:0 0 0 auto;font-size:11px;color:color-mix(in srgb,var(--table-ink) 50%,transparent)}
+.cm-table-setby-top{margin:0 0 0 auto;font-size:11px;color:color-mix(in srgb,var(--table-ink) 72%,transparent)}
 /* The host's Edit beside the rules' heading: smaller than the page's buttons, so the panel's words are undisturbed. */
 .cm-table-rules-edit{padding:1px 8px;border-radius:6px;border:1px solid color-mix(in srgb,var(--table-ink) 30%,transparent);background:transparent;color:var(--table-ink);font:inherit;font-size:11px;font-weight:600;line-height:1.5;cursor:pointer}
 .cm-table-rules-edit:hover{background:color-mix(in srgb,var(--table-ink) 10%,transparent)}
@@ -198,7 +198,7 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 /* Choose mat: Use this mat beside the ✕ in the header. */
 #cm-dialog .cm-dialog-head:has(.cm-mat-use) h2{flex:1 1 auto}
 #matrix-v2 #cm-dialog .cm-mat-use{margin-left:auto;margin-right:8px}
-.cm-table-rules dt{color:color-mix(in srgb,var(--table-ink) 60%,transparent);line-height:1.3}
+.cm-table-rules dt{color:color-mix(in srgb,var(--table-ink) 72%,transparent);line-height:1.3}   /* 60% read at 4.2:1 on the white panel */
 .cm-table-rules dd{margin:0;font-weight:600;color:var(--table-ink);line-height:1.3}
 /* The launch line is a box, not a sentence: it is the table speaking, not the host. */
 /* Rob: two columns, the reading and a Start button taking 15-25% on the right. The button is
@@ -3213,7 +3213,7 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 /* THE STRIP, one 48px line that never wraps. */
 .cm-board-strip{display:flex;align-items:center;gap:8px;height:48px;padding:0 12px;border-bottom:1px solid var(--v-line);background:var(--v-panel);white-space:nowrap;position:relative;z-index:8;min-width:0}
 .cm-board-turn{font-weight:900;font-size:15px;letter-spacing:-.01em;flex:0 0 auto}
-.cm-board-step{padding:3px 10px;border-radius:7px;background:var(--v-accent);color:var(--on-accent);font-weight:800;font-size:13px;flex:0 0 auto}
+.cm-board-step{padding:3px 10px;border-radius:7px;background:var(--accent-fill);color:var(--color-on-accent);font-weight:800;font-size:13px;flex:0 0 auto}
 .cm-board-count{border:0;background:none;color:var(--v-muted);font:inherit;font-size:13px;padding:4px 6px;cursor:pointer;border-radius:6px;white-space:nowrap}
 .cm-board-count:hover{background:var(--v-raised)}
 .cm-board-prompt{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:10px;overflow:hidden}
@@ -3240,9 +3240,9 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 .cm-board-also .cm-board-decision{padding:0;border:0;background:none;box-shadow:none;backdrop-filter:none}
 .cm-board-also .cm-board-decision.is-also{display:grid;gap:8px}
 .cm-board-steps .cm-board-ribbon{flex-wrap:wrap;margin:0 0 8px}
-.cm-board-views{display:inline-flex;gap:2px;padding:3px;border-radius:10px;background:color-mix(in srgb,var(--v-ink) 6%,transparent);flex:0 0 auto}
+.cm-board-views{display:inline-flex;gap:5px;padding:3px;border-radius:10px;background:color-mix(in srgb,var(--v-ink) 6%,transparent);flex:0 0 auto}   /* 5px apart: a focused one's ring lies in the gap, not over the next */
 #matrix-v2 .cm-board-views .v-button{min-height:0;height:28px;padding:0 11px;border-color:transparent;background:transparent;font-size:12px}
-#matrix-v2 .cm-board-views .v-button.is-on{background:var(--v-accent);color:var(--on-accent);font-weight:800}
+#matrix-v2 .cm-board-views .v-button.is-on{background:var(--accent-fill);color:var(--color-on-accent);font-weight:800}
 /* THE VITALS PILL: life, ☠ poison, a bar per opposing commander toward 21; red when in trouble. */
 .cm-vitals{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border:0;border-radius:999px;background:rgb(0 0 0 / .62);color:var(--mat-ink);font:inherit;font-size:12px;flex:0 0 auto;white-space:nowrap}
 button.cm-vitals{cursor:pointer}
@@ -3256,7 +3256,7 @@ button.cm-vitals{cursor:pointer}
 .cm-board-ribbon{display:flex;flex-wrap:nowrap;gap:2px;list-style:none;margin:0 0 0 8px;padding:3px;border-radius:999px;background:rgba(0,0,0,.4);font-size:12px;white-space:nowrap;overflow:hidden;flex:0 1 auto;min-width:0}
 .cm-board-ribbon li{padding:2px 10px;border-radius:999px;color:rgba(255,255,255,.85);font-weight:500;transition:background .25s,color .25s}
 .cm-board-ribbon li.is-done{text-decoration:line-through;color:rgba(255,255,255,.6)}
-.cm-board-ribbon li.is-now{background:var(--v-accent);color:var(--on-accent);font-weight:700}
+.cm-board-ribbon li.is-now{background:var(--accent-fill);color:var(--color-on-accent);font-weight:700}
 /* THE PLAYMAT, one component at four sizes (data-fit): the header, then the zone grid -- Battlefield over Lands on
    the left, Command over Library and Exile over Graveyard as card-shaped frames on the right, the History band
    between the pairs in Focus. Each size names its card width; everything else follows the card. */
@@ -3346,10 +3346,13 @@ button.cm-vitals{cursor:pointer}
 .cm-bcard img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .cm-bcard-name{position:absolute;left:6%;right:6%;top:5%;font-size:calc(var(--bc) * .12);line-height:1.15;font-weight:700;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
 .cm-bcard-pt{position:absolute;right:5%;bottom:4%;z-index:1;padding:1px 5px;border-radius:5px;background:var(--table-ink);color:var(--mat-ink);font-size:calc(var(--bc) * .13);font-weight:800}
-.cm-bcard-count{position:absolute;inset:0;z-index:1;display:grid;place-items:center;font-size:calc(var(--bc) * .3);font-weight:900;color:var(--mat-ink);text-shadow:0 1px 4px rgba(0,0,0,.8)}
+/* the count on a pile's back sits on its own dark pill: the back's picture is bright in places, and a shadow alone
+   left it at 1.1:1 there (the accessibility pass) */
+.cm-bcard-count{position:absolute;left:50%;top:50%;z-index:1;transform:translate(-50%,-50%);padding:0 .3em;border-radius:999px;background:var(--mat-scrim);font-size:calc(var(--bc) * .3);line-height:1.25;font-weight:900;color:var(--mat-ink);text-shadow:0 1px 4px rgba(0,0,0,.8)}
 .cm-bcard-marks{position:absolute;left:4%;bottom:4%;z-index:1;display:grid;gap:2px}
 .cm-bcard-mark{font-size:10px;background:var(--vital-danger);color:var(--mat-ink);border-radius:4px;padding:0 4px}
 .cm-bcard-mark.is-state{background:var(--table-ink);font-weight:700}   /* a card read upright says it is tapped */
+.cm-bcard-mark.is-combat{background:var(--table-ink);font-weight:700;text-transform:capitalize}   /* attacking, blocking: said in its label too */
 .cm-bcard.is-tapped{transform:rotate(90deg) scale(.86);margin:0 calc(var(--bc) * .22)}
 .cm-bcard.is-bright{box-shadow:0 0 0 3px var(--v-accent),0 6px 14px -6px rgb(0 0 0 / .85);cursor:pointer}
 .cm-bcard.is-picked{box-shadow:0 0 0 3px var(--v-accent),0 0 18px var(--v-accent);translate:0 -4px}
@@ -3436,7 +3439,7 @@ button.cm-vitals{cursor:pointer}
 .cm-board-stack ol{margin:0;padding-left:18px;font-size:13px}
 /* THE HAND on its slate tray: a row along the foot in Table view; docked over the mat's bottom edge in Focus and
    Full screen, the cards peeking and lifting on hover (Space fans the whole hand). */
-.cm-board-hand{position:relative;z-index:5;display:flex;align-items:flex-start;gap:12px;padding:30px 16px 10px;border-radius:16px 16px 0 0;background:rgba(26,24,21,.55);backdrop-filter:blur(3px);border:1px solid rgba(255,255,255,.12);border-bottom:0;color:var(--mat-ink);min-width:0;overflow:visible}
+.cm-board-hand{position:relative;z-index:5;display:flex;align-items:flex-start;gap:12px;padding:30px 16px 10px;border-radius:16px 16px 0 0;background:var(--tray);backdrop-filter:blur(3px);border:1px solid rgba(255,255,255,.12);border-bottom:0;color:var(--mat-ink);min-width:0;overflow:visible}
 /* The bar along the tray's top (item 5): dragged, it is the hand's size, and the boards take the room it leaves. */
 .cm-board-traybar{position:absolute;left:10px;right:10px;top:4px;height:22px;display:flex;align-items:center;gap:10px}
 .cm-board-traybar .cm-board-grip{cursor:ns-resize}
@@ -3445,10 +3448,10 @@ button.cm-vitals{cursor:pointer}
 .cm-board-hand-count{font-size:22px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
 /* The hand by type (item 14): castable now over in hand; a type with something castable lit. */
 .cm-board-hand-types{list-style:none;margin:2px 0 0;padding:0;display:grid;gap:1px;font-size:11px;font-weight:600}
-.cm-board-hand-types li{display:flex;justify-content:space-between;gap:6px;color:color-mix(in srgb,var(--mat-ink) 60%,transparent)}
+.cm-board-hand-types li{display:flex;justify-content:space-between;gap:6px;color:color-mix(in srgb,var(--mat-ink) 75%,transparent)}
 .cm-board-hand-types li b{font-variant-numeric:tabular-nums;font-weight:800}
 .cm-board-hand-types li.is-live{color:var(--mat-ink)}
-.cm-board-hand-types li.is-live b{color:var(--v-accent)}
+.cm-board-hand-types li.is-live b{color:color-mix(in srgb,var(--v-accent) 45%,var(--mat-ink))}   /* the accent lightened for the dark tray: Felt & Cream's own read 2.6:1 on it */
 .cm-board-hand.is-backs{padding-top:10px}
 .cm-board-hand-whose{font-size:11px;font-weight:600;color:color-mix(in srgb,var(--mat-ink) 70%,transparent);white-space:nowrap}
 .cm-board-hand.is-backs .cm-bcard:hover{transform:none}
@@ -3498,7 +3501,7 @@ button.cm-vitals{cursor:pointer}
 .cm-full-vitals>div>span .cm-board-turn-mark{margin-left:6px}
 .cm-board-tile.is-focus{outline:2px solid var(--v-accent);outline-offset:1px}
 .cm-board-tile-name{font-weight:700;font-size:12px}
-.cm-board-tile .cm-muted{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.cm-board-tile .cm-muted{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;color:color-mix(in srgb,var(--v-ink) 82%,transparent)}   /* over the seat's tint, the theme's muted fell to 4.0:1 */
 .cm-board-tile .cm-vitals{align-self:end}
 .cm-board-tile .cm-board-tile-flag{position:absolute;right:8px;top:8px}
 .cm-board-coach-open{display:flex;align-items:center;justify-content:center;gap:6px;min-height:34px;padding:0 10px;border-radius:9px;border:1px solid var(--v-aether);background:color-mix(in srgb,var(--v-aether) 8%,transparent);color:var(--v-ink);font:inherit;font-weight:600;cursor:pointer}
@@ -3516,14 +3519,14 @@ button.cm-vitals{cursor:pointer}
 .cm-board-main>.cm-board-hand{position:absolute;left:calc((100% - var(--mat-w,100%)) / 2);width:var(--mat-w,100%);top:var(--tray-top,auto);border-radius:16px;border-bottom:1px solid rgba(255,255,255,.12)}
 .cm-board-main>.cm-board-ask{top:52px}
 /* FULL SCREEN: the rail, the others across the top, the big board across the foot, the column at the side. */
-.cm-board[data-view="full"]{grid-template-rows:minmax(0,1fr);grid-template-columns:44px minmax(0,1fr) 210px;gap:8px;padding:8px;background:color-mix(in srgb,var(--v-bg) 55%,black)}
+.cm-board[data-view="full"]{grid-template-rows:minmax(0,1fr);grid-template-columns:44px minmax(0,1fr) 210px;gap:8px;padding:8px;background:color-mix(in srgb,var(--v-bg) 20%,var(--mat-felt-edge))}   /* the table's dark in both themes: half Felt & Cream's cream left a gray no ink read on */
 .cm-full-rail{display:flex;flex-direction:column;align-items:center;gap:8px;min-height:0}
 .cm-full-rail .cm-board-views{flex-direction:column;background:transparent;padding:0}
 /* The rail squares ITS OWN buttons; the menus it opens (Tools, History) keep the app's buttons (item 23). */
 #matrix-v2 .cm-full-rail>.v-button,#matrix-v2 .cm-full-rail>.cm-board-tools>.v-button,#matrix-v2 .cm-full-rail>.cm-board-views>.v-button{width:36px;height:36px;min-height:0;padding:0;font-size:15px}
 .cm-full-rail>.v-button .cm-icon,.cm-full-rail>.cm-board-tools>.v-button .cm-icon{width:18px;height:18px}
 .cm-full-rail .cm-board-menu{left:calc(100% + 6px);right:auto;top:0}
-.cm-full-turn{font-weight:800;font-size:11px;color:var(--v-muted)}
+.cm-full-turn{font-weight:800;font-size:11px;color:color-mix(in srgb,var(--mat-ink) 80%,transparent)}
 .cm-full-center{position:relative;display:grid;grid-template-rows:minmax(0,2fr) minmax(0,3fr);gap:3px;min-width:0;min-height:0}
 .cm-full-others{display:grid;grid-template-columns:repeat(var(--cols),minmax(0,1fr));gap:3px;min-height:0;min-width:0}
 .cm-full-other{min-width:0;min-height:0;display:grid}
@@ -3531,22 +3534,24 @@ button.cm-vitals{cursor:pointer}
 .cm-full-mine{position:relative;min-height:0;min-width:0;display:grid;--hc:calc(112px * var(--hand-scale,1))}
 .cm-full-mine>.cm-mat{height:100%;padding-top:52px;--mat-reserve:var(--tray-h,calc(var(--hc) * 7 / 5 + 22px))}   /* the pill over it; the whole hand tray along its foot (item 25) */
 .cm-full-mine>.cm-mat[data-fit="full"]{--bc:min(calc(clamp(64px,var(--full-w,1200px) * .075,112px) * var(--board-scale,1)),var(--full-bc-max,112px))}
-.cm-full-pill{position:absolute;left:50%;top:8px;z-index:6;display:flex;align-items:center;gap:8px;padding:4px 6px 4px 12px;transform:translateX(-50%);border-radius:999px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.15);white-space:nowrap;max-width:calc(100% - 16px);color:var(--mat-ink)}
+.cm-full-pill{position:absolute;left:50%;top:8px;z-index:6;display:flex;align-items:center;gap:8px;padding:4px 6px 4px 12px;transform:translateX(-50%);border-radius:999px;background:var(--mat-scrim);border:1px solid rgba(255,255,255,.15);white-space:nowrap;max-width:calc(100% - 16px);color:var(--mat-ink)}
 .cm-full-pill .cm-board-waiting{color:var(--mat-ink)}
+.cm-full-pill .cm-board-next{color:color-mix(in srgb,var(--mat-ink) 80%,transparent)}   /* the theme's muted is a page's, not the pill's */
 #matrix-v2 .cm-full-corner .v-button.compact{min-height:0;height:28px;padding:0 10px}
 .cm-full-corner{position:absolute;left:12px;top:10px;z-index:6;display:flex;align-items:center;gap:8px}
-.cm-full-corner-name{font-size:12px;font-weight:700;color:var(--mat-ink);text-shadow:0 1px 3px rgba(0,0,0,.8)}
+.cm-full-corner-name{font-size:12px;font-weight:700;color:var(--mat-ink);text-shadow:0 1px 3px rgba(0,0,0,.8);padding:1px 8px;border-radius:999px;background:var(--mat-scrim)}   /* over the art: a shadow alone read at 2.5:1 */
 /* The tray starts where the room kept for it starts, and a larger hand grows down past the window, never up over the
    board (Rob, 2026-10-09). */
 .cm-full-mine>.cm-board-hand{position:absolute;left:120px;right:120px;top:calc(100% - var(--tray-h,calc(var(--hc) * 7 / 5 + 22px)));z-index:5}
-.cm-full-side{display:flex;flex-direction:column;gap:6px;min-width:0;min-height:0;overflow:hidden}
+.cm-full-side{display:flex;flex-direction:column;gap:6px;min-width:0;min-height:0;overflow:hidden auto}   /* scrolls, so what the keyboard reaches in it is brought into view */
 .cm-full-vitals{display:grid;gap:3px}
 .cm-full-vitals>div{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;background:linear-gradient(90deg,color-mix(in srgb,var(--seat) 30%,var(--mat-cavern)),var(--mat-cavern));font-size:11px;color:var(--mat-ink)}
 .cm-full-vitals>div>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cm-full-pick{display:grid;gap:6px;justify-items:center;padding:6px;border-radius:8px;background:color-mix(in srgb,var(--vital-danger) 18%,var(--v-bg));border:2px solid color-mix(in srgb,var(--vital-danger) 65%,transparent)}
 .cm-full-pick .cm-bcard{--bc:var(--pick-w,calc(190px * var(--card-scale,1)));max-width:100%;cursor:zoom-in}
 .cm-full-pick-empty{margin:0;padding:8px;font-size:11px;border-radius:8px;border:1px dashed var(--v-line)}
-.cm-full-side .cm-board-band{flex:1 1 auto;min-height:0;border-radius:6px}
+#matrix-v2 .cm-full-pick-empty.cm-muted{color:color-mix(in srgb,var(--mat-ink) 80%,transparent)}   /* on Full screen's dark, in both themes */
+.cm-full-side .cm-board-band{flex:1 1 auto;min-height:140px;border-radius:6px}   /* the log keeps a few lines, the column scrolling for them, rather than being squeezed to nothing */
 .cm-full-side .cm-board-band ol{overflow:auto}
 .cm-full-side .cm-board-decision,.cm-full-side .cm-board-stack{padding:8px 10px;box-shadow:none}
 .cm-full-side .cm-board-decision.is-also{display:grid;gap:6px}
@@ -3557,7 +3562,7 @@ button.cm-vitals{cursor:pointer}
 .cm-history-filter{width:100%}
 .cm-history-list{list-style:none;margin:0;padding:0;overflow:auto;font-size:12px}
 .cm-history-list li{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid var(--v-line)}
-.cm-history-list li.is-turn{justify-content:center;font-weight:700;color:var(--v-accent);border-bottom-color:var(--v-accent)}
+.cm-history-list li.is-turn{justify-content:center;font-weight:700;color:var(--v-ink);border-bottom-color:var(--v-accent)}   /* the accent as words fell to 4.0:1 on Felt & Cream's panel; it stays as the rule */
 .cm-history-list li.is-end,.cm-board-band li.is-end{font-weight:700}
 .cm-history-list li.is-quiet{color:var(--v-muted)}   /* a step that passed by itself (item 11) */
 .cm-board-band li.is-quiet{opacity:.62}   /* on the mat, quieter by the fade's floor, which still reads at 4.5:1 */
@@ -3611,7 +3616,7 @@ button.cm-vitals{cursor:pointer}
    190px in a 3px brass ring. A card under the pointer is shown at the center of the screen, 400px (Rob,
    2026-09-29). All follow the card-size slider. */
 .cm-board-size{display:grid;gap:4px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--v-line)}
-.cm-hand-show{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;background:rgba(10,9,8,.62);color:var(--mat-ink)}
+.cm-hand-show{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;background:rgba(10,9,8,.8);color:var(--mat-ink)}   /* dim enough over a light theme's board for its words */
 .cm-hand-show header{text-align:center}
 .cm-hand-show h2{margin:0;color:var(--mat-ink)}
 .cm-hand-show .cm-muted{color:color-mix(in srgb,var(--mat-ink) 75%,transparent)}
@@ -3752,3 +3757,34 @@ button.cm-vitals{cursor:pointer}
    as far down as the page is long, "lost in the scroll". The track now takes only its own height, so Menu sits
    right under the last page. */
 #matrix-v2 .cm-sidebar .v-nav-track{flex:0 0 auto}
+/* THE ACCESSIBILITY PASS ON THE BOARD AND IN THE LOBBY (docs/plan-to-done-2026-09-30.md, Part 6; tests/a11y-board.mjs
+   reads each from the screen's own pixels). THE FOCUS RING (WCAG 2.4.7, 1.4.11): --focus-ring outside a band of
+   --focus-halo (crankmagic-design.css), so on any ground -- a light theme's panel, the dark felt, the brightest artwork --
+   one of the two stands 3:1 from what is around it. */
+#matrix-v2 .cm-board :focus-visible,#matrix-v2 .cm-cloud-table :focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;box-shadow:0 0 0 2px var(--focus-halo)}
+/* a card keeps what its glow says (it can be used, it is chosen) inside the ring, and comes out over its neighbors */
+#matrix-v2 .cm-board .cm-bcard:focus-visible{z-index:3;box-shadow:0 0 0 2px var(--focus-halo),0 6px 14px -6px rgb(0 0 0 / .85)}
+#matrix-v2 .cm-board .cm-bcard.is-bright:focus-visible{box-shadow:0 0 0 2px var(--focus-halo),0 0 0 7px var(--v-accent)}
+#matrix-v2 .cm-board .cm-bcard.is-picked:focus-visible{box-shadow:0 0 0 2px var(--focus-halo),0 0 0 7px var(--v-accent),0 0 18px var(--v-accent)}
+/* WORDS ON THE ACCENT, in the board and the lobby: on --accent-fill, under the theme's own ink */
+#matrix-v2 .cm-board .v-button.primary,#matrix-v2 .cm-cloud-table .v-button.primary{background:var(--accent-fill);border-color:var(--accent-fill);color:var(--color-on-accent)}
+/* A seat's vitals keep the mat's ink: the app's buttons inherit their color, which on Felt & Cream was dark on the dark pill */
+#cm-board .cm-vitals{color:var(--mat-ink)}
+/* Full screen's frame is the table's dark in both themes: the rail's view switch, drawn on it with no ground of its own,
+   takes the mat's ink (Felt & Cream's dark ink read 1.7:1 there) */
+#matrix-v2 .cm-full-rail .cm-board-views .v-button:not(.is-on){color:var(--mat-ink)}
+/* A focused control's ring is not painted over by its neighbors: the view switch's next button, the cards under the
+   hand's divider, the life counter on the rows' divider (each hid part of the ring, the accessibility pass found). Only
+   while the keyboard is on it: a bar lifted for a mouse's focus (its card-size slider dragged) lay over the life
+   counter's logo and took its click. */
+#matrix-v2 .cm-board-views .v-button:focus-visible{position:relative;z-index:1}
+.cm-board-traybar:has(:focus-visible),.cm-board-rowbar:has(>.cm-board-grip:focus-visible){z-index:4}
+/* a card picked to read already wears the aether ring, so its focus ring is the band and the ring a step further out */
+#matrix-v2 .cm-board .cm-bcard.is-selected:focus-visible{outline-offset:4px;box-shadow:0 0 0 4px var(--focus-halo),0 6px 14px -6px rgb(0 0 0 / .85)}
+/* the zone a focused card is in shows it whole, over the zones beside it: on Full screen's small boards the battlefield's
+   last card ran under the Command pile, clipped */
+#matrix-v2 .cm-board .cm-mat-zone:focus-within{z-index:5;overflow:visible}
+/* A seat's tile at the pane's own width has no room for the turn mark's words beside its vitals: there the mark is its
+   icon (still named, role=img, for a screen reader), so it no longer covers the poison count (the accessibility pass) */
+.cm-board-tile{container-type:inline-size}
+@container (max-width:200px){.cm-board-tile>.cm-board-turn-mark b{display:none}.cm-board-tile>.cm-board-turn-mark{padding:2px}}
