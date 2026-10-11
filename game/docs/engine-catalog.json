@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1244,
+  "defined": 1245,
   "provisional": 27,
-  "everyRule": 2577
+  "everyRule": 2578
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -8207,7 +8207,7 @@
      "forge": "GainLife",
      "top": 6,
      "all": 21,
-     "blocks": 6,
+     "blocks": 5,
      "alone": 1
     },
     {
@@ -9629,7 +9629,7 @@
      "forge": "LifeGained",
      "top": 5,
      "all": 20,
-     "blocks": 5,
+     "blocks": 4,
      "alone": 0
     },
     {

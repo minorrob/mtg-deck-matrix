@@ -33,6 +33,9 @@ const SCALES = "Hardened Scales", YOSHI = "Yoshimaru, Beloved Companion", VORIN 
 const FIX = {
   Bear: {types: ["Creature"], subtypes: ["Bear"], manaCost: "{1}{G}", colors: ["G"], power: 2, toughness: 2},
   Relic: {types: ["Artifact"], subtypes: [], manaCost: "{2}", colors: []},
+  /* "If one or more -1/-1 counters would be put on a creature you control, that many -1/-1 counters minus one are put on it instead." */
+  Vizier: {types: ["Creature"], subtypes: ["Human"], manaCost: "{1}{W}", colors: ["W"], power: 2, toughness: 1,
+    abilities: [{id: "v", kind: "static", text: "x", rule: "more-counters", affects: {types: ["Creature"], controller: "you"}, counter: "-1/-1", plus: -1}]},
   /* "Twice that many counters of any kind on a permanent you control", saying nothing of players. */
   Doubler: {types: ["Artifact"], subtypes: [], manaCost: "{2}", colors: [], abilities: [{id: "d", kind: "static", text: "x", rule: "more-counters", affects: {what: "permanent", controller: "you"}, times: 2}]},
 };
@@ -69,6 +72,12 @@ const idOf = (s, name, seat = 0) => s.zones.battlefield.find((id) => s.objects[i
   eq([asked.question?.player, asked.question?.options.length], [0, 2], "Scales and Vorinclex's half on one counter end at 1 or 0: Rob, whose Bear it is, is asked");
   eq(countersPlaced(s, bear, "+1/+1", 1, 1), 0, "nobody to ask, put by another: the fewest -- halved to none, and Scales has nothing to add to");
   eq(countersPlaced(s, bear, "+1/+1", 1, 0), 4, "Rob's own: Vorinclex doubles, Scales adds -- the most, 4 (plus first, then twice)");
+}
+{
+  /* "That many -1/-1 counters minus one" (plus -1): one is none, three are two. */
+  const s = table([at(0, "battlefield", "Vizier", "Bear")]);
+  eq([countersPlaced(s, idOf(s, "Bear"), "-1/-1", 1, 1), countersPlaced(s, idOf(s, "Bear"), "-1/-1", 3, 1), countersPlaced(s, idOf(s, "Bear"), "+1/+1", 1, 1)], [0, 2, 1],
+    "minus one: of the kind it names, on its controller's creature");
 }
 {
   /* "Can't have -1/-1 counters put on them" (times 0) beside Vorinclex: none, either way, and nobody is asked. */
@@ -206,7 +215,7 @@ const withStatic = (fields) => compileScript({schema: "CrankCardScript@1",
   identity: {name: "Odd Scales", oracleId: "x", types: ["Enchantment"], subtypes: [], manaCost: "{G}", colors: ["G"], colorIdentity: ["G"]},
   oracleText: "x", source: "hand", abilities: [{kind: "static", text: "x", rule: "more-counters", affects: {types: ["Creature"], controller: "you"}, ...fields}]}).problems;
 eq([withStatic({plus: 1}), withStatic({half: true, putBy: "opponent", players: true}), withStatic({times: 0})], [[], [], []], "plus, half and times compile");
-for (const [bad, words] of [[{plus: 1, times: 2}, "one of times, plus or half"], [{plus: 0}, "plus is a whole number"], [{half: 2}, "half is true"],
+for (const [bad, words] of [[{plus: 1, times: 2}, "one of times, plus or half"], [{plus: 0}, "plus is a whole number, not 0"], [{half: 2}, "half is true"],
   [{putBy: "anyone"}, "putBy is"], [{players: "yes"}, "players is true"], [{times: -1}, "times is a whole number"]])
   ok(withStatic(bad).some((p) => p.includes(words)), `and refuses ${JSON.stringify(bad)}`);
 

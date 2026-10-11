@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 398 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 399 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1268,6 +1268,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-counters-replaced` - `tests/engine-counters-replaced.mjs`: counters put on, replaced -- that many plus one (Hardened Scales), half rounded down (Vorinclex), twice -- by whom, and the CR 616.1 order asked of the affected player where it changes how many
 - `engine-lki-dies` - `tests/engine-lki-dies.mjs`: what a creature was as it died -- the counters it had, its keywords, its toughness -- for a dies trigger as it triggers and resolves, through a wipe, a checkpoint and a theft
 - `engine-exile-if-dies` - `tests/engine-exile-if-dies.mjs`: "if that creature would die this turn, exile it instead" (Essence Burn) -- every way to die, never a death, a bounce and a new object not it, beside other exile-instead effects, this turn only
+- `engine-life-doubled` - `tests/engine-life-doubled.mjs`: "you gain twice that much life instead" (Rhox Faithmender) -- an effect's gain, lifelink in and out of combat, an exchange; four times for two; can't gain life
 
 ## Design and execution record
 

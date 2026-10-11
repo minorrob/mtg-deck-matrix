@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,244 defined and playable today; 2,577 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,245 defined and playable today; 2,578 with every
 mechanic built, so only their definitions are left to write; 27 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -758,7 +758,7 @@ The things that alone hold back the most of the most-played cards.
 | CreateToken | — | missing | 17 | 32 | 17 | 0 |
 | AddCounter | rules/statics | partial | 15 | 30 | 0 | 0 |
 | Draw | — | missing | 7 | 37 | 7 | 4 |
-| GainLife | — | missing | 6 | 21 | 6 | 1 |
+| GainLife | — | missing | 6 | 21 | 5 | 1 |
 | Untap | rules/turn | partial | 5 | 157 | 0 | 0 |
 | ProduceMana | — | missing | 2 | 11 | 2 | 0 |
 | Mill | — | missing | 2 | 2 | 2 | 0 |
@@ -889,7 +889,7 @@ The things that alone hold back the most of the most-played cards.
 | — | Attackers declared | — | missing | 5 | 62 | 5 | 4 |
 | — | Cards in exile | — | missing | 5 | 42 | 4 | 3 |
 | — | Your starting life total | — | missing | 5 | 23 | 5 | 0 |
-| — | LifeGained | — | missing | 5 | 20 | 5 | 0 |
+| — | LifeGained | — | missing | 5 | 20 | 4 | 0 |
 | — | Whether it was kicked | — | missing | 3 | 92 | 3 | 0 |
 | — | Times kicked | — | missing | 3 | 30 | 2 | 0 |
 | — | Life your opponents lost this turn | — | missing | 3 | 26 | 3 | 1 |

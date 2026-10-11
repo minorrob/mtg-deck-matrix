@@ -57,7 +57,7 @@ import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf, de
 import {isCreatureType} from "../keywords/types.mjs";
 import {givePoison, changeLife, infects, addCounters, damagePermanent} from "../script/effects/resources.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
-import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack as restricted, cantGainLife, attackerCaps, defenderLifted, attacksEachCombat} from "./statics.mjs";
+import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack as restricted, cantGainLife, lifeGained, attackerCaps, defenderLifted, attacksEachCombat} from "./statics.mjs";
 import {paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits} from "./mana.mjs";
 import {recordCommanderDamage} from "./commander.mjs";
 import {damageAssignmentProblem} from "../controller.mjs";
@@ -739,9 +739,11 @@ export const combatDamage = {
         /* Unless its controller can't gain life (CR 119.7): the damage is dealt, and no life gained. */
         if (gains !== undefined && !cantGainLife(state, gains)) {
           const before = state.players[gains].life;
-          state.players[gains].life += linked;
+          /* "You gain twice that much life instead" (Rhox Faithmender; rules/statics.mjs, lifeGained). */
+          const gained = lifeGained(state, gains, linked);
+          state.players[gains].life += gained;
           /* Life gained this turn, as every other gain is kept (effects/resources.mjs changeLife). */
-          state.players[gains].gainedThisTurn = (state.players[gains].gainedThisTurn ?? 0) + linked;
+          state.players[gains].gainedThisTurn = (state.players[gains].gainedThisTurn ?? 0) + gained;
           events.push(event("GameEventPlayerLivesChanged", state, {
             player: {playerId: gains, name: state.players[gains].name},
             oldLives: before, newLives: state.players[gains].life, lifelink: true,

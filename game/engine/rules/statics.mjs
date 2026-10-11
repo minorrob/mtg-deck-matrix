@@ -96,6 +96,10 @@ export const STATIC_RULES = Object.freeze({
       the players `affects` names, from its controller's side. cantGainLife, read wherever life is gained: an effect's gain
       (script/effects/resources.mjs, changeLife) and lifelink in combat (rules/combat.mjs). */
   "cant-gain-life": "script/effects/resources.mjs",
+  /** "If you would gain life, you gain twice that much life instead" (Rhox Faithmender; CR 614.1a): `affects` the players,
+      from its controller's side, `times`. lifeGained, read wherever life is gained: changeLife (script/effects/resources.mjs)
+      and lifelink in combat (rules/combat.mjs). */
+  "more-life": "script/effects/resources.mjs",
   /** "Your opponents can't cast spells from anywhere other than their hands", "during your turn", "more than one spell each
       turn" (CantBeCast): castForbidden, read where a cast is offered. rules/actions.mjs. And for a while, by an effect
       (effectUntil): "can't cast spells with the same name as that creature until your next turn" (Reflector Mage). */
@@ -278,11 +282,29 @@ export function cantGainLife(state, player) {
 }
 
 /**
+ * HOW MUCH LIFE IS GAINED (CR 614.1a, 119.3): "if you would gain life, you gain twice that much life instead" (Rhox
+ * Faithmender) -- each `more-life` static whose `affects` names the player, "you" its controller, multiplies the gain by its
+ * `times`. Only multiplying is built, so their order never changes how much and nobody is asked (CR 616.1); two
+ * Faithmenders are four times. A gain the player can't have is no gain to double (cantGainLife, asked first).
+ */
+export function lifeGained(state, player, amount) {
+  let n = amount;
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static" || ability.rule !== "more-life") continue;
+      if (compileSelector({what: "player", ...ability.affects})(state, player, {controller: holder.controller, source: holderId})) n *= ability.times;
+    }
+  }
+  return n;
+}
+
+/**
  * HOW MANY COUNTERS ARE PUT ON (`more-counters`; CR 614.1a, 122.6). Each such static is a replacement effect over the
  * permanents it `affects` -- and, `players: true`, the players -- and the kind it names (`counter`; any, unsaid):
  *   `times`  "twice that many ... instead" (Branching Evolution, Innkeeper's Talent, Vorinclex, Monstrous Raider's for you);
  *            0, "can't have -1/-1 counters put on them" (Darksteel Angel); 2 when it says none of these three;
- *   `plus`   "that many plus one" (Hardened Scales, Yoshimaru, Beloved Companion);
+ *   `plus`   "that many plus one" (Hardened Scales, Yoshimaru, Beloved Companion), -1 "that many minus one";
  *   `half`   "half that many ..., rounded down" (Vorinclex's for its opponents).
  * `putBy` the player who must be putting them: "you" its controller, "opponent" one of its opponents. `by` is that player --
  * an effect's controller, a cost's payer, an infect source's controller, and for a permanent entering with counters its

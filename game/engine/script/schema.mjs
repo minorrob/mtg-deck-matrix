@@ -361,11 +361,14 @@ function checkAbility(ability, path, errors) {
       if (["times", "plus", "half"].filter((key) => ability[key] !== undefined).length > 1)
         errors.push({path, message: "More counters instead is one of times, plus or half"});
       if (ability.times !== undefined && !(Number.isInteger(ability.times) && ability.times >= 0)) errors.push({path: `${path}.times`, message: "times is a whole number, 0 or more"});
-      if (ability.plus !== undefined && !(Number.isInteger(ability.plus) && ability.plus >= 1)) errors.push({path: `${path}.plus`, message: "plus is a whole number, 1 or more"});
+      if (ability.plus !== undefined && !(Number.isInteger(ability.plus) && ability.plus !== 0)) errors.push({path: `${path}.plus`, message: "plus is a whole number, not 0: 1 for \"that many plus one\", -1 for \"that many minus one\""});
       if (ability.half !== undefined && ability.half !== true) errors.push({path: `${path}.half`, message: "half is true: half that many, rounded down"});
       if (ability.putBy !== undefined && !["you", "opponent"].includes(ability.putBy)) errors.push({path: `${path}.putBy`, message: "putBy is \"you\" or \"opponent\": who must be putting them"});
       if (ability.players !== undefined && ability.players !== true) errors.push({path: `${path}.players`, message: "players is true: a player's counters too"});
     }
+    /* "Twice that much life instead" (rules/statics.mjs, lifeGained): how many times, 2 or more. */
+    if (ability.rule === "more-life" && !(Number.isInteger(ability.times) && ability.times >= 2))
+      errors.push({path: `${path}.times`, message: "More life instead says how many times as much: a whole number, 2 or more"});
     if (ability.rule === "cant-be-blocked-by") {
       if (!ability.by && ability.byPowerBelowSource !== true) errors.push({path, message: "\"Can't be blocked by\" says by what: `by`, or `byPowerBelowSource`"});
       if (ability.by) checkSelector(ability.by, `${path}.by`, errors, {choice: true});
