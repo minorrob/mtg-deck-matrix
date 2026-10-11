@@ -11,7 +11,9 @@
  *      colorless commander -- to 99.
  *   3. A game's exception is that game unclean, said with its seed, and the run goes on (playSafely).
  *   4. Seed 229, the game that stalled, played through the real room with a person in seat 0: clean, replayed
- *      identically, no seat sent a card it may not know.
+ *      identically, no seat sent a card it may not know. And seed 1193, all AI seats: amass Goblins made a Zombie Army's
+ *      card types read "Goblin", so Braids, Arisen Nightmare's "shares a card type with it" was refused part-way
+ *      (tests/engine-amass.mjs holds the rule).
  */
 import assert from "node:assert/strict";
 import {decksFromLibrary, libraryFrom, playSafely, verdict, LIBRARY_BASICS} from "../tools/fuzz-live.mjs";
@@ -85,4 +87,11 @@ const lib = libraryFrom();
   eq(v.problems, [], `and is clean: finished, nothing refused, replayed identically, no leak (${game.turns} turns, ${game.leakChecks} checks of every seat's view)`);
 }
 
-console.log(`fuzz-library: ${checks} checks passed -- each seed's four decks Commander decks of Rob's library, the same for the same seed; a game's exception said with its seed; seed 229, the waterbend that stalled a table, played clean.`);
+/* ---- and seed 1193, all AI seats, the amass that stalled ---- */
+{
+  const decks = decksFromLibrary(1193, {...lib, cards: tableCards});
+  const {game, exception} = await playSafely({decks, seed: 1193, cards: tableCards, levels: ["normal", "normal", "normal", "normal"], replay: true, matchId: "lib-1193"});
+  eq([exception, game && verdict(game).problems], [undefined, []], `seed 1193 plays to its end clean (${game?.turns} turns, ${game?.result?.reason})`);
+}
+
+console.log(`fuzz-library: ${checks} checks passed -- each seed's four decks Commander decks of Rob's library, the same for the same seed; a game's exception said with its seed; seeds 229 and 1193, the waterbend and the amass that stalled tables, played clean.`);

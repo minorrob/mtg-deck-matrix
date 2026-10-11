@@ -11,6 +11,7 @@
  * creature types are read from the creature tokens cards make as well (game/tools/engine-creature-types.mjs).
  */
 import assert from "node:assert/strict";
+import {characteristicsOf} from "../game/engine/rules/layers.mjs";
 import {awaitingChoice, resolveAwaiting, advance} from "../game/engine/rules/turn.mjs";
 import {passPriority} from "../game/engine/rules/priority.mjs";
 import {runScenario} from "../game/engine/cards/scenario.mjs";
@@ -52,6 +53,11 @@ const CAST_RAGE = [{tap: "Swamp"}, {tap: "Wastes"}, {tap: "Wastes"}, {cast: "Rag
   eq([named(s, "Goblin Army").length, s.objects[id].counters["+1/+1"]], [0, 2], "the counters on the Army there was; no token made");
   eq([is(s, id, {subtypes: ["Goblin"]}), is(s, id, {subtypes: ["Zombie"]}), is(s, id, {subtypes: ["Army"]})], [true, true, true],
     "a Goblin as well as a Zombie and an Army (CR 701.47a, layer 4)");
+  /* A Goblin is a creature type, a subtype (CR 205.3m): its card types are still Creature alone. Braids, Arisen Nightmare's
+     "a permanent that shares a card type with it" read "Goblin" there as a card type, and was refused part-way (a library
+     game, 2026-10-11). */
+  const amassed = characteristicsOf(s, id);
+  eq([amassed.types, amassed.subtypes.includes("Goblin")], [["Creature"], true], "Goblin among its subtypes; its card types still Creature alone");
   /* Not until the end of the turn: the type change lasts as long as the creature does (CR 611.2a). Two turns on: */
   for (let n = 0; n < 400 && s.turn < 3; n += 1) {
     if (s.awaiting) resolveAwaiting(s, awaitingChoice(s).options.slice(0, awaitingChoice(s).min ?? 0).map((o) => o.index));

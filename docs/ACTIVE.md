@@ -28,9 +28,11 @@ byte with the dry run):**
   script, rehearsed (#705);
 - words on the accent at 4.5:1 across the app (#706);
 - Gandalf, so 1,131 of Rob's 1,132 cards play, and control for good no longer breaking a room's save (#707);
-- G-D's dress rehearsal: 50 games through the real board, every one replayed with no leak, M8's exit criteria met (#708).
+- G-D's dress rehearsal: 50 games through the real board, every one replayed with no leak, M8's exit criteria met (#708);
+- G1 over Rob's whole library, not only his seven decks: 650 games, and the two table-stalling bugs they found fixed
+  (#710, and the amass fix after it; the G1-L record below).
 
-Staging serves main 73279bc0. Every gate item that is this side's is done; what is left is Rob's (the list above, and
+Staging serves main 9c746136. Every gate item that is this side's is done; what is left is Rob's (the list above, and
 G-D's 50 games by Grok Bot once the agents' tokens are in).
 
 ## RESUMED, 2026-10-08: the review-response session (Claude, a cloud container), on Rob's "Keep building"
@@ -1242,3 +1244,43 @@ A table's rerun reuses its match id (`journey0005g1`), which the agents' games o
 version 44986635. Its `play-worker.js` is byte-identical to the release's dry-run bundle and to #707's (3,305,833
 bytes): #708 changed comments in shipped code only, which the bundle does not carry. Its AI bindings are the Coach's
 alone. `tools/staging-check.mjs --expect 73279bc` exits 0, seating the session's token as `service:e07b4fed5ab9`.
+
+**G1-L: G1's checks over Rob's whole library (2026-10-11).** G1's 1,400 clean games played his seven decks' 477 cards; the
+rest of his library was proven by its cards' scenarios alone, and #707's save bug had lived there. `tools/fuzz-live.mjs
+--library` (#710) plays, for each seed, four Commander decks made from `data/live-load.json`'s cards (decksFromLibrary: a
+legendary creature the table plays, 99 cards of its color identity, none twice but basics; the same seed, the same decks),
+with G1's terms: finished, nothing refused over the whole match, replayed identically, no seat sent a card it may not know.
+- **The sweep, 650 games**, seat 0 a person (G1's random-legal answerer) or all four seats house AIs (Normal):
+
+  | Run | Games | Clean | Not clean |
+  |---|---:|---:|---|
+  | a person, seeds 1-300 (before either fix) | 300 | 299 | seed 229 |
+  | all AI, seeds 1001-1150 (before either fix) | 150 | 150 | |
+  | a person, seeds 301-400 (the waterbend fixed) | 100 | 100 | |
+  | all AI, seeds 1151-1250 (the waterbend fixed) | 100 | 99 | seed 1193 |
+
+  1,123 of the library's 1,126 playable cards were in at least one deck (the three not drawn are red-green cards with
+  one red-green commander to lead them); every all-AI game played to a winner, in 25 to 95 turns.
+- **Seed 229, fixed in #710: a waterbend paid with rider mana stalled the table.** Foggy Swamp Vinebender's waterbend
+  offer named its rider mana (Path of Ancestry's) against a cost it took as nothing, so once the creatures were picked
+  the rest could not be paid "without the riders". The payment was refused after the ability was on the stack, the
+  room's least answer found no question, and the person's turn was undone each time it was replayed. A waterbend offer
+  now names no rider mana; the rest is paid plain mana first, as anything but a spell is.
+- **Seed 1193, fixed after #710: amass made "Goblin" a card type.** Amass Goblins on a Zombie Army added Goblin to its
+  card types, not its subtypes (CR 701.47a, 205.3m). Braids, Arisen Nightmare's "a permanent that shares a card type with
+  it" then bound "Goblin" as a card type, and the selector's grammar refused it part-way through the sacrifice: the same
+  stall. `engine-amass`'s own check read types and subtypes together, so it could not see it; it now reads the card
+  types alone.
+- **Both are one kind: an AI's answer refused after it had changed the game.** The room assumes the rules refuse an
+  answer before they change anything, which both bugs broke. A snapshot of the game before each AI answer, to undo such a
+  refusal, was measured: about 6 ms an answer, 20 to 30 percent of a game's time on the Durable Object. It was set aside;
+  the library sweep is the guard, and `tests/fuzz-library.mjs` plays seeds 229 and 1193 clean.
+- **Proof:** `tests/fuzz-library.mjs` (new), 12 checks; `tests/engine-waterbend.mjs` and `tests/engine-amass.mjs`, each
+  a check that fails before its fix; `breaks-fuzz-library.py`, 9 breaks, every one caught; check-cards 3,876 scenarios,
+  0 failed.
+
+**#710 merged on main 9c746136 on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` be14ee56 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 22:31:19 UTC as
+version 025e7c27, its `play-worker.js` byte-identical to the release's dry-run bundle (3,305,854 bytes). Its AI bindings
+are the Coach's alone. `tools/staging-check.mjs --expect 9c74613` exits 0, seating the session's token as
+`service:e07b4fed5ab9`.
