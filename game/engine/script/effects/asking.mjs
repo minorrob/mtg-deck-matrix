@@ -636,13 +636,17 @@ export const modal = {
 const hasCounters = (counters) => Object.values(counters ?? {}).some((n) => n > 0);
 /* A player's counters, poison among them (CR 122.1f; batch 77 -- kept apart, as `poison`, for the state-based action). */
 const playerCounters = (player) => ({...(player.counters ?? {}), ...(player.poison > 0 ? {poison: player.poison} : {})});
+/* That a player proliferated, once it is done (CR 701.34a): "whenever you proliferate" (Ezuri, Stalker of Spheres;
+   rules/trigger.mjs) -- choosing none is proliferating too, "any number" being none as well. */
+const proliferated = (state, player) => event("GameEventProliferate", state, {player: {playerId: player, name: state.players[player].name}});
 export const proliferate = {
   open(state, params, context) {
     const candidates = [
       ...state.zones.battlefield.filter((id) => hasCounters(state.objects[id].counters)).map((id) => ({id})),
       ...state.players.filter((p) => !p.lost && hasCounters(playerCounters(p))).map((p) => ({player: p.id})),
     ];
-    if (candidates.length === 0) return false;
+    /* Nothing with a counter: nothing to choose, and nobody is asked -- but the player has proliferated. */
+    if (candidates.length === 0) return {events: [proliferated(state, context.controller)]};
     state.awaiting = {kind: "effect-choice", effect: "proliferate", player: context.controller, candidates};
     return true;
   },
@@ -665,7 +669,7 @@ export const proliferate = {
 
   apply(state, awaiting, indices) {
     const chosen = (indices ?? []).map((i) => awaiting.candidates[i]).filter(Boolean).map((c) => (c.player !== undefined ? {player: c.player} : c.id));
-    return giveEachAnother(state, {chosen}, {controller: awaiting.player});
+    return [...giveEachAnother(state, {chosen}, {controller: awaiting.player}), proliferated(state, awaiting.player)];
   },
 };
 

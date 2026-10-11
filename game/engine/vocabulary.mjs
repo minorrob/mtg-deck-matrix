@@ -111,6 +111,8 @@ export const TRIGGER_EVENTS = Object.freeze([
   "loyalty activated",
   /* "Whenever you scry or surveil" (CR 701.22a, 701.25a). */
   "scried",
+  /* "Whenever you proliferate" (CR 701.34a; Train C, w2c-hands-triggers). */
+  "proliferated",
 ]);
 
 /** The cost atoms of §12.2. The two symbolic ones are named; the rest are structural. */

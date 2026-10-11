@@ -122,6 +122,11 @@ function subjects(state, event, condition, sourceId, controller) {
     const scrier = fields.player?.playerId;
     return whoseIs(condition.scrier ?? "you", scrier, controller) ? [{player: scrier}] : [];
   }
+  /* "Whenever you proliferate" (CR 701.34a): who did. */
+  if (condition.on === "GameEventProliferate") {
+    const proliferator = fields.player?.playerId;
+    return whoseIs(condition.proliferator ?? "you", proliferator, controller) ? [{player: proliferator}] : [];
+  }
   /* "Whenever you activate a loyalty ability" (CR 606): an ability, not a spell, with a loyalty cost, by `activator`; the
      counters its cost removed at least `removedAtLeast`. */
   if (condition.on === "GameEventSpellAbilityCast" && condition.loyaltyActivated) {

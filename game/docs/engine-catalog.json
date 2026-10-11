@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1254,
+  "defined": 1255,
   "provisional": 27,
-  "everyRule": 2602
+  "everyRule": 2603
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -5522,10 +5522,10 @@
   },
   "Triggers": {
    "tally": {
-    "built": 20,
+    "built": 21,
     "partial": 4,
     "named": 2,
-    "missing": 112
+    "missing": 111
    },
    "entries": [
     {
@@ -6012,13 +6012,13 @@
      "kind": "trigger",
      "rule": null,
      "name": "Proliferate",
-     "engine": null,
-     "status": "missing",
+     "engine": "proliferated",
+     "status": "built",
      "forge": "Proliferate",
      "top": 1,
      "all": 6,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
