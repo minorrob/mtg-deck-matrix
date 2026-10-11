@@ -16,7 +16,7 @@ the gate passed once and failed once in one `table-board` check: root-caused to 
 - the advisor's eval with his key;
 - confirming his library plays as he expects;
 - M3's two alerts and their email, and R2 with the nightly copy's window and deletion promise (`docs/ops.md`);
-- G-C's four agents' access (M8);
+- G-C's four agents' access: four service tokens, admitted at staging (M8; the steps are in `docs/playtest-harness.md`);
 - then G-D (Grok Bot), G-E (his invites) and G-F (his review and production go).
 
 Part 7's first sentence waits on G-A's approvals and G-C's agents.
@@ -51,7 +51,7 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | G-B: the A11y pass's checks | done | `tests/a11y-board.mjs` 288 checks on the merge with Train C (the A11y record below) |
 | G-C: staging from main, version read back | **done**, signed in too | the G-C records below; and `tools/staging-check.mjs` signed in as the session-check token (A5; 2026-10-10): staging serves 2125854a, both pages say so, `/api/me` seats the token |
 | G-C: the harness note for Grok Bot | done | `docs/playtest-harness.md`, held to the page by `tests/playtest-harness.mjs` (PR #681) |
-| G-C: the four agents' access | not set | **Rob** (M8) |
+| G-C: the four agents' access | **built; waiting on Rob's four tokens** | at staging each service token Access admits is now an identity of its own, so four agents are four seats (the agents' access record below); how an agent signs in, and **Rob's** five steps, in `docs/playtest-harness.md`; the proof once they're made: `node tools/staging-check.mjs --agents` |
 
 So the first sentence of Part 7 is not yet true: it waits on the agents' access, Rob's, and on AI-2 to AI-6, this
 session's. The network measurement, the phones and the signed-in read-back are done (2026-10-10).
@@ -1036,3 +1036,25 @@ would have come back at the next read, two seconds on.
   `crankmagic-table.js`).
 - **Checks:** `table-board` 251 checks; `tools/table-away-breaks.py` 6 breaks, every one caught.
 - The timeout's message still says what Maya's flag read and what her socket last brought, should it fail again.
+
+**G-C, the agents' access (2026-10-11).** Staging seated every service token Access admitted as one identity,
+`service:session-checks`, so the four agents M8 plays staging with would have been one person: one library, one seat.
+Now each token is `service:` and twelve hex of its client id's SHA-256 (`cloud/access.mjs`). The same token is always
+the same identity and four tokens are four; none is a person's address, and the client id isn't repeated. It is still
+staging only (`SERVICE_SEATS`).
+- **How an agent gets in** (`docs/playtest-harness.md`): the token's two headers on every request. Checked against
+  staging with the session's token:
+  - Access answers the first request with its `CF_Authorization` cookie (Secure, SameSite=None, about 30 days);
+  - a request carrying only that cookie was seated as the token's identity;
+  - in Chromium, extra headers stay off a socket's handshake while the cookie goes with it, so the cookie carries the
+    table's socket.
+  
+  A real socket through Access is not yet seen: this container's proxy carries none.
+- **Checks:** `cloud-worker` 120, `staging-check` 18 (`--agents`: four identities, none admitted by production),
+  `playtest-harness` 155, `play-e2e` 35, `production-play-e2e` 27; `tools/agents-access-breaks.py` 8 breaks, every one
+  caught.
+- **Rob's:** make the four tokens; admit them on staging's application only (Service Auth, strict service token
+  authentication left off); give each agent its own; put them in the environment as `AGENT1_` to `AGENT4_` for the
+  check.
+- Once released, the session's token reads back as its own `service:` identity, and what staging kept under
+  `service:session-checks` (test data only) is no longer reached.
