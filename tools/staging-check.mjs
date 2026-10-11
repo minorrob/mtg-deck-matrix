@@ -8,20 +8,30 @@
  * environment as CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET -- never on a command line, never in a file, never
  * printed. This reads what staging serves: version.json (the release's commit, date and profile), both pages'
  * crankmagic-version, and /api/me, which a release that seats the token (SERVICE_SEATS, cloud/access.mjs) answers as
- * the session's checks. With --expect <commit>, it fails unless staging serves that release.
+ * the token's own test identity. With --expect <commit>, it fails unless staging serves that release.
+ *
+ * THE AGENTS' ACCESS (M8, Part 7's G-C): with --agents it reads, instead, the four service tokens Rob made for the
+ * agents that play staging (docs/playtest-harness.md), given as AGENT1_CF_ACCESS_CLIENT_ID and
+ * AGENT1_CF_ACCESS_CLIENT_SECRET to AGENT4_..., and fails unless staging seats each as an identity of its own -- four
+ * agents, four seats -- and production admits none of them.
  *
  *   node tools/staging-check.mjs [--expect <commit>] [--base https://staging.crankmagic.com]
+ *   node tools/staging-check.mjs --agents [--base ...] [--production https://crankmagic.com]
  *
- * Exit 0 when staging answers as expected, 1 when it does not, 2 when the token is not in the environment.
+ * Exit 0 when staging answers as expected, 1 when it does not, 2 when a token is not in the environment.
  * It reads the WebSocket of no table: this container's network proxy carries none (docs/ACTIVE.md).
  */
 import {fileURLToPath} from "node:url";
 
-export async function check({base = "https://staging.crankmagic.com", expect = null, id, secret, fetchImpl = fetch} = {}) {
+/* A seated service token's name (cloud/access.mjs): `service:` and twelve hex, never a person's address. */
+const SEATED = /^service:[0-9a-f]{12}$/;
+
+/* One read of a site as a service token. Access answers a token it does not admit with a redirect to its sign-in (its
+   team's domain, or /cdn-cgi/access/), or 403. Any other redirect is the site's own -- staging's static files drop
+   ".html", /crankmagic.html answering 307 to /crankmagic -- and is followed, on the same site only, the token's headers
+   with it. */
+function reader(base, id, secret, fetchImpl) {
   const headers = {"CF-Access-Client-Id": id, "CF-Access-Client-Secret": secret};
-  /* Access answers a token it does not admit with a redirect to its sign-in (its team's domain, or /cdn-cgi/access/), or
-     403. Any other redirect is staging's own -- its static files drop ".html", /crankmagic.html answering 307 to
-     /crankmagic -- and is followed, on the same site only, the token's headers with it. */
   const read = async (path, hops = 0) => {
     const at = new URL(path, base), response = await fetchImpl(at, {headers, redirect: "manual"});
     if (response.status >= 300 && response.status < 400) {
@@ -31,6 +41,18 @@ export async function check({base = "https://staging.crankmagic.com", expect = n
     }
     return {status: response.status, text: await response.text()};
   };
+  return read;
+}
+/* Who /api/me says the token is, or null. */
+async function seatedAs(read) {
+  const me = await read("/api/me");
+  let who = null;
+  if (me.status === 200) { try { who = JSON.parse(me.text).email ?? null; } catch { /* reported by the caller */ } }
+  return {me, who};
+}
+
+export async function check({base = "https://staging.crankmagic.com", expect = null, id, secret, fetchImpl = fetch} = {}) {
+  const read = reader(base, id, secret, fetchImpl);
   const problems = [];
   const version = await read("/version.json");
   let release = null;
@@ -44,25 +66,56 @@ export async function check({base = "https://staging.crankmagic.com", expect = n
     pages[page] = got.status === 200 ? (/<meta name="crankmagic-version" content="([^"]+)">/.exec(got.text) ?? [])[1] ?? null : null;
     if (!pages[page]) problems.push(`${page} does not say its version (${got.refused ?? got.status})`);
   }
-  const me = await read("/api/me");
-  let who = null;
-  if (me.status === 200) { try { who = JSON.parse(me.text).email ?? null; } catch { /* reported below */ } }
-  if (who !== "service:session-checks") problems.push(`/api/me does not seat the service token (${me.refused ?? me.status}${who ? `, as ${who}` : ""}): a release before L6, or SERVICE_SEATS off`);
+  const {me, who} = await seatedAs(read);
+  if (!SEATED.test(who ?? "")) problems.push(`/api/me does not seat the service token (${me.refused ?? me.status}${who ? `, as ${who}` : ""}): a release before L6, or SERVICE_SEATS off`);
   if (release && expect && !String(release.commit ?? "").startsWith(expect) && !String(expect).startsWith(release.commit ?? "-"))
     problems.push(`staging serves ${release.commit}, not ${expect}`);
   if (release && release.profile !== "cloud-staging") problems.push(`staging serves the ${release.profile} profile`);
   return {release, pages, who, problems};
 }
 
+/** The agents' tokens (M8): each seated at staging as an identity of its own, and none admitted by production. */
+export async function checkAgents({base = "https://staging.crankmagic.com", production = "https://crankmagic.com", tokens, fetchImpl = fetch} = {}) {
+  const problems = [], agents = [];
+  for (const [i, {id, secret}] of tokens.entries()) {
+    const n = i + 1, {me, who} = await seatedAs(reader(base, id, secret, fetchImpl));
+    const seated = SEATED.test(who ?? "");
+    if (!seated) problems.push(`agent ${n}: staging does not seat its token (${me.refused ?? me.status}${who ? `, as ${who}` : ""})`);
+    const prod = await seatedAs(reader(production, id, secret, fetchImpl));
+    if (prod.me.status === 200) problems.push(`agent ${n}: production admits its token${prod.who ? ` (as ${prod.who})` : ""}: the agents' access is staging's only`);
+    agents.push({n, who: seated ? who : null, production: prod.me.refused ? "refused" : prod.me.status});
+  }
+  const seen = new Map();
+  for (const a of agents.filter((x) => x.who)) seen.set(a.who, [...(seen.get(a.who) ?? []), a.n]);
+  for (const [who, ns] of seen) if (ns.length > 1) problems.push(`agents ${ns.join(" and ")} are one identity (${who}): one token given twice, or a release before each token was its own`);
+  return {agents, problems};
+}
+
 /** The token from the environment, its names in any case: an environment's settings may keep the case they were typed in
     (CF_Access_Client_Secret), and Linux's names are case-sensitive. Never printed. */
-export function credentials(env) {
+export function credentials(env, prefix = "") {
   const named = (name) => env[name] ?? Object.entries(env).find(([k]) => k.toUpperCase() === name)?.[1];
-  return {id: named("CF_ACCESS_CLIENT_ID"), secret: named("CF_ACCESS_CLIENT_SECRET")};
+  return {id: named(`${prefix}CF_ACCESS_CLIENT_ID`), secret: named(`${prefix}CF_ACCESS_CLIENT_SECRET`)};
+}
+/** The four agents' tokens from the environment (AGENT1_ to AGENT4_), and which agents have none. */
+export function agentCredentials(env) {
+  const tokens = [1, 2, 3, 4].map((n) => credentials(env, `AGENT${n}_`));
+  return {tokens, missing: tokens.flatMap((t, i) => (t.id && t.secret ? [] : [i + 1]))};
 }
 
 async function main(argv) {
   const arg = (name) => { const i = argv.indexOf(`--${name}`); return i >= 0 ? argv[i + 1] : undefined; };
+  if (argv.includes("--agents")) {
+    const {tokens, missing} = agentCredentials(process.env);
+    if (missing.length) {
+      console.error(`staging-check: no token in this environment for agent${missing.length > 1 ? "s" : ""} ${missing.join(", ")}: AGENTn_CF_ACCESS_CLIENT_ID and AGENTn_CF_ACCESS_CLIENT_SECRET, n 1 to 4 (docs/playtest-harness.md, "The agents' access").`);
+      return 2;
+    }
+    const result = await checkAgents({base: arg("base") ?? undefined, production: arg("production") ?? undefined, tokens});
+    for (const a of result.agents) console.log(`staging-check: agent ${a.n} seated as ${a.who ?? "-"}; production ${a.production}`);
+    for (const problem of result.problems) console.log(`  problem: ${problem}`);
+    return result.problems.length ? 1 : 0;
+  }
   const {id, secret} = credentials(process.env);
   if (!id || !secret) {
     console.error("staging-check: CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET are not in this environment. Add them in the cloud environment's settings (docs/review-response-2026-10-05.md §6.2, A5); a new session receives them.");

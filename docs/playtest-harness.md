@@ -18,8 +18,55 @@ socket directly. Read what a person reads: the text, and the ARIA names below.
 | `#table?id=<tableId>` | A table: the lobby, then the board once the game is on |
 | `#table/<tableId>/<code>` | An invite link; opening it signed in joins that seat |
 
-Access needs one of the agents' service tokens or invited test addresses (M8: Rob's step). A signed-out visit to
-the API is refused with instructions (`not-invited.html`).
+## The agents' access
+
+Staging is behind Cloudflare Access. Each agent signs in with a service token of its own (M8; Rob makes them, below):
+it sends the token's two headers with every request:
+
+- `CF-Access-Client-Id`
+- `CF-Access-Client-Secret`
+
+A browser the agent drives sends them for its whole session (in Playwright, `extraHTTPHeaders` on the context).
+**The table's socket is carried by Access's cookie, not the headers:**
+- Chromium doesn't send extra headers on a WebSocket handshake.
+- Access answers the first admitted request with its `CF_Authorization` cookie (about 30 days), and the browser
+  sends that cookie on the socket.
+- So load a page before joining a table, which the app does anyway.
+
+A client that isn't a browser must keep that cookie and send it on its socket.
+Staging seats each token as a test identity of its own: four tokens are four people, each with a library of its
+own, so four agents can take the four seats of one table. A seat's name on the board is the one the host gives it
+when inviting. Production admits none of them. A signed-out visit to the API is refused with instructions
+(`not-invited.html`).
+
+Checked 2026-10-11:
+- staging set the cookie for a service token;
+- a request carrying only that cookie was seated as the token's identity;
+- in Chromium, extra headers stayed off a socket's handshake while the cookie went with it.
+
+**Not yet seen:** a real socket through Access, because the session that checked this can't open one through its
+network proxy. If the board says it is reconnecting and never connects, report it as a finding.
+
+Never put a token in a finding, a record, a log or a chat.
+
+### Rob's steps: the four agents' access, staging only
+
+1. **Make the tokens.** Zero Trust → **Access controls** → **Service credentials** → **Service Tokens** →
+   **Create Service Token**, four times: `crankmagic-agent-1` to `crankmagic-agent-4`, with a duration of a year or
+   less. Each Client Secret is shown once, so copy it when it is shown.
+2. **Admit them at staging.** Zero Trust → **Access controls** → **Applications** → staging's application →
+   **Policies**: add the four to the policy that admits the session's token, or a new one. Either way the action is
+   **Service Auth** and the Include rule is **Service Token**, with the four selected. Production's application is
+   never touched. Leave the organization's *strict service token authentication* off: with it on, Access sets no
+   cookie, and the agents' sockets are refused.
+3. **Give each agent its own token**, through that agent's own secret store: never a chat, an email or a file in
+   the repository.
+4. **Prove it.** Put the eight values in the cloud environment's settings, named `AGENT1_CF_ACCESS_CLIENT_ID` and
+   `AGENT1_CF_ACCESS_CLIENT_SECRET` through `AGENT4_`. A new session then runs
+   `node tools/staging-check.mjs --agents`, which checks that staging seats each agent as an identity of its own and
+   that production refuses all four. You can also run it on your own machine with them in the environment.
+5. **Take an agent's access away** by deleting its token (Service Tokens → **Delete**), or pause it with
+   **Disable token**.
 
 ## The lobby (`crankmagic-table.js`)
 

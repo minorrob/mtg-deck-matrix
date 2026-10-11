@@ -527,7 +527,7 @@ two mana and a summoning-sick creature left to tapping by hand. `engine-pay-choi
 pays more than one way offered and asking which way (X8b): two colors for generic, a Phyrexian symbol's mana or life, a
 hybrid; one way asks nothing, a way gone from the pool is refused, and the house pilot pays with mana. `staging-check`
 holds `tools/staging-check.mjs`, a session reading staging back through its Access service token: the release, both
-pages' version and the seated identity, and what is wrong when Access refuses or the release is not the one expected. `engine-cards-pb1` holds what the scenarios of Rob's
+pages' version and the seated identity, and what is wrong when Access refuses or the release is not the one expected; and, with `--agents`, the four agents' tokens (M8): four identities at staging, none admitted by production. `engine-cards-pb1` holds what the scenarios of Rob's
 priority list's first cards cannot reach: a creature that can't block never offered as a blocker (on itself, on a
 selector, for a turn), "destroy all other creatures" sparing only what the spell made, every counter removed, and "choose
 one or both"; `engine-cards-pb2`, the next slice's: exhaust once per object (a new object may again), an ability of a
