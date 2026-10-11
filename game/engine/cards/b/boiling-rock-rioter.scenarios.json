@@ -1,0 +1,422 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Boiling Rock Rioter",
+  "fixtures": {
+    "Ally Scout": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Ally"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{C}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{C}",
+      "colors": [
+        "R"
+      ],
+      "power": 4,
+      "toughness": 4
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob taps the Rioter itself to exile his Ally Scout; on his turn it attacks, firebends {R}, and he casts the Scout with it",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Boiling Rock Rioter",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Ally Scout"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "activate": "Boiling Rock Rioter",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Ally Scout",
+              "seat": 0
+            }
+          ],
+          "tapping": "Boiling Rock Rioter"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Ally Scout"
+              ]
+            },
+            {
+              "seat": 0,
+              "tapped": "Boiling Rock Rioter"
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Boiling Rock Rioter"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Boiling Rock Rioter: Firebending 1",
+                  "Boiling Rock Rioter: Whenever this creature attacks, you may cast an Ally spell from among cards you own exiled with this creature."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            1,
+            0
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "pool": {
+                "R": 1
+              }
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Ally Scout",
+                  "Don't cast"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Ally Scout"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "pool": {
+                "R": 0
+              }
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Boiling Rock Rioter",
+            "Ally Scout",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "Firebending 1: the {R} stays in the pool through combat and is gone once combat ends",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Boiling Rock Rioter"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Boiling Rock Rioter"
+          ]
+        },
+        {
+          "answer": [
+            1,
+            0
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "pool": {
+                "R": 1
+              }
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "pool": {
+                "R": 1
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_END"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "pool": {
+                "R": 1
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 0
+          }
+        },
+        {
+          "seat": 1,
+          "life": 37
+        }
+      ]
+    },
+    {
+      "name": "Maya's Ally, exiled with it, is not his to cast, nor his Bear, which is no Ally: nothing is offered",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Boiling Rock Rioter",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Ally Scout"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "activate": "Boiling Rock Rioter",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Ally Scout",
+              "seat": 1
+            }
+          ],
+          "tapping": "Boiling Rock Rioter"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 4,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "activate": "Boiling Rock Rioter",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Bear",
+              "seat": 0
+            }
+          ],
+          "tapping": "Boiling Rock Rioter"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Boiling Rock Rioter"
+          ]
+        },
+        {
+          "answer": [
+            1,
+            0
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Ally Scout"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 37
+        }
+      ]
+    }
+  ]
+}

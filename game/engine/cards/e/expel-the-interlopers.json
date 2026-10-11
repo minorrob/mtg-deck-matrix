@@ -1,0 +1,225 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Expel the Interlopers",
+    "oracleId": "744b7e93-c893-4770-a3bb-6a45b7f8e4f7",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose a number between 0 and 10. Destroy all creatures with power greater than or equal to the chosen number.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose a number between 0 and 10. Destroy all creatures with power greater than or equal to the chosen number.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "modal",
+          "chooser": "you",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "0",
+              "effects": [
+                {
+                  "effect": "destroyAll",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ],
+                    "power": {
+                      "min": 0
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "text": "1",
+              "effects": [
+                {
+                  "effect": "destroyAll",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ],
+                    "power": {
+                      "min": 1
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "text": "2",
+              "effects": [
+                {
+                  "effect": "destroyAll",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ],
+                    "power": {
+                      "min": 2
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "text": "3",
+              "effects": [
+                {
+                  "effect": "destroyAll",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ],
+                    "power": {
+                      "min": 3
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "text": "4",
+              "effects": [
+                {
+                  "effect": "destroyAll",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ],
+                    "power": {
+                      "min": 4
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "text": "5",
+              "effects": [
+                {
+                  "effect": "destroyAll",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ],
+                    "power": {
+                      "min": 5
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "text": "6",
+              "effects": [
+                {
+                  "effect": "destroyAll",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ],
+                    "power": {
+                      "min": 6
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "text": "7",
+              "effects": [
+                {
+                  "effect": "destroyAll",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ],
+                    "power": {
+                      "min": 7
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "text": "8",
+              "effects": [
+                {
+                  "effect": "destroyAll",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ],
+                    "power": {
+                      "min": 8
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "text": "9",
+              "effects": [
+                {
+                  "effect": "destroyAll",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ],
+                    "power": {
+                      "min": 9
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "text": "10",
+              "effects": [
+                {
+                  "effect": "destroyAll",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ],
+                    "power": {
+                      "min": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

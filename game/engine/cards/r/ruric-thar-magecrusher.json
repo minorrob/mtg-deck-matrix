@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ruric Thar, Magecrusher",
+    "oracleId": "453b2b3c-7df5-4515-9565-82f603cf451b",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Ogre",
+      "Warrior"
+    ],
+    "manaCost": "{5}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 7,
+    "toughness": 7
+  },
+  "oracleText": "This spell can't be countered.\nReach, vigilance, trample\nRuric Thar has hexproof as long as they haven't dealt combat damage yet. (They can't be the target of spells or abilities your opponents control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell can't be countered.",
+      "rule": "cant-be-countered",
+      "affects": {
+        "what": "spell",
+        "self": true
+      }
+    },
+    {
+      "kind": "keyword",
+      "text": "Reach",
+      "keyword": "reach"
+    },
+    {
+      "kind": "keyword",
+      "text": "vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "keyword",
+      "text": "trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "static",
+      "text": "Ruric Thar has hexproof as long as they haven't dealt combat damage yet. (They can't be the target of spells or abilities your opponents control.)",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "self": true,
+        "hasDealtCombatDamage": false
+      },
+      "apply": {
+        "addKeywords": [
+          "Hexproof"
+        ]
+      }
+    }
+  ]
+}

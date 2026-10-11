@@ -1,0 +1,473 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Woodland Weavemaster",
+  "fixtures": {
+    "Elf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf",
+        "Warrior"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Elf Lord": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Squirrel": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Squirrel"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Elf Seer": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "c",
+          "kind": "activated",
+          "zone": "hand",
+          "cycling": true,
+          "text": "Cycling {1}",
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{1}"
+            },
+            {
+              "atom": "discard",
+              "self": true
+            }
+          ],
+          "targets": [],
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    "Bear Seer": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "c",
+          "kind": "activated",
+          "zone": "hand",
+          "cycling": true,
+          "text": "Cycling {1}",
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{1}"
+            },
+            {
+              "atom": "discard",
+              "self": true
+            }
+          ],
+          "targets": [],
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Its {G} pays an Elf card's cycling in his hand -- the source of an ability wherever it is -- and he draws",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Woodland Weavemaster"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Elf Seer",
+            "Bear Seer"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Woodland Weavemaster",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Elf Seer"
+              },
+              "count": 1
+            },
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Bear Seer"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "activate": "Elf Seer"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear Seer",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Elf Seer"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Elf spells only: its {G} casts the Elf, not the Squirrel; the Elf enters and the Weavemaster is 2/3 until end of turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Woodland Weavemaster"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Elf",
+            "Squirrel"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Woodland Weavemaster",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Squirrel"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "cast": "Elf"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Woodland Weavemaster",
+                "power": 2,
+                "toughness": 3
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Woodland Weavemaster",
+            "power": 1,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Squirrel"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "X is its power: another Elf enters off a Forest, and it taps for two green, which cast a {1}{G} Elf",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Woodland Weavemaster",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Elf",
+            "Elf Lord"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Elf"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Woodland Weavemaster"
+              },
+              "mana": [
+                {
+                  "W": 2
+                },
+                {
+                  "U": 2
+                },
+                {
+                  "B": 2
+                },
+                {
+                  "R": 2
+                },
+                {
+                  "G": 2
+                }
+              ],
+              "count": 5
+            }
+          ]
+        },
+        {
+          "tap": "Woodland Weavemaster",
+          "mana": {
+            "G": 2
+          }
+        },
+        {
+          "cast": "Elf Lord"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Woodland Weavemaster",
+            "Forest",
+            "Elf",
+            "Elf Lord"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Another Elf he controls only: Maya's Elf entering leaves it 1/2",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Woodland Weavemaster"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Elf"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Elf"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Woodland Weavemaster",
+            "power": 1,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vigilance: it attacks and stays untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Woodland Weavemaster"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Woodland Weavemaster"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Woodland Weavemaster",
+          "is": false
+        },
+        {
+          "seat": 1,
+          "life": 39
+        }
+      ]
+    }
+  ]
+}

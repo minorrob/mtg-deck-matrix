@@ -1,0 +1,71 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Platypus-Bear",
+    "oracleId": "933e4e8a-01ea-4f58-8f5e-4f6c43f4e105",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Platypus",
+      "Bear"
+    ],
+    "manaCost": "{1}{G/U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Defender\nWhen this creature enters, mill two cards. (Put the top two cards of your library into your graveyard.)\nAs long as there is a Lesson card in your graveyard, this creature can attack as though it didn't have defender.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender",
+      "keyword": "defender"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, mill two cards.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "mill",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "As long as there is a Lesson card in your graveyard, this creature can attack as though it didn't have defender.",
+      "rule": "attacks-despite-defender",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "count": {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "subtypes": [
+                "Lesson"
+              ]
+            }
+          },
+          "atLeast": 1
+        }
+      }
+    }
+  ]
+}

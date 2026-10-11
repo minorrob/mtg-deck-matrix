@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Smaug, the Great Calamity // Spew Flame",
+    "oracleId": "fc75cfec-e1f6-4cb5-8a3c-2f7b2c39c03f",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon"
+    ],
+    "manaCost": "{5}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Flying",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    }
+  ],
+  "adventure": {
+    "identity": {
+      "name": "Spew Flame",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [
+        "Adventure"
+      ],
+      "manaCost": "{4}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Spew Flame deals 5 damage to target creature. (Then exile this card. You may cast the creature later from exile.)",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Spew Flame deals 5 damage to target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 5,
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

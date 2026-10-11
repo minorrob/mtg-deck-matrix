@@ -43,6 +43,9 @@ export const FORGE_API = {
   Poison: "poison",
   /* "You win the game" (batch 68). */
   WinsGame: "winGame",
+  /* "That player loses the game", "each player with exactly 13 life loses the game" (Train C phase 2, p6-combat; CR
+     104.3e): the players named, at once and together, each leaving the game as it happens (CR 104.5, 800.4a). */
+  LosesGame: "loseGame",
   /* Goad (batch 69): attacks each combat, not its goader if it can. */
   Goad: "goad",
   /* Earthbend (batch 65): the land a creature with haste, its counters, its return. */
@@ -55,6 +58,8 @@ export const FORGE_API = {
   Charm: "modal", RepeatEach: "repeatFor", Branch: "branch", DelayedTrigger: "delayedTrigger",
   ImmediateTrigger: "immediateTrigger", Counter: "counterSpell", CopySpellAbility: "copySpell",
   AddTurn: "addTurn", AddPhase: "addPhase", ChooseCard: "chooseCard", ChooseType: "chooseType",
+  /* ChooseColor ("choose a color", as it resolves; Skrelv, Defector Mite, Train C phase 2): CR 105.1. */
+  ChooseColor: "chooseColor",
   /* GenericChoice ("create a Food token or a Treasure token", "target opponent may have you draw three cards"): the modal
      question at resolution, its chooser any player (batch 52). */
   GenericChoice: "modal", TwoPiles: "twoPiles", Connive: "connive",
@@ -70,6 +75,14 @@ export const FORGE_TRIGGER = {
   Discarded: "discarded", DiscardedAll: "discarded", Drawn: "drawn", LandPlayed: "land played",
   BecomesTarget: "becomes target", Taps: "becomes tapped", Cycled: "cycled", CounterAdded: "counter added", CounterAddedOnce: "counter added once",
   LifeGained: "life gained", LifeLost: "life lost", TokenCreatedOnce: "token created", BecomeMonstrous: "becomes monstrous",
+  /* "Whenever you proliferate" (Train C, w2c-hands-triggers; CR 701.34a). */
+  Proliferate: "proliferated",
+  /* "Whenever you commit a crime" (Train C, w2c-hands-triggers; CR 700.13). */
+  CommitCrime: "crime committed",
+  /* A state trigger (Train C, w2c-hands-triggers; CR 603.8): "when this artifact has twenty or more charge counters on it". */
+  Always: "state",
+  /* "Whenever this creature transforms into ..." (Train C, w2c-hands-triggers; CR 701.27e). */
+  Transformed: "transformed",
 };
 
 /* Forge static and replacement modes the engine can execute today. `Continuous` is an anthem or a
@@ -121,7 +134,12 @@ export const FORGE_REPLACEMENT = {Moved: "replacement",
   DamageDone: "rules/replacement",
   /* "If you would proliferate, proliferate twice instead" (Tekuthal, Inquiry Dominus): the static `proliferate-twice`, each
      one doubling its controller's proliferates as one reaches the head of a resolution (script/resolution.mjs). */
-  Proliferate: "script/resolution"};
+  Proliferate: "script/resolution",
+  /* Counters put on a permanent or a player, replaced (Train C, p4-replacements): "twice that many" (Branching Evolution,
+     credited here with no new code for it), "that many plus one" (Hardened Scales), "half that many, rounded down"
+     (Vorinclex) -- for whom they are put on and by whom -- the order of two the affected player's (CR 614.1a, 616.1): the
+     static `more-counters`, rules/statics.mjs, placeCounters; asked in a resolution (effects/asking.mjs, orderCounters). */
+  AddCounter: "rules/statics"};
 
 /* Keywords the engine implements BEHAVIORALLY, as opposed to merely declaring the word. Declaring
    `Flying` in the vocabulary is what lets a card script say it; `keywords/combat.mjs` is what makes
@@ -134,10 +152,11 @@ export const BEHAVIORAL_KEYWORDS = new Set([...Object.values(KEYWORD_FAMILIES), 
    activated ability with the `attach` effect, and what the Equipment grants a static ability on the creature it is
    attached to (`attachedBy`). Cycling is "{cost}, discard this card: draw a card" activated from the hand (CR 702.29a),
    and typecycling the same searching for a card of the type (702.29e): built with activation from the hand (batch 9). */
-/* Keywords that are a deck rule, held at the table and never in the game: the partner abilities (CR 702.124), read from
-   the card's own words (cards/index.mjs, partnersIn) and held by room/table.mjs when a deck names two commanders. Not
-   "Partner with", which is also a trigger as the card enters (702.124j). */
-export const DECK_RULE_KEYWORDS = {Partner: "room/table.mjs", "Choose a Background": "room/table.mjs"};
+/* Keywords that are a deck rule, held at the table: the partner abilities (CR 702.124), read from the card's own words
+   (cards/index.mjs, partnersIn) and held by room/table.mjs when a deck names two commanders. "Partner with" (702.124j) is
+   also a trigger as the card enters, its target player searching for the partner it names (cards/index.mjs; Train C
+   phase 2). */
+export const DECK_RULE_KEYWORDS = {Partner: "room/table.mjs", "Choose a Background": "room/table.mjs", "Partner with": "room/table.mjs"};
 
 /* Keywords that are a way of casting or entering, held by the rules module named (Train B, X11):
    AlternateAdditionalCost -- "as an additional cost to cast this spell, sacrifice an artifact or discard a card" (Demand
@@ -176,6 +195,9 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   /* Mentor (CR 702.134a; Legion Warboss, Train B X11): the attack trigger, a +1/+1 counter on target attacking creature
      with power less than this creature's -- as it resolves, or as it last was if it has left (cards/index.mjs). */
   Mentor: "putCounter",
+  /* Firebending (CR 702.189a; Fire Nation Cadets, Train C phase 2): the attack trigger, N {R} kept until end of combat
+     (cards/index.mjs, rules/turn.mjs). */
+  Firebending: "addMana",
   /* Afterlife (X5c): the dies trigger, N 1/1 white and black Spirit tokens with flying (cards/index.mjs). */
   Afterlife: "createToken",
   /* Forge's etbCounter, "this creature enters with two +1/+1 counters on it" (X5e): the replacement `entersWithCounters` on
@@ -188,6 +210,10 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   /* Encore (X5f): the card's activated ability in its owner's graveyard, a hasty token copy for each opponent, each required
      to attack that opponent this turn (cards/index.mjs, rules/combat.mjs). */
   Encore: "copyPermanent",
+  /* Embalm (CR 702.128a; Anointer Priest, Train C phase 2): the card's activated ability in its owner's graveyard at sorcery
+     speed, a token copy of it that is white, a Zombie besides its other types, and has no mana cost (cards/index.mjs;
+     effects/permanents.mjs, copiable's `noManaCost`). */
+  Embalm: "copyPermanent",
   /* Echo (CR 702.30a; Karmic Guide, AI 1's deck): the upkeep trigger, its intervening "if" (came under your control since
      your last upkeep, script/condition.mjs), and "sacrifice it unless you pay" a mana cost with its colors (cards/index.mjs,
      effects/asking.mjs). */
@@ -219,9 +245,10 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   "Cumulative upkeep": "unlessPays"};
 
 /* "PROTECTION FROM [QUALITY]" printed as a keyword (CR 702.16a; Karmic Guide's "protection from black"): built for the
-   qualities rules/protection.mjs reads -- a color, a card type, everything -- compiled from the keyword (cards/index.mjs).
-   Not a player, a name, "multicolored", "each color" or "the color of your choice". */
-const PROTECTION_QUALITIES = /^protection from (white|blue|black|red|green|everything|artifacts|creatures|enchantments|instants|lands|planeswalkers|sorceries)$/i;
+   qualities rules/protection.mjs reads -- a color, a card type, multicolored (Argentum Masticore, Train C phase 2),
+   everything -- compiled from the keyword (cards/index.mjs). Not a player, a name, "each color" or "the color of your
+   choice". */
+const PROTECTION_QUALITIES = /^protection from (white|blue|black|red|green|multicolored|everything|artifacts|creatures|enchantments|instants|lands|planeswalkers|sorceries)$/i;
 
 /** Whether a keyword is built: one a rules module acts on, an ability keyword whose primitive is built, or a deck rule the
     table holds. The one rule `missingFor` and the catalog (engine-catalog.mjs) both read. */
@@ -241,7 +268,9 @@ export const FORGE_OPTIONS = Object.freeze({
   UnlessCostMana: {name: "Unless a player pays mana (\"unless that player pays {1}\")", status: "built", engine: "unlessPays (generic mana)"},
   UnlessCostPayLife: {name: "Unless a player pays life (a shock land's 2 life)", status: "built", engine: "unlessPay life, as it enters"},
   UnlessCostReveal: {name: "Unless a player reveals a card (\"reveal an Island or Swamp card\")", status: "built", engine: "unlessReveal, as it enters"},
-  UnlessCostDiscard: {name: "Unless a player discards a card", status: "missing"},
+  /* Ward's discard (CR 702.21a), and "sacrifice this creature unless you discard a card. When you discard a card this way"
+     (Argentum Masticore, Train C phase 2): each card in the payer's hand its own option, the card discarded remembered. */
+  UnlessCostDiscard: {name: "Unless a player discards a card", status: "built", engine: "unlessPays's discard: each card in the payer's hand an option; the discarded card remembered (\"this way\")"},
   UnlessCostSac: {name: "Unless a player sacrifices a permanent", status: "missing"},
   UnlessCostOther: {name: "Unless a player pays some other cost (taps, exiles, ...)", status: "missing"},
   /* Judged kind by kind (FORGE_COUNTS below), not as one: "for each creature you control" is built, "for each spell
@@ -317,20 +346,34 @@ export const FORGE_COUNTS = Object.freeze({
      Addendum's condition) -- for a target the spell has only then (CR 601.2c; script/bind.mjs, `onlyIf`). */
   IfCastInOwnMainPhase: {name: "If it was cast during its caster's main phase (\"if you cast this spell during your main phase\")", status: "built",
     engine: "condition {cast: {mainPhase: true}}; a target spec's onlyIf (script/bind.mjs)"},
-  LifeOppsLostThisTurn: {name: "Life your opponents lost this turn", status: "missing"},
+  /* Train C (Light Up the Stage's spectacle, CR 702.137a): every opponent's life lost this turn, together, those still in
+     the game (CR 800.4a) -- the record each player's own count was kept in (effects/resources.mjs). Its one form, built. */
+  LifeOppsLostThisTurn: {name: "Life your opponents lost this turn", status: "built", engine: "amount {lifeLostThisTurn: \"opponents\"} (effects/resources.mjs keeps each player's, rules/turn.mjs clears it)"},
   ThisTurnEntered: {name: "What entered or died this turn", status: "missing"},
-  ThisTurnCast: {name: "Spells cast this turn", status: "missing"},
+  /* Train C (Aetherflux Reservoir, Traxos, Academy Guardian): a player's spells this turn, as each was cast -- read by its
+     card types and controller (rules/actions.mjs keeps them; script/filter.mjs, matchesLastKnown) -- counted when the
+     amount is read (CR 608.2h). Partial: a spell's color, subtypes, mana value or name this turn are not read. */
+  ThisTurnCast: {name: "Spells cast this turn", status: "partial", engine: "amount {spellsCastThisTurn: \"you\" | \"that player\", filter?} -- by card type and controller"},
   ThisTurnActivated: {name: "Abilities activated this turn", status: "missing"},
   ResolvedThisTurn: {name: "Times this resolved this turn", status: "missing"},
-  YouDrewThisTurn: {name: "Cards you drew this turn", status: "missing"},
+  /* Train C (Fractal Anomaly, Lake-town Toymaker): each card a player drew this turn its own (CR 121.2; state/index.mjs,
+     recordDraw, at every draw). Its one form, built. */
+  YouDrewThisTurn: {name: "Cards you drew this turn", status: "built", engine: "amount {cardsDrawnThisTurn: \"you\" | \"that player\"} (state/index.mjs recordDraw, rules/turn.mjs clears it)"},
   RememberedSize: {name: "How many things an effect remembered", status: "missing"},
   RememberedNumber: {name: "A number an effect remembered", status: "missing"},
   TriggerRememberAmount: {name: "An amount the trigger carries", status: "missing"},
   ChosenNumber: {name: "A number a player chose", status: "missing"},
   CardManaCost: {name: "This card's mana value", status: "missing"},
-  ColorsColorIdentity: {name: "Colors in your commanders' identity", status: "missing"},
+  /* Train C (p3-costs; War Room): "pay life equal to the number of colors in your commanders' color identity" -- the union of
+     their identities (CR 903.4), undefined and a cost of it unpayable without a commander (903.4f). */
+  ColorsColorIdentity: {name: "Colors in your commanders' identity", status: "built", engine: "amount {commanderColors: \"you\"} (script/amount.mjs); a cost of it unpayable without a commander"},
   CommanderCastFromCommandZone: {name: "Times your commander was cast from the command zone", status: "missing"},
-  Converge: {name: "Colors of mana spent (converge)", status: "missing"},
+  /* Train C, phase 2 (w2b-amounts; Vanguard of the Restless): "for each time you've cast your commander from the command zone
+     this game" -- every cast of each of your commanders from there (CR 903.8), as their tax is kept. Its one form, built. */
+  TotalCommanderCastFromCommandZone: {name: "Times you've cast your commanders from the command zone", status: "built", engine: "amount {commanderCasts: \"you\"} (rules/commander.mjs keeps the casts)"},
+  /* Train C, phase 2 (w2b-amounts; Sundering Archaic): the colors among the mana spent to cast its own object (CR 601.2h) --
+     a spell's, a permanent's trigger's (remembered as it triggers, CR 608.2h), and as it enters with counters. */
+  Converge: {name: "Colors of mana spent (converge)", status: "built", engine: "amount {colorsSpent: \"self\"} (rules/actions.mjs records the mana by kind)"},
   /* Rob's Priority Batch 10.3, its twenty-first slice: the mana spent to cast an object, by color (rules/actions.mjs). */
   Adamant: {name: "Mana of a color spent to cast it (adamant; \"if {G}{G} was spent to cast it\")", status: "built", engine: "condition {spent: {color: n}} (script/condition.mjs)"},
   /* Fblthp, the Lost (AI 1's deck): "if it entered from your library or was cast from your library". */
@@ -339,11 +382,16 @@ export const FORGE_COUNTS = Object.freeze({
   /* Train B (X11; Wayward Swordtooth): "unless you have the city's blessing" -- ascend's designation (CR 702.131;
      keywords/designations.mjs). */
   Blessing: {name: "The city's blessing (ascend)", status: "built", engine: "condition {citysBlessing} (script/condition.mjs)"},
-  Morbid: {name: "Morbid (a creature died this turn)", status: "missing"},
+  /* Train C (Dreaded Bat-Cloud, Essenceknit Scholar): a creature put into a graveyard from the battlefield (CR 700.4),
+     counted as it lands there for whoever controlled it as it last existed (state/index.mjs, recordDeath; every way it can
+     go there: effects/zones.mjs, rules/sba.mjs) -- "a creature died this turn" and "died under your control". Built. */
+  Morbid: {name: "Morbid (a creature died this turn)", status: "built", engine: "amount {creaturesDiedThisTurn: \"you\" | \"that player\" | \"any\"} (state/index.mjs recordDeath, rules/turn.mjs clears it)"},
   UrzaLands: {name: "The Urza lands", status: "missing"},
   Monarch: {name: "The monarch", status: "missing"},
   YourStartingLife: {name: "Your starting life total", status: "missing"},
   DamageAmount: {name: "Damage dealt", status: "built", engine: "{damageDealt: true}: the damage a damage trigger is about, all of an action's together"},
+  /* Train C, p4-replacements: the number a counter replacement changes ("that many plus one", "twice that many"). */
+  CounterNum: {name: "That many counters (the number of counters a replacement changes)", status: "built", engine: "more-counters' times, plus and half (rules/statics.mjs, placeCounters)"},
   AttackersDeclared: {name: "Attackers declared", status: "missing"},
   TimesKicked: {name: "Times kicked", status: "missing"},
   Kicked: {name: "Whether it was kicked", status: "missing"},

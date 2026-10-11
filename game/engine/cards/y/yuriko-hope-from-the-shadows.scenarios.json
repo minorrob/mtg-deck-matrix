@@ -1,0 +1,206 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Yuriko, Hope from the Shadows",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Flashed in on Maya's turn: her attacking Big Bear -3/-0 (three cards in Rob's graveyard, not Maya's two), and Rob takes 2",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Yuriko, Hope from the Shadows"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Rock",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Big Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Big Bear"
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "cast": "Yuriko, Hope from the Shadows",
+          "seat": 0
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Target creature gets -X/-0 until end of turn, where X is the number of cards in your graveyard. → Big Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "stats": {
+                "card": "Big Bear",
+                "power": 2,
+                "toughness": 5
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 38
+        }
+      ]
+    },
+    {
+      "name": "It enters: surveil 2 -- the Bear and the Forest both into the graveyard",
+      "library": [
+        "Bear",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Yuriko, Hope from the Shadows"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Yuriko, Hope from the Shadows"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Surveil 2."
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear",
+            "Forest"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 18
+        }
+      ]
+    }
+  ]
+}

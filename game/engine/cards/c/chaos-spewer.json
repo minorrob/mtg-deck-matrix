@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Chaos Spewer",
+    "oracleId": "77217a66-4ba8-443f-b915-178cfcc233e1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Warlock"
+    ],
+    "manaCost": "{2}{B/R}",
+    "colors": [
+      "B",
+      "R"
+    ],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "power": 5,
+    "toughness": 4
+  },
+  "oracleText": "When this creature enters, you may pay {2}. If you don't, blight 2. (To blight 2, put two -1/-1 counters on a creature you control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, you may pay {2}. If you don't, blight 2. (To blight 2, put two -1/-1 counters on a creature you control.)",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "you",
+          "amount": 2,
+          "effects": [
+            {
+              "effect": "chooseCard",
+              "zone": "battlefield",
+              "selector": {
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              },
+              "to": "stay",
+              "remember": true
+            },
+            {
+              "effect": "putCounter",
+              "targets": "remembered",
+              "counter": "-1/-1",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

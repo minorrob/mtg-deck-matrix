@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blazing Firesinger // Seething Song",
+    "oracleId": "1bf505a7-292e-4642-83b6-8ff41ebe5d51",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dwarf",
+      "Bard"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This creature enters prepared.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersPrepared": true
+      }
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Seething Song",
+      "types": [
+        "Instant"
+      ],
+      "subtypes": [],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Add {R}{R}{R}{R}{R}.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Add {R}{R}{R}{R}{R}.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "addMana",
+            "mana": {
+              "R": 5
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

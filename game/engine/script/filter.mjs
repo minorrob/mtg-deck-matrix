@@ -36,8 +36,9 @@ import {usesThisTurn, valueCostOf} from "../state/index.mjs";
 import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf, subtypesOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {hasSubtype, isCreatureType} from "../keywords/types.mjs";
-import {protectedFrom} from "../rules/protection.mjs";
+import {protectedFrom, hexproofFrom} from "../rules/protection.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
+import {NONE_CHOSEN} from "./chosen.mjs";
 
 /* The steps after blockers are declared, in which an attacker is blocked or unblocked (CR 509.1h). */
 const BLOCKERS_DECLARED = ["COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAGE", "COMBAT_DAMAGE", "COMBAT_END"];
@@ -60,7 +61,20 @@ export const SELECTOR_KEYS = Object.freeze([
   /* "Creatures your opponents control without flying or reach" (Sidar Kondo of Jamuraa), "a creature without flanking"
      (CR 702.25a): none of these keywords, through the layers. */
   "nonKeywords",
+  /* "As long as Ratonhnhaké꞉ton hasn't dealt damage yet", "as long as they haven't dealt combat damage yet" (Ruric Thar,
+     Magecrusher): whether this object has dealt damage, or combat damage, since it became one (CR 400.7). */
+  "hasDealtDamage", "hasDealtCombatDamage",
+  /* "Permanent cards in your graveyard that were put there from the battlefield this turn" (Brought Back). */
+  "fromBattlefieldThisTurn",
+  /* "Counter target spell with {X} in its mana cost" (Frontline Medic; CR 107.3, 202.1). */
+  "xInManaCost",
+  /* "A permanent of their choice that shares a card type with it" (Braids, Arisen Nightmare; CR 205.2a): with what an effect
+     before it moved, as it last existed. */
+  "sharesCardTypeWith",
 ]);
+
+/** The card types (CR 205.2a). */
+export const CARD_TYPES = Object.freeze(["Artifact", "Battle", "Creature", "Enchantment", "Instant", "Kindred", "Land", "Planeswalker", "Sorcery"]);
 
 /* THE SOURCE A LINK IS KEPT AGAINST (CR 607.2a; effects/zones.mjs, `link`): the ability's source -- or, gone from the
    battlefield since its ability was put on the stack, that object as it last was (CR 113.7a): "if there are cards exiled
@@ -75,7 +89,10 @@ export const exiledWithSource = (state, source) => (source === null || source ==
    as it left (rules/layers.mjs, lastKnown) still knows. These are the keys a departure's filter may use. */
 /* `self` (Rundvelt Hordemaster): "whenever this creature or another Goblin you control dies" -- the source itself, as it
    last was, whatever it then was (`anyOf: [{self: true}, {subtypes, controller}]`). */
-const LAST_KNOWN_KEYS = ["what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "controller", "token", "another", "attachedBy", "anyOf", "self"];
+/* `keywords` (Rampart Architect: "whenever a creature you control with defender dies") and `counters` (Shadow Urchin: "with
+   one or more counters on it", "any" or a kind): what it had as it last existed, through the layers (rules/layers.mjs). */
+const LAST_KNOWN_KEYS = ["what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "controller", "token", "another", "attachedBy", "anyOf", "self",
+  "keywords", "counters"];
 export function matchesLastKnown(selector, lki, context = {}) {
   if (!lki) return false;
   const s = selector ?? {};
@@ -97,6 +114,8 @@ export function matchesLastKnown(selector, lki, context = {}) {
   if (s.self === true && lki.cardId !== context.source) return false;
   /* "Equipped creature dies": the Equipment was attached to it as it died. */
   if (s.attachedBy === "self" && !(lki.attachments ?? []).includes(context.source)) return false;
+  if (s.keywords && !s.keywords.every((word) => (lki.keywords ?? []).includes(word))) return false;
+  if (s.counters !== undefined && !(s.counters === "any" ? Object.values(lki.counters ?? {}).some((n) => n > 0) : (lki.counters?.[s.counters] ?? 0) > 0)) return false;
   return true;
 }
 
@@ -112,7 +131,25 @@ export function matchesSelector(selector, state, id, context = {}) {
 }
 
 /** What a selector can be about. */
-const WHAT = ["permanent", "card", "player", "spell"];
+const WHAT = ["permanent", "card", "player", "spell", "ability"];
+
+/* AN ABILITY ON THE STACK (CR 113.7a, 115.2: "target spell or ability", Bolt Bend): no object, so it is named by its stack
+   entry, `id` the entry's stack id -- an activated or triggered ability's, never a spell's. What may be asked of it: who
+   controls it (`controller`), and "with a single target" (`singleTarget`, CR 115.9a: one object or player chosen in all).
+   Nothing gives an ability hexproof or protection, so being a target asks nothing more (`target`). */
+const ABILITY_KEYS = ["what", "controller", "singleTarget", "target"];
+const abilityMatcher = (selector) => {
+  const extra = Object.keys(selector).filter((key) => !ABILITY_KEYS.includes(key));
+  if (extra.length) throw new Error(`An ability on the stack is chosen by ${ABILITY_KEYS.join(", ")}, not ${extra.join(", ")}`);
+  return (state, id, context = {}) => {
+    const entry = state.stack.find((e) => e.stackId === id);
+    if (!entry || entry.kind === "spell") return false;
+    if (selector.controller === "you" && entry.playerId !== context.controller) return false;
+    if (selector.controller === "opponent" && entry.playerId === context.controller) return false;
+    if (selector.singleTarget === true && (entry.targets ?? []).flat().filter(Boolean).length !== 1) return false;
+    return true;
+  };
+};
 
 /* Where each `what` looks by default. A permanent is on the battlefield and nowhere else
    (CR 110.1) — a card in a hand is a card, not a permanent, and conflating them is how a "destroy
@@ -142,25 +179,45 @@ function assertGrammar(selector) {
   /* A mana value's most may be an amount counted (Betor): one of the amount grammar's (script/amount.mjs). */
   const most = selector.manaValue?.max;
   if (most !== null && typeof most === "object" && amountProblems(most).length) throw new Error(`A selector's manaValue.max: ${amountProblems(most).join("; ")}`);
+  /* Odd or even: named, or the quality its permanent chose ("$chosen"; none chosen yet, NONE_CHOSEN). */
+  if (selector.manaValue?.parity !== undefined && !["Odd", "Even", "$chosen", NONE_CHOSEN].includes(selector.manaValue.parity))
+    throw new Error("A selector's manaValue.parity is \"Odd\", \"Even\" or \"$chosen\", the quality its permanent chose");
   if (selector.unequalPowerToughness !== undefined && selector.unequalPowerToughness !== true) throw new Error("unequalPowerToughness is true");
   if (selector.exiledThisTurn !== undefined && selector.exiledThisTurn !== true) throw new Error("exiledThisTurn is true");
   if (selector.exiledWith !== undefined && selector.exiledWith !== "self") throw new Error("A selector's exiledWith is \"self\": a card this source's linked ability exiled");
   if (selector.dealtDamageThisTurn !== undefined && typeof selector.dealtDamageThisTurn !== "boolean") throw new Error("A selector's dealtDamageThisTurn is true or false");
+  for (const key of ["hasDealtDamage", "hasDealtCombatDamage"])
+    if (selector[key] !== undefined && typeof selector[key] !== "boolean") throw new Error(`A selector's ${key} is true or false`);
+  if (selector.fromBattlefieldThisTurn !== undefined && selector.fromBattlefieldThisTurn !== true) throw new Error("A selector's fromBattlefieldThisTurn is true: a graveyard card put there from the battlefield this turn");
+  if (selector.xInManaCost !== undefined && selector.xInManaCost !== true) throw new Error("A selector's xInManaCost is true: {X} among the symbols of its mana cost");
+  const shared = selector.sharesCardTypeWith;
+  if (shared !== undefined && shared !== "moved" && !(Array.isArray(shared) && shared.every((type) => CARD_TYPES.includes(type))))
+    throw new Error("A selector's sharesCardTypeWith is \"moved\": a card type of what the effect before it moved, as it last existed");
   for (const key of ["otherThan", "sharesCreatureTypeWith"])
     if (selector[key] !== undefined && selector[key] !== "that card") throw new Error(`A selector's ${key} is "that card": the object a trigger is about`);
   if (selector.equipped !== undefined && selector.equipped !== true) throw new Error("A selector's equipped is true: an Equipment is attached to it");
   /* "With power less than this creature's power" (mentor, CR 702.134a): `power.lessThan` "self". */
   if (selector.power?.lessThan !== undefined && selector.power.lessThan !== "self") throw new Error("A selector's power.lessThan is \"self\": less than its source's power");
+  /* "With lesser toughness" than what a trigger is about, as it last existed (Colfenor): `toughness.lessThan` "that card". */
+  if (selector.toughness?.lessThan !== undefined && selector.toughness.lessThan !== "that card") throw new Error("A selector's toughness.lessThan is \"that card\": less than the toughness of what the trigger is about, as it last existed");
 }
 
 /* AN OBJECT'S CREATURE TYPES (CR 205.3m): the subtypes of a creature or a kindred card, through the layers on the
    battlefield and as printed elsewhere; `every` for a changeling (CR 702.73a). A planeswalker's subtypes are not. */
-function creatureTypesOf(state, id) {
+export function creatureTypesOf(state, id) {
   const object = state.objects[id];
   const types = typesOf(state, id);
   if (!types.includes("Creature") && !types.includes("Kindred")) return {every: false, types: []};
   const subtypes = object.zone === "battlefield" ? subtypesOf(state, id) : object.subtypes ?? [];
   return {every: everyCreatureTypeOf(state, id) === true, types: subtypes.filter(isCreatureType)};
+}
+
+/** Whether objects have a creature type in common: one each of them has, a changeling having every one (CR 702.73a). */
+export function shareCreatureType(state, ids) {
+  const types = ids.map((id) => creatureTypesOf(state, id));
+  const named = [...new Set(types.flatMap((t) => t.types))];
+  if (types.every((t) => t.every)) return true;
+  return named.some((type) => types.every((t) => t.every || t.types.includes(type)));
 }
 
 /* A player with hexproof (CR 702.11c): a permanent of theirs with the static "you have hexproof" (rules/statics.mjs). */
@@ -175,6 +232,8 @@ function canBeTargetedBy(state, id, chooser, source = null) {
   if (keywords.includes("Hexproof") && controllerOf(state, id) !== chooser) return false;
   /* Protection (CR 702.16b; rules/protection.mjs): no target of a spell or ability from a source with the quality. */
   if (protectedFrom(state, {card: id}, source)) return false;
+  /* Hexproof from a color (CR 702.11d; rules/protection.mjs): no target of an opponent's spell or ability of that color. */
+  if (hexproofFrom(state, id, chooser, source)) return false;
   return true;
 }
 
@@ -188,6 +247,9 @@ function matchesManaValue(state, id, rule, context = {}) {
   if (rule.exactly !== undefined) return value === (rule.exactly === "X" ? context.x ?? 0 : rule.exactly);
   /* "With even mana values" (Void Winnower): zero is even. */
   if (rule.even !== undefined && (value % 2 === 0) !== rule.even) return false;
+  /* "A spell with mana value of the chosen quality" (Gollum, Riddle Master): "Odd" or "Even" as its permanent chose as it
+     entered (`parity: "$chosen"`, script/chosen.mjs) -- zero is even; before anything is chosen, none. */
+  if (rule.parity !== undefined && rule.parity !== (value % 2 === 0 ? "Even" : "Odd")) return false;
   if (rule.min !== undefined && value < rule.min) return false;
   /* "With mana value X or less" (Rally the Ancestors): the X paid, as `exactly` reads it. "Less than or equal to the amount
      of life you lost this turn" (Betor, Ancestor's Voice): an amount counted as the selector is asked (script/amount.mjs) --
@@ -214,6 +276,7 @@ export function compileSelector(selector) {
   }
   assertGrammar(selector);
   const what = selector.what ?? "permanent";
+  if (what === "ability") return abilityMatcher(selector);
 
   return function matches(state, id, context = {}) {
     const chooser = context.controller;
@@ -306,11 +369,13 @@ export function compileSelector(selector) {
       if (state.objects[context.source]?.attachedTo !== id) return false;
     }
 
-    /* CR 109.5 */
+    /* CR 109.5 -- "other": another than the source, or, an ability's source gone, another than what it was as it last
+       existed (`lastKnown`, which the stack keeps for it: CR 113.7a, 608.2h) -- Reckless Bushwhacker's "other creatures you
+       control", the Bushwhacker shocked in response: every creature its controller still controls. */
     if (selector.another === true) {
-      if (context.source === undefined || context.source === null)
-        throw new Error("A selector using `another` needs the source it is another than (CR 109.5)");
-      if (id === context.source) return false;
+      const self = context.source ?? context.lastKnown?.cardId ?? null;
+      if (self === null) throw new Error("A selector using `another` needs the source it is another than (CR 109.5)");
+      if (id === self) return false;
     }
 
     if (selector.manaValue && !matchesManaValue(state, id, selector.manaValue, context)) return false;
@@ -382,6 +447,22 @@ export function compileSelector(selector) {
        turn began -- still so once the damage is gone (regenerated, CR 701.19a), never so for damage before this object was
        (CR 400.7) or before this turn (effects/resources.mjs, damagePermanent). */
     if (selector.dealtDamageThisTurn !== undefined && (usesThisTurn(state, id, "dealt damage") > 0) !== selector.dealtDamageThisTurn) return false;
+    /* "Hasn't dealt damage yet" (Ratonhnhaké꞉ton), "haven't dealt combat damage yet" (Ruric Thar): any damage it dealt, or
+       combat damage (CR 510.2), as this object -- effects/resources.mjs and rules/combat.mjs mark it as it is dealt; a new
+       object has dealt none (CR 400.7). */
+    if (selector.hasDealtDamage !== undefined && (object.hasDealtDamage === true) !== selector.hasDealtDamage) return false;
+    if (selector.hasDealtCombatDamage !== undefined && (object.hasDealtCombatDamage === true) !== selector.hasDealtCombatDamage) return false;
+    /* "Put there from the battlefield this turn" (Brought Back): a graveyard card that arrived from the battlefield on this
+       turn -- the mark only a graveyard card has (state/index.mjs, moveObject). */
+    if (selector.fromBattlefieldThisTurn === true && !(object.fromBattlefield === true && object.arrivedTurn === state.turn)) return false;
+    /* "Target spell with {X} in its mana cost" (Frontline Medic): an {X} among the symbols of the mana cost it has now (CR
+       107.3, 202.1) -- a spell's on the stack, its X chosen or not; an Adventure cast as one, the Adventure's (CR 715.3b); a
+       copy, the one it copied (CR 707.2). No mana cost, no {X}. */
+    if (selector.xInManaCost === true && !parseManaCost(object.manaCost).symbols.some((symbol) => symbol.kind === "variable" && symbol.name === "X")) return false;
+    /* "That shares a card type with it" (Braids, Arisen Nightmare; CR 205.2a): one of the card types of what the effect before
+       it moved, as each last existed there (CR 608.2h) -- bound to that list as the effect reaches the head of its resolution
+       (script/bind.mjs) -- through the layers now. Unbound ("moved", no card type), it matches nothing. */
+    if (selector.sharesCardTypeWith !== undefined && !typesOf(state, id).some((type) => [].concat(selector.sharesCardTypeWith).includes(type))) return false;
     /* "Untap all creatures that attacked this turn" (Relentless Assault): declared as an attacker in a combat this turn. */
     if (selector.attackedThisTurn === true && usesThisTurn(state, id, "attacked") === 0) return false;
     /* "Four or more +1/+1 counters on it": a number of counters of a kind. */
@@ -414,6 +495,13 @@ export function compileSelector(selector) {
       const toughness = characteristicsOf(state, id).toughness ?? 0;
       if (selector.toughness.min !== undefined && toughness < selector.toughness.min) return false;
       if (selector.toughness.max !== undefined && toughness > selector.toughness.max) return false;
+      /* "Return up to one other target creature card with lesser toughness" (Colfenor, the Last Yew): less than the toughness
+         of the creature the trigger is about as it last existed on the battlefield (CR 608.2h; rules/trigger.mjs keeps it,
+         `about.lastKnown`). None known, and nothing is less. */
+      if (selector.toughness.lessThan === "that card") {
+        const theirs = context.about?.lastKnown?.toughness;
+        if (!(toughness < theirs)) return false;
+      }
     }
     if (selector.self === true && id !== context.source) return false;
     /* RELATIVE TO WHAT A TRIGGER IS ABOUT: "it gets +1/+0 until end of turn for each other attacking creature that shares a
@@ -453,6 +541,8 @@ export function selectMatching(state, selector, context = {}) {
   const match = compileSelector(selector);
   const what = selector.what ?? "permanent";
   if (what === "player") return state.players.map((p) => p.id).filter((id) => match(state, id, context));
+  /* Abilities on the stack, by their entries' stack ids, from the bottom of the stack up. */
+  if (what === "ability") return state.stack.map((e) => e.stackId).filter((id) => match(state, id, context));
 
   const zone = selector.zone ?? DEFAULT_ZONE[what];
   const candidates = zone === "battlefield" || zone === "stack" || zone === "exile"

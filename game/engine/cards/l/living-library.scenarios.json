@@ -1,0 +1,165 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Living Library",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Walker": {
+      "types": [
+        "Planeswalker"
+      ],
+      "subtypes": [
+        "Ajani"
+      ],
+      "manaCost": "{2}{W}",
+      "colors": [
+        "W"
+      ],
+      "loyalty": 4
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{6}, sacrificed: Maya's Big Bear shuffled into her library; Rob's Bear and Maya's Rock no choice",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Living Library",
+            "Bear",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Big Bear",
+            "Walker",
+            "Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Living Library"
+              },
+              "count": 2,
+              "targets": [
+                [
+                  "Big Bear"
+                ],
+                [
+                  "Walker"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Living Library",
+          "targets": [
+            {
+              "card": "Big Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "library",
+          "count": 21
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Walker",
+            "Rock"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Living Library"
+          ]
+        },
+        {
+          "event": "GameEventShuffle",
+          "where": {
+            "player": {
+              "playerId": 1,
+              "name": "Maya"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

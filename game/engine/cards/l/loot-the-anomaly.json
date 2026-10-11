@@ -1,0 +1,85 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Loot, the Anomaly",
+    "oracleId": "e0142e7d-7b0b-4290-a56c-5fa950fdccf8",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Beast",
+      "Horror"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": -2,
+    "toughness": 4
+  },
+  "oracleText": "If Loot's power is negative, he assigns combat damage as though his power were positive.\nThreshold — Sacrifice another creature or planeswalker: Loot gets -2/-0 until end of turn. Activate only if there are seven or more cards in your graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If Loot's power is negative, he assigns combat damage as though his power were positive.",
+      "rule": "negative-power-as-positive",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Threshold — Sacrifice another creature or planeswalker: Loot gets -2/-0 until end of turn. Activate only if there are seven or more cards in your graveyard.",
+      "cost": [
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Creature"
+                ],
+                "another": true
+              },
+              {
+                "types": [
+                  "Planeswalker"
+                ],
+                "another": true
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": -2,
+          "toughness": 0
+        }
+      ],
+      "targets": [],
+      "condition": {
+        "compare": {
+          "count": {
+            "count": {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you"
+            }
+          },
+          "atLeast": 7
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Screeching Soulbreaker",
+    "oracleId": "47e33aa1-2f54-471c-a484-de13bcd2dceb",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Siren",
+      "Bard"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nWhenever this creature attacks, it deals 1 damage to each opponent and you gain 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks, it deals 1 damage to each opponent and you gain 1 life.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "who": "opponent"
+        },
+        {
+          "effect": "gainLife",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

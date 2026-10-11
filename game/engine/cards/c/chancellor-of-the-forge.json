@@ -1,0 +1,107 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Chancellor of the Forge",
+    "oracleId": "0aedf049-db6b-420e-80e7-591ed38d4fba",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Giant"
+    ],
+    "manaCost": "{4}{R}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "You may reveal this card from your opening hand. If you do, at the beginning of the first upkeep, create a 1/1 red Phyrexian Goblin creature token with haste.\nWhen this creature enters, create X 1/1 red Phyrexian Goblin creature tokens with haste, where X is the number of creatures you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may reveal this card from your opening hand. If you do, at the beginning of the first upkeep, create a 1/1 red Phyrexian Goblin creature token with haste.",
+      "rule": "opening-hand",
+      "affects": {
+        "what": "card",
+        "self": true
+      },
+      "effects": [
+        {
+          "effect": "delayedTrigger",
+          "at": "upkeep",
+          "text": "At the beginning of the first upkeep, create a 1/1 red Phyrexian Goblin creature token with haste.",
+          "effects": [
+            {
+              "effect": "createToken",
+              "count": 1,
+              "token": {
+                "name": "Phyrexian Goblin",
+                "types": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Phyrexian",
+                  "Goblin"
+                ],
+                "colors": [
+                  "R"
+                ],
+                "power": 1,
+                "toughness": 1,
+                "keywords": [
+                  "Haste"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, create X 1/1 red Phyrexian Goblin creature tokens with haste, where X is the number of creatures you control.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": {
+            "count": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you"
+            }
+          },
+          "token": {
+            "name": "Phyrexian Goblin",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Phyrexian",
+              "Goblin"
+            ],
+            "colors": [
+              "R"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Haste"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

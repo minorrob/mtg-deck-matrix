@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bilbo Baggins, Burglar // Take a Glance",
+    "oracleId": "fa85f9e6-69ff-4669-b70a-440aa7b16c97",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Halfling",
+      "Rogue"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "When Bilbo Baggins enters, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Bilbo Baggins enters, draw a card.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "adventure": {
+    "identity": {
+      "name": "Take a Glance",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [
+        "Adventure"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Scry 2. (Then exile this card. You may cast the creature later from exile.)",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Scry 2.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "scry",
+            "count": 2
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Priest of Fell Rites",
+    "oracleId": "ec6ccd8f-cc75-4a50-8639-f4ec31a280aa",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warlock"
+    ],
+    "manaCost": "{W}{B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "{T}, Pay 3 life, Sacrifice this creature: Return target creature card from your graveyard to the battlefield. Activate only as a sorcery.\nUnearth {3}{W}{B} ({3}{W}{B}: Return this card from your graveyard to the battlefield. It gains haste. Exile it at the beginning of the next end step or if it would leave the battlefield. Unearth only as a sorcery.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}, Pay 3 life, Sacrifice this creature: Return target creature card from your graveyard to the battlefield. Activate only as a sorcery.",
+      "timing": "sorcery",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "payLife",
+          "amount": 3
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "battlefield"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Unearth {3}{W}{B}",
+      "keyword": "unearth",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{W}{B}"
+        }
+      ]
+    }
+  ]
+}

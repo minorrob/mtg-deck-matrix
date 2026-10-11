@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Marwyn, the Preserver",
+    "oracleId": "eb03f6c1-c94f-4f09-b2e9-a55ce5533653",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Druid"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "Lands you control have hexproof. (They can't be the targets of spells or abilities your opponents control.)\n{2}: Return target land card from your graveyard to your hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Lands you control have hexproof.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Land"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Hexproof"
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{2}: Return target land card from your graveyard to your hand.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "types": [
+            "Land"
+          ],
+          "owner": "you"
+        }
+      ]
+    }
+  ]
+}

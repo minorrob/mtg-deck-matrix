@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ambitious Augmenter",
+    "oracleId": "d87f0e52-486e-49b4-9cf1-12e238857340",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Turtle",
+      "Wizard"
+    ],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)\nWhen this creature dies, if it had one or more counters on it, create a 0/0 green and blue Fractal creature token, then put this creature's counters on that token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)",
+      "keyword": "increment"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature dies, if it had one or more counters on it, create a 0/0 green and blue Fractal creature token, then put this creature's counters on that token.",
+      "trigger": {
+        "on": "dies",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Fractal",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Fractal"
+            ],
+            "colors": [
+              "G",
+              "U"
+            ],
+            "power": 0,
+            "toughness": 0
+          },
+          "remember": true
+        },
+        {
+          "effect": "putCounter",
+          "targets": "remembered",
+          "countersOf": "self"
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "countersOn": "self",
+            "counter": "any"
+          },
+          "atLeast": 1
+        }
+      }
+    }
+  ]
+}

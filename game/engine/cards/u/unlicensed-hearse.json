@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Unlicensed Hearse",
+    "oracleId": "c640654c-487e-4a2c-aced-126ed835b78f",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Vehicle"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Exile up to two target cards from a single graveyard.\nUnlicensed Hearse's power and toughness are each equal to the number of cards exiled with it.\nCrew 2",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Exile up to two target cards from a single graveyard.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "count": {
+            "min": 0,
+            "max": 2
+          },
+          "share": "graveyard"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "link": true
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Unlicensed Hearse's power and toughness are each equal to the number of cards exiled with it.",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "count": {
+            "what": "card",
+            "zone": "exile",
+            "exiledWith": "self"
+          }
+        },
+        "setToughness": {
+          "count": {
+            "what": "card",
+            "zone": "exile",
+            "exiledWith": "self"
+          }
+        }
+      }
+    },
+    {
+      "kind": "keyword",
+      "text": "Crew 2",
+      "keyword": "crew",
+      "amount": 2
+    }
+  ]
+}

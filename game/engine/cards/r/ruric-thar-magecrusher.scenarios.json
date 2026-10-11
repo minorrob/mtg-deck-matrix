@@ -1,0 +1,290 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ruric Thar, Magecrusher",
+  "fixtures": {
+    "Kill": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s0",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Cancel": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s0",
+        "text": "Counter target spell.",
+        "targets": [
+          {
+            "what": "spell"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "counterSpell",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Hexproof until it has dealt combat damage: Maya's Kill has no target -- then Ruric Thar hits her for 7, and it does",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ruric Thar, Magecrusher"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Kill"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Kill",
+                "seat": 1
+              },
+              "count": 0
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Ruric Thar, Magecrusher",
+                "has": [
+                  "Hexproof"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Ruric Thar, Magecrusher"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 33
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Ruric Thar, Magecrusher",
+                "lacks": [
+                  "Hexproof"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 1
+        },
+        {
+          "cast": "Kill",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Ruric Thar, Magecrusher"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Ruric Thar, Magecrusher"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "This spell can't be countered: Maya's Cancel does nothing, and it resolves",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ruric Thar, Magecrusher"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Cancel"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Ruric Thar, Magecrusher"
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "cast": "Cancel",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Ruric Thar, Magecrusher"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Ruric Thar, Magecrusher",
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Cancel"
+          ]
+        }
+      ]
+    }
+  ]
+}

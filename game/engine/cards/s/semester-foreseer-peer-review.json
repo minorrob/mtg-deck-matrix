@@ -1,0 +1,100 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Semester Foreseer // Peer Review",
+    "oracleId": "21b8d59f-a90d-44ff-a2e3-9f439ac3e14a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\nWhen this creature enters, surveil 1.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This creature enters prepared.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersPrepared": true
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, surveil 1.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "surveil",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Peer Review",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{2}{W/U}",
+      "colors": [
+        "W",
+        "U"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Create a 2/2 colorless Wizard Soldier creature token named Cadet. Surveil 1.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Create a 2/2 colorless Wizard Soldier creature token named Cadet. Surveil 1.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 1,
+            "token": {
+              "name": "Cadet",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Wizard",
+                "Soldier"
+              ],
+              "colors": [],
+              "power": 2,
+              "toughness": 2
+            }
+          },
+          {
+            "effect": "surveil",
+            "count": 1
+          }
+        ]
+      }
+    ]
+  }
+}

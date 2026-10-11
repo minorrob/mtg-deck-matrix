@@ -1,0 +1,344 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Hexhaven Dueling Arena",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It taps for {C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hexhaven Dueling Arena"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Hexhaven Dueling Arena"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "{4}, {T}: the Glasswright becomes prepared -- Craft with Pride waits in exile, and Rob casts it for a Treasure",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hexhaven Dueling Arena",
+            "Goblin Glasswright // Craft with Pride",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": []
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Hexhaven Dueling Arena",
+          "ability": "a2",
+          "targets": [
+            {
+              "card": "Goblin Glasswright"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Craft with Pride"
+              ]
+            },
+            {
+              "event": "GameEventCardAttribute",
+              "where": {
+                "attribute": "prepared",
+                "value": true
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Craft with Pride"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Hexhaven Dueling Arena",
+            "Goblin Glasswright",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Mountain",
+            "Treasure"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "{2}, {T}: only a creature that attacked this turn -- the Glasswright after it attacks, never the Bear that stayed home",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hexhaven Dueling Arena",
+            "Goblin Glasswright // Craft with Pride",
+            "Bear",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Hexhaven Dueling Arena"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Goblin Glasswright"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Hexhaven Dueling Arena"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Goblin Glasswright"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Hexhaven Dueling Arena",
+          "ability": "a1",
+          "targets": [
+            {
+              "card": "Goblin Glasswright"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Craft with Pride"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 38
+        }
+      ]
+    },
+    {
+      "name": "{2}, {T} only as a sorcery: not in the combat the Glasswright attacked in",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hexhaven Dueling Arena",
+            "Goblin Glasswright // Craft with Pride",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Goblin Glasswright"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_END"
+          }
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Hexhaven Dueling Arena"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "{2}, {T} only as a sorcery: on Maya's turn only the {4} ability is offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hexhaven Dueling Arena",
+            "Goblin Glasswright // Craft with Pride",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Hexhaven Dueling Arena",
+            "seat": 0
+          },
+          "count": 1,
+          "targets": [
+            [
+              "Goblin Glasswright"
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

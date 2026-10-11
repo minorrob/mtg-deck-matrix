@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Eldrazi Ravager",
+    "oracleId": "25a73cfc-a40d-47ea-a7b1-61c7b62a9e6c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Eldrazi"
+    ],
+    "manaCost": "{5}{C}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Annihilator 1 (Whenever this creature attacks, defending player sacrifices a permanent of their choice.)\nSacrifice two Eldrazi: Return this card from your graveyard to your hand.\nCycling {2} ({2}, Discard this card: Draw a card.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Annihilator 1",
+      "keyword": "annihilator",
+      "amount": 1
+    },
+    {
+      "kind": "activated",
+      "text": "Sacrifice two Eldrazi: Return this card from your graveyard to your hand.",
+      "zone": "graveyard",
+      "cost": [
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "subtypes": [
+              "Eldrazi"
+            ]
+          },
+          "count": 2
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "hand"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Cycling {2}",
+      "zone": "hand",
+      "cycling": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

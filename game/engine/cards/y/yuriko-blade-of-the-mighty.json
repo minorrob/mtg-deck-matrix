@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Yuriko, Blade of the Mighty",
+    "oracleId": "f89b0143-4b19-4ab1-a96b-356b21e435ef",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Samurai"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "During combat, players can't cast spells or activate abilities that aren't mana abilities.\nWhenever a creature you control attacks a player alone, it gains double strike until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "During combat, players can't cast spells or activate abilities that aren't mana abilities.",
+      "rule": "cant-cast",
+      "affects": {
+        "what": "player"
+      },
+      "duringCombat": true
+    },
+    {
+      "kind": "static",
+      "text": "During combat, players can't cast spells or activate abilities that aren't mana abilities.",
+      "rule": "cant-activate",
+      "affects": {
+        "what": "player"
+      },
+      "duringCombat": true
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature you control attacks a player alone, it gains double strike until end of turn.",
+      "trigger": {
+        "on": "attacks",
+        "who": "any",
+        "alone": true,
+        "defender": "player",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "that card",
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Double Strike"
+          ]
+        }
+      ]
+    }
+  ]
+}

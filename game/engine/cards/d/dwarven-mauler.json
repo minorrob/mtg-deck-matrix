@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dwarven Mauler",
+    "oracleId": "70538676-2ffb-4cad-827e-b55e81088678",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dwarf",
+      "Warrior"
+    ],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Equip abilities you activate that target this creature cost {2} less to activate.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Equip abilities you activate that target this creature cost {2} less to activate.",
+      "rule": "equip-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": 2
+    }
+  ]
+}

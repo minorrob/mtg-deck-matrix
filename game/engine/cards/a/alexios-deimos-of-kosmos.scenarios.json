@@ -1,0 +1,338 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Alexios, Deimos of Kosmos",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Edict": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Each player sacrifices a creature.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "sacrifice",
+            "who": "each",
+            "count": 1,
+            "selector": {
+              "types": [
+                "Creature"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "Altar": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [],
+      "manaCost": "{2}",
+      "colors": [],
+      "abilities": [
+        {
+          "id": "alt",
+          "kind": "activated",
+          "text": "Sacrifice a creature: You gain 1 life.",
+          "cost": [
+            {
+              "atom": "sacrifice",
+              "selector": {
+                "types": [
+                  "Creature"
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "effect": "gainLife",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob's upkeep gives it a counter and it must attack Maya, 5 damage; at her upkeep she gains control, untaps it, puts a second counter on it, and it gains haste -- but it can't attack Rob, its owner",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Alexios, Deimos of Kosmos"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 35
+            },
+            {
+              "seat": 0,
+              "tapped": "Alexios, Deimos of Kosmos",
+              "is": true
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "controls": [
+                "Alexios, Deimos of Kosmos"
+              ],
+              "seat": 1
+            },
+            {
+              "seat": 0,
+              "tapped": "Alexios, Deimos of Kosmos",
+              "is": false
+            },
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Alexios, Deimos of Kosmos",
+                "counter": "+1/+1",
+                "count": 2
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Alexios, Deimos of Kosmos",
+                "has": [
+                  "Haste",
+                  "Trample"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "controls": [
+            "Alexios, Deimos of Kosmos"
+          ],
+          "seat": 1
+        }
+      ]
+    },
+    {
+      "name": "Three players: at Maya's upkeep it is hers, and it must attack -- Trey, never Rob, its owner; at Trey's upkeep, Trey's",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Alexios, Deimos of Kosmos"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 2,
+              "life": 35
+            },
+            {
+              "seat": 0,
+              "life": 40
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "controls": [
+            "Alexios, Deimos of Kosmos"
+          ],
+          "seat": 2
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Alexios, Deimos of Kosmos",
+            "counter": "+1/+1",
+            "count": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Can't be sacrificed: each player sacrifices a creature, and Rob's is the Bear; a sacrifice cost is offered the Bear alone",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Alexios, Deimos of Kosmos",
+            "Bear",
+            "Bear",
+            "Altar",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Edict"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Altar"
+              },
+              "count": 2,
+              "costs": [
+                [
+                  "Bear"
+                ],
+                [
+                  "Bear"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Edict"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Bear",
+                  "Bear"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Alexios, Deimos of Kosmos",
+            "Bear",
+            "Altar",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": []
+        }
+      ]
+    }
+  ]
+}

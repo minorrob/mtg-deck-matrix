@@ -35,6 +35,84 @@
           }
         ]
       }
+    },
+    "Bear Seer": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "c",
+          "kind": "activated",
+          "zone": "hand",
+          "cycling": true,
+          "text": "Cycling {1}",
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{1}"
+            },
+            {
+              "atom": "discard",
+              "self": true
+            }
+          ],
+          "targets": [],
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    "Rock Seer": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [],
+      "manaCost": "{1}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "c",
+          "kind": "activated",
+          "zone": "hand",
+          "cycling": true,
+          "text": "Cycling {1}",
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{1}"
+            },
+            {
+              "atom": "discard",
+              "self": true
+            }
+          ],
+          "targets": [],
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
     }
   },
   "scenarios": [
@@ -106,6 +184,75 @@
           "seat": 0,
           "tapped": "Gwenna, Eyes of Gaea",
           "is": false
+        }
+      ]
+    },
+    {
+      "name": "Its mana pays a creature card's cycling in his hand -- a creature source -- and not an artifact card's",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gwenna, Eyes of Gaea"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear Seer",
+            "Rock Seer"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Gwenna, Eyes of Gaea",
+          "mana": {
+            "G": 2
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Bear Seer"
+              },
+              "count": 1
+            },
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Rock Seer"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "activate": "Bear Seer"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear Seer"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rock Seer",
+            "Wastes"
+          ]
         }
       ]
     }

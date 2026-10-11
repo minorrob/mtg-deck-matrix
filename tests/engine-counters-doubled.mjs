@@ -6,8 +6,8 @@
  * `multiplyCounters` (script/effects/resources.mjs; a primitive the catalog declared and nothing built): on each target, as
  * many more of each kind as it has, put on as counters are; `who`, a player's own (poison).
  * `more-counters` (rules/statics.mjs, countersPlaced; CR 614.1a, 122.6): "twice that many ... instead", for the permanents
- * and the kind it says -- read wherever counters are put on a permanent, as it enters too. Only multiplying is built, so two
- * of them in either order are four times, and nobody is asked.
+ * and the kind it says -- read wherever counters are put on a permanent, as it enters too. Two
+ * of them in either order are four times, and nobody is asked (plus one and half: tests/engine-counters-replaced.mjs).
  * `scried` (cards/index.mjs; rules/trigger.mjs): the event a scry or a surveil makes once it is done (effects/asking.mjs),
  * by its player; a library with nothing to look at is no scry.
  */

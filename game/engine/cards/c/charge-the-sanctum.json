@@ -1,0 +1,89 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Charge the Sanctum",
+    "oracleId": "9d835137-584c-46bd-952e-4b2812bba1a3",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R/W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Creatures you control get +2/+0 until end of turn.\n• Target creature gets +2/+0 and gains first strike until end of turn. Put a +1/+1 counter on it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Creatures you control get +2/+0 until end of turn.\n• Target creature gets +2/+0 and gains first strike until end of turn. Put a +1/+1 counter on it.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Creatures you control get +2/+0 until end of turn.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "pumpAll",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ],
+                    "controller": "you"
+                  },
+                  "power": 2,
+                  "toughness": 0,
+                  "until": "end-of-turn"
+                }
+              ]
+            },
+            {
+              "text": "Target creature gets +2/+0 and gains first strike until end of turn. Put a +1/+1 counter on it.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "pump",
+                  "targets": {
+                    "target": 0
+                  },
+                  "power": 2,
+                  "toughness": 0,
+                  "keywords": [
+                    "First Strike"
+                  ]
+                },
+                {
+                  "effect": "putCounter",
+                  "targets": {
+                    "target": 0
+                  },
+                  "counter": "+1/+1",
+                  "count": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

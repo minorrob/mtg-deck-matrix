@@ -1,0 +1,181 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Wall of Reverence",
+  "fixtures": {
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Glass Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "At Rob's end step: he gains life equal to his Glass Bear's power, 3 -- Maya's Bear no choice",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wall of Reverence",
+            "Glass Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Wall of Reverence",
+                  "Glass Bear"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Glass Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 43
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Wall of Reverence",
+            "has": [
+              "Defender",
+              "Flying"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "He may decline; and at Maya's end step nothing triggers",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wall of Reverence",
+            "Big Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "choose": [
+            "Big Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "No"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 40
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

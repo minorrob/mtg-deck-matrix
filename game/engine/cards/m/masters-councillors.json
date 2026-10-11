@@ -1,0 +1,72 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Master's Councillors",
+    "oracleId": "b9079564-5c86-4765-988a-f2334e016fa6",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Advisor"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Vigilance\nThis creature gets +2/+0 for each graveyard with seven or more cards in it.\nWhenever you draw your second card each turn, target player mills three cards. (They put the top three cards of their library into their graveyard.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "static",
+      "text": "This creature gets +2/+0 for each graveyard with seven or more cards in it.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "power": {
+          "graveyardsWithAtLeast": 7,
+          "times": 2
+        },
+        "toughness": 0
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you draw your second card each turn, target player mills three cards.",
+      "trigger": {
+        "on": "drawn",
+        "drawer": "you",
+        "nthThisTurn": 2
+      },
+      "effects": [
+        {
+          "effect": "mill",
+          "who": {
+            "target": 0
+          },
+          "count": 3
+        }
+      ],
+      "targets": [
+        {
+          "what": "player"
+        }
+      ]
+    }
+  ]
+}

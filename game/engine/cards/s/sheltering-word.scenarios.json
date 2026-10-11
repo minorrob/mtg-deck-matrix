@@ -1,0 +1,188 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sheltering Word",
+  "fixtures": {
+    "Wall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 3
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Its creature gains hexproof, and he gains life equal to its toughness, 3",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sheltering Word"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wall"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Sheltering Word"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Wall"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Sheltering Word",
+          "targets": [
+            {
+              "card": "Wall"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Wall",
+            "has": [
+              "Hexproof"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "life": 43
+        }
+      ]
+    },
+    {
+      "name": "An Ogre's toughness: 3 life, and the hexproof wears off at end of turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sheltering Word"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Sheltering Word",
+          "targets": [
+            {
+              "card": "Ogre"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 43
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Ogre",
+                "has": [
+                  "Hexproof"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Ogre",
+            "lacks": [
+              "Hexproof"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

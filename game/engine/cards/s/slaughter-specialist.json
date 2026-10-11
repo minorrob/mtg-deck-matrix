@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Slaughter Specialist",
+    "oracleId": "ab431f93-73bb-49d9-9321-a0712f096ed7",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire",
+      "Warrior"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "When this creature enters, each opponent creates a 1/1 white Human creature token.\nWhenever a creature an opponent controls dies, put a +1/+1 counter on this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, each opponent creates a 1/1 white Human creature token.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "repeatFor",
+          "each": "opponent",
+          "effects": [
+            {
+              "effect": "createToken",
+              "count": 1,
+              "token": {
+                "name": "Human",
+                "types": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Human"
+                ],
+                "colors": [
+                  "W"
+                ],
+                "power": 1,
+                "toughness": 1
+              },
+              "controller": "that player"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature an opponent controls dies, put a +1/+1 counter on this creature.",
+      "trigger": {
+        "on": "dies",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "opponent"
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

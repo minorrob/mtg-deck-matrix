@@ -1,0 +1,121 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Stalwart Shield-Bearers",
+  "fixtures": {
+    "Wall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 4,
+      "keywords": [
+        "Defender"
+      ]
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Their Wall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 4,
+      "keywords": [
+        "Defender"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "His other defender gets +0/+2; his Bear, itself and Maya's Wall do not; it cannot attack",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Stalwart Shield-Bearers",
+            "Wall",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Wall"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Wall",
+            "power": 0,
+            "toughness": 6
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Stalwart Shield-Bearers",
+            "power": 0,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Their Wall",
+            "power": 0,
+            "toughness": 4
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Stalwart Shield-Bearers",
+            "has": [
+              "Defender"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

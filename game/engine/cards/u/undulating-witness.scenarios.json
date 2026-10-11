@@ -1,0 +1,204 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Undulating Witness",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Grove": {
+      "types": [
+        "Land"
+      ],
+      "manaCost": null,
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{2} twice: a 5/3 until end of turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Undulating Witness",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Undulating Witness"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Undulating Witness"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Undulating Witness",
+                "power": 5,
+                "toughness": 3
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Undulating Witness",
+                "has": [
+                  "Flying"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Undulating Witness",
+            "power": 3,
+            "toughness": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "Basic landcycling {2}: discarded, and the Island found -- the Bear, the Rock and the nonbasic Grove no choice",
+      "library": [
+        "Bear",
+        "Island",
+        "Rock",
+        "Grove"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Undulating Witness"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Undulating Witness"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Island",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Island"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Undulating Witness"
+          ]
+        }
+      ]
+    }
+  ]
+}

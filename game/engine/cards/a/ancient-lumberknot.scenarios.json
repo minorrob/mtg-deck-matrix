@@ -1,0 +1,129 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ancient Lumberknot",
+  "fixtures": {
+    "Wall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 4
+    },
+    "Raider": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 1
+    },
+    "Their Wall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 4
+    }
+  },
+  "scenarios": [
+    {
+      "name": "The 0/4 Wall and the 1/4 Lumberknot deal 4 each; the 3/1 Raider deals its power, 3",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ancient Lumberknot",
+            "Wall",
+            "Raider"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Ancient Lumberknot",
+            "Wall",
+            "Raider"
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 29
+        }
+      ]
+    },
+    {
+      "name": "An opponent's 0/4 is not his: it deals no damage attacking",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ancient Lumberknot"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Wall"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Their Wall"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

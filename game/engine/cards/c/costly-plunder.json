@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Costly Plunder",
+    "oracleId": "8cdfd9df-4783-4138-a286-828a97f516aa",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As an additional cost to cast this spell, sacrifice an artifact or creature.\nDraw two cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "As an additional cost to cast this spell, sacrifice an artifact or creature.\nDraw two cards.",
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2
+        }
+      ],
+      "additionalCost": [
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Artifact"
+                ]
+              },
+              {
+                "types": [
+                  "Creature"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Biblioplex Tomekeeper",
+    "oracleId": "08a0e845-9ef9-4de1-b9fe-4530357346ca",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Construct"
+    ],
+    "manaCost": "{4}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "When this creature enters, choose up to one —\n• Target creature becomes prepared. (Only creatures with prepare spells can become prepared.)\n• Target creature becomes unprepared.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, choose up to one —\n• Target creature becomes prepared. (Only creatures with prepare spells can become prepared.)\n• Target creature becomes unprepared.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "mayChooseNone": true,
+          "modes": [
+            {
+              "text": "Target creature becomes prepared.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "alterAttribute",
+                  "targets": {
+                    "target": 0
+                  },
+                  "attribute": "prepared"
+                }
+              ]
+            },
+            {
+              "text": "Target creature becomes unprepared.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "alterAttribute",
+                  "targets": {
+                    "target": 0
+                  },
+                  "attribute": "prepared",
+                  "value": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

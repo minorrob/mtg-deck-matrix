@@ -1,0 +1,277 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Eye of Jace",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Six in his graveyard; he surveils a Bear into it: seven -- sacrificed, 2 damage to each opponent, 2 life",
+      "seats": 3,
+      "library": [
+        "Bear",
+        "Bear",
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Eye of Jace"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 4,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "count": 8
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": []
+        },
+        {
+          "seat": 1,
+          "life": 38
+        },
+        {
+          "seat": 2,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "life": 42
+        }
+      ]
+    },
+    {
+      "name": "Six in his graveyard and the Bear kept on top: six, nothing more",
+      "library": [
+        "Bear",
+        "Bear",
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Eye of Jace"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": []
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "count": 6
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Eye of Jace"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Five in his graveyard, and one surveiled: six -- it stays",
+      "library": [
+        "Bear",
+        "Bear",
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Eye of Jace"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "count": 6
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Eye of Jace"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Not on Maya's upkeep",
+      "library": [
+        "Bear",
+        "Bear",
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Eye of Jace"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "UPKEEP"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "count": 6
+        }
+      ]
+    }
+  ]
+}

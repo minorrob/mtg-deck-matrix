@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dreaded Bat-Cloud",
+    "oracleId": "3cc64ce6-45e2-4dc3-9b28-d7206a131873",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bat"
+    ],
+    "manaCost": "{4}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 4,
+    "toughness": 2
+  },
+  "oracleText": "This spell costs {3} less to cast if a creature died this turn.\nFlying, deathtouch",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell costs {3} less to cast if a creature died this turn.",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": {
+        "creaturesDiedThisTurn": "any",
+        "atMost": 1,
+        "times": 3
+      }
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "deathtouch",
+      "keyword": "deathtouch"
+    }
+  ]
+}

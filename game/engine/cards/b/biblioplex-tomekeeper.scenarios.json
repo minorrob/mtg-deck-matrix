@@ -1,0 +1,245 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Biblioplex Tomekeeper",
+  "scenarios": [
+    {
+      "name": "It enters: Lorehold Archivist becomes prepared, its Restore Relic made in exile",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Lorehold Archivist // Restore Relic",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Biblioplex Tomekeeper"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Biblioplex Tomekeeper"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Target creature becomes prepared. → Lorehold Archivist"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Restore Relic"
+          ]
+        },
+        {
+          "event": "GameEventCardAttribute",
+          "where": {
+            "attribute": "prepared",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "A second one enters: the Archivist becomes unprepared, and the Restore Relic is gone",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Lorehold Archivist // Restore Relic",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Biblioplex Tomekeeper",
+            "Biblioplex Tomekeeper"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Biblioplex Tomekeeper"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Target creature becomes prepared. → Lorehold Archivist"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Restore Relic"
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Biblioplex Tomekeeper"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Target creature becomes unprepared. → Lorehold Archivist"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        },
+        {
+          "event": "GameEventCardAttribute",
+          "where": {
+            "attribute": "prepared",
+            "value": false
+          }
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Restore Relic"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Up to one: none chosen, and nothing happens",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Lorehold Archivist // Restore Relic",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Biblioplex Tomekeeper"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Biblioplex Tomekeeper"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Choose none"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,135 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Carrion Feeder",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Goblin Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "The Bear sacrificed, then the Goblin: two +1/+1 counters, a 3/3 -- and Maya's Bear is no choice",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Carrion Feeder",
+            "Bear",
+            "Goblin Pal"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Big Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Carrion Feeder"
+              },
+              "count": 3,
+              "costs": [
+                [
+                  "Carrion Feeder"
+                ],
+                [
+                  "Bear"
+                ],
+                [
+                  "Goblin Pal"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Carrion Feeder",
+          "sacrifice": "Bear"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Carrion Feeder",
+          "sacrifice": "Goblin Pal"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Carrion Feeder",
+            "counter": "+1/+1",
+            "count": 2
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Carrion Feeder",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Goblin Pal"
+          ]
+        }
+      ]
+    }
+  ]
+}

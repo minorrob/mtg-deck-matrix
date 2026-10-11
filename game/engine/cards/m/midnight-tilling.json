@@ -1,0 +1,78 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Midnight Tilling",
+    "oracleId": "79bc2c6d-b03d-4ceb-b468-293378ec73ae",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Mill four cards, then you may return a permanent card from among them to your hand. (To mill four cards, put the top four cards of your library into your graveyard.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Mill four cards, then you may return a permanent card from among them to your hand. (To mill four cards, put the top four cards of your library into your graveyard.)",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "mill",
+          "count": 4,
+          "remember": true
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "graveyard",
+          "among": "remembered",
+          "upTo": true,
+          "count": 1,
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Artifact"
+                ]
+              },
+              {
+                "types": [
+                  "Battle"
+                ]
+              },
+              {
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "types": [
+                  "Enchantment"
+                ]
+              },
+              {
+                "types": [
+                  "Land"
+                ]
+              },
+              {
+                "types": [
+                  "Planeswalker"
+                ]
+              }
+            ]
+          },
+          "to": "hand"
+        }
+      ]
+    }
+  ]
+}

@@ -83,7 +83,7 @@ const guide = id(KG);
     "no quality, a color that is none, a quality not built: refused");
   eq(compileScript(script("everything")).definition.abilities[0].from, "everything", "protection from everything");
   eq(["Protection from black", "Protection from artifacts", "Protection from everything", "Protection from multicolored", "Protection from Humans", "Protection from the color of your choice"].map(keywordBuilt),
-    [true, true, true, false, false, false], "credited for a color, a card type, everything; not for the rest");
+    [true, true, true, true, false, false], "credited for a color, a card type, everything, multicolored (Train C phase 2); not for the rest");
 }
 
 console.log(`engine-protection-color: ${checks} checks passed -- protection from a color as the source now is: no damage, no block, no target, no Aura; the keyword's quality said or refused.`);

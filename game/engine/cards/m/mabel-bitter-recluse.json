@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mabel, Bitter Recluse",
+    "oracleId": "36924990-8e3a-434e-bcd1-f03603cb350d",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Mouse",
+      "Warlock"
+    ],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Deathtouch\nWhen Mabel enters, remove up to three counters from another target creature or planeswalker.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Deathtouch",
+      "keyword": "deathtouch"
+    },
+    {
+      "kind": "triggered",
+      "text": "When Mabel enters, remove up to three counters from another target creature or planeswalker.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "removeCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "any",
+          "count": 3,
+          "upTo": true
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "another": true
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ],
+              "another": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

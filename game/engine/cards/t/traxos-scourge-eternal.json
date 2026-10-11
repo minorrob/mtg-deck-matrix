@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Traxos, Scourge Eternal",
+    "oracleId": "acf4abde-4034-4fcf-b531-78c935aecd8c",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon",
+      "Construct"
+    ],
+    "manaCost": "{4}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 5,
+    "toughness": 4
+  },
+  "oracleText": "Trample\nTraxos doesn't untap during your untap step.\nWhenever you cast an artifact or creature spell, untap Traxos.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "static",
+      "text": "Traxos doesn't untap during your untap step.",
+      "rule": "doesnt-untap",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast an artifact or creature spell, untap Traxos.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "anyOf": [
+            {
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "types": [
+                "Creature"
+              ]
+            }
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "untap",
+          "targets": "self"
+        }
+      ]
+    }
+  ]
+}

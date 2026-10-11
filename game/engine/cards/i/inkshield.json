@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Inkshield",
+    "oracleId": "da93264e-4e04-401a-9809-e4e1056cf604",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{W}{B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Prevent all combat damage that would be dealt to you this turn. For each 1 damage prevented this way, create a 2/1 white and black Inkling creature token with flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Prevent all combat damage that would be dealt to you this turn. For each 1 damage prevented this way, create a 2/1 white and black Inkling creature token with flying.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "rule": "prevent-damage",
+          "who": "you",
+          "apply": {
+            "combat": true
+          },
+          "then": [
+            {
+              "effect": "createToken",
+              "count": {
+                "damagePrevented": true
+              },
+              "token": {
+                "name": "Inkling",
+                "types": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Inkling"
+                ],
+                "colors": [
+                  "W",
+                  "B"
+                ],
+                "power": 2,
+                "toughness": 1,
+                "keywords": [
+                  "Flying"
+                ]
+              }
+            }
+          ],
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,238 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Glóin the Mighty // Easy Pickings",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Their Goblin": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Goblin Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "At the beginning of Rob's first main phase: {R}{R}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Glóin the Mighty // Easy Pickings"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Not on Maya's turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Glóin the Mighty // Easy Pickings"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "R": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Easy Pickings: 1 damage to each creature Maya controls -- her Goblin dies, her Bear lives, Rob's Goblin untouched; then Glóin from exile",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Goblin Pal"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Glóin the Mighty // Easy Pickings"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Their Goblin"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Easy Pickings"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "zone": "graveyard",
+              "cards": [
+                "Their Goblin"
+              ]
+            },
+            {
+              "seat": 1,
+              "controls": [
+                "Bear"
+              ]
+            },
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Glóin the Mighty"
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Glóin the Mighty"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Goblin Pal",
+            "Glóin the Mighty"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Glóin the Mighty",
+            "power": 4,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        }
+      ]
+    }
+  ]
+}

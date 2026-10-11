@@ -1,0 +1,463 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ashling, Rekindled // Ashling, Rimebound",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "Imp": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Imp"
+      ],
+      "manaCost": "{R}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 2,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: Rob may discard a card, and if he does, draws one",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ashling, Rekindled // Ashling, Rimebound",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Ashling, Rekindled"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "He discards nothing: nothing drawn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ashling, Rekindled // Ashling, Rimebound",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Ashling, Rekindled"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "His first main phase: {U} paid, it transforms -- and transforming into Ashling, Rimebound adds two mana of one color, for an Ogre and not a Bear",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ashling, Rekindled // Ashling, Rimebound"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ogre",
+            "Imp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Pay {U}"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "battlefield",
+              "cards": [
+                "Ashling, Rimebound",
+                "Island",
+                "Wastes",
+                "Wastes"
+              ]
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Red"
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Imp"
+              },
+              "count": 0
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Ogre"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "cast": "Ogre"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ashling, Rimebound",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Ogre"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "{U} not paid: it stays Ashling, Rekindled",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ashling, Rekindled // Ashling, Rimebound"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ashling, Rekindled",
+            "Island"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Ashling, Rimebound at his next first main phase: two mana of one color, and {R} paid transforms it back -- into Ashling, Rekindled, a discard and a draw",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ashling, Rekindled // Ashling, Rimebound"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Pay {U}"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Green"
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Pay {R}"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "battlefield",
+              "cards": [
+                "Ashling, Rekindled",
+                "Island",
+                "Mountain"
+              ]
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Blue"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "event": "GameEventManaPool",
+          "where": {
+            "produced": {
+              "U": 2
+            }
+          }
+        },
+        {
+          "event": "GameEventManaPool",
+          "where": {
+            "produced": {
+              "G": 2
+            }
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ashling, Rekindled",
+            "Island",
+            "Mountain"
+          ]
+        }
+      ]
+    }
+  ]
+}

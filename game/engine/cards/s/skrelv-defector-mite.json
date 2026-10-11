@@ -1,0 +1,117 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Skrelv, Defector Mite",
+    "oracleId": "20053847-6623-493c-8cdb-a69cda3b1577",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Mite"
+    ],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Toxic 1 (Players dealt combat damage by this creature also get a poison counter.)\nSkrelv can't block.\n{W/P}, {T}: Choose a color. Another target creature you control gains toxic 1 and hexproof from that color until end of turn. It can't be blocked by creatures of that color this turn. ({W/P} can be paid with either {W} or 2 life.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Toxic 1",
+      "keyword": "toxic",
+      "amount": 1
+    },
+    {
+      "kind": "static",
+      "text": "Skrelv can't block.",
+      "rule": "cant-block",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{W/P}, {T}: Choose a color. Another target creature you control gains toxic 1 and hexproof from that color until end of turn. It can't be blocked by creatures of that color this turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{W/P}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "another": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseColor"
+        },
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 0,
+          "toughness": 0,
+          "abilities": [
+            {
+              "kind": "keyword",
+              "text": "Toxic 1",
+              "keyword": "toxic",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "hexproof-from",
+          "targets": {
+            "target": 0
+          },
+          "colors": [
+            "$chosenColor"
+          ],
+          "until": "end-of-turn"
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "cant-be-blocked-by",
+          "targets": {
+            "target": 0
+          },
+          "by": {
+            "types": [
+              "Creature"
+            ],
+            "colors": [
+              "$chosenColor"
+            ]
+          },
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

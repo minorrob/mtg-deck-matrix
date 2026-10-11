@@ -1,0 +1,772 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "The Misty Mountains Cold",
+  "fixtures": {
+    "Treasure": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [
+        "Treasure"
+      ],
+      "manaCost": null,
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "I with three Treasures already: a fourth, the Saga sacrificed, and a 6/6 red Dragon with flying",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Treasure",
+            "Treasure",
+            "Treasure"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "The Misty Mountains Cold"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "The Misty Mountains Cold"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Treasure",
+            "Treasure",
+            "Treasure",
+            "Treasure",
+            "Dragon"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "The Misty Mountains Cold"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Dragon",
+            "power": 6,
+            "toughness": 6
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Dragon",
+            "has": [
+              "Flying"
+            ]
+          }
+        },
+        {
+          "event": "GameEventCardChangeZone",
+          "where": {
+            "sacrificed": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "II makes the fourth: two Treasures at the start, a third at I, the fourth at II -- the Saga sacrificed and the Dragon",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Treasure",
+            "Treasure"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "The Misty Mountains Cold"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "The Misty Mountains Cold"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Mountain",
+                "Wastes",
+                "Wastes",
+                "The Misty Mountains Cold",
+                "Treasure",
+                "Treasure",
+                "Treasure"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Treasure",
+            "Treasure",
+            "Treasure",
+            "Treasure",
+            "Dragon"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "The Misty Mountains Cold"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Dragon",
+            "power": 6,
+            "toughness": 6
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Dragon",
+            "has": [
+              "Flying"
+            ]
+          }
+        },
+        {
+          "event": "GameEventCardChangeZone",
+          "where": {
+            "sacrificed": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "III makes the fourth: one Treasure at the start",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Treasure"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "The Misty Mountains Cold"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "The Misty Mountains Cold"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Mountain",
+                "Wastes",
+                "Wastes",
+                "The Misty Mountains Cold",
+                "Treasure",
+                "Treasure",
+                "Treasure"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Treasure",
+            "Treasure",
+            "Treasure",
+            "Treasure",
+            "Dragon"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "The Misty Mountains Cold"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Dragon",
+            "power": 6,
+            "toughness": 6
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Dragon",
+            "has": [
+              "Flying"
+            ]
+          }
+        },
+        {
+          "event": "GameEventCardChangeZone",
+          "where": {
+            "sacrificed": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fewer than four: a Treasure each chapter and the Saga stays -- until IV makes the fourth, and the Dragon",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "The Misty Mountains Cold"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "The Misty Mountains Cold"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Mountain",
+                "Wastes",
+                "Wastes",
+                "The Misty Mountains Cold",
+                "Treasure"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Mountain",
+                "Wastes",
+                "Wastes",
+                "The Misty Mountains Cold",
+                "Treasure",
+                "Treasure",
+                "Treasure"
+              ]
+            },
+            {
+              "seat": 0,
+              "counters": {
+                "card": "The Misty Mountains Cold",
+                "counter": "lore",
+                "count": 3
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 7,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Treasure",
+            "Treasure",
+            "Treasure",
+            "Treasure",
+            "Dragon"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "The Misty Mountains Cold"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Dragon",
+            "power": 6,
+            "toughness": 6
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Dragon",
+            "has": [
+              "Flying"
+            ]
+          }
+        },
+        {
+          "event": "GameEventCardChangeZone",
+          "where": {
+            "sacrificed": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "A Treasure spent before IV: three at IV, so no Dragon -- the Saga goes after IV all the same",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "The Misty Mountains Cold"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "The Misty Mountains Cold"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Treasure",
+          "mana": {
+            "R": 1
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Mountain",
+                "Wastes",
+                "Wastes",
+                "The Misty Mountains Cold",
+                "Treasure",
+                "Treasure"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 7,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 7,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Treasure",
+            "Treasure",
+            "Treasure"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "The Misty Mountains Cold"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maya's Treasures are not Rob's: her three and his one, no sacrifice and no Dragon",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "The Misty Mountains Cold"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Treasure",
+            "Treasure",
+            "Treasure"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "The Misty Mountains Cold"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "The Misty Mountains Cold",
+            "Treasure"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "The Saga gone before its chapter resolves: no sacrifice, so no Dragon",
+      "library": [
+        "Wastes"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Plains",
+            "Wastes",
+            "Treasure",
+            "Treasure",
+            "Treasure"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "The Misty Mountains Cold",
+            "Disenchant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "The Misty Mountains Cold"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Disenchant",
+          "targets": [
+            {
+              "card": "The Misty Mountains Cold"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Plains",
+            "Wastes",
+            "Treasure",
+            "Treasure",
+            "Treasure",
+            "Treasure"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "The Misty Mountains Cold",
+            "Disenchant"
+          ]
+        }
+      ]
+    }
+  ]
+}

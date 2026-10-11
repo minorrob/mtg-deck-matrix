@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Professional Face-Breaker",
+    "oracleId": "04152e7a-969c-4858-841b-0a569a9fc1bf",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warrior"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Menace\nWhenever one or more creatures you control deal combat damage to a player, create a Treasure token.\nSacrifice a Treasure: Exile the top card of your library. You may play that card this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Menace",
+      "keyword": "menace"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever one or more creatures you control deal combat damage to a player, create a Treasure token.",
+      "trigger": {
+        "on": "damage dealt once",
+        "who": "any",
+        "to": "player",
+        "combat": true,
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Treasure"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Sacrifice a Treasure: Exile the top card of your library. You may play that card this turn.",
+      "cost": [
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "subtypes": [
+              "Treasure"
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "fromTop": 1,
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "mayPlay",
+          "targets": "remembered",
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gloom Ripper",
+    "oracleId": "78e1beca-840d-47b2-8759-cc31454fdf5a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Assassin"
+    ],
+    "manaCost": "{3}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "When this creature enters, target creature you control gets +X/+0 until end of turn and up to one target creature an opponent controls gets -0/-X until end of turn, where X is the number of Elves you control plus the number of Elf cards in your graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, target creature you control gets +X/+0 until end of turn and up to one target creature an opponent controls gets -0/-X until end of turn, where X is the number of Elves you control plus the number of Elf cards in your graveyard.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": {
+            "count": {
+              "subtypes": [
+                "Elf"
+              ],
+              "controller": "you",
+              "anyOf": [
+                {
+                  "what": "permanent"
+                },
+                {
+                  "what": "card",
+                  "zone": "graveyard"
+                }
+              ]
+            }
+          },
+          "toughness": 0
+        },
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 1
+          },
+          "power": 0,
+          "toughness": {
+            "count": {
+              "subtypes": [
+                "Elf"
+              ],
+              "controller": "you",
+              "anyOf": [
+                {
+                  "what": "permanent"
+                },
+                {
+                  "what": "card",
+                  "zone": "graveyard"
+                }
+              ]
+            },
+            "times": -1
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        },
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "opponent",
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Aetherflux Reservoir",
+    "oracleId": "5f15125e-ae89-471e-b055-226a783bc7c1",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever you cast a spell, you gain 1 life for each spell you've cast this turn.\nPay 50 life: This artifact deals 50 damage to any target.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a spell, you gain 1 life for each spell you've cast this turn.",
+      "trigger": {
+        "on": "spell cast"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": {
+            "spellsCastThisTurn": "you"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Pay 50 life: This artifact deals 50 damage to any target.",
+      "cost": [
+        {
+          "atom": "payLife",
+          "amount": 50
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Battle"
+              ]
+            },
+            {
+              "what": "player"
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 50,
+          "targets": {
+            "target": 0
+          },
+          "who": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,549 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Arno Dorian",
+  "fixtures": {
+    "Cutthroat": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Assassin"
+      ],
+      "manaCost": "{1}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 2,
+      "toughness": 1
+    },
+    "Shock": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Shock deals 2 damage to any target.",
+        "targets": [
+          {
+            "anyOf": [
+              {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "what": "permanent",
+                "types": [
+                  "Planeswalker"
+                ]
+              },
+              {
+                "what": "permanent",
+                "types": [
+                  "Battle"
+                ]
+              },
+              {
+                "what": "player"
+              }
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 2,
+            "targets": {
+              "target": 0
+            },
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Cast for {2}{B}{R}: a 3/3 with deathtouch, and Rob's other Assassin, the Cutthroat, gets +2/+0",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Arno Dorian"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cutthroat",
+            "Swamp",
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Arno Dorian"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Cutthroat",
+            "power": 4,
+            "toughness": 1
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Arno Dorian",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Arno Dorian",
+            "has": [
+              "Deathtouch"
+            ],
+            "lacks": [
+              "Ward"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Disguise: cast face down for {3}, a nameless 2/2 with ward {2} and nothing else -- the Cutthroat not pumped; turned face up for {B}{R}, Arno",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Arno Dorian"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cutthroat",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Swamp",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Arno Dorian",
+          "disguise": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Arno Dorian",
+                "power": 2,
+                "toughness": 2
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Arno Dorian",
+                "has": [
+                  "Ward"
+                ],
+                "lacks": [
+                  "Deathtouch"
+                ]
+              }
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Cutthroat",
+                "power": 2,
+                "toughness": 1
+              }
+            },
+            {
+              "seat": 0,
+              "zone": "hand",
+              "count": 0
+            },
+            {
+              "offers": {
+                "kind": "turn-face-up",
+                "card": "Arno Dorian"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "turn-face-up",
+                "card": "Arno Dorian"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "turnFaceUp": "Arno Dorian",
+          "disguise": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Arno Dorian",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Arno Dorian",
+            "has": [
+              "Deathtouch"
+            ],
+            "lacks": [
+              "Ward"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Cutthroat",
+            "power": 4,
+            "toughness": 1
+          }
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "B": 0,
+            "R": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ward {2} on the face-down 2/2: Maya's Shock aimed at it is countered, her {2} unpaid",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Arno Dorian"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Shock"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Arno Dorian",
+          "disguise": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Shock",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "A face-down permanent"
+            }
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1
+              }
+            }
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Arno Dorian",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Shock"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Turned face up after blocks: Maya's Bear blocks the 2/2, Arno turns face up, 3/3 with deathtouch -- the Bear dies, Arno lives",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Swamp",
+            "Mountain"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Arno Dorian"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Arno Dorian",
+          "disguise": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "A face-down permanent"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Bear",
+              "A face-down permanent"
+            ]
+          ]
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "turnFaceUp": "Arno Dorian",
+          "disguise": true
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Arno Dorian",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

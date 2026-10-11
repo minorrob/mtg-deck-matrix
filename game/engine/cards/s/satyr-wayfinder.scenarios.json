@@ -145,6 +145,75 @@
           ]
         }
       ]
+    },
+    {
+      "name": "The four it reveals are revealed -- shown to every player -- and he takes the Forest",
+      "library": [
+        "Bear",
+        "Forest",
+        "Rock",
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Satyr Wayfinder"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Satyr Wayfinder"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "event": "GameEventCardRevealed",
+              "where": {}
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "event": "GameEventCardRevealed",
+          "where": {}
+        }
+      ]
     }
   ]
 }

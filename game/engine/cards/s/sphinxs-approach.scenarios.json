@@ -1,0 +1,393 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sphinx's Approach",
+  "scenarios": [
+    {
+      "name": "Four in the graveyard: drawn two, then this spell and those four exiled, and a Sphinx found onto the battlefield",
+      "library": [
+        "Island",
+        "Island",
+        "Wastes",
+        "Consecrated Sphinx"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sphinx's Approach"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Sphinx's Approach",
+            "Sphinx's Approach",
+            "Sphinx's Approach",
+            "Sphinx's Approach"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Sphinx's Approach"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Exile Sphinx's Approach and four cards named Sphinx's Approach from your graveyard",
+                  "Don't pay"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Exile Sphinx's Approach and four cards named Sphinx's Approach from your graveyard"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Consecrated Sphinx"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Consecrated Sphinx"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Consecrated Sphinx"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Sphinx's Approach",
+            "Sphinx's Approach",
+            "Sphinx's Approach",
+            "Sphinx's Approach",
+            "Sphinx's Approach"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island",
+            "Island"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Only three: nothing to exile, nothing asked -- it draws two and goes to the graveyard",
+      "library": [
+        "Island",
+        "Island",
+        "Consecrated Sphinx"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sphinx's Approach"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Sphinx's Approach",
+            "Sphinx's Approach",
+            "Sphinx's Approach"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Sphinx's Approach"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Sphinx's Approach",
+            "Sphinx's Approach",
+            "Sphinx's Approach",
+            "Sphinx's Approach"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island",
+            "Island"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "You may: declined, and nothing is exiled",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sphinx's Approach"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Sphinx's Approach",
+            "Sphinx's Approach",
+            "Sphinx's Approach",
+            "Sphinx's Approach"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Sphinx's Approach"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Sphinx's Approach",
+            "Sphinx's Approach",
+            "Sphinx's Approach",
+            "Sphinx's Approach",
+            "Sphinx's Approach"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "Five there: which four is Rob's to choose, and one stays",
+      "library": [
+        "Island",
+        "Island",
+        "Consecrated Sphinx"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sphinx's Approach"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Sphinx's Approach",
+            "Sphinx's Approach",
+            "Sphinx's Approach",
+            "Sphinx's Approach",
+            "Sphinx's Approach"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Sphinx's Approach"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Exile Sphinx's Approach and four cards named Sphinx's Approach from your graveyard"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "min": 4
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0,
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "choose": [
+            "Consecrated Sphinx"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Sphinx's Approach"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Sphinx's Approach",
+            "Sphinx's Approach",
+            "Sphinx's Approach",
+            "Sphinx's Approach",
+            "Sphinx's Approach"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Consecrated Sphinx"
+          ]
+        }
+      ]
+    }
+  ]
+}

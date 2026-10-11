@@ -197,6 +197,82 @@
           ]
         }
       ]
+    },
+    {
+      "name": "The four it reveals are revealed, the Goblins to his hand",
+      "library": [
+        "Goblin Pal",
+        "Island",
+        "Goblin Pal",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Goblin Ringleader"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Goblin Ringleader"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "event": "GameEventCardRevealed",
+              "where": {}
+            }
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Goblin Pal",
+            "Goblin Pal"
+          ]
+        },
+        {
+          "event": "GameEventCardRevealed",
+          "where": {}
+        }
+      ]
     }
   ]
 }

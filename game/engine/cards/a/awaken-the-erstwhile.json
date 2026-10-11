@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Awaken the Erstwhile",
+    "oracleId": "06fa6719-aa4f-4857-8029-e42d01232645",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each player discards all the cards in their hand, then creates that many 2/2 black Zombie creature tokens.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each player discards all the cards in their hand, then creates that many 2/2 black Zombie creature tokens.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "discard",
+          "who": "each",
+          "all": true,
+          "remember": true
+        },
+        {
+          "effect": "repeatFor",
+          "each": "player",
+          "effects": [
+            {
+              "effect": "createToken",
+              "controller": "that player",
+              "count": {
+                "rememberedCount": true,
+                "controlledBy": "that player"
+              },
+              "token": {
+                "name": "Zombie",
+                "types": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Zombie"
+                ],
+                "colors": [
+                  "B"
+                ],
+                "power": 2,
+                "toughness": 2
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

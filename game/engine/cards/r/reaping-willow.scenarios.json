@@ -1,0 +1,364 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Reaping Willow",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{2}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Cast, it enters with two -1/-1 counters; {1}{W/B} and both counters return the Ogre, not the Big Bear",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Swamp",
+            "Wastes",
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Reaping Willow"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre",
+            "Big Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Reaping Willow"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Reaping Willow",
+                "counter": "-1/-1",
+                "count": 2
+              }
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Reaping Willow",
+                "power": 1,
+                "toughness": 4
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Reaping Willow"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Ogre"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Reaping Willow",
+          "targets": [
+            {
+              "card": "Ogre"
+            }
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "min": 2,
+                "options": [
+                  "Reaping Willow: a -1/-1 counter (1)",
+                  "Reaping Willow: a -1/-1 counter (2)"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Reaping Willow: a -1/-1 counter (1)",
+            "Reaping Willow: a -1/-1 counter (2)"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Reaping Willow",
+            "counter": "-1/-1",
+            "count": 0
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Reaping Willow",
+            "power": 3,
+            "toughness": 6
+          }
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Plains",
+            "Swamp",
+            "Wastes",
+            "Swamp",
+            "Wastes",
+            "Reaping Willow",
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Big Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Without two counters on it, the ability can't be activated",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Reaping Willow",
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Reaping Willow"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Only as a sorcery: not on Maya's turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Swamp",
+            "Wastes",
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Reaping Willow"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Reaping Willow"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Reaping Willow",
+            "seat": 0
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Lifelink: it attacks for 3 and Rob gains 3",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Reaping Willow"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Reaping Willow"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 37
+        },
+        {
+          "seat": 0,
+          "life": 43
+        }
+      ]
+    }
+  ]
+}

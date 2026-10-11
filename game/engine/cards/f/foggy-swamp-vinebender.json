@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Foggy Swamp Vinebender",
+    "oracleId": "82fefb82-a436-488d-8ecd-594686117e34",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Plant",
+      "Ally"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "This creature can't be blocked by creatures with power 2 or less.\nWaterbend {5}: Put a +1/+1 counter on this creature. Activate only during your turn. (While paying a waterbend cost, you can tap your artifacts and creatures to help. Each one pays for {1}.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This creature can't be blocked by creatures with power 2 or less.",
+      "rule": "cant-be-blocked-by",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "by": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "power": {
+          "max": 2
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Waterbend {5}: Put a +1/+1 counter on this creature. Activate only during your turn.",
+      "cost": [
+        {
+          "atom": "waterbend",
+          "cost": "{5}"
+        }
+      ],
+      "condition": {
+        "yourTurn": true
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

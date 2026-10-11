@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pir, Imaginative Rascal",
+    "oracleId": "7683c2b2-a06f-4691-9cc5-1968dc032885",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Partner with Toothy, Imaginary Friend (When this creature enters, target player may put Toothy into their hand from their library, then shuffle.)\nIf one or more counters would be put on a permanent your team controls, that many plus one of each of those kinds of counters are put on that permanent instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Partner with Toothy, Imaginary Friend",
+      "keyword": "partner with",
+      "name": "Toothy, Imaginary Friend"
+    },
+    {
+      "kind": "static",
+      "text": "If one or more counters would be put on a permanent your team controls, that many plus one of each of those kinds of counters are put on that permanent instead.",
+      "rule": "more-counters",
+      "affects": {
+        "controller": "you"
+      },
+      "plus": 1
+    }
+  ]
+}

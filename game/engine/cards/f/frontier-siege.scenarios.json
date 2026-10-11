@@ -65,6 +65,142 @@
           }
         }
       ]
+    },
+    {
+      "name": "Khans: the Siege destroyed with its main-phase trigger waiting -- {G}{G} still added (CR 113.7a)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Frontier Siege",
+            "Shatter"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Frontier Siege"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Khans"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Shatter",
+          "targets": [
+            {
+              "card": "Frontier Siege"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            },
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Frontier Siege",
+                "Shatter"
+              ]
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 2
+          }
+        },
+        {
+          "stack": 0
+        }
+      ]
     }
-  ]
+  ],
+  "fixtures": {
+    "Shatter": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target enchantment.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Enchantment"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  }
 }

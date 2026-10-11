@@ -1,0 +1,82 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Screeching Soulbreaker",
+  "scenarios": [
+    {
+      "name": "It attacks Maya: 1 damage to Maya and to Trey, 1 life for Rob, then 1 combat damage to Maya",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Screeching Soulbreaker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Screeching Soulbreaker"
+          ],
+          "at": "Maya"
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 39
+            },
+            {
+              "seat": 2,
+              "life": 39
+            },
+            {
+              "seat": 0,
+              "life": 41
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        },
+        {
+          "seat": 2,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "life": 41
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Screeching Soulbreaker",
+            "has": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

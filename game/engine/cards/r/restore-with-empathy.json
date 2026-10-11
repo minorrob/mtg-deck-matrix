@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Restore with Empathy",
+    "oracleId": "cb1e697f-6689-4f0b-8725-61d51432b8dd",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Return target permanent card from your graveyard to your hand. You gain 4 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Return target permanent card from your graveyard to your hand. You gain 4 life.",
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "nonTypes": [
+            "Instant",
+            "Sorcery"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        },
+        {
+          "effect": "gainLife",
+          "amount": 4
+        }
+      ]
+    }
+  ]
+}

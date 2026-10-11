@@ -1,0 +1,160 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Campus Crier",
+  "fixtures": {
+    "Jace": {
+      "types": [
+        "Planeswalker"
+      ],
+      "subtypes": [
+        "Jace"
+      ],
+      "colors": [
+        "U"
+      ],
+      "manaCost": null,
+      "token": true,
+      "loyalty": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "From the graveyard, {1} and exiled: no Jace token, so one is made, with 2 loyalty",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Campus Crier"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Campus Crier"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Campus Crier"
+              ]
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Wastes",
+            "Jace"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Jace",
+            "counter": "loyalty",
+            "count": 2
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "With a Jace token already, it gets two loyalty counters: 3 to 5",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Jace"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Campus Crier"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Campus Crier"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Wastes",
+            "Jace"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Jace",
+            "counter": "loyalty",
+            "count": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "On the battlefield it has no such ability",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Campus Crier"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Campus Crier"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

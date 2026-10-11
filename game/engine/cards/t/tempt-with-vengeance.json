@@ -1,0 +1,121 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tempt with Vengeance",
+    "oracleId": "8e356df5-ca92-4be2-871e-8965c2510fbe",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{X}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Tempting offer — Create X 1/1 red Elemental creature tokens with haste. Each opponent may create X 1/1 red Elemental creature tokens with haste. For each opponent who does, create X 1/1 red Elemental creature tokens with haste.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Tempting offer — Create X 1/1 red Elemental creature tokens with haste. Each opponent may create X 1/1 red Elemental creature tokens with haste. For each opponent who does, create X 1/1 red Elemental creature tokens with haste.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": "X",
+          "token": {
+            "name": "Elemental",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Elemental"
+            ],
+            "colors": [
+              "R"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Haste"
+            ]
+          }
+        },
+        {
+          "effect": "repeatFor",
+          "each": "opponent",
+          "effects": [
+            {
+              "effect": "modal",
+              "chooser": "that player",
+              "title": "Tempting offer: you may create X 1/1 red Elemental creature tokens with haste.",
+              "modes": [
+                {
+                  "text": "Create them",
+                  "did": true,
+                  "effects": [
+                    {
+                      "effect": "createToken",
+                      "count": "X",
+                      "token": {
+                        "name": "Elemental",
+                        "types": [
+                          "Creature"
+                        ],
+                        "subtypes": [
+                          "Elemental"
+                        ],
+                        "colors": [
+                          "R"
+                        ],
+                        "power": 1,
+                        "toughness": 1,
+                        "keywords": [
+                          "Haste"
+                        ]
+                      },
+                      "controller": "that player"
+                    }
+                  ]
+                },
+                {
+                  "text": "Don't",
+                  "effects": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "effect": "createToken",
+          "count": {
+            "playersWhoDid": true,
+            "times": "X"
+          },
+          "token": {
+            "name": "Elemental",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Elemental"
+            ],
+            "colors": [
+              "R"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Haste"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

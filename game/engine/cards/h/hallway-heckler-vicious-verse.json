@@ -1,0 +1,95 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hallway Heckler // Vicious Verse",
+    "oracleId": "d1af8018-35b5-4b6f-93c8-1ed6bd8c92b1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental",
+      "Sorcerer"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\n{T}, Discard a card: Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This creature enters prepared.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersPrepared": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}, Discard a card: Draw a card.",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "discard"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Vicious Verse",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{B/R}",
+      "colors": [
+        "B",
+        "R"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Vicious Verse deals 1 damage to target opponent.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Vicious Verse deals 1 damage to target opponent.",
+        "targets": [
+          {
+            "what": "player",
+            "who": "opponent"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 1,
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

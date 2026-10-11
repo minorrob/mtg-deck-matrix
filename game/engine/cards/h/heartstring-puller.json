@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Heartstring Puller",
+    "oracleId": "2cdcf65c-03d2-416f-8a3f-0322f75e8595",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Sorcerer"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "Trample\nWhen this creature enters, create a 2/2 colorless Wizard Soldier creature token named Cadet.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, create a 2/2 colorless Wizard Soldier creature token named Cadet.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Cadet",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Wizard",
+              "Soldier"
+            ],
+            "colors": [],
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    }
+  ]
+}

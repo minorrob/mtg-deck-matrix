@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cathartic Pyre",
+    "oracleId": "f7e55117-69fb-412e-b16e-d92e0f95f629",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Cathartic Pyre deals 3 damage to target creature or planeswalker.\n• Discard up to two cards, then draw that many cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Cathartic Pyre deals 3 damage to target creature or planeswalker.\n• Discard up to two cards, then draw that many cards.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Cathartic Pyre deals 3 damage to target creature or planeswalker.",
+              "targets": [
+                {
+                  "anyOf": [
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Creature"
+                      ]
+                    },
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Planeswalker"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "dealDamage",
+                  "amount": 3,
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Discard up to two cards, then draw that many cards.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "discard",
+                  "count": 2,
+                  "upTo": true,
+                  "remember": true
+                },
+                {
+                  "effect": "draw",
+                  "count": {
+                    "rememberedCount": true
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
