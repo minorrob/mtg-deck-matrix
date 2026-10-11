@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wall of Blood",
+    "oracleId": "b26c3563-d289-4ca3-8736-9d89e191a840",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Wall"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 0,
+    "toughness": 2
+  },
+  "oracleText": "Defender (This creature can't attack.)\nPay 1 life: This creature gets +1/+1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender",
+      "keyword": "defender"
+    },
+    {
+      "kind": "activated",
+      "text": "Pay 1 life: This creature gets +1/+1 until end of turn.",
+      "cost": [
+        {
+          "atom": "payLife",
+          "amount": 1
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 1
+        }
+      ]
+    }
+  ]
+}
