@@ -1,0 +1,101 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lake-town Mariners // Gone Fishing",
+    "oracleId": "dba1d231-6b03-44ad-ab8c-be0c8fe1b6db",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Citizen"
+    ],
+    "manaCost": "{4}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 6,
+    "toughness": 5
+  },
+  "oracleText": "Vigilance\nWard {2} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "keyword",
+      "text": "Ward {2}",
+      "keyword": "ward",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ]
+    }
+  ],
+  "adventure": {
+    "identity": {
+      "name": "Gone Fishing",
+      "types": [
+        "Instant"
+      ],
+      "subtypes": [
+        "Adventure"
+      ],
+      "manaCost": "{3}{U}",
+      "colors": [
+        "U"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Exile two target creatures and/or lands you control, then return them to the battlefield under their owner's control.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Exile two target creatures and/or lands you control, then return them to the battlefield under their owner's control.",
+        "targets": [
+          {
+            "anyOf": [
+              {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              },
+              {
+                "what": "permanent",
+                "types": [
+                  "Land"
+                ],
+                "controller": "you"
+              }
+            ],
+            "count": {
+              "min": 2,
+              "max": 2
+            }
+          }
+        ],
+        "effects": [
+          {
+            "effect": "moveZone",
+            "targets": {
+              "target": 0
+            },
+            "to": "exile",
+            "andReturn": "now"
+          }
+        ]
+      }
+    ]
+  }
+}

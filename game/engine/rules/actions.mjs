@@ -1561,12 +1561,17 @@ function nextToChoose(state, player, action) {
 }
 
 /** The question for an offer's counted target (CR 601.2c): its legal choices, picked as a pick-several (script/bind.mjs). */
+/* An Adventure's asked with the card shown as its Adventure, as its offer was made (CR 715.3a): the cast stopped to ask
+   inside withAdventure, which has shown the card as itself again since -- read so, "up to one target creature" (Meager
+   Meal) was the creature card's, which has no spell, and asked of every permanent. */
 export function chooseTargetsChoice(state, awaiting) {
-  const {specs, context} = offerSpecs(state, awaiting.player, awaiting.action);
-  const object = state.objects[awaiting.action.objectId];
-  const ability = awaiting.action.kind === "activate" ? abilitiesOf(state, awaiting.action.objectId).find((a) => a.id === awaiting.action.abilityId) : object?.spell;
-  return countedChoice(state, specs[awaiting.index], context, {id: `choose-targets:${awaiting.action.objectId}:${awaiting.index}`,
-    name: object?.card ?? "That spell", hostile: awaiting.action.hostile === true || isHostile(ability?.effects ?? [])});
+  return asCast(state, awaiting.action, () => {
+    const {specs, context} = offerSpecs(state, awaiting.player, awaiting.action);
+    const object = state.objects[awaiting.action.objectId];
+    const ability = awaiting.action.kind === "activate" ? abilitiesOf(state, awaiting.action.objectId).find((a) => a.id === awaiting.action.abilityId) : object?.spell;
+    return countedChoice(state, specs[awaiting.index], context, {id: `choose-targets:${awaiting.action.objectId}:${awaiting.index}`,
+      name: object?.card ?? "That spell", hostile: awaiting.action.hostile === true || isHostile(ability?.effects ?? [])});
+  });
 }
 
 /**
@@ -1574,13 +1579,17 @@ export function chooseTargetsChoice(state, awaiting) {
  * cast or activated now, as it would have been had they been chosen with it (CR 601.2c-i, 602.2b).
  */
 export function resolveChooseTargets(state, awaiting, indices) {
-  const choice = chooseTargetsChoice(state, awaiting);
-  const picked = [...new Set(indices ?? [])].sort((a, b) => a - b);
-  if (picked.length !== (indices ?? []).length || picked.length < choice.min || picked.length > choice.max || picked.some((i) => !choice.options[i]))
-    throw new Error("Invalid selection");
   const action = structuredClone(awaiting.action);
-  action.targets[awaiting.index] = picked.map((i) => choice.options[i].targets[0]);
-  const next = nextToChoose(state, awaiting.player, action);
+  /* An Adventure's checked and its next target found with the card shown as one (CR 715.3a); the cast itself shows it so
+     again (perform). */
+  const next = asCast(state, action, () => {
+    const choice = chooseTargetsChoice(state, awaiting);
+    const picked = [...new Set(indices ?? [])].sort((a, b) => a - b);
+    if (picked.length !== (indices ?? []).length || picked.length < choice.min || picked.length > choice.max || picked.some((i) => !choice.options[i]))
+      throw new Error("Invalid selection");
+    action.targets[awaiting.index] = picked.map((i) => choice.options[i].targets[0]);
+    return nextToChoose(state, awaiting.player, action);
+  });
   if (next >= 0) {
     state.awaiting = {...awaiting, action, index: next};
     return [];
