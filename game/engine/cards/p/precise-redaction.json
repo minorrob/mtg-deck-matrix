@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Precise Redaction",
+    "oracleId": "c251b676-0e98-4047-bed1-d72c83aa8da0",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Counter target white or black spell.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Counter target white or black spell.",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "spell",
+              "colors": [
+                "W"
+              ]
+            },
+            {
+              "what": "spell",
+              "colors": [
+                "B"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}
