@@ -23,11 +23,11 @@ For Grok Bot's four-agent playtests (`docs/plan-to-100.md`, M8). Fill in one row
 | `severity` | `S1` blocks a game or corrupts it · `S2` wrong result · `S3` friction · `S4` cosmetic or copy |
 | `class` | `rules`, `card` (a missing or wrong card definition), `ui`, `performance` or `ux` |
 | `status` | `open`, `fixed` or `as-intended` |
-| `outcome` | Empty while open. Once closed: for `fixed`, the PR that fixed it (`PR #705`) and its test; for `as-intended`, why, with the rule in `cr_rule` |
+| `outcome` | Empty while open. Once closed: for `fixed`, the PR that fixed it (`PR #705`) and its test; for `as-intended`, why, and for a `rules` or `card` finding the rule in `cr_rule` (a `ui`, `ux` or `performance` one answers to the design, which its outcome says) |
 
 **The triage loop** (M8): read the rows; replay each game from its seed and tape; class each finding;
 fix it with a test; replay the game again; and answer each row with what was fixed and what was ruled
-working as intended, with the CR citation.
+working as intended, with the CR citation for a rules or card finding.
 
 **The machine half:** `node tools/playtest-triage.mjs docs/uat/<date>-playtest`. For each game:
 - it plays the record again from its seed and tape, an answer at a time;

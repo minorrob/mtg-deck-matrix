@@ -52,7 +52,7 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | G-C: staging from main, version read back | **done**, signed in too | the G-C records below; and `tools/staging-check.mjs` signed in as the session-check token (A5; 2026-10-10): staging serves 2125854a, both pages say so, `/api/me` seats the token |
 | G-C: the harness note for Grok Bot | done | `docs/playtest-harness.md`, held to the page by `tests/playtest-harness.mjs` (PR #681) |
 | G-C: the four agents' access | **built and on staging; waiting on Rob's four tokens** | at staging each service token Access admits is an identity of its own, so four agents are four seats (#704; released, and the session's token now reads back as `service:e07b4fed5ab9`, the agents' access record below); how an agent signs in, and **Rob's** five steps, in `docs/playtest-harness.md`; the proof once they're made: `node tools/staging-check.mjs --agents` |
-| G-D: Grok Bot's UAT (M8) | **ready for the agents; not run** | this side's half built: the triage tool (`tools/playtest-triage.mjs`: every game replayed from its record, every seat's view judged at every answer, M8's exit criteria; 30 checks, 20 breaks caught), the findings' outcome column, the seven decks to paste (`docs/uat/decks/`, held to the library), the run step by step (`docs/uat/playtest-run.md`); a dress rehearsal through the real board under way, two people and two house AIs a table, the seven decks four at a time: 7 games so far, every one replayed to the same journal with no leak in 3,092 checks, and two findings open (the rehearsal record below). **Rob:** the agents' tokens (G-C), then Grok Bot's 50 games |
+| G-D: Grok Bot's UAT (M8) | **ready for the agents; not run** | this side's half built: the triage tool (`tools/playtest-triage.mjs`: every game replayed from its record, every seat's view judged at every answer, M8's exit criteria; 32 checks, 22 breaks caught), the findings' outcome column, the seven decks to paste (`docs/uat/decks/`, held to the library), the run step by step (`docs/uat/playtest-run.md`); **a dress rehearsal through the real board, done: 50 games**, two people and two house AIs a table, the seven decks four at a time; the triage replayed all 50 to the same journal, with 0 thrown and 0 leaks in 21,006 checks of every seat's view; both findings were ruled (each the harness's, not the board's), and **M8's exit criteria are met** (the rehearsal record below). **Rob:** the agents' tokens (G-C), then Grok Bot's 50 games |
 | G-E: human invites | **ready for Rob's invites** | `docs/play-invites.md`, *G-E*: Rob's steps (one rule group of invitees for both Access applications), the before-the-first-invite checklist, and how their findings arrive (*Send feedback* names the release and the game). **Rob:** staging's invite list and its block page, the alerts and R2, then the invites |
 | G-F: Rob's review and production | **rehearsed; on Rob's go** | `tools/release-production.sh` and `docs/release-production.md`: the standby, then Play, each built from main, walked and committed locally, and pushed only on Rob's go; the standby rehearsed on main 1aa46cd (`release-acceptance` 23, `production-play-e2e` 27, nothing pushed). **Found:** production's Workers Builds has not deployed `release/pages` (the last deploy was by wrangler, 2026-10-01; the release of 2026-10-03 never went live). **Rob:** that build's settings, his review, each go |
 
@@ -1179,3 +1179,48 @@ games never met it; but all five are defined, so an invitee's deck could bring o
     nothing else in the 3,869. With the fix, none of the 3,876 lose anything.
   - `breaks-control-for-good.py`: 2 breaks, both caught. The `engine-cards` check also fails on its own with the fix
     reverted.
+
+**#707 merged on main fd628286 on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 39b46f0d (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 18:31:25 UTC as
+version 30b5cf40, its `play-worker.js` byte-identical to the release's dry-run bundle (3,305,833 bytes; it grew with
+the engine from 3,302,092). Its AI bindings are the Coach's alone. `tools/staging-check.mjs --expect fd62828` exits 0,
+seating the session's token as `service:e07b4fed5ab9`; its first read, a minute after the deploy, found `/` still at
+fa7cbc7 at the edge, and the next found both pages at fd62828. So staging's table plays 1,131 of Rob's 1,132 cards.
+
+**G-D's dress rehearsal: done, 50 games, and M8's exit criteria met (2026-10-11).** It ran `tests/uat/real-deck-game.mjs`
+for 50 tables here, on the release's own pages and table (not on staging):
+- two people through the real board, each in a browser session of their own, and two house AIs at each table;
+- the seven decks four at a time;
+- playtest tables, as staging's are;
+- both people downloading each game's full record from the game-over panel, each record judged at once by G1's oracle.
+
+**The triage** (`tools/playtest-triage.mjs` over the run's folder, as Grok Bot's run will be triaged): **50 games, 50
+replayed to the same journal, 0 threw, 0 leaked, in 21,006 checks of every seat's view**, in 25 minutes here (about 30
+s a game). Both findings are ruled, so the exit criteria are met. Each finding was the harness's, not the board's:
+- **PT-R-01 (S2, ui): as intended.** *Turns went by*'s OK could not be pressed for 30 s (tables 19 and 33). The panel
+  puts itself away after six seconds by design (Rob, 2026-10-09: nothing to acknowledge). The harness's click outlived
+  it and waited out its 30 s; table 33's diagnostic showed the board still, at the seat's priority. The harness now
+  presses the OK while it is there, and says why when a shown OK cannot be pressed.
+- **PT-R-02 (S1, rules): as intended, CR 401.5.** The harness's own frames check, stricter than the rules, flagged
+  cards the rules show:
+  - a library's top played revealed (Conspicuous Snoop, in D6, at the first table);
+  - a card revealed and known while it stays on top (Chaos Warp at table 13; CR 701.20a, 701.20d).
+
+  G1's oracle passed every recorded game. The first table's own card can't be named: its record was not kept, because
+  the check ran before the download (since reversed). With the records on, the frames are now held to what the oracle
+  passed, so the oracle is the one judge.
+
+**What the rehearsal changed** (the follow-up PR to #707):
+- the harness's two fixes above;
+- the triage asks a CR citation of a `rules` or `card` finding ruled as intended. A `ui`, `ux` or `performance` one
+  answers to the design, which its outcome says; PT-R-01 had no rule of the game to cite, and the agents' will not
+  either. The tool is now 32 checks and 22 breaks, every one caught;
+- "play with the top card of your library revealed" cited as CR 401.5, not 401.4, in the projection, G1's oracle and
+  two suites.
+
+**The run's stops**, none the board's:
+- five where I stopped the run myself, or it reached the two-hour limit for a background job; each was resumed at its
+  table;
+- three on the harness's two findings above.
+
+A table's rerun reuses its match id (`journey0005g1`), which the agents' games on staging will not.
