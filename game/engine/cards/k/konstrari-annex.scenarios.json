@@ -1,0 +1,107 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Konstrari Annex",
+  "scenarios": [
+    {
+      "name": "No planeswalker: it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Konstrari Annex"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Konstrari Annex"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Konstrari Annex",
+          "is": true
+        }
+      ]
+    },
+    {
+      "name": "With Elspeth: untapped, and it taps for {R} or {G}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elspeth, Sun's Champion"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Konstrari Annex"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Konstrari Annex"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Konstrari Annex",
+          "is": false
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Konstrari Annex"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "R": 1
+            },
+            {
+              "G": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A planeswalker of Maya's does not count: it enters tapped",
+      "setup": [
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Elspeth, Sun's Champion"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Konstrari Annex"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Konstrari Annex"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Konstrari Annex",
+          "is": true
+        }
+      ]
+    }
+  ]
+}

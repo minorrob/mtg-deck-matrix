@@ -1,0 +1,183 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Goblin Burrows",
+  "fixtures": {
+    "Goblin Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Their Goblin": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Goblin Idol": {
+      "types": [
+        "Kindred",
+        "Artifact"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It taps for {C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Goblin Burrows"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Goblin Burrows"
+        },
+        {
+          "tap": "Goblin Burrows"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "{1}{R}, {T}: a Goblin gets +2/+0 until end of turn -- Rob's or Maya's, never the Bear or a Goblin that is no creature",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin Burrows",
+            "Mountain",
+            "Wastes",
+            "Goblin Pal",
+            "Bear",
+            "Goblin Idol"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Goblin"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Goblin Burrows"
+              },
+              "count": 2,
+              "targets": [
+                [
+                  "Goblin Pal"
+                ],
+                [
+                  "Their Goblin"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Goblin Burrows",
+          "targets": [
+            {
+              "card": "Goblin Pal"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Goblin Pal",
+                "power": 3,
+                "toughness": 1
+              }
+            },
+            {
+              "seat": 0,
+              "tapped": "Goblin Burrows"
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Goblin Pal",
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  ]
+}
