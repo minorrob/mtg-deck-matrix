@@ -243,6 +243,18 @@ const TRIGGERS = {
     ...(t.each === true ? {each: true} : {})} : null),
   /* "Whenever you scry or surveil" (Proft, Consulting Detective; CR 701.22a, 701.25a): once each is done, by `scrier`. */
   scried: (t) => ({on: "GameEventScried", scrier: t.scrier ?? "you"}),
+  /* "Whenever you proliferate" (Ezuri, Stalker of Spheres; CR 701.34a): once each proliferate is done, by `proliferator`
+     you, opponent or any. */
+  proliferated: (t) => ({on: "GameEventProliferate", proliferator: t.proliferator ?? "you"}),
+  /* "Whenever you commit a crime" (Bandit's Haul; CR 700.13): a spell, an activated ability or a triggered ability of
+     `criminal`'s -- you, opponent or any -- aimed at an opponent of theirs or what is that opponent's (rules/stack.mjs). */
+  "crime committed": (t) => ({on: "GameEventCrimeCommitted", criminal: t.criminal ?? "you"}),
+  /* A STATE TRIGGER (CR 603.8): "when this artifact has twenty or more charge counters on it" (Darksteel Reactor) -- `state`, a
+     condition of script/condition.mjs's grammar (script/schema.mjs holds it to it), triggering while it holds (rules/trigger.mjs). */
+  state: (t) => ({on: "state", state: t.state}),
+  /* "Whenever this creature transforms into Ashling, Rekindled" (CR 701.27e): this permanent transforming, `into` the face
+     it then has, by name -- not entering transformed (CR 712.14a), which is no transforming. This one's own alone. */
+  transformed: (t) => ((t.who ?? "self") === "self" && typeof t.into === "string" ? {on: "GameEventCardTransformed", who: "self", into: t.into} : null),
   /* "Whenever you activate a loyalty ability" (Ajani Unrelenting; CR 606, 602.2): a loyalty ability put on the stack by
      you (`activator`), any permanent's; "if you removed two or more loyalty counters to activate it" (`removedAtLeast`,
      its cost, CR 606.4). About the permanent and the player. */
@@ -308,8 +320,10 @@ const TRIGGERS = {
      attacking, a cost or an effect; one that enters tapped never became tapped. */
   "becomes tapped": (t) => (ARRIVALS.includes(t.who ?? "self") ? {on: "GameEventCardTapped", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {})} : null),
   /* "Whenever you discard a card", "whenever an opponent discards a land card" (CR 701.9): `discarder` you, opponent or
-     any; `filter` the card discarded. */
-  discarded: (t) => ({on: "GameEventCardChangeZone", to: "Graveyard", discarded: true, discarder: t.discarder ?? "you", ...(t.filter ? {filter: t.filter} : {})}),
+     any; `filter` the card discarded. "When you discard this card" (Titanbones, Towering Heart; `who: "self"`): this card,
+     from where it went (rules/trigger.mjs). "Whenever a player discards one or more cards" (`batch`): once for each player. */
+  discarded: (t) => ([undefined, "self"].includes(t.who) ? {on: "GameEventCardChangeZone", to: "Graveyard", discarded: true, discarder: t.discarder ?? "you",
+    ...(t.filter ? {filter: t.filter} : {}), ...(t.who === "self" ? {who: "self"} : {})} : null),
   /* "When you cycle this card" (`who: "self"`, CR 702.29c) and "whenever you cycle a card" (`who: "any"`, `cycler`): a card
      discarded to pay a cycling cost (rules/actions.mjs). Not yet "whenever you cycle a creature card" (a filter). */
   cycled: (t) => (["self", "any"].includes(t.who ?? "self") && !t.filter
@@ -467,6 +481,12 @@ function withDelayedTriggers(abilities, problems) {
         const compile = TRIGGERS[when.on];
         const on = compile ? compile({...when, who: named ? "any" : when.who}) : null;
         if (!on) problems.push(`${when.on}: a delayed trigger the engine does not watch for yet`);
+        /* A DELAYED TRIGGERED MANA ABILITY (CR 605.1b): one that waits on a mana ability and adds a fixed mana, with no target
+           -- "until end of turn, whenever you tap a Mountain for mana, add an additional {R}" (Molten Tide). Not put on the
+           stack: what it adds is added with the mana ability that triggered it (rules/trigger.mjs, manaTriggered). */
+        const [adds] = rest.effects ?? [];
+        if (on?.on === "GameEventManaPool" && (rest.effects ?? []).length === 1 && MANA(adds?.mana)
+          && Object.values(adds.mana).every((n) => Number.isInteger(n))) on.manaAbility = {mana: {...adds.mana}};
         out = {...rest, on: on ?? {on: null}, ...(named ? {watch: when.who} : {})};
       } else if (!DELAYED_MOMENTS.includes(out.at ?? "end step")) problems.push(`${out.at}: a moment no delayed trigger waits for yet`);
     }
@@ -1166,6 +1186,19 @@ export function compileScript(script) {
       /* Mana kept until end of combat (firebending): plain mana; restricted mana kept so is not built. */
       if (effect.effect === "addMana" && effect.untilEndOfCombat !== undefined && (effect.untilEndOfCombat !== true || effect.spendOnly !== undefined))
         problems.push("addMana: untilEndOfCombat is true, on mana that is not restricted");
+      /* "Add two mana of any one color" as an ability resolves (Ashling, Rimebound; script/resolution.mjs): of any color,
+         more than one of it, one color for all. */
+      if (effect.effect === "addMana" && effect.oneColor !== undefined && !(effect.oneColor === true && effect.anyColor === true && effect.mana === undefined && effect.count >= 2))
+        problems.push("addMana: oneColor is true, beside anyColor and a count of 2 or more -- that many mana, all of one color");
+      /* "Target opponent reveals their hand. You choose a nonland card from it. That player discards that card" (Render
+         Speechless; effects/asking.mjs): a discard chosen by this effect's controller (`chooser: "you"`, CR 701.9b) is from a
+         hand revealed (`reveal: true`, CR 701.20a) -- the two together, and one card or more of it; "any number" is the
+         discarder's own choice. */
+      if (effect.effect === "discard" && (effect.chooser !== undefined || effect.reveal !== undefined)
+        && !(effect.chooser === "you" && effect.reveal === true && effect.anyNumber === undefined && effect.upTo === undefined && effect.random === undefined && effect.all === undefined))
+        problems.push("discard: a card chosen by this effect's controller (`chooser: \"you\"`) from a hand revealed (`reveal: true`), the two together -- never up to, any number, at random or all");
+      if (effect.effect === "discard" && effect.anyNumber !== undefined && !(effect.anyNumber === true && effect.count === undefined && effect.upTo === undefined))
+        problems.push("discard: anyNumber is true, from none to every card in that hand -- with no count of its own");
     }
 
     if (ability.kind === "spell") {
@@ -1374,7 +1407,11 @@ export function compileScript(script) {
         /* "This ability triggers only once each turn". */
         ...(ability.limit ? {limit: ability.limit} : {}),
         /* Had only at that Class level or greater (CR 716.2a; classLevel, above). */
-        ...(Number.isInteger(ability.level) ? {level: ability.level} : {})});
+        ...(Number.isInteger(ability.level) ? {level: ability.level} : {}),
+        /* "At the beginning of your upkeep, you may return this card from your graveyard to your hand" (Squee, Goblin Nabob):
+           an ability that works from its card's graveyard, and only there (CR 113.6m; rules/trigger.mjs). */
+        ...(ability.zone === "graveyard" ? {zone: "graveyard"} : {})});
+      if (ability.zone !== undefined && ability.zone !== "graveyard") problems.push(`${ability.text}: a triggered ability works from the battlefield, or from a graveyard (\`zone: "graveyard"\`)`);
       return;
     }
     /* A condition on a static (Forge's IsPresentStatic) is read by the layers (rules/layers.mjs), and a static that works
@@ -1383,6 +1420,10 @@ export function compileScript(script) {
     if (ability.kind === "static" && ability.rule && ((ability.condition && !RULES_READING_A_CONDITION.includes(ability.rule)) || ability.worksFrom))
       problems.push(`${ability.text}: a condition or a graveyard on a rule static, which nothing reads yet`);
     if (ability.kind === "static" && ability.worksFrom !== undefined && ability.worksFrom !== "graveyard") problems.push(`${ability.text}: a static works from the battlefield, or from a graveyard`);
+    /* An opening hand's action (rules/mulligan.mjs): revealing the card, and the delayed trigger that makes (CR 103.6b, 603.7g)
+       -- not beginning the game with it on the battlefield (103.6a), which is not built. */
+    if (ability.kind === "static" && ability.rule === "opening-hand" && !((ability.effects ?? []).length && ability.effects.every((e) => e?.effect === "delayedTrigger")))
+      problems.push(`${ability.text}: an opening hand's action reveals the card and makes a delayed trigger (CR 103.6b); beginning the game with it on the battlefield (103.6a) is not built`);
     /* A layer static's `affects` is read by the layers' own matcher: a key it does not read is refused, not ignored. */
     if (ability.kind === "static" && ability.layer !== undefined)
       for (const key of Object.keys(ability.affects ?? {})) if (!LAYER_AFFECTS_KEYS.includes(key)) problems.push(`${ability.text}: a layer static's affects has no key ${JSON.stringify(key)}`);

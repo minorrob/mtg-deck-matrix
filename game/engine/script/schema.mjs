@@ -345,6 +345,8 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
          `trigger.mjs` will never match it. */
       errors.push({path: `${path}.trigger.on`, message: `${JSON.stringify(on)} is not a trigger event the engine declares; the app's terms are bridged in vocabulary.mjs, not accepted here`});
     }
+    /* A state trigger's state (CR 603.8): a condition, held to the condition grammar. */
+    if (on === "state") for (const message of conditionProblems(ability.trigger.state ?? null)) errors.push({path: `${path}.trigger.state`, message});
     /* "Attack one of your opponents or a planeswalker they control" (CR 506.3): planeswalkers: true, beside defender: "opponent".
        "Deals combat damage to a player or planeswalker" (Grateful Apparition): planeswalkers: true, on a damage trigger
        about a player. */

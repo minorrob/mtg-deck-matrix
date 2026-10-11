@@ -111,6 +111,14 @@ export const TRIGGER_EVENTS = Object.freeze([
   "loyalty activated",
   /* "Whenever you scry or surveil" (CR 701.22a, 701.25a). */
   "scried",
+  /* "Whenever you proliferate" (CR 701.34a; Train C, w2c-hands-triggers). */
+  "proliferated",
+  /* "Whenever you commit a crime" (CR 700.13; Train C, w2c-hands-triggers). */
+  "crime committed",
+  /* A state trigger, "when this artifact has twenty or more charge counters on it" (CR 603.8; Train C, w2c-hands-triggers). */
+  "state",
+  /* "Whenever this creature transforms into Ashling, Rimebound" (CR 701.27e; Train C, w2c-hands-triggers). */
+  "transformed",
 ]);
 
 /** The cost atoms of §12.2. The two symbolic ones are named; the rest are structural. */

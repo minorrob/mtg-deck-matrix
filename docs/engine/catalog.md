@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,261 defined and playable today; 2,630 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,262 defined and playable today; 2,637 with every
 mechanic built, so only their definitions are left to write; 27 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -21,7 +21,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Keyword abilities (CR 702) | 194 | 64 | 0 | 5 | 125 |
 | Keyword actions (CR 701) | 70 | 22 | 5 | 1 | 42 |
 | Effects | 192 | 72 | 1 | 2 | 117 |
-| Triggers | 138 | 20 | 4 | 2 | 112 |
+| Triggers | 138 | 24 | 4 | 2 | 108 |
 | Static abilities | 77 | 14 | 2 | 0 | 61 |
 | Replacement effects | 34 | 0 | 6 | 0 | 28 |
 | Costs | 26 | 5 | 2 | 10 | 9 |
@@ -548,7 +548,7 @@ The things that alone hold back the most of the most-played cards.
 | AbilityCast | — | missing | 5 | 42 | 5 | 5 |
 | Cycled | cycled | built | 4 | 77 | 0 | 0 |
 | LandPlayed | land played | named | 4 | 40 | 4 | 3 |
-| CommitCrime | — | missing | 4 | 21 | 4 | 4 |
+| CommitCrime | crime committed | built | 4 | 21 | 0 | 0 |
 | AttackerBlocked | — | missing | 3 | 126 | 3 | 3 |
 | Taps | becomes tapped | built | 3 | 112 | 0 | 0 |
 | Untaps | — | missing | 3 | 30 | 3 | 1 |
@@ -557,7 +557,7 @@ The things that alone hold back the most of the most-played cards.
 | FullyUnlock | — | missing | 3 | 17 | 3 | 1 |
 | RingTemptsYou | — | missing | 3 | 9 | 3 | 0 |
 | Blocks | blocks | built | 2 | 127 | 0 | 0 |
-| Always | — | missing | 2 | 62 | 2 | 2 |
+| Always | state | built | 2 | 62 | 0 | 0 |
 | DamageDealtOnce | — | missing | 2 | 48 | 2 | 1 |
 | DiscardedAll | discarded | built | 2 | 22 | 0 | 0 |
 | DamageAll | — | missing | 2 | 9 | 2 | 2 |
@@ -567,7 +567,7 @@ The things that alone hold back the most of the most-played cards.
 | TokenCreated | — | missing | 2 | 3 | 1 | 1 |
 | AttackerUnblocked | — | missing | 1 | 37 | 1 | 0 |
 | Exploited | — | missing | 1 | 25 | 1 | 0 |
-| Proliferate | — | missing | 1 | 6 | 1 | 1 |
+| Proliferate | proliferated | built | 1 | 6 | 0 | 0 |
 | SpellAbilityCast | — | missing | 1 | 6 | 1 | 0 |
 | AbilityTriggered | — | missing | 1 | 4 | 1 | 1 |
 | Countered | — | missing | 1 | 4 | 1 | 1 |
@@ -586,7 +586,7 @@ The things that alone hold back the most of the most-played cards.
 | PlaneswalkedTo | — | missing | 0 | 57 | 0 | 0 |
 | CrankContraption | — | missing | 0 | 45 | 0 | 0 |
 | Mutates | — | missing | 0 | 32 | 0 | 0 |
-| Transformed | — | missing | 0 | 30 | 0 | 0 |
+| Transformed | transformed | built | 0 | 30 | 0 | 0 |
 | Scry | — | missing | 0 | 23 | 0 | 0 |
 | BecomeMonstrous | becomes monstrous | built | 0 | 19 | 0 | 0 |
 | RolledDie | — | missing | 0 | 19 | 0 | 0 |

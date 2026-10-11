@@ -75,6 +75,14 @@ export const FORGE_TRIGGER = {
   Discarded: "discarded", DiscardedAll: "discarded", Drawn: "drawn", LandPlayed: "land played",
   BecomesTarget: "becomes target", Taps: "becomes tapped", Cycled: "cycled", CounterAdded: "counter added", CounterAddedOnce: "counter added once",
   LifeGained: "life gained", LifeLost: "life lost", TokenCreatedOnce: "token created", BecomeMonstrous: "becomes monstrous",
+  /* "Whenever you proliferate" (Train C, w2c-hands-triggers; CR 701.34a). */
+  Proliferate: "proliferated",
+  /* "Whenever you commit a crime" (Train C, w2c-hands-triggers; CR 700.13). */
+  CommitCrime: "crime committed",
+  /* A state trigger (Train C, w2c-hands-triggers; CR 603.8): "when this artifact has twenty or more charge counters on it". */
+  Always: "state",
+  /* "Whenever this creature transforms into ..." (Train C, w2c-hands-triggers; CR 701.27e). */
+  Transformed: "transformed",
 };
 
 /* Forge static and replacement modes the engine can execute today. `Continuous` is an anthem or a

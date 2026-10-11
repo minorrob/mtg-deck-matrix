@@ -44,6 +44,7 @@ import {beginResolution, resolutionPending} from "../script/resolution.mjs";
 import {delayedTrigger} from "../script/effects/permanents.mjs";
 import {prepare} from "../script/effects/attributes.mjs";
 import {recheckTargets, factsOf, modalScript} from "../script/bind.mjs";
+import {characteristicsOf} from "./layers.mjs";
 
 /* The projection contract (§12.1) names these zones with a capital, and the telemetry matches on
    them by name. The engine's own zone keys are lower case. */
@@ -66,6 +67,26 @@ export function becameTarget(state, entry, only = null) {
   /* A counted target's list: each of them (script/bind.mjs). */
   return (entry?.targets ?? []).flat().filter((t) => t && t.kind === "object" && state.objects[t.id] && (only === null || t.id === only) && !seen.has(t.id) && seen.add(t.id))
     .map((t) => event("GameEventBecomesTarget", state, {card: cardRef(state, t.id), targetId: t.id, stackId: entry.stackId, kind: entry.kind, by: {playerId: entry.playerId}}));
+}
+
+/**
+ * A CRIME (CR 700.13): a spell cast, an ability activated or a triggered ability put on the stack that targets an opponent,
+ * a permanent or spell an opponent controls, or a card in an opponent's graveyard -- what "whenever you commit a crime"
+ * (Bandit's Haul) watches. Said once for the entry, by its controller, as its targets are chosen (rules/actions.mjs,
+ * rules/trigger.mjs); never as they are changed, which is no casting, activating or putting on the stack.
+ */
+export function crimeCommitted(state, entry) {
+  const criminal = entry?.playerId;
+  const opponent = (player) => Number.isInteger(player) && player !== criminal;
+  const crime = (entry?.targets ?? []).flat().some((t) => {
+    if (t?.kind === "player") return opponent(t.id);
+    const object = t?.kind === "object" ? state.objects[t.id] : undefined;
+    if (!object) return false;
+    if (object.zone === "battlefield") return opponent(characteristicsOf(state, t.id).controller);
+    if (object.zone === "stack") return opponent(object.controller);
+    return object.zone === "graveyard" && opponent(object.owner);
+  });
+  return crime ? [event("GameEventCrimeCommitted", state, {player: {playerId: criminal, name: state.players[criminal]?.name}, stackId: entry.stackId})] : [];
 }
 
 /** How many objects are on the stack. */

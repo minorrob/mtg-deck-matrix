@@ -34,6 +34,9 @@ export const STATIC_RULES = Object.freeze({
       "that many plus one" (Hardened Scales) `plus`; "half that many, rounded down" (Vorinclex) `half`; `putBy` "you" or
       "opponent"; `players`. Read wherever counters are put on a permanent, as it enters too (placeCounters, below). */
   "more-counters": "rules/statics.mjs",
+  /** CR 103.6b: "You may reveal this card from your opening hand. If you do, at the beginning of the first upkeep, ..."
+      (Chancellor of the Forge): `effects`, what revealing it does, asked once the mulligans are done. rules/mulligan.mjs. */
+  "opening-hand": "rules/mulligan.mjs",
   /** CR 104.3: "You can't lose the game" (Darksteel Angel): its controller loses to no state-based action. rules/sba.mjs. */
   "cant-lose": "rules/sba.mjs",
   /** CR 104.2b: "Your opponents can't win the game" (Darksteel Angel): an effect that says they win does not. effects/resources.mjs, winGame. */

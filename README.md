@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 445 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 454 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1315,6 +1315,15 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-dig-by-type` - `tests/engine-dig-by-type.mjs`: a dig's cards to zones by card type (Zimone's Experiment; CR 701.20a) -- lands onto the battlefield tapped, creatures into hand, a land creature with the lands, the taken alone revealed
 - `engine-search-steps` - `tests/engine-search-steps.mjs`: a search a card at a time (Krosan Verge, Myriad Landscape; CR 701.23b, 701.23h) -- a description for each card, or sharing a land type; found together, shuffled once
 - `engine-unless-exile` - `tests/engine-unless-exile.mjs`: "you may exile this spell and four cards named Sphinx's Approach from your graveyard. If you do" (CR 118.12a, 707.10a) -- offered only when it can be paid, which four asked; and its deck rule (CR 100.2a)
+- `engine-revealed-hand` - `tests/engine-revealed-hand.mjs`: a discard chosen from a revealed hand (CR 701.9b, 701.20a; Render Speechless, Stinging Vitriol, Dai Li Indoctrination, Auntie's Sentence) -- every card shown to every seat while it is chosen, named in the journal, discarded by its own player -- and "any number of cards, then draws that many" (Steal the Show)
+- `engine-discard-triggers` - `tests/engine-discard-triggers.mjs`: "when you discard this card" (CR 113.6k; Titanbones, Towering Heart) from the zone it went to, its own discard alone -- at cleanup and as a cost -- and "whenever a player discards one or more cards" (CR 603.2c; Tinybones, Pocket Nuisance), once for each player each action
+- `engine-graveyard-upkeep` - `tests/engine-graveyard-upkeep.mjs`: a triggered ability that works from its card's graveyard (CR 113.6m; Squee, Goblin Nabob) -- there alone, for its owner, once for each card, finding nothing once the card has left
+- `engine-proliferated` - `tests/engine-proliferated.mjs`: "whenever you proliferate" (CR 701.34a; Ezuri, Stalker of Spheres) -- every proliferate said as it is done, counters given or none, by whom, twice when doubled (Tekuthal)
+- `engine-crime` - `tests/engine-crime.mjs`: "whenever you commit a crime" (CR 700.13; Bandit's Haul) -- a spell cast, an ability activated or a trigger put on the stack aimed at an opponent, what they control, or a card in their graveyard, once for it, by whom
+- `engine-state-trigger` - `tests/engine-state-trigger.mjs`: state triggers (CR 603.8; Darksteel Reactor) -- triggering the moment the state holds, not again while waiting or on the stack, again once resolved if it still holds, one for each permanent
+- `engine-transformed` - `tests/engine-transformed.mjs`: "whenever this creature transforms into" a face (CR 701.27e; Ashling, Rekindled // Ashling, Rimebound), this permanent's own turning over and never entering transformed, and an ability's two mana of one color, kept for what it may pay for (CR 106.6)
+- `engine-delayed-mana` - `tests/engine-delayed-mana.mjs`: a delayed triggered mana ability (CR 603.7, 605.1b; Molten Tide, Pyre Rhymer's prepared spell) -- added at once with the mana ability that triggers it, never on the stack, for what it names, its controller's, until it ends
+- `engine-opening-hand` - `tests/engine-opening-hand.mjs`: an opening hand's actions (CR 103.6b; Chancellor of the Forge) asked once the mulligans are done, the starting player first, a card at a time -- revealed to everyone until the first turn begins -- and the delayed trigger at the first upkeep (CR 603.7g)
 
 ## Design and execution record
 

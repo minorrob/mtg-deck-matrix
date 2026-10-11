@@ -53,7 +53,7 @@
  */
 
 import {cardsIn, moveObject, usesThisTurn, recordUse, showFace, showAdventure, shownFaceDown, turnFaceUp, eventCard, commanderKeyOf, recordDiscard} from "../state/index.mjs";
-import {pushSpell, pushAbility, becameTarget} from "./stack.mjs";
+import {pushSpell, pushAbility, becameTarget, crimeCommitted} from "./stack.mjs";
 import {addMana, spend, parseManaCost, automaticPayment, canPay, chosenPayment, paymentOptions, paymentKey, paymentWords, PAY_CHOICES, manaValue, poolSize, tapPlans, convokeCanPay, convokePayments} from "./mana.mjs";
 import {commanderTax, recordCommanderCast, commanderIdentity} from "./commander.mjs";
 import {COLORS, MANA_KEYS} from "./mana.mjs";
@@ -2234,8 +2234,8 @@ function performOffered(state, player, action, during) {
       state.objects[id].tapped = true;
       events.push(event("GameEventCardTapped", state, {card: cardRef(state, id), tapped: true}));
     }
-    /* What it is aimed at becomes its target (ward, CR 702.21a). */
-    events.push(...becameTarget(state, entry));
+    /* What it is aimed at becomes its target (ward, CR 702.21a); and aimed at an opponent or what is theirs, a crime (CR 700.13). */
+    events.push(...becameTarget(state, entry), ...crimeCommitted(state, entry));
     /* STORM (CR 702.40a): "when you cast this spell, copy it for each spell cast before it this turn. You may choose new
        targets for the copies" -- a triggered ability of the spell on the stack, waiting with the rest; every player's
        spells this turn counted, this one aside. */
@@ -2305,7 +2305,7 @@ function performOffered(state, player, action, during) {
       si: {isTrigger: false, actor: {playerId: player, name: state.players[player].name}},
       targetDescription,
     }));
-    events.push(...becameTarget(state, entry));
+    events.push(...becameTarget(state, entry), ...crimeCommitted(state, entry));
     /* The mana, once: its own atom's, or what an increase added to a cost that printed none (costPayment). */
     const payMana = () => {
       spendFor(state, player, {ability: action.objectId}, payment.mana.mana, action.riders ?? null);

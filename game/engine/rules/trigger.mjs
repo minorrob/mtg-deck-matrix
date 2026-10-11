@@ -41,12 +41,15 @@
  * DELAYED TRIGGERS (CR 603.7), created by a resolving effect: "at the beginning of the next end step" (M4 phase 3,
  * batch 13), "at the beginning of the next turn's upkeep", "at end of combat" and "at the beginning of the declare attackers
  * step on your next turn" (Train C, p6-combat), and on an event -- "when that creature dies this turn",
- * "whenever a creature dies this turn" (batch 17). Other moments ("when you next cast a creature spell") are not yet. WHAT IS DEFERRED AND NAMED: state triggers (CR 603.8), which trigger
- * while a condition holds rather than on an event.
+ * "whenever a creature dies this turn" (batch 17). Other moments ("when you next cast a creature spell") are not yet.
+ *
+ * STATE TRIGGERS (CR 603.8; Train C): "when this artifact has twenty or more charge counters on it, you win the game"
+ * (Darksteel Reactor) -- a trigger on a state, not an event (`on: "state"`, its `state` a condition), read whenever what
+ * triggers is read, and not again while it waits or is on the stack.
  */
 
 import {conditionHolds} from "../script/condition.mjs";
-import {pushAbility, becameTarget} from "./stack.mjs";
+import {pushAbility, becameTarget, crimeCommitted} from "./stack.mjs";
 import {cardsIn, usesThisTurn, recordUse} from "../state/index.mjs";
 import {playerStatics} from "./statics.mjs";
 import {matchesSelector, matchesLastKnown} from "../script/filter.mjs";
@@ -56,7 +59,10 @@ import {targetChoices, targetName, isHostile, isChoosing, targetCandidates, coun
 
 /* An ability lives where its card is (CR 113.6). A triggered ability of a permanent watches the
    game only while that permanent is on the battlefield, so an ability on a card in a graveyard is
-   not watching anything — which is why a dead creature's "whenever a creature enters" stays quiet. */
+   not watching anything — which is why a dead creature's "whenever a creature enters" stays quiet.
+   Unless the ability says it works there: "at the beginning of your upkeep, you may return this card
+   from your graveyard to your hand" (Squee, Goblin Nabob; `zone: "graveyard"`) moves its card out of
+   the graveyard, so it functions there and only there (CR 113.6b, 113.6m). */
 const WATCHING_ZONES = ["battlefield"];
 
 /* Whether a player is the one a trigger asks about: "you" its controller, "opponent" anyone else, "any" anyone. */
@@ -118,6 +124,18 @@ function subjects(state, event, condition, sourceId, controller) {
   if (condition.on === "GameEventScried") {
     const scrier = fields.player?.playerId;
     return whoseIs(condition.scrier ?? "you", scrier, controller) ? [{player: scrier}] : [];
+  }
+  /* "Whenever this creature transforms into Ashling, Rimebound" (CR 701.27e): this permanent, the face it has just after. */
+  if (condition.on === "GameEventCardTransformed") return fields.card?.cardId === sourceId && fields.to === condition.into ? [{card: sourceId}] : [];
+  /* "Whenever you commit a crime" (CR 700.13): who did. */
+  if (condition.on === "GameEventCrimeCommitted") {
+    const criminal = fields.player?.playerId;
+    return whoseIs(condition.criminal ?? "you", criminal, controller) ? [{player: criminal}] : [];
+  }
+  /* "Whenever you proliferate" (CR 701.34a): who did. */
+  if (condition.on === "GameEventProliferate") {
+    const proliferator = fields.player?.playerId;
+    return whoseIs(condition.proliferator ?? "you", proliferator, controller) ? [{player: proliferator}] : [];
   }
   /* "Whenever you activate a loyalty ability" (CR 606): an ability, not a spell, with a loyalty cost, by `activator`; the
      counters its cost removed at least `removedAtLeast`. */
@@ -286,6 +304,8 @@ function subjects(state, event, condition, sourceId, controller) {
     const discarder = fields.from?.player?.playerId;
     if (!whoseIs(condition.discarder ?? "you", discarder, controller)) return [];
     const card = fields.becomes;
+    /* "When you discard this card": this card, and no other. */
+    if (condition.who === "self" && card !== sourceId) return [];
     if (condition.filter && !(card !== undefined && state.objects[card] && matchesSelector({...condition.filter, what: "card", zone: "graveyard"}, state, card, {controller, source: sourceId}))) return [];
     return [{card, player: discarder}];
   }
@@ -501,6 +521,14 @@ export function manaTriggered(state, event) {
       if (adds) made.push({player: fields.player?.playerId, mana: adds, source: id});
     }
   }
+  /* And a DELAYED triggered mana ability (CR 603.7, 605.1b): "until end of turn, whenever you tap a Mountain for mana, add an
+     additional {R}" (Molten Tide) -- made by a resolving spell, its controller's, while it lasts. A mana ability is
+     activated after whatever made it, so nothing it sees came first (CR 603.7a). */
+  for (const d of state.delayedTriggers ?? []) {
+    const mana = d.on?.manaAbility;
+    if (!mana || !tappedForMana(state, fields, d.on, d.source, d.controller)) continue;
+    made.push({player: d.controller, mana: {...mana.mana}, source: d.source});
+  }
   return made;
 }
 
@@ -538,6 +566,9 @@ export function collectTriggers(state, events) {
   };
   /* The board does not change while this reads it: each permanent's abilities are read once, for every event. */
   const abilitiesNow = abilitiesReader(state);
+  /* The cards in graveyards with a triggered ability that works there (WATCHING_ZONES): found once, as the first event is read. */
+  let fromGraveyards = null;
+  const inGraveyards = () => (fromGraveyards ??= state.zones.graveyard.flat().filter((id) => (state.objects[id]?.abilities ?? []).some((a) => a.kind === "triggered" && a.zone === "graveyard")));
   for (const event of events ?? []) {
     /* An arrival waiting to be told what it is a copy of triggers once it is (rules/entering.mjs). */
     if (event.data?.fields?.awaitingCopy === true) continue;
@@ -545,11 +576,15 @@ export function collectTriggers(state, events) {
        zone the card went to (CR 702.29c). */
     const cycled = event.kind === "GameEventCardChangeZone" && event.data?.fields?.cycled === true ? event.data.fields.becomes : undefined;
     const wentTo = cycled !== undefined && state.objects[cycled] ? [cycled] : [];
+    /* And a card just discarded, where it went: its own "when you discard this card" alone (Titanbones, Towering Heart) -- a
+       trigger condition that can't trigger from the battlefield, so it functions from the zone the card went to (CR 113.6k). */
+    const discarded = event.kind === "GameEventCardChangeZone" && event.data?.fields?.discarded === true ? event.data.fields.becomes : undefined;
+    const discardedTo = discarded !== undefined && state.objects[discarded] ? [discarded] : [];
     /* And a spell just cast, on the stack: its own "when you cast this spell" alone (CR 603.2). */
     const castSpell = event.kind === "GameEventSpellAbilityCast" && event.data?.fields?.sa?.isSpell ? state.stack.find((e) => e.stackId === event.data.fields.sa.stackId)?.objectId : undefined;
     const justCast = castSpell !== undefined && state.objects[castSpell] ? [castSpell] : [];
-    for (const zone of [...WATCHING_ZONES, "cycled", "cast"]) {
-      for (const id of zone === "cycled" ? wentTo : zone === "cast" ? justCast : state.zones[zone]) {
+    for (const zone of [...WATCHING_ZONES, "graveyard", "cycled", "discarded", "cast"]) {
+      for (const id of zone === "cycled" ? wentTo : zone === "discarded" ? discardedTo : zone === "cast" ? justCast : zone === "graveyard" ? inGraveyards() : state.zones[zone]) {
         const object = state.objects[id];
         /* A permanent's abilities now, the ones given it included (layers.mjs); a card's elsewhere. */
         for (const own of abilitiesNow(id)) {
@@ -557,16 +592,20 @@ export function collectTriggers(state, events) {
           const ability = chosenFor(own, object);
           /* A triggered mana ability happened with the mana ability that triggered it (manaTriggered). */
           if (ability.kind !== "triggered" || !ability.trigger || ability.trigger.manaAbility) continue;
+          /* One that works from a graveyard works from there alone; the rest never do (WATCHING_ZONES). */
+          if ((zone === "graveyard") !== (ability.zone === "graveyard")) continue;
           /* An ability of a Class level its permanent has not reached, it does not have (CR 716.2a, 716.2d). */
           if (Number.isInteger(ability.level) && (object.level ?? 1) < ability.level) continue;
           if (zone === "cycled" && !(ability.trigger.cycled && ability.trigger.who === "self")) continue;
+          if (zone === "discarded" && !(ability.trigger.discarded && ability.trigger.who === "self")) continue;
           if (zone === "cast" && !(ability.trigger.on === "GameEventSpellAbilityCast" && ability.trigger.who === "self")) continue;
           for (const about of subjects(state, event, ability.trigger, id, object.controller)) {
           /* "If it isn't that player's turn" asks about the player the event is about. */
           if (!conditionHolds(state, ability.condition, {controller: object.controller, source: id, about})) continue;
           /* Damage to players, "one or more" at once: once for each player dealt it; damage to "a Dragon you control", once
-             for each creature dealt it. */
-          const once = `${id}:${ability.id}${ability.trigger.on === "GameEventPlayerDamaged" || ability.trigger.loser !== undefined ? `:${about.player}`
+             for each creature dealt it. "Whenever a player discards one or more cards" (Tinybones, Pocket Nuisance): once for
+             each player who discarded (CR 603.2c). */
+          const once = `${id}:${ability.id}${ability.trigger.on === "GameEventPlayerDamaged" || ability.trigger.loser !== undefined || ability.trigger.discarded ? `:${about.player}`
             : ability.trigger.on === "GameEventCardDamaged" && ["creature", "enchanted"].includes(ability.trigger.to) ? `:${about.card}` : ""}`;
           if (ability.trigger.batch && joined(once, about)) continue;
           /* "This ability triggers only once each turn": once it has, this turn, it does not again. */
@@ -650,7 +689,8 @@ export function collectTriggers(state, events) {
        creature (`watch`, the object it was as the trigger was made); "whenever a creature dies this turn" every time,
        until the turn ends (turn.mjs, cleanup). Not on the action that made it (CR 603.7a): that one is `fresh`. */
     for (const d of [...(state.delayedTriggers ?? [])]) {
-      if (!d.on || d.fresh) continue;
+      /* A delayed triggered mana ability happened with the mana ability that triggered it (manaTriggered). */
+      if (!d.on || d.fresh || d.on.manaAbility) continue;
       if (d.watch !== undefined && (d.watch === null || event.data?.fields?.card?.cardId !== d.watch)) continue;
       for (const about of subjects(state, event, d.on, d.source, d.controller)) {
         state.pendingTriggers.push({
@@ -696,6 +736,21 @@ export function collectTriggers(state, events) {
         if (times) again.push({at: state.pendingTriggers.length - 1, times});
         if (ability.trigger.batch) opened(`${gone.cardId}:${ability.id}`, about);
       }
+    }
+  }
+  /* STATE TRIGGERS (CR 603.8): each permanent's, the moment its state holds -- and not again until that triggering has left
+     the stack, so not while it waits to go on it or is there. One whose permanent left and came back is a new object's. A
+     state comes to hold only by something happening, so it is read as what happened is: with no events nothing has, and
+     the board is not read again (each permanent's abilities derived once, for the events above). */
+  if ((events ?? []).length) for (const id of state.zones.battlefield) {
+    const object = state.objects[id];
+    for (const own of abilitiesNow(id)) {
+      if (own.kind !== "triggered" || own.trigger?.on !== "state") continue;
+      const ability = chosenFor(own, object);
+      if (state.pendingTriggers.some((t) => t.source.cardId === id && t.abilityId === ability.id) || state.stack.some((e) => e.cardId === id && e.abilityId === ability.id)) continue;
+      if (!conditionHolds(state, ability.trigger.state, {controller: object.controller, source: id})) continue;
+      state.pendingTriggers.push({abilityId: ability.id, text: ability.text ?? ability.id, controller: object.controller, source: {cardId: id, name: object.card}, cause: null,
+        optional: ability.optional === true, ...scriptOf(ability)});
     }
   }
   /* What was made during this action has now been read past (CR 603.7a), and waits for the next. */
@@ -844,8 +899,8 @@ export function resolveTriggerCounted(state, awaiting, indices) {
   state.awaiting = null;
   if (askCounted(state, entry)) return [];
   askTriggerTargets(state);
-  /* What it is aimed at becomes its target (ward, CR 702.21a). */
-  return becameTarget(state, entry);
+  /* What it is aimed at becomes its target (ward, CR 702.21a); and aimed at an opponent or what is theirs, a crime (CR 700.13). */
+  return [...becameTarget(state, entry), ...crimeCommitted(state, entry)];
 }
 
 /* EACH WAY TO CHOOSE A MODAL TRIGGER'S MODES AND THEIR TARGETS (CR 603.3c, 700.2): as many modes as it says, none twice
@@ -925,8 +980,8 @@ export function resolveTriggerTargets(state, awaiting, indices) {
   if (entry.targets.some(isChoosing) && askCounted(state, entry)) return [];
   entry.stage = "waiting";
   askTriggerTargets(state);
-  /* What it is aimed at becomes its target (ward, CR 702.21a). */
-  return becameTarget(state, entry);
+  /* What it is aimed at becomes its target (ward, CR 702.21a); and aimed at an opponent or what is theirs, a crime (CR 700.13). */
+  return [...becameTarget(state, entry), ...crimeCommitted(state, entry)];
 }
 
 function putOnStack(state, triggers) {
