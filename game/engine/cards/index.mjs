@@ -1250,6 +1250,10 @@ export function compileScript(script) {
     if (ability.kind === "static" && ability.rule && ((ability.condition && !RULES_READING_A_CONDITION.includes(ability.rule)) || ability.worksFrom))
       problems.push(`${ability.text}: a condition or a graveyard on a rule static, which nothing reads yet`);
     if (ability.kind === "static" && ability.worksFrom !== undefined && ability.worksFrom !== "graveyard") problems.push(`${ability.text}: a static works from the battlefield, or from a graveyard`);
+    /* An opening hand's action (rules/mulligan.mjs): revealing the card, and the delayed trigger that makes (CR 103.6b, 603.7g)
+       -- not beginning the game with it on the battlefield (103.6a), which is not built. */
+    if (ability.kind === "static" && ability.rule === "opening-hand" && !((ability.effects ?? []).length && ability.effects.every((e) => e?.effect === "delayedTrigger")))
+      problems.push(`${ability.text}: an opening hand's action reveals the card and makes a delayed trigger (CR 103.6b); beginning the game with it on the battlefield (103.6a) is not built`);
     /* A layer static's `affects` is read by the layers' own matcher: a key it does not read is refused, not ignored. */
     if (ability.kind === "static" && ability.layer !== undefined)
       for (const key of Object.keys(ability.affects ?? {})) if (!LAYER_AFFECTS_KEYS.includes(key)) problems.push(`${ability.text}: a layer static's affects has no key ${JSON.stringify(key)}`);

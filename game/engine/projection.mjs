@@ -142,9 +142,11 @@ function topLookedAtBy(state, viewer, ids) {
 /* A HAND REVEALED (CR 701.20a; effects/asking.mjs, discard's `handRevealed`): "target opponent reveals their hand. You
    choose a nonland card from it" (Render Speechless) -- each card of it shown to every player while the card is chosen, and
    to nobody once the question is gone, however it goes: those of this hand's cards the question revealed. */
+/* And a card revealed from an opening hand (CR 103.6b): until the first turn begins. */
 function handShown(state, ids) {
   const asking = state.awaiting;
-  return asking?.handRevealed === true ? ids.filter((id) => asking.cards.includes(id)) : [];
+  const opening = state.stepIndex === undefined ? state.mulligan?.revealed ?? [] : [];
+  return ids.filter((id) => (asking?.handRevealed === true && asking.cards.includes(id)) || opening.includes(id));
 }
 
 function zoneFor(state, zone, owner, viewer) {

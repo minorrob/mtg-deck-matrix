@@ -133,7 +133,8 @@ function libraryKnowledge(state, viewer) {
   /* A hand revealed while a card is chosen from it (CR 701.20a; "target opponent reveals their hand"): its cards, to every
      player, while that question is asked (`handRevealed`). */
   const asking = state.awaiting;
-  const hand = new Set(asking?.handRevealed === true ? asking.cards : []);
+  /* And a card revealed from an opening hand, until the first turn begins (CR 103.6b). */
+  const hand = new Set([...(asking?.handRevealed === true ? asking.cards : []), ...(state.stepIndex === undefined ? state.mulligan?.revealed ?? [] : [])]);
   return {known, shown, hand};
 }
 /* THE CARDS A QUESTION SHOWS THE PLAYER IT ASKS: what a scry, a surveil or a dig looks at, what a search offers (CR 701.22a,

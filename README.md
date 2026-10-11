@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 427 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 428 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1297,6 +1297,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-state-trigger` - `tests/engine-state-trigger.mjs`: state triggers (CR 603.8; Darksteel Reactor) -- triggering the moment the state holds, not again while waiting or on the stack, again once resolved if it still holds, one for each permanent
 - `engine-transformed` - `tests/engine-transformed.mjs`: "whenever this creature transforms into" a face (CR 701.27e; Ashling, Rekindled // Ashling, Rimebound), this permanent's own turning over and never entering transformed, and an ability's two mana of one color, kept for what it may pay for (CR 106.6)
 - `engine-delayed-mana` - `tests/engine-delayed-mana.mjs`: a delayed triggered mana ability (CR 603.7, 605.1b; Molten Tide, Pyre Rhymer's prepared spell) -- added at once with the mana ability that triggers it, never on the stack, for what it names, its controller's, until it ends
+- `engine-opening-hand` - `tests/engine-opening-hand.mjs`: an opening hand's actions (CR 103.6b; Chancellor of the Forge) asked once the mulligans are done, the starting player first, a card at a time -- revealed to everyone until the first turn begins -- and the delayed trigger at the first upkeep (CR 603.7g)
 
 ## Design and execution record
 

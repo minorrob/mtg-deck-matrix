@@ -266,7 +266,7 @@ export function awaitingChoice(state) {
 function choiceFor(state) {
   const awaiting = state.awaiting;
   if (!awaiting) return null;
-  if (awaiting.kind === "mulligan-decision" || awaiting.kind === "mulligan-bottom")
+  if (awaiting.kind === "mulligan-decision" || awaiting.kind === "mulligan-bottom" || awaiting.kind === "opening-hand")
     return mulliganChoice(state, awaiting);
   if (awaiting.kind === "effect-choice") return resolutionChoice(state, awaiting);
   if (awaiting.kind === "commander-replacement") return commanderChoice(state, awaiting);
@@ -361,7 +361,7 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
   /* The mulligan is the one decision that consumes randomness, because keeping or not decides
      whether a library is shuffled. A generator is a closure and game state is plain data (§3.2.4),
      so the stream is handed in rather than held. */
-  if (awaiting.kind === "mulligan-decision" || awaiting.kind === "mulligan-bottom")
+  if (awaiting.kind === "mulligan-decision" || awaiting.kind === "mulligan-bottom" || awaiting.kind === "opening-hand")
     return resolveMulligan(state, awaiting, indices, rng);
 
   /* A card effect that stopped half way through. `extra` carries what generic indices cannot --
