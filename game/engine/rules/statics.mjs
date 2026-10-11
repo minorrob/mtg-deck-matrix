@@ -107,6 +107,10 @@ export const STATIC_RULES = Object.freeze({
       614.1a): `affects` the players whose draws it replaces, from its controller's side. drawsInstead, read by the draw
       effect (script/effects/zones.mjs). */
   "draws-instead": "script/effects/zones.mjs",
+  /** "Alexios ... can't be sacrificed" (Alexios, Deimos of Kosmos; CR 701.21a): `affects` what can't. cantBeSacrificed, read
+      where a permanent would be sacrificed (script/effects/zones.mjs, sacrificeOne) and where one is chosen to be: the
+      sacrifice effect and an "unless" cost (script/effects/asking.mjs), a cost (rules/actions.mjs). */
+  "cant-be-sacrificed": "script/effects/zones.mjs",
   /** "If one or more artifact tokens would be created under your control, that many 5/5 red Dragon creature tokens with
       flying are created instead" (Draconic Visitor): `affects` the tokens it replaces, `token` what is made instead.
       tokensCreated (script/effects/permanents.mjs). */
@@ -318,6 +322,21 @@ export function tokensCreated(state, controller, count, values) {
     }
   }
   return {count: n, instead};
+}
+
+/**
+ * WHETHER A PERMANENT CAN'T BE SACRIFICED (CR 701.21a, 101.2): a `cant-be-sacrificed` static's `affects` names it ("Alexios ...
+ * can't be sacrificed", itself). An effect told to sacrifice it does nothing to it; a player told to sacrifice a creature,
+ * or paying a cost that sacrifices one, can't choose it -- "can't" beats "must" and "may" alike (CR 101.2).
+ */
+export function cantBeSacrificed(state, id) {
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of holder.abilities ?? [])
+      if (ability.kind === "static" && ability.rule === "cant-be-sacrificed"
+        && matchesSelector({what: "permanent", ...ability.affects}, state, id, {controller: holder.controller, source: holderId})) return true;
+  }
+  return false;
 }
 
 /**

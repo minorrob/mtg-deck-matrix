@@ -384,6 +384,10 @@ export function winGame(state, params, context) {
   return [];
 }
 
+/* Who puts them, for "if you would put" (rules/statics.mjs): the effect's controller -- or, "that player ... puts a +1/+1
+   counter on it" (Alexios, Deimos of Kosmos: `puts: "that player"`), the player the trigger is about. */
+const putterOf = (params, context) => (params.puts === "that player" ? context.about.player : context.controller);
+
 /** `putCounter` — CR 121. */
 export function putCounter(state, params, context) {
   const events = [];
@@ -391,7 +395,7 @@ export function putCounter(state, params, context) {
      counterKind) -- never decided here, and never put on as a counter named "chosen". */
   if (params.counter === "chosen") throw new Error("putCounter with a chosen kind of counter asks its controller which: run it through resolution.mjs");
   for (const {id, kind, count} of counterPlacements(state, params, context, false))
-    addCounters(state, id, kind, count, events, context.controller, params.counterOrders?.[placementKey(id, kind)] ?? []);
+    addCounters(state, id, kind, count, events, putterOf(params, context), params.counterOrders?.[placementKey(id, kind)] ?? []);
   return events;
 }
 
@@ -429,8 +433,8 @@ export function counterQuestion(state, effect, context, answers = {}) {
   if (!COUNTING[effect?.effect]) return null;
   for (const {id, kind, count} of counterPlacements(state, effect, context, effect.effect === "putCounterAll")) {
     const key = placementKey(id, kind);
-    const {question} = placeCounters(state, {id}, kind, count, context.controller, {orders: answers[key] ?? [], askable: true});
-    if (question) return {...question, id, kind, by: context.controller, key};
+    const {question} = placeCounters(state, {id}, kind, count, putterOf(effect, context), {orders: answers[key] ?? [], askable: true});
+    if (question) return {...question, id, kind, by: putterOf(effect, context), key};
   }
   return null;
 }

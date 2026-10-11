@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1246,
+  "defined": 1247,
   "provisional": 27,
-  "everyRule": 2579
+  "everyRule": 2580
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -7477,8 +7477,8 @@
      "forge": "CantSacrifice",
      "top": 2,
      "all": 10,
-     "blocks": 2,
-     "alone": 1
+     "blocks": 1,
+     "alone": 0
     },
     {
      "kind": "static",

@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 401 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 402 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1271,6 +1271,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-life-doubled` - `tests/engine-life-doubled.mjs`: "you gain twice that much life instead" (Rhox Faithmender) -- an effect's gain, lifelink in and out of combat, an exchange; four times for two; can't gain life
 - `engine-tokens-replaced` - `tests/engine-tokens-replaced.mjs`: tokens created, replaced -- twice that many (Anointed Procession), Dragons instead of artifact tokens (Draconic Visitor) -- whose control, copies, the effect's own words on what is made instead
 - `engine-draws-replaced` - `tests/engine-draws-replaced.mjs`: an opponent's two or more draws replaced, one each (Alms Collector), and whose of two players' asked of the drawing player before anything is drawn
+- `engine-cant-be-sacrificed` - `tests/engine-cant-be-sacrificed.mjs`: "can't be sacrificed" (Alexios, Deimos of Kosmos) -- told to, nothing happens; never among the choices of an effect or a cost -- and whose control and counter "that player" is
 
 ## Design and execution record
 

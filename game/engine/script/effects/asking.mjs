@@ -38,7 +38,7 @@ import {loseLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";
 import {damageOrderChoice} from "../../rules/replacement.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
 import {commanderTax} from "../../rules/commander.mjs";
-import {cantBeCountered, counterOrderChoice} from "../../rules/statics.mjs";
+import {cantBeCountered, counterOrderChoice, cantBeSacrificed} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
 import {castNow, castChoicesNow} from "../../rules/actions.mjs";
 
@@ -592,7 +592,8 @@ export const proliferate = {
    ("Korvold ... sacrifice another permanent"). */
 const sacrificeable = (state, player, selector, source = null) => {
   const matches = compileSelector({...(selector ?? {}), what: "permanent", controller: "you"});
-  return state.zones.battlefield.filter((id) => matches(state, id, {controller: player, source}));
+  /* Never one that can't be sacrificed (Alexios; rules/statics.mjs): it is not theirs to choose. */
+  return state.zones.battlefield.filter((id) => matches(state, id, {controller: player, source}) && !cantBeSacrificed(state, id));
 };
 /* "A creature with the greatest power among creatures that player controls" (Crackling Doom), "the greatest mana value"
    (Soul Shatter): of what may be sacrificed, those with the most -- a tie is the player's choice among them. */
@@ -891,14 +892,14 @@ function payOptions(state, awaiting) {
   if (awaiting.sacrifice) {
     const alternatives = Array.isArray(awaiting.sacrifice.anyOf) ? awaiting.sacrifice.anyOf : [awaiting.sacrifice];
     const matchers = alternatives.map((one) => compileSelector({...one, what: "permanent", controller: "you"}));
+    /* What they could sacrifice: never one that can't be sacrificed (Alexios; rules/statics.mjs). */
+    const mine = state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player})) && !cantBeSacrificed(state, id));
     /* "Sacrifice three permanents": one option, to pay it, if they have that many; which ones is asked next (`sacrificing`). */
     if (awaiting.sacrificeCount) {
-      const mine = state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player})));
       return awaiting.sacrificing ? mine.map((id) => ({label: state.objects[id].card, cardId: id}))
         : mine.length >= awaiting.sacrificeCount ? [{label: `Sacrifice ${awaiting.sacrificeCount} permanents${also}`, pay: true, sacrificeMany: true}] : [];
     }
-    return state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player})))
-      .map((id) => ({label: `Sacrifice ${state.objects[id].card}${also}`, pay: true, sacrifice: id, cardId: id}));
+    return mine.map((id) => ({label: `Sacrifice ${state.objects[id].card}${also}`, pay: true, sacrifice: id, cardId: id}));
   }
   if (awaiting.discard) return cardsIn(state, "hand", player).map((id) => ({label: `Discard ${state.objects[id].card}${also}`, pay: true, discard: id, cardId: id}));
   /* "UNLESS YOU RETURN ANOTHER CREATURE YOU CONTROL TO ITS OWNER'S HAND" (Faerie Impostor; CR 118.12a, a cost other than

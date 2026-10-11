@@ -26,7 +26,7 @@ import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf, controllerOf, abilitiesOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector, matchesSelector} from "../filter.mjs";
 import {applyReplacements, enteringModifications, regenerated} from "../../rules/replacement.mjs";
-import {cantBeCountered, entersUntapped, countersPlaced, drawsInstead} from "../../rules/statics.mjs";
+import {cantBeCountered, entersUntapped, countersPlaced, drawsInstead, cantBeSacrificed} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
 
@@ -281,7 +281,8 @@ const inRandomOrder = (list, rng) => {
  */
 export function sacrificeOne(state, id, events) {
   const object = state.objects[id];
-  if (!object) return null;
+  /* "Can't be sacrificed" (Alexios; rules/statics.mjs): told to, nothing happens to it. */
+  if (!object || cantBeSacrificed(state, id)) return null;
   const sacrificer = object.controller;
   const before = events.length;
   const moved = moveOne(state, id, "graveyard", events, {owner: object.owner});

@@ -960,6 +960,9 @@ export function compileScript(script) {
          it last existed, as many -- with no kind or count of its own (effects/resources.mjs, putCounter). */
       if (effect.effect === "putCounter" && effect.countersOf !== undefined && !(effect.countersOf === "self" && effect.counter === undefined && effect.count === undefined))
         problems.push("putCounter: countersOf is \"self\", its source's counters as it last existed, with no counter or count of its own");
+      /* "That player ... puts a +1/+1 counter on it" (Alexios): who puts them, the player a trigger is about. */
+      if (effect.effect === "putCounter" && effect.puts !== undefined && effect.puts !== "that player")
+        problems.push("putCounter: puts is \"that player\", the player the trigger is about putting them");
       /* "Spend this mana only to cast instant and sorcery spells" (effects/resources.mjs), "only to cast a creature spell of
          the chosen type" (a mana ability's, cards/index.mjs manaAbility): what the mana may pay for, read here for both. */
       if (effect.effect === "addMana" && effect.spendOnly !== undefined && !spendOnlyValid(effect.spendOnly))
