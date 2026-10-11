@@ -874,6 +874,20 @@ export function compileScript(script) {
       keywords.push("Flashback");
       return;
     }
+    /* EMBALM [COST] (CR 702.128a; Anointer Priest): "[Cost], Exile this card from your graveyard: Create a token that's a copy
+       of this card, except it's white, it has no mana cost, and it's a Zombie in addition to its other types. Activate only as
+       a sorcery" -- an activated ability of the card in its owner's graveyard (rules/actions.mjs offers it there), "this card"
+       the card in exile its cost put there (the stack entry is about it, as encore's is), copied with those exceptions
+       (effects/permanents.mjs, copiable's `setColors`, `addSubtypes`, `noManaCost`). A mana cost; a permanent card. */
+    if (word === "embalm") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      if (cost.length !== 1 || cost[0]?.atom !== "mana") problems.push(`${ability.text}: an embalm cost is mana, once`);
+      if (!(identity.types ?? []).some((t) => ["Artifact", "Creature", "Enchantment", "Land", "Planeswalker", "Battle"].includes(t))) problems.push(`${ability.text}: embalm makes a token copy of a permanent card`);
+      abilities.push({id, kind: "activated", text: ability.text, zone: "graveyard", timing: "sorcery", cost: [...structuredClone(cost), {atom: "exileFromGraveyard", self: true}],
+        effects: [{effect: "copyPermanent", targets: "that card", except: {setColors: ["W"], addSubtypes: ["Zombie"], noManaCost: true}}]});
+      keywords.push("Embalm");
+      return;
+    }
     /* ENCORE (CR 702.141a): an activated ability of the card in its owner's graveyard, at sorcery speed (rules/actions.mjs
        offers it there), its cost the mana and the card exiled: for each opponent, a token copy of the card with haste that
        attacks that opponent this turn if able, sacrificed at the beginning of the next end step. "This card" is that card in

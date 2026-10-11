@@ -16,10 +16,10 @@
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 57,
+    "built": 58,
     "partial": 0,
     "named": 5,
-    "missing": 132
+    "missing": 131
    },
    "entries": [
     {
@@ -1706,8 +1706,8 @@
      "kind": "keyword ability",
      "rule": "702.128",
      "name": "Embalm",
-     "engine": null,
-     "status": "missing",
+     "engine": "Embalm",
+     "status": "built",
      "forge": "Embalm",
      "top": 0,
      "all": 15,

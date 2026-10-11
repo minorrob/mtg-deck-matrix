@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 57 | 0 | 5 | 132 |
+| Keyword abilities (CR 702) | 194 | 58 | 0 | 5 | 131 |
 | Keyword actions (CR 701) | 70 | 22 | 3 | 1 | 44 |
 | Effects | 192 | 70 | 1 | 2 | 119 |
 | Triggers | 138 | 20 | 4 | 2 | 112 |
@@ -196,7 +196,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.194 | Teamwork | — | missing | 0 | 17 | 0 | 0 |
 | 702.132 | Assist | — | missing | 0 | 16 | 0 | 0 |
 | 702.113 | Awaken | — | missing | 0 | 15 | 0 | 0 |
-| 702.128 | Embalm | — | missing | 0 | 15 | 0 | 0 |
+| 702.128 | Embalm | Embalm | built | 0 | 15 | 0 | 0 |
 | 702.119 | Emerge | — | missing | 0 | 15 | 0 | 0 |
 | 702.154 | Enlist | — | missing | 0 | 15 | 0 | 0 |
 | 702.162 | More Than Meets the Eye | — | missing | 0 | 15 | 0 | 0 |

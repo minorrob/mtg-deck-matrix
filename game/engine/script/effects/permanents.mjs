@@ -129,7 +129,8 @@ export function attachTo(state, auraId, hostId) {
 function copiable(object, except = {}) {
   const supertypes = [...new Set([...(object.supertypes ?? []).filter((t) => !(except.nonLegendary && t === "Legendary")), ...(except.addSupertypes ?? [])])];
   return {
-    card: except.name ?? object.card, manaCost: object.manaCost ?? null,
+    /* "With no mana cost" (embalm, CR 702.128a): none, part of the copiable values (CR 707.9b) -- its mana value 0. */
+    card: except.name ?? object.card, manaCost: except.noManaCost === true ? null : object.manaCost ?? null,
     /* "It's a Vehicle artifact ... and it loses all other card types" (Imposter Mech): set, then any added. */
     types: [...new Set([...(except.setTypes ?? object.types ?? []), ...(except.addTypes ?? [])])],
     /* "It's a 2/2 black Zombie in addition to its other colors and types" (Ratadrabik): added, not set. */

@@ -188,6 +188,10 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   /* Encore (X5f): the card's activated ability in its owner's graveyard, a hasty token copy for each opponent, each required
      to attack that opponent this turn (cards/index.mjs, rules/combat.mjs). */
   Encore: "copyPermanent",
+  /* Embalm (CR 702.128a; Anointer Priest, Train C phase 2): the card's activated ability in its owner's graveyard at sorcery
+     speed, a token copy of it that is white, a Zombie besides its other types, and has no mana cost (cards/index.mjs;
+     effects/permanents.mjs, copiable's `noManaCost`). */
+  Embalm: "copyPermanent",
   /* Echo (CR 702.30a; Karmic Guide, AI 1's deck): the upkeep trigger, its intervening "if" (came under your control since
      your last upkeep, script/condition.mjs), and "sacrifice it unless you pay" a mana cost with its colors (cards/index.mjs,
      effects/asking.mjs). */
