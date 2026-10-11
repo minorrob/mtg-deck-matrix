@@ -715,8 +715,8 @@ function sacrificeChoices(state, player, sourceId, given) {
 }
 const sacrificeAtom = (cost) => (cost ?? []).find((a) => a?.atom === "sacrifice" && a.selector);
 /* "EXILE A CARD FROM YOUR GRAVEYARD" AS A COST (Lorehold Excavation; Rubble Rouser's mana ability; CR 602.2b, 601.2h): the
-   cards of the player's own graveyard the selector describes -- one offer each, as a discard is. The ability is a
-   permanent's, so its source is never among them. */
+   cards of the player's own graveyard the selector describes -- one offer each, as a discard is. A permanent's source is
+   never among them; a card's own, in that graveyard, is unless the selector says `another` (abilityOffers). */
 const graveyardAtom = (cost) => (cost ?? []).find((a) => a?.atom === "exileFromGraveyard" && a.self !== true);
 const graveyardChoices = (state, player, sourceId, selector) => {
   const fits = compileSelector({...(selector ?? {}), what: "card", zone: "graveyard"});
@@ -1322,49 +1322,7 @@ function offers(state, player) {
       if (!withinLimit(state, id, ability)) continue;
       /* A loyalty ability: only if none of this permanent's has been activated this turn (CR 606.3). */
       if (ability.loyalty !== undefined && usesThisTurn(state, id, "loyalty") > 0) continue;
-      for (const X of abilityXValues(state, player, ability, id)) {
-        const payment = costPayment(state, player, id, ability.cost, X ?? 0, abilityLess(state, player, id, ability));
-        if (!payment) continue;
-        const atom = sacrificeAtom(ability.cost), back = returnAtom(ability.cost), toss = discardAtom(ability.cost);
-        /* A permanent you control to sacrifice, or to return to its owner's hand, or a card in your hand to discard: one
-           offer each (CR 602.2b). No card to discard, and the ability can't be activated. */
-        const crew = crewAtom(ability.cost), tapper = tapAtom(ability.cost), untapper = untapAtom(ability.cost), blighter = blightAtom(ability.cost), grave = graveyardAtom(ability.cost);
-        const anyCounter = (ability.cost ?? []).some((a) => a?.atom === "removeAnyCounter" && a.self === true);
-        /* "Sacrifice two other creatures" (Priest of Forgotten Gods): each set of `count` of them, one offer each, as the
-           cards of "discard two cards" are; fewer than that there, and it can't be activated. */
-        /* Ten of many permanents: one offer, the ten asked once it is taken (sacrificesLater). */
-        const later = sacrificesLater(state, player, id, atom), among = countersAmongAtom(ability.cost);
-        const fodder = later ? [null] : atom ? discardSets(sacrificeChoices(state, player, id, atom.selector), atom.count ?? 1).map((s) => ({sacrifice: s}))
-          : back ? sacrificeChoices(state, player, id, back.selector).map((r) => ({returnToHand: r}))
-          /* "Discard a creature card" (Fauna Shaman): only a card its selector describes. */
-          : toss ? discardSets(cardsIn(state, "hand", player).filter((c) => c !== id && (!toss.selector || compileSelector({...toss.selector, what: "card", zone: "hand"})(state, c, {controller: player, source: id}))),
-            toss.count ?? 1).map((d) => ({discard: d}))
-          : crew ? crewChoices(state, player, id, crew.power).map((set) => ({crew: set}))
-          : tapper ? ((tapper.count ?? 1) > 1 ? tapSets(state, player, id, tapper.selector, tapper.count).map((set) => ({tapAll: set}))
-            : tapChoices(state, player, id, tapper.selector).map((t) => ({tap: t})))
-          : untapper ? untapChoices(state, player, untapper.count).map((set) => ({untap: set}))
-          : blighter ? blightChoices(state, player).map((c) => ({blight: c}))
-          /* A card of the graveyard to exile: one offer each; none there, and it can't be activated (CR 118.3). */
-          : grave ? graveyardChoices(state, player, id, grave.selector).map((c) => ({exile: c}))
-          : anyCounter ? Object.entries(object.counters ?? {}).filter(([, n]) => n > 0).map(([counter]) => ({counter})) : [null];
-        for (const costChoice of fodder)
-        /* What rider mana it spends, when it must spend some (rules/restricted-mana.mjs, riderChoices). */
-        for (const riders of (payment.payWays ? null : riderChoices(state, player, {ability: id}, payment.mana?.mana ?? {})) ?? [undefined])
-          actions.push(...withModesOrTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, ...offeredPayment(payment), ...(X !== null ? {x: X} : {}), ...ridersOffer(state, riders),
-            /* A loyalty ability says its loyalty cost (CR 606.4), for a pilot to weigh. */
-            ...(ability.loyalty !== undefined ? {loyalty: ability.loyalty === "-X" ? -(X ?? 0) : ability.loyalty} : {}),
-            /* What its player picks once it is taken: the permanents to sacrifice, the counters to remove (choose-cost). */
-            ...(later ? {sacrificeLater: atom.count} : {}), ...(among ? {countersLater: among.count} : {}),
-            ...(costChoice ? {costChoice, costNames: costChoice.crew ? costChoice.crew.map((c) => state.objects[c].card)
-              : costChoice.untap ? costChoice.untap.map((c) => state.objects[c].card)
-              : costChoice.tapAll ? costChoice.tapAll.map((c) => state.objects[c].card)
-              : Array.isArray(costChoice.discard) ? costChoice.discard.map((c) => state.objects[c].card)
-              : Array.isArray(costChoice.sacrifice) ? costChoice.sacrifice.map((c) => state.objects[c].card)
-              : costChoice.counter !== undefined ? [`a ${costChoice.counter} counter`]
-              : [state.objects[costChoice.sacrifice ?? costChoice.returnToHand ?? costChoice.discard ?? costChoice.tap ?? costChoice.blight ?? costChoice.exile].card]} : {})}, ability,
-            /* "With mana value X": the X of this offer (script/filter.mjs). */
-            {controller: player, source: id, ...(X !== null ? {x: X} : {})}));
-      }
+      actions.push(...abilityOffers(state, player, id, ability));
     }
   }
 
@@ -1378,35 +1336,80 @@ function offers(state, player) {
       if (object.zone === "command" && ability.alsoCommand !== true) continue;
       if (ability.timing === "sorcery" && !sorceryTime) continue;
       if (!conditionHolds(state, ability.condition, {controller: player, source: id})) continue;
-      /* "Cycling {X}{1}{U}" (Shark Typhoon): one offer for each X the pool can pay, as a permanent's ability has (CR 107.3). */
-      for (const X of abilityXValues(state, player, ability, id)) {
-        const payment = costPayment(state, player, id, ability.cost, X ?? 0, abilityLess(state, player, id, ability));
-        if (!payment) continue;
-        /* "Return an unblocked attacking creature you control to its owner's hand" (ninjutsu): one offer per creature it may be. */
-        const back = returnAtom(ability.cost);
-        for (const costChoice of back ? sacrificeChoices(state, player, id, back.selector).map((r) => ({returnToHand: r})) : [null])
-        for (const riders of (payment.payWays ? null : riderChoices(state, player, {ability: id}, payment.mana?.mana ?? {})) ?? [undefined])
-          actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, ...offeredPayment(payment), ...(X !== null ? {x: X} : {}), ...ridersOffer(state, riders),
-            ...(costChoice ? {costChoice, costNames: [state.objects[costChoice.returnToHand].card]} : {})}, ability, {controller: player, source: id, ...(X !== null ? {x: X} : {})}));
-      }
+      /* "Cycling {X}{1}{U}" (Shark Typhoon): one offer for each X the pool can pay; ninjutsu's "return an unblocked attacking
+         creature you control to its owner's hand", one per creature it may be -- as a permanent's are (abilityOffers). */
+      actions.push(...abilityOffers(state, player, id, ability));
     }
   }
 
-  /* An ability a card has in its owner's graveyard -- encore (CR 702.141a) -- whenever that player has priority, at its own
-     timing. */
+  /* An ability a card has in its owner's graveyard -- encore (CR 702.141a), "Sacrifice two Eldrazi: Return this card from
+     your graveyard to your hand" (Eldrazi Ravager) -- whenever that player has priority, at its own timing, its costs
+     offered, chosen and paid as a permanent's are (CR 602.2; abilityOffers). */
   for (const id of cardsIn(state, "graveyard", player)) {
     const object = state.objects[id];
     for (const ability of object.abilities ?? []) {
       if (ability.kind !== "activated" || ability.zone !== "graveyard") continue;
       if (ability.timing === "sorcery" && !sorceryTime) continue;
       if (!conditionHolds(state, ability.condition, {controller: player, source: id})) continue;
-      const payment = costPayment(state, player, id, ability.cost, 0, abilityLess(state, player, id, ability));
-      if (!payment) continue;
-      for (const riders of (payment.payWays ? null : riderChoices(state, player, {ability: id}, payment.mana?.mana ?? {})) ?? [undefined])
-        actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, ...offeredPayment(payment), ...ridersOffer(state, riders)}, ability, {controller: player, source: id}));
+      actions.push(...abilityOffers(state, player, id, ability));
     }
   }
 
+  return actions;
+}
+
+/* AN ACTIVATED ABILITY'S OFFERS (CR 602.2), wherever it works from -- a permanent's, or a card's in a hand, the command zone
+   or a graveyard: one for each X the pool can pay (CR 107.3), each way to pay its costs that its player chooses as they
+   activate it (CR 602.2b, 601.2h) -- the permanents to sacrifice, the one to return, the cards to discard, the creatures
+   to tap or untap, the card of the graveyard to exile -- and each way to spend rider mana, each with its targets or modes.
+   A cost with nothing to pay it with makes no offer: it can't be activated (CR 118.3). The caller says whether the ability
+   may be activated now at all (its zone, its timing, its condition, its limit). */
+function abilityOffers(state, player, id, ability) {
+  const object = state.objects[id];
+  const actions = [];
+  for (const X of abilityXValues(state, player, ability, id)) {
+    const payment = costPayment(state, player, id, ability.cost, X ?? 0, abilityLess(state, player, id, ability));
+    if (!payment) continue;
+    const atom = sacrificeAtom(ability.cost), back = returnAtom(ability.cost), toss = discardAtom(ability.cost);
+    /* A permanent you control to sacrifice, or to return to its owner's hand, or a card in your hand to discard: one
+       offer each (CR 602.2b). No card to discard, and the ability can't be activated. */
+    const crew = crewAtom(ability.cost), tapper = tapAtom(ability.cost), untapper = untapAtom(ability.cost), blighter = blightAtom(ability.cost), grave = graveyardAtom(ability.cost);
+    const anyCounter = (ability.cost ?? []).some((a) => a?.atom === "removeAnyCounter" && a.self === true);
+    /* "Sacrifice two other creatures" (Priest of Forgotten Gods): each set of `count` of them, one offer each, as the
+       cards of "discard two cards" are; fewer than that there, and it can't be activated. */
+    /* Ten of many permanents: one offer, the ten asked once it is taken (sacrificesLater). */
+    const later = sacrificesLater(state, player, id, atom), among = countersAmongAtom(ability.cost);
+    const fodder = later ? [null] : atom ? discardSets(sacrificeChoices(state, player, id, atom.selector), atom.count ?? 1).map((s) => ({sacrifice: s}))
+      : back ? sacrificeChoices(state, player, id, back.selector).map((r) => ({returnToHand: r}))
+      /* "Discard a creature card" (Fauna Shaman): only a card its selector describes. */
+      : toss ? discardSets(cardsIn(state, "hand", player).filter((c) => c !== id && (!toss.selector || compileSelector({...toss.selector, what: "card", zone: "hand"})(state, c, {controller: player, source: id}))),
+        toss.count ?? 1).map((d) => ({discard: d}))
+      : crew ? crewChoices(state, player, id, crew.power).map((set) => ({crew: set}))
+      : tapper ? ((tapper.count ?? 1) > 1 ? tapSets(state, player, id, tapper.selector, tapper.count).map((set) => ({tapAll: set}))
+        : tapChoices(state, player, id, tapper.selector).map((t) => ({tap: t})))
+      : untapper ? untapChoices(state, player, untapper.count).map((set) => ({untap: set}))
+      : blighter ? blightChoices(state, player).map((c) => ({blight: c}))
+      /* A card of the graveyard to exile: one offer each; none there, and it can't be activated (CR 118.3). */
+      : grave ? graveyardChoices(state, player, id, grave.selector).map((c) => ({exile: c}))
+      : anyCounter ? Object.entries(object.counters ?? {}).filter(([, n]) => n > 0).map(([counter]) => ({counter})) : [null];
+    for (const costChoice of fodder)
+    /* What rider mana it spends, when it must spend some (rules/restricted-mana.mjs, riderChoices). */
+    for (const riders of (payment.payWays ? null : riderChoices(state, player, {ability: id}, payment.mana?.mana ?? {})) ?? [undefined])
+      actions.push(...withModesOrTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, ...offeredPayment(payment), ...(X !== null ? {x: X} : {}), ...ridersOffer(state, riders),
+        /* A loyalty ability says its loyalty cost (CR 606.4), for a pilot to weigh. */
+        ...(ability.loyalty !== undefined ? {loyalty: ability.loyalty === "-X" ? -(X ?? 0) : ability.loyalty} : {}),
+        /* What its player picks once it is taken: the permanents to sacrifice, the counters to remove (choose-cost). */
+        ...(later ? {sacrificeLater: atom.count} : {}), ...(among ? {countersLater: among.count} : {}),
+        ...(costChoice ? {costChoice, costNames: costChoice.crew ? costChoice.crew.map((c) => state.objects[c].card)
+          : costChoice.untap ? costChoice.untap.map((c) => state.objects[c].card)
+          : costChoice.tapAll ? costChoice.tapAll.map((c) => state.objects[c].card)
+          : Array.isArray(costChoice.discard) ? costChoice.discard.map((c) => state.objects[c].card)
+          : Array.isArray(costChoice.sacrifice) ? costChoice.sacrifice.map((c) => state.objects[c].card)
+          : costChoice.counter !== undefined ? [`a ${costChoice.counter} counter`]
+          : [state.objects[costChoice.sacrifice ?? costChoice.returnToHand ?? costChoice.discard ?? costChoice.tap ?? costChoice.blight ?? costChoice.exile].card]} : {})}, ability,
+        /* "With mana value X": the X of this offer (script/filter.mjs). */
+        {controller: player, source: id, ...(X !== null ? {x: X} : {})}));
+  }
   return actions;
 }
 

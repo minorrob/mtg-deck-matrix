@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 397 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 398 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1267,6 +1267,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-x11-ascend` - `tests/engine-x11-ascend.mjs`: ascend (Wayward Swordtooth), the city's blessing at ten permanents for the rest of the game, a permanent's and a spell's, and "unless you have the city's blessing"
 - `engine-chosen-mode` - `tests/engine-chosen-mode.mjs`: a Siege's chosen mode (Outpost Siege), asked as its ability triggers -- as the Siege last was, for one that left with the creatures -- and never again as it resolves
 - `engine-restricted-source` - `tests/engine-restricted-source.mjs`: mana for abilities of a kind of source (Woodland Weavemaster) pays for that object wherever it is, a card's cycling in a hand too; for abilities of creatures, a permanent only
+- `engine-zone-costs` - `tests/engine-zone-costs.mjs`: an activated ability's costs offered, chosen and paid wherever it works from (Eldrazi Ravager's "Sacrifice two Eldrazi" from the graveyard; a discard from a hand; a creature to tap)
 
 ## Design and execution record
 
