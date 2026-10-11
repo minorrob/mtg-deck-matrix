@@ -206,6 +206,10 @@ export function valueCostOf(object) {
 /* A FACE-DOWN PERMANENT'S CHARACTERISTICS (CR 708.2a, 701.40a): a nameless 2/2 creature, textless, without subtypes or a
    mana cost -- and so colorless, with no supertype -- its copiable values while it is face down. */
 const FACE_DOWN = Object.freeze({card: null, types: ["Creature"], subtypes: [], supertypes: [], manaCost: null, colors: [], power: 2, toughness: 2, keywords: [], abilities: []});
+/* CAST WITH DISGUISE (CR 702.168a-b): the same, with ward {2} -- a face-down spell, and the permanent it becomes, as long as
+   it is face down. Its ward is the triggered ability a printed "Ward {2}" compiles to (cards/index.mjs). */
+const FACE_DOWN_DISGUISED = Object.freeze({...FACE_DOWN, keywords: ["Ward"], abilities: [{id: "disguise-ward", kind: "triggered", text: "Ward {2}",
+  trigger: {on: "GameEventBecomesTarget", who: "self", by: "opponent"}, effects: [{effect: "unlessPays", who: "that player", amount: 2, effects: [{effect: "counterSpell", stack: "that"}]}]}]});
 /* A CARD EXILED FACE DOWN (CR 406.3a): no characteristics at all -- no name, no types, no cost, nothing. */
 const FACE_DOWN_EXILED = Object.freeze({card: null, types: [], subtypes: [], supertypes: [], manaCost: null, colors: [], power: null, toughness: null, keywords: [], abilities: []});
 /* What the card is, kept beside a face-down permanent's own (`faceDownCard`): seen by its controller (CR 708.5,
@@ -225,6 +229,7 @@ export function turnFaceUp(state, id) {
   const real = object.faceDownCard;
   delete object.faceDown;
   delete object.faceDownCard;
+  delete object.disguised;
   for (const key of CARD_KEYS) {
     if (real[key] === undefined) delete object[key];
     else object[key] = structuredClone(real[key]);
@@ -247,6 +252,16 @@ export function showFace(state, id, face) {
    (715.3a-b); anywhere else, its own alone (715.4). */
 const PRESENT_ONLY = ["subtypes", "supertypes", "colors"];
 const adventureSide = (adventurer, shown) => Object.fromEntries(FACE_KEYS.map((key) => [key, (shown ? adventurer.adventure : adventurer.main)[key]]));
+
+/** A card as the face-down spell its disguise would cast (CR 702.168b): what is weighed as it is cast face down -- its
+    cost, its timing, every rule that reads a spell -- the card it is kept beside (`faceDownCard`), as a face-down
+    permanent's is. A new object for the same card: rules/actions.mjs puts it in the card's place for the offer and the
+    cast, and the card itself back, untouched, unless the cast moved it. */
+export function shownFaceDown(object) {
+  const faceDownCard = Object.fromEntries(CARD_KEYS.filter((key) => object[key] !== undefined).map((key) => [key, object[key]]));
+  const rest = Object.fromEntries(Object.entries(object).filter(([key]) => !CARD_KEYS.includes(key)));
+  return {...rest, ...structuredClone(FACE_DOWN_DISGUISED), faceDown: true, disguised: true, faceDownCard};
+}
 
 /** Show an adventurer card as its Adventure (`shown`), or as itself again: what is weighed as it is cast as an Adventure
     (CR 715.3a) -- rules/actions.mjs shows it for the offer and the cast, and puts it back unless the cast moved it. What
@@ -351,6 +366,8 @@ export function addObject(state, object, zone, player = null) {
     ...(object.preparation ? {preparation: structuredClone(object.preparation)} : {}),
     /* Face down (CR 708.2): what the card is, beside the face-down characteristics it has (moveObject). */
     ...(object.faceDown === true ? {faceDown: true, faceDownCard: structuredClone(object.faceDownCard ?? {})} : {}),
+    /* Face down by its disguise (CR 702.168): turned face up for its disguise cost alone (rules/actions.mjs). */
+    ...(object.faceDown === true && object.disguised === true ? {disguised: true} : {}),
   };
   state.nextTimestamp += 1;
   listFor(state, zone, player).push(id);
@@ -428,7 +445,8 @@ export function recordUse(state, id, key) {
 }
 
 /* `transformed` (CR 712.14a): a double-faced card put onto the battlefield with its back face up. */
-export function moveObject(state, id, zone, player = null, {faceDown = false, transformed = false} = {}) {
+/* `disguised` (CR 702.168b): face down as a disguise casts it -- onto the stack, and from there onto the battlefield. */
+export function moveObject(state, id, zone, player = null, {faceDown = false, transformed = false, disguised = false} = {}) {
   const current = state.objects[id];
   if (!current) throw new Error(`There is no object ${id} to move`);
   /* A face-down permanent leaving is revealed, and moves as the card it is (CR 708.9). */
@@ -461,7 +479,12 @@ export function moveObject(state, id, zone, player = null, {faceDown = false, tr
      from: a double-faced card's front face (712.8a, 712.15). */
   if (faceDown && zone === "battlefield") {
     const faceDownCard = Object.fromEntries(CARD_KEYS.filter((key) => from[key] !== undefined).map((key) => [key, from[key]]));
-    return addObject(state, {...FACE_DOWN, ...kept, faceDown: true, faceDownCard}, zone, player);
+    return addObject(state, {...(disguised ? FACE_DOWN_DISGUISED : FACE_DOWN), ...kept, faceDown: true, ...(disguised ? {disguised: true} : {}), faceDownCard}, zone, player);
+  }
+  /* CAST FACE DOWN (disguise, CR 702.168b): a face-down spell, with the characteristics it was cast with. */
+  if (disguised && zone === "stack") {
+    const faceDownCard = Object.fromEntries(CARD_KEYS.filter((key) => from[key] !== undefined).map((key) => [key, from[key]]));
+    return addObject(state, {...FACE_DOWN_DISGUISED, ...kept, faceDown: true, disguised: true, faceDownCard}, zone, player);
   }
   /* EXILED FACE DOWN (hideaway, CR 702.75a): a card with no characteristics there (406.3a) -- not even a face-down
      permanent's 2/2 -- what it is kept beside it, as onto the battlefield; as it leaves exile it moves as the card it is

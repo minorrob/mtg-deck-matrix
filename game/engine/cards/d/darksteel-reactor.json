@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Darksteel Reactor",
+    "oracleId": "bc483bab-14fb-498d-9310-9c070766c7ae",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Indestructible (Effects that say \"destroy\" don't destroy this artifact.)\nAt the beginning of your upkeep, you may put a charge counter on this artifact.\nWhen this artifact has twenty or more charge counters on it, you win the game.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Indestructible",
+      "keyword": "indestructible"
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, you may put a charge counter on this artifact.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "charge",
+          "count": 1
+        }
+      ],
+      "optional": true
+    },
+    {
+      "kind": "triggered",
+      "text": "When this artifact has twenty or more charge counters on it, you win the game.",
+      "trigger": {
+        "on": "state",
+        "state": {
+          "compare": {
+            "count": {
+              "countersOn": "self",
+              "counter": "charge"
+            },
+            "atLeast": 20
+          }
+        }
+      },
+      "effects": [
+        {
+          "effect": "winGame"
+        }
+      ]
+    }
+  ]
+}

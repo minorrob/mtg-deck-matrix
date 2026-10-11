@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Stinging Vitriol",
+    "oracleId": "624cf822-0b4e-4f0c-9893-a53cb094f616",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{B}{R}",
+    "colors": [
+      "B",
+      "R"
+    ],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Stinging Vitriol deals 2 damage to target opponent. That player reveals their hand. You choose a nonland card from it. They discard that card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Stinging Vitriol deals 2 damage to target opponent. That player reveals their hand. You choose a nonland card from it. They discard that card.",
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 2,
+          "who": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "discard",
+          "who": {
+            "target": 0
+          },
+          "chooser": "you",
+          "reveal": true,
+          "selector": {
+            "nonTypes": [
+              "Land"
+            ]
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

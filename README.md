@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 428 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 471 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -949,6 +949,36 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `deck-sources` — `tests/deck-sources.mjs`
 - `docx-writer` — `tests/docx-writer.mjs`
 - `edhrec-client` — `tests/edhrec-client.mjs`
+- `engine-actions` — `tests/engine-actions.mjs`
+- `engine-cast` — `tests/engine-cast.mjs`
+- `engine-combat` — `tests/engine-combat.mjs`
+- `engine-commander` — `tests/engine-commander.mjs`
+- `engine-controller` — `tests/engine-controller.mjs`
+- `engine-effects` — `tests/engine-effects.mjs`
+- `engine-enters` — `tests/engine-enters.mjs`
+- `engine-filter` — `tests/engine-filter.mjs`
+- `engine-gate` — `tests/engine-gate.mjs`
+- `engine-headers` — `tests/engine-headers.mjs`
+- `engine-journal` — `tests/engine-journal.mjs`
+- `engine-keywords` — `tests/engine-keywords.mjs`
+- `engine-layers` — `tests/engine-layers.mjs`
+- `engine-lki` — `tests/engine-lki.mjs`
+- `engine-mana` — `tests/engine-mana.mjs`
+- `engine-mulligan` — `tests/engine-mulligan.mjs`
+- `engine-priority` — `tests/engine-priority.mjs`
+- `engine-projection` — `tests/engine-projection.mjs`
+- `engine-replacement` — `tests/engine-replacement.mjs`
+- `engine-resolution` — `tests/engine-resolution.mjs`
+- `engine-rng` — `tests/engine-rng.mjs`
+- `engine-runtime` — `tests/engine-runtime.mjs`
+- `engine-sba` — `tests/engine-sba.mjs`
+- `engine-schema` — `tests/engine-schema.mjs`
+- `engine-skeleton` — `tests/engine-skeleton.mjs`
+- `engine-stack` — `tests/engine-stack.mjs`
+- `engine-state` — `tests/engine-state.mjs`
+- `engine-trigger` — `tests/engine-trigger.mjs`
+- `engine-turn` — `tests/engine-turn.mjs`
+- `engine-vocabulary` — `tests/engine-vocabulary.mjs`
 - `engine-cards` — `tests/engine-cards.mjs`
 - `engine-catalog` — `tests/engine-catalog.mjs`
 - `engine-deaths` — `tests/engine-deaths.mjs`
@@ -1298,6 +1328,49 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-enters-or-leaves` - `tests/engine-enters-or-leaves.mjs`: "if a legendary permanent or an artifact entering or leaving the battlefield causes a triggered ability ... to trigger, that ability triggers an additional time" (Gandalf the White; CR 603.2d, 603.10a) -- every way to leave, as it last existed, a token, its own dies trigger, two at once
 - `engine-mana-provenance` - `tests/engine-mana-provenance.mjs`: "if mana from a Treasure was spent to cast it" (Smaug, Wicked Worm; CR 106.3, 601.2h) -- a mana ability's mana remembered with its source when an ability asks, the spell keeping it, and which mana pays the caster's choice where it is read
 - `engine-mana-withheld` - `tests/engine-mana-withheld.mjs`: "This mana can't be spent to cast spells from your hand" (Heartwood Crafter; CR 106.4, 106.6, 118.12) -- in the pool and remembered beside it: a spell cast from the hand sees the pool less it, anything else spends it first, and a spend the engine is not told of (an "unless" cost, a mana ability's own cost) is read as having spent it first, settled before mana is added again
+- `engine-split-second` - `tests/engine-split-second.mjs`: split second (Siege Smash), nothing cast and no ability but a mana ability activated while it is on the stack; triggers and special actions go on
+- `engine-riot` - `tests/engine-riot.mjs`: riot (Ghor-Clan Wrecker), a +1/+1 counter or haste, its controller's choice as it enters however it enters, each instance its own
+- `engine-surge-freerunning` - `tests/engine-surge-freerunning.mjs`: surge (Reckless Bushwhacker) and freerunning (Monastery Raid), alternative costs after another spell or an Assassin's or commander's combat damage this turn, and "if its cost was paid"
+- `engine-embalm` - `tests/engine-embalm.mjs`: embalm (Anointer Priest), from its owner's graveyard as a sorcery, the card exiled, a white Zombie token copy of it with no mana cost
+- `engine-tiered` - `tests/engine-tiered.mjs`: tiered (Cloud's Limit Break), one mode with its own cost added, each mode its own cast, a mode's target controlled by different players
+- `engine-suspend-hand` - `tests/engine-suspend-hand.mjs`: suspend from the hand (Knight of Old Benalia), a special action at the timing it could be cast, exiled with its time counters and suspended
+- `engine-protection-multicolored` - `tests/engine-protection-multicolored.mjs`: protection from multicolored (Argentum Masticore), and "sacrifice it unless you discard a card; when you discard a card this way", about the card discarded
+- `engine-hexproof-from` - `tests/engine-hexproof-from.mjs`: a color chosen as it resolves (Skrelv, Defector Mite), hexproof from that color and unblockable by creatures of it until end of turn
+- `engine-partner-with` - `tests/engine-partner-with.mjs`: partner with [name] (for Pir, Imaginative Rascal), two commanders that name each other, and the trigger as it enters: its target player may search their library for the card it names
+- `engine-firebending` - `tests/engine-firebending.mjs`: firebending (Fire Nation Cadets), whenever it attacks N {R} kept as combat's steps end, no more than is left, and lost as combat ends; each instance its own; the Cadets' only while a Lesson is in its controller's graveyard
+- `engine-compleated` - `tests/engine-compleated.mjs`: compleated (Vraska, Betrayal's Sting), two fewer loyalty counters for each Phyrexian symbol its caster paid with life, never fewer than none; a creature made a Treasure artifact for good, and a target player's poison counters counted to nine
+- `engine-disguise` - `tests/engine-disguise.mjs`: disguise (Arno Dorian, Bayek of Siwa), a card cast face down for {3}, a nameless 2/2 with ward {2} on the stack and the battlefield, never named to another seat; turned face up for its disguise cost alone, a special action
+- `engine-adventure-asking` - `tests/engine-adventure-asking.mjs`: asking what an adventurer card may do changes nothing, the card shown as itself again with no empty subtypes, supertypes or colors kept
+- `engine-counted-amounts` - `tests/engine-counted-amounts.mjs`: amounts counted as printed -- half and "for every seven", rounded down (Pox Plague, Dark Matter Manipulator), each player's own count for a discard or a sacrifice, a target player's hand (Borrowed Knowledge, Jeska's Will), a whole hand remembered, a remembered count filtered and carried into a reflexive trigger (Release to Memory, Augusta, Order Returned), converge (Sundering Archaic), planeswalker types and proliferate X times (Tam, the Possibility), your commanders' casts
+- `engine-another-died` - `tests/engine-another-died.mjs`: "if another creature died this turn" (Chain Assassination), the deaths this turn less what the destroy killed, as a destroy remembers it -- not the indestructible, nor one exiled instead
+- `engine-each-player-creates` - `tests/engine-each-player-creates.mjs`: "each opponent creates a 1/1 white Human creature token" (Slaughter Specialist; CR 111.2) -- a token made for "that player" of a repetition, theirs to control and own, in turn order, none for a player gone
+- `engine-attach-target` - `tests/engine-attach-target.mjs`: "attach target Equipment you control to up to one target creature you control" (Iron Hills Stalwart; CR 701.3) -- the targeted Equipment moves, from where it was; nothing moves for an illegal target, none chosen, or protection
+- `engine-counters-removed` - `tests/engine-counters-removed.mjs`: "remove up to three counters from another target creature or planeswalker" (Mabel, Bitter Recluse; CR 122.1, 608.2d) -- of any kinds, which ones its controller chooses as it resolves, counted after; unasked where there is no choice
+- `engine-graveyard-abilities` - `tests/engine-graveyard-abilities.mjs`: "Thranduil has all activated abilities of all Elf cards in your graveyard" (CR 613.1f) -- its controller's graveyard as it now is, a changeling card among them, one ability each, "this creature" the holder
+- `engine-copy-set` - `tests/engine-copy-set.mjs`: copies of a set and of a card from among those that left a graveyard (Mirrorform, Spirit of Resilience; CR 707.2, 611.2c, 400.7e) -- each matched as it begins; what that leaves attached unattached (CR 704.5p, 301.5c); a card where it is now
+- `engine-roles` - `tests/engine-roles.mjs`: Role tokens (Royal Treatment; CR 303.7, 303.4i, 704.5z) -- a Royal Role created attached, not created for what it could not enchant, and one player's newest Role alone on a permanent
+- `engine-counters-onto` - `tests/engine-counters-onto.mjs`: "move any number of +1/+1 counters from this creature onto other creatures" (Forgotten Ancient; CR 122.5) -- where each goes asked a counter at a time, then all moved at once, one placement on each; all or nothing
+- `engine-counter-duration` - `tests/engine-counter-duration.mjs`: "for as long as that land has a blight counter on it, it loses all land types and abilities" (Ultima, Origin of Oblivion; CR 611.2b, 205.3i) -- applied while it has the counter, over for good once it does not; every land type lost, a land creature's creature types kept
+- `engine-dig-by-type` - `tests/engine-dig-by-type.mjs`: a dig's cards to zones by card type (Zimone's Experiment; CR 701.20a) -- lands onto the battlefield tapped, creatures into hand, a land creature with the lands, the taken alone revealed
+- `engine-search-steps` - `tests/engine-search-steps.mjs`: a search a card at a time (Krosan Verge, Myriad Landscape; CR 701.23b, 701.23h) -- a description for each card, or sharing a land type; found together, shuffled once
+- `engine-unless-exile` - `tests/engine-unless-exile.mjs`: "you may exile this spell and four cards named Sphinx's Approach from your graveyard. If you do" (CR 118.12a, 707.10a) -- offered only when it can be paid, which four asked; and its deck rule (CR 100.2a)
+- `engine-revealed-hand` - `tests/engine-revealed-hand.mjs`: a discard chosen from a revealed hand (CR 701.9b, 701.20a; Render Speechless, Stinging Vitriol, Dai Li Indoctrination, Auntie's Sentence) -- every card shown to every seat while it is chosen, named in the journal, discarded by its own player -- and "any number of cards, then draws that many" (Steal the Show)
+- `engine-discard-triggers` - `tests/engine-discard-triggers.mjs`: "when you discard this card" (CR 113.6k; Titanbones, Towering Heart) from the zone it went to, its own discard alone -- at cleanup and as a cost -- and "whenever a player discards one or more cards" (CR 603.2c; Tinybones, Pocket Nuisance), once for each player each action
+- `engine-graveyard-upkeep` - `tests/engine-graveyard-upkeep.mjs`: a triggered ability that works from its card's graveyard (CR 113.6m; Squee, Goblin Nabob) -- there alone, for its owner, once for each card, finding nothing once the card has left
+- `engine-proliferated` - `tests/engine-proliferated.mjs`: "whenever you proliferate" (CR 701.34a; Ezuri, Stalker of Spheres) -- every proliferate said as it is done, counters given or none, by whom, twice when doubled (Tekuthal)
+- `engine-crime` - `tests/engine-crime.mjs`: "whenever you commit a crime" (CR 700.13; Bandit's Haul) -- a spell cast, an ability activated or a trigger put on the stack aimed at an opponent, what they control, or a card in their graveyard, once for it, by whom
+- `engine-state-trigger` - `tests/engine-state-trigger.mjs`: state triggers (CR 603.8; Darksteel Reactor) -- triggering the moment the state holds, not again while waiting or on the stack, again once resolved if it still holds, one for each permanent
+- `engine-transformed` - `tests/engine-transformed.mjs`: "whenever this creature transforms into" a face (CR 701.27e; Ashling, Rekindled // Ashling, Rimebound), this permanent's own turning over and never entering transformed, and an ability's two mana of one color, kept for what it may pay for (CR 106.6)
+- `engine-delayed-mana` - `tests/engine-delayed-mana.mjs`: a delayed triggered mana ability (CR 603.7, 605.1b; Molten Tide, Pyre Rhymer's prepared spell) -- added at once with the mana ability that triggers it, never on the stack, for what it names, its controller's, until it ends
+- `engine-opening-hand` - `tests/engine-opening-hand.mjs`: an opening hand's actions (CR 103.6b; Chancellor of the Forge) asked once the mulligans are done, the starting player first, a card at a time -- revealed to everyone until the first turn begins -- and the delayed trigger at the first upkeep (CR 603.7g)
+- `engine-attack-tax-answers` - `tests/engine-attack-tax-answers.mjs`: an attack tax the attacker can't pay (CR 508.1d, 508.1h): the declare-attackers record says what each attack takes from the mana there is, and L0, L1, the random pilot and the room's least answer declare only what can be paid for -- a required Goblin goes where it is free
+- `engine-counter-exile-cast` - `tests/engine-counter-exile-cast.mjs`: a permanent spell countered and exiled instead, and cast free for as long as it remains exiled (Thranduil's Decree; CR 701.6a, 611.2b, 400.7): what the counter moved remembered, a permission only for a card in exile now
+- `engine-ability-target` - `tests/engine-ability-target.mjs`: an ability on the stack as a target (Bolt Bend; CR 115.2, 115.5, 115.7a, 115.9a): chosen by its stack entry, by whose and "with a single target", gone once it leaves; an effect's stack entries; its new target held to the ability's own requirements; the room's offer and the pilots' aim read off the stack
+- `engine-tempting-offer` - `tests/engine-tempting-offer.mjs`: a tempting offer (Tempt with Vengeance; CR 207.2c, 101.4, 800.4b, 800.4g): each opponent asked a "may" in turn order, those who did kept and counted (playersWhoDid, X for each with times X), one who leaves answered for, given nothing and not counted
+- `engine-prevention-shields` - `tests/engine-prevention-shields.mjs`: a player's prevention shields (Inkshield, Deflecting Palm; CR 609.7a, 615.5, 615.8, 616.1): who they shield, a source chosen, used up once, what follows dealt by the card the spell became, ordered with the other effects by the player dealt the damage
+- `engine-vote` - `tests/engine-vote.mjs`: voting (Fateful Tempest's council's dilemma; CR 701.38, 800.4a): each player from the caster in turn order, the votes so far in the question, one who has left casting none; the votes for a choice and the total mana value of what was milled counted
+- `engine-unless-times` - `tests/engine-unless-times.mjs`: a cost paid any number of times and "that many" after it (Bloodthirsty Adversary; CR 118.12a, 601.2h, 603.12): each count the mana pays offered, the cost that many times over paid as one, the reflexive trigger's X and "up to X" targets
+- `engine-pay-mana-play` - `tests/engine-pay-mana-play.mjs`: casting what this creature exiled as it attacks, its mana cost paid (Boiling Rock Rioter; CR 607.2a, 608.2g, 601.2g-h, 605.3a): an Ally exiled with this creature cast from the pool and its caster's plain sources, colored symbols and all, the ways to pay asked; an {X} or unpayable one not offered; a tap cost that may tap its own source unless it says another
 
 ## Design and execution record
 

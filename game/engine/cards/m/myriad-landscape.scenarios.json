@@ -1,0 +1,271 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Myriad Landscape",
+  "fixtures": {
+    "Savannah": {
+      "types": [
+        "Land"
+      ],
+      "subtypes": [
+        "Forest",
+        "Plains"
+      ],
+      "manaCost": null,
+      "colors": [],
+      "abilities": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Two basic Forests share a land type: the second is offered only Forests",
+      "library": [
+        "Forest",
+        "Island",
+        "Forest",
+        "Plains"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Myriad Landscape",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Myriad Landscape"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Forest",
+                  "Island",
+                  "Forest",
+                  "Plains",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Forest"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Myriad Landscape"
+          ]
+        },
+        {
+          "event": "GameEventShuffle",
+          "where": {}
+        }
+      ]
+    },
+    {
+      "name": "Up to two: one Island, then no more",
+      "library": [
+        "Island",
+        "Island",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Myriad Landscape",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Myriad Landscape"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Island"
+          ]
+        },
+        {
+          "answer": []
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Island"
+        }
+      ]
+    },
+    {
+      "name": "Basic lands only: a nonbasic Savannah is never offered, Wastes are; with no other Plains the Plains finds nothing to share",
+      "library": [
+        "Savannah",
+        "Plains",
+        "Swamp"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Myriad Landscape",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Myriad Landscape"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Plains",
+                  "Swamp",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Plains"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

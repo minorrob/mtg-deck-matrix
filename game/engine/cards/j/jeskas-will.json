@@ -1,0 +1,89 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Jeska's Will",
+    "oracleId": "0fd114c4-092b-4e28-b0dc-ef529f3bc73e",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one. If you control a commander as you cast this spell, you may choose both instead.\n• Add {R} for each card in target opponent's hand.\n• Exile the top three cards of your library. You may play them this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one. If you control a commander as you cast this spell, you may choose both instead.\n• Add {R} for each card in target opponent's hand.\n• Exile the top three cards of your library. You may play them this turn.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "chooseMore": {
+            "condition": {
+              "present": {
+                "what": "permanent",
+                "commander": true,
+                "controller": "you"
+              }
+            },
+            "choose": 2
+          },
+          "modes": [
+            {
+              "text": "Add {R} for each card in target opponent's hand.",
+              "targets": [
+                {
+                  "what": "player",
+                  "who": "opponent"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "addMana",
+                  "mana": {
+                    "R": {
+                      "count": {
+                        "what": "card",
+                        "zone": "hand",
+                        "controller": {
+                          "target": 0
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Exile the top three cards of your library. You may play them this turn.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "fromTop": 3,
+                  "to": "exile",
+                  "remember": true
+                },
+                {
+                  "effect": "mayPlay",
+                  "targets": "remembered",
+                  "until": "end-of-turn"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

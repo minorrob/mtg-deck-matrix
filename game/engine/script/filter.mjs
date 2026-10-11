@@ -36,7 +36,7 @@ import {usesThisTurn, valueCostOf} from "../state/index.mjs";
 import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf, subtypesOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {hasSubtype, isCreatureType} from "../keywords/types.mjs";
-import {protectedFrom} from "../rules/protection.mjs";
+import {protectedFrom, hexproofFrom} from "../rules/protection.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
 
 /* The steps after blockers are declared, in which an attacker is blocked or unblocked (CR 509.1h). */
@@ -130,7 +130,25 @@ export function matchesSelector(selector, state, id, context = {}) {
 }
 
 /** What a selector can be about. */
-const WHAT = ["permanent", "card", "player", "spell"];
+const WHAT = ["permanent", "card", "player", "spell", "ability"];
+
+/* AN ABILITY ON THE STACK (CR 113.7a, 115.2: "target spell or ability", Bolt Bend): no object, so it is named by its stack
+   entry, `id` the entry's stack id -- an activated or triggered ability's, never a spell's. What may be asked of it: who
+   controls it (`controller`), and "with a single target" (`singleTarget`, CR 115.9a: one object or player chosen in all).
+   Nothing gives an ability hexproof or protection, so being a target asks nothing more (`target`). */
+const ABILITY_KEYS = ["what", "controller", "singleTarget", "target"];
+const abilityMatcher = (selector) => {
+  const extra = Object.keys(selector).filter((key) => !ABILITY_KEYS.includes(key));
+  if (extra.length) throw new Error(`An ability on the stack is chosen by ${ABILITY_KEYS.join(", ")}, not ${extra.join(", ")}`);
+  return (state, id, context = {}) => {
+    const entry = state.stack.find((e) => e.stackId === id);
+    if (!entry || entry.kind === "spell") return false;
+    if (selector.controller === "you" && entry.playerId !== context.controller) return false;
+    if (selector.controller === "opponent" && entry.playerId === context.controller) return false;
+    if (selector.singleTarget === true && (entry.targets ?? []).flat().filter(Boolean).length !== 1) return false;
+    return true;
+  };
+};
 
 /* Where each `what` looks by default. A permanent is on the battlefield and nowhere else
    (CR 110.1) — a card in a hand is a card, not a permanent, and conflating them is how a "destroy
@@ -210,6 +228,8 @@ function canBeTargetedBy(state, id, chooser, source = null) {
   if (keywords.includes("Hexproof") && controllerOf(state, id) !== chooser) return false;
   /* Protection (CR 702.16b; rules/protection.mjs): no target of a spell or ability from a source with the quality. */
   if (protectedFrom(state, {card: id}, source)) return false;
+  /* Hexproof from a color (CR 702.11d; rules/protection.mjs): no target of an opponent's spell or ability of that color. */
+  if (hexproofFrom(state, id, chooser, source)) return false;
   return true;
 }
 
@@ -249,6 +269,7 @@ export function compileSelector(selector) {
   }
   assertGrammar(selector);
   const what = selector.what ?? "permanent";
+  if (what === "ability") return abilityMatcher(selector);
 
   return function matches(state, id, context = {}) {
     const chooser = context.controller;
@@ -341,11 +362,13 @@ export function compileSelector(selector) {
       if (state.objects[context.source]?.attachedTo !== id) return false;
     }
 
-    /* CR 109.5 */
+    /* CR 109.5 -- "other": another than the source, or, an ability's source gone, another than what it was as it last
+       existed (`lastKnown`, which the stack keeps for it: CR 113.7a, 608.2h) -- Reckless Bushwhacker's "other creatures you
+       control", the Bushwhacker shocked in response: every creature its controller still controls. */
     if (selector.another === true) {
-      if (context.source === undefined || context.source === null)
-        throw new Error("A selector using `another` needs the source it is another than (CR 109.5)");
-      if (id === context.source) return false;
+      const self = context.source ?? context.lastKnown?.cardId ?? null;
+      if (self === null) throw new Error("A selector using `another` needs the source it is another than (CR 109.5)");
+      if (id === self) return false;
     }
 
     if (selector.manaValue && !matchesManaValue(state, id, selector.manaValue, context)) return false;
@@ -511,6 +534,8 @@ export function selectMatching(state, selector, context = {}) {
   const match = compileSelector(selector);
   const what = selector.what ?? "permanent";
   if (what === "player") return state.players.map((p) => p.id).filter((id) => match(state, id, context));
+  /* Abilities on the stack, by their entries' stack ids, from the bottom of the stack up. */
+  if (what === "ability") return state.stack.map((e) => e.stackId).filter((id) => match(state, id, context));
 
   const zone = selector.zone ?? DEFAULT_ZONE[what];
   const candidates = zone === "battlefield" || zone === "stack" || zone === "exile"

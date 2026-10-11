@@ -41,7 +41,7 @@
 import {conditionHolds} from "../script/condition.mjs";
 import {isCounted, amountOf} from "../script/amount.mjs";
 import {chosenFor} from "../script/chosen.mjs";
-import {hasSubtype, everyCreatureType} from "../keywords/types.mjs";
+import {hasSubtype, everyCreatureType, isLandType} from "../keywords/types.mjs";
 
 /** The seven layers of CR 613.1, in order. */
 export const LAYERS = Object.freeze([1, 2, 3, 4, 5, 6, 7]);
@@ -111,6 +111,9 @@ function affects(state, effect, current, sourceController) {
     return anyOf.some((one) => affects(state, {...effect, affects: {...shared, ...one}}, current, sourceController));
   }
   if (rule.ids && !rule.ids.includes(current.id)) return false;
+  /* "For as long as that land has a blight counter on it" (Ultima, Origin of Oblivion; CR 611.2b): an effect's object while
+     it has a counter of that kind -- and once it has none, no longer (rules/sba.mjs ends it for good, endCounterDurations). */
+  if (effect.whileCounter && !(((current.counters ?? {})[effect.whileCounter] ?? 0) > 0)) return false;
   if (rule.types && !rule.types.every((type) => current.types.includes(type))) return false;
   if (rule.controller === "you" && current.controller !== sourceController) return false;
   if (rule.controller === "opponent" && current.controller === sourceController) return false;
@@ -165,6 +168,8 @@ function applyEffect(current, effect) {
   if (change.setTypes) current.types = [...change.setTypes];
   /* "Enchanted permanent is a colorless Forest land" (Song of the Dryads): its subtypes set, every other one lost (CR 205.1b). */
   if (change.setSubtypes) { current.subtypes = [...change.setSubtypes]; current.everyCreatureType = false; }
+  /* "It loses all land types" (Ultima, Origin of Oblivion; CR 205.3i): every land type taken away, the other subtypes kept. */
+  if (change.removeLandTypes === true) current.subtypes = current.subtypes.filter((subtype) => !isLandType(subtype));
   /* "It's not a creature" (impending, CR 702.176a): that type taken away, the rest kept. */
   if (change.removeTypes) current.types = current.types.filter((type) => !change.removeTypes.includes(type));
   if (change.setColors) current.colors = [...change.setColors];
@@ -231,6 +236,20 @@ function topCardGrant(state, holder, ability) {
   const {topCardAbilities: _top, ...rest} = ability.apply;
   return {...ability, apply: {...rest, addAbilities: (card.abilities ?? []).filter((a) => a.kind === "activated" || a.kind === "mana")}};
 }
+/* "THRANDUIL HAS ALL ACTIVATED ABILITIES OF ALL ELF CARDS IN YOUR GRAVEYARD" (Thranduil, the Elvenking; CR 613.1f, layer 6):
+   `apply.graveyardAbilities`, what those cards must be (their subtypes, a changeling card's every creature type among them,
+   CR 702.73a) -- read from the holder's controller's graveyard as it now is, so the abilities come and go with the cards.
+   Each card's activated abilities, mana abilities among them (CR 605.1a), given as granted abilities are, each named by its
+   card as well, so two cards' alike abilities are two; one that works only from a graveyard is given and never offered on
+   the battlefield (rules/actions.mjs). No such card, and the static gives nothing. */
+function graveyardGrant(state, holder, ability) {
+  const wanted = ability.apply.graveyardAbilities?.subtypes ?? [];
+  const cards = (state.zones.graveyard?.[holder.controller] ?? []).filter((id) => state.objects[id]
+    && wanted.every((t) => hasSubtype(state.objects[id].subtypes ?? [], everyCreatureType(state.objects[id].keywords), t)));
+  const {graveyardAbilities: _graveyard, ...rest} = ability.apply;
+  return {...ability, apply: {...rest, addAbilities: cards.flatMap((id) => (state.objects[id].abilities ?? [])
+    .filter((a) => a.kind === "activated" || a.kind === "mana").map((a) => ({...a, id: `${id}:${a.id}`})))}};
+}
 
 function gatherEffects(state) {
   const found = [];
@@ -249,7 +268,8 @@ function gatherEffects(state) {
       /* One that works from a graveyard does not work here (CR 113.6). */
       if (ability.worksFrom === "graveyard") continue;
       if (!holdsNow(state, ability.condition, {controller: holder.controller, source: id})) continue;
-      const given = ability.apply?.topCardAbilities !== undefined ? topCardGrant(state, holder, ability) : ability;
+      const given = ability.apply?.topCardAbilities !== undefined ? topCardGrant(state, holder, ability)
+        : ability.apply?.graveyardAbilities !== undefined ? graveyardGrant(state, holder, ability) : ability;
       if (given === null) continue;
       found.push({
         /* "Creatures you control of the chosen type get +1/+1", "this creature is the chosen type": its own choice. */
@@ -323,7 +343,7 @@ const trial = (c) => ({...c, types: [...c.types], subtypes: [...c.subtypes], col
    answer is the same either way; `pruneCheck` makes the trial anyway and throws if the two disagree (the suites). */
 const READS = {types: ["types"], subtypes: ["types", "subtypes"], controller: ["controller"], colors: ["colors"], colorless: ["colors"], keywords: ["keywords"]};
 const WRITES = {controller: "controller", addTypes: "types", setTypes: "types", removeTypes: "types", addSubtypes: "subtypes", setSubtypes: "subtypes",
-  allCreatureTypes: "subtypes", setColors: "colors", removeAllAbilities: "abilities", addAbilities: "abilities", addKeywords: "abilities", setPower: "pt",
+  allCreatureTypes: "subtypes", removeLandTypes: "subtypes", setColors: "colors", removeAllAbilities: "abilities", addAbilities: "abilities", addKeywords: "abilities", setPower: "pt",
   setToughness: "pt", power: "pt", toughness: "pt", switchPT: "pt"};
 /* Operations on one field that give the same result in either order (canonical sorts types and keywords). */
 const COMMUTING = {types: ["addTypes"], abilities: ["addKeywords"], pt: ["power", "toughness"], subtypes: ["allCreatureTypes"]};
@@ -576,7 +596,7 @@ const heldAbilities = (object, current) => [...(current.lostAbilities ? [] : obj
    graveyard (where one may work from, allEffects): when none does, a permanent's abilities are its own, and nothing need
    be derived to read them. */
 function abilitiesChange(state) {
-  const changes = (apply) => Boolean(apply && (apply.addAbilities || apply.removeAllAbilities || apply.topCardAbilities));
+  const changes = (apply) => Boolean(apply && (apply.addAbilities || apply.removeAllAbilities || apply.topCardAbilities || apply.graveyardAbilities));
   if ((state.effects ?? []).some((effect) => changes(effect.apply))) return true;
   const holders = [...state.zones.battlefield, ...(state.zones.graveyard ?? []).flat()];
   return holders.some((id) => (state.objects[id].abilities ?? []).some((ability) => ability.kind === "static" && changes(ability.apply)));

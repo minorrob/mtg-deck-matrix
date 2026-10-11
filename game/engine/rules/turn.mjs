@@ -197,13 +197,21 @@ const skipsFirstDraw = (state) =>
 /* CR 500.4. Reported only when there was something to empty: an empty pool emptying again is not
    news, and a board that announces it every step buries what matters. */
 function emptyManaPools(state, events) {
+  /* Mana its player does not lose until end of combat (firebending, CR 702.189a; script/effects/resources.mjs): kept as a
+     combat step but the last ends, and lost as the combat phase ends (500.5a). Kept no more than the pool holds of it:
+     the plain mana is spent first -- the two pay the same, and the kept mana lasts longer -- as rules/restricted-mana.mjs
+     spends plain mana before rider mana. */
+  const combatGoesOn = state.phase.startsWith("COMBAT_") && state.phase !== "COMBAT_END";
   for (const player of state.players) {
     /* And the mana that could be spent only on some things (rules/restricted-mana.mjs). */
     emptyRestricted(player);
-    const total = Object.values(player.manaPool).reduce((a, b) => a + b, 0);
+    const kept = combatGoesOn ? Object.fromEntries(Object.entries(player.combatMana ?? {}).map(([color, n]) => [color, Math.min(n, player.manaPool[color])]).filter(([, n]) => n > 0)) : {};
+    if (Object.keys(kept).length) player.combatMana = kept;
+    else delete player.combatMana;
+    const had = Object.fromEntries(Object.entries(player.manaPool).map(([color, n]) => [color, n - (kept[color] ?? 0)]));
+    const total = Object.values(had).reduce((a, b) => a + b, 0);
     if (total === 0) continue;
-    const had = {...player.manaPool};
-    for (const color of Object.keys(player.manaPool)) player.manaPool[color] = 0;
+    for (const color of Object.keys(player.manaPool)) player.manaPool[color] = kept[color] ?? 0;
     events.push(event("GameEventManaPool", state, {player: {playerId: player.id, name: player.name}, emptied: had}));
   }
 }
@@ -266,7 +274,7 @@ export function awaitingChoice(state) {
 function choiceFor(state) {
   const awaiting = state.awaiting;
   if (!awaiting) return null;
-  if (awaiting.kind === "mulligan-decision" || awaiting.kind === "mulligan-bottom")
+  if (awaiting.kind === "mulligan-decision" || awaiting.kind === "mulligan-bottom" || awaiting.kind === "opening-hand")
     return mulliganChoice(state, awaiting);
   if (awaiting.kind === "effect-choice") return resolutionChoice(state, awaiting);
   if (awaiting.kind === "commander-replacement") return commanderChoice(state, awaiting);
@@ -361,7 +369,7 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
   /* The mulligan is the one decision that consumes randomness, because keeping or not decides
      whether a library is shuffled. A generator is a closure and game state is plain data (§3.2.4),
      so the stream is handed in rather than held. */
-  if (awaiting.kind === "mulligan-decision" || awaiting.kind === "mulligan-bottom")
+  if (awaiting.kind === "mulligan-decision" || awaiting.kind === "mulligan-bottom" || awaiting.kind === "opening-hand")
     return resolveMulligan(state, awaiting, indices, rng);
 
   /* A card effect that stopped half way through. `extra` carries what generic indices cannot --

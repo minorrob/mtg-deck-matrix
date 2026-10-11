@@ -244,8 +244,8 @@ const equipTo = (s, equipment, target) => applyAction(s, 0, offers(s, "activate"
   main(s);
   throws(() => runEffects(s, [{effect: "createToken", token: {predefined: "Blood"}}], {controller: 0, source: null}), /No predefined token named Blood/,
     "a predefined token the engine does not know is refused, not made blank");
-  eq(Object.keys(PREDEFINED_TOKENS).sort(), ["Clue", "Food", "Jace", "Mutagen", "Pest", "Treasure"],
-    "the three the most-played cards make, the Pest (batch 18, Beledros Witherbloom), the Mutagen (CR 111.10v; Splinter, the Mentor), and empower Jace's Jace (tests/engine-empower-jace.mjs)");
+  eq(Object.keys(PREDEFINED_TOKENS).sort(), ["Clue", "Food", "Jace", "Mutagen", "Pest", "Royal Role", "Treasure"],
+    "the three the most-played cards make, the Pest (batch 18, Beledros Witherbloom), the Mutagen (CR 111.10v; Splinter, the Mentor), empower Jace's Jace (tests/engine-empower-jace.mjs), and the Royal Role (CR 111.10m; Royal Treatment, tests/engine-roles.mjs)");
 }
 
 /* ---- a mana ability that sacrifices its source ---- */

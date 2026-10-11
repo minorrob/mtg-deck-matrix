@@ -13,6 +13,9 @@
  * tapping for a cast, and the compile.
  */
 import assert from "node:assert/strict";
+import {readdirSync, readFileSync} from "node:fs";
+import {join, relative} from "node:path";
+import {fileURLToPath} from "node:url";
 import {runScenario} from "../game/engine/cards/scenario.mjs";
 import {loadCardIndex} from "../game/tools/engine-cards.mjs";
 import {awaitingChoice, resolveAwaiting, advance} from "../game/engine/rules/turn.mjs";
@@ -20,6 +23,10 @@ import {legalActions, applyAction, tapUnits} from "../game/engine/rules/actions.
 import {passPriority} from "../game/engine/rules/priority.mjs";
 import {poolFor, withheldOf} from "../game/engine/rules/restricted-mana.mjs";
 import {compileScript} from "../game/engine/cards/index.mjs";
+import {payGeneric} from "../game/engine/rules/mana.mjs";
+import {runEffects} from "../game/engine/script/effects/index.mjs";
+import {beginResolution} from "../game/engine/script/resolution.mjs";
+import {collectTriggers} from "../game/engine/rules/trigger.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -145,6 +152,78 @@ const C = (s) => s.players[0].manaPool.C;
   eq([s.players[0].life, s.objects[named(s, HC)].tapped], [40, true], "paid: the Crafter tapped");
 }
 
+/* ---- EVERY ADD TO A POOL GOES THROUGH addPoolMana, which settles the withheld mana first ----
+   Read from the source: the pool's raw add (rules/mana.mjs, addMana) is imported by rules/restricted-mana.mjs alone and called
+   there only in addPoolMana; nothing else in the engine writes a pool up -- by `+=`, `++` or `=` on a pool or a name for one,
+   by handing one to anything but what spends or reads it -- but the step's emptying (rules/turn.mjs, which keeps
+   firebending's mana and never adds). */
+{
+  const engine = fileURLToPath(new URL("../game/engine/", import.meta.url));
+  const files = [];
+  const walk = (dir) => { for (const e of readdirSync(dir, {withFileTypes: true})) { const p = join(dir, e.name); if (e.isDirectory()) walk(p); else if (e.name.endsWith(".mjs") && e.name !== "definitions.mjs") files.push(p); } };
+  walk(engine);
+  const code = (text) => text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`\\])\/\/[^\n]*/g, "$1");
+  const rel = (p) => relative(engine, p).split("\\").join("/");
+  const importers = [], namespaces = [], writes = [], handed = [];
+  const READERS = ["spend", "poolSize", "paymentOptions", "chosenPayment", "automaticPayment", "Object.entries", "Object.keys", "Object.values", "addMana"];
+  for (const file of files) {
+    const text = code(readFileSync(file, "utf8"));
+    for (const [, names, from] of text.matchAll(/import\s*\{([^}]*)\}\s*from\s*"([^"]*)"/g))
+      if (/(^|\/)mana\.mjs$/.test(from) && names.split(",").some((n) => n.trim().split(/\s+as\s+/)[0] === "addMana")) importers.push(rel(file));
+    for (const [, from] of text.matchAll(/import\s*\*\s*as\s+\w+\s+from\s*"([^"]*)"/g)) if (/(^|\/)mana\.mjs$/.test(from)) namespaces.push(rel(file));
+    if (/\{[^{}]*\bmanaPool\b[^{}]*\}\s*=[^=]/.test(text)) writes.push(`${rel(file)}: a pool destructured`);
+    /* Each top-level statement on its own: a local name for a pool (`const pool = ...manaPool;`) is that function's. */
+    for (const chunk of text.split(/\n(?=\S)/)) {
+      const aliases = [...new Set([...chunk.matchAll(/(?:const|let|var)\s+(\w+)\s*=\s*[\w.[\]()]*\.manaPool\s*;/g)].map((m) => m[1]))];
+      for (const name of ["manaPool", ...aliases]) {
+        /* A pool as `...manaPool`, or a local name for one standing alone (not `e.pool`). */
+        const at = name === "manaPool" ? "\\bmanaPool" : `(?<![\\w.])${name}`;
+        for (const m of chunk.matchAll(new RegExp(`${at}\\s*(\\[[^\\]]*\\]|\\.[WUBRGC]\\b)\\s*(\\+=|\\+\\+|=(?!=))[^;\\n]*`, "g"))) writes.push(`${rel(file)}: ${m[0].trim()}`);
+        for (const m of chunk.matchAll(new RegExp(`\\+\\+\\s*[\\w.\\[\\]]*${at}`, "g"))) writes.push(`${rel(file)}: ${m[0].trim()}`);
+        for (const m of chunk.matchAll(new RegExp(`([\\w.]+)\\(\\s*[\\w.\\[\\]]*?(?:\\.manaPool|${at})\\s*[,)]`, "g"))) if (!READERS.includes(m[1])) handed.push(`${rel(file)}: ${m[0]}`);
+      }
+    }
+    for (const m of text.matchAll(/\.manaPool\s*=(?!=)[^;\n]*/g)) writes.push(`${rel(file)}: ${m[0].trim()}`);
+    for (const m of text.matchAll(/Object\.assign\(\s*[\w.[\]]*\.manaPool/g)) writes.push(`${rel(file)}: ${m[0]}`);
+  }
+  eq([importers, namespaces], [["rules/restricted-mana.mjs"], []], "the pool's raw add is imported by rules/restricted-mana.mjs alone");
+  const restricted = code(readFileSync(join(engine, "rules/restricted-mana.mjs"), "utf8"));
+  const body = restricted.slice(restricted.indexOf("export function addPoolMana"), restricted.indexOf("\n}\n", restricted.indexOf("export function addPoolMana")));
+  eq([(restricted.match(/\baddMana\(/g) ?? []).length, (body.match(/\baddMana\(/g) ?? []).length, /^\s*export function addPoolMana[^{]*\{\s*settleWithheld\(state, player\);/.test(body)], [1, 1, true],
+    "and called once, in addPoolMana, after the withheld mana is settled");
+  eq(writes, ["rules/turn.mjs: manaPool[color] = kept[color] ?? 0"], "nothing else writes a pool up: the step's emptying alone sets one");
+  eq(handed, [], "nor hands a pool to anything that might");
+}
+
+/* ---- and the constructs that add mana since (firebending; two mana of one color; a delayed triggered mana ability): each
+   settles the Crafter's {C}, spent unsaid by an "unless" cost, before it adds ---- */
+{
+  const spentUnsaid = (setup = []) => {
+    const s = play([at(0, "battlefield", CRAFTER, ...setup), at(0, "hand", "Rite")], [{tap: HC}]);
+    payGeneric(s, 0, 1);
+    eq([C(s), s.players[0].withheldMana.length, withheldOf(s, 0)], [0, 1, []], "the Crafter's {C} spent on an \"unless\" cost: still listed, read as gone");
+    return s;
+  };
+  const firebent = spentUnsaid();
+  runEffects(firebent, [{effect: "addMana", mana: {C: 1}, untilEndOfCombat: true}], {controller: 0, source: null});
+  eq([C(firebent), firebent.players[0].withheldMana, firebent.players[0].combatMana, offers(firebent, "cast", "Rite").length], [1, [], {C: 1}, 1],
+    "mana kept until end of combat (firebending): settled first -- its {C} is not withheld, and pays for Rite");
+  const ashling = spentUnsaid();
+  beginResolution(ashling, [{effect: "addMana", anyColor: true, oneColor: true, count: 2}], {controller: 0, source: null});
+  resolveAwaiting(ashling, [awaitingChoice(ashling).options.find((o) => o.label === "Green").index]);
+  eq([ashling.players[0].manaPool.G, ashling.players[0].withheldMana], [2, []], "two mana of any one color (Ashling, Rimebound's): settled as it is added");
+  const tide = compileScript({schema: "CrankCardScript@1", identity: {name: "Tide", oracleId: "x", types: ["Instant"], subtypes: [], manaCost: "{R}", colors: ["R"], colorIdentity: ["R"]},
+    oracleText: "x", abilities: [{kind: "spell", text: "x", targets: [], effects: [{effect: "delayedTrigger", when: {on: "tapped for mana", tapper: "you", filter: {types: ["Land"]}}, thisTurn: true,
+      text: "Until end of turn, whenever you tap a land for mana, add an additional {C}.", effects: [{effect: "addMana", mana: {C: 1}}]}]}]}).definition.spell.effects[0];
+  eq(tide.on.manaAbility, {mana: {C: 1}}, "a delayed triggered mana ability (Molten Tide's form)");
+  /* The Great Hall's {1} paid with the Crafter's {C} (a mana ability's own cost, unsaid), its mana restricted -- so nothing but
+     the delayed ability's {C} goes into the pool. */
+  const hall = play([at(0, "battlefield", CRAFTER, "Great Hall of the Citadel")], [{tap: HC}]);
+  collectTriggers(hall, runEffects(hall, [tide], {controller: 0, source: null}));
+  applyAction(hall, 0, legalActions(hall, 0).find((a) => a.kind === "activate-mana" && a.objectId === named(hall, "Great Hall of the Citadel") && a.abilityId === "a1"));
+  eq([C(hall), hall.players[0].restrictedMana.length, hall.players[0].withheldMana], [1, 2, []], "the Hall's restricted mana, and the delayed ability's {C}: settled, not withheld");
+}
+
 /* ---- the compile ---- */
 {
   const mana = index.definition(CRAFTER).abilities.find((a) => a.kind === "mana");
@@ -160,6 +239,14 @@ const C = (s) => s.players[0].manaPool.C;
   ok(refused(land({cantSpend: {castFrom: "hand"}, whenSpent: {spell: {types: ["Creature"]}, effects: [{effect: "scry", count: 1}], text: "x"}}).problems), "with a rider besides: not built");
   ok(land({cantSpend: {castFrom: "hand"}}, {on: "tapped for mana", filter: {types: ["Land"]}}).problems.some((p) => p.includes("triggered mana ability whose mana may pay for only some things")),
     "a triggered mana ability's: not built, and said");
+  ok(refused(land({cantSpend: {castFrom: "hand"}, untilEndOfCombat: true}).problems) && refused(compileScript({schema: "CrankCardScript@1",
+    identity: {name: "Odd", oracleId: "x", types: ["Creature"], subtypes: [], manaCost: "{1}", colors: [], colorIdentity: [], power: 1, toughness: 1}, oracleText: "x", source: "hand",
+    abilities: [{kind: "triggered", text: "x", trigger: {on: "upkeep"}, effects: [{effect: "addMana", anyColor: true, oneColor: true, count: 2, cantSpend: {castFrom: "hand"}}]}]}).problems),
+  "kept until end of combat, or of one color chosen as it resolves: neither carries it, so not built");
+  const delayed = compileScript({schema: "CrankCardScript@1", identity: {name: "Odd", oracleId: "x", types: ["Instant"], subtypes: [], manaCost: "{R}", colors: ["R"], colorIdentity: ["R"]},
+    oracleText: "x", abilities: [{kind: "spell", text: "x", targets: [], effects: [{effect: "delayedTrigger", when: {on: "tapped for mana", tapper: "you", filter: {types: ["Land"]}}, thisTurn: true,
+      text: "x", effects: [{effect: "addMana", mana: {C: 1}, cantSpend: {castFrom: "hand"}}]}]}]});
+  ok(delayed.problems.some((p) => p.includes("delayed triggered mana ability whose mana can't be spent on some things")), "a delayed triggered mana ability's: not built, and said");
 }
 
 console.log(`engine-mana-withheld: ${checks} checks passed -- mana that can't be spent to cast spells from the hand, in the pool, spent first on anything else and kept from those, gone with its pool.`);

@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fateful Tempest",
+    "oracleId": "9d2f02f7-adcd-4d23-a051-ebca70f22ba5",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Council's dilemma — Starting with you, each player votes for past or present. You mill a card for each past vote, then Fateful Tempest deals damage to each opponent equal to the total mana value of cards milled this way. Exile the top card of your library for each present vote. Until the end of your next turn, you may play the exiled cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Council's dilemma — Starting with you, each player votes for past or present. You mill a card for each past vote, then Fateful Tempest deals damage to each opponent equal to the total mana value of cards milled this way. Exile the top card of your library for each present vote. Until the end of your next turn, you may play the exiled cards.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "vote",
+          "choices": [
+            "past",
+            "present"
+          ],
+          "title": "Council's dilemma: vote for past or present"
+        },
+        {
+          "effect": "mill",
+          "who": "you",
+          "count": {
+            "votes": "past"
+          },
+          "remember": true
+        },
+        {
+          "effect": "dealDamage",
+          "who": "opponent",
+          "amount": {
+            "totalManaValue": "remembered"
+          }
+        },
+        {
+          "effect": "moveZone",
+          "fromTop": {
+            "votes": "present"
+          },
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "mayPlay",
+          "targets": "remembered",
+          "until": "your-next-end"
+        }
+      ]
+    }
+  ]
+}

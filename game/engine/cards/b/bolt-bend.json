@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bolt Bend",
+    "oracleId": "c20a96f7-aa5a-4c15-b8b1-806685c99b27",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This spell costs {3} less to cast if you control a creature with power 4 or greater.\nChange the target of target spell or ability with a single target.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell costs {3} less to cast if you control a creature with power 4 or greater.",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": {
+        "if": {
+          "present": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "power": {
+              "min": 4
+            }
+          }
+        },
+        "then": 3,
+        "else": 0
+      }
+    },
+    {
+      "kind": "spell",
+      "text": "Change the target of target spell or ability with a single target.",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "spell",
+              "singleTarget": true
+            },
+            {
+              "what": "ability",
+              "singleTarget": true
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "changeTargets",
+          "stack": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

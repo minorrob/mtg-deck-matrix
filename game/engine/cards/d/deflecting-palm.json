@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Deflecting Palm",
+    "oracleId": "dc5dffc8-fac5-4956-bac4-1ad2cc16f6be",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "The next time a source of your choice would deal damage to you this turn, prevent that damage. If damage is prevented this way, Deflecting Palm deals that much damage to that source's controller.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "The next time a source of your choice would deal damage to you this turn, prevent that damage. If damage is prevented this way, Deflecting Palm deals that much damage to that source's controller.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "chooseSource"
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "prevent-damage",
+          "who": "you",
+          "from": "remembered",
+          "next": true,
+          "then": [
+            {
+              "effect": "dealDamage",
+              "amount": {
+                "damagePrevented": true
+              },
+              "who": "that card's controller"
+            }
+          ],
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

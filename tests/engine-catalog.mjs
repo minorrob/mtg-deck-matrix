@@ -74,11 +74,11 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
 {
   eq(section("Options and conditions").map((e) => e.forge).sort(), Object.keys(FORGE_OPTIONS).sort(), "every option and condition the engine is measured against is an entry");
   /* Batch 14 built "unless that player pays {N}" and judges an unless-cost by what it asks: Rhystic Study's mana no
-     longer holds it back; an unless-discard (Painful Quandary) still does. */
+     longer holds it back; an unless-sacrifice still does. (Train C phase 2 credited the unless-discard: Argentum Masticore.) */
   eq([missingFor({apis: ["Draw"], triggers: ["SpellCast"], options: ["OptionalDecider", "UnlessCost", "UnlessCostMana"]}),
-    missingFor({apis: ["LoseLife"], triggers: ["SpellCast"], options: ["UnlessCost", "UnlessCostDiscard"]}), missingFor({apis: ["Draw"], options: ["Optional"]})],
-    [[], [{kind: "option", name: "UnlessCostDiscard", why: "not built"}], []],
-    "an unless-cost holds a card back by what it asks: Rhystic Study's mana is built, an unless-discard is not; a plain \"you may\" (built) does not");
+    missingFor({apis: ["LoseLife"], triggers: ["SpellCast"], options: ["UnlessCost", "UnlessCostSac"]}), missingFor({apis: ["Draw"], options: ["Optional"]})],
+    [[], [{kind: "option", name: "UnlessCostSac", why: "not built"}], []],
+    "an unless-cost holds a card back by what it asks: Rhystic Study's mana is built, an unless-sacrifice is not; a plain \"you may\" (built) does not");
   ok(inventory.top.perCard["Rhystic Study"].options.includes("UnlessCost"), "the measurement records the option on the card itself");
 }
 
@@ -126,7 +126,8 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
 {
   eq([inventory.top.perCard["Rhystic Study"].options.includes("UnlessCostMana"), inventory.top.perCard["Choked Estuary"].options.includes("UnlessCostReveal"),
     inventory.top.perCard["Watery Grave"].options.includes("UnlessCostPayLife")], [true, true, true], "the measurement names what each unless-cost asks: mana, a reveal, life");
-  ok(section("Options and conditions").some((e) => e.forge === "UnlessCostDiscard" && e.status === "missing"), "and an unless-discard is missing");
+  ok(section("Options and conditions").some((e) => e.forge === "UnlessCostSac" && e.status === "missing"), "and an unless-sacrifice is missing");
+  ok(section("Options and conditions").some((e) => e.forge === "UnlessCostDiscard" && e.status === "built"), "and an unless-discard built (Train C phase 2)");
 }
 
 /* ---- order ---- */

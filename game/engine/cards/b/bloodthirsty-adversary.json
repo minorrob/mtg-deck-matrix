@@ -1,0 +1,110 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bloodthirsty Adversary",
+    "oracleId": "3b943c3e-1f18-4997-b6d0-28ef75aed88e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Haste\nWhen this creature enters, you may pay {2}{R} any number of times. When you pay this cost one or more times, put that many +1/+1 counters on this creature, then exile up to that many target instant and/or sorcery cards with mana value 3 or less from your graveyard and copy them. You may cast any number of the copies without paying their mana costs.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Haste",
+      "keyword": "haste"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, you may pay {2}{R} any number of times. When you pay this cost one or more times, put that many +1/+1 counters on this creature, then exile up to that many target instant and/or sorcery cards with mana value 3 or less from your graveyard and copy them. You may cast any number of the copies without paying their mana costs.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "you",
+          "mana": "{2}{R}",
+          "timesAny": true,
+          "ifPaid": true,
+          "effects": [
+            {
+              "effect": "immediateTrigger",
+              "text": "When you pay this cost one or more times, put that many +1/+1 counters on this creature, then exile up to that many target instant and/or sorcery cards with mana value 3 or less from your graveyard and copy them. You may cast any number of the copies without paying their mana costs.",
+              "targets": [
+                {
+                  "anyOf": [
+                    {
+                      "what": "card",
+                      "zone": "graveyard",
+                      "controller": "you",
+                      "types": [
+                        "Instant"
+                      ],
+                      "manaValue": {
+                        "max": 3
+                      }
+                    },
+                    {
+                      "what": "card",
+                      "zone": "graveyard",
+                      "controller": "you",
+                      "types": [
+                        "Sorcery"
+                      ],
+                      "manaValue": {
+                        "max": 3
+                      }
+                    }
+                  ],
+                  "count": {
+                    "min": 0,
+                    "max": "X"
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "putCounter",
+                  "targets": "self",
+                  "counter": "+1/+1",
+                  "count": "X"
+                },
+                {
+                  "effect": "moveZone",
+                  "targets": {
+                    "target": 0
+                  },
+                  "to": "exile",
+                  "remember": true
+                },
+                {
+                  "effect": "play",
+                  "from": "targets",
+                  "targets": "remembered",
+                  "copies": true,
+                  "free": true,
+                  "anyNumber": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

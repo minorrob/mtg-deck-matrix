@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Auntie's Sentence",
+    "oracleId": "406e6db7-6e31-44b9-a793-57ee10688f71",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Target opponent reveals their hand. You choose a nonland permanent card from it. That player discards that card.\n• Target creature gets -2/-2 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Target opponent reveals their hand. You choose a nonland permanent card from it. That player discards that card.\n• Target creature gets -2/-2 until end of turn.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Target opponent reveals their hand. You choose a nonland permanent card from it. That player discards that card.",
+              "targets": [
+                {
+                  "what": "player",
+                  "who": "opponent"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "discard",
+                  "who": {
+                    "target": 0
+                  },
+                  "chooser": "you",
+                  "reveal": true,
+                  "selector": {
+                    "nonTypes": [
+                      "Land",
+                      "Instant",
+                      "Sorcery"
+                    ]
+                  },
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "text": "Target creature gets -2/-2 until end of turn.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "pump",
+                  "targets": {
+                    "target": 0
+                  },
+                  "power": -2,
+                  "toughness": -2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

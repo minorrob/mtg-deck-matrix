@@ -49,6 +49,7 @@ import {compileSelector, matchesSelector} from "../script/filter.mjs";
 import {amountOf, isCounted} from "../script/amount.mjs";
 import {chosenFor} from "../script/chosen.mjs";
 import {protectedFrom} from "./protection.mjs";
+import {controllerOf} from "./layers.mjs";
 
 /* "This land enters tapped unless you control a Forest or a Plains" (a check land), "... unless you control two or
    fewer other lands" (a fast land): the arrival's `unless`, read as the land is about to enter -- so the land itself,
@@ -229,14 +230,26 @@ function applicable(state, proposal) {
       }
     }
   }
+  /* And the prevention effects with a duration, once a shield with more to it is among them (preventionsFor, below): each a
+     candidate like any, so the player dealt the damage orders them with the rest (CR 616.1). */
+  if (proposal.event === "damage") {
+    const shields = preventionsFor(state, proposal);
+    if (shields.some(isShield)) for (const effect of shields) {
+      const ability = shieldAbility(effect);
+      if (!(proposal.appliedBy ?? []).includes(appliedKey(null, ability))) found.push({holderId: null, ability, effect});
+    }
+  }
   return found;
 }
 
-/* Whether a "prevent all damage ... this turn" effect stops this damage: `affects.ids` the objects it is about (fixed as it
+/* The "prevent all damage ... this turn" effects that stop this damage: `affects.ids` the objects it is about (fixed as it
    began, as the card says "that creature" or "those permanents"), `apply.to` damage dealt to them (the default),
-   `apply.by` damage they deal, `apply.combat` combat damage only. A new object is not one of them (CR 400.7). */
-function preventedForAWhile(state, proposal) {
-  return (state.effects ?? []).some((effect) => {
+   `apply.by` damage they deal, `apply.combat` combat damage only. A new object is not one of them (CR 400.7).
+   "Prevent all combat damage that would be dealt to you this turn" (Inkshield): `players`, the players it shields.
+   "The next time a source of your choice would deal damage to you this turn" (Deflecting Palm; CR 609.7a, 615.8):
+   `sources`, the damage only from them. */
+function preventionsFor(state, proposal) {
+  return (state.effects ?? []).filter((effect) => {
     if (effect.rule !== "prevent-damage") return false;
     const ids = effect.affects?.ids;
     /* Fixed objects ("that creature"), or a description read as the damage is dealt ("creatures your opponents control",
@@ -245,10 +258,19 @@ function preventedForAWhile(state, proposal) {
       && matchesSelector({what: "permanent", ...effect.affects}, state, id, {controller: effect.sourceController}));
     const how = effect.apply ?? {};
     if (how.combat === true && proposal.combat !== true) return false;
+    if (Array.isArray(effect.sources) && !effect.sources.includes(proposal.sourceId)) return false;
+    if (Array.isArray(effect.players)) return proposal.toPlayer !== undefined && proposal.toPlayer !== null && effect.players.includes(proposal.toPlayer);
     return (how.to !== false && proposal.toCard !== undefined && proposal.toCard !== null && among(proposal.toCard))
       || (how.by === true && proposal.sourceId !== undefined && proposal.sourceId !== null && among(proposal.sourceId));
   });
 }
+/* A SHIELD WITH MORE TO IT than preventing all of the damage: what follows the prevention, "for each 1 damage prevented
+   this way" (`then`, CR 615.5: done immediately afterward), or a shield used up by the first damage it prevents (`next`,
+   CR 615.8). Where one applies, the order of it and the others is the affected player's (CR 616.1): Inkshield after a
+   doubler prevents twice as much. Each is a candidate of its own, by its effect's id. */
+const isShield = (effect) => Array.isArray(effect.then) || effect.next === true;
+const shieldAbility = (effect) => ({id: effect.id, kind: "replacement", name: effect.name, watches: {event: "damage"},
+  change: {prevent: true, ...(Array.isArray(effect.then) ? {then: effect.then} : {})}});
 
 /**
  * A REGENERATION SHIELD, USED (CR 701.19a): destruction replaced -- "instead remove all damage marked on it and tap it. If
@@ -286,7 +308,7 @@ function affectedPlayer(state, proposal) {
 
 /* `dry` tries the effect without spending anything: a shield is worn out only when the damage is dealt (CR 615.1), not when
    an order is tried or a question is built. */
-function applyOne(state, {holderId, ability}, proposal, dry = false) {
+function applyOne(state, {holderId, ability, effect = null}, proposal, dry = false) {
   const next = {...proposal, applied: [...(proposal.applied ?? []), ability.id], appliedBy: [...(proposal.appliedBy ?? []), appliedKey(holderId, ability)]};
 
   if (ability.change?.to) next.to = ability.change.to;
@@ -304,6 +326,10 @@ function applyOne(state, {holderId, ability}, proposal, dry = false) {
   /* "As this artifact enters, choose a creature type", "choose Khans or Dragons": a question for its controller once it is
      there, the answer kept as the permanent's `chosen` (rules/entering.mjs). */
   if (ability.change?.choose) next.asks = [...(next.asks ?? []), {choose: structuredClone(ability.change.choose)}];
+  /* RIOT (CR 702.136a; Ghor-Clan Wrecker): "you may have this permanent enter with an additional +1/+1 counter on it. If you
+     don't, it gains haste" -- its controller's choice, asked once it is there (rules/entering.mjs); each instance its own
+     (702.136b), as each effect applies once (CR 614.5). */
+  if (ability.change?.riot === true) next.asks = [...(next.asks ?? []), {riot: true}];
   /* "You may have this creature enter as a copy of any creature on the battlefield" (CR 614.1c, 707.9): which one is asked
      once it is there, its arrival waiting for the answer (rules/entering.mjs) -- "except", "until end of turn", "tapped". */
   if (ability.change?.copyOf) next.asks = [...(next.asks ?? []), {copyOf: structuredClone(ability.change.copyOf),
@@ -330,11 +356,21 @@ function applyOne(state, {holderId, ability}, proposal, dry = false) {
        counter on that creature for each 1 damage prevented this way" (Vigor): what follows the prevention, part of the
        same replacement (CR 615.5), done by the damage's dealer once the event is settled (`followUps`) -- about the
        permanent or player it would have been dealt to, "that many" the damage stopped (amount.mjs, damagePrevented). */
-    if (ability.change.prevent === true && Array.isArray(ability.change.then) && next.amount > 0) {
+    if (ability.change.prevent === true && Array.isArray(ability.change.then) && next.amount > 0 && effect) {
+      /* An effect's shield (Inkshield, Deflecting Palm): done by its controller, dealt by the spell that made it (`dealer`, the
+         card it became; rules/stack.mjs) -- about the damage's source, and its controller as it is now ("that source's
+         controller": a spell's, a permanent's), "that much" the damage it stopped. */
+      const source = proposal.sourceId ?? null, from = source !== null ? state.objects[source] : null;
+      next.followUps = [...(next.followUps ?? []), {effects: structuredClone(ability.change.then), context: {controller: effect.sourceController,
+        source: effect.dealer !== undefined && state.objects[effect.dealer] ? effect.dealer : null,
+        about: {...(from ? {card: source, controller: from.zone === "battlefield" ? controllerOf(state, source) : from.controller} : {}), amount: next.amount}}}];
+    } else if (ability.change.prevent === true && Array.isArray(ability.change.then) && next.amount > 0) {
       const holder = state.objects[holderId];
       next.followUps = [...(next.followUps ?? []), {effects: structuredClone(ability.change.then), context: {controller: holder.controller, source: holderId,
         about: {...(proposal.toCard !== undefined && proposal.toCard !== null ? {card: proposal.toCard} : {}), ...(proposal.toPlayer !== undefined && proposal.toPlayer !== null ? {player: proposal.toPlayer} : {}), amount: next.amount}}}];
     }
+    /* "The next time ...": used up once it has prevented damage (CR 615.8) -- never by an order tried dry. */
+    if (effect?.next === true && next.amount > 0 && !dry) state.effects = state.effects.filter((e) => e !== effect);
     if (ability.change.prevent === true) next.amount = 0;
     /* REDIRECTION (CR 614.9): "all damage that would be dealt to you is dealt to enchanted creature instead" (Pariah) -- the
        same damage, to the permanent its holder enchants, while it enchants one; the rest of the replacements then look
@@ -383,7 +419,8 @@ export function applyReplacements(state, proposal, {orders = [], askable = false
      turn" (Maze of Ith), "prevent all damage that would be dealt to those permanents this turn" (Mutational Advantage)
      -- an effect with a duration (`rule: "prevent-damage"`, effects/permanents.mjs's effectUntil). It prevents all of
      the damage, so nothing is left for another effect to apply to, and there is no order to ask (CR 616.1). */
-  if (proposal.event === "damage" && preventedForAWhile(state, current))
+  const lasting = proposal.event === "damage" ? preventionsFor(state, current) : [];
+  if (lasting.length && !lasting.some(isShield))
     return {proposal: {...current, amount: 0, prevented: true}, applied: current.applied, awaiting: false};
   /* PROTECTION (CR 702.16e, 702.16j; rules/protection.mjs): damage from a source with the quality is prevented, all of it. */
   if (proposal.event === "damage" && protectedFrom(state, {card: current.toCard ?? null, player: current.toPlayer ?? null}, current.sourceId))
@@ -440,7 +477,7 @@ export function applyReplacements(state, proposal, {orders = [], askable = false
  *
  * @returns {{tapped: boolean, counters: object}}
  */
-export function enteringModifications(state, {objectId, player, types, abilities, x = 0, escaped = false, kicked = 0}) {
+export function enteringModifications(state, {objectId, player, types, abilities, x = 0, escaped = false, kicked = 0, phyrexianLife = 0}) {
   const {proposal} = applyReplacements(state, {
     event: "enters", objectId, player, types: types ?? [], x, escaped, kicked,
     entering: {abilities: abilities ?? []},
@@ -450,6 +487,10 @@ export function enteringModifications(state, {objectId, player, types, abilities
      planeswalker has. */
   const counters = {...(proposal.counters ?? {})}, loyalty = state.objects[objectId]?.loyalty;
   if ((types ?? []).includes("Planeswalker") && Number.isInteger(loyalty)) counters.loyalty = (counters.loyalty ?? 0) + loyalty;
+  /* Compleated (CR 702.150a): two fewer for each Phyrexian symbol of its cost its caster paid with life (`phyrexianLife`,
+     rules/actions.mjs), if it would enter with any. */
+  if (phyrexianLife > 0 && counters.loyalty > 0 && (state.objects[objectId]?.keywords ?? []).includes("Compleated"))
+    counters.loyalty = Math.max(0, counters.loyalty - 2 * phyrexianLife);
   return {tapped: proposal.tapped === true, counters, asks: proposal.asks ?? [], designations: proposal.designations ?? []};
 }
 
@@ -481,7 +522,10 @@ const sameEnd = (state, proposal) => ends(state, proposal).size === 1;
 
 /** Whether two or more effects that change damage are where they act: with fewer, no order of them is anyone's to choose. */
 export function damageChoicesPossible(state) {
-  let n = 0;
+  /* A shield among the prevention effects (Inkshield) is ordered with the rest (applicable, above). */
+  const lasting = (state.effects ?? []).filter((e) => e.rule === "prevent-damage");
+  let n = lasting.some(isShield) ? lasting.length : 0;
+  if (n >= 2) return true;
   for (const id of state.zones.battlefield)
     for (const ability of state.objects[id]?.abilities ?? [])
       if (ability.kind === "replacement" && ability.watches?.event === "damage" && (n += 1) >= 2) return true;
@@ -519,7 +563,7 @@ export function damageOrderChoice(state, awaiting) {
     const amounts = endings.map((e) => e.amount ?? 0), counted = endings.flatMap((e) => e.counted).filter((n) => n !== null);
     const where = [...new Set(endings.map(nameOf))];
     const said = `${range(amounts)} damage${where.length === 1 && where[0] === target ? "" : ` to ${where.join(" or ")}`}${counted.length ? `, ${range(counted)} prevented` : ""}`;
-    return {index, label: `${state.objects[candidate.holderId]?.card ?? "An effect"} first: ${said}`, cardId: candidate.holderId, leaves: Math.min(...amounts), key: candidateKey(candidate)};
+    return {index, label: `${state.objects[candidate.holderId]?.card ?? candidate.ability.name ?? "An effect"} first: ${said}`, ...(candidate.holderId !== null ? {cardId: candidate.holderId} : {}), leaves: Math.min(...amounts), key: candidateKey(candidate)};
   });
   /* Two that would read alike (two permanents of one name) are numbered, so no two options read the same. */
   for (const option of options) {

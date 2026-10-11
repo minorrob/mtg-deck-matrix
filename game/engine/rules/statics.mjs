@@ -34,6 +34,9 @@ export const STATIC_RULES = Object.freeze({
       "that many plus one" (Hardened Scales) `plus`; "half that many, rounded down" (Vorinclex) `half`; `putBy` "you" or
       "opponent"; `players`. Read wherever counters are put on a permanent, as it enters too (placeCounters, below). */
   "more-counters": "rules/statics.mjs",
+  /** CR 103.6b: "You may reveal this card from your opening hand. If you do, at the beginning of the first upkeep, ..."
+      (Chancellor of the Forge): `effects`, what revealing it does, asked once the mulligans are done. rules/mulligan.mjs. */
+  "opening-hand": "rules/mulligan.mjs",
   /** CR 104.3: "You can't lose the game" (Darksteel Angel): its controller loses to no state-based action. rules/sba.mjs. */
   "cant-lose": "rules/sba.mjs",
   /** CR 104.2b: "Your opponents can't win the game" (Darksteel Angel): an effect that says they win does not. effects/resources.mjs, winGame. */
@@ -42,6 +45,10 @@ export const STATIC_RULES = Object.freeze({
       definition says `canBeCommander` (cards/index.mjs), and the table holds a deck's commander to it (room/table.mjs,
       commanderLegal). */
   "can-be-commander": "cards/index.mjs",
+  /** CR 100.2a, 903.5b's exception: "A deck can have any number of cards named Sphinx's Approach" -- a rule of the deck, not
+      of the game, which nothing in a game reads: the compiler holds it to the card's own name (cards/index.mjs), and it stays
+      among the definition's abilities for a deck held to the rule that every card but a basic land has a different name. */
+  "any-number-in-deck": "cards/index.mjs",
   /** CR 510.1a's exception: assigns combat damage equal to its toughness rather than its power. combat.mjs. */
   "combat-damage-by-toughness": "rules/combat.mjs",
   /** CR 510.1a's other exception: "If Loot's power is negative, he assigns combat damage as though his power were positive"
@@ -175,6 +182,12 @@ export const STATIC_RULES = Object.freeze({
   /** Rebound (CR 702.88a): the keyword kept as this static (cards/index.mjs), read as the spell leaves the stack: cast from
       its owner's hand and resolved, it is exiled and may be cast free at its caster's next upkeep (Ephemerate). */
   "rebound": "rules/stack.mjs",
+  /** Suspend N--[cost] (CR 702.62a): the keyword kept as this static (cards/index.mjs), read in its owner's hand: the
+      special action that exiles it with N time counters for its cost, offered where it could be cast (rules/actions.mjs). */
+  "suspend": "rules/actions.mjs",
+  /** Disguise [cost] (CR 702.168a): the keyword kept as this static (cards/index.mjs), read where the card could be cast --
+      cast face down for {3} -- and on the face-down permanent, turned face up for its cost (rules/actions.mjs). */
+  "disguise": "rules/actions.mjs",
   /** Paradigm (CR 702.192a): the keyword kept as this static (cards/index.mjs), read as the spell resolves -- the delayed
       trigger made the first time a spell of its name resolves for its controller, and the spell exiled. rules/stack.mjs. */
   "paradigm": "rules/stack.mjs",
@@ -732,6 +745,12 @@ export function cantBeBlockedBy(state, attackerId, blockerId) {
       if (ability.by && matchesSelector(ability.by, state, blockerId, context)) return true;
       if (ability.byPowerBelowSource === true && powerOf(state, blockerId) < powerOf(state, holderId)) return true;
     }
+  }
+  /* And an effect for a while (effectUntil's `rule: "cant-be-blocked-by"`): "it can't be blocked by creatures of that color
+     this turn" (Skrelv, Defector Mite) -- the attackers it names, the blockers its `by` describes, "you" its controller. */
+  for (const effect of state.effects ?? []) {
+    if (effect.rule !== "cant-be-blocked-by" || !(effect.affects?.ids ?? []).includes(attackerId)) continue;
+    if (matchesSelector({what: "permanent", ...(effect.by ?? {})}, state, blockerId, {controller: effect.sourceController})) return true;
   }
   return false;
 }

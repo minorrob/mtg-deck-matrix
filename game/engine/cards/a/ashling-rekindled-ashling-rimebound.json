@@ -1,0 +1,198 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ashling, Rekindled // Ashling, Rimebound",
+    "oracleId": "31fc5d8b-94bc-4688-8a84-f15800e717a8",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental",
+      "Sorcerer"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Whenever this creature enters or transforms into Ashling, Rekindled, you may discard a card. If you do, draw a card.\nAt the beginning of your first main phase, you may pay {U}. If you do, transform Ashling.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature enters or transforms into Ashling, Rekindled, you may discard a card. If you do, draw a card.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "discard",
+          "count": 1,
+          "upTo": true,
+          "remember": true
+        },
+        {
+          "effect": "draw",
+          "count": 1,
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature enters or transforms into Ashling, Rekindled, you may discard a card. If you do, draw a card.",
+      "trigger": {
+        "on": "transformed",
+        "who": "self",
+        "into": "Ashling, Rekindled"
+      },
+      "effects": [
+        {
+          "effect": "discard",
+          "count": 1,
+          "upTo": true,
+          "remember": true
+        },
+        {
+          "effect": "draw",
+          "count": 1,
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your first main phase, you may pay {U}. If you do, transform Ashling.",
+      "trigger": {
+        "on": "step",
+        "step": "MAIN1"
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "you",
+          "mana": "{U}",
+          "ifPaid": true,
+          "effects": [
+            {
+              "effect": "setState",
+              "targets": "self",
+              "transform": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "layout": "transform",
+  "back": {
+    "identity": {
+      "name": "Ashling, Rimebound",
+      "supertypes": [
+        "Legendary"
+      ],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elemental",
+        "Wizard"
+      ],
+      "manaCost": null,
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 3
+    },
+    "oracleText": "Whenever this creature transforms into Ashling, Rimebound and at the beginning of your first main phase, add two mana of any one color. Spend this mana only to cast spells with mana value 4 or greater.\nAt the beginning of your first main phase, you may pay {R}. If you do, transform Ashling.",
+    "abilities": [
+      {
+        "kind": "triggered",
+        "text": "Whenever this creature transforms into Ashling, Rimebound and at the beginning of your first main phase, add two mana of any one color. Spend this mana only to cast spells with mana value 4 or greater.",
+        "trigger": {
+          "on": "transformed",
+          "who": "self",
+          "into": "Ashling, Rimebound"
+        },
+        "effects": [
+          {
+            "effect": "addMana",
+            "anyColor": true,
+            "oneColor": true,
+            "count": 2,
+            "spendOnly": {
+              "spell": {
+                "manaValue": {
+                  "min": 4
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "triggered",
+        "text": "Whenever this creature transforms into Ashling, Rimebound and at the beginning of your first main phase, add two mana of any one color. Spend this mana only to cast spells with mana value 4 or greater.",
+        "trigger": {
+          "on": "step",
+          "step": "MAIN1"
+        },
+        "effects": [
+          {
+            "effect": "addMana",
+            "anyColor": true,
+            "oneColor": true,
+            "count": 2,
+            "spendOnly": {
+              "spell": {
+                "manaValue": {
+                  "min": 4
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "triggered",
+        "text": "At the beginning of your first main phase, you may pay {R}. If you do, transform Ashling.",
+        "trigger": {
+          "on": "step",
+          "step": "MAIN1"
+        },
+        "effects": [
+          {
+            "effect": "unlessPays",
+            "who": "you",
+            "mana": "{R}",
+            "ifPaid": true,
+            "effects": [
+              {
+                "effect": "setState",
+                "targets": "self",
+                "transform": true
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -19,7 +19,7 @@
 
 import {addObject, transformObject, rememberExileLooker, COPY_KEYS} from "../../state/index.mjs";
 import {selectMatching, compileSelector} from "../filter.mjs";
-import {bindEffect, rememberNow} from "../bind.mjs";
+import {bindEffect, rememberNow, countThisWay} from "../bind.mjs";
 import {amountOf} from "../amount.mjs";
 import {event, cardRef, moveOne} from "./zones.mjs";
 import {typesOf, controllerOf} from "../../rules/layers.mjs";
@@ -63,6 +63,17 @@ export const PREDEFINED_TOKENS = Object.freeze({
         cost: [{atom: "removeCounters", self: true, counter: "loyalty", count: 1}], effects: [{effect: "surveil", count: 1}]},
       {id: "jace-draw", kind: "activated", text: "\u22123: Draw a card.", targets: [], loyalty: -3, timing: "sorcery",
         cost: [{atom: "removeCounters", self: true, counter: "loyalty", count: 3}], effects: [{effect: "draw", count: 1}]},
+    ]},
+  /* CR 111.10m (Royal Treatment): a Role (CR 303.7) -- a colorless Aura Role enchantment token with enchant creature, named
+     Royal, "Enchanted creature gets +1/+1 and has ward {1}" (its ward the triggered ability the keyword is, as a card's
+     compiles; cards/index.mjs). Created attached to what it enchants (createToken's `attachedTo`). */
+  "Royal Role": {name: "Royal", types: ["Enchantment"], subtypes: ["Aura", "Role"], colors: [], enchant: {what: "permanent", types: ["Creature"]},
+    abilities: [
+      {id: "royal-pt", kind: "static", text: "Enchanted creature gets +1/+1 and has ward {1}.", layer: 7, sublayer: "c",
+        affects: {what: "permanent", attachedBy: "self"}, apply: {power: 1, toughness: 1}},
+      {id: "royal-ward", kind: "static", text: "Enchanted creature gets +1/+1 and has ward {1}.", layer: 6, affects: {what: "permanent", attachedBy: "self"},
+        apply: {addKeywords: ["Ward"], addAbilities: [{id: "ward", kind: "triggered", text: "ward {1}", trigger: {on: "GameEventBecomesTarget", who: "self", by: "opponent"},
+          effects: [{effect: "unlessPays", who: "that player", amount: 1, effects: [{effect: "counterSpell", stack: "that"}]}]}]}},
     ]},
   /* CR 111.10v (Splinter, the Mentor) */
   Mutagen: {name: "Mutagen", types: ["Artifact"], subtypes: ["Mutagen"],
@@ -129,7 +140,8 @@ export function attachTo(state, auraId, hostId) {
 function copiable(object, except = {}) {
   const supertypes = [...new Set([...(object.supertypes ?? []).filter((t) => !(except.nonLegendary && t === "Legendary")), ...(except.addSupertypes ?? [])])];
   return {
-    card: except.name ?? object.card, manaCost: object.manaCost ?? null,
+    /* "With no mana cost" (embalm, CR 702.128a): none, part of the copiable values (CR 707.9b) -- its mana value 0. */
+    card: except.name ?? object.card, manaCost: except.noManaCost === true ? null : object.manaCost ?? null,
     /* "It's a Vehicle artifact ... and it loses all other card types" (Imposter Mech): set, then any added. */
     types: [...new Set([...(except.setTypes ?? object.types ?? []), ...(except.addTypes ?? [])])],
     /* "It's a 2/2 black Zombie in addition to its other colors and types" (Ratadrabik): added, not set. */
@@ -339,10 +351,32 @@ export function copyOnto(state, id, fromId, {except = {}, keep = [], until = nul
   showCopy(object);
   return true;
 }
+/* "Each nonland permanent you control becomes a copy of target non-Aura permanent" (Mirrorform): `selector`, what becomes
+   the copy in the source's place -- each permanent it matches as the effect begins (CR 611.2c). The target among them
+   becomes a copy of itself, which changes nothing, so the rest copy it as it was (CR 707.2). */
 export function becomeCopy(state, params, context) {
-  copyOnto(state, context.source, (params.targets ?? [])[0], {except: params.except ?? {}, keep: params.keep ?? [], until: params.until ?? null});
+  const ids = params.selector ? selectMatching(state, params.selector, context) : [context.source];
+  for (const id of ids) copyOnto(state, id, (params.targets ?? [])[0], {except: params.except ?? {}, keep: params.keep ?? [], until: params.until ?? null});
   return [];
 }
+/**
+ * "FOR AS LONG AS THAT LAND HAS A BLIGHT COUNTER ON IT" (Ultima, Origin of Oblivion; CR 611.2b): a layer's effect lasting while
+ * each object it affects has a counter of a kind (`whileCounter`) ends for an object with none -- for good, so a counter put
+ * on again later does not bring it back -- and with none left, it is over. Run as the game is checked (rules/sba.mjs); the
+ * layers apply it only while the counter is there, in between. A rule changed for a while (`rule`, Promise of Loyalty's
+ * "can't attack") reads its counter where the rule is asked (rules/statics.mjs).
+ */
+export function endCounterDurations(state) {
+  const over = new Set();
+  for (const e of state.effects ?? []) {
+    if (!e.whileCounter || e.rule || !Array.isArray(e.affects?.ids)) continue;
+    const ids = e.affects.ids.filter((id) => (state.objects[id]?.counters?.[e.whileCounter] ?? 0) > 0);
+    if (!ids.length) over.add(e);
+    else if (ids.length < e.affects.ids.length) e.affects = {...e.affects, ids};
+  }
+  if (over.size) state.effects = state.effects.filter((e) => !over.has(e));
+}
+
 /** "Until end of turn": those copy effects end (rules/turn.mjs, the cleanup step). */
 export function endCopies(state) {
   for (const id of state.zones.battlefield) {
@@ -387,13 +421,20 @@ export function createToken(state, params, context) {
   if (!spec) throw new Error(`No predefined token named ${params.token.predefined}`);
   const count = params.count ?? 1;
   const controller = params.controller ?? context.controller;
-  /* A target player who is no longer one creates nothing. */
-  if (!state.players[controller]) return events;
+  /* A target player who is no longer one creates nothing -- nor one who has left the game (CR 800.4b: no token is created
+     under their control; Tempt with Vengeance's "may create" answered for them, CR 800.4g). */
+  if (!state.players[controller] || state.players[controller].lost) return events;
+  /* "Create a Royal Role token attached to that creature" (Royal Treatment): `attachedTo`, an object bound as a target is --
+     an Aura token created attached to what its Enchant could not enchant, or to nothing, is not created (CR 303.4i). An Aura
+     token's alone: the compiler refuses it of any other (cards/index.mjs). */
+  const [host] = params.attachedTo ?? [];
+  if (params.attachedTo !== undefined && !enchantable(state, spec.enchant, controller).includes(host)) return events;
   const made = [];
   /* "Twice that many of those tokens instead" (Anointed Procession), artifact tokens made Dragons instead (Draconic Visitor):
      what is made, and how many (rules/statics.mjs, tokensCreated). */
   const {count: many, instead} = tokensCreated(state, controller, count, spec);
   for (let i = 0; i < many; i += 1) made.push(makeToken(state, instead ?? spec, controller, params, context, events));
+  if (params.attachedTo !== undefined) for (const id of made) attachTo(state, id, host);
   /* "They gain haste until end of turn" (Ovika), and the rest a made permanent may gain (afterwards). */
   afterwards(state, made, {...params, controller}, context);
   /* "Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all OTHER creatures" (Martial Coup): the
@@ -421,6 +462,8 @@ function makeToken(state, spec, controller, params, context, events) {
     toughness: sized(spec.toughness),
     keywords: spec.keywords ?? [],
     abilities: spec.abilities ?? [],
+    /* An Aura token's Enchant (a Role's, CR 303.7): what the state-based actions hold it to (CR 704.5m). */
+    ...(spec.enchant ? {enchant: spec.enchant} : {}),
     owner: controller,
     controller,
     token: true,
@@ -606,7 +649,9 @@ export function effectUntil(state, params, context) {
        (Promise of Loyalty): `defender` "you", this effect's controller, `planeswalkers` theirs too (CR 506.3), and
        `whileCounter`, a duration of each creature's own -- while it has that counter (CR 611.2b; rules/statics.mjs). */
     ...(params.rule === "cant-attack" && params.defender === "you" ? {defender: "you", ...(params.planeswalkers === true ? {planeswalkers: true} : {})} : {}),
-    ...(params.rule === "cant-attack" && typeof params.whileCounter === "string" ? {whileCounter: params.whileCounter} : {}),
+    /* And "for as long as that land has a blight counter on it, it loses all land types and abilities" (Ultima, Origin of
+       Oblivion): the same, for a characteristic changed in a layer (rules/layers.mjs). */
+    ...(typeof params.whileCounter === "string" ? {whileCounter: params.whileCounter} : {}),
     apply: params.apply ?? {},
     /* "Until end of turn" (the default), "until your next turn", or "ever": an effect with no duration -- "up to one other
        target creature loses all abilities" (Abigale) -- lasting as long as what it affects does (CR 611.2a; a permanent
@@ -616,6 +661,23 @@ export function effectUntil(state, params, context) {
        rule changed for players (`players`): their protection, their life total that can't change. */
     ...(params.until === "their-next-turn" || ["protection", "life-cant-change"].includes(params.rule) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
     ...(params.rule === "protection" ? {from: params.from ?? "everything"} : {}),
+    /* A PREVENTION SHIELD OF A PLAYER'S (CR 615; rules/replacement.mjs, preventionsFor): "prevent all combat damage that would
+       be dealt to you this turn" (Inkshield) -- `who`, the players it shields -- "the next time a source of your choice
+       would deal damage to you this turn" (Deflecting Palm) -- `from`, the sources chosen (CR 609.7a), and `next`, used up
+       by the first damage it prevents (CR 615.8) -- and what follows, `then` (CR 615.5), done by its controller and dealt by
+       the spell that made it (`dealer`, followed to the card it becomes, rules/stack.mjs), its name for the order's
+       question (CR 616.1). */
+    ...(params.rule === "prevent-damage" && params.who !== undefined ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
+    ...(params.rule === "prevent-damage" && Array.isArray(params.from) ? {sources: [...params.from]} : {}),
+    ...(params.rule === "prevent-damage" && params.next === true ? {next: true} : {}),
+    ...(params.rule === "prevent-damage" && Array.isArray(params.then) ? {then: structuredClone(params.then), dealer: context.source ?? null} : {}),
+    ...(params.rule === "prevent-damage" ? {name: state.objects[context.source]?.card ?? context.lastKnown?.name ?? "An effect"} : {}),
+    /* "Hexproof from that color until end of turn" (Skrelv, Defector Mite; CR 702.11d): its colors, chosen as it resolves
+       ("$chosenColor", script/bind.mjs), read where a target is chosen (rules/protection.mjs, hexproofFrom). */
+    ...(params.rule === "hexproof-from" ? {colors: [...(params.colors ?? [])]} : {}),
+    /* "It can't be blocked by creatures of that color this turn" (Skrelv): which blockers, a selector (rules/statics.mjs,
+       cantBeBlockedBy, `by`). */
+    ...(params.rule === "cant-be-blocked-by" ? {by: structuredClone(params.by ?? {})} : {}),
     /* "Until this card is cast from exile" (Emrakul, the Exigent Doom): `untilCast` the card, as `until: "ever"` otherwise is,
        until that cast (rules/actions.mjs). */
     ...(Array.isArray(params.untilCast) && params.untilCast.length ? {untilCast: params.untilCast[0]} : {}),
@@ -836,17 +898,21 @@ export function addPhase(state, params, context) {
  * condition saying whether it did ("this way", script/condition.mjs) -- and goes on the stack the next time a player
  * would receive priority, with the other triggers waiting then, its targets chosen as it does (CR 603.3d; none legal,
  * and it is removed). `effects` what it does, `targets` its own; "that card" and "that player" what this resolution is
- * about.
+ * about -- or, `about: "remembered"`, "that card" what the effect before it remembered: "when you discard a card this way,
+ * destroy target nonland permanent ... with mana value less than or equal to the mana value of the discarded card"
+ * (Argentum Masticore; effects/asking.mjs, unlessPays's discard).
  */
 export function immediateTrigger(state, params, context) {
   const source = context.source ?? null;
+  const about = params.about === "remembered" && context.remembered?.[0] !== undefined ? {...(context.about ?? {}), card: context.remembered[0]} : context.about;
   (state.pendingTriggers ??= []).push({abilityId: "reflexive", text: params.text ?? "When you do", controller: context.controller,
     source: {cardId: source, name: source !== null ? state.objects[source]?.card ?? null : null}, cause: null, optional: false,
-    ...(context.about ? {about: structuredClone(context.about)} : {}),
+    ...(about ? {about: structuredClone(about)} : {}),
     /* And the X of the resolution that made it (Halo Forager's "you may pay {X}. When you do, ... with mana value X"):
        what its targets and effects read as X (rules/trigger.mjs). */
     ...(Number.isInteger(context.x) ? {x: context.x} : {}),
-    script: {targets: structuredClone(params.targets ?? []), effects: structuredClone(params.effects ?? [])}});
+    /* "Put that many +1/+1 counters" (Augusta, Order Returned): what this resolution did, counted now (script/bind.mjs). */
+    script: {targets: structuredClone(params.targets ?? []), effects: structuredClone(countThisWay(params.effects, context, state))}});
   return [];
 }
 
