@@ -246,6 +246,9 @@ const TRIGGERS = {
   /* "Whenever you proliferate" (Ezuri, Stalker of Spheres; CR 701.34a): once each proliferate is done, by `proliferator`
      you, opponent or any. */
   proliferated: (t) => ({on: "GameEventProliferate", proliferator: t.proliferator ?? "you"}),
+  /* "Whenever you commit a crime" (Bandit's Haul; CR 700.13): a spell, an activated ability or a triggered ability of
+     `criminal`'s -- you, opponent or any -- aimed at an opponent of theirs or what is that opponent's (rules/stack.mjs). */
+  "crime committed": (t) => ({on: "GameEventCrimeCommitted", criminal: t.criminal ?? "you"}),
   /* "Whenever you activate a loyalty ability" (Ajani Unrelenting; CR 606, 602.2): a loyalty ability put on the stack by
      you (`activator`), any permanent's; "if you removed two or more loyalty counters to activate it" (`removedAtLeast`,
      its cost, CR 606.4). About the permanent and the player. */

@@ -75,6 +75,8 @@ export const FORGE_TRIGGER = {
   LifeGained: "life gained", LifeLost: "life lost", TokenCreatedOnce: "token created", BecomeMonstrous: "becomes monstrous",
   /* "Whenever you proliferate" (Train C, w2c-hands-triggers; CR 701.34a). */
   Proliferate: "proliferated",
+  /* "Whenever you commit a crime" (Train C, w2c-hands-triggers; CR 700.13). */
+  CommitCrime: "crime committed",
 };
 
 /* Forge static and replacement modes the engine can execute today. `Continuous` is an anthem or a

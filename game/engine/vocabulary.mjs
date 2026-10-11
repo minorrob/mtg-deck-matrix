@@ -113,6 +113,8 @@ export const TRIGGER_EVENTS = Object.freeze([
   "scried",
   /* "Whenever you proliferate" (CR 701.34a; Train C, w2c-hands-triggers). */
   "proliferated",
+  /* "Whenever you commit a crime" (CR 700.13; Train C, w2c-hands-triggers). */
+  "crime committed",
 ]);
 
 /** The cost atoms of §12.2. The two symbolic ones are named; the rest are structural. */

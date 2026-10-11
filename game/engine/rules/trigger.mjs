@@ -46,7 +46,7 @@
  */
 
 import {conditionHolds} from "../script/condition.mjs";
-import {pushAbility, becameTarget} from "./stack.mjs";
+import {pushAbility, becameTarget, crimeCommitted} from "./stack.mjs";
 import {cardsIn, usesThisTurn, recordUse} from "../state/index.mjs";
 import {playerStatics} from "./statics.mjs";
 import {matchesSelector, matchesLastKnown} from "../script/filter.mjs";
@@ -121,6 +121,11 @@ function subjects(state, event, condition, sourceId, controller) {
   if (condition.on === "GameEventScried") {
     const scrier = fields.player?.playerId;
     return whoseIs(condition.scrier ?? "you", scrier, controller) ? [{player: scrier}] : [];
+  }
+  /* "Whenever you commit a crime" (CR 700.13): who did. */
+  if (condition.on === "GameEventCrimeCommitted") {
+    const criminal = fields.player?.playerId;
+    return whoseIs(condition.criminal ?? "you", criminal, controller) ? [{player: criminal}] : [];
   }
   /* "Whenever you proliferate" (CR 701.34a): who did. */
   if (condition.on === "GameEventProliferate") {
@@ -859,8 +864,8 @@ export function resolveTriggerCounted(state, awaiting, indices) {
   state.awaiting = null;
   if (askCounted(state, entry)) return [];
   askTriggerTargets(state);
-  /* What it is aimed at becomes its target (ward, CR 702.21a). */
-  return becameTarget(state, entry);
+  /* What it is aimed at becomes its target (ward, CR 702.21a); and aimed at an opponent or what is theirs, a crime (CR 700.13). */
+  return [...becameTarget(state, entry), ...crimeCommitted(state, entry)];
 }
 
 /* EACH WAY TO CHOOSE A MODAL TRIGGER'S MODES AND THEIR TARGETS (CR 603.3c, 700.2): as many modes as it says, none twice
@@ -940,8 +945,8 @@ export function resolveTriggerTargets(state, awaiting, indices) {
   if (entry.targets.some(isChoosing) && askCounted(state, entry)) return [];
   entry.stage = "waiting";
   askTriggerTargets(state);
-  /* What it is aimed at becomes its target (ward, CR 702.21a). */
-  return becameTarget(state, entry);
+  /* What it is aimed at becomes its target (ward, CR 702.21a); and aimed at an opponent or what is theirs, a crime (CR 700.13). */
+  return [...becameTarget(state, entry), ...crimeCommitted(state, entry)];
 }
 
 function putOnStack(state, triggers) {

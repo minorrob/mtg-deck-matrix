@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bandit's Haul",
+    "oracleId": "84b08b55-0623-4202-98c6-1756d3c1bb8f",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever you commit a crime, put a loot counter on this artifact. This ability triggers only once each turn. (Targeting opponents, anything they control, and/or cards in their graveyards is a crime.)\n{T}: Add one mana of any color.\n{2}, {T}, Remove two loot counters from this artifact: Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you commit a crime, put a loot counter on this artifact. This ability triggers only once each turn.",
+      "trigger": {
+        "on": "crime committed"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "loot",
+          "count": 1
+        }
+      ],
+      "limit": 1
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add one mana of any color.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{2}, {T}, Remove two loot counters from this artifact: Draw a card.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "removeCounters",
+          "self": true,
+          "counter": "loot",
+          "count": 2
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}
