@@ -717,6 +717,11 @@ export function advance(state) {
       if (player.combatDamagedThisTurn) player.combatDamagedThisTurn = false;
       /* And the sources each controlled that dealt combat damage to a player, with their creature types (prowl, CR 702.76a). */
       if (player.combatDamageSources) delete player.combatDamageSources;
+      /* And the creatures that died under each one's control (state/index.mjs, morbid), whether each was dealt noncombat
+         damage (effects/resources.mjs), and the times each scried or surveilled (effects/asking.mjs): script/amount.mjs. */
+      if (player.diedThisTurn) player.diedThisTurn = 0;
+      if (player.noncombatDamagedThisTurn) player.noncombatDamagedThisTurn = false;
+      if (player.scriedThisTurn) player.scriedThisTurn = 0;
     }
     next = 0;
   }

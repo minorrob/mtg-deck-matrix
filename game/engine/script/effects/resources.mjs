@@ -192,7 +192,15 @@ export function dealDamage(state, params, context) {
     const infect = source !== null && infects(state, source);
     /* Whoever controls the source puts the counters infect makes (CR 702.90b-c): "if you would put counters". */
     const putter = infect && state.objects[source] ? controllerOf(state, source) : null;
+    /* The source has dealt damage (CR 120.1), for as long as it is this object (CR 400.7): "as long as Ratonhnhaké꞉ton
+       hasn't dealt damage yet" (script/filter.mjs, hasDealtDamage) -- marked below where it is dealt, to a player or to a
+       permanent; damage prevented in full was never dealt (above). */
     if (toPlayer !== undefined) {
+      if (source !== null) state.objects[source].hasDealtDamage = true;
+      /* A player dealt noncombat damage this turn, infect's included (CR 702.90b: still damage dealt): "activate only if an
+         opponent has been dealt noncombat damage this turn" (Grim Repriser; script/amount.mjs, playersDealtNoncombatDamage).
+         rules/turn.mjs clears it as a turn begins. */
+      state.players[toPlayer].noncombatDamagedThisTurn = true;
       if (infect) events.push(...givePoison(state, toPlayer, proposal.amount, putter));
       else changeLife(state, toPlayer, -proposal.amount, events);
       events.push(event("GameEventPlayerDamaged", state, {
@@ -205,6 +213,7 @@ export function dealDamage(state, params, context) {
          to a creature (its damage marked counted; from deathtouch, anything past 1, 702.2c), past its loyalty to a
          planeswalker, the greater for one that is both -- read before it is dealt, and kept for the effects after it. */
       context.excessDamage = (context.excessDamage ?? 0) + excessOf(state, toCard, proposal.amount, source);
+      if (source !== null) state.objects[source].hasDealtDamage = true;
       damagePermanent(state, toCard, proposal.amount, events, {infect, by: putter});
       events.push(event("GameEventCardDamaged", state, {
         card: cardRef(state, toCard),

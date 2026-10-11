@@ -54,8 +54,9 @@ export const KEYWORD_FAMILIES = Object.freeze({
       cast for it (rules/stack.mjs). Escalate (CR 702.120a), an additional cost for each mode chosen beyond the first, paid with
       the rest of the cost (rules/actions.mjs). Overload (CR 702.96a-b), an alternative cost whose cast carries the spell's
       "each" effects, written out by the card, and no targets (cards/index.mjs, rules/actions.mjs, rules/stack.mjs): built
-      for Winds of Abandon, credited with Mizzium Mortars and Vandalblast. */
-  pay: Object.freeze(["Convoke", "Evoke", "Prowl", "Escalate", "Overload"]),
+      for Winds of Abandon, credited with Mizzium Mortars and Vandalblast. Spectacle (CR 702.137a), an alternative cost
+      offered once an opponent of its caster lost life this turn (cards/index.mjs; script/amount.mjs). */
+  pay: Object.freeze(["Convoke", "Evoke", "Prowl", "Escalate", "Overload", "Spectacle"]),
 });
 
 /**

@@ -1919,6 +1919,11 @@ function performOffered(state, player, action, during) {
     }
     /* What this player has cast this turn, for "whenever an opponent casts their first noncreature spell each turn". */
     (state.players[player].castThisTurn ??= []).push({types: [...(object.types ?? [])], colors: [...(object.colors ?? [])]});
+    /* And this game, by name (CR 201.2): "if ... you've cast another spell named Approach of the Second Sun this game"
+       (script/amount.mjs, spellsCastThisGame) -- the name it was cast with, an Adventure's or a face's (CR 715.3, 712.8).
+       Never cleared. */
+    const castNames = (state.players[player].castNames ??= {});
+    castNames[object.card] = (castNames[object.card] ?? 0) + 1;
     /* A prepare spell's copy (CR 722.3c): the permanent it is the prepare spell of, read before it moves. */
     const preparedBy = object.zone === "exile" && object.prepareOf !== undefined ? object.prepareOf : undefined;
     const entry = pushSpell(state, action.objectId, {controller: player, permanent, targets, ...(action.x !== undefined ? {x: action.x} : {}), ...(Array.isArray(action.modes) ? {modes: action.modes} : {})});

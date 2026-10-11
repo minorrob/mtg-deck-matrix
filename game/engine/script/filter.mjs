@@ -60,6 +60,11 @@ export const SELECTOR_KEYS = Object.freeze([
   /* "Creatures your opponents control without flying or reach" (Sidar Kondo of Jamuraa), "a creature without flanking"
      (CR 702.25a): none of these keywords, through the layers. */
   "nonKeywords",
+  /* "As long as Ratonhnhaké꞉ton hasn't dealt damage yet", "as long as they haven't dealt combat damage yet" (Ruric Thar,
+     Magecrusher): whether this object has dealt damage, or combat damage, since it became one (CR 400.7). */
+  "hasDealtDamage", "hasDealtCombatDamage",
+  /* "Permanent cards in your graveyard that were put there from the battlefield this turn" (Brought Back). */
+  "fromBattlefieldThisTurn",
 ]);
 
 /* THE SOURCE A LINK IS KEPT AGAINST (CR 607.2a; effects/zones.mjs, `link`): the ability's source -- or, gone from the
@@ -146,6 +151,9 @@ function assertGrammar(selector) {
   if (selector.exiledThisTurn !== undefined && selector.exiledThisTurn !== true) throw new Error("exiledThisTurn is true");
   if (selector.exiledWith !== undefined && selector.exiledWith !== "self") throw new Error("A selector's exiledWith is \"self\": a card this source's linked ability exiled");
   if (selector.dealtDamageThisTurn !== undefined && typeof selector.dealtDamageThisTurn !== "boolean") throw new Error("A selector's dealtDamageThisTurn is true or false");
+  for (const key of ["hasDealtDamage", "hasDealtCombatDamage"])
+    if (selector[key] !== undefined && typeof selector[key] !== "boolean") throw new Error(`A selector's ${key} is true or false`);
+  if (selector.fromBattlefieldThisTurn !== undefined && selector.fromBattlefieldThisTurn !== true) throw new Error("A selector's fromBattlefieldThisTurn is true: a graveyard card put there from the battlefield this turn");
   for (const key of ["otherThan", "sharesCreatureTypeWith"])
     if (selector[key] !== undefined && selector[key] !== "that card") throw new Error(`A selector's ${key} is "that card": the object a trigger is about`);
   if (selector.equipped !== undefined && selector.equipped !== true) throw new Error("A selector's equipped is true: an Equipment is attached to it");
@@ -382,6 +390,14 @@ export function compileSelector(selector) {
        turn began -- still so once the damage is gone (regenerated, CR 701.19a), never so for damage before this object was
        (CR 400.7) or before this turn (effects/resources.mjs, damagePermanent). */
     if (selector.dealtDamageThisTurn !== undefined && (usesThisTurn(state, id, "dealt damage") > 0) !== selector.dealtDamageThisTurn) return false;
+    /* "Hasn't dealt damage yet" (Ratonhnhaké꞉ton), "haven't dealt combat damage yet" (Ruric Thar): any damage it dealt, or
+       combat damage (CR 510.2), as this object -- effects/resources.mjs and rules/combat.mjs mark it as it is dealt; a new
+       object has dealt none (CR 400.7). */
+    if (selector.hasDealtDamage !== undefined && (object.hasDealtDamage === true) !== selector.hasDealtDamage) return false;
+    if (selector.hasDealtCombatDamage !== undefined && (object.hasDealtCombatDamage === true) !== selector.hasDealtCombatDamage) return false;
+    /* "Put there from the battlefield this turn" (Brought Back): a graveyard card that arrived from the battlefield on this
+       turn -- the mark only a graveyard card has (state/index.mjs, moveObject). */
+    if (selector.fromBattlefieldThisTurn === true && !(object.fromBattlefield === true && object.arrivedTurn === state.turn)) return false;
     /* "Untap all creatures that attacked this turn" (Relentless Assault): declared as an attacker in a combat this turn. */
     if (selector.attackedThisTurn === true && usesThisTurn(state, id, "attacked") === 0) return false;
     /* "Four or more +1/+1 counters on it": a number of counters of a kind. */

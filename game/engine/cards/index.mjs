@@ -800,6 +800,17 @@ export function compileScript(script) {
       keywords.push("Prowl");
       return;
     }
+    /* SPECTACLE [COST] (CR 702.137a; Light Up the Stage): "You may pay [cost] rather than pay this spell's mana cost if an
+       opponent lost life this turn" -- an alternative cost (CR 118.9; rules/actions.mjs offers it), its condition the life
+       its caster's opponents lost this turn, 1 or more (script/amount.mjs, lifeLostThisTurn "opponents"). A mana cost. */
+    if (word === "spectacle") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      if (!cost.length || !cost.every((atom) => atom?.atom === "mana")) problems.push(`${ability.text}: a spectacle cost of mana`);
+      abilities.push({id, kind: "static", rule: "alternative-cost", condition: {compare: {count: {lifeLostThisTurn: "opponents"}, atLeast: 1}}, text: ability.text,
+        cost: structuredClone(cost), affects: {what: "card", self: true}});
+      keywords.push("Spectacle");
+      return;
+    }
     /* ESCALATE (CR 702.120a): "for each mode you choose beyond the first as you cast this spell, you pay an additional [cost]"
        -- mana, "tap an untapped creature you control" (Collective Effort), or both: kept for the spell, among its additional
        costs (below; rules/actions.mjs, additionalVariants). */

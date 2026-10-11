@@ -44,7 +44,7 @@
  * implemented is worse than a missing one.
  */
 
-import {moveObject, removeObject, PER_PLAYER, PUBLIC_ZONES, eventCard, rememberExileLooker} from "../state/index.mjs";
+import {moveObject, removeObject, PER_PLAYER, PUBLIC_ZONES, eventCard, rememberExileLooker, recordDeath} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
 import {lastKnown, toughnessOf, typesOf, keywordsOf, controllerOf, deriving} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
@@ -233,6 +233,8 @@ export function checkStateBasedActions(state) {
       const leftBehind = lastKnown(state, id);
       const {proposal} = applyReplacements(state, {event: "zone-change", objectId: id, from: "battlefield", to: "graveyard", player: object.controller});
       const fell = moveObject(state, id, proposal.to, PER_PLAYER.includes(proposal.to) ? object.owner : null);
+      /* An Aura that is a creature too, put there (CR 303.4d), dies (CR 700.4; state/index.mjs). */
+      recordDeath(state, leftBehind, proposal.to);
       events.push(event("GameEventCardChangeZone", state, {
         card, leftBehind,
         /* What it became (CR 400.7e): an Aura's "return it to its owner's hand" finds the card in the graveyard. */
@@ -329,6 +331,8 @@ export function checkStateBasedActions(state) {
         const destination = proposal.to;
         const died = moveObject(state, id, destination, destination === "graveyard" || destination === "hand" || destination === "library"
           ? object.owner : null);
+        /* Died, unless a replacement sent it elsewhere (CR 700.4; state/index.mjs). */
+        recordDeath(state, leftBehind, destination);
         events.push(event("GameEventCardChangeZone", state, {
           card,
           leftBehind,
@@ -353,6 +357,8 @@ export function checkStateBasedActions(state) {
       const leftBehind = lastKnown(state, id);
       const {proposal} = applyReplacements(state, {event: "zone-change", objectId: id, from: "battlefield", to: "graveyard", player: object.controller});
       const went = moveObject(state, id, proposal.to, PER_PLAYER.includes(proposal.to) ? object.owner : null);
+      /* A planeswalker that is a creature too dies as it is put there (CR 700.4; state/index.mjs). */
+      recordDeath(state, leftBehind, proposal.to);
       events.push(event("GameEventCardChangeZone", state, {
         card, leftBehind, ...(PUBLIC_ZONES.includes(proposal.to) ? {becomes: went} : {}),
         from: {zoneType: "Battlefield", player: {playerId: object.controller}},

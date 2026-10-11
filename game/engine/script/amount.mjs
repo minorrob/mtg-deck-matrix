@@ -36,6 +36,13 @@
  *   {lesserOf: [amount, amount]}         the least of them: "greater than this creature's power or toughness" (increment)
  *   {tappedThisWay: true}                how many creatures this spell's additional cost tapped as it was cast -- "three times
  *                                        the number of creatures tapped this way" (Burn at the Stake; rules/actions.mjs)
+ *   {creaturesDiedThisTurn: who}         the creatures that died this turn under that player's control, or anyone's ("any")
+ *   {cardsDrawnThisTurn: who}            the cards that player drew this turn
+ *   {scriedOrSurveilledThisTurn: who}    the times that player scried or surveilled this turn
+ *   {spellsCastThisTurn: who, filter?}   that player's spells cast this turn, as each was cast
+ *   {spellsCastThisGame: who, named}     that player's spells of a name cast this game
+ *   {playersDealtNoncombatDamage: "opponent"|"any"}  the players noncombat damage reached this turn
+ *   {lifeLostThisTurn: "opponents"}      the life every opponent lost this turn, together
  *
  * and any of them may say `atMost` ("{1} less IF you control a creature with flying": the count, at most 1), `times` and
  * `plus`: "twice X", "1 plus the number of ...", and `times: -1` for "-X/-X" and
@@ -61,8 +68,10 @@ import {valueCostOf, commanderKeyOf} from "../state/index.mjs";
 export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "toughnessOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
   "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn", "playersDealtCombatDamage", "cardTypesAmong", "manaSpent",
   "permanentsEnteredThisTurn", "excessDamage", "lesserOf", "kicked", "differentPowers", "commanderCasts", "cardsLeftGraveyardThisTurn",
-  "countersRemovedThisWay", "movedCount", "tappedThisWay"]);
-const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "filter", "controlledBy"];
+  "countersRemovedThisWay", "movedCount", "tappedThisWay",
+  /* What happened this turn, and this game (Train C): the records state/index.mjs, rules/combat.mjs and the effects keep. */
+  "creaturesDiedThisTurn", "cardsDrawnThisTurn", "playersDealtNoncombatDamage", "scriedOrSurveilledThisTurn", "spellsCastThisTurn", "spellsCastThisGame"]);
+const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "filter", "controlledBy", "named"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
 /** Whether a value is a counted amount rather than a plain number. */
@@ -77,11 +86,21 @@ export function amountProblems(value) {
   const problems = [];
   for (const key of Object.keys(value)) if (!AMOUNT_KINDS.includes(key) && !AMOUNT_EXTRAS.includes(key)) problems.push(`An amount has no key ${JSON.stringify(key)}`);
   if ("countersOn" in value && typeof value.counter !== "string") problems.push("Counting counters says which kind: {countersOn, counter}");
-  for (const key of ["lifeGainedThisTurn", "tokensCreatedThisTurn", "permanentsLeftThisTurn", "permanentsEnteredThisTurn", "cardsLeftGraveyardThisTurn"]) if (key in value && !["you", "that player"].includes(value[key])) problems.push(`${key} is "you" or "that player"`);
-  /* What entered, as it was (rules/trigger.mjs keeps it): a filter of what a last known snapshot answers, and only there. */
+  for (const key of ["lifeGainedThisTurn", "tokensCreatedThisTurn", "permanentsLeftThisTurn", "permanentsEnteredThisTurn", "cardsLeftGraveyardThisTurn",
+    "cardsDrawnThisTurn", "scriedOrSurveilledThisTurn", "spellsCastThisTurn", "spellsCastThisGame"]) if (key in value && !["you", "that player"].includes(value[key])) problems.push(`${key} is "you" or "that player"`);
+  /* The life lost this turn: a player's, or every opponent's together ("if an opponent lost life this turn", spectacle). */
+  if ("lifeLostThisTurn" in value && !["you", "that player", "opponents"].includes(value.lifeLostThisTurn)) problems.push('lifeLostThisTurn is "you", "that player" or "opponents"');
+  if ("creaturesDiedThisTurn" in value && !["you", "that player", "any"].includes(value.creaturesDiedThisTurn)) problems.push('creaturesDiedThisTurn is "you", "that player" or "any"');
+  if ("playersDealtNoncombatDamage" in value && !["opponent", "any"].includes(value.playersDealtNoncombatDamage)) problems.push('playersDealtNoncombatDamage is "opponent" or "any"');
+  /* Spells cast this game are kept by name, and counted by it ("another spell named Approach of the Second Sun"). */
+  if ("spellsCastThisGame" in value && !(typeof value.named === "string" && value.named.length)) problems.push("spellsCastThisGame counts the spells of a name: {spellsCastThisGame, named}");
+  if ("named" in value && !("spellsCastThisGame" in value)) problems.push("Only spellsCastThisGame takes a name");
+  /* What entered, as it was (rules/trigger.mjs keeps it), and the spells cast this turn, as each was cast (rules/actions.mjs):
+     a filter of what a last known snapshot answers, and only there. */
   if ("filter" in value) {
-    if (!("permanentsEnteredThisTurn" in value)) problems.push("Only permanentsEnteredThisTurn takes a filter");
-    else try { matchesLastKnown(value.filter, {}, {}); } catch (error) { problems.push(`What permanentsEnteredThisTurn counts: ${error.message}`); }
+    const of = ["permanentsEnteredThisTurn", "spellsCastThisTurn"].find((key) => key in value);
+    if (!of) problems.push("Only permanentsEnteredThisTurn and spellsCastThisTurn take a filter");
+    else try { matchesLastKnown(value.filter, {}, {}); } catch (error) { problems.push(`What ${of} counts: ${error.message}`); }
   }
   /* What was moved, as it last was: a filter of what a last known snapshot answers (script/filter.mjs, matchesLastKnown). */
   if ("movedCount" in value) try { matchesLastKnown(value.movedCount ?? {}, {}, {}); } catch (error) { problems.push(`What movedCount counts: ${error.message}`); }
@@ -248,9 +267,51 @@ export function amountOf(state, value, context = {}) {
   }
   /* "Equal to the life they lost this turn" (Wound Reflection; resources.mjs keeps it, turn.mjs clears it). */
   else if ("lifeLostThisTurn" in value) {
-    const player = playerOf(value.lifeLostThisTurn, context);
-    n = player !== null ? state.players[player]?.lostThisTurn ?? 0 : 0;
+    /* And every opponent's together, those still in the game (CR 800.4a): spectacle's "if an opponent lost life this turn"
+       (CR 702.137a; cards/index.mjs) is this, 1 or more. */
+    if (value.lifeLostThisTurn === "opponents") n = state.players.filter((p) => p.id !== context.controller && !p.lost).reduce((sum, p) => sum + (p.lostThisTurn ?? 0), 0);
+    else {
+      const player = playerOf(value.lifeLostThisTurn, context);
+      n = player !== null ? state.players[player]?.lostThisTurn ?? 0 : 0;
+    }
   }
+  /* MORBID (Dreaded Bat-Cloud, Essenceknit Scholar): the creatures that died this turn (CR 700.4) under that player's
+     control -- or anyone's, "any" (state/index.mjs, recordDeath; rules/turn.mjs clears it). */
+  else if ("creaturesDiedThisTurn" in value) {
+    const player = playerOf(value.creaturesDiedThisTurn, context);
+    n = value.creaturesDiedThisTurn === "any" ? state.players.reduce((sum, p) => sum + (p.diedThisTurn ?? 0), 0)
+      : player !== null ? state.players[player]?.diedThisTurn ?? 0 : 0;
+  }
+  /* "The number of cards you've drawn this turn" (Fractal Anomaly), "if you've drawn two or more cards this turn" (Lake-town
+     Toymaker): each card drawn its own (CR 121.2; state/index.mjs, recordDraw). */
+  else if ("cardsDrawnThisTurn" in value) {
+    const player = playerOf(value.cardsDrawnThisTurn, context);
+    n = player !== null ? state.players[player]?.drawnThisTurn ?? 0 : 0;
+  }
+  /* "If you've scried or surveilled this turn" (Desperate Futurescribe): the times that player did (CR 701.22a, 701.25a;
+     effects/asking.mjs). */
+  else if ("scriedOrSurveilledThisTurn" in value) {
+    const player = playerOf(value.scriedOrSurveilledThisTurn, context);
+    n = player !== null ? state.players[player]?.scriedThisTurn ?? 0 : 0;
+  }
+  /* "For each spell you've cast this turn" (Aetherflux Reservoir), "if you've cast a noncreature spell this turn" (Traxos,
+     Academy Guardian): that player's spells this turn, as each was cast (rules/actions.mjs keeps them), `filter` fitting --
+     counted when the amount is read, so one cast after a trigger triggered and before it resolves is among them (CR 608.2h). */
+  else if ("spellsCastThisTurn" in value) {
+    const player = playerOf(value.spellsCastThisTurn, context);
+    n = player !== null ? (state.players[player]?.castThisTurn ?? []).filter((cast) => matchesLastKnown(value.filter ?? {}, {...cast, controller: player}, {controller: context.controller})).length : 0;
+  }
+  /* "You've cast another spell named Approach of the Second Sun this game": that player's spells of the name this game, this
+     one included once it is cast (rules/actions.mjs). */
+  else if ("spellsCastThisGame" in value) {
+    const player = playerOf(value.spellsCastThisGame, context);
+    n = player !== null ? state.players[player]?.castNames?.[value.named] ?? 0 : 0;
+  }
+  /* "If an opponent was dealt noncombat damage this turn" (Grim Repriser, Whiplash Wordsmith): the players still in the game
+     noncombat damage reached this turn (effects/resources.mjs) -- the controller's opponents, or anyone -- as the combat
+     count below. */
+  else if ("playersDealtNoncombatDamage" in value) n = state.players.filter((p) => !p.lost && p.noncombatDamagedThisTurn === true
+    && (value.playersDealtNoncombatDamage === "any" || p.id !== context.controller)).length;
   /* "If you gained 3 or more life this turn" (Indulging Patrician), "only if you created a token this turn" (Idol of
      Oblivion): what that player has gained, and made, this turn (resources.mjs and permanents.mjs keep them, turn.mjs
      clears them). */

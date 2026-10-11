@@ -82,8 +82,13 @@ function finishScry(state, awaiting, top, bottom) {
   return events;
 }
 /* That a player scried or surveilled, once it is done (CR 701.22a, 701.25a): "whenever you scry or surveil" (Proft,
-   Consulting Detective; rules/trigger.mjs). */
-const scried = (state, awaiting, kind) => event("GameEventScried", state, {player: {playerId: awaiting.player, name: state.players[awaiting.player].name}, kind, count: awaiting.count ?? awaiting.cards.length});
+   Consulting Detective; rules/trigger.mjs) -- and counted for the turn, "if you've scried or surveilled this turn"
+   (Desperate Futurescribe; script/amount.mjs, scriedOrSurveilledThisTurn), cleared as a turn begins (rules/turn.mjs). */
+function scried(state, awaiting, kind) {
+  const player = state.players[awaiting.player];
+  player.scriedThisTurn = (player.scriedThisTurn ?? 0) + 1;
+  return event("GameEventScried", state, {player: {playerId: awaiting.player, name: player.name}, kind, count: awaiting.count ?? awaiting.cards.length});
+}
 
 export const scry = {
   open(state, params, context) {

@@ -41,6 +41,17 @@ export function recordDraw(state, player) {
   return who.drawnThisTurn;
 }
 
+/* MORBID'S RECORD: a creature DIES when it is put into a graveyard from the battlefield (CR 700.4) -- counted as it lands
+   there for the player who controlled it as it last existed on the battlefield (`was`, rules/layers.mjs lastKnown: an
+   animated land died a creature, CR 603.10a), a token among them. "If a creature died this turn" (Dreaded Bat-Cloud), "if a
+   creature died under your control this turn" (Essenceknit Scholar): script/amount.mjs, creaturesDiedThisTurn. Every
+   departure from the battlefield that can end in a graveyard calls it (effects/zones.mjs moveOne; rules/sba.mjs), as it
+   happens, so an effect later in the same resolution sees it; cleared as a turn begins (rules/turn.mjs). */
+export function recordDeath(state, was, zone) {
+  if (zone !== "graveyard" || !(was?.types ?? []).includes("Creature")) return;
+  state.players[was.controller].diedThisTurn = (state.players[was.controller].diedThisTurn ?? 0) + 1;
+}
+
 /**
  * A new game state.
  *
@@ -448,7 +459,7 @@ export function moveObject(state, id, zone, player = null, {faceDown = false, tr
     const faceDownCard = Object.fromEntries(CARD_KEYS.filter((key) => from[key] !== undefined).map((key) => [key, from[key]]));
     return addObject(state, {...FACE_DOWN_EXILED, ...kept, faceDown: true, faceDownCard}, zone, player);
   }
-  return addObject(state, {
+  const arrived = addObject(state, {
     /* A double-faced card keeps the face that was up only onto the battlefield, where it was put that way; anywhere else
        it is its front (CR 712.8a). */
     ...(from.mdfc ? {mdfc: from.mdfc, face: zone === "battlefield" && (from.face === "back" || transformed === true) ? "back" : undefined} : {}),
@@ -464,4 +475,9 @@ export function moveObject(state, id, zone, player = null, {faceDown = false, tr
     spell: from.spell, subtypes: from.subtypes, supertypes: from.supertypes, colors: from.colors,
     enchant: from.enchant,
   }, zone, player);
+  /* "Permanent cards in your graveyard that were put there from the battlefield this turn" (Brought Back): the card it
+     became in the graveyard (CR 400.7) knows it came from the battlefield, and `arrivedTurn` when (script/filter.mjs,
+     fromBattlefieldThisTurn). A new object again as it leaves the graveyard, it does not carry the mark. */
+  if (from.zone === "battlefield" && zone === "graveyard") state.objects[arrived].fromBattlefield = true;
+  return arrived;
 }
