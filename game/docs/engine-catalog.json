@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1216,
+  "defined": 1242,
   "provisional": 27,
-  "everyRule": 2568
+  "everyRule": 2575
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -4133,7 +4133,7 @@
      "forge": "ChooseNumber",
      "top": 5,
      "all": 57,
-     "blocks": 5,
+     "blocks": 4,
      "alone": 1
     },
     {
@@ -5979,8 +5979,8 @@
      "forge": "TokenCreated",
      "top": 2,
      "all": 3,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 1,
+     "alone": 1
     },
     {
      "kind": "trigger",
@@ -8923,8 +8923,8 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 85,
-     "alone": 22
+     "blocks": 83,
+     "alone": 21
     },
     {
      "kind": "option",
@@ -8947,7 +8947,7 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 92,
+     "blocks": 91,
      "alone": 26
     },
     {
@@ -9007,7 +9007,7 @@
      "forge": "MayPlay",
      "top": 99,
      "all": 625,
-     "blocks": 66,
+     "blocks": 65,
      "alone": 17
     },
     {
@@ -9437,8 +9437,8 @@
      "forge": "ValidLibrary",
      "top": 13,
      "all": 63,
-     "blocks": 13,
-     "alone": 9
+     "blocks": 12,
+     "alone": 8
     },
     {
      "kind": "count",
@@ -9473,8 +9473,8 @@
      "forge": "ThisTurnEntered",
      "top": 11,
      "all": 174,
-     "blocks": 10,
-     "alone": 10
+     "blocks": 9,
+     "alone": 9
     },
     {
      "kind": "count",
@@ -9581,7 +9581,7 @@
      "forge": "ChosenNumber",
      "top": 5,
      "all": 77,
-     "blocks": 5,
+     "blocks": 4,
      "alone": 0
     },
     {
@@ -9845,8 +9845,8 @@
      "forge": "Converge",
      "top": 1,
      "all": 31,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
