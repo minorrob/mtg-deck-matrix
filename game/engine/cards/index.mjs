@@ -308,8 +308,10 @@ const TRIGGERS = {
      attacking, a cost or an effect; one that enters tapped never became tapped. */
   "becomes tapped": (t) => (ARRIVALS.includes(t.who ?? "self") ? {on: "GameEventCardTapped", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {})} : null),
   /* "Whenever you discard a card", "whenever an opponent discards a land card" (CR 701.9): `discarder` you, opponent or
-     any; `filter` the card discarded. */
-  discarded: (t) => ({on: "GameEventCardChangeZone", to: "Graveyard", discarded: true, discarder: t.discarder ?? "you", ...(t.filter ? {filter: t.filter} : {})}),
+     any; `filter` the card discarded. "When you discard this card" (Titanbones, Towering Heart; `who: "self"`): this card,
+     from where it went (rules/trigger.mjs). "Whenever a player discards one or more cards" (`batch`): once for each player. */
+  discarded: (t) => ([undefined, "self"].includes(t.who) ? {on: "GameEventCardChangeZone", to: "Graveyard", discarded: true, discarder: t.discarder ?? "you",
+    ...(t.filter ? {filter: t.filter} : {}), ...(t.who === "self" ? {who: "self"} : {})} : null),
   /* "When you cycle this card" (`who: "self"`, CR 702.29c) and "whenever you cycle a card" (`who: "any"`, `cycler`): a card
      discarded to pay a cycling cost (rules/actions.mjs). Not yet "whenever you cycle a creature card" (a filter). */
   cycled: (t) => (["self", "any"].includes(t.who ?? "self") && !t.filter

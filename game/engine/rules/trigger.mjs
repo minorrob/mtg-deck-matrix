@@ -286,6 +286,8 @@ function subjects(state, event, condition, sourceId, controller) {
     const discarder = fields.from?.player?.playerId;
     if (!whoseIs(condition.discarder ?? "you", discarder, controller)) return [];
     const card = fields.becomes;
+    /* "When you discard this card": this card, and no other. */
+    if (condition.who === "self" && card !== sourceId) return [];
     if (condition.filter && !(card !== undefined && state.objects[card] && matchesSelector({...condition.filter, what: "card", zone: "graveyard"}, state, card, {controller, source: sourceId}))) return [];
     return [{card, player: discarder}];
   }
@@ -545,11 +547,15 @@ export function collectTriggers(state, events) {
        zone the card went to (CR 702.29c). */
     const cycled = event.kind === "GameEventCardChangeZone" && event.data?.fields?.cycled === true ? event.data.fields.becomes : undefined;
     const wentTo = cycled !== undefined && state.objects[cycled] ? [cycled] : [];
+    /* And a card just discarded, where it went: its own "when you discard this card" alone (Titanbones, Towering Heart) -- a
+       trigger condition that can't trigger from the battlefield, so it functions from the zone the card went to (CR 113.6k). */
+    const discarded = event.kind === "GameEventCardChangeZone" && event.data?.fields?.discarded === true ? event.data.fields.becomes : undefined;
+    const discardedTo = discarded !== undefined && state.objects[discarded] ? [discarded] : [];
     /* And a spell just cast, on the stack: its own "when you cast this spell" alone (CR 603.2). */
     const castSpell = event.kind === "GameEventSpellAbilityCast" && event.data?.fields?.sa?.isSpell ? state.stack.find((e) => e.stackId === event.data.fields.sa.stackId)?.objectId : undefined;
     const justCast = castSpell !== undefined && state.objects[castSpell] ? [castSpell] : [];
-    for (const zone of [...WATCHING_ZONES, "cycled", "cast"]) {
-      for (const id of zone === "cycled" ? wentTo : zone === "cast" ? justCast : state.zones[zone]) {
+    for (const zone of [...WATCHING_ZONES, "cycled", "discarded", "cast"]) {
+      for (const id of zone === "cycled" ? wentTo : zone === "discarded" ? discardedTo : zone === "cast" ? justCast : state.zones[zone]) {
         const object = state.objects[id];
         /* A permanent's abilities now, the ones given it included (layers.mjs); a card's elsewhere. */
         for (const own of abilitiesNow(id)) {
@@ -560,13 +566,15 @@ export function collectTriggers(state, events) {
           /* An ability of a Class level its permanent has not reached, it does not have (CR 716.2a, 716.2d). */
           if (Number.isInteger(ability.level) && (object.level ?? 1) < ability.level) continue;
           if (zone === "cycled" && !(ability.trigger.cycled && ability.trigger.who === "self")) continue;
+          if (zone === "discarded" && !(ability.trigger.discarded && ability.trigger.who === "self")) continue;
           if (zone === "cast" && !(ability.trigger.on === "GameEventSpellAbilityCast" && ability.trigger.who === "self")) continue;
           for (const about of subjects(state, event, ability.trigger, id, object.controller)) {
           /* "If it isn't that player's turn" asks about the player the event is about. */
           if (!conditionHolds(state, ability.condition, {controller: object.controller, source: id, about})) continue;
           /* Damage to players, "one or more" at once: once for each player dealt it; damage to "a Dragon you control", once
-             for each creature dealt it. */
-          const once = `${id}:${ability.id}${ability.trigger.on === "GameEventPlayerDamaged" || ability.trigger.loser !== undefined ? `:${about.player}`
+             for each creature dealt it. "Whenever a player discards one or more cards" (Tinybones, Pocket Nuisance): once for
+             each player who discarded (CR 603.2c). */
+          const once = `${id}:${ability.id}${ability.trigger.on === "GameEventPlayerDamaged" || ability.trigger.loser !== undefined || ability.trigger.discarded ? `:${about.player}`
             : ability.trigger.on === "GameEventCardDamaged" && ["creature", "enchanted"].includes(ability.trigger.to) ? `:${about.card}` : ""}`;
           if (ability.trigger.batch && joined(once, about)) continue;
           /* "This ability triggers only once each turn": once it has, this turn, it does not again. */

@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Titanbones, Towering Heart",
+    "oracleId": "510bccb1-61cd-49f1-a54a-80352653d1e3",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Skeleton",
+      "Druid"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "Reach\nWhenever you gain life, put two +1/+1 counters on Titanbones.\nWhen you discard this card, you gain 3 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Reach",
+      "keyword": "reach"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you gain life, put two +1/+1 counters on Titanbones.",
+      "trigger": {
+        "on": "life gained"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When you discard this card, you gain 3 life.",
+      "trigger": {
+        "on": "discarded",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 3
+        }
+      ]
+    }
+  ]
+}
