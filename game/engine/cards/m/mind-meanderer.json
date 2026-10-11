@@ -1,0 +1,91 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mind Meanderer",
+    "oracleId": "18d1765b-3b60-4dda-93a6-d02a4e53f185",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bird",
+      "Fish",
+      "Illusion"
+    ],
+    "manaCost": "{3}{G}{U}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nThis creature has vigilance as long as you control a Jace planeswalker.\nWhen this creature enters, it fights up to one target creature an opponent controls. (Each deals damage equal to its power to the other.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "static",
+      "text": "This creature has vigilance as long as you control a Jace planeswalker.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Vigilance"
+        ]
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Planeswalker"
+          ],
+          "subtypes": [
+            "Jace"
+          ],
+          "controller": "you"
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, it fights up to one target creature an opponent controls. (Each deals damage equal to its power to the other.)",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "fight",
+          "from": "self",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "opponent",
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    }
+  ]
+}

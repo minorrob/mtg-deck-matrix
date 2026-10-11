@@ -1,0 +1,94 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Medic's Kitesail",
+    "oracleId": "eacfe895-5106-437c-b8c1-2ff03c107744",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Equipped creature gets +1/+0 and has flying and \"Whenever this creature attacks, you gain 1 life.\"\nEquip {2} ({2}: Attach to target creature you control. Equip only as a sorcery.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +1/+0 and has flying and \"Whenever this creature attacks, you gain 1 life.\"",
+      "layer": 7,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 0
+      },
+      "sublayer": "c"
+    },
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +1/+0 and has flying and \"Whenever this creature attacks, you gain 1 life.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addKeywords": [
+          "Flying"
+        ],
+        "addAbilities": [
+          {
+            "kind": "triggered",
+            "text": "Whenever this creature attacks, you gain 1 life.",
+            "trigger": {
+              "on": "attacks",
+              "who": "self"
+            },
+            "effects": [
+              {
+                "effect": "gainLife",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Equip {2}",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,464 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Pox Plague",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Elk": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elk"
+      ],
+      "manaCost": "{2}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Glyph": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{2}{W}",
+      "colors": [
+        "W"
+      ]
+    },
+    "Drain": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s0",
+        "text": "Each opponent loses 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "loseLife",
+            "amount": 1,
+            "who": "opponent"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Both at 40 lose 20; Rob discards one of his three cards and Maya two of her five; Rob sacrifices three of his seven permanents and Maya two of her five, each choosing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Bear",
+            "Elk"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Pox Plague",
+            "Bear",
+            "Elk",
+            "Rock"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Elk",
+            "Rock",
+            "Glyph",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Elk",
+            "Rock",
+            "Glyph",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Pox Plague"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 20
+            },
+            {
+              "seat": 1,
+              "life": 20
+            },
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Bear",
+                  "Elk",
+                  "Rock"
+                ],
+                "min": 1
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Rock"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1,
+                "options": [
+                  "Bear",
+                  "Elk",
+                  "Rock",
+                  "Glyph",
+                  "Forest"
+                ],
+                "min": 2
+              }
+            },
+            {
+              "seat": 0,
+              "zone": "hand",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Glyph",
+            "Forest"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "min": 3
+              }
+            },
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Rock"
+              ]
+            },
+            {
+              "seat": 1,
+              "zone": "graveyard",
+              "cards": [
+                "Glyph",
+                "Forest"
+              ]
+            }
+          ]
+        },
+        {
+          "answer": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1,
+                "options": [
+                  "Bear",
+                  "Elk",
+                  "Rock",
+                  "Glyph",
+                  "Forest"
+                ],
+                "min": 2
+              }
+            },
+            {
+              "seat": 0,
+              "controls": [
+                "Swamp",
+                "Swamp",
+                "Swamp",
+                "Swamp",
+                "Swamp",
+                "Bear",
+                "Elk"
+              ]
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Rock",
+            "Glyph"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 20
+        },
+        {
+          "seat": 1,
+          "life": 20
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Elk"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Elk",
+            "Rock"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Swamp",
+            "Swamp",
+            "Bear",
+            "Elk"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Bear",
+            "Elk",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Pox Plague",
+            "Rock",
+            "Swamp",
+            "Swamp",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Glyph",
+            "Forest",
+            "Rock",
+            "Glyph"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Round down each time: Maya at 39 loses 19; a hand of one discards nothing and one permanent stays, neither asked",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Drain",
+            "Pox Plague"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Elk"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Drain"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 39
+            }
+          ]
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Pox Plague"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "min": 3
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0,
+            1,
+            2
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 20
+        },
+        {
+          "seat": 1,
+          "life": 20
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Elk"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Swamp",
+            "Swamp",
+            "Swamp"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

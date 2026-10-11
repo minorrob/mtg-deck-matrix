@@ -1,0 +1,156 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Costly Plunder",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Charm Ward": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Offered once for each artifact or creature to sacrifice, never the enchantment; the Rock sacrificed, two cards drawn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Bear",
+            "Rock",
+            "Charm Ward"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Costly Plunder"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Costly Plunder"
+              },
+              "count": 2,
+              "costs": [
+                [
+                  "Bear"
+                ],
+                [
+                  "Rock"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Costly Plunder",
+          "sacrifice": "Rock"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Costly Plunder",
+            "Rock"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Bear",
+            "Charm Ward"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Nothing to sacrifice but an enchantment and lands: it cannot be cast",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Charm Ward"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Costly Plunder"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Costly Plunder"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

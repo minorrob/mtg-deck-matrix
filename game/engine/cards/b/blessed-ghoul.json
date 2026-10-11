@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blessed Ghoul",
+    "oracleId": "fe99d90e-4809-4310-a3f7-ceb540511d55",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie",
+      "Cleric"
+    ],
+    "manaCost": "{W/B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Lifelink\n{2}{W/B}: Return this card from your graveyard to your hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Lifelink",
+      "keyword": "lifelink"
+    },
+    {
+      "kind": "activated",
+      "text": "{2}{W/B}: Return this card from your graveyard to your hand.",
+      "zone": "graveyard",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{W/B}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "hand"
+        }
+      ]
+    }
+  ]
+}

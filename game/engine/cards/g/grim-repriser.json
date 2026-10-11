@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Grim Repriser",
+    "oracleId": "e853e2fb-f90d-4934-aa70-c8d3cdf12e56",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie",
+      "Bard"
+    ],
+    "manaCost": "{B}{R}",
+    "colors": [
+      "B",
+      "R"
+    ],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)\n{B}{R}: Return this card from your graveyard to the battlefield with a finality counter on it. Activate only if an opponent has been dealt noncombat damage this turn. (If a creature with a finality counter on it would die, exile it instead.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)",
+      "keyword": "prowess"
+    },
+    {
+      "kind": "activated",
+      "text": "{B}{R}: Return this card from your graveyard to the battlefield with a finality counter on it. Activate only if an opponent has been dealt noncombat damage this turn.",
+      "zone": "graveyard",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{B}{R}"
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "playersDealtNoncombatDamage": "opponent"
+          },
+          "atLeast": 1
+        }
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "battlefield",
+          "withCounters": {
+            "finality": 1
+          }
+        }
+      ]
+    }
+  ]
+}

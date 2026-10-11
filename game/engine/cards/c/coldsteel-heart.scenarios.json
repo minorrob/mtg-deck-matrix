@@ -1,0 +1,167 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Coldsteel Heart",
+  "scenarios": [
+    {
+      "name": "Cast, Rob is asked for a color and chooses blue; it enters tapped, and next turn taps for {U} only",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Coldsteel Heart"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Coldsteel Heart"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "White",
+                  "Blue",
+                  "Black",
+                  "Red",
+                  "Green"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Blue"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Coldsteel Heart",
+              "is": true
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Coldsteel Heart"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Coldsteel Heart"
+              },
+              "count": 1,
+              "mana": [
+                {
+                  "U": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Coldsteel Heart"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Red chosen: it taps for {R}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Coldsteel Heart"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Coldsteel Heart"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Red"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Coldsteel Heart"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1,
+            "U": 0
+          }
+        }
+      ]
+    }
+  ]
+}

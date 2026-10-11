@@ -1,0 +1,245 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Whiplash Wordsmith // Vicious Verse",
+  "fixtures": {
+    "Spark": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s0",
+        "text": "Spark deals 1 damage to any target.",
+        "targets": [
+          {
+            "anyOf": [
+              {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "what": "permanent",
+                "types": [
+                  "Planeswalker"
+                ]
+              },
+              {
+                "what": "permanent",
+                "types": [
+                  "Battle"
+                ]
+              },
+              {
+                "what": "player"
+              }
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 1,
+            "targets": {
+              "target": 0
+            },
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters prepared; Vicious Verse deals Maya 1: noncombat damage to an opponent, so it has flying and haste and attacks at once",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Whiplash Wordsmith // Vicious Verse"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Whiplash Wordsmith"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Vicious Verse"
+              ]
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Whiplash Wordsmith",
+                "lacks": [
+                  "Flying",
+                  "Haste"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Vicious Verse",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Whiplash Wordsmith",
+                "has": [
+                  "Flying",
+                  "Haste"
+                ]
+              }
+            },
+            {
+              "seat": 1,
+              "life": 39
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Whiplash Wordsmith"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 36
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Whiplash Wordsmith",
+            "lacks": [
+              "Flying",
+              "Haste"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rob dealt the noncombat damage to himself: he is no opponent, and it has neither",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Whiplash Wordsmith // Vicious Verse",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Spark"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Spark",
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Whiplash Wordsmith",
+            "lacks": [
+              "Flying",
+              "Haste"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "life": 39
+        }
+      ]
+    }
+  ]
+}

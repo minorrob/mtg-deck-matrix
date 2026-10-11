@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Smaug, Wicked Worm",
+    "oracleId": "20535126-f811-4386-bdce-d73f30691724",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon"
+    ],
+    "manaCost": "{3}{B}{R}",
+    "colors": [
+      "B",
+      "R"
+    ],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Flying\nWhen Smaug enters, create X tapped Treasure tokens, where X is the number of artifacts your opponents control.\nWhenever you cast a spell, if mana from a Treasure was spent to cast it, you draw a card and lose 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "When Smaug enters, create X tapped Treasure tokens, where X is the number of artifacts your opponents control.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": {
+            "count": {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ],
+              "controller": "opponent"
+            }
+          },
+          "tapped": true,
+          "token": {
+            "predefined": "Treasure"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a spell, if mana from a Treasure was spent to cast it, you draw a card and lose 1 life.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "loseLife",
+          "amount": 1
+        }
+      ],
+      "condition": {
+        "spentFrom": {
+          "subtypes": [
+            "Treasure"
+          ]
+        }
+      }
+    }
+  ]
+}

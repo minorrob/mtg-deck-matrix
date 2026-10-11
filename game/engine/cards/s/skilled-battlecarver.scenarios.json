@@ -1,0 +1,88 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Skilled Battlecarver",
+  "scenarios": [
+    {
+      "name": "First strike during Rob's turn, not during Maya's",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Skilled Battlecarver"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Skilled Battlecarver",
+                "has": [
+                  "First Strike"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Skilled Battlecarver",
+            "lacks": [
+              "First Strike"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "{1}{R}: +1/+0 until end of turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Skilled Battlecarver",
+            "Mountain",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Skilled Battlecarver"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Skilled Battlecarver",
+            "power": 3,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  ]
+}

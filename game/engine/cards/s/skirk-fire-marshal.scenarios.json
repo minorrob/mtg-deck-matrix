@@ -1,0 +1,148 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Skirk Fire Marshal",
+  "fixtures": {
+    "Goblin": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Their Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It and four Goblins tapped: 10 damage to each creature and player -- all die but it, protected from its own red damage",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Skirk Fire Marshal",
+            "Goblin",
+            "Goblin",
+            "Goblin",
+            "Goblin",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Skirk Fire Marshal",
+          "tapping": [
+            "Skirk Fire Marshal",
+            "Goblin"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Skirk Fire Marshal"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": []
+        },
+        {
+          "seat": 0,
+          "life": 30
+        },
+        {
+          "seat": 1,
+          "life": 30
+        },
+        {
+          "seat": 2,
+          "life": 30
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Goblin",
+            "Goblin",
+            "Goblin",
+            "Goblin",
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Only four untapped Goblins: not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Skirk Fire Marshal",
+            "Goblin",
+            "Goblin",
+            "Goblin",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Skirk Fire Marshal"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

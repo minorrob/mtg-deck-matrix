@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Stalwart Shield-Bearers",
+    "oracleId": "55aafc25-76c5-4621-941b-754bd8f13e64",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 0,
+    "toughness": 3
+  },
+  "oracleText": "Defender\nOther creatures you control with defender get +0/+2.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender",
+      "keyword": "defender"
+    },
+    {
+      "kind": "static",
+      "text": "Other creatures you control with defender get +0/+2.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "another": true,
+        "keywords": [
+          "Defender"
+        ]
+      },
+      "apply": {
+        "power": 0,
+        "toughness": 2
+      }
+    }
+  ]
+}

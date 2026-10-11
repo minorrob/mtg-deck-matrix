@@ -1,0 +1,105 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ordeal of Nylea",
+    "oracleId": "5fff2bf4-9e26-4815-9bf6-672ed7e55b96",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature\nWhenever enchanted creature attacks, put a +1/+1 counter on it. Then if it has three or more +1/+1 counters on it, sacrifice this Aura.\nWhen you sacrifice this Aura, search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Enchant creature",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever enchanted creature attacks, put a +1/+1 counter on it. Then if it has three or more +1/+1 counters on it, sacrifice this Aura.",
+      "trigger": {
+        "on": "attacks",
+        "who": "any",
+        "filter": {
+          "attachedBy": "self"
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "that card",
+          "counter": "+1/+1",
+          "count": 1
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "about": "that card",
+            "is": {
+              "countersAtLeast": {
+                "counter": "+1/+1",
+                "count": 3
+              }
+            }
+          },
+          "then": [
+            {
+              "effect": "moveZone",
+              "targets": "self",
+              "sacrifice": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When you sacrifice this Aura, search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle.",
+      "trigger": {
+        "on": "sacrificed",
+        "sacrificer": "you",
+        "filter": {
+          "self": true
+        }
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "count": 2,
+          "upTo": true,
+          "to": "battlefield",
+          "tapped": true,
+          "shuffle": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kami of Old Stone",
+    "oracleId": "575d08b2-3150-47d2-8f83-e8bb1f184c0f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 7
+  },
+  "oracleText": "",
+  "source": "hand",
+  "abilities": []
+}

@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Swampsnare Trap",
+    "oracleId": "fc532d1d-6cf5-4b59-afb3-325d0bc0db77",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This spell costs {1} less to cast if it targets a creature with flying.\nEnchant creature\nEnchanted creature gets -5/-3.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell costs {1} less to cast if it targets a creature with flying.",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": 1,
+      "targeting": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "keywords": [
+          "Flying"
+        ]
+      }
+    },
+    {
+      "kind": "keyword",
+      "text": "Enchant creature",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "hostile": true
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted creature gets -5/-3.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": -5,
+        "toughness": -3
+      }
+    }
+  ]
+}

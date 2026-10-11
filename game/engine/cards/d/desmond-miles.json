@@ -1,0 +1,88 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Desmond Miles",
+    "oracleId": "654d84bb-f801-4d03-898c-78952f1c5a73",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Assassin"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Menace\nDesmond Miles gets +1/+0 for each other Assassin you control and each Assassin card in your graveyard.\nWhenever Desmond Miles deals combat damage to a player, surveil X, where X is the amount of damage it dealt to that player.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Menace",
+      "keyword": "menace"
+    },
+    {
+      "kind": "static",
+      "text": "Desmond Miles gets +1/+0 for each other Assassin you control and each Assassin card in your graveyard.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "power": {
+          "count": {
+            "anyOf": [
+              {
+                "what": "permanent",
+                "subtypes": [
+                  "Assassin"
+                ],
+                "controller": "you",
+                "another": true
+              },
+              {
+                "what": "card",
+                "zone": "graveyard",
+                "subtypes": [
+                  "Assassin"
+                ],
+                "owner": "you"
+              }
+            ]
+          }
+        },
+        "toughness": 0
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Desmond Miles deals combat damage to a player, surveil X, where X is the amount of damage it dealt to that player.",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "self",
+        "combat": true,
+        "to": "player"
+      },
+      "effects": [
+        {
+          "effect": "surveil",
+          "count": {
+            "damageDealt": true
+          }
+        }
+      ]
+    }
+  ]
+}

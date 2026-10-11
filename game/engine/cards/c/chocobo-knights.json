@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Chocobo Knights",
+    "oracleId": "6cbefcba-0c1c-48fd-9b78-905ed61aae1e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Knight"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Whenever you attack, creatures you control with counters on them gain double strike until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you attack, creatures you control with counters on them gain double strike until end of turn.",
+      "trigger": {
+        "on": "attackers declared",
+        "attacker": "you"
+      },
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "counters": "any"
+          },
+          "keywords": [
+            "Double Strike"
+          ],
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

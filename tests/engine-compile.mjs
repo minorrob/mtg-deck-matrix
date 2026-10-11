@@ -47,8 +47,13 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
   eq(unfaithful, [], "every hand definition passes fidelity: each ability a sentence of the card, every clause claimed");
   const smoked = scripts.map((s) => ({name: s.identity.name, ...smokeTest(s, index.definition)}));
   eq(smoked.filter((r) => !r.ok).map((r) => `${r.name}: ${r.problems.join("; ")}`), [], "every hand definition survives its smoke game");
-  const played = smoked.filter((r) => r.played).length;
-  ok(played >= scripts.length - 2, `and ${played} of ${scripts.length} were actually played or cast in it (a counterspell for creatures has only a sorcery to answer)`);
+  /* The few a smoke game cannot cast, each for want of what its only target must be: an attacking creature (Condemn), a
+     creature dealt damage this turn (Mirrodin Avenged), a white or black spell to counter (Precise Redaction), a tapped
+     creature for the modes its mana pays (Cloud's Limit Break) -- or for want of seven cards in its player's graveyard,
+     without which it can't be cast at all (Proft, Sinister Mastermind). Named, so a card that stops being played in its
+     smoke game is found, not counted. */
+  const unplayed = smoked.filter((r) => !r.played).map((r) => r.name).sort();
+  eq(unplayed, ["Cloud's Limit Break", "Condemn", "Mirrodin Avenged", "Precise Redaction", "Proft, Sinister Mastermind"], `and the other ${scripts.length - unplayed.length} of ${scripts.length} were actually played or cast in it`);
   /* Batch 30: a card aimed at its controller's own creature spell answers the Smoke Whelp its player casts first. */
   ok(smoked.find((r) => r.name === "Double Major")?.played === true, "Double Major (\"copy target creature spell you control\") is cast in its smoke game, at its player's own creature spell");
   /* A creature whose ACTIVATED ability copies its controller's spells is cast as any creature is: no spell of its own put on

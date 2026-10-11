@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Kami of Old Stone",
+  "scenarios": [
+    {
+      "name": "Cast for {3}{W}: a 1/7 on the battlefield",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Kami of Old Stone"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Kami of Old Stone"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Kami of Old Stone",
+            "power": 1,
+            "toughness": 7
+          }
+        }
+      ]
+    }
+  ]
+}

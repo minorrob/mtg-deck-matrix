@@ -6,7 +6,7 @@
  *
  * WHAT NOBODY IS TOLD. A card that moves between two hidden zones (a library and a hand) is never named: a
  * draw is "Rob drew a card", however many. Everything else it names was, or has just become, public: a land
- * played, a spell cast, a card discarded, milled, destroyed or exiled.
+ * played, a spell cast, a card revealed, discarded, milled, destroyed or exiled.
  *
  * Left out, as noise: tapping, mana, shuffles, and the steps of a turn (the turn itself is a line).
  *
@@ -70,6 +70,10 @@ export function historyLines(event, names = []) {
       const blocks = (f.blockers || []).map((b) => `${cardName(b.card)} blocked ${cardName(b.blocking)}`);
       return blocks.length ? line(`${who(f.player.playerId)}: ${blocks.join(", ")}`) : [];
     }
+    /* A card revealed (CR 701.20a) -- from a library, from a hand (Render Speechless's "target opponent reveals their hand"),
+       as a cost -- is shown to every player, so it is named. */
+    case "GameEventCardRevealed":
+      return line(`${who(f.player.playerId)} revealed ${cardName(f.card)}`);
     /* A double-faced permanent turned over (CR 701.27a): both faces are public, so both are named. */
     case "GameEventCardTransformed":
       return line(`${f.from ?? "A permanent"} transformed into ${cardName(f.card)}`);

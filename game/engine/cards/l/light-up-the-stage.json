@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Light Up the Stage",
+    "oracleId": "8d286376-f386-43ab-a9bd-8478fb9e2497",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Spectacle {R} (You may cast this spell for its spectacle cost rather than its mana cost if an opponent lost life this turn.)\nExile the top two cards of your library. Until the end of your next turn, you may play those cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Spectacle {R}",
+      "keyword": "spectacle",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{R}"
+        }
+      ]
+    },
+    {
+      "kind": "spell",
+      "text": "Exile the top two cards of your library. Until the end of your next turn, you may play those cards.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "fromTop": 2,
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "mayPlay",
+          "targets": "remembered",
+          "until": "your-next-end"
+        }
+      ]
+    }
+  ]
+}

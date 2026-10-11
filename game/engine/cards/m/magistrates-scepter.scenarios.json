@@ -1,0 +1,255 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Magistrate's Scepter",
+  "scenarios": [
+    {
+      "name": "A charge counter on each of three turns; then three removed: Rob takes an extra turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Magistrate's Scepter",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Magistrate's Scepter",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Magistrate's Scepter",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Magistrate's Scepter",
+                "counter": "charge",
+                "count": 2
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Magistrate's Scepter",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Magistrate's Scepter",
+                "counter": "charge",
+                "count": 3
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 7,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Magistrate's Scepter",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "event": "GameEventExtraTurn",
+              "where": {
+                "player": {
+                  "playerId": 0,
+                  "name": "Rob"
+                }
+              }
+            },
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Magistrate's Scepter",
+                "counter": "charge",
+                "count": 0
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 8,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "event": "GameEventTurnPhase",
+          "where": {
+            "phase": "UNTAP",
+            "playerTurn": {
+              "playerId": 0,
+              "name": "Rob"
+            },
+            "extraTurn": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "With two charge counters, the extra turn is not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Magistrate's Scepter",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Magistrate's Scepter",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Magistrate's Scepter",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Magistrate's Scepter",
+            "counter": "charge",
+            "count": 2
+          }
+        },
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Magistrate's Scepter"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

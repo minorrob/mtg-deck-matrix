@@ -1,0 +1,117 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Outpost Siege",
+    "oracleId": "ebb24fc7-dc71-4712-8c2a-b5920f78e55d",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As this enchantment enters, choose Khans or Dragons.\n• Khans — At the beginning of your upkeep, exile the top card of your library. Until end of turn, you may play that card.\n• Dragons — Whenever a creature you control leaves the battlefield, this enchantment deals 1 damage to any target.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "As this enchantment enters, choose Khans or Dragons.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "choose": [
+          "Khans",
+          "Dragons"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "• Khans — At the beginning of your upkeep, exile the top card of your library. Until end of turn, you may play that card.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "fromTop": 1,
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "mayPlay",
+          "targets": "remembered",
+          "until": "end-of-turn"
+        }
+      ],
+      "condition": {
+        "chosen": "Khans"
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "• Dragons — Whenever a creature you control leaves the battlefield, this enchantment deals 1 damage to any target.",
+      "trigger": {
+        "on": "leaves",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "targets": {
+            "target": 0
+          },
+          "who": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Battle"
+              ]
+            },
+            {
+              "what": "player"
+            }
+          ]
+        }
+      ],
+      "condition": {
+        "chosen": "Dragons"
+      }
+    }
+  ]
+}

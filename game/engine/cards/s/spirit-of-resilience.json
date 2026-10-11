@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Spirit of Resilience",
+    "oracleId": "ddc85b23-113a-46e9-ab09-fae9312c72fa",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit",
+      "Warrior"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Whenever one or more cards leave your graveyard, put a +1/+1 counter on this creature, then you may have this creature become a copy of an artifact or creature card from among those cards until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever one or more cards leave your graveyard, put a +1/+1 counter on this creature, then you may have this creature become a copy of an artifact or creature card from among those cards until end of turn.",
+      "trigger": {
+        "on": "left graveyard",
+        "batch": true
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "any",
+          "among": "those cards",
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Artifact"
+                ]
+              },
+              {
+                "types": [
+                  "Creature"
+                ]
+              }
+            ]
+          },
+          "upTo": true,
+          "to": "stay",
+          "remember": true
+        },
+        {
+          "effect": "becomeCopy",
+          "targets": "remembered",
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rhox Faithmender",
+    "oracleId": "2abe9303-d498-4aad-b6b2-8b5064bd2ffd",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Rhino",
+      "Monk"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 5
+  },
+  "oracleText": "Lifelink (Damage dealt by this creature also causes you to gain that much life.)\nIf you would gain life, you gain twice that much life instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Lifelink (Damage dealt by this creature also causes you to gain that much life.)",
+      "keyword": "lifelink"
+    },
+    {
+      "kind": "static",
+      "text": "If you would gain life, you gain twice that much life instead.",
+      "rule": "more-life",
+      "affects": {
+        "who": "you"
+      },
+      "times": 2
+    }
+  ]
+}

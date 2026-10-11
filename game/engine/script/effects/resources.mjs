@@ -15,16 +15,15 @@
  * looks generous.
  */
 
-import {addMana as addToPool} from "../../rules/mana.mjs";
-import {addRestricted} from "../../rules/restricted-mana.mjs";
+import {addRestricted, addPoolMana} from "../../rules/restricted-mana.mjs";
 import {applyReplacements, hitKey, damageChoicesPossible} from "../../rules/replacement.mjs";
 import {runFollowUps} from "./index.mjs";
 import {selectMatching} from "../filter.mjs";
 import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
 import {typesOf, powerOf, toughnessOf, keywordsOf, isKeywordCounter, controllerOf} from "../../rules/layers.mjs";
-import {cantGainLife, countersPlaced, playerCountersPlaced} from "../../rules/statics.mjs";
-import {playerRuled} from "../../rules/sba.mjs";
+import {cantGainLife, lifeGained, countersPlaced, playerCountersPlaced, placeCounters} from "../../rules/statics.mjs";
+import {playerRuled, leaveGame} from "../../rules/sba.mjs";
 import {amountOf} from "../amount.mjs";
 import {recordUse} from "../../state/index.mjs";
 
@@ -37,7 +36,14 @@ export function addMana(state, params, context) {
   /* "Spend this mana only to cast instant and sorcery spells" (Abstract Paintmage; CR 106.6): beside the pool, what it may
      pay for read as it is added, as a mana ability's is (rules/restricted-mana.mjs). */
   if (params.spendOnly) addRestricted(state, context.controller, mana, params.spendOnly, context.source);
-  else addToPool(state.players[context.controller].manaPool, mana);
+  /* "This mana can't be spent to cast spells from your hand": in the pool, remembered beside it. */
+  else addPoolMana(state, context.controller, mana, params.cantSpend, context.source);
+  /* "Until end of combat, you don't lose this mana as steps and phases end" (firebending, CR 702.189a): how much of the pool
+     its player keeps as combat's steps end (`combatMana`, rules/turn.mjs). */
+  if (params.untilEndOfCombat === true) {
+    const kept = (state.players[context.controller].combatMana ??= {});
+    for (const [color, n] of Object.entries(mana)) kept[color] = (kept[color] ?? 0) + n;
+  }
   return [event("GameEventManaPool", state, {
     player: {playerId: context.controller, name: state.players[context.controller].name},
     produced: {...mana},
@@ -103,6 +109,9 @@ export function changeLife(state, player, delta, events) {
   if (delta > 0 && cantGainLife(state, player)) return;
   /* "Their life total can't change" (Teferi's Reproach; CR 119.7-8): no gain, no loss. */
   if ((state.effects ?? []).some((e) => e.rule === "life-cant-change" && (e.players ?? []).includes(player))) return;
+  /* "If you would gain life, you gain twice that much life instead" (Rhox Faithmender; rules/statics.mjs, lifeGained): an
+     exchange of life totals and a life total set higher are gains too (CR 701.12b, 119.5). */
+  if (delta > 0) delta = lifeGained(state, player, delta);
   const before = state.players[player].life;
   state.players[player].life += delta;
   /* The life each player has lost this turn (Wound Reflection; script/amount.mjs), cleared as a turn begins (turn.mjs). */
@@ -192,7 +201,15 @@ export function dealDamage(state, params, context) {
     const infect = source !== null && infects(state, source);
     /* Whoever controls the source puts the counters infect makes (CR 702.90b-c): "if you would put counters". */
     const putter = infect && state.objects[source] ? controllerOf(state, source) : null;
+    /* The source has dealt damage (CR 120.1), for as long as it is this object (CR 400.7): "as long as Ratonhnhaké꞉ton
+       hasn't dealt damage yet" (script/filter.mjs, hasDealtDamage) -- marked below where it is dealt, to a player or to a
+       permanent; damage prevented in full was never dealt (above). */
     if (toPlayer !== undefined) {
+      if (source !== null) state.objects[source].hasDealtDamage = true;
+      /* A player dealt noncombat damage this turn, infect's included (CR 702.90b: still damage dealt): "activate only if an
+         opponent has been dealt noncombat damage this turn" (Grim Repriser; script/amount.mjs, playersDealtNoncombatDamage).
+         rules/turn.mjs clears it as a turn begins. */
+      state.players[toPlayer].noncombatDamagedThisTurn = true;
       if (infect) events.push(...givePoison(state, toPlayer, proposal.amount, putter));
       else changeLife(state, toPlayer, -proposal.amount, events);
       events.push(event("GameEventPlayerDamaged", state, {
@@ -205,6 +222,7 @@ export function dealDamage(state, params, context) {
          to a creature (its damage marked counted; from deathtouch, anything past 1, 702.2c), past its loyalty to a
          planeswalker, the greater for one that is both -- read before it is dealt, and kept for the effects after it. */
       context.excessDamage = (context.excessDamage ?? 0) + excessOf(state, toCard, proposal.amount, source);
+      if (source !== null) state.objects[source].hasDealtDamage = true;
       damagePermanent(state, toCard, proposal.amount, events, {infect, by: putter});
       events.push(event("GameEventCardDamaged", state, {
         card: cardRef(state, toCard),
@@ -275,13 +293,15 @@ export function damagePermanent(state, id, amount, events, {infect = false, by =
   else object.damage += amount;
 }
 
-/* `by`: the player putting them (rules/statics.mjs, countersPlaced) -- an effect's controller, an infect source's. */
-export function addCounters(state, id, kind, count, events, by = null) {
+/* `by`: the player putting them (rules/statics.mjs, countersPlaced) -- an effect's controller, an infect source's.
+   `orders`: the affected player's answers for the order of the effects that change them (CR 616.1; orderCounters). */
+export function addCounters(state, id, kind, count, events, by = null, orders = []) {
   if (count === 0) return;
   const object = state.objects[id];
   if (!object) return;
-  /* "Twice that many instead" (Branching Evolution; "if you would put", Innkeeper's Talent; rules/statics.mjs). */
-  if (object.zone === "battlefield") count = countersPlaced(state, id, kind, count, by);
+  /* "Twice that many instead" (Branching Evolution; "if you would put", Innkeeper's Talent), "that many plus one" (Hardened
+     Scales), "half that many" (Vorinclex): rules/statics.mjs. */
+  if (object.zone === "battlefield") count = countersPlaced(state, id, kind, count, by, orders);
   if (count === 0) return;
   const before = object.counters[kind] ?? 0;
   object.counters[kind] = before + count;
@@ -379,22 +399,75 @@ export function winGame(state, params, context) {
   return [];
 }
 
+/**
+ * `loseGame` -- "that player loses the game" (Strixhaven Stadium), "each player with exactly 13 life loses the game"
+ * (Triskaidekaphobia; CR 104.3e; Forge's LosesGame): each player `who` names -- with `withLife`, only those whose life total
+ * is exactly that now -- found first, then all of them losing together (CR 104.4a: all who remain losing at once is a draw).
+ * Each leaves the game as it happens, everything of theirs with them (CR 104.5, 800.4a; rules/sba.mjs leaveGame): no
+ * state-based action. One for whom "you can't lose the game" holds (Darksteel Angel) does not lose -- then, or later.
+ */
+export function loseGame(state, params, context) {
+  const events = [];
+  const losing = playersFor(state, params.who ?? "you", context.controller)
+    .filter((id) => params.withLife === undefined || state.players[id].life === params.withLife)
+    .filter((id) => !playerRuled(state, "cant-lose", id));
+  for (const id of losing) leaveGame(state, state.players[id], "effect", events);
+  return events;
+}
+
+/* Who puts them, for "if you would put" (rules/statics.mjs): the effect's controller -- or, "that player ... puts a +1/+1
+   counter on it" (Alexios, Deimos of Kosmos: `puts: "that player"`), the player the trigger is about. */
+const putterOf = (params, context) => (params.puts === "that player" ? context.about.player : context.controller);
+
 /** `putCounter` — CR 121. */
 export function putCounter(state, params, context) {
   const events = [];
   /* A kind of counter its controller chooses (`counter: "chosen"`) is asked first, as it resolves (effects/asking.mjs,
      counterKind) -- never decided here, and never put on as a counter named "chosen". */
   if (params.counter === "chosen") throw new Error("putCounter with a chosen kind of counter asks its controller which: run it through resolution.mjs");
-  for (const id of params.targets ?? []) addCounters(state, id, params.counter ?? "+1/+1", params.count ?? 1, events, context.controller);
+  for (const {id, kind, count} of counterPlacements(state, params, context, false))
+    addCounters(state, id, kind, count, events, putterOf(params, context), params.counterOrders?.[placementKey(id, kind)] ?? []);
   return events;
 }
 
 /** `putCounterAll` — on everything a selector matches. */
 export function putCounterAll(state, params, context) {
   const events = [];
-  for (const id of selectMatching(state, params.selector ?? {what: "permanent"}, context))
-    addCounters(state, id, params.counter ?? "+1/+1", params.count ?? 1, events, context.controller);
+  for (const {id, kind, count} of counterPlacements(state, params, context, true))
+    addCounters(state, id, kind, count, events, context.controller, params.counterOrders?.[placementKey(id, kind)] ?? []);
   return events;
+}
+
+/* ---- CR 616.1, before counters are put on ----
+
+   The counter effects a resolution can stop to ask about (script/resolution.mjs; effects/asking.mjs, orderCounters), each
+   as the placements it makes -- so the question and the putting see the same ones. */
+const COUNTING = Object.freeze({putCounter, putCounterAll});
+function counterPlacements(state, params, context, all) {
+  const kind = params.counter ?? "+1/+1", count = params.count ?? 1;
+  const ids = all ? selectMatching(state, params.selector ?? {what: "permanent"}, context) : params.targets ?? [];
+  /* "Put this creature's counters on that token" (Ambitious Augmenter's dies trigger): each kind its source had as it last
+     existed, as many (CR 608.2h) -- put on as counters are, so what changes counters put on changes these too. */
+  if (params.countersOf === "self")
+    return ids.flatMap((id) => Object.entries(context.lastKnown?.counters ?? {}).map(([had, n]) => ({id, kind: had, count: n})));
+  return ids.map((id) => ({id, kind, count}));
+}
+/** Which placement an answer belongs to: the permanent, and the kind. */
+export const placementKey = (id, kind) => `${id}:${kind}`;
+
+/**
+ * The first placement of this counter effect whose replacement effects' order is the affected player's to choose and not
+ * yet chosen (CR 616.1), given `answers` (by placement, `placementKey`): `{player, options, count, id, kind, by, key}`, or
+ * null when there is none. It changes nothing.
+ */
+export function counterQuestion(state, effect, context, answers = {}) {
+  if (!COUNTING[effect?.effect]) return null;
+  for (const {id, kind, count} of counterPlacements(state, effect, context, effect.effect === "putCounterAll")) {
+    const key = placementKey(id, kind);
+    const {question} = placeCounters(state, {id}, kind, count, putterOf(effect, context), {orders: answers[key] ?? [], askable: true});
+    if (question) return {...question, id, kind, by: putterOf(effect, context), key};
+  }
+  return null;
 }
 
 /**
@@ -419,17 +492,21 @@ export function multiplyCounters(state, params, context) {
     Intimidation): `counter: "all"`, every kind it has, all of each. "Remove all charge counters from this artifact"
     (Coalition Relic): `all: true`, every counter of the kind named. And how many it removed, for "for each charge counter
     removed this way" after it (`countersRemoved`, read by the amount `countersRemovedThisWay`, script/amount.mjs): none
-    removed is 0 (CR 122.1, 608.2c). */
+    removed is 0 (CR 122.1, 608.2c). "Remove up to three counters from another target creature or planeswalker" (Mabel,
+    Bitter Recluse): `counter: "any"`, which ones its controller's choice, asked first (effects/asking.mjs, countersToRemove)
+    and done with the answer, `removing`, how many of each kind -- never decided here. */
 export function removeCounter(state, params, context) {
+  if (params.counter === "any" && params.removing === undefined)
+    throw new Error("removeCounter of any kinds asks its controller which counters: run it through resolution.mjs");
   const events = [];
   let removed = 0;
   for (const id of params.targets ?? []) {
     const object = state.objects[id];
     if (!object) continue;
-    const kinds = params.counter === "all" ? Object.keys(object.counters ?? {}) : [params.counter ?? "+1/+1"];
+    const kinds = params.counter === "all" ? Object.keys(object.counters ?? {}) : params.counter === "any" ? Object.keys(params.removing) : [params.counter ?? "+1/+1"];
     for (const kind of kinds) {
       const before = object.counters[kind] ?? 0;
-      const after = params.counter === "all" || params.all === true ? 0 : Math.max(0, before - (params.count ?? 1));
+      const after = params.counter === "all" || params.all === true ? 0 : Math.max(0, before - (params.counter === "any" ? params.removing[kind] : params.count ?? 1));
       if (after === before) continue;
       object.counters[kind] = after;
       removed += before - after;
@@ -454,6 +531,8 @@ export function removeCounter(state, params, context) {
 export function moveCounters(state, params, context) {
   const events = [];
   if (params.counter === "chosen") throw new Error("moveCounters with a chosen kind of counter asks its controller which: run it through resolution.mjs");
+  /* "Onto other creatures" (Forgotten Ancient): where each goes is asked (effects/asking.mjs, countersOnto), never decided here. */
+  if (params.onto !== undefined) throw new Error("moveCounters onto permanents its controller chooses asks where: run it through resolution.mjs");
   const [from] = params.from ?? [], [to] = params.targets ?? [];
   const kind = params.counter ?? "+1/+1", n = Math.max(0, params.count ?? 1);
   if (from === undefined || to === undefined || from === to || n === 0) return events;

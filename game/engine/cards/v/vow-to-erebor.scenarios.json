@@ -1,0 +1,307 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Vow to Erebor",
+  "fixtures": {
+    "Dwarf Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dwarf"
+      ],
+      "manaCost": "{1}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob's attacking Dwarf untapped, +2/+2, and Behemoth Sledge attached to it: 6/6 with trample",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Dwarf Pal",
+            "Behemoth Sledge"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vow to Erebor"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Dwarf Pal"
+          ]
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Vow to Erebor",
+          "targets": [
+            {
+              "card": "Dwarf Pal"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Behemoth Sledge"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Behemoth Sledge"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Dwarf Pal",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Dwarf Pal",
+            "power": 6,
+            "toughness": 6
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Dwarf Pal",
+            "has": [
+              "Trample",
+              "Lifelink"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "The Dwarf, and Rob declines: +2/+2, nothing attached",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Dwarf Pal",
+            "Behemoth Sledge"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vow to Erebor"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Vow to Erebor",
+          "targets": [
+            {
+              "card": "Dwarf Pal"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": []
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Dwarf Pal",
+            "power": 4,
+            "toughness": 4
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Dwarf Pal",
+            "lacks": [
+              "Trample"
+            ]
+          }
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "A Bear is no Dwarf: untapped and +2/+2, and nothing is asked about the Sledge",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Bear",
+            "Behemoth Sledge"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vow to Erebor"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Vow to Erebor",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "tapped": "Bear",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 4,
+            "toughness": 4
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bear",
+            "lacks": [
+              "Trample"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Only Rob's own creatures: Maya's Dwarf is no target",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vow to Erebor"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Dwarf Pal"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Vow to Erebor"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

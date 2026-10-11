@@ -1,0 +1,78 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Jiang Yanggu, Never Alone",
+    "oracleId": "4ba661d7-1cb8-4fec-bfaa-5f2797235fcf",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Druid"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "When Jiang Yanggu enters, create Mowu, a legendary 3/3 green Dog creature token.\nAt the beginning of your end step, untap all tokens you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Jiang Yanggu enters, create Mowu, a legendary 3/3 green Dog creature token.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Mowu",
+            "supertypes": [
+              "Legendary"
+            ],
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Dog"
+            ],
+            "colors": [
+              "G"
+            ],
+            "power": 3,
+            "toughness": 3
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, untap all tokens you control.",
+      "trigger": {
+        "on": "end step"
+      },
+      "effects": [
+        {
+          "effect": "untapAll",
+          "selector": {
+            "what": "permanent",
+            "token": true,
+            "controller": "you"
+          }
+        }
+      ]
+    }
+  ]
+}

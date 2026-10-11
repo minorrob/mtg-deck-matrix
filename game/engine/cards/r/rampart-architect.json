@@ -1,0 +1,124 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rampart Architect",
+    "oracleId": "b0edba6f-8f54-4dc4-b952-20b57a797d60",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elephant",
+      "Advisor"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Whenever this creature enters or attacks, create a 1/3 white Wall creature token with defender.\nWhenever a creature you control with defender dies, you may search your library for a basic land card, put that card onto the battlefield tapped, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature enters or attacks, create a 1/3 white Wall creature token with defender.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Wall",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Wall"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 1,
+            "toughness": 3,
+            "keywords": [
+              "Defender"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature enters or attacks, create a 1/3 white Wall creature token with defender.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Wall",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Wall"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 1,
+            "toughness": 3,
+            "keywords": [
+              "Defender"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature you control with defender dies, you may search your library for a basic land card, put that card onto the battlefield tapped, then shuffle.",
+      "trigger": {
+        "on": "dies",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "keywords": [
+            "Defender"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "to": "battlefield",
+          "tapped": true,
+          "shuffle": true
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

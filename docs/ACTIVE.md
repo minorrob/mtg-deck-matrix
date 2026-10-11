@@ -16,7 +16,7 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | Gate item | State | Proof, or whose step |
 | --- | --- | --- |
 | G-A: G1, 1,400 games | **done: 1,400 of 1,400 clean** | PR #686's head ccb250d1: every game finished, none refused, every replay identical, 0 leaks in 105,656 checks of every seat's view |
-| G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**, with a daily cap of its own ($1.50, released at 905394dc); **AI-2's L1 built** (Normal and Easy, measured against L0: Normal 61%, Easy 56%, L0 itself 51%); **the LLM seat built behind its switch**, its privacy wording Rob's to approve; **AI-5 built and on staging** (each deck says whether the table can play it; Play this deck); **AI-4, the deck advisor, built behind its switch**, its privacy wording Rob's to approve; **AI-3's Train C running** (Rob's library: 825 of 1,132 cards playable, 307 being defined); **AI-6, AI Coach settings, built** | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
+| G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**, with a daily cap of its own ($1.50, released at 905394dc); **AI-2's L1 built** (Normal and Easy, measured against L0: Normal 61%, Easy 56%, L0 itself 51%); **the LLM seat built behind its switch**, its privacy wording Rob's to approve; **AI-5 built and on staging** (each deck says whether the table can play it; Play this deck); **AI-4, the deck advisor, built behind its switch**, its privacy wording Rob's to approve; **AI-3's Train C done: 1,130 of Rob's 1,132 cards play** (the two left, each with its reason), Rob's to confirm; **AI-6, AI Coach settings, built** | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
 | G-A: M3's monitoring and backups | **monitoring built** (Workers Logs keeps the Worker's own 5xx and sync-conflict lines; `tools/ops-week.mjs`, the weekly check); Time Travel confirmed, 30 days | **Rob:** the two alerts and their email; R2 turned on, the nightly copy's window and what deletion promises (`docs/ops.md`) |
 | G-B: the whole gate green twice on main | done | dispatched Tests runs on main, every suite: 2499 on def8fa89 and 2503 on eff40fdc, both green |
 | G-B: `play-e2e` under wrangler dev | done | 35 checks at every staging release |
@@ -946,3 +946,25 @@ incidents, 3 people, 24 versions, Time Travel back to the database's birth (its 
 version 9e463c21, its `play-worker.js` byte-identical to the release's dry-run bundle (2,825,718 bytes, sha256
 efa5ea01…). Its AI bindings are the Coach's alone. **Workers Logs is on for crankmagic-staging as built:** the
 Worker's `script-settings` read `observability.enabled` true, `head_sampling_rate` 1, `logs.invocation_logs` false.
+
+**Train C (AI-3): Rob's whole library, learned (2026-10-11).** Of the 1,132 cards in Rob's library, 825 were playable
+before Train C; 305 of the other 307 are now defined, each with scenarios that can fail, so **1,130 of 1,132 play**.
+- **Phase 1** defined 167 with the engine as it was (seven workers by card kind).
+- **Phase 2** built the engine pieces the rest needed, in six areas: four bugs; the turn's and game's records;
+  costs that read their targets, cost atoms, behold, waterbend; replacements and last-known information; keywords
+  (split second, riot, surge, freerunning, embalm, tiered, suspend from the hand, disguise, partner with,
+  firebending, compleated, and more); combat (attacked recipients, attacks alone, losing the game).
+- **Wave 2** built the rest in five areas: selectors and conditions, with mana provenance and mana withheld from
+  casting from hand; counted amounts; revealed hands and the triggers the engine lacked; counters, copies, Roles,
+  attachments and searches; the stack as targets, prevention shields, votes and tempting offers, and the fix for an
+  attack tax the attacker can't pay (CR 508.1d). Then a last area of four. Phase 2 and wave 2 defined 138 of the
+  307, and a few cards beside them (a second Danitha, Gandalf the White) whose clauses the areas were named for.
+- **The two left, and why:** Gandalf, Goblins' Bane // Flameshape (playing a face-down exiled card, CR 406.3a, isn't
+  built) and Extrapolate the Impossible (nothing outside the game in Commander, CR 903.5e and 903.11, so it does
+  nothing there).
+- **Proof:** check-cards 2,041 definitions, 3,868 scenarios, 0 failed; about 80 new engine suites, every engine, room
+  and game suite green; 1,381 breaks, every one caught; G1's shape on a sample, 140 games: **140 of 140 clean** (seven pods, each with a person in seat 0 and all house, seeds 1-10, `--replay --leaks`): every game finished, none refused, every replay identical, 0 leaks in 8,774 checks of every seat's view; the person's longest wait in a game, median 0.16 s, 90th percentile 0.40 s, at most 1.2 s.
+- **Rob's, left:** confirm the library plays as he expects (AI-3 asks "learned and confirmed"); the two cards above.
+- **Found and fixed on the way** (each from a check that failed first): step-beginning triggers lost when the step's
+  turn-based action asks (a held draw, declare attackers or blockers) -- live tables; a negative printed power read as
+  null; an adventurer card changed just by listing what it may do; an attack tax the house pilot couldn't pay.

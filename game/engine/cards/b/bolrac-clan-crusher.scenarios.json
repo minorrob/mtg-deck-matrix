@@ -1,0 +1,269 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Bolrac-Clan Crusher",
+  "fixtures": {
+    "Grower": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "grow",
+          "kind": "activated",
+          "text": "{0}: Put a +1/+1 counter on this creature.",
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{0}"
+            }
+          ],
+          "targets": [],
+          "effects": [
+            {
+              "effect": "putCounter",
+              "targets": "self",
+              "counter": "+1/+1",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    "Shrinker": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Horror"
+      ],
+      "manaCost": "{2}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 3,
+      "toughness": 3,
+      "abilities": [
+        {
+          "id": "shrink",
+          "kind": "activated",
+          "text": "{0}: Put a -1/-1 counter on this creature.",
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{0}"
+            }
+          ],
+          "targets": [],
+          "effects": [
+            {
+              "effect": "putCounter",
+              "targets": "self",
+              "counter": "-1/-1",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A +1/+1 counter off the Grower, Rob's choice of which creature: 2 damage to Maya",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bolrac-Clan Crusher",
+            "Grower"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Grower"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Grower"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Bolrac-Clan Crusher",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Grower: a +1/+1 counter (1)",
+                  "Grower: a +1/+1 counter (2)"
+                ],
+                "min": 1
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Grower: a +1/+1 counter (1)"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Grower",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Bolrac-Clan Crusher"
+        }
+      ]
+    },
+    {
+      "name": "A -1/-1 counter is no +1/+1 counter, and Maya's Grower is not Rob's: nothing to remove, so no activation",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bolrac-Clan Crusher",
+            "Shrinker"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Grower"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Shrinker"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "pass": 1
+        },
+        {
+          "activate": "Grower",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Shrinker",
+                "counter": "-1/-1",
+                "count": 1
+              }
+            },
+            {
+              "seat": 1,
+              "counters": {
+                "card": "Grower",
+                "counter": "+1/+1",
+                "count": 1
+              }
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Bolrac-Clan Crusher",
+            "seat": 0
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Its own +1/+1 counter pays too: it is a creature Rob controls",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bolrac-Clan Crusher",
+            "Grower"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Grower"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Bolrac-Clan Crusher",
+          "targets": [
+            {
+              "card": "Grower"
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Grower: a +1/+1 counter"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Grower"
+          ]
+        }
+      ]
+    }
+  ]
+}

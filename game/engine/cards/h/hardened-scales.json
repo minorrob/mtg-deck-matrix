@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hardened Scales",
+    "oracleId": "a1f3da21-af6d-450e-bf0b-985d158418e6",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If one or more +1/+1 counters would be put on a creature you control, that many plus one +1/+1 counters are put on it instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If one or more +1/+1 counters would be put on a creature you control, that many plus one +1/+1 counters are put on it instead.",
+      "rule": "more-counters",
+      "affects": {
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "counter": "+1/+1",
+      "plus": 1
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thoughtweft Imbuer",
+    "oracleId": "9dee8c0b-71e0-4a94-b411-78b29b599847",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Kithkin",
+      "Advisor"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 0,
+    "toughness": 5
+  },
+  "oracleText": "Whenever a creature you control attacks alone, it gets +X/+X until end of turn, where X is the number of Kithkin you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature you control attacks alone, it gets +X/+X until end of turn, where X is the number of Kithkin you control.",
+      "trigger": {
+        "on": "attacks",
+        "who": "any",
+        "alone": true,
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "that card",
+          "power": {
+            "count": {
+              "what": "permanent",
+              "subtypes": [
+                "Kithkin"
+              ],
+              "controller": "you"
+            }
+          },
+          "toughness": {
+            "count": {
+              "what": "permanent",
+              "subtypes": [
+                "Kithkin"
+              ],
+              "controller": "you"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

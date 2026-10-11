@@ -6,12 +6,44 @@
       "types": [
         "Creature"
       ],
+      "subtypes": [
+        "Bear"
+      ],
       "manaCost": "{1}{G}",
       "colors": [
         "G"
       ],
       "power": 2,
       "toughness": 2
+    },
+    "Shatter": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target enchantment.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Enchantment"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
     }
   },
   "scenarios": [
@@ -82,6 +114,118 @@
               "Haste"
             ]
           }
+        }
+      ]
+    },
+    {
+      "name": "Jeskai: his Bear deals Maya combat damage, the Siege is destroyed in response, and he still draws (CR 113.7a)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Frostcliff Siege",
+            "Shatter"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Frostcliff Siege"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Jeskai"
+          ]
+        },
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            },
+            {
+              "seat": 1,
+              "life": 38
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Shatter",
+          "targets": [
+            {
+              "card": "Frostcliff Siege"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            },
+            {
+              "seat": 0,
+              "zone": "hand",
+              "count": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Frostcliff Siege",
+            "Shatter"
+          ]
         }
       ]
     }

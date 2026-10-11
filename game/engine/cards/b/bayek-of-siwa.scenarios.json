@@ -1,0 +1,259 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Bayek of Siwa",
+  "fixtures": {
+    "Hasty General": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Soldier"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "keywords": [
+        "Haste"
+      ],
+      "supertypes": [
+        "Legendary"
+      ]
+    },
+    "Iron Bear": {
+      "types": [
+        "Artifact",
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{2}",
+      "colors": [],
+      "power": 2,
+      "toughness": 2
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob's turn: his legendary General and Iron Bear (an artifact) have double strike, his plain Bear does not; on Maya's turn neither",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bayek of Siwa",
+            "Hasty General",
+            "Iron Bear",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Bayek of Siwa",
+                "has": [
+                  "Double Strike"
+                ]
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Hasty General",
+                "has": [
+                  "Double Strike"
+                ]
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Iron Bear",
+                "has": [
+                  "Double Strike"
+                ]
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Bear",
+                "lacks": [
+                  "Double Strike"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Iron Bear",
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 34
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Hasty General",
+            "lacks": [
+              "Double Strike"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bayek of Siwa",
+            "has": [
+              "Double Strike"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Disguise: face down for {3}, the General without double strike; turned face up for {1}{R}{W}, Bayek, and the General has it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bayek of Siwa"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hasty General",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Mountain",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bayek of Siwa",
+          "disguise": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Bayek of Siwa",
+                "has": [
+                  "Ward"
+                ],
+                "lacks": [
+                  "Double Strike"
+                ]
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Hasty General",
+                "lacks": [
+                  "Double Strike"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "turnFaceUp": "Bayek of Siwa",
+          "disguise": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Hasty General",
+            "has": [
+              "Double Strike"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bayek of Siwa",
+            "power": 3,
+            "toughness": 4
+          }
+        }
+      ]
+    }
+  ]
+}

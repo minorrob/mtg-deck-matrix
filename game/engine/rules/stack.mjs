@@ -44,6 +44,7 @@ import {beginResolution, resolutionPending} from "../script/resolution.mjs";
 import {delayedTrigger} from "../script/effects/permanents.mjs";
 import {prepare} from "../script/effects/attributes.mjs";
 import {recheckTargets, factsOf, modalScript} from "../script/bind.mjs";
+import {characteristicsOf} from "./layers.mjs";
 
 /* The projection contract (§12.1) names these zones with a capital, and the telemetry matches on
    them by name. The engine's own zone keys are lower case. */
@@ -66,6 +67,26 @@ export function becameTarget(state, entry, only = null) {
   /* A counted target's list: each of them (script/bind.mjs). */
   return (entry?.targets ?? []).flat().filter((t) => t && t.kind === "object" && state.objects[t.id] && (only === null || t.id === only) && !seen.has(t.id) && seen.add(t.id))
     .map((t) => event("GameEventBecomesTarget", state, {card: cardRef(state, t.id), targetId: t.id, stackId: entry.stackId, kind: entry.kind, by: {playerId: entry.playerId}}));
+}
+
+/**
+ * A CRIME (CR 700.13): a spell cast, an ability activated or a triggered ability put on the stack that targets an opponent,
+ * a permanent or spell an opponent controls, or a card in an opponent's graveyard -- what "whenever you commit a crime"
+ * (Bandit's Haul) watches. Said once for the entry, by its controller, as its targets are chosen (rules/actions.mjs,
+ * rules/trigger.mjs); never as they are changed, which is no casting, activating or putting on the stack.
+ */
+export function crimeCommitted(state, entry) {
+  const criminal = entry?.playerId;
+  const opponent = (player) => Number.isInteger(player) && player !== criminal;
+  const crime = (entry?.targets ?? []).flat().some((t) => {
+    if (t?.kind === "player") return opponent(t.id);
+    const object = t?.kind === "object" ? state.objects[t.id] : undefined;
+    if (!object) return false;
+    if (object.zone === "battlefield") return opponent(characteristicsOf(state, t.id).controller);
+    if (object.zone === "stack") return opponent(object.controller);
+    return object.zone === "graveyard" && opponent(object.owner);
+  });
+  return crime ? [event("GameEventCrimeCommitted", state, {player: {playerId: criminal, name: state.players[criminal]?.name}, stackId: entry.stackId})] : [];
 }
 
 /** How many objects are on the stack. */
@@ -104,12 +125,14 @@ export function pushSpell(state, objectId, {controller, targets = [], permanent 
   const object = state.objects[objectId];
   if (!object) throw new Error(`There is no object ${objectId} to cast`);
   const name = object.card;
-  const moved = moveObject(state, objectId, "stack");
+  /* Cast face down with disguise (CR 702.168b; rules/actions.mjs shows the card so as it is cast): a face-down spell. */
+  const moved = moveObject(state, objectId, "stack", null, {disguised: object.disguised === true});
   const entry = entryFor(state, {
     objectId: moved, cardId: moved, name, playerId: controller ?? object.controller,
     kind: "spell", abilityId, targets,
   });
   entry.permanent = permanent === true;
+  if (object.disguised === true) entry.faceDown = true;
   /* The value chosen for X (CR 601.2b), part of the spell until it leaves the stack (CR 107.3a). */
   if (x !== null) entry.x = x;
   /* The modes chosen as it was cast (CR 700.2), in order. */
@@ -124,7 +147,7 @@ export function pushSpell(state, objectId, {controller, targets = [], permanent 
  * `sourceId` may be null for an ability whose source has already left the battlefield, which is a
  * legal position (CR 113.7a) rather than a bug.
  */
-export function pushAbility(state, {sourceId = null, controller, abilityId, kind = "ability", targets = [], script = null, about = null, x = null, lastKnown = null, spent = null, sourceTransforms = undefined} = {}) {
+export function pushAbility(state, {sourceId = null, controller, abilityId, kind = "ability", targets = [], script = null, about = null, x = null, lastKnown = null, spent = null, paidFor = null, sourceTransforms = undefined} = {}) {
   if (!abilityId) throw new Error("An ability on the stack needs an abilityId, or nothing can resolve it");
   const source = sourceId === null ? null : state.objects[sourceId];
   const entry = entryFor(state, {
@@ -142,6 +165,9 @@ export function pushAbility(state, {sourceId = null, controller, abilityId, kind
   if (lastKnown) entry.lastKnown = structuredClone(lastKnown);
   /* The mana spent to cast its source, as it triggered (rules/trigger.mjs): its "if" is asked again as it resolves. */
   if (spent) entry.spent = {...spent};
+  /* And the alternative cost its source was cast for, as it triggered (rules/trigger.mjs): "if its surge cost was paid" is
+     asked again as it resolves, its source perhaps gone (CR 603.4, 608.2h). */
+  if (typeof paidFor === "string") entry.paidFor = paidFor;
   /* "Transform Venat" (CR 701.27f): how many times a double-faced source had transformed as its ability was put on the
      stack -- or, a delayed trigger's, as it was made (effects/permanents.mjs) -- for an instruction to transform it to be
      ignored once it has since. */
@@ -240,6 +266,9 @@ export function resolveTop(state, effect = null, rng = null) {
     ...(entry.sourceTransforms !== undefined ? {sourceTransforms: entry.sourceTransforms} : {}),
     /* What its cost sacrificed, as each last existed: "the sacrificed creature's toughness" (rules/actions.mjs). */
     ...(entry.sacrificed ? {sacrificed: entry.sacrificed} : {}),
+    /* The mana spent to cast its source, as its trigger remembered it: converge's count, its source gone, for its targets
+       asked again (CR 608.2b; script/amount.mjs, colorsSpent). */
+    ...(entry.spent ? {spent: entry.spent} : {}),
     /* What its permanent chose as it entered: "draw a card for each creature of the chosen type". */
     ...(source !== null && state.objects[source]?.chosen !== undefined ? {chosen: state.objects[source].chosen} : {})};
   /* "Another target" asked again with its source gone (Oblivion Ring destroyed with its trigger waiting): another than the
@@ -255,7 +284,7 @@ export function resolveTop(state, effect = null, rng = null) {
   /* An intervening "if" asked again as it resolves (CR 603.4): false now, and the ability does nothing. A triggered
      ability's own condition only -- "activate only if" was asked as it was activated (CR 602.5b) and is not again. */
   if (entry.kind === "trigger" && script.condition && !conditionHolds(state, script.condition, {controller: entry.playerId, source, about: entry.about ?? undefined,
-    ...(entry.spent ? {spent: entry.spent} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {})})) return finishTop(state, entry, events, false);
+    ...(entry.spent ? {spent: entry.spent} : {}), ...(entry.paidFor ? {paidFor: entry.paidFor} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {})})) return finishTop(state, entry, events, false);
   /* What its effects need to know about their targets, read once, now (CR 608.2h). */
   const outcome = beginResolution(state, script.effects, {...context, targets, facts: factsOf(state, targets)}, rng);
   events.push(...outcome.events);
@@ -263,6 +292,9 @@ export function resolveTop(state, effect = null, rng = null) {
     entry.stage = "resolving";
     return events;
   }
+  /* Its controller lost the game as it resolved ("you lose the game", CR 104.3e): it left the stack with them (CR 800.4a,
+     rules/sba.mjs leaveGame), and nothing of it is left to finish -- nor did it resolve. */
+  if (state.players[entry.playerId]?.lost && !state.stack.includes(entry)) return events;
   return finishTop(state, entry, events, false);
 }
 
@@ -364,9 +396,18 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     }
     const entering = to === "battlefield"
       ? enteringModifications(state, {objectId: entry.objectId, player: entry.playerId,
-        types: object.types, abilities: object.abilities, x: entry.x ?? 0, escaped: entry.escaped === true, kicked: entry.kicked ?? 0})
+        types: object.types, abilities: object.abilities, x: entry.x ?? 0, escaped: entry.escaped === true, kicked: entry.kicked ?? 0, phyrexianLife: entry.cast?.phyrexianLife ?? 0})
       : null;
-    const arrived = moveObject(state, entry.objectId, to, ["graveyard", "library"].includes(to) ? owner : null);
+    /* A face-down spell becomes a face-down permanent, the same characteristics (CR 702.168b). */
+    const down = object.disguised === true ? {faceDown: true, disguised: true} : {};
+    const arrived = moveObject(state, entry.objectId, to, ["graveyard", "library"].includes(to) ? owner : null, down);
+    /* A SHIELD THIS SPELL MADE deals its damage as the card it became ("Deflecting Palm deals that much damage", a
+       prevention effect's `dealer`; effects/permanents.mjs) -- and one whose chosen source is this spell, a permanent spell,
+       applies to the permanent it becomes (CR 609.7a). */
+    for (const effect of state.effects ?? []) {
+      if (effect.dealer === entry.objectId) effect.dealer = arrived;
+      if (to === "battlefield" && Array.isArray(effect.sources) && effect.sources.includes(entry.objectId)) effect.sources = effect.sources.map((id) => (id === entry.objectId ? arrived : id));
+    }
     /* Rebound's delayed trigger (CR 702.88a, 603.7d: its controller the spell's): at the beginning of THEIR next upkeep, the
        card in exile -- the object it now is, so one that leaves exile meanwhile is not cast (CR 400.7) -- may be cast
        without paying its mana cost, as the trigger resolves (CR 608.2g; effects/asking.mjs, `play`), or left there for good. */
@@ -399,6 +440,9 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     if (to === "battlefield" && entry.evoked) state.objects[arrived].evoked = true;
     /* And for its prowl cost (CR 702.76a): "if its prowl cost was paid" (script/condition.mjs, `prowled`). */
     if (to === "battlefield" && entry.prowled) state.objects[arrived].prowled = true;
+    /* And for its surge cost (CR 702.117a), or another that says so (rules/actions.mjs): "if its surge cost was paid"
+       (script/condition.mjs, `paidFor`). A new object after it moves again (CR 400.7) was cast for nothing. */
+    if (to === "battlefield" && entry.cast?.paidFor) state.objects[arrived].paidFor = entry.cast.paidFor;
     /* Cast from suspend: haste, while it is this permanent (CR 702.62a). */
     if (to === "battlefield" && entry.fromSuspend && (state.objects[arrived].types ?? []).includes("Creature"))
       (state.effects ??= []).push({id: `suspend-haste:${arrived}`, layer: 6, affects: {ids: [arrived]}, apply: {addKeywords: ["Haste"]}, until: null, sourceController: entry.playerId});

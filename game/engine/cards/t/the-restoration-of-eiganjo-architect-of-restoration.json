@@ -1,0 +1,205 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "The Restoration of Eiganjo // Architect of Restoration",
+    "oracleId": "9d9b52b2-2edc-4f7f-a8d9-e024b1398847",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Saga"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "(As this Saga enters and after your draw step, add a lore counter.)\nI — Search your library for a basic Plains card, reveal it, put it into your hand, then shuffle.\nII — You may discard a card. When you do, return target permanent card with mana value 2 or less from your graveyard to the battlefield tapped.\nIII — Exile this Saga, then return it to the battlefield transformed under your control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "As this Saga enters and after your draw step, add a lore counter.",
+      "keyword": "saga"
+    },
+    {
+      "kind": "triggered",
+      "text": "I — Search your library for a basic Plains card, reveal it, put it into your hand, then shuffle.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 1
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ],
+            "subtypes": [
+              "Plains"
+            ]
+          },
+          "to": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "II — You may discard a card. When you do, return target permanent card with mana value 2 or less from your graveyard to the battlefield tapped.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 2
+      },
+      "effects": [
+        {
+          "effect": "discard",
+          "count": 1,
+          "upTo": true,
+          "remember": true
+        },
+        {
+          "effect": "immediateTrigger",
+          "text": "When you do, return target permanent card with mana value 2 or less from your graveyard to the battlefield tapped.",
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          },
+          "targets": [
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "nonTypes": [
+                "Instant",
+                "Sorcery"
+              ],
+              "manaValue": {
+                "max": 2
+              }
+            }
+          ],
+          "effects": [
+            {
+              "effect": "moveZone",
+              "targets": {
+                "target": 0
+              },
+              "to": "battlefield",
+              "tapped": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "III — Exile this Saga, then return it to the battlefield transformed under your control.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 3
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "exile",
+          "andReturn": true,
+          "transformed": true,
+          "under": "you"
+        }
+      ]
+    }
+  ],
+  "layout": "transform",
+  "back": {
+    "identity": {
+      "name": "Architect of Restoration",
+      "types": [
+        "Enchantment",
+        "Creature"
+      ],
+      "subtypes": [
+        "Fox",
+        "Monk"
+      ],
+      "manaCost": null,
+      "colors": [
+        "W"
+      ],
+      "power": 3,
+      "toughness": 4
+    },
+    "oracleText": "Vigilance\nWhenever this creature attacks or blocks, create a 1/1 colorless Spirit creature token.",
+    "abilities": [
+      {
+        "kind": "keyword",
+        "text": "Vigilance",
+        "keyword": "vigilance"
+      },
+      {
+        "kind": "triggered",
+        "text": "Whenever this creature attacks or blocks, create a 1/1 colorless Spirit creature token.",
+        "trigger": {
+          "on": "attacks",
+          "who": "self"
+        },
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 1,
+            "token": {
+              "name": "Spirit",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Spirit"
+              ],
+              "colors": [],
+              "power": 1,
+              "toughness": 1
+            }
+          }
+        ]
+      },
+      {
+        "kind": "triggered",
+        "text": "Whenever this creature attacks or blocks, create a 1/1 colorless Spirit creature token.",
+        "trigger": {
+          "on": "blocks",
+          "who": "self"
+        },
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 1,
+            "token": {
+              "name": "Spirit",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Spirit"
+              ],
+              "colors": [],
+              "power": 1,
+              "toughness": 1
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

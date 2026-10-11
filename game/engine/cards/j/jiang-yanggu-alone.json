@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Jiang Yanggu, Alone",
+    "oracleId": "fa8b3557-b35a-4a68-ab85-cf09683f3bc5",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Berserker"
+    ],
+    "manaCost": "{4}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Menace (This creature can't be blocked except by two or more creatures.)\nWhenever a creature you control attacks a player alone, discard a card, then draw a card. Then put a +1/+1 counter on that creature for each card you've discarded this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Menace",
+      "keyword": "menace"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature you control attacks a player alone, discard a card, then draw a card. Then put a +1/+1 counter on that creature for each card you've discarded this turn.",
+      "trigger": {
+        "on": "attacks",
+        "who": "any",
+        "alone": true,
+        "defender": "player",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "discard",
+          "count": 1
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "putCounter",
+          "targets": "that card",
+          "counter": "+1/+1",
+          "count": {
+            "cardsDiscardedThisTurn": "you"
+          }
+        }
+      ]
+    }
+  ]
+}

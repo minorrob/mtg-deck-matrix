@@ -1,0 +1,116 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dwarven Mattock",
+    "oracleId": "f75bb13b-41fc-4614-b35e-f456069ce9c6",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When this Equipment enters, attach it to target Dwarf you control.\nEquipped creature gets +2/+2 and has ward {1}. (Whenever equipped creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {1}.)\nEquip {3} ({3}: Attach to target creature you control. Equip only as a sorcery.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this Equipment enters, attach it to target Dwarf you control.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "subtypes": [
+            "Dwarf"
+          ],
+          "controller": "you"
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +2/+2 and has ward {1}.",
+      "layer": 7,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 2
+      },
+      "sublayer": "c"
+    },
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +2/+2 and has ward {1}.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "keyword",
+            "text": "ward {1}",
+            "keyword": "ward",
+            "cost": [
+              {
+                "atom": "mana",
+                "cost": "{1}"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Equip {3}",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ]
+    }
+  ]
+}

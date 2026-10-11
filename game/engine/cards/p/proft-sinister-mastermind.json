@@ -1,0 +1,89 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Proft, Sinister Mastermind",
+    "oracleId": "a350856c-87f2-4605-999f-4e26aa362a55",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Rogue"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Threshold — You can't cast this spell unless there are seven or more cards in your graveyard.\nMenace\n{B}, Discard this card: Target creature gets -3/-1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Threshold — You can't cast this spell unless there are seven or more cards in your graveyard.",
+      "rule": "cant-cast-self",
+      "affects": {
+        "what": "card",
+        "self": true
+      },
+      "unless": {
+        "compare": {
+          "count": {
+            "count": {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you"
+            }
+          },
+          "atLeast": 7
+        }
+      }
+    },
+    {
+      "kind": "keyword",
+      "text": "Menace",
+      "keyword": "menace"
+    },
+    {
+      "kind": "activated",
+      "text": "{B}, Discard this card: Target creature gets -3/-1 until end of turn.",
+      "zone": "hand",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{B}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": -3,
+          "toughness": -1
+        }
+      ]
+    }
+  ]
+}

@@ -65,6 +65,15 @@ const tapped = (s, card) => s.objects[named(s, card)[0]].tapped === true;
     "and nothing has moved or been paid while it asks");
 }
 {
+  /* With no untapped creature, nothing can convoke: the cast the pool pays is the only offer, here with its payment question
+     (three Islands and three Swamps pay {3}{U}{U} more than one way). A convoke offer with nobody to tap asked for one to
+     none of them, an answer no one could give (the leave-questions fuzz found it, Unexpected Assistance, 2026-10-11). */
+  const s = play("nobody to tap", [at(0, "battlefield", "Island", "Island", "Island", "Swamp", "Swamp", "Swamp"), at(0, "hand", "Unexpected Assistance")],
+    [{tap: "Island"}, {tap: "Island"}, {tap: "Island"}, {tap: "Swamp"}, {tap: "Swamp"}, {tap: "Swamp"}]);
+  eq(offers(s, "Unexpected Assistance").map((a) => [a.convoke === true, a.payWays === true]), [[false, true]],
+    "with no untapped creature, no convoke offer: only the cast the pool pays, asking which mana pays it");
+}
+{
   /* With the pool able to pay all of it, the convoke offer asks for none at least. */
   const s = play("none needed", [at(0, "battlefield", "Plains", "Plains", "Wastes", "Wastes", "Wastes", "Wastes", "Bear"), at(0, "hand", "Sun-Dappled Celebrant")],
     [{tap: "Plains"}, {tap: "Plains"}, {tap: "Wastes"}, {tap: "Wastes"}, {tap: "Wastes"}, {tap: "Wastes"}]);

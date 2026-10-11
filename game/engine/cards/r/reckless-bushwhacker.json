@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Reckless Bushwhacker",
+    "oracleId": "4fb83127-00cf-4ce7-aedf-cb0b2740c66f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Warrior",
+      "Ally"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Surge {1}{R} (You may cast this spell for its surge cost if you or a teammate has cast another spell this turn.)\nHaste\nWhen this creature enters, if its surge cost was paid, other creatures you control get +1/+0 and gain haste until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Surge {1}{R}",
+      "keyword": "surge",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{R}"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Haste",
+      "keyword": "haste"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, if its surge cost was paid, other creatures you control get +1/+0 and gain haste until end of turn.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "another": true
+          },
+          "power": 1,
+          "toughness": 0,
+          "keywords": [
+            "Haste"
+          ],
+          "until": "end-of-turn"
+        }
+      ],
+      "condition": {
+        "paidFor": "surge"
+      }
+    }
+  ]
+}

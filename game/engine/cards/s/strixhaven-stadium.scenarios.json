@@ -1,0 +1,276 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Strixhaven Stadium",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{T}: {C}, and a point counter on it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Strixhaven Stadium"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Strixhaven Stadium"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Strixhaven Stadium",
+            "counter": "point",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Maya's Bear deals Rob combat damage: a counter removed; Rob's deals Maya combat damage: one put on",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Strixhaven Stadium",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Strixhaven Stadium"
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Strixhaven Stadium",
+                "counter": "point",
+                "count": 0
+              }
+            },
+            {
+              "seat": 0,
+              "life": 38
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Strixhaven Stadium",
+            "counter": "point",
+            "count": 1
+          }
+        },
+        {
+          "seat": 1,
+          "life": 38
+        }
+      ]
+    },
+    {
+      "name": "Ten point counters: they are all removed, and Maya loses the game",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Strixhaven Stadium",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Strixhaven Stadium"
+        },
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Strixhaven Stadium"
+        },
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Strixhaven Stadium"
+        },
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 7,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Strixhaven Stadium"
+        },
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 9,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Strixhaven Stadium"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Strixhaven Stadium",
+                "counter": "point",
+                "count": 9
+              }
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 9,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Strixhaven Stadium",
+            "counter": "point",
+            "count": 0
+          }
+        },
+        {
+          "seat": 1,
+          "life": 30
+        },
+        {
+          "event": "GameEventPlayerLivesChanged",
+          "where": {
+            "player": {
+              "playerId": 1,
+              "name": "Maya"
+            },
+            "lost": true,
+            "lossReason": "effect"
+          }
+        }
+      ]
+    }
+  ]
+}

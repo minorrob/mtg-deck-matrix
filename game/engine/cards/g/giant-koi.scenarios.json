@@ -1,0 +1,421 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Giant Koi",
+  "fixtures": {
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Wall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 3
+    },
+    "Charm": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    },
+    "Island Swamp": {
+      "types": [
+        "Land"
+      ],
+      "subtypes": [
+        "Island",
+        "Swamp"
+      ],
+      "colors": [],
+      "manaCost": null
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Waterbend {3} paid by tapping an artifact, a creature and the Koi itself -- never an enchantment",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Giant Koi",
+            "Rock",
+            "Bear",
+            "Charm"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wall"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Giant Koi"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "activate": "Giant Koi",
+          "waterbend": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Giant Koi",
+                  "Rock",
+                  "Bear"
+                ],
+                "min": 3
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Giant Koi",
+            "Rock",
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Rock"
+            },
+            {
+              "seat": 0,
+              "tapped": "Bear"
+            },
+            {
+              "seat": 0,
+              "tapped": "Charm",
+              "is": false
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Giant Koi"
+        }
+      ]
+    },
+    {
+      "name": "Two mana in the pool: one creature tapped pays the rest, and the Koi attacks unblocked",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Giant Koi",
+            "Bear",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wall"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Giant Koi",
+          "waterbend": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Giant Koi",
+                  "Bear"
+                ],
+                "min": 1
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "pool": {
+                "C": 0
+              }
+            },
+            {
+              "seat": 0,
+              "tapped": "Bear"
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Giant Koi"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 35
+        }
+      ]
+    },
+    {
+      "name": "Three mana in the pool pays it all: that offer too, nothing tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Giant Koi",
+            "Bear",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Giant Koi"
+              },
+              "count": 2
+            }
+          ]
+        },
+        {
+          "activate": "Giant Koi"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 0
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Bear",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "tapped": "Giant Koi",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "Three mana in the pool, and Rob waterbends all the same: the Bear tapped, two mana paid, one kept",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Giant Koi",
+            "Bear",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Giant Koi",
+          "waterbend": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Giant Koi",
+                  "Bear"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Bear"
+        }
+      ]
+    },
+    {
+      "name": "Islandcycling {2}: an Island card from the library -- a dual land with the type too",
+      "library": [
+        "Wastes",
+        "Island Swamp"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Giant Koi"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Giant Koi"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Island Swamp"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Giant Koi"
+          ]
+        }
+      ]
+    }
+  ]
+}

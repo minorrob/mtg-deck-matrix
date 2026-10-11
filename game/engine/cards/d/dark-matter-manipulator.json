@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dark Matter Manipulator",
+    "oracleId": "6a3862f0-8dfc-4ac9-8eb9-faefcad685d4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warlock"
+    ],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, mill three cards.\nThis creature gets +2/+0 for every seven cards in your graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, mill three cards.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "mill",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "This creature gets +2/+0 for every seven cards in your graveyard.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "power": {
+          "count": {
+            "what": "card",
+            "zone": "graveyard",
+            "controller": "you"
+          },
+          "per": 7,
+          "times": 2
+        },
+        "toughness": 0
+      }
+    }
+  ]
+}

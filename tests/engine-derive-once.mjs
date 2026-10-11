@@ -228,4 +228,19 @@ const parts = (s, id) => ({types: typesOf(s, id), controller: controllerOf(s, id
   ok(deriveMemo.trials() <= n * (n - 1), `and each pair was asked once at most: ${deriveMemo.trials()} trials for ${n} effects, never more than the ${n * (n - 1)} ordered pairs`);
 }
 
+{
+  /* Asking what may be done shows an adventurer card as its Adventure and puts it back (rules/actions.mjs, withAdventure): put
+     back exactly as it was. An Unexpected Party has no subtypes, and an object holds none for it (state/index.mjs, addObject);
+     put back with an empty list where it had none, its saved game differed from before the question. */
+  const state = createState({matchId: "adventure", seed: "adventure", players: [{name: "Rob"}, {name: "Maya"}]});
+  for (let seat = 0; seat < 2; seat += 1) for (let i = 0; i < 10; i += 1) addObject(state, {...MOUNTAIN, owner: seat, controller: seat}, "library", seat);
+  beginGame(state);
+  for (let n = 0; n < 50 && !(state.phase === "MAIN1" && state.priorityPlayer === 0); n += 1) advance(state);
+  addObject(state, {...card("An Unexpected Party // At the Door"), owner: 0, controller: 0}, "hand", 0);
+  for (let i = 0; i < 4; i += 1) addObject(state, {...MOUNTAIN, owner: 0, controller: 0}, "battlefield", 0);
+  const before = hashState(state);
+  legalActions(state, 0);
+  eq(hashState(state), before, "the offers asked with an adventurer card in hand, and the game as it was");
+}
+
 console.log(`engine-derive-once: ${checks} checks passed -- each object derived once per question and guard level, the same answers as without the memo, questions that only read change nothing, answers handed out as copies, and the state-based actions reading the board once before acting.`);

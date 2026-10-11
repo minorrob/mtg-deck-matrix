@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Plunder the Trollshaws",
+    "oracleId": "526f520e-b4bb-4215-9c6b-afc298744f06",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Draw a card. If this spell was cast from a graveyard, draw two cards instead.\nFlashback {3}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Draw a card. If this spell was cast from a graveyard, draw two cards instead.\nFlashback {3}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "cast": {
+              "from": "graveyard"
+            }
+          },
+          "then": [
+            {
+              "effect": "draw",
+              "count": 2
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Flashback {3}{U}",
+      "keyword": "flashback",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{U}"
+        }
+      ]
+    }
+  ]
+}

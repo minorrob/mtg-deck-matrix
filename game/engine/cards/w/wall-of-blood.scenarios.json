@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Wall of Blood",
+  "scenarios": [
+    {
+      "name": "Pay 1 life, three times: a 3/5 until end of turn, Rob at 37",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wall of Blood"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Wall of Blood"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Wall of Blood"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Wall of Blood"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Wall of Blood",
+                "power": 3,
+                "toughness": 5
+              }
+            },
+            {
+              "seat": 0,
+              "life": 37
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Wall of Blood",
+                "has": [
+                  "Defender"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Wall of Blood",
+            "power": 0,
+            "toughness": 2
+          }
+        }
+      ]
+    }
+  ]
+}

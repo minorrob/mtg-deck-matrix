@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pox Plague",
+    "oracleId": "c505d304-9428-4532-87a2-167c69f16969",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{B}{B}{B}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each player loses half their life, then discards half the cards in their hand, then sacrifices half the permanents they control of their choice. Round down each time.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each player loses half their life, then discards half the cards in their hand, then sacrifices half the permanents they control of their choice. Round down each time.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "repeatFor",
+          "each": "player",
+          "effects": [
+            {
+              "effect": "loseLife",
+              "who": "that player",
+              "amount": {
+                "lifeTotal": "that player",
+                "half": true
+              }
+            }
+          ]
+        },
+        {
+          "effect": "discard",
+          "who": "each",
+          "perPlayer": true,
+          "count": {
+            "count": {
+              "what": "card",
+              "zone": "hand",
+              "controller": "that player"
+            },
+            "half": true
+          }
+        },
+        {
+          "effect": "sacrifice",
+          "who": "each",
+          "perPlayer": true,
+          "count": {
+            "count": {
+              "what": "permanent",
+              "controller": "that player"
+            },
+            "half": true
+          }
+        }
+      ]
+    }
+  ]
+}

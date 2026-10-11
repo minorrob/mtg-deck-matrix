@@ -8,8 +8,8 @@
  * words (cards/index.mjs, `partnersIn`); in the game they do nothing. What a card script could not do was say the keyword:
  * "Partner" compiled as a word with no behavior, and the card was refused. Now the compiler takes `partner` and
  * `choose a background` as deck rules -- the card's words must say the same -- and the catalog credits both
- * (game/tools/engine-constructs.mjs, DECK_RULE_KEYWORDS). Not yet "Partner with [name]" (702.124j), which is also a
- * trigger as the card enters.
+ * (game/tools/engine-constructs.mjs, DECK_RULE_KEYWORDS). "Partner with [name]" (702.124j), which is also a trigger as
+ * the card enters, is its own keyword (Train C phase 2; tests/engine-partner-with.mjs).
  *
  * Splinter, the Mentor makes a Mutagen, a predefined token (CR 111.10v): script/effects/permanents.mjs, with Treasure,
  * Food and Clue.
@@ -44,7 +44,7 @@ const at = (seat, zone, ...cards) => ({seat, zone, cards});
   eq([background.problems, background.definition.keywords, background.definition.partners], [[], ["Choose a Background"], [{kind: "background"}]], "Choose a Background, the same");
   ok(compileScript(script("Flying", "partner", "Partner")).problems.some((p) => p.includes("CR 702.124")), "a partner keyword the card's words do not say is a problem");
   ok(compileScript(script("Partner with Toothy, Imaginary Friend", "partner", "Partner with Toothy, Imaginary Friend")).problems.length > 0,
-    "not yet \"Partner with [name]\": its trigger as the card enters is not built");
+    "\"Partner with [name]\" is not the partner keyword: it is its own, with a trigger as the card enters (tests/engine-partner-with.mjs)");
   ok(compileScript(script("Partner (You can have two commanders if both have partner.)", "choose a background", "Choose a Background")).problems.length > 0,
     "Partner's words are not Choose a Background's");
 }
@@ -62,7 +62,7 @@ const at = (seat, zone, ...cards) => ({seat, zone, cards});
 
 /* ---- the catalog ---- */
 eq([missingFor({keywords: ["Partner"]}), missingFor({keywords: ["Choose a Background"]})], [[], []], "the catalog credits Partner and Choose a Background, deck rules the table holds");
-ok(missingFor({keywords: ["Partner with"]}).length === 1, "not Partner with, which is also a trigger");
+eq(missingFor({keywords: ["Partner with"]}), [], "and Partner with, its trigger as the card enters built too (Train C phase 2)");
 
 /* ---- the Mutagen (CR 111.10v) ---- */
 {
@@ -92,4 +92,4 @@ ok(missingFor({keywords: ["Partner with"]}).length === 1, "not Partner with, whi
 for (const name of ["Kraum, Ludevic's Opus", "Ikra Shidiqi, the Usurper", "Ganax, Astral Hunter", "April O'Neil, Live on the Scene", "Bruse Tarl, Boorish Herder",
   "Ravos, Soultender", "Jaheira, Friend of the Forest", "Karlach, Fury of Avernus", "Splinter, the Mentor"]) ok(index.resolve(name)?.playable === true, `${name} is defined and playable`);
 
-console.log(`engine-partner-keywords: ${checks} checks passed -- Partner, a named Partner and Choose a Background compile as deck rules the card's words must say; the table pairs the real cards and refuses mixed ones; the catalog credits both, not Partner with; the Mutagen token.`);
+console.log(`engine-partner-keywords: ${checks} checks passed -- Partner, a named Partner and Choose a Background compile as deck rules the card's words must say; the table pairs the real cards and refuses mixed ones; the catalog credits both, and Partner with; the Mutagen token.`);

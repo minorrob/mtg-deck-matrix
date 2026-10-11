@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dai Li Indoctrination",
+    "oracleId": "5591efbc-1b2c-489a-b4f3-935c9b6bd71a",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [
+      "Lesson"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Target opponent reveals their hand. You choose a nonland permanent card from it. That player discards that card.\n• Earthbend 2. (Target land you control becomes a 0/0 creature with haste that's still a land. Put two +1/+1 counters on it. When it dies or is exiled, return it to the battlefield tapped.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Target opponent reveals their hand. You choose a nonland permanent card from it. That player discards that card.\n• Earthbend 2. (Target land you control becomes a 0/0 creature with haste that's still a land. Put two +1/+1 counters on it. When it dies or is exiled, return it to the battlefield tapped.)",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Target opponent reveals their hand. You choose a nonland permanent card from it. That player discards that card.",
+              "targets": [
+                {
+                  "what": "player",
+                  "who": "opponent"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "discard",
+                  "who": {
+                    "target": 0
+                  },
+                  "chooser": "you",
+                  "reveal": true,
+                  "selector": {
+                    "nonTypes": [
+                      "Land",
+                      "Instant",
+                      "Sorcery"
+                    ]
+                  },
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "text": "Earthbend 2.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Land"
+                  ],
+                  "controller": "you"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "earthbend",
+                  "targets": {
+                    "target": 0
+                  },
+                  "count": 2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
