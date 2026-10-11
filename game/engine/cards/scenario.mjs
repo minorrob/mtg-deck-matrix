@@ -144,7 +144,9 @@ export function runScenario(scenario, cards, fixtures = {}) {
       const w = wanted[i];
       /* A counted target ("up to two target creatures", a list in the step): the offer holds its placeholder, and the list
          is picked once the offer is taken (CR 601.2c; script/bind.mjs). */
-      if (Array.isArray(w)) return isChoosing(t);
+      /* One whose choices share something ("from a single graveyard", script/bind.mjs `share`) is offered once for each group:
+         the one holding every card the step names. */
+      if (Array.isArray(w)) return isChoosing(t) && (!Array.isArray(t.group) || w.every((x) => x.card === undefined || t.group.some((id) => targetName(state, {kind: "object", id}) === x.card)));
       if (w.player !== undefined) return t.kind === "player" && t.id === w.player;
       return t.kind === "object" && targetName(state, t) === w.card && (w.seat === undefined || state.objects[t.id].controller === w.seat);
     });

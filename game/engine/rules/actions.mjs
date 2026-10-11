@@ -58,7 +58,7 @@ import {addMana, spend, parseManaCost, automaticPayment, canPay, chosenPayment, 
 import {commanderTax, recordCommanderCast, commanderIdentity} from "./commander.mjs";
 import {COLORS, MANA_KEYS} from "./mana.mjs";
 import {sickForAbilities, hasFlash} from "../keywords/timing.mjs";
-import {targetChoices, targetName, isHostile, modalScript, isChoosing, countOf, targetCandidates, countedChoice, inWords, differentControllersProblem} from "../script/bind.mjs";
+import {targetChoices, targetName, isHostile, modalScript, isChoosing, countOf, targetCandidates, countedChoice, inWords, differentControllersProblem, shareProblem} from "../script/bind.mjs";
 import {moveOne, sacrificeOne, mill} from "../script/effects/zones.mjs";
 import {compileSelector, matchesSelector, selectMatching} from "../script/filter.mjs";
 import {runEffects} from "../script/effects/index.mjs";
@@ -1698,7 +1698,7 @@ export function chooseTargetsChoice(state, awaiting) {
     const object = state.objects[awaiting.action.objectId];
     const ability = awaiting.action.kind === "activate" ? abilitiesOf(state, awaiting.action.objectId).find((a) => a.id === awaiting.action.abilityId) : object?.spell;
     return countedChoice(state, specs[awaiting.index], context, {id: `choose-targets:${awaiting.action.objectId}:${awaiting.index}`,
-      name: object?.card ?? "That spell", hostile: awaiting.action.hostile === true || isHostile(ability?.effects ?? [])});
+      name: object?.card ?? "That spell", hostile: awaiting.action.hostile === true || isHostile(ability?.effects ?? []), placeholder: awaiting.action.targets[awaiting.index]});
   });
 }
 
@@ -1743,6 +1743,9 @@ function countedProblem(state, player, action) {
     /* "Controlled by different players" (script/bind.mjs): refused with what to do instead. */
     const split = differentControllersProblem(state, spec, chosen, state.objects[action.objectId]?.card ?? "That spell");
     if (split) throw new Error(split);
+    /* "From a single graveyard", "that share a creature type" (script/bind.mjs): refused with what to do instead. */
+    const apart = shareProblem(state, spec, chosen, state.objects[action.objectId]?.card ?? "That spell");
+    if (apart) throw new Error(apart);
   }
 }
 

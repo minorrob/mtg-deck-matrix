@@ -34,7 +34,7 @@
 
 import {isPrimitive, isKeyword, isTriggerEvent} from "../vocabulary.mjs";
 import {compileSelector} from "./filter.mjs";
-import {targetRefs} from "./bind.mjs";
+import {targetRefs, SHARES} from "./bind.mjs";
 import {LAYERS} from "../rules/layers.mjs";
 import {STATIC_RULES, CANT_ATTACK_DEFENDERS} from "../rules/statics.mjs";
 import {amountProblems, AMOUNT_PARAMS} from "./amount.mjs";
@@ -256,7 +256,7 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
   /* A target is a selector, or `{anyOf: [...]}` for "any target" (script/bind.mjs) -- either with a `count`, `{min, max}`, for
      "up to N", "any number of", "one or two" (CR 115.1, 601.2c). */
   for (const [index, spec] of (ability.targets ?? []).entries()) {
-    const {count, distinctFrom, onlyIf, differentControllers, ...selector} = spec && typeof spec === "object" ? spec : {};
+    const {count, distinctFrom, onlyIf, differentControllers, share, ...selector} = spec && typeof spec === "object" ? spec : {};
     if (count !== undefined && !countValid(count))
       errors.push({path: `${path}.targets[${index}].count`, message: "A target's count is `{min, max}`: whole numbers, max at least 1 and at least min, or no max for \"any number\""});
     /* "A second target", "up to one other target" (script/bind.mjs, SPEC_KEYS): an earlier target of the same ability. */
@@ -266,6 +266,9 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
     for (const message of conditionProblems(onlyIf)) errors.push({path: `${path}.targets[${index}].onlyIf`, message});
     if (differentControllers !== undefined && !(differentControllers === true && count !== undefined))
       errors.push({path: `${path}.targets[${index}].differentControllers`, message: "\"Controlled by different players\" is differentControllers: true, on a counted target"});
+    /* "From a single graveyard", "that share a creature type" (script/bind.mjs, `share`): on a counted target. */
+    if (share !== undefined && !(SHARES.includes(share) && count !== undefined))
+      errors.push({path: `${path}.targets[${index}].share`, message: `What a counted target's choices share is ${SHARES.map((s) => JSON.stringify(s)).join(" or ")}, on a counted target`});
     if (spec && typeof spec === "object" && "anyOf" in spec) {
       if (!Array.isArray(selector.anyOf) || selector.anyOf.length === 0 || Object.keys(selector).length !== 1)
         errors.push({path: `${path}.targets[${index}]`, message: "A choice of targets is `{anyOf: [selector, ...]}` and nothing else, or that with a count"});
@@ -279,9 +282,11 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
   if (modal) {
     for (const [m, mode] of (modal.modes ?? []).entries()) {
       for (const [index, spec] of (mode.targets ?? []).entries()) {
-        const {count, ...selector} = spec && typeof spec === "object" ? spec : {};
+        const {count, share, ...selector} = spec && typeof spec === "object" ? spec : {};
         if (count !== undefined && !countValid(count))
           errors.push({path: `${path}.effects[0].modes[${m}].targets[${index}].count`, message: "A target's count is `{min, max}`"});
+        if (share !== undefined && !(SHARES.includes(share) && count !== undefined))
+          errors.push({path: `${path}.effects[0].modes[${m}].targets[${index}].share`, message: `What a counted target's choices share is ${SHARES.map((s) => JSON.stringify(s)).join(" or ")}, on a counted target`});
         if (spec && typeof spec === "object" && "anyOf" in spec) (selector.anyOf ?? []).forEach((one, at) => checkSelector(one, `${path}.effects[0].modes[${m}].targets[${index}].anyOf[${at}]`, errors));
         else checkSelector(spec && typeof spec === "object" ? selector : spec, `${path}.effects[0].modes[${m}].targets[${index}]`, errors);
       }

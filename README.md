@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 421 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 422 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1291,6 +1291,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-unless-tap` - `tests/engine-unless-tap.mjs`: "you may tap another untapped Merfolk you control. When you do, ..." (Meanders Guide; CR 118.12a, 603.12), each permanent its own option
 - `engine-spell-x-cost` - `tests/engine-spell-x-cost.mjs`: a spell with {X} in its mana cost, as a selector (Frontline Medic; CR 107.3) -- on the stack whatever X was chosen, in a hand, on the battlefield; {Y} is not {X} -- and battalion as the attack as a whole
 - `engine-shares-card-type` - `tests/engine-shares-card-type.mjs`: "each opponent may sacrifice a permanent that shares a card type with it; for each opponent who doesn't ..." (Braids, Arisen Nightmare) -- the card types of what was sacrificed as it last existed, a sacrifice that may be declined, and what follows each refusal, in turn order
+- `engine-target-groups` - `tests/engine-target-groups.mjs`: a counted target's choices together -- "up to two target cards from a single graveyard" (Unlicensed Hearse), "two target creature cards that share a creature type" (Unbury) -- a way to aim it for each group, picked within it, held to it as cast and as it resolves (CR 601.2c, 608.2b)
 
 ## Design and execution record
 

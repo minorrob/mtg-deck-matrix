@@ -182,7 +182,7 @@ function assertGrammar(selector) {
 
 /* AN OBJECT'S CREATURE TYPES (CR 205.3m): the subtypes of a creature or a kindred card, through the layers on the
    battlefield and as printed elsewhere; `every` for a changeling (CR 702.73a). A planeswalker's subtypes are not. */
-function creatureTypesOf(state, id) {
+export function creatureTypesOf(state, id) {
   const object = state.objects[id];
   const types = typesOf(state, id);
   if (!types.includes("Creature") && !types.includes("Kindred")) return {every: false, types: []};
