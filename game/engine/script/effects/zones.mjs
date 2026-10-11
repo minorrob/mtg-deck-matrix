@@ -19,7 +19,7 @@
 
 import {holdArrival, enteredWith} from "../../rules/entering.mjs";
 import {prepare} from "./attributes.mjs";
-import {afterwards, delayedTrigger, enchantable, enchantOnArrival, controlSourceLeft} from "./permanents.mjs";
+import {afterwards, delayedTrigger, enchantable, enchantOnArrival, controlSourceLeft, endWhileSourceRemains} from "./permanents.mjs";
 import {typesOf} from "../../rules/layers.mjs";
 import {moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard, rememberExileLooker, recordDraw, recordDeath} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
@@ -218,6 +218,8 @@ export function returnExiledUntil(state, departed, events, leftBehind = null) {
   if (leftBehind) keepLastKnown(state, departed, leftBehind);
   /* And control gained "for as long as" it remained on the battlefield ends with it (CR 611.2b; Sower of Temptation). */
   controlSourceLeft(state, departed, events);
+  /* And every other effect lasting for as long as it remained there (Old Fat Spider Can't See Me). */
+  endWhileSourceRemains(state, departed);
   const due = (state.exiledUntil ?? []).filter((link) => link.source === departed);
   if (!due.length) return;
   state.exiledUntil = state.exiledUntil.filter((link) => link.source !== departed);
@@ -470,7 +472,8 @@ export function manifest(state, params, context) {
  * `mayPlay` — "Until the end of your next turn, you may play that card" (Blazing Crescendo), "you may play them this turn":
  * a permission, not a cast now (that is `play`). Its controller may play the named cards from where they are, each the way
  * it could be played from a hand -- a land as their land for the turn (CR 305.2), a spell at its type's speed, its costs
- * paid (CR 601.2a) -- until `until`: "end-of-turn", or "your-next-end", the end of that player's next turn (rules/turn.mjs).
+ * paid (CR 601.2a) -- until `until`: "end-of-turn", "your-next-end", the end of that player's next turn, or
+ * "your-next-end-step", as that player's next end step begins ("until your next end step", Shadow Urchin; rules/turn.mjs).
  * `spellsOnly` for "you may cast that card". It names objects, as `remembered` binds them: a card that moves becomes a new
  * object (CR 400.7) and leaves the permission behind -- played, or put back into a library.
  */

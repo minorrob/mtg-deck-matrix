@@ -1631,8 +1631,11 @@ export const chooseCard = {
     /* "You may exile ONE OF THEM from your graveyard" (Conspiracy Theorist): among what a "one or more" trigger is about
        (`among: "those cards"`, rules/trigger.mjs `batch`), each still the card it was there (CR 400.7) -- face up, as the
        remembered are. */
-    const among = params.among === "remembered" || params.among === "those cards";
-    const amongIds = params.among === "those cards" ? context.about?.cards ?? [] : context.remembered ?? [];
+    /* "Attach an Equipment that was attached to Zack Fair to that creature" (Zack Fair; `among: "was attached to this"`):
+       among what was attached to the ability's source as it last existed -- sacrificed as its cost (CR 608.2h) -- each still
+       the object it was there (CR 400.7), one chosen if several (CR 701.3a). */
+    const among = params.among === "remembered" || params.among === "those cards" || params.among === "was attached to this";
+    const amongIds = params.among === "those cards" ? context.about?.cards ?? [] : params.among === "was attached to this" ? context.lastKnown?.attachments ?? [] : context.remembered ?? [];
     /* "Return ANOTHER permanent card" (Rise of the Witch-king, batch 70): not the one an earlier effect of this resolution
        remembered -- the creature sacrificed this way. */
     const except = params.except === "remembered" ? new Set(context.remembered ?? []) : null;

@@ -100,8 +100,9 @@ const fixedLife = (atom) => atom?.atom !== "payLife" || (Number.isInteger(atom.a
 /* A flashback cost's discard: any card, a number of them -- never a card of a kind, nor "discard this card". */
 const plainDiscard = (atom) => atom?.atom !== "discard" || (atom.self === undefined && atom.selector === undefined && (atom.count === undefined || (Number.isInteger(atom.count) && atom.count >= 1)));
 /* How long "you may play that card" lasts (script/effects/zones.mjs, mayPlay): this turn, until the end of your next turn,
-   or for as long as it remains there ("ever": a card that moves is a new object, CR 400.7, Emrakul, the Exigent Doom). */
-const MAY_PLAY_UNTIL = ["end-of-turn", "your-next-end", "ever"];
+   until your next end step (Shadow Urchin; CR 513.1, rules/turn.mjs), or for as long as it remains there ("ever": a card
+   that moves is a new object, CR 400.7, Emrakul, the Exigent Doom). */
+const MAY_PLAY_UNTIL = ["end-of-turn", "your-next-end", "your-next-end-step", "ever"];
 /* What an evoke cost may be made of (CR 702.74a): what an alternative cost is paid with (rules/actions.mjs) -- mana
    ("Evoke {2}{U}", Mulldrifter), and a card exiled from the hand ("Evoke--Exile a red card from your hand", Fury). */
 const EVOKE_ATOMS = ["mana", "payLife", "exileFromHand"];
@@ -1115,6 +1116,17 @@ export function compileScript(script) {
         if (effect.rule !== "prevent-damage" || !Array.isArray(effect.then)) problems.push("effectUntil: `then` is what follows a prevention shield's prevention, a list");
         for (const inner of Array.isArray(effect.then) ? effect.then : []) if (!EFFECTS[inner?.effect]) problems.push(`effectUntil: ${inner?.effect} follows a prevention, and it asks a question or is not built`);
       }
+      /* "For as long as this Saga remains on the battlefield" (CR 611.2b): a duration effectUntil keeps with its source and
+         ends as that leaves (effects/permanents.mjs, endWhileSourceRemains), as gainControl and exileUntil keep theirs -- no
+         other effect's, and not a rule changed for players' casting, which keeps no source. */
+      if (effect.until === "this leaves" && !(["gainControl", "exileUntil"].includes(effect.effect) || (effect.effect === "effectUntil" && effect.rule !== "cant-cast")))
+        problems.push(`${effect.effect}: "for as long as this remains on the battlefield" (until "this leaves") is effectUntil's, gainControl's and exileUntil's`);
+      /* "Choose one that hasn't been chosen" (Gollum, Riddle Master): a triggered ability's one effect, choosing one, its
+         modes chosen as it is put on the stack (rules/trigger.mjs) -- not a spell's, an activated ability's, nor a choice
+         made as something resolves, which are not built. */
+      if (effect.effect === "modal" && effect.unchosen !== undefined && !(effect.unchosen === true && ability.kind === "triggered" && (ability.effects ?? []).length === 1
+        && ability.effects[0] === effect && effect.chooser === undefined && (effect.choose ?? 1) === 1 && effect.mayChooseNone === undefined))
+        problems.push("modal: \"choose one that hasn't been chosen\" (unchosen: true) is a triggered ability's one effect, choosing one");
       /* "You may play that card" until a time (effects/zones.mjs): this turn, or the end of its controller's next turn. */
       if (effect.effect === "mayPlay") {
         if (!MAY_PLAY_UNTIL.includes(effect.until ?? "end-of-turn")) problems.push(`mayPlay: until ${MAY_PLAY_UNTIL.join(" or ")}`);
@@ -1182,6 +1194,11 @@ export function compileScript(script) {
          (effects/asking.mjs, chooseCard) -- never a search of every zone. */
       if (effect.effect === "chooseCard" && effect.zone === "any" && effect.among === undefined)
         problems.push("chooseCard: any zone is among cards named before it (`among`), never a search");
+      /* Among what: the cards an earlier part remembered, those a "one or more" trigger is about, or -- on the battlefield --
+         what was attached to the ability's source as it last existed (Zack Fair; effects/asking.mjs). */
+      if (effect.effect === "chooseCard" && effect.among !== undefined && !(["remembered", "those cards"].includes(effect.among)
+        || (effect.among === "was attached to this" && effect.zone === "battlefield")))
+        problems.push("chooseCard: among \"remembered\", \"those cards\", or \"was attached to this\" on the battlefield");
       if (effect.effect === "repeatFor" && (effect.effects ?? []).some((inner) => inner?.effect === "removeCounter" && inner.counter === "any"))
         problems.push("repeatFor: which counters of any kinds to remove is asked, and what repeats here does not ask it");
       /* "Spend this mana only to cast instant and sorcery spells" (effects/resources.mjs), "only to cast a creature spell of
@@ -1403,6 +1420,9 @@ export function compileScript(script) {
       const lone = (ability.effects ?? []).length === 1 ? ability.effects[0] : null;
       const modal = lone?.effect === "modal" && lone.chooser === undefined
         ? {choose: lone.choose ?? 1, ...(lone.mayChooseNone ? {mayChooseNone: true} : {}), ...(lone.differentPlayers ? {differentPlayers: true} : {}),
+          /* "Choose one that hasn't been chosen" (Gollum, Riddle Master): each mode once, for as long as its permanent is
+             the object it is (rules/trigger.mjs, modesTaken). */
+          ...(lone.unchosen === true ? {unchosen: true} : {}),
           modes: (lone.modes ?? []).map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? []}))} : null;
       if (modal && (ability.optional || (ability.targets ?? []).length)) problems.push(`${ability.text}: a modal triggered ability names its targets in its modes, and "you may" as mayChooseNone`);
       if (modal && modal.modes.some((m) => m.targets.some((t) => t && typeof t === "object" && t.count !== undefined)))

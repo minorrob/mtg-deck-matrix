@@ -1,0 +1,125 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Old Fat Spider Can't See Me",
+    "oracleId": "e4402d21-bb7f-4777-bc8d-b24bf2faccb0",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Saga"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after IV.)\nI — Target creature you control gains hexproof for as long as this Saga remains on the battlefield.\nII — Prevent all damage that would be dealt by up to one target creature for as long as this Saga remains on the battlefield.\nIII, IV — Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "As this Saga enters and after your draw step, add a lore counter. Sacrifice after IV.",
+      "keyword": "saga"
+    },
+    {
+      "kind": "triggered",
+      "text": "I — Target creature you control gains hexproof for as long as this Saga remains on the battlefield.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 1
+      },
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "layer": 6,
+          "targets": {
+            "target": 0
+          },
+          "apply": {
+            "addKeywords": [
+              "Hexproof"
+            ]
+          },
+          "until": "this leaves"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "II — Prevent all damage that would be dealt by up to one target creature for as long as this Saga remains on the battlefield.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 2
+      },
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "rule": "prevent-damage",
+          "targets": {
+            "target": 0
+          },
+          "apply": {
+            "by": true,
+            "to": false
+          },
+          "until": "this leaves"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "III, IV — Draw a card.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 3
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "III, IV — Draw a card.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 4
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}
