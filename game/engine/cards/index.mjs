@@ -235,7 +235,10 @@ const TRIGGERS = {
     /* "For each other instant and sorcery spell you've cast before it this turn": counted as it triggers. */
     ...(t.countBefore ? {countBefore: true} : {}),
     /* "An instant or sorcery spell that targets a creature" (Rehearsed Debater): what one of its targets is (rules/trigger.mjs). */
-    ...(t.targets ? {targets: t.targets} : {})}),
+    ...(t.targets ? {targets: t.targets} : {}),
+    /* "An Equipment spell or a spell that targets a creature you control" (Danitha, Sword of Hope): either, each its own
+       `filter` and `targets`. */
+    ...(Array.isArray(t.anyOf) ? {anyOf: t.anyOf.map((one) => ({...(one.filter ? {filter: one.filter} : {}), ...(one.targets ? {targets: one.targets} : {})}))} : {})}),
   /* "Whenever one or more +1/+1 counters are put on Berta" (CR 122.1): counters of `counter` put on this permanent, once
      for each time they are put on, however many. */
   "counter added": (t) => ((t.who ?? "self") === "self" && typeof t.counter === "string" ? {on: "GameEventCardCounters", counterAdded: true, counter: t.counter,
@@ -1163,6 +1166,15 @@ export function compileScript(script) {
       if (ability.trigger.targets !== undefined) {
         if (ability.trigger.on !== "spell cast") problems.push(`${ability.text}: what a spell targets is read as it is cast, and by no other trigger`);
         else try { compileSelector(ability.trigger.targets); } catch (error) { problems.push(`${ability.text}: ${error.message}`); }
+      }
+      /* A choice of spells cast (`anyOf`): each a filter of the spell, of what it targets, or both -- and only that, on a spell
+         cast trigger with neither of its own and no count of the caster's spells this turn, which reads its filter. */
+      if (ability.trigger.anyOf !== undefined) {
+        const alternatives = ability.trigger.anyOf;
+        if (ability.trigger.on !== "spell cast" || !Array.isArray(alternatives) || alternatives.length < 2 || ["filter", "targets", "firstThisTurn", "nthThisTurn", "countBefore"].some((key) => ability.trigger[key] !== undefined)
+          || !alternatives.every((one) => one && typeof one === "object" && Object.keys(one).length && Object.keys(one).every((key) => key === "filter" || key === "targets")))
+          problems.push(`${ability.text}: a choice of spells cast is anyOf, two or more of {filter, targets}, on a spell cast trigger with no filter, targets or count of its own`);
+        else for (const one of alternatives) try { if (one.filter) compileSelector({...one.filter, what: "spell"}); if (one.targets) compileSelector(one.targets); } catch (error) { problems.push(`${ability.text}: ${error.message}`); }
       }
 
       /* "YOU MAY" (CR 603.5): an optional triggered ability goes on the stack like any other, and as it resolves its

@@ -137,13 +137,15 @@ function subjects(state, event, condition, sourceId, controller) {
     if (condition.castFrom && fields.castFrom !== condition.castFrom) return [];
     /* "When you cast this spell" (CR 603.2, Emrakul, the Exigent Doom): this spell's own cast, and no other. */
     if (condition.who === "self" && spell !== sourceId) return [];
-    if (condition.filter && !(state.objects[spell] && matchesSelector({...condition.filter, what: "spell"}, state, spell, {controller, source: sourceId}))) return [];
     /* "An instant or sorcery spell that targets a creature" (Rehearsed Debater): one of what it targets, chosen as it was
        cast (CR 601.2c) and so before it became cast (601.2i), fits `targets`. A player it targets fits no such selector. */
-    if (condition.targets) {
-      const aimed = (state.stack.find((e) => e.stackId === fields.sa?.stackId)?.targets ?? []).flat();
-      if (!aimed.some((t) => t?.kind === "object" && state.objects[t.id] && matchesSelector(condition.targets, state, t.id, {controller, source: sourceId}))) return [];
-    }
+    const aimed = () => (state.stack.find((e) => e.stackId === fields.sa?.stackId)?.targets ?? []).flat();
+    const fitsCast = (one) => (!one.filter || (state.objects[spell] && matchesSelector({...one.filter, what: "spell"}, state, spell, {controller, source: sourceId})))
+      && (!one.targets || aimed().some((t) => t?.kind === "object" && state.objects[t.id] && matchesSelector(one.targets, state, t.id, {controller, source: sourceId})));
+    if (!fitsCast(condition)) return [];
+    /* "Whenever you cast an Equipment spell or a spell that targets a creature you control" (Danitha, Sword of Hope): one of
+       these, each a filter of the spell or of what it targets, or both. */
+    if (condition.anyOf && !condition.anyOf.some(fitsCast)) return [];
     /* "Their first noncreature spell each turn": this is the first of the caster's spells this turn the filter fits. And
        "copy it for each other instant and sorcery spell you've cast before it this turn" (Thousand-Year Storm): how many
        of them came before this one, counted now, as it triggers -- a spell cast later, in response, did not. */
