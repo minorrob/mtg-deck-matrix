@@ -1,0 +1,85 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Woodland Weavemaster",
+    "oracleId": "28ffddca-a3c4-467d-a2dc-2c5e62393e11",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Druid"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "Vigilance\nWhenever another Elf you control enters, this creature gets +1/+1 until end of turn.\n{T}: Add X mana of any one color, where X is this creature's power. Spend this mana only to cast Elf spells and activate abilities of Elf sources.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another Elf you control enters, this creature gets +1/+1 until end of turn.",
+      "trigger": {
+        "on": "enters",
+        "who": "another",
+        "filter": {
+          "subtypes": [
+            "Elf"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add X mana of any one color, where X is this creature's power. Spend this mana only to cast Elf spells and activate abilities of Elf sources.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true,
+          "count": {
+            "powerOf": "self"
+          },
+          "spendOnly": {
+            "spell": {
+              "subtypes": [
+                "Elf"
+              ]
+            },
+            "abilitySource": {
+              "subtypes": [
+                "Elf"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

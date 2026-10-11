@@ -5,7 +5,10 @@
  *
  * It is mana in its player's pool like any other, and empties with it (CR 500.4, rules/turn.mjs), but it is kept beside
  * the pool -- the player's `restrictedMana`, one entry a mana -- each entry with what it may pay for: `spell`, a selector
- * over the card being cast, `ability`, one over the source of an ability being activated; either, or both. "The chosen
+ * over the card being cast, `ability`, one over the permanent whose ability is being activated ("abilities of
+ * creatures": a creature permanent, CR 109.2), `abilitySource`, one over the source of an ability wherever that object is
+ * ("abilities of Elf sources": an Elf card's cycling in a hand too -- CR 109.2 does not narrow a "source" to a permanent,
+ * and an ability's source is the object it is of, CR 113.7); any of them, or more than one. "The chosen
  * type" is read as the mana is made, its source's choice (script/chosen.mjs), so the source leaving later changes
  * nothing. What a spell or an ability may spend is the pool and the entries that admit it, and it spends those entries
  * first: nothing else could use them. "And that spell can't be countered" (Cavern, Delighted Halfling) rides on the
@@ -30,7 +33,7 @@ import {chosenFor} from "../script/chosen.mjs";
 import {spend, MANA_KEYS} from "./mana.mjs";
 
 /** The keys a mana ability's `spendOnly` may carry. */
-export const SPEND_ONLY_KEYS = Object.freeze(["spell", "ability", "uncounterable"]);
+export const SPEND_ONLY_KEYS = Object.freeze(["spell", "ability", "abilitySource", "uncounterable"]);
 
 const restricted = (state, player) => state.players[player].restrictedMana ?? [];
 
@@ -39,15 +42,19 @@ export function addRestricted(state, player, mana, spendOnly, source) {
   const only = chosenFor(spendOnly, state.objects[source]);
   const list = (state.players[player].restrictedMana ??= []);
   for (const [key, n] of Object.entries(mana)) for (let i = 0; i < n; i += 1)
-    list.push({key, source, ...(only.spell ? {spell: only.spell} : {}), ...(only.ability ? {ability: only.ability} : {}), ...(only.uncounterable === true ? {uncounterable: true} : {})});
+    list.push({key, source, ...(only.spell ? {spell: only.spell} : {}), ...(only.ability ? {ability: only.ability} : {}),
+      ...(only.abilitySource ? {abilitySource: only.abilitySource} : {}), ...(only.uncounterable === true ? {uncounterable: true} : {})});
 }
 
 /* Whether this entry may pay for `use`: casting the card `use.spell` (where it is now, before it moves to the stack), or
-   activating an ability of the permanent `use.ability` -- on the battlefield; a card's ability in a hand is not one. */
+   activating an ability of the object `use.ability` -- by `ability`, a permanent on the battlefield, a card's ability in a
+   hand not one; by `abilitySource`, the object where it is now: Woodland Weavemaster's {G} pays an Elf card's "Cycling {1}"
+   in its owner's hand (CR 109.2, 113.7). */
 function admits(state, player, entry, use) {
   const context = {controller: player, source: entry.source};
   if (use.spell !== undefined) return Boolean(entry.spell) && compileSelector({...entry.spell, what: "card", zone: state.objects[use.spell]?.zone})(state, use.spell, context);
-  if (use.ability !== undefined) return Boolean(entry.ability) && compileSelector({...entry.ability, what: "permanent"})(state, use.ability, context);
+  if (use.ability !== undefined) return (Boolean(entry.ability) && compileSelector({...entry.ability, what: "permanent"})(state, use.ability, context))
+    || (Boolean(entry.abilitySource) && compileSelector({...entry.abilitySource, what: "card", zone: state.objects[use.ability]?.zone})(state, use.ability, context));
   return false;
 }
 

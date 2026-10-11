@@ -410,9 +410,13 @@ function whenSpentProblems(effect) {
 }
 function spendOnlyValid(only) {
   if (!only || typeof only !== "object" || Array.isArray(only) || !Object.keys(only).every((k) => SPEND_ONLY_KEYS.includes(k))) return false;
-  if (!only.spell && !only.ability) return false;
+  if (!only.spell && !only.ability && !only.abilitySource) return false;
   if ("uncounterable" in only && only.uncounterable !== true) return false;
-  try { if (only.spell) compileSelector({...only.spell, what: "card"}); if (only.ability) compileSelector({...only.ability, what: "permanent"}); } catch { return false; }
+  try {
+    if (only.spell) compileSelector({...only.spell, what: "card"});
+    if (only.ability) compileSelector({...only.ability, what: "permanent"});
+    if (only.abilitySource) compileSelector({...only.abilitySource, what: "card"});
+  } catch { return false; }
   return true;
 }
 
@@ -959,7 +963,7 @@ export function compileScript(script) {
       /* "Spend this mana only to cast instant and sorcery spells" (effects/resources.mjs), "only to cast a creature spell of
          the chosen type" (a mana ability's, cards/index.mjs manaAbility): what the mana may pay for, read here for both. */
       if (effect.effect === "addMana" && effect.spendOnly !== undefined && !spendOnlyValid(effect.spendOnly))
-        problems.push(`addMana: a spending restriction says what it pays for -- a spell, an ability's source, or both, each a selector (${SPEND_ONLY_KEYS.join(", ")})`);
+        problems.push(`addMana: a spending restriction says what it pays for -- a spell, an ability of a permanent or of a source anywhere, or more than one, each a selector (${SPEND_ONLY_KEYS.join(", ")})`);
       if (effect.effect === "addMana") problems.push(...whenSpentProblems(effect));
     }
 

@@ -67,7 +67,7 @@
                 "$chosen"
               ]
             },
-            "ability": {
+            "abilitySource": {
               "types": [
                 "Creature"
               ],
