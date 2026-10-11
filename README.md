@@ -1303,6 +1303,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-disguise` - `tests/engine-disguise.mjs`: disguise (Arno Dorian, Bayek of Siwa), a card cast face down for {3}, a nameless 2/2 with ward {2} on the stack and the battlefield, never named to another seat; turned face up for its disguise cost alone, a special action
 - `engine-adventure-asking` - `tests/engine-adventure-asking.mjs`: asking what an adventurer card may do changes nothing, the card shown as itself again with no empty subtypes, supertypes or colors kept
 - `engine-counted-amounts` - `tests/engine-counted-amounts.mjs`: amounts counted as printed -- half and "for every seven", rounded down (Pox Plague, Dark Matter Manipulator), each player's own count for a discard or a sacrifice, a target player's hand (Borrowed Knowledge, Jeska's Will), a whole hand remembered, a remembered count filtered and carried into a reflexive trigger (Release to Memory, Augusta, Order Returned), converge (Sundering Archaic), planeswalker types and proliferate X times (Tam, the Possibility), your commanders' casts
+- `engine-another-died` - `tests/engine-another-died.mjs`: "if another creature died this turn" (Chain Assassination), the deaths this turn less what the destroy killed, as a destroy remembers it -- not the indestructible, nor one exiled instead
 
 ## Design and execution record
 

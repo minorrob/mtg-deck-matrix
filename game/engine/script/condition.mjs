@@ -259,7 +259,10 @@ export function conditionHolds(state, condition, {controller, source = null, abo
       /* "If excess damage was dealt this way" (Violent Echoes): what the damage before it left (script/resolution.mjs). */
       ...(excessDamage !== undefined ? {excessDamage} : {}),
       /* "For each creature exiled this way, its controller ..." (Winds of Abandon): who controlled what was remembered. */
-      ...(rememberedControllers !== undefined ? {rememberedControllers} : {})};
+      ...(rememberedControllers !== undefined ? {rememberedControllers} : {}),
+      /* "If another creature died this turn" (Chain Assassination): what the effect before it moved, as each last existed
+         there, counted out of the deaths ({movedCount}). */
+      ...(movedWas !== undefined ? {movedWas} : {})};
     const n = amountOf(state, condition.compare.count, counted), than = (v) => amountOf(state, v, counted);
     if (condition.compare.atLeast !== undefined && n < than(condition.compare.atLeast)) return false;
     if (condition.compare.atMost !== undefined && n > than(condition.compare.atMost)) return false;
