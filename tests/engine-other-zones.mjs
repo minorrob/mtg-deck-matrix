@@ -4,7 +4,7 @@
  *
  * "You may play lands from your graveyard" and "from the top of your library" use the land drop (CR 305.2); "you may
  * play an additional land" adds one; "you may cast artifact spells and colorless spells from the top of your library"
- * offers only what fits. The top card is seen by whom the rules say and nobody else (CR 401.4): revealed, by everyone;
+ * offers only what fits. The top card is seen by whom the rules say and nobody else (CR 401.5): revealed, by everyone;
  * "you may look at the top card any time", by its owner alone; otherwise by nobody -- never more than that one card.
  * "You may cast this card from your graveyard or from exile" is the card's own.
  */

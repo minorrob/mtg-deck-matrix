@@ -109,7 +109,7 @@ export function person(seed) {
    `--leaks` judges). Face up in a public zone, everyone (CR 400.2; the command zone, 903.6); in a hand, its owner; face
    down on the battlefield or the stack, its controller (708.5); face down in exile, whoever an instruction let look
    (406.3, `lookers`) or controls what exiled it (702.75a); in a library, no one (401.2), but its top card when a
-   permanent its owner controls reveals it to all or lets its owner look (401.4), and the cards a player looked at while
+   permanent its owner controls reveals it to all or lets its owner look (401.5), and the cards a player looked at while
    they are still the top, in that order (701.20e, `state.looks`). A phased-out permanent was public as it phased out. */
 const PUBLIC_ZONES = new Set(["battlefield", "graveyard", "exile", "command", "stack", "phased"]);
 const nameOf = (o) => (o.faceDown === true ? o.faceDownCard?.card : o.card);
