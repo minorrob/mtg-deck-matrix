@@ -104,12 +104,14 @@ export function pushSpell(state, objectId, {controller, targets = [], permanent 
   const object = state.objects[objectId];
   if (!object) throw new Error(`There is no object ${objectId} to cast`);
   const name = object.card;
-  const moved = moveObject(state, objectId, "stack");
+  /* Cast face down with disguise (CR 702.168b; rules/actions.mjs shows the card so as it is cast): a face-down spell. */
+  const moved = moveObject(state, objectId, "stack", null, {disguised: object.disguised === true});
   const entry = entryFor(state, {
     objectId: moved, cardId: moved, name, playerId: controller ?? object.controller,
     kind: "spell", abilityId, targets,
   });
   entry.permanent = permanent === true;
+  if (object.disguised === true) entry.faceDown = true;
   /* The value chosen for X (CR 601.2b), part of the spell until it leaves the stack (CR 107.3a). */
   if (x !== null) entry.x = x;
   /* The modes chosen as it was cast (CR 700.2), in order. */
@@ -369,7 +371,9 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
       ? enteringModifications(state, {objectId: entry.objectId, player: entry.playerId,
         types: object.types, abilities: object.abilities, x: entry.x ?? 0, escaped: entry.escaped === true, kicked: entry.kicked ?? 0, phyrexianLife: entry.cast?.phyrexianLife ?? 0})
       : null;
-    const arrived = moveObject(state, entry.objectId, to, ["graveyard", "library"].includes(to) ? owner : null);
+    /* A face-down spell becomes a face-down permanent, the same characteristics (CR 702.168b). */
+    const down = object.disguised === true ? {faceDown: true, disguised: true} : {};
+    const arrived = moveObject(state, entry.objectId, to, ["graveyard", "library"].includes(to) ? owner : null, down);
     /* Rebound's delayed trigger (CR 702.88a, 603.7d: its controller the spell's): at the beginning of THEIR next upkeep, the
        card in exile -- the object it now is, so one that leaves exile meanwhile is not cast (CR 400.7) -- may be cast
        without paying its mana cost, as the trigger resolves (CR 608.2g; effects/asking.mjs, `play`), or left there for good. */

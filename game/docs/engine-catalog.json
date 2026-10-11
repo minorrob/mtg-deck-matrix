@@ -16,10 +16,10 @@
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 62,
+    "built": 63,
     "partial": 0,
     "named": 5,
-    "missing": 127
+    "missing": 126
    },
    "entries": [
     {
@@ -1406,8 +1406,8 @@
      "kind": "keyword ability",
      "rule": "702.168",
      "name": "Disguise",
-     "engine": null,
-     "status": "missing",
+     "engine": "Disguise",
+     "status": "built",
      "forge": "Disguise",
      "top": 0,
      "all": 47,

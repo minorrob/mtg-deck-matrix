@@ -741,6 +741,20 @@ export function compileScript(script) {
       keywords.push("Riot");
       return;
     }
+    /* DISGUISE [COST] (CR 702.168a; Arno Dorian, Bayek of Siwa, Train C phase 2): kept as the static `disguise` with its
+       cost, read where the card could be cast -- cast face down for {3} as a 2/2 creature with ward {2} (rules/actions.mjs,
+       withFaceDown; state/index.mjs) -- and on the face-down permanent: turned face up for that cost, a special action
+       (702.168d). A mana cost, without X; never on a land, which is not cast. */
+    if (word === "disguise") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      let parsed = null;
+      try { parsed = cost.length === 1 && cost[0]?.atom === "mana" ? parseManaCost(cost[0].cost ?? "") : null; } catch { /* refused below */ }
+      if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`${ability.text}: a disguise cost of mana, without X`);
+      if ((identity.types ?? []).includes("Land")) problems.push(`${ability.text}: disguise on a land, which is never cast`);
+      abilities.push({id, kind: "static", rule: "disguise", text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
+      keywords.push("Disguise");
+      return;
+    }
     /* COMPLEATED (CR 702.150a; Vraska, Betrayal's Sting, Train C phase 2): a planeswalker whose caster paid life for Phyrexian
        mana symbols of its cost enters with two fewer loyalty counters for each (rules/replacement.mjs, enteringModifications;
        rules/actions.mjs remembers the symbols paid with life). Only on a planeswalker card with a Phyrexian symbol in its cost. */

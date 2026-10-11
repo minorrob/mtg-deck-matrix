@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 62 | 0 | 5 | 127 |
+| Keyword abilities (CR 702) | 194 | 63 | 0 | 5 | 126 |
 | Keyword actions (CR 701) | 70 | 22 | 3 | 1 | 44 |
 | Effects | 192 | 71 | 1 | 2 | 118 |
 | Triggers | 138 | 20 | 4 | 2 | 112 |
@@ -171,7 +171,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.183 | Tiered | Tiered | built | 1 | 7 | 0 | 0 |
 | 702.176 | Impending | — | named | 1 | 6 | 1 | 1 |
 | 702.192 | Paradigm | Paradigm | built | 1 | 5 | 0 | 0 |
-| 702.168 | Disguise | — | missing | 0 | 47 | 0 | 0 |
+| 702.168 | Disguise | Disguise | built | 0 | 47 | 0 | 0 |
 | 702.45 | Bushido | — | missing | 0 | 37 | 0 | 0 |
 | 702.18 | Shroud | Shroud | built | 0 | 37 | 0 | 0 |
 | 702.140 | Mutate | — | missing | 0 | 34 | 0 | 0 |

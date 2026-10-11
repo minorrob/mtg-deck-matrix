@@ -191,7 +191,9 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   /* Firebending N (CR 702.189): an attack trigger, its mana kept until end of combat (cards/index.mjs, rules/turn.mjs). */
   "firebending",
   /* Compleated (CR 702.150): fewer loyalty counters for Phyrexian mana paid with life (rules/replacement.mjs). */
-  "compleated"];
+  "compleated",
+  /* Disguise (CR 702.168): cast face down for {3}, turned face up for its cost (rules/actions.mjs). */
+  "disguise"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

@@ -178,6 +178,9 @@ export function runScenario(scenario, cards, fixtures = {}) {
     /* Convoked (CR 702.51a): `convoke: true` takes the offer the caster's creatures help pay, its creatures a question once it
        is taken, answered by the next step's `choose`; without it, the cast the pool pays alone. */
     found = found.filter((a) => (a.convoke ?? false) === (step.convoke ?? false));
+    /* Cast face down with disguise (CR 702.168a), or turned face up for its disguise cost (702.168d): `disguise: true`;
+       without it, the card cast as itself, or turned face up for its mana cost. */
+    found = found.filter((a) => (a.disguise ?? false) === (step.disguise ?? false));
     for (const key of ["exile"]) if (step[key] !== undefined) found = found.filter((a) => (a.costNames ?? []).includes(step[key]));
     /* Which permanent a "Sacrifice a creature" cost takes, which card a discard does, which creature an "untap a tapped
        creature you control" cost untaps, or which one a "Blight 1" cost puts its counter on: the offer that names it. */
@@ -213,6 +216,10 @@ export function runScenario(scenario, cards, fixtures = {}) {
     }
   }
 
+  /* A permanent on a seat's battlefield, as that seat sees it: by its name -- a face-down one of theirs by the card it is,
+     which they may look at (CR 708.5), and any face-down one as "A face-down permanent". */
+  const onField = (seat, name) => projectFor(state, seat).players[seat].zones.Battlefield.cards
+    .find((c) => c.name === name || (c.faceDown && (c.faceDownName === name || name === "A face-down permanent")));
   function check(expect) {
     for (const e of expect ?? []) {
       if (e.zone !== undefined) {
@@ -247,7 +254,7 @@ export function runScenario(scenario, cards, fixtures = {}) {
         if (size !== e.stack) fail(`the stack holds ${size}, not ${e.stack}`);
         passed.push(`the stack holds ${e.stack}`);
       } else if (e.tapped !== undefined) {
-        const card = projectFor(state, e.seat).players[e.seat].zones.Battlefield.cards.find((c) => c.name === e.tapped);
+        const card = onField(e.seat, e.tapped);
         if (!card || card.tapped !== (e.is !== false)) fail(`${e.tapped} is ${card ? (card.tapped ? "tapped" : "untapped") : "not on the battlefield"}`);
         passed.push(`${e.tapped} ${e.is === false ? "untapped" : "tapped"}`);
       } else if (e.pool !== undefined) {
@@ -287,21 +294,21 @@ export function runScenario(scenario, cards, fixtures = {}) {
         passed.push(`asks ${names[state.awaiting.player]}: ${(e.asks.options ?? []).join(", ")}`);
       } else if (e.keywords !== undefined) {
         /* A permanent's current keywords, as its controller's view shows them. */
-        const card = projectFor(state, e.seat).players[e.seat].zones.Battlefield.cards.find((c) => c.name === e.keywords.card);
+        const card = onField(e.seat, e.keywords.card);
         if (!card) fail(`${e.keywords.card} is not on ${names[e.seat]}'s battlefield`);
         for (const k of e.keywords.has ?? []) if (!card.keywords.includes(k)) fail(`${e.keywords.card} lacks ${k}`);
         for (const k of e.keywords.lacks ?? []) if (card.keywords.includes(k)) fail(`${e.keywords.card} has ${k}`);
         passed.push(`${e.keywords.card}: ${(e.keywords.has ?? []).join(", ")}${(e.keywords.lacks ?? []).length ? `, not ${e.keywords.lacks.join(", ")}` : ""}`);
       } else if (e.counters !== undefined) {
         /* A permanent's counters of one kind, as its seat sees them: {seat, counters: {card, counter, count}}. */
-        const card = projectFor(state, e.seat).players[e.seat].zones.Battlefield.cards.find((c) => c.name === e.counters.card);
+        const card = onField(e.seat, e.counters.card);
         if (!card) fail(`${e.counters.card} is not on ${names[e.seat]}'s battlefield`);
         const n = card.counters?.[e.counters.counter] ?? 0;
         if (n !== e.counters.count) fail(`${e.counters.card} has ${n} ${e.counters.counter} counter${n === 1 ? "" : "s"}, not ${e.counters.count}`);
         passed.push(`${e.counters.card}: ${e.counters.count} ${e.counters.counter}`);
       } else if (e.stats !== undefined) {
         /* A creature's current power and toughness, as its controller's view shows them (layer 7). */
-        const card = projectFor(state, e.seat).players[e.seat].zones.Battlefield.cards.find((c) => c.name === e.stats.card);
+        const card = onField(e.seat, e.stats.card);
         if (!card) fail(`${e.stats.card} is not on ${names[e.seat]}'s battlefield`);
         if (card.power !== e.stats.power || card.toughness !== e.stats.toughness) fail(`${e.stats.card} is ${card.power}/${card.toughness}, not ${e.stats.power}/${e.stats.toughness}`);
         passed.push(`${e.stats.card}: ${e.stats.power}/${e.stats.toughness}`);
