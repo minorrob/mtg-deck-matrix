@@ -27,7 +27,8 @@ import {readAsk, openVersion, adviseBrief, cardOfFor} from "../cloud/advise.mjs"
 import {ADVISE_SYSTEM, ADVISE_MAX_TOKENS, adviseBody, Closed} from "../cloud/ai.mjs";
 import * as Advise from "../cloud/advise-brief.mjs";
 import {createRequire} from "node:module";
-import {MODEL_VERSION} from "../cloud/advise.mjs";
+import {MODEL_VERSION, aiSettingsOf, unownedPool} from "../cloud/advise.mjs";
+import {ADVISE_FIELDS, ADVISE_CARDS} from "../cloud/advise-cards.mjs";
 const require = createRequire(import.meta.url);
 const M = require("../collection-model.js"), Catalog = require("../card-catalog.js");
 
@@ -76,6 +77,40 @@ const brief = adviseBrief(state, D1.id, "more removal");
   await assert.rejects(openVersion(older), (e) => e instanceof Closed && e.status === 409 && /another version/.test(e.message)); checks += 1;
   const generated = spawnSync(process.execPath, ["tools/build-advise-cards.mjs", "--check"], {cwd: new URL("..", import.meta.url), encoding: "utf8"});
   eq(generated.status, 0, `the catalog the Worker reads is what data/cards.json makes (${(generated.stdout || generated.stderr).trim()})`);
+}
+
+/* ---- AI-6: the person's AI Coach settings, read from their library in the cloud ---- */
+{
+  const withPrefs = (aiCoach) => ({...state, preferences: {...state.preferences, aiCoach}});
+  eq(aiSettingsOf(state), {suggestUnowned: false, preferOwned: true, inBracket: true, length: "short", coachSees: "hand"},
+    "nothing saved: cards not owned off, own first, inside the bracket, short advice, the Coach sees the hand");
+  ok(!adviseBrief(withPrefs({suggestUnowned: false}), D1.id, "").candidates.some((c) => /Not owned/.test(c.source)), "Suggest cards I don't own off: never a card not owned");
+  const on = adviseBrief(withPrefs({suggestUnowned: true}), D1.id, ""), notOwned = on.candidates.filter((c) => c.source === "Not owned");
+  const records = new Map(JSON.parse(readFileSync(new URL("../data/cards.json", import.meta.url), "utf8")).cards.map((c) => [c.name, c]));
+  const held = new Set(Object.values(state.cards).map((c) => c.name)), identity = new Set(on.deck.identity), cap = on.constraints.perCardCap;
+  ok(notOwned.length > 0 && on.constraints.unowned === true, `on: cards not owned are candidates (${notOwned.length}, ${notOwned.slice(0, 3).map((c) => c.name).join(", ")})`);
+  ok(notOwned.every((c) => {const r = records.get(c.name); return r && !held.has(c.name) && r.legalities?.commander === "legal" && (r.colorIdentity || []).every((x) => identity.has(x)) && (cap === null || c.price === null || c.price <= cap);}),
+    "each from the catalog, none in Rob's library, legal in Commander, inside the commander's colors, within the deck's per-card cap");
+  const pool = unownedPool(state);
+  ok(pool.length > 0 && pool.every((c) => records.get(c.name)?.legalities?.commander === "legal" && !held.has(c.name)),
+    `the pool of cards not owned: ${pool.length}, each legal in Commander and none of Rob's`);
+  /* Every card in today's catalog is Commander-legal, so a banned one is made here: the table's own row, its legal mark cleared. */
+  const legalAt = ADVISE_FIELDS.indexOf("legal"), [sample, row] = Object.entries(ADVISE_CARDS).find(([n]) => !held.has(n));
+  eq(unownedPool(state, {[sample]: row, "Banned Card": row.map((v, i) => (i === legalAt ? 0 : v))}).map((c) => c.name), [sample],
+    `a card the catalog marks not legal in Commander is never in the pool (${sample} is, its banned twin is not)`);
+  /* D5 Shadrix Aristocrats is short of roles that cards Rob does not own fill. */
+  const D5 = state.decks.find((d) => d.id === "deck:live:D5"), first = adviseBrief(withPrefs({suggestUnowned: true}), D5.id, "");
+  const firstNot = first.candidates.findIndex((c) => c.source === "Not owned"), lastMine = first.candidates.map((c) => c.source !== "Not owned").lastIndexOf(true);
+  ok(firstNot > lastMine, `Prefer what I own first: every card of Rob's own before any not owned (his up to ${lastMine}, the first not owned at ${firstNot})`);
+  const mixed = adviseBrief(withPrefs({suggestUnowned: true, preferOwned: false}), D5.id, "");
+  const mixedFirstNot = mixed.candidates.findIndex((c) => c.source === "Not owned"), mixedLastMine = mixed.candidates.map((c) => c.source !== "Not owned").lastIndexOf(true);
+  ok(mixed.candidates.every((c, i, a) => i === 0 || a[i - 1].fills.length >= c.fills.length) && mixedFirstNot < mixedLastMine,
+    `off: owned or not, a card filling more short roles first (a card not owned at ${mixedFirstNot}, one of Rob's at ${mixedLastMine})`);
+  eq([first.candidates.filter((c) => c.source === "Not owned").length, first.candidates.filter((c) => c.source !== "Not owned").length], [10, 30],
+    "cards not owned have ten places of their own, beside his thirty");
+  eq([brief.constraints.gameChangers.cap, adviseBrief(withPrefs({inBracket: false}), D1.id, "").constraints.gameChangers.cap], [3, null], "Stay inside the deck's bracket off lifts the game changers' cap");
+  eq([brief.constraints.length, adviseBrief(withPrefs({length: "detailed"}), D1.id, "").constraints.length], ["short", "detailed"], "and Advice length is the brief's, short or detailed");
+  ok(/constraints\.length is \\?"detailed\\?"/.test(ADVISE_SYSTEM) || ADVISE_SYSTEM.includes('constraints.length is "detailed"'), "which the instruction reads");
 }
 
 /* ---- 3-5. the door ---- */
@@ -169,5 +204,10 @@ const open = async (env, email = ROB) => {
 };
 eq([await open(OPEN), await open(shut), await open(OPEN, STRANGER), await open({...OPEN, ANTHROPIC_API_KEY: ""})], [true, false, false, false],
   "a deck's page may offer the advisor only with its switch on, the door's key and caps set, and the person on the list");
+/* AI-6's meter: the person's own spending over the last 24 hours against their cap. */
+const meter = async (env, email = ROB) => (await (await handle(new Request("https://crankmagic.test/api/ai-meter", {headers: {"cf-access-jwt-assertion": await token(email, "aud-library")}}), env, {fetchImpl, now: clock})).json());
+const spentNow = Number(DB.raw.prepare("SELECT COALESCE(SUM(cost_micros), 0) AS m FROM ai_calls WHERE email = ?").get(ROB).m);
+eq([await meter(OPEN), await meter(OPEN, STRANGER), await meter({...OPEN, ANTHROPIC_API_KEY: ""})], [{open: true, spentCents: Math.round(spentNow / 100) / 100, capCents: 25}, {open: false}, {open: false}],
+  "the settings' meter: Rob's spending against his 25-cent cap; nothing for someone not on the list, or where the door is shut");
 
 console.log(`advisor: ${checks} checks passed — the deck advisor through the AI door: the brief built from the person's own library in the cloud, the door's model at low effort, grounded swaps only, on the day's caps.`);

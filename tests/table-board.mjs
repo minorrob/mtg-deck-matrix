@@ -140,6 +140,8 @@ async function dropSocket(email) {
 
 const html = readFileSync(path.join(ROOT, "index.html"), "utf8").replace("</head>", '<meta name="crankmagic-accounts" content="on"><meta name="crankmagic-play" content="cloud"></head>');
 const {browser, base, stub, close} = await openBrowser({name: "table-board", flag: "GEOMETRY_REQUIRED"});
+/* What the board sends the Coach, as each person asked (AI-6: their AI Coach settings may withhold the hand). */
+const coachAsked = [];
 async function person(email, viewport, {fullscreen = true} = {}) {
   const context = await browser.newContext({viewport, serviceWorkers: "block"});
   const page = await context.newPage();
@@ -153,7 +155,7 @@ async function person(email, viewport, {fullscreen = true} = {}) {
   await page.route(`${base}/api/me`, (r) => r.fulfill({json: {email}}));
   /* The Coach's door, shut as it is until the privacy page names what it sends (cloud/worker.mjs, AI_COACH): the board
      says so in the Coach's own words. A moment's wait, as the network has, so its typing shows. */
-  await page.route(`${base}/api/ai/coach`, async (r) => {await new Promise((go) => setTimeout(go, 300)); r.fulfill({status: 503, json: {error: "The Coach is not switched on here yet."}});});
+  await page.route(`${base}/api/ai/coach`, async (r) => {coachAsked.push(JSON.parse(r.request().postData() || "{}")); await new Promise((go) => setTimeout(go, 300)); r.fulfill({status: 503, json: {error: "The Coach is not switched on here yet."}});});
   await page.route(`${base}/api/library**`, (r) => r.request().method() === "GET" ? r.fulfill({json: {head: null}})
     : r.fulfill({json: {head: {id: "00000000-0000-4000-8000-000000000000", revision: 1, checksum: "x", device: "test", createdAt: new Date().toISOString()}}}));
   await page.route(`${base}/api/tables**`, (r) => answer(r, email));
@@ -682,6 +684,7 @@ try {
     return {n: bs.length, overlap, clipped: bs.filter((x) => x.clipped).length, narrow: bs.filter((x) => x.r.width <= 40).length};
   });
   ok(toolsMenu.n >= 4 && !toolsMenu.overlap && !toolsMenu.clipped && !toolsMenu.narrow, `in Full screen the Tools menu's ${toolsMenu.n} buttons are whole: none overlaps another, none is squared or clipped`);
+  eq(await rob.page.locator("#cm-board-tools [data-action=ai-settings]").count(), 1, "and among them AI Coach settings…, the same panel as Settings' (AI-6)");
   await shot(rob.page, "tools-full-1400");
   await rob.page.click(".cm-full-rail [aria-label='Tools']");
   await rob.page.click("[aria-label='Leave full screen']");
@@ -1198,6 +1201,18 @@ try {
   await rob.page.press(".cm-coach-input", "Enter");
   await rob.page.locator(".cm-coach-msg.is-you").nth(1).waitFor();
   eq((await rob.page.locator(".cm-coach-msg.is-you").nth(1).innerText()).trim(), "Who's the threat?\nand why", "Enter sends it");
+  ok(coachAsked.length >= 2 && coachAsked.every((b) => b.hand === undefined && typeof b.tableId === "string"), "the board sends the Coach the table and the question, the hand not withheld by default");
+  /* AI-6: set to "My board only", the Coach says so, and its question withholds the hand. */
+  await rob.page.locator(".cm-coach-msg.is-typing").waitFor({state: "detached", timeout: 10000});
+  await rob.page.evaluate(() => __cm.commit({type: "preferences", values: {aiCoach: {coachSees: "board"}}}, {renderView: false}));
+  await rob.page.fill(".cm-coach-input", "What now?");
+  await rob.page.press(".cm-coach-input", "Enter");
+  await rob.page.locator(".cm-coach-msg.is-you").nth(2).waitFor();
+  await rob.page.waitForFunction(() => /your hand withheld/.test(document.getElementById("cm-coach-context")?.textContent || ""), null, {timeout: 10000});
+  ok(true, "set to the board only, the Coach says it sees the board and the table, the hand withheld");
+  eq(coachAsked.at(-1).hand, false, "and asks with the hand withheld");
+  await rob.page.locator(".cm-coach-msg.is-typing").waitFor({state: "detached", timeout: 10000});
+  await rob.page.evaluate(() => __cm.commit({type: "preferences", values: {aiCoach: {coachSees: "hand"}}}, {renderView: false}));
   await rob.page.fill(".cm-coach-input", "a draft");
   await rob.page.focus(".cm-coach-input");
   const viewsBefore = views(ROB).length;

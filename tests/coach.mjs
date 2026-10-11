@@ -57,6 +57,10 @@ const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1;};
   shuffled.state.players[0].zones.Library = zone([card(12, "Mountain"), card(9, "Top Secret")], 50);
   eq(coachBrief(shuffled, {name: "Rob's deck", commander: ["Rob General"], cards: ["Top Secret", "Mountain", "Bolt", "Bear", "Mountain"]}), brief, "a library in another order, its top shown or not, and the deck listed in another order give the same brief");
   eq(brief.players[1].battlefield[0].name, "a face-down permanent", "Maya's face-down permanent is just that");
+  /* AI-6, AI Coach settings, "My board only": no hand, and not the question being asked, whose options name it. */
+  const boardOnly = coachBrief(view, {name: "Rob's deck", commander: ["Rob General"], cards: ["Mountain", "Bear", "Bolt", "Mountain", "Top Secret"]}, {hand: false});
+  eq([boardOnly.hand, boardOnly.asked, boardOnly.handWithheld, boardOnly.players[0].hand], [[], null, true, 1], "set to his board only, the brief has no hand and no question, says the hand is withheld, and still counts it");
+  ok(!JSON.stringify(boardOnly).includes("Bolt\"") || JSON.stringify(boardOnly.deck).includes("Bolt"), "Bolt, in his hand, is named only in his deck's list");
   eq([brief.players[1].graveyard, brief.history], [[{id: 6, name: "Opt"}], ["Turn 3: Maya played a Forest"]], "the public zones and the history's lines");
 }
 
@@ -179,6 +183,13 @@ eq([content.question, content.game.you, content.game.hand.map((c) => c.name).sor
 ok(!JSON.stringify(out).includes("Black Lotus") && !JSON.stringify(out).includes(ROB), "never anything the browser added, and never who is asking");
 eq(calls().at(-1), {feature: "coach", model: "claude-haiku-5-5", outcome: "ok"}, "logged as the Coach's, with its model");
 
+/* AI-6: "My board only" reaches the table, and the brief sent has no hand. */
+answer = reply({answer: "Attack with your board.", plays: [], show: []});
+const withheld = await ask({body: {tableId: TABLE, question: "What now?", hand: false}});
+const sentWithheld = JSON.parse(sent.at(-1).body.messages[0].content).game;
+eq([withheld.status, sentWithheld.hand, sentWithheld.handWithheld, sentWithheld.asked], [200, [], true, null], "asked with the hand withheld, the Coach is sent the board alone");
+ok(robHand.every((n) => !JSON.stringify(sentWithheld.players).includes(`"${n}"`) || seen.has(n)), "and none of his hand's cards on the board's side of it");
+ok(/handWithheld/.test(COACH_SYSTEM), "and told the person chose not to share it");
 for (const [bad, why] of [
   [{answer: "Cast [[Black Lotus]].", plays: [], show: []}, "a card in no zone and no deck"],
   [{answer: `Cast [[${mayaHand[0]}]].`, plays: [], show: []}, "a card in Maya's hidden hand"],

@@ -211,6 +211,7 @@ export const COACH_SYSTEM = [
   "You are the CrankMagic Coach, beside a person playing a game of Commander.",
   "The user message holds the game as that person may see it, as JSON: their hand and what each card can do now, every public zone, the stack, the step, recent history and their deck as a list; then their question.",
   "You do not see any other player's hand or the order of any library, and you never guess at them.",
+  "When handWithheld is true, the person has chosen not to share their own hand either: advise on the board alone, and never guess at it.",
   "Answer in very concise sentences: one to three at most, and aim for one. No preamble, no restating the question, no lists. Each play's why is one short sentence.",
   "Name only cards and players in the game you are given, and write every card name in the answer inside double square brackets, like [[Sol Ring]].",
   "You advise and never act: suggest plays the person can make with what they have now.",
@@ -236,7 +237,8 @@ export function readQuestion(input) {
   const question = typeof input?.question === "string" ? input.question.trim() : "";
   if (!question) throw new Closed("Ask the Coach a question.", 400);
   if (question.length > QUESTION_MAX) throw new Closed(`A question for the Coach is at most ${QUESTION_MAX} characters.`, 400);
-  return {tableId, question};
+  /* The person's AI Coach setting (AI-6): `hand: false` withholds their hand from the brief. It can only take away. */
+  return {tableId, question, hand: input?.hand !== false};
 }
 
 export function coachBody(brief, question, model) {
@@ -333,7 +335,7 @@ export const ADVISE_SYSTEM = [
   "You get a brief built by code: the deck, its measured roles (weakest first) and curve, the hundred (the cards in the deck, each with its roles and state), the candidates (cards the player could bring in), and the constraints, among them the player's own goal (constraints.ask), when they gave one.",
   "Choose up to ten changes, each taking one card out of the hundred and bringing one candidate in. Name only cards from the brief, exactly as written. Never take out a card listed in constraints.keep.",
   "Prefer changes that serve the player's goal, fill the short roles, suit the commander and the deck's mechanics, and respect the per-card cap and the bracket's game-changer cap. A card marked as a substitute is holding a seat; say so when you replace it.",
-  "Give one plain sentence of why for each change, in American English, with no prices and no rules rulings. Return only JSON matching the schema.",
+  "Give the why of each change in one plain sentence; when constraints.length is \"detailed\", in two or three, naming the role it fills and the numbers behind it. Write in American English, with no prices and no rules rulings. Return only JSON matching the schema.",
 ].join(" ");
 export function adviseBody(brief, model) {
   return {

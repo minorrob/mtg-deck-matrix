@@ -173,8 +173,9 @@ says whether to offer it).
   measured roles and curve, the hundred, the candidates the code finds among the person's own cards and lists (the bench,
   To buy, Watching, on order), and the constraints (`cloud/advise-brief.mjs`). Each card's facts come from the catalog,
   slimmed for the Worker (`cloud/advise-cards.mjs`, generated from `data/cards.json`). A deck not yet saved to the cloud is
-  refused, saying so. Cards the person does not own are never offered: that is a setting of theirs (AI-6), off until it
-  is built.
+  refused, saying so. It reads the person's AI Coach settings (AI-6) from the same library: cards they do not own only
+  when they ask for them (then the catalog's, Commander-legal, ten places of their own), their own first unless they
+  say otherwise, the bracket's game-changer cap unless they lift it, and the advice short or detailed.
 - **The call** (`cloud/ai.mjs`, `advise`) is the door's model at low effort, with the advisor's instruction as a cached
   prefix and the answer's schema (`{changes: [{out, in, role, why}], keep, summary}`). The eval asks with the same body
   (`tests/ai-advise-eval/run.mjs`), so it measures what is shipped. Logged as `advise`, on the day's caps.
@@ -191,7 +192,7 @@ says whether to offer it).
 
 > **The deck advisor.** On a deck's page, if you are invited to AI features, you may ask Claude, Anthropic's AI model, to
 > suggest swaps. CrankMagic sends Anthropic that deck's list, each card with its roles, whether you own it, its market
-> price and rank; the cards you own, have ordered, or have on your To buy and Watching lists that could go in it; the
-> deck's own settings; and the goal you type, if any. It never sends your name or email, what you paid for a card, or another person's library. Each
+> price and rank; the cards you own, have ordered, or have on your To buy and Watching lists that could go in it, and, if
+> your AI Coach settings allow it, cards you don't own; the deck's own settings; and the goal you type, if any. It never sends your name or email, what you paid for a card, or another person's library. Each
 > request is logged under your account with what it cost, and the day's limits hold it. A suggestion changes nothing until
 > you save it, and Anthropic does not use what it is sent to train its models.

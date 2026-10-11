@@ -32,6 +32,7 @@ views.settings=async()=>{
       `<p>Prices are in US dollars, from Scryfall's daily market prices.</p>`
       +`<form class="cm-settings-cap" data-settings-cap><label>Default budget cap ($)<input name="cap" type="number" min="1" step="1" inputmode="numeric" value="${own??''}" placeholder="${e(rule??'')}"></label>${b('Save cap','save-budget-cap',{},true)}</form>`
       +`<p class="cm-muted">A deck with no cap of its own is held to <strong>${e(money(C.deckCap()))}</strong>${own?'':` — the pod's rule`}. Clear the box to go back to the rule${rule?` (${e(money(rule))})`:''}.</p>`)
+   +card('ai','AI Coach',`<p>What the AI may suggest, how much it says, and what the Coach may see at a table. Nothing here turns an AI feature on: those are invite-only.</p><div class="cm-settings-row">${b('AI Coach settings…','ai-settings')}</div>`)
    +card('data','Data',
       `<div class="cm-settings-stack">${b('Save a backup file','backup')}${b('Restore from a backup file','restore')}${b('Export as Excel','export-excel')}${b('Email the export…','share-export')}</div>`
       +`<p class="cm-settings-label">History</p><div class="cm-settings-stack">${b('See every change…','history')}${b('Undo last change','undo')}</div>`
@@ -43,6 +44,31 @@ views.settings=async()=>{
 };
 
 actions['open-settings']=()=>C.go('settings');
+/* AI COACH SETTINGS (AI-6, docs/plan-to-done-2026-09-30.md). One panel, two doors: Settings above, and the board's Tools.
+   Six controls, nothing else, saved with the person's preferences (`aiCoach`) and synced with the library, so the Worker
+   reads the advisor's from the library it holds (cloud/advise.mjs aiSettingsOf, whose defaults these are); the Coach's
+   is sent with each question from the board. The model per job is Rob's, never the person's; the door's gates turn a
+   feature on, never this. */
+const AI_DEFAULTS={suggestUnowned:false,preferOwned:true,inBracket:true,length:'short',coachSees:'hand'};
+const aiPrefs=()=>({...AI_DEFAULTS,...((C.state.preferences||{}).aiCoach||{})});
+C.aiSettings=()=>{const v=aiPrefs(),box=(name,label,help)=>`<label class="cm-checkbox cm-full"><input type="checkbox" name="${name}"${v[name]?' checked':''}> ${e(label)}</label><p class="cm-muted cm-ai-help">${e(help)}</p>`,
+  pick=(name,label,options,key=name)=>`<label class="cm-full">${e(label)}<select name="${name}">${options.map(([k,t])=>`<option value="${k}"${v[key]===k?' selected':''}>${e(t)}</option>`).join('')}</select></label>`;
+  C.modal('AI Coach settings',`<form class="cm-ai-settings" id="cm-ai-settings">`
+    +box('suggestUnowned','Suggest cards I don’t own','When on, the deck advisor may suggest cards you don’t own, each priced, within the deck’s own cost cap. Off, it suggests only cards you own or have listed.')
+    +box('preferOwned','Prefer what I own first','The bench, then To buy and Watching, before anything else.')
+    +box('inBracket','Stay inside the deck’s bracket','The advisor keeps to the game changers your deck’s bracket allows.')
+    +pick('adviceLength','Advice length',[['short','Short: one line per change'],['detailed','Detailed: the why, with the role and the numbers']],'length')
+    +pick('coachSees','What the Coach may see at the table',[['hand','My board and hand'],['board','My board only (my hand withheld)']])
+    +`<div class="cm-full"><p class="cm-settings-label">Spending</p><p id="cm-ai-meter" class="cm-muted">Reading your AI spending…</p><p class="cm-muted"><a href="privacy.html#ai-features">What the AI features send, and what they never do</a></p></div>`
+    +`<div class="cm-form-footer cm-full">${b('Cancel','close')}${b('Save','ai-settings-save',{},true)}</div></form>`);
+  fetch('/api/ai-meter',{credentials:'same-origin',redirect:'manual',cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null).then(m=>{const el=document.getElementById('cm-ai-meter');if(!el)return;
+    el.textContent=m&&m.open?`${m.spentCents}¢ of your ${m.capCents}¢ over the last 24 hours.`:'AI features are not open to you here, so nothing is spent.';});};
+actions['ai-settings']=()=>C.aiSettings();
+actions['ai-settings-save']=async()=>{const f=document.getElementById('cm-ai-settings');if(!f)return;
+  const next={suggestUnowned:f.elements.suggestUnowned.checked,preferOwned:f.elements.preferOwned.checked,inBracket:f.elements.inBracket.checked,
+    /* Not elements.length, which is the form's count of controls. */
+    length:f.elements.adviceLength.value==='detailed'?'detailed':'short',coachSees:f.elements.coachSees.value==='board'?'board':'hand'};
+  await commit({type:'preferences',values:{aiCoach:next}});actions.close();notice('AI Coach settings saved.');};
 actions['set-motion']=async()=>{const on=!(C.state.preferences&&C.state.preferences.reduceMotion);await commit({type:'preferences',values:{reduceMotion:on}});notice(on?'Motion reduced: backgrounds and transitions hold still.':'Motion back on (your device’s own setting still applies).');};
 /* The cap is read from its own form, whichever button or key submitted it. Empty goes back to the rule. */
 actions['save-budget-cap']=async el=>{const form=el.closest('[data-settings-cap]'),raw=String(form?.elements.cap.value??'').trim(),n=raw===''?null:Number(raw);
