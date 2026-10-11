@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1254,
+  "defined": 1255,
   "provisional": 27,
-  "everyRule": 2602
+  "everyRule": 2604
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -8925,7 +8925,7 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 81,
+     "blocks": 80,
      "alone": 21
     },
     {
@@ -8949,7 +8949,7 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 89,
+     "blocks": 88,
      "alone": 26
     },
     {
@@ -9009,7 +9009,7 @@
      "forge": "MayPlay",
      "top": 99,
      "all": 625,
-     "blocks": 63,
+     "blocks": 62,
      "alone": 18
     },
     {
@@ -9316,10 +9316,10 @@
   },
   "Amounts the game counts": {
    "tally": {
-    "built": 22,
+    "built": 24,
     "partial": 2,
     "named": 0,
-    "missing": 164
+    "missing": 162
    },
    "entries": [
     {
@@ -9842,8 +9842,8 @@
      "kind": "count",
      "rule": null,
      "name": "Colors of mana spent (converge)",
-     "engine": null,
-     "status": "missing",
+     "engine": "amount {colorsSpent: \"self\"} (rules/actions.mjs records the mana by kind)",
+     "status": "built",
      "forge": "Converge",
      "top": 1,
      "all": 31,
@@ -9877,14 +9877,14 @@
     {
      "kind": "count",
      "rule": null,
-     "name": "TotalCommanderCastFromCommandZone",
-     "engine": null,
-     "status": "missing",
+     "name": "Times you've cast your commanders from the command zone",
+     "engine": "amount {commanderCasts: \"you\"} (rules/commander.mjs keeps the casts)",
+     "status": "built",
      "forge": "TotalCommanderCastFromCommandZone",
      "top": 1,
      "all": 16,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",

@@ -48,10 +48,19 @@
  *   {commanderColors: "you"}             the number of colors in your commanders' color identity (CR 903.4; War Room) --
  *                                        undefined for a player with no commander (903.4f), so a cost of it is unpayable
  *                                        (commanderless, below)
+ *   {colorsSpent: "self"}                converge: the colors of mana spent to cast its own object (Sundering Archaic)
+ *   {planeswalkerTypesAmong: selector}   the different planeswalker types among what the selector matches (Tam, the
+ *                                        Possibility; CR 205.3j)
+ *   {commanderCasts: "you"}              every time you've cast your commanders from the command zone this game (Vanguard of
+ *                                        the Restless; CR 903.8)
  *
  * and any of them may say `atMost` ("{1} less IF you control a creature with flying": the count, at most 1), `times` and
  * `plus`: "twice X", "1 plus the number of ...", and `times: -1` for "-X/-X" and
  * "-1/-1 for each Swamp you control" -- the only way an amount comes out below nothing; every other is at least 0.
+ * Before them, `half` ("half the cards in their hand", Pox Plague) and `per` ("+2/+0 for every seven cards in your
+ * graveyard", Dark Matter Manipulator: per 7, times 2) divide the count, rounded down as those cards print it (CR 107.1a).
+ * A counted selector's `controller` may be a target player, `{target: n}` ("the number of cards in target opponent's hand",
+ * Borrowed Knowledge, Jeska's Will): that player, bound as it is counted.
  * A selector counted may be a choice, `{anyOf: [...]}` with what the alternatives share: "Squirrels, Bats, Lizards,
  * and Rats you control", each counted once.
  *
@@ -64,8 +73,9 @@
  */
 
 import {conditionHolds, conditionProblems} from "./condition.mjs";
-import {selectMatching, compileSelector, matchesLastKnown} from "./filter.mjs";
-import {powerOf, toughnessOf, characteristicsOf, controllerOf} from "../rules/layers.mjs";
+import {selectMatching, compileSelector, matchesLastKnown, matchesSelector} from "./filter.mjs";
+import {powerOf, toughnessOf, characteristicsOf, controllerOf, subtypesOf} from "../rules/layers.mjs";
+import {isPlaneswalkerType} from "../keywords/types.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {valueCostOf, commanderKeyOf} from "../state/index.mjs";
 import {commanderIdentity, hasCommander} from "../rules/commander.mjs";
@@ -77,8 +87,10 @@ export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf"
   "countersRemovedThisWay", "movedCount", "tappedThisWay", "cardsDiscardedThisTurn",
   /* What happened this turn, and this game (Train C): the records state/index.mjs, rules/combat.mjs and the effects keep. */
   "creaturesDiedThisTurn", "cardsDrawnThisTurn", "playersDealtNoncombatDamage", "scriedOrSurveilledThisTurn", "spellsCastThisTurn", "spellsCastThisGame",
-  "commanderColors"]);
-const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "filter", "controlledBy", "named"];
+  "commanderColors",
+  /* Train C, phase 2 (w2b-amounts): converge, and the planeswalker types among a set. */
+  "colorsSpent", "planeswalkerTypesAmong"]);
+const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
 /** Whether an amount is undefined for its player (CR 903.4f): one of the colors in their commanders' color identity, for a
@@ -110,7 +122,10 @@ export function amountProblems(value) {
      a filter of what a last known snapshot answers, and only there. */
   if ("filter" in value) {
     const of = ["permanentsEnteredThisTurn", "spellsCastThisTurn"].find((key) => key in value);
-    if (!of) problems.push("Only permanentsEnteredThisTurn and spellsCastThisTurn take a filter");
+    /* "For each creature card exiled this way" (Release to Memory): of what the effect before it remembered, those the
+       filter -- a selector -- describes where each now is. */
+    if ("rememberedCount" in value) try { compileSelector({...(value.filter ?? {}), what: "card"}); } catch (error) { problems.push(`What rememberedCount counts: ${error.message}`); }
+    else if (!of) problems.push("Only permanentsEnteredThisTurn and spellsCastThisTurn take a filter of what was, and rememberedCount one of what is");
     else try { matchesLastKnown(value.filter, {}, {}); } catch (error) { problems.push(`What ${of} counts: ${error.message}`); }
   }
   /* What was moved, as it last was: a filter of what a last known snapshot answers (script/filter.mjs, matchesLastKnown). */
@@ -118,7 +133,10 @@ export function amountProblems(value) {
   if ("playersDealtCombatDamage" in value && !["opponent", "any"].includes(value.playersDealtCombatDamage)) problems.push('playersDealtCombatDamage is "opponent" or "any"');
   if ("cardTypesAmong" in value && value.cardTypesAmong !== "remembered") problems.push('cardTypesAmong is "remembered"');
   if ("manaSpent" in value && !["that card", "self"].includes(value.manaSpent)) problems.push('manaSpent is "that card" or "self"');
-  if ("commanderCasts" in value && value.commanderCasts !== "that card") problems.push('commanderCasts is "that card"');
+  if ("commanderCasts" in value && !["that card", "you"].includes(value.commanderCasts)) problems.push('commanderCasts is "that card" or "you"');
+  if ("colorsSpent" in value && value.colorsSpent !== "self") problems.push('colorsSpent is "self": the colors of mana spent to cast its own object');
+  if ("half" in value && value.half !== true) problems.push("An amount's half is true: halved, rounded down");
+  if ("per" in value && !(Number.isInteger(value.per) && value.per > 1)) problems.push("An amount's per is a whole number above 1: \"for every seven\" is per 7");
   if ("countersRemovedThisWay" in value && value.countersRemovedThisWay !== true) problems.push("countersRemovedThisWay is true");
   if ("tappedThisWay" in value && value.tappedThisWay !== true) problems.push("tappedThisWay is true");
   if ("commanderColors" in value && value.commanderColors !== "you") problems.push('commanderColors is "you"');
@@ -132,7 +150,7 @@ export function amountProblems(value) {
     for (const key of ["then", "else"]) if (key in value) problems.push(...amountProblems(value[key]));
   }
   /* What it counts is a selector, held to the selector grammar (script/filter.mjs), a choice of them included. */
-  for (const key of ["count", "greatestPower", "totalPower", "mostAmongOpponents", "differentPowers"]) {
+  for (const key of ["count", "greatestPower", "totalPower", "mostAmongOpponents", "differentPowers", "planeswalkerTypesAmong"]) {
     if (!(key in value)) continue;
     const {anyOf, ...shared} = value[key] ?? {};
     try { for (const one of Array.isArray(anyOf) ? anyOf.map((a) => ({...shared, ...a})) : [value[key]]) compileSelector(one); }
@@ -141,11 +159,29 @@ export function amountProblems(value) {
   return problems;
 }
 
-/* What a counted selector matches: one selector, or a choice of them, each thing once. */
+/* "The number of cards in target opponent's hand" (Borrowed Knowledge, Jeska's Will): a counted selector's `controller` a
+   target player ({target: n}, script/bind.mjs), bound to that player as it is counted (CR 608.2h) -- or to nobody, a target
+   no longer legal (CR 608.2b), so nothing is counted. */
+function toTarget(selector, targets) {
+  const ref = selector?.controller;
+  if (!Number.isInteger(ref?.target)) return selector;
+  const chosen = (targets ?? [])[ref.target];
+  return {...selector, controller: chosen?.kind === "player" ? chosen.id : -1};
+}
+
+/* What a counted selector matches: one selector, or a choice of them, each thing once -- its target players those of the
+   spell or ability counting it (`who.targets`). */
 function matching(state, selector, who) {
-  const {anyOf, ...shared} = selector ?? {};
-  if (!Array.isArray(anyOf)) return selectMatching(state, selector, who);
-  return [...new Set(anyOf.flatMap((one) => selectMatching(state, {...shared, ...one}, who)))];
+  const {anyOf, ...shared} = toTarget(selector ?? {}, who.targets);
+  if (!Array.isArray(anyOf)) return selectMatching(state, shared, who);
+  return [...new Set(anyOf.flatMap((one) => selectMatching(state, toTarget({...shared, ...one}, who.targets), who)))];
+}
+
+/* A remembered object the filter describes where it now is -- a permanent on the battlefield, a card anywhere else (CR
+   400.7: one that has moved since is a new object, and no longer among them). */
+function fitsNow(state, filter, id, who) {
+  const object = state.objects[id];
+  return Boolean(object) && matchesSelector({...filter, what: object.zone === "battlefield" ? "permanent" : "card", zone: object.zone}, state, id, who);
 }
 
 /* The player an amount refers to: you, or the player a trigger or repetition is about. */
@@ -195,7 +231,9 @@ export function amountOf(state, value, context = {}) {
   /* What a trigger or a repetition is about, too: "the number of nonbasic lands that player controls" (repeatFor). */
   const who = {controller: context.controller, source: context.source, ...(context.about ? {about: context.about} : {}),
     /* The source as it last was (CR 113.7a), for "cards exiled with this enchantment" once it has gone (script/filter.mjs). */
-    ...(context.lastKnown ? {lastKnown: context.lastKnown} : {})};
+    ...(context.lastKnown ? {lastKnown: context.lastKnown} : {}),
+    /* Its targets, for a selector counted on a target player's zone (toTarget, above). */
+    ...(context.targets ? {targets: context.targets} : {})};
   let n = 0;
   if ("x" in value) n = Math.max(0, context.x ?? 0);
   /* "A charge counter on it for each time it was kicked" (Everflowing Chalice; multikicker, CR 702.33c). */
@@ -205,6 +243,19 @@ export function amountOf(state, value, context = {}) {
   else if ("tappedThisWay" in value) n = context.cast?.tapped ?? 0;
   /* "The number of colors in your commanders' color identity" (War Room; CR 903.4): the union of their identities. */
   else if ("commanderColors" in value) n = commanderIdentity(state, context.controller).length;
+  /* CONVERGE (Sundering Archaic): "the number of colors of mana spent to cast this creature" -- the colors among the mana
+     spent to cast its own object (CR 601.2h; rules/actions.mjs keeps it by kind, and the permanent it becomes keeps it,
+     rules/stack.mjs), or, that object gone, as its trigger remembered it (`spent`, rules/trigger.mjs; CR 608.2h). Colorless
+     mana is no color (CR 105.1); an object never cast spent none. */
+  else if ("colorsSpent" in value) {
+    const spent = state.objects[context.source]?.spent ?? context.spent ?? {};
+    n = COLORS.filter((color) => spent[color] > 0).length;
+  }
+  /* "The number of planeswalker types among planeswalkers you control" (Tam, the Possibility; CR 205.3j): the different
+     planeswalker types among what the selector matches, through the layers -- The Aetherspark's Equipment is an artifact
+     type, none (keywords/types.mjs). */
+  else if ("planeswalkerTypesAmong" in value) n = new Set(matching(state, value.planeswalkerTypesAmong, who)
+    .flatMap((id) => (state.objects[id].zone === "battlefield" ? subtypesOf(state, id) : state.objects[id].subtypes ?? [])).filter(isPlaneswalkerType)).size;
   /* "Greater than this creature's power or toughness" (increment, Berta): the lesser of them. */
   else if ("lesserOf" in value) n = Math.min(...value.lesserOf.map((one) => amountOf(state, one, context)));
   else if ("count" in value) n = matching(state, value.count, who).length;
@@ -246,9 +297,12 @@ export function amountOf(state, value, context = {}) {
   /* "Then draws that many cards" (Winds of Change): what the effect before it moved, and remembered, counted. */
   /* "For each creature exiled this way, its controller searches" (Winds of Abandon): `controlledBy` "that player", those of
      them that player controlled as they left the battlefield (script/effects/zones.mjs). */
-  else if ("rememberedCount" in value) n = value.controlledBy === "that player"
-    ? (context.remembered ?? []).filter((id) => (context.rememberedControllers ?? {})[id] === context.about?.player).length
-    : (context.remembered ?? []).length;
+  /* "For each creature card exiled this way" (Release to Memory), "when one or more nonland cards are exiled this way" (Augusta,
+     Order Returned): `filter`, those the selector describes where each now is (fitsNow). */
+  else if ("rememberedCount" in value) {
+    const remembered = (context.remembered ?? []).filter((id) => value.filter === undefined || fitsNow(state, value.filter, id, who));
+    n = value.controlledBy === "that player" ? remembered.filter((id) => (context.rememberedControllers ?? {})[id] === context.about?.player).length : remembered.length;
+  }
   /* "For each nontoken creature you controlled that was destroyed this way" (Ceaseless Conflict): of what the effect before
      it moved from the battlefield (`movedWas`: effects/zones.mjs, destroyAll's and moveZone's `remember`), those that were,
      as each last existed there (CR 608.2h), what the filter says -- "you" the player who controlled it then, `token` whether
@@ -279,8 +333,7 @@ export function amountOf(state, value, context = {}) {
   /* "Half that player's life total, rounded down" (Heartless Hidetsugu): a player's life now; `half` halves it, down. */
   else if ("lifeTotal" in value) {
     const player = playerOf(value.lifeTotal, context);
-    const life = player !== null ? state.players[player]?.life ?? 0 : 0;
-    n = value.half === true ? Math.floor(life / 2) : life;
+    n = player !== null ? state.players[player]?.life ?? 0 : 0;
   }
   /* "Equal to the life they lost this turn" (Wound Reflection; resources.mjs keeps it, turn.mjs clears it). */
   else if ("lifeLostThisTurn" in value) {
@@ -386,6 +439,9 @@ export function amountOf(state, value, context = {}) {
   /* "Scry X, where X is the number of times it's been cast from the command zone this game" (Study Hall; CR 903.8): the
      commander a trigger is about, by the key its casts are kept under (rules/commander.mjs) -- taken as it triggered, so
      a commander that has since left the stack is still counted -- this cast included. */
+  /* "For each time you've cast your commander from the command zone this game" (Vanguard of the Restless; CR 903.8): every
+     cast of each of your commanders from there, as rules/commander.mjs keeps them for its tax. */
+  else if (value.commanderCasts === "you") n = Object.values(state.players[context.controller]?.commanderCasts ?? {}).reduce((a, b) => a + b, 0);
   else if ("commanderCasts" in value) {
     const id = objectOf(value.commanderCasts, context);
     const object = id !== null ? state.objects[id] : null;
@@ -408,6 +464,11 @@ export function amountOf(state, value, context = {}) {
     const id = objectOf(value.colorsOf, context);
     n = id !== null && state.objects[id] ? (state.objects[id].zone === "battlefield" ? characteristicsOf(state, id).colors : state.objects[id].colors ?? []).length : 0;
   }
+  /* "Half that player's life total, rounded down" (Heartless Hidetsugu), "half the cards in their hand ... round down"
+     (Pox Plague), "for every seven cards in your graveyard" (Dark Matter Manipulator): the count divided, rounded down as
+     each prints it (CR 107.1a), before anything below. */
+  if (value.half === true) n = Math.floor(n / 2);
+  if (Number.isInteger(value.per)) n = Math.floor(n / value.per);
   /* `atMost`: "{1} less if you control a creature with flying" is the count of them, at most 1. */
   const total = Math.min(value.atMost ?? Infinity, n) * (value.times ?? 1) + (value.plus ?? 0);
   return (value.times ?? 1) < 0 ? total : Math.max(0, total);
@@ -424,6 +485,9 @@ export function countEffect(state, effect, context) {
   let bound = effect;
   for (const key of AMOUNT_PARAMS) {
     if (!isCounted(effect[key])) continue;
+    /* "Each player ... discards half the cards in their hand" (Pox Plague, `perPlayer`): counted for each player in turn, as
+       that player is asked (effects/asking.mjs), not once here. */
+    if (key === "count" && effect.perPlayer === true) continue;
     bound = bound === effect ? {...effect} : bound;
     bound[key] = amountOf(state, effect[key], context);
   }

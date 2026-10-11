@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Borrowed Knowledge",
+    "oracleId": "0d6507b0-c986-49d1-aea3-77b2cf2a7433",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Discard your hand, then draw cards equal to the number of cards in target opponent's hand.\n• Discard your hand, then draw cards equal to the number of cards discarded this way.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Discard your hand, then draw cards equal to the number of cards in target opponent's hand.\n• Discard your hand, then draw cards equal to the number of cards discarded this way.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Discard your hand, then draw cards equal to the number of cards in target opponent's hand.",
+              "targets": [
+                {
+                  "what": "player",
+                  "who": "opponent"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "discard",
+                  "all": true
+                },
+                {
+                  "effect": "draw",
+                  "count": {
+                    "count": {
+                      "what": "card",
+                      "zone": "hand",
+                      "controller": {
+                        "target": 0
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Discard your hand, then draw cards equal to the number of cards discarded this way.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "discard",
+                  "all": true,
+                  "remember": true
+                },
+                {
+                  "effect": "draw",
+                  "count": {
+                    "rememberedCount": true
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

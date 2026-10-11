@@ -406,6 +406,13 @@ export const dig = {
 
 /* ---- discard ---- */
 
+/* How many the player asked must discard, or sacrifice: the effect's count, or theirs alone (`counts`, perPlayer). */
+const howMany = (awaiting) => (awaiting.counts ? awaiting.counts[awaiting.player] : awaiting.count);
+/* "Each player ... sacrifices half the permanents they control" (Pox Plague; `perPlayer`): each player's count, counted with
+   "that player" them (script/amount.mjs) -- every player's before anyone is asked or anything is done (CR 101.4, 608.2h). */
+const countsFor = (state, params, players, context) => (params.perPlayer === true
+  ? Object.fromEntries(players.map((player) => [player, amountOf(state, params.count, {...context, about: {...context.about, player}})])) : null);
+
 /* One card from a hand to its owner's graveyard, said as a discard (CR 701.9a) -- what "whenever you discard" reads. */
 function discardOne(state, id, player, events) {
   const card = cardRef(state, id);
@@ -424,18 +431,28 @@ function discardOne(state, id, player, events) {
 
 export const discard = {
   open(state, params, context, rng = null) {
+    /* "Each player ... discards half the cards in their hand" (Pox Plague; `perPlayer`): how many, for each player (countsFor)
+       -- none, and they are not asked. */
+    const counts = countsFor(state, params, playersFor(state, params.who, context.controller), context);
     /* Each player who has to discard is asked separately, in turn order, about their own hand. */
     const queue = playersFor(state, params.who, context.controller)
-      .filter((player) => cardsIn(state, "hand", player).length > 0);
+      .filter((player) => cardsIn(state, "hand", player).length > 0 && (counts === null || counts[player] > 0));
     /* "You may discard a card. If you do, ..." (Toph, batch 70): what this effect's controller discarded, remembered for the
        effects after it -- nothing, until they do. */
     if (params.remember) context.remembered = [];
     if (queue.length === 0) return false;
-    /* "Discard your hand" (Ajani Unrelenting): every card in it, so there is nothing to choose and nobody is asked. */
+    /* "Discard your hand" (Ajani Unrelenting): every card in it, so there is nothing to choose and nobody is asked. "Then
+       draw cards equal to the number of cards discarded this way" (Borrowed Knowledge): `remember`, every card discarded, as
+       the cards they became -- and whose hand each was, for "each player discards all the cards in their hand, then creates
+       that many" (Awaken the Erstwhile; rememberedCount's `controlledBy`, script/amount.mjs). */
     if (params.all === true) {
-      const events = [];
-      for (const player of queue) for (const id of cardsIn(state, "hand", player)) discardOne(state, id, player, events);
-      if (params.remember) context.remembered = [];
+      const events = [], gone = [], whose = {};
+      for (const player of queue) for (const id of cardsIn(state, "hand", player)) {
+        const discarded = discardOne(state, id, player, events);
+        gone.push(discarded);
+        whose[discarded] = player;
+      }
+      if (params.remember) { context.remembered = gone; context.rememberedControllers = whose; }
       return {events};
     }
     /* "Discard a card at random" (Gamble, batch 80; CR 701.9b): nobody chooses -- each card is picked from the hand by the
@@ -456,7 +473,8 @@ export const discard = {
       kind: "effect-choice", effect: "discard", player: asked[0], remaining: asked.slice(1),
       /* Whose discards are remembered: this effect's controller's, or the player a connive is for (`rememberOf`, script/
          resolution.mjs), whose permanent the counter goes on. */
-      count: params.count ?? 1, ...(params.who !== undefined ? {who: params.who} : {}), controller: Number.isInteger(params.rememberOf) ? params.rememberOf : context.controller,
+      ...(counts === null ? {count: params.count ?? 1} : {counts}), ...(params.who !== undefined ? {who: params.who} : {}),
+      controller: Number.isInteger(params.rememberOf) ? params.rememberOf : context.controller,
       ...(params.remember ? {remembering: []} : {}),
       /* "You may discard UP TO two cards. If you do, draw that many cards" (Fable of the Mirror-Breaker, chapter II): how many,
          from none to that many, is the discarder's to say (CR 701.9a, 701.9b); "that many" counts what they discarded
@@ -468,7 +486,7 @@ export const discard = {
 
   choice(state, awaiting) {
     const hand = cardsIn(state, "hand", awaiting.player);
-    const count = Math.min(awaiting.count, hand.length);
+    const count = Math.min(howMany(awaiting), hand.length);
     return {
       id: `discard:${awaiting.player}:${state.turn}`,
       title: `Discard ${awaiting.upTo ? "up to " : ""}${count} card${count === 1 ? "" : "s"}`,
@@ -486,7 +504,7 @@ export const discard = {
        hand underneath the positions the player answered with. */
     const chosen = (indices ?? []).map((index) => hand[index]).filter((id) => id !== undefined);
     /* Each a card in that hand, once, and no more than it says -- fewer only when it says "up to". */
-    const most = Math.min(awaiting.count, hand.length);
+    const most = Math.min(howMany(awaiting), hand.length);
     if (new Set(chosen).size !== chosen.length || chosen.length > most || (!awaiting.upTo && chosen.length < most)) throw new Error("Invalid selection");
     /* CR 101.4: chosen now, discarded when the last player has chosen -- every player's at the same time. */
     const decided = [...(awaiting.decided ?? []), {player: awaiting.player, ids: chosen}];
@@ -706,7 +724,9 @@ export const sacrifice = {
       state.awaiting = begun;
       return true;
     }
-    const queue = everyone.filter((p) => mustSacrifice(state, p, asked));
+    /* Half the permanents they control (Pox Plague): each player's own count (countsFor) -- none, and they are not asked. */
+    const counts = countsFor(state, params, everyone, context);
+    const queue = everyone.filter((p) => mustSacrifice(state, p, asked) && (counts === null || counts[p] > 0));
     if (keeping(params) && params.keep !== undefined) asked.everyone = everyone;
     if (queue.length === 0) {
       /* Nobody has a choice to make, and what the keeping does is still done: each keeps all they have. */
@@ -716,7 +736,7 @@ export const sacrifice = {
       if (asked.rememberKept) context.remembered = outcome.remembered;
       return {events};
     }
-    state.awaiting = {kind: "effect-choice", effect: "sacrifice", player: queue[0], remaining: queue.slice(1), count: params.count ?? 1, ...asked,
+    state.awaiting = {kind: "effect-choice", effect: "sacrifice", player: queue[0], remaining: queue.slice(1), ...(counts === null ? {count: params.count ?? 1} : {counts}), ...asked,
       ...(params.remember ? {remember: context.controller, remembering: []} : {})};
     return true;
   },
@@ -741,7 +761,7 @@ export const sacrifice = {
         mode: keep === 1 ? "one" : "many", min: keep, max: keep, options: mine.map(option)};
       return {id: `sacrifice-keep:${awaiting.player}:${state.turn}`, title: `Choose up to ${keep} to keep; the rest are sacrificed`, mode: "many", min: 0, max: keep, options: mine.map(option)};
     }
-    const count = Math.min(awaiting.count, mine.length);
+    const count = Math.min(howMany(awaiting), mine.length);
     return {
       id: `sacrifice:${awaiting.player}:${state.turn}`,
       title: `Sacrifice ${count === 1 ? "a permanent" : `${count} permanents`}`,
