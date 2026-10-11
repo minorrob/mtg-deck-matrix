@@ -101,7 +101,9 @@ const index = loadCardIndex();
   /* Its events name it by its own name, the only one it has in every zone (CR 722.4): Lorehold Archivist and Goblin
      Glasswright are each cast there, and say so. */
   const smoked = loadCardScripts().filter(({script}) => script.prepare !== undefined).map(({script}) => [script.identity.name, smokeTest(script, index.definition).played]);
-  t.eq(smoked, [["Goblin Glasswright // Craft with Pride", true], ["Lorehold Archivist // Restore Relic", true]], "each preparation card is cast in its smoke game, and the test knows it");
+  t.eq(smoked.filter(([, played]) => !played), [], `each preparation card is cast in its smoke game (${smoked.length} of them)`);
+  t.eq(["Goblin Glasswright // Craft with Pride", "Lorehold Archivist // Restore Relic"].filter((n) => !smoked.some(([name]) => name === n)), [],
+    "Lorehold Archivist and Goblin Glasswright among them");
 }
 
 t.done();

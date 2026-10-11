@@ -1188,9 +1188,11 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
     const payWays = !payment && !autoTap && canPay(pool, cost, {life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0) - (lifeCost ?? 0), x: x + (X ?? 0) * cost.variable});
     /* CONVOKE (CR 702.51a): the caster's creatures help pay, and the pool the rest -- one offer, beside any the pool or its
        sources pay alone, when the pool and their untapped creatures could pay it together; which creatures, picked once it
-       is taken (castCostChoice). Not with {X}, without paying its mana cost, or with another way to pay. */
-    const convokes = X === null && !freely && !back && !fled && !way && !variant.escalateTap && hasConvoke(state, id)
-      && convokeCanPay(pool, {...cost, generic: cost.generic + x}, convokers(state, player));
+       is taken (castCostChoice). Not with {X}, without paying its mana cost, or with another way to pay -- and not with no
+       creature to tap: that cast is the one the pool pays, offered already, and a convoke asking for one creature of none
+       could not be answered. */
+    const helpers = X === null && !freely && !back && !fled && !way && !variant.escalateTap && hasConvoke(state, id) ? convokers(state, player) : [];
+    const convokes = helpers.length > 0 && convokeCanPay(pool, {...cost, generic: cost.generic + x}, helpers);
     if (!payment && !payWays && !convokes) continue;
     const paysFor = offeredAtoms.length ? additionalChoices(state, player, id, offeredAtoms) : [null];
     for (const convoke of [...(payment || payWays ? [false] : []), ...(convokes ? [true] : [])])
