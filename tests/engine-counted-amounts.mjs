@@ -58,7 +58,7 @@ const FIX = {
   Captain: {types: ["Creature"], supertypes: ["Legendary"], subtypes: ["Human"], manaCost: "{R}", colors: ["R"], power: 1, toughness: 1},
   Wisp: {types: ["Creature"], subtypes: ["Spirit"], manaCost: "{W}", colors: ["W"], power: 1, toughness: 1},
   /* Vanguard of the Restless's static, alone: "Spirits you control get +1/+1 for each time you've cast your commander from the
-     command zone this game" (its graveyard trigger waits on a construct of another area). */
+     command zone this game", on an enchantment: the card itself, with its graveyard trigger, is defined. */
   Banner: {types: ["Enchantment"], manaCost: "{1}{W}", colors: ["W"], abilities: [{id: "b", kind: "static", text: "Spirits you control get +1/+1 for each time you've cast your commander from the command zone this game.",
     layer: 7, sublayer: "c", affects: {what: "permanent", subtypes: ["Spirit"], controller: "you"}, apply: {power: {commanderCasts: "you"}, toughness: {commanderCasts: "you"}}}]},
   /* "Creatures your opponents control get -3/-3": a 3/3 that enters dies before its trigger is put on the stack. */
@@ -354,7 +354,7 @@ eq(["Converge", "TotalCommanderCastFromCommandZone"].map((kind) => FORGE_COUNTS[
   "credited: converge, and every cast of your commanders from the command zone");
 eq(FORGE_COUNTS.RememberedSize.status, "missing", "not credited: Forge's remembered count holds players as well, which nothing here remembers");
 eq(missingFor({counts: ["Converge", "TotalCommanderCastFromCommandZone"]}), [], "and a card counting them is held back by neither");
-for (const name of ["Pox Plague", "Dark Matter Manipulator", "Borrowed Knowledge", "Jeska's Will", "Release to Memory", "Augusta, Order Returned", "Sundering Archaic", "Tam, the Possibility", "Awaken the Erstwhile"])
+for (const name of ["Pox Plague", "Dark Matter Manipulator", "Borrowed Knowledge", "Jeska's Will", "Release to Memory", "Augusta, Order Returned", "Sundering Archaic", "Tam, the Possibility", "Awaken the Erstwhile", "Vanguard of the Restless"])
   ok(index.resolve(name)?.playable === true, `${name} is defined and playable`);
 
 console.log(`engine-counted-amounts: ${checks} checks passed -- half and per; each player's own count; a target player's zone; a whole hand remembered; a remembered count filtered and carried into a reflexive trigger; converge; planeswalker types and proliferate X times; your commanders' casts.`);
