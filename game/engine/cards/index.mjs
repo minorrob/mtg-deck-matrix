@@ -1188,6 +1188,11 @@ export function compileScript(script) {
          (effects/asking.mjs, chooseCard) -- never a search of every zone. */
       if (effect.effect === "chooseCard" && effect.zone === "any" && effect.among === undefined)
         problems.push("chooseCard: any zone is among cards named before it (`among`), never a search");
+      /* Among what: the cards an earlier part remembered, those a "one or more" trigger is about, or -- on the battlefield --
+         what was attached to the ability's source as it last existed (Zack Fair; effects/asking.mjs). */
+      if (effect.effect === "chooseCard" && effect.among !== undefined && !(["remembered", "those cards"].includes(effect.among)
+        || (effect.among === "was attached to this" && effect.zone === "battlefield")))
+        problems.push("chooseCard: among \"remembered\", \"those cards\", or \"was attached to this\" on the battlefield");
       if (effect.effect === "repeatFor" && (effect.effects ?? []).some((inner) => inner?.effect === "removeCounter" && inner.counter === "any"))
         problems.push("repeatFor: which counters of any kinds to remove is asked, and what repeats here does not ask it");
       /* "Spend this mana only to cast instant and sorcery spells" (effects/resources.mjs), "only to cast a creature spell of

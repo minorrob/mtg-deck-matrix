@@ -1,0 +1,106 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Zack Fair",
+    "oracleId": "e84d146a-1c67-49df-b062-622794e45c42",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 0,
+    "toughness": 1
+  },
+  "oracleText": "Zack Fair enters with a +1/+1 counter on it.\n{1}, Sacrifice Zack Fair: Target creature you control gains indestructible until end of turn. Put Zack Fair's counters on that creature and attach an Equipment that was attached to Zack Fair to that creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "Zack Fair enters with a +1/+1 counter on it.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "+1/+1",
+          "count": 1
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{1}, Sacrifice Zack Fair: Target creature you control gains indestructible until end of turn. Put Zack Fair's counters on that creature and attach an Equipment that was attached to Zack Fair to that creature.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Indestructible"
+          ]
+        },
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "countersOf": "self"
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "battlefield",
+          "among": "was attached to this",
+          "selector": {
+            "subtypes": [
+              "Equipment"
+            ]
+          },
+          "to": "stay",
+          "remember": true
+        },
+        {
+          "effect": "attach",
+          "source": "remembered",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}
