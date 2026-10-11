@@ -483,7 +483,7 @@ globalThis.CrankBoard = Object.freeze({
       <p class="cm-muted cm-board-hold-help">When you cast a spell or activate an ability, it resolves unless someone responds${stored(HOLD_KEY) === "on" ? "; with Hold priority on, you are asked first, to respond to it yourself" : ""}.</p>
       <p class="cm-muted cm-board-yield-help">${yours ? "Skip to end passes your priority for you through the rest of your turn" : `Yield this turn passes your priority for you through the rest of ${e(nameOf(view.state.turnPlayerId))}'s turn`}. It stops the moment anything is on the stack or you are asked anything else, so you can still answer a spell. Until then you hold priority: with a card you could use, you are asked at every step.</p>`;
     return `<div class="cm-board-menu" role="menu" id="cm-board-tools">
-      <div class="cm-actions cm-board-menu-row">${gb(COACH, "Recommended actions", "board-coach", {}, {cls: ""})}${b("Table vitals", "board-vitals", {})}</div>
+      <div class="cm-actions cm-board-menu-row">${gb(COACH, "Recommended actions", "board-coach", {}, {cls: ""})}${b("Table vitals", "board-vitals", {})}${b("AI Coach settings…", "ai-settings", {})}</div>
       ${priority}
       <div class="cm-board-size">${C.cardScaleSlider()}<p class="cm-muted">${lo}% – ${hi}% · the table's size: it sets Board cards and Hand cards too · remembered on this device · ⌘/Ctrl + / − also work</p></div>
       ${soundMenu()}
@@ -936,7 +936,9 @@ globalThis.CrankBoard = Object.freeze({
   /* THE COACH (the handoff's play-coach). It lives beside the board, not inside it, so the views that arrive
      while someone types redraw the board and leave the composer, and whatever is in it, alone. */
   const stepNow = () => {const s = view.state, at = stepAt(s.phase); return s.turn ? `Turn ${s.turn} · ${at < 0 ? "Opening hands" : STEPS[at][0]}` : "Before turn 1";};
-  function coachContext() {return `Sees your board, hand and the table · turn ${view && view.state.turn ? view.state.turn : 0}`;}
+  /* What the Coach sees, as the person's AI Coach settings say (AI-6): their hand too, or their board only. */
+  const handShared = () => C.state.preferences?.aiCoach?.coachSees !== "board";
+  function coachContext() {return `Sees your board${handShared() ? ", hand" : ""} and the table${handShared() ? "" : " (your hand withheld)"} · turn ${view && view.state.turn ? view.state.turn : 0}`;}
   function drawCoach() {
     const panelEl = document.getElementById("cm-board-coach");
     if (!panelEl) return;
@@ -994,7 +996,8 @@ globalThis.CrankBoard = Object.freeze({
     let said;
     try {
       const r = await fetch("/api/ai/coach", {method: "POST", credentials: "same-origin", redirect: "manual",
-        headers: {"content-type": "application/json", "x-crankmagic": "ai"}, body: JSON.stringify({tableId, question: q})});
+        /* AI Coach settings (AI-6): "My board only" withholds the hand from what the Coach is sent. */
+        headers: {"content-type": "application/json", "x-crankmagic": "ai"}, body: JSON.stringify({tableId, question: q, ...(handShared() ? {} : {hand: false})})});
       if (r.type === "opaqueredirect" || r.status === 401) said = {text: "Sign in to the Coach first: it has its own sign-in, with Google.", signIn: true};
       else {
         const j = await r.json().catch(() => null);

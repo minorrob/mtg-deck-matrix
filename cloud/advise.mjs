@@ -9,8 +9,10 @@
  *     model's own version (MODEL_VERSION), never written. A deck not in it -- a change on this device not yet synced --
  *     is refused, saying so.
  *   - THE BRIEF: the list reading (the deck's own list, each card's state), the candidates the code finds among the
- *     person's own cards and lists (the bench, To buy, Watching, on order). Cards the person does not own are not
- *     offered: whether they may be is the person's setting (AI-6), off until it is built.
+ *     person's own cards and lists (the bench, To buy, Watching, on order), read as the person's AI Coach settings say
+ *     (AI-6, `preferences.aiCoach`, synced with the library): cards they do not own only when they ask for them (then
+ *     from the catalog, Commander-legal), their own first unless they say otherwise, the bracket's game-changer cap
+ *     unless they lift it, and the advice short or detailed.
  *   - WHAT IS NEVER IN IT: cloud/advise-brief.mjs says so -- no price paid, no address, no other person's library.
  */
 import {buildBrief} from "./advise-brief.mjs";
@@ -49,16 +51,47 @@ export async function openVersion(body) {
   return state;
 }
 
+/* The catalog's facts of a name, as the brief reads a card. */
+let byFold = null;
+const factsOf = (name) => {
+  byFold ||= new Map(Object.keys(ADVISE_CARDS).map((n) => [fold(n), n]));
+  const printed = byFold.get(fold(name)), row = printed && ADVISE_CARDS[printed];
+  return row ? factsOfRow(printed, row) : null;
+};
+const factsOfRow = (printed, row) => {
+  const facts = Object.fromEntries(ADVISE_FIELDS.map((k, i) => [k, row[i]]));
+  return {...facts, name: printed, colorIdentity: [...(facts.colorIdentity || "")], gameChanger: facts.gameChanger === 1, legal: facts.legal === 1};
+};
+
 /** A library card joined to its catalog facts, as the app's C.card joins them; a card the catalog lacks has no roles. */
 export function cardOfFor(state) {
   return (id) => {
     const ref = state.cards?.[id];
     if (!ref) return null;
-    const row = ADVISE_CARDS[fold(ref.name)];
-    if (!row) return {...ref, id, roles: []};
-    const facts = Object.fromEntries(ADVISE_FIELDS.map((k, i) => [k, row[i]]));
-    return {...facts, colorIdentity: [...(facts.colorIdentity || "")], gameChanger: facts.gameChanger === 1, ...ref, id, oracleId: ref.oracleId || facts.oracleId};
+    const facts = factsOf(ref.name);
+    if (!facts) return {...ref, id, roles: []};
+    const {legal: _legal, ...rest} = facts;
+    return {...rest, ...ref, id, oracleId: ref.oracleId || facts.oracleId};
   };
+}
+
+/** The person's AI Coach settings (AI-6), with their defaults: what the settings panel shows when nothing is saved. */
+export function aiSettingsOf(state) {
+  const p = state.preferences?.aiCoach || {};
+  return {suggestUnowned: p.suggestUnowned === true, preferOwned: p.preferOwned !== false, inBracket: p.inBracket !== false,
+    length: p.length === "detailed" ? "detailed" : "short", coachSees: p.coachSees === "board" ? "board" : "hand"};
+}
+
+/** The catalog's Commander-legal cards that are not in the person's library: the cards not owned, when they ask for them. */
+export function unownedPool(state, table = ADVISE_CARDS) {
+  const held = new Set(Object.values(state.cards || {}).map((c) => fold(c.name)));
+  const pool = [];
+  for (const [name, row] of Object.entries(table)) {
+    if (held.has(fold(name))) continue;
+    const facts = factsOfRow(name, row);
+    if (facts.legal) {const {legal: _legal, ...card} = facts; pool.push({...card, id: `catalog:${facts.oracleId || name}`});}
+  }
+  return pool;
 }
 
 /** The brief for one of the person's decks, from their library's state. */
@@ -66,5 +99,7 @@ export function adviseBrief(state, deckId, ask) {
   if (!(state.decks || []).some((d) => d.id === deckId && !d.archived)) {
     throw new Closed("That deck is not in your library in the cloud yet. Let this device finish saving, then ask again.", 409);
   }
-  return buildBrief({state, deckId, cardOf: cardOfFor(state), ask, allowUnowned: false, basis: "list"});
+  const s = aiSettingsOf(state);
+  return buildBrief({state, deckId, cardOf: cardOfFor(state), ask, allowUnowned: s.suggestUnowned, unownedPool: s.suggestUnowned ? unownedPool(state) : null,
+    preferOwned: s.preferOwned, inBracket: s.inBracket, length: s.length, basis: "list"});
 }

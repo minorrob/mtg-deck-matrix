@@ -28,6 +28,7 @@ const ROLES = [
 /* Game changers a bracket allows (crankmagic-lobby.js BRACKETS): none at 1 and 2, three at 3, any above. */
 const GC_CAP = {1: 0, 2: 0, 3: 3, 4: Infinity, 5: Infinity};
 const LIMIT = 30;
+const UNOWNED_LIMIT = 10;
 
 const isLand = (c) => /\bLand\b/.test((c && c.typeLine) || "");
 const price = (c) => (c && Number.isFinite(c.price) ? Math.round(c.price * 100) / 100 : null);
@@ -94,7 +95,7 @@ function curveOf(counted) {
    only when asked the commander's co-play neighbors the person does not own; inside the identity, not already
    counted, priced within the per-card cap unless owned, scored by the short roles they fill, then co-play, owned
    before not, rank and price. */
-function candidatesOf(state, deck, cardOf, {counted, roles, identity, perCardCap, allowUnowned, coPlay, byOracle, commander, limit, seats}) {
+function candidatesOf(state, deck, cardOf, {counted, roles, identity, perCardCap, allowUnowned, coPlay, byOracle, unownedPool, preferOwned, commander, limit, seats}) {
   const have = new Set(counted.map(({card}) => card.id));
   const short = new Set(roles.filter((r) => r.short > 0).map((r) => r.role));
   const pool = new Map();
@@ -125,6 +126,9 @@ function candidatesOf(state, deck, cardOf, {counted, roles, identity, perCardCap
   }
   const co = coPlay && commander && commander.oracleId ? coPlay(commander.oracleId) : null;
   if (allowUnowned && co && byOracle) for (const oid of co.keys()) offer(byOracle(oid), "Not owned");
+  /* Without the co-play graph (the Worker's case), the cards not owned are a pool the caller gives: the catalog's, none
+     the person holds; ranked as every candidate is, by the roles they fill, then rank and price. */
+  else if (allowUnowned && unownedPool) for (const card of unownedPool) if (!pool.has(card.id)) offer(card, "Not owned");
   const rows = [];
   for (const {card, sources} of pool.values()) {
     const owned = sources.has("Bench") || sources.has("Ordered");
@@ -135,19 +139,29 @@ function candidatesOf(state, deck, cardOf, {counted, roles, identity, perCardCap
     rows.push({name: card.name, roles: fills, fills: shortFills, source: [...sources].sort().join(", "), price: p, rank: rank(card),
       coPlay: edge ? Math.round(edge.inclusion * 1000) / 1000 : null, gameChanger: !!card.gameChanger, owned});
   }
-  rows.sort((a, b) => b.fills.length - a.fills.length || (b.coPlay ?? -1) - (a.coPlay ?? -1) || (b.owned - a.owned)
+  /* AI-6's "Prefer what I own first": the person's own cards and lists before any not owned, then the order below. */
+  const ours = (r) => (r.source === "Not owned" ? 0 : 1);
+  rows.sort((a, b) => (preferOwned ? ours(b) - ours(a) : 0) || b.fills.length - a.fills.length || (b.coPlay ?? -1) - (a.coPlay ?? -1) || (b.owned - a.owned)
     || (a.rank ?? Infinity) - (b.rank ?? Infinity) || (a.price ?? Infinity) - (b.price ?? Infinity) || a.name.localeCompare(b.name));
   /* In the box reading the deck's own seats' cards are always offered, past the limit if need be, in their ranked
      place and unmarked: which candidate a seat is for is the model's to judge. */
   const seatNames = new Set((seats || []).map((r) => (cardOf(r.cardId) || {}).name));
-  return rows.filter((r, i) => i < limit || seatNames.has(r.name));
+  /* Cards not owned have places of their own (UNOWNED_LIMIT), after or among the person's as Prefer what I own first
+     says, so asking for them is never crowded out by the person's own thirty. */
+  const kept = [];
+  let own = 0, notOwned = 0;
+  for (const r of rows) {
+    if (r.source === "Not owned") {if (notOwned++ < UNOWNED_LIMIT) kept.push(r); continue;}
+    if (own++ < limit || seatNames.has(r.name)) kept.push(r);
+  }
+  return kept;
 }
 
 /**
  * The brief for one deck. `cardOf(id)` joins a library card to its record (the app's C.card); `coPlay(oracleId)` and
  * `byOracle(oracleId)` are optional (the commander's co-play row, and a neighbor's record), as the role lens takes them.
  */
-function buildBrief({state, deckId, cardOf, coPlay = null, byOracle = null, ask = "", allowUnowned = false, basis = "list", limit = LIMIT}) {
+function buildBrief({state, deckId, cardOf, coPlay = null, byOracle = null, unownedPool = null, ask = "", allowUnowned = false, preferOwned = true, inBracket = true, length = "short", basis = "list", limit = LIMIT}) {
   const deck = (state.decks || []).find((d) => d.id === deckId);
   if (!deck) throw new Error("There is no such deck in this library.");
   const commanders = (deck.commanders || []).map(cardOf).filter(Boolean);
@@ -165,10 +179,12 @@ function buildBrief({state, deckId, cardOf, coPlay = null, byOracle = null, ask 
       mechanics: Array.isArray(def.mechanics) ? def.mechanics.slice(0, 12) : [], strategies: Array.isArray(def.strategies) ? def.strategies.slice(0, 12) : []},
     measure: {roles, ...curveOf(counted), cards: counted.reduce((n, x) => n + x.quantity, 0)},
     hundred: rows,
-    candidates: candidatesOf(state, deck, cardOf, {counted, roles, identity, perCardCap, allowUnowned, coPlay, byOracle, commander: commanders[0], limit,
+    candidates: candidatesOf(state, deck, cardOf, {counted, roles, identity, perCardCap, allowUnowned, coPlay, byOracle, unownedPool, preferOwned, commander: commanders[0], limit,
       seats: basis === "box" ? seatsOf(state, deck, rows, cardOf) : null}),
-    constraints: {budget: Number.isFinite(def.budget) ? def.budget : null, perCardCap, gameChangers: {have: gcHave, cap: ceiling === null ? null : GC_CAP[ceiling] ?? null},
-      keep: [...commanders.map((c) => c.name), ...rows.filter((r) => r.kept).map((r) => r.name)], ask: String(ask || "").trim().slice(0, 300), unowned: !!allowUnowned},
+    /* AI-6: "Stay inside the deck's bracket" off lifts the game changers' cap; "Advice length" is short or detailed. */
+    constraints: {budget: Number.isFinite(def.budget) ? def.budget : null, perCardCap, gameChangers: {have: gcHave, cap: !inBracket || ceiling === null ? null : GC_CAP[ceiling] ?? null},
+      keep: [...commanders.map((c) => c.name), ...rows.filter((r) => r.kept).map((r) => r.name)], ask: String(ask || "").trim().slice(0, 300), unowned: !!allowUnowned,
+      length: length === "detailed" ? "detailed" : "short"},
   };
 }
 

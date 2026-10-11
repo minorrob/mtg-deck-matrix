@@ -421,9 +421,9 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
 
     /** THE COACH'S BRIEF (X13; game/room/coach-brief.mjs): the game as this person may see it, and the deck they brought --
         built here, from their own seat's view, for the Worker's AI door and nothing else. */
-    async brief(email) {
+    async brief(email, {hand = true} = {}) {
       const {room: game, seatId} = await api.room(email);
-      return coachBrief(game.view(seatId), record.decks[needSeat(email)]);
+      return coachBrief(game.view(seatId), record.decks[needSeat(email)], {hand});
     },
 
     /**

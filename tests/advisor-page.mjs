@@ -30,7 +30,10 @@ const state = await openVersion(gzipSync(Buffer.from(JSON.stringify(live))).toSt
 const DECK = "deck:live:D1", brief = adviseBrief(state, DECK, "");
 const outs = brief.hundred.filter((r) => !r.empty && !brief.constraints.keep.includes(r.name)).map((r) => r.name);
 const ins = brief.candidates.map((c) => c.name);
-const swaps = [{out: outs[0], in: ins[0], role: "Removal", why: "It answers threats for less."}, {out: outs[1], in: ins[1], role: "Draw", why: "It keeps the hand full."}];
+/* And one card Rob does not own, as the Worker offers it with Suggest cards I don't own on (AI-6): the catalog's. */
+const unowned = adviseBrief({...state, preferences: {...state.preferences, aiCoach: {suggestUnowned: true}}}, DECK, "").candidates.find((c) => c.source === "Not owned");
+const swaps = [{out: outs[0], in: ins[0], role: "Removal", why: "It answers threats for less."}, {out: outs[1], in: ins[1], role: "Draw", why: "It keeps the hand full."},
+  {out: outs[2], in: unowned.name, role: "Ramp", why: "It is faster."}];
 const html = readFileSync(path.join(ROOT, "index.html"), "utf8").replace("</head>", `<meta name="crankmagic-accounts" content="on"></head>`);
 
 const {browser, base, stub, close} = await openBrowser({name: "advisor-page", flag: "GEOMETRY_REQUIRED"});
@@ -78,7 +81,7 @@ try {
     await page.locator("#cm-advise-out input[name=advise]").first().waitFor({timeout: 15000});
     eq(sent.map((x) => [x.body, x.header]), [[{deckId: DECK, ask: "more removal"}, "ai"]], "the page sends the deck's id and the goal, with the AI door's header, and nothing more");
     const rows = await page.locator("#cm-advise-out li").allInnerTexts();
-    eq(rows.length, 2, "each swap is a row to tick");
+    eq(rows.length, 3, "each swap is a row to tick");
     ok(rows[0].includes(`${swaps[0].out} → ${swaps[0].in}`) && rows[0].includes(swaps[0].why) && rows[0].includes("Removal"), `with the cards out and in, the role and the why (${rows[0].replace(/\s+/g, " ")})`);
     const said = (await page.locator("#cm-advise-out").innerText()).replace(/\s+/g, " ");
     ok(/Two swaps for more interaction\./.test(said) && /1 proposed swap named a card not in this deck/.test(said) && /as saved Oct 11/.test(said) && /0\.4¢ of your 25¢ today/.test(said),
@@ -88,10 +91,11 @@ try {
     await page.locator("[data-action=deck-advise-save]").click();
     await page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"), null, {timeout: 15000});
     const after = await upgradesOf(page);
-    eq(after.filter((x) => !before.some((y) => y.in === x.in && y.out === x.out)), [{in: swaps[0].in, out: swaps[0].out, committed: false}],
-      "Save ticked as upgrades saves the ticked swap as D1's linked upgrade -- the card in for the card out's slot, not yet committed -- and the unticked one not at all");
-    await page.waitForFunction(() => /Saved 1 swap as upgrade/.test(document.getElementById("cm-notice")?.textContent || ""), null, {timeout: 10000});
-    ok(true, "and says it saved one swap as an upgrade, on the Upgrades tab");
+    eq(after.filter((x) => !before.some((y) => y.in === x.in && y.out === x.out)).sort((a, b) => a.in.localeCompare(b.in)),
+      [{in: swaps[0].in, out: swaps[0].out, committed: false}, {in: unowned.name, out: swaps[2].out, committed: false}].sort((a, b) => a.in.localeCompare(b.in)),
+      `Save ticked as upgrades saves each ticked swap as D1's linked upgrade -- the card in for the card out's slot, not yet committed -- a card not owned (${unowned.name}) among them, from the catalog; the unticked one not at all`);
+    await page.waitForFunction(() => /Saved 2 swaps as upgrades/.test(document.getElementById("cm-notice")?.textContent || ""), null, {timeout: 10000});
+    ok(true, "and says it saved two swaps as upgrades, on the Upgrades tab");
     await context.close();
   }
   /* 4. Signed in to the library only: the door's own sign-in, back to the deck. */

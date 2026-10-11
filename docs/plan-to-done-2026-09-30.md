@@ -678,6 +678,19 @@ to keep it simple."*
   gates do that.
 - **Proof:** `tests/settings-r3.mjs` and the board suite: each control read by the advisor's brief and the Coach's
   request (a card not owned never appears with 1 off; the hand withheld with 5 set to board only); the meter shown.
+- **Status, 2026-10-11: built.** *AI Coach settings…* from Settings (its own card, *AI Coach*) and from the board's
+  Tools, one panel (`crankmagic-settings.js`, `C.aiSettings`), saved as `preferences.aiCoach` and synced with the library.
+  - **1-4, the advisor's**, read by the Worker from the library it holds (`cloud/advise.mjs` `aiSettingsOf`, whose
+    defaults the panel shows): cards not owned only when asked for, from the catalog (Commander-legal, inside the
+    commander's colors and the per-card cap), with ten places of their own beside the person's thirty; the person's
+    own first unless they say otherwise; the bracket's game-changer cap unless lifted; and the advice short or detailed,
+    which the instruction reads.
+  - **5, the Coach's:** *My board only* sends the question with the hand withheld; the table builds the brief with no
+    hand and not the question being asked, whose options name it (`coachBrief`, `?hand=0`), and the Coach is told why;
+    the board's Coach says what it sees.
+  - **6, the meter:** `GET /api/ai-meter`, the person's spending over the last 24 hours against their cap, and the
+    privacy page's AI section.
+  - **Proof:** `advisor` 56 checks, `coach` 60, `settings-r3` 56, `table-board` 250, `advisor-page` 9; 26 breaks caught.
 
 ### AI-5. Your decks and the decks you can play — the connection
 
