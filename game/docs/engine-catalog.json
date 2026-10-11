@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1242,
+  "defined": 1243,
   "provisional": 27,
-  "everyRule": 2575
+  "everyRule": 2576
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -9314,10 +9314,10 @@
   },
   "Amounts the game counts": {
    "tally": {
-    "built": 17,
+    "built": 18,
     "partial": 1,
     "named": 0,
-    "missing": 170
+    "missing": 169
    },
    "entries": [
     {
@@ -10116,13 +10116,13 @@
      "kind": "count",
      "rule": null,
      "name": "Colors in your commanders' identity",
-     "engine": null,
-     "status": "missing",
+     "engine": "amount {commanderColors: \"you\"} (script/amount.mjs); a cost of it unpayable without a commander",
+     "status": "built",
      "forge": "ColorsColorIdentity",
      "top": 1,
      "all": 1,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",

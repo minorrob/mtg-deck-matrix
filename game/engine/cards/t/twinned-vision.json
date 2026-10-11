@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Twinned Vision",
+    "oracleId": "fa1cc78f-26bc-4d5d-973b-7cb7d7490973",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U/R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Draw a card. If this spell wasn't cast from your hand, draw two cards instead.\nFlashback—{1}{U/R}{U/R}, Discard a card. (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Draw a card. If this spell wasn't cast from your hand, draw two cards instead.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "cast": {
+              "from": "hand"
+            }
+          },
+          "then": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "draw",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Flashback—{1}{U/R}{U/R}, Discard a card. (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+      "keyword": "flashback",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{U/R}{U/R}"
+        },
+        {
+          "atom": "discard"
+        }
+      ]
+    }
+  ]
+}

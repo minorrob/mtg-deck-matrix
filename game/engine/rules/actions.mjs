@@ -55,7 +55,7 @@
 import {cardsIn, moveObject, usesThisTurn, recordUse, showFace, showAdventure, turnFaceUp, eventCard, commanderKeyOf} from "../state/index.mjs";
 import {pushSpell, pushAbility, becameTarget} from "./stack.mjs";
 import {addMana, spend, parseManaCost, automaticPayment, canPay, chosenPayment, paymentOptions, paymentKey, paymentWords, PAY_CHOICES, manaValue, poolSize, tapPlans, convokeCanPay, convokePayments} from "./mana.mjs";
-import {commanderTax, recordCommanderCast, colorIdentity} from "./commander.mjs";
+import {commanderTax, recordCommanderCast, commanderIdentity} from "./commander.mjs";
 import {COLORS, MANA_KEYS} from "./mana.mjs";
 import {sickForAbilities, hasFlash} from "../keywords/timing.mjs";
 import {targetChoices, targetName, isHostile, modalScript, isChoosing, countOf, targetCandidates, countedChoice, inWords, differentControllersProblem} from "../script/bind.mjs";
@@ -66,7 +66,7 @@ import {changeLife} from "../script/effects/resources.mjs";
 import {unprepare, preparedCopyStays} from "../script/effects/attributes.mjs";
 import {checkStateBasedActions, gameOver} from "./sba.mjs";
 import {costReduction, costIncrease, abilityCostIncrease, equipCostReduction, playerStatics, freeCast, flashGranted, castForbidden, countersPlaced} from "./statics.mjs";
-import {countMana, amountOf, countEffect} from "../script/amount.mjs";
+import {countMana, amountOf, countEffect, isCounted, amountProblems, commanderless} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
 import {lastKnown, characteristicsOf, abilitiesOf, deriving, derivingAfresh, onceAQuestion, keywordsOf, colorsOf, controllerOf} from "./layers.mjs";
@@ -112,9 +112,10 @@ function castCost(state, player, id, tax, free = false, instead = null, extra = 
  * keyword's cost, or -- given until end of turn ("each instant and sorcery card in your graveyard gains flashback",
  * Past in Flames) -- its mana cost. Only an instant or sorcery, and only from the caster's own graveyard. A cost that taps
  * creatures ("Flashback--Tap three untapped white creatures you control", Battle Screech) says how many and which
- * (`tap`); whether they are there is the offer's to ask (flashbackTappers).
+ * (`tap`); whether they are there is the offer's to ask (flashbackTappers). One that discards ("Flashback--{1}{U/R}{U/R},
+ * Discard a card", Twinned Vision) has it among its `extra` atoms, each card its own offer, as an alternative cost's are.
  *
- * @returns {?{mana: string, life: number, tap?: {count: number, selector: object}}}
+ * @returns {?{mana: string, life: number, extra?: Array<object>, tap?: {count: number, selector: object}}}
  */
 export function flashbackCost(state, player, id) {
   const object = state.objects[id];
@@ -129,7 +130,7 @@ export function flashbackCost(state, player, id) {
   if (!cost) return null;
   const tap = cost.find((a) => a.atom === "tapCreature");
   return {mana: cost.find((a) => a.atom === "mana")?.cost ?? "", life: cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0),
-    ...(tap ? {tap: {count: tap.count ?? 1, selector: tap.selector ?? {}}} : {})};
+    ...(cost.some((a) => a.atom === "discard") ? {extra: cost.filter((a) => a.atom === "discard")} : {}), ...(tap ? {tap: {count: tap.count ?? 1, selector: tap.selector ?? {}}} : {})};
 }
 
 /* The untapped creatures a player controls that a flashback cost may tap: each fits its selector ("white creatures"), a
@@ -229,8 +230,8 @@ function activationCostChoice(state, {action, player}) {
   const ability = abilitiesOf(state, action.objectId).find((a) => a.id === action.abilityId);
   if (action.countersLater) {
     const atom = countersAmongAtom(ability?.cost);
-    const units = counterUnits(state, player, action.objectId, atom.selector);
-    return {id: `choose-cost:${action.objectId}:${action.abilityId}`, title: `${name}: remove ${inWords(atom.count)} counter${atom.count === 1 ? "" : "s"}`,
+    const units = counterUnits(state, player, action.objectId, atom);
+    return {id: `choose-cost:${action.objectId}:${action.abilityId}`, title: `${name}: remove ${inWords(atom.count)} ${atom.counter ? `${atom.counter} ` : ""}counter${atom.count === 1 ? "" : "s"}`,
       mode: "many", min: atom.count, max: atom.count, cost: "counters",
       options: numbered(units.map((u, index) => ({index, label: `${state.objects[u.id].card}: a ${u.counter} counter`, cardId: u.id, counter: u.counter})))};
   }
@@ -576,7 +577,9 @@ function withTargets(state, base, ability, context, aim = null) {
 
 /* The cost atoms 2.4 can pay. `costPayment` says whether all of an ability's can be paid now, and how. */
 const COST_ATOMS_BUILT = ["{T}", "mana", "payLife", "sacrifice"];
-export const costAtomBuilt = (atom) => (COST_ATOMS_BUILT.includes(atom?.atom) && (atom.atom !== "sacrifice" || atom.self === true || (atom.selector && typeof atom.selector === "object")))
+export const costAtomBuilt = (atom) => (COST_ATOMS_BUILT.includes(atom?.atom) && (atom.atom !== "sacrifice" || atom.self === true || (atom.selector && typeof atom.selector === "object"))
+  /* Life: a number, or counted as the cost is paid (War Room; script/amount.mjs). */
+  && (atom.atom !== "payLife" || (Number.isInteger(atom.amount) && atom.amount >= 0) || (isCounted(atom.amount) && !amountProblems(atom.amount).length)))
   /* "Discard this card" (cycling, CR 702.29a): a card's ability activated from its owner's hand. */
   || (atom?.atom === "discard" && atom.self === true)
   /* "{1}{R}, Discard a card: Draw a card" (Glint-Horn Buccaneer): which card is chosen as it is activated, one offer each. */
@@ -610,7 +613,9 @@ export const costAtomBuilt = (atom) => (COST_ATOMS_BUILT.includes(atom?.atom) &&
   /* "Remove three counters from among other artifacts, creatures, and planeswalkers you control" (Tekuthal, Inquiry
      Dominus): `count` counters of any kinds on the permanents `selector` describes, which ones asked once the offer is
      taken (countersAmong). */
-  || (atom?.atom === "removeCountersAmong" && Number.isInteger(atom.count) && atom.count >= 1 && Boolean(atom.selector) && typeof atom.selector === "object")
+  || (atom?.atom === "removeCountersAmong" && Number.isInteger(atom.count) && atom.count >= 1 && Boolean(atom.selector) && typeof atom.selector === "object"
+    /* "Remove a +1/+1 counter from a creature you control" (Bolrac-Clan Crusher): of that kind only (`counter`). */
+    && (atom.counter === undefined || typeof atom.counter === "string"))
   /* "Pay eight {E}" (Salvation Colossus's unearth; CR 107.14): that many energy counters removed from the player paying. */
   || (atom?.atom === "payEnergy" && Number.isInteger(atom.count) && atom.count >= 1);
 
@@ -693,14 +698,18 @@ const setsOf = (n, k) => { let c = 1; for (let i = 0; i < k; i += 1) c = (c * (n
 const sacrificesLater = (state, player, sourceId, atom) => Boolean(atom) && (atom.count ?? 1) > 1
   && setsOf(sacrificeChoices(state, player, sourceId, atom.selector).length, atom.count ?? 1) > CREW_OFFERS_MAX;
 /* "REMOVE THREE COUNTERS FROM AMONG OTHER ARTIFACTS, CREATURES, AND PLANESWALKERS YOU CONTROL" (Tekuthal): every counter on
-   the permanents its selector describes, the player's own, each one a unit to choose -- of any kind, from any of them. */
+   the permanents its selector describes, the player's own, each one a unit to choose -- of any kind, from any of them; or of
+   the one kind it names (`counter`: "remove a +1/+1 counter from a creature you control", Bolrac-Clan Crusher). */
 const countersAmongAtom = (cost) => (cost ?? []).find((a) => a?.atom === "removeCountersAmong");
-function counterUnits(state, player, sourceId, selector) {
-  const holds = compileSelector({...selector, what: "permanent", controller: "you"});
+function counterUnits(state, player, sourceId, atom) {
+  const holds = compileSelector({...atom.selector, what: "permanent", controller: "you"});
   const units = [];
   for (const id of state.zones.battlefield) {
     if (!holds(state, id, {controller: player, source: sourceId})) continue;
-    for (const [counter, n] of Object.entries(state.objects[id].counters ?? {})) for (let i = 0; i < n; i += 1) units.push({id, counter});
+    for (const [counter, n] of Object.entries(state.objects[id].counters ?? {})) {
+      if (atom.counter !== undefined && counter !== atom.counter) continue;
+      for (let i = 0; i < n; i += 1) units.push({id, counter});
+    }
   }
   return units;
 }
@@ -708,7 +717,7 @@ function counterUnits(state, player, sourceId, selector) {
 function countersPicked(state, player, sourceId, atom, picked) {
   if (!Array.isArray(picked) || picked.length !== atom.count) return false;
   const left = new Map();
-  for (const {id, counter} of counterUnits(state, player, sourceId, atom.selector)) left.set(`${id}:${counter}`, (left.get(`${id}:${counter}`) ?? 0) + 1);
+  for (const {id, counter} of counterUnits(state, player, sourceId, atom)) left.set(`${id}:${counter}`, (left.get(`${id}:${counter}`) ?? 0) + 1);
   for (const one of picked) {
     const key = `${one?.id}:${one?.counter}`;
     if (!(left.get(key) > 0)) return false;
@@ -792,12 +801,17 @@ function costPayment(state, player, id, cost, x = 0, less = 0, key = undefined) 
       mana = pay(printed, {life: state.players[player].life, x: x * printed.variable});
       if (mana === undefined) return null;
     }
-    /* CR 119.4: a player can pay life only if their life total is at least the amount. */
-    if (atom.atom === "payLife") life += atom.amount ?? 0;
+    /* CR 119.4: a player can pay life only if their life total is at least the amount. "Pay life equal to the number of
+       colors in your commanders' color identity" (War Room): counted now (CR 602.2b, 601.2f), and unpayable for a player with
+       no commander (CR 903.4f) -- one with a colorless commander pays 0 life, which a player always can (119.4b). */
+    if (atom.atom === "payLife") {
+      if (commanderless(state, atom.amount, {controller: player})) return null;
+      life += amountOf(state, atom.amount ?? 0, {controller: player, source: id});
+    }
     /* A −X loyalty cost is offered only for the X it can pay (abilityXValues). */
     if (atom.atom === "removeCounters" && atom.count !== "X" && (object.counters?.[atom.counter] ?? 0) < (atom.count ?? 1)) return null;
     /* Three counters from among them: there must be three there to remove (CR 118.3). */
-    if (atom.atom === "removeCountersAmong" && counterUnits(state, player, id, atom.selector).length < atom.count) return null;
+    if (atom.atom === "removeCountersAmong" && counterUnits(state, player, id, atom).length < atom.count) return null;
     /* Energy (CR 107.14): no more than the player has (CR 118.3). */
     if (atom.atom === "payEnergy" && (state.players[player].counters?.energy ?? 0) < atom.count) return null;
   }
@@ -816,19 +830,9 @@ function costPayment(state, player, id, cost, x = 0, less = 0, key = undefined) 
    `payWays` when the pool pays it more than one way -- the way asked once it is taken (X8b). */
 const offeredPayment = (payment) => ({payment: {mana: payment.mana, life: payment.life}, ...(payment.payWays ? {payWays: true} : {})});
 
-/**
- * A player's commander's color identity (CR 903.4): the union of their commanders' (702.124c), as established when the
- * game began (903.4a) -- the identity the definition carried, or read off the printed cost for an object without one.
- * Empty for a player with no commander, which is what makes "any color in your commander's identity" add nothing.
- */
-export function commanderIdentity(state, player) {
-  const found = new Set();
-  for (const object of Object.values(state.objects)) {
-    if (object.commander !== true || object.owner !== player) continue;
-    for (const color of object.colorIdentity ?? colorIdentity({manaCost: object.manaCost})) found.add(color);
-  }
-  return COLORS.filter((color) => found.has(color));
-}
+/* A player's commander's color identity (CR 903.4): rules/commander.mjs, where the amount grammar reads it too ("pay life
+   equal to the number of colors in your commanders' color identity", War Room). */
+export {commanderIdentity};
 
 /* The colors "as it enters, choose a color" offers (CR 105.1), by the mana each is. */
 export const COLOR_CHOICES = Object.freeze(["White", "Blue", "Black", "Red", "Green"]);
@@ -1176,7 +1180,8 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
   /* Cast from the graveyard by its own alternative cost, that cost alone; otherwise the mana cost and every other one. */
   for (const way of graveyardCost ? alternatives.filter((w) => w.fromGraveyard) : [null, ...alternatives.filter((w) => !w.fromGraveyard)]) {
   if (way && way.life > state.players[player].life) continue;
-  for (const variant of additionalVariants([...(object.spell?.additionalCost ?? []), ...(way?.extra ?? [])])) {
+  /* The flashback cost's discard (Twinned Vision) is chosen with the cast, as an alternative cost's card exiled from the hand is. */
+  for (const variant of additionalVariants([...(object.spell?.additionalCost ?? []), ...(way?.extra ?? []), ...(back?.extra ?? [])])) {
   /* Creatures tapped as an additional cost (tapAnyAtom): asked once the cast is taken, and paid from the pool -- never tapped
      for, which taps creatures too (a mana creature), the two questions about the same creatures. */
   const tapsAny = tapAnyAtom(variant.atoms);
@@ -2095,7 +2100,8 @@ function performOffered(state, player, action, during) {
         events.push(event("GameEventCardTapped", state, {card: cardRef(state, action.objectId), tapped: true}));
       }
       if (atom.atom === "mana") payMana();
-      if (atom.atom === "payLife") changeLife(state, player, -(atom.amount ?? 0), events);
+      /* Life paid is life lost (CR 119.4), counted as it is paid (War Room). */
+      if (atom.atom === "payLife") changeLife(state, player, -amountOf(state, atom.amount ?? 0, {controller: player, source: action.objectId}), events);
       if (atom.atom === "addCounters" || atom.atom === "removeCounters")
         payCounters(state, action.objectId, [{counter: atom.counter, count: atom.count === "X" ? action.x ?? 0 : atom.count ?? 1, put: atom.atom === "addCounters"}], player);
       /* "Return a Forest you control to its owner's hand": the one chosen with the offer. */

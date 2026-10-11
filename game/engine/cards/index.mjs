@@ -75,9 +75,16 @@ const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "trig
 
 /* A target picked after the offer is taken ("up to two target creatures", script/bind.mjs): not chosen with it. */
 const countedTarget = (spec) => Boolean(spec) && typeof spec === "object" && spec.count !== undefined;
-/* What a flashback cost may be made of (CR 702.34a): mana, life ("Flashback--{1}{U}, Pay 3 life"), and creatures to tap
-   ("Flashback--Tap three untapped white creatures you control", Battle Screech: `tapCreature`, its `count` and `selector`). */
-const FLASHBACK_ATOMS = ["mana", "payLife", "tapCreature"];
+/* What a flashback cost may be made of (CR 702.34a): mana, life ("Flashback--{1}{U}, Pay 3 life"), creatures to tap
+   ("Flashback--Tap three untapped white creatures you control", Battle Screech: `tapCreature`, its `count` and `selector`),
+   and cards to discard ("Flashback--{1}{U/R}{U/R}, Discard a card", Twinned Vision: `discard`, its `count`), each card its
+   own offer as an additional cost's discard is (rules/actions.mjs, additionalChoices). */
+const FLASHBACK_ATOMS = ["mana", "payLife", "tapCreature", "discard"];
+/* Life paid as a number (CR 119.4): only an activated ability's cost counts it as it is paid (rules/actions.mjs, costPayment;
+   War Room) -- an alternative cost's life and a mana ability's are read before anything is counted. */
+const fixedLife = (atom) => atom?.atom !== "payLife" || (Number.isInteger(atom.amount) && atom.amount >= 0);
+/* A flashback cost's discard: any card, a number of them -- never a card of a kind, nor "discard this card". */
+const plainDiscard = (atom) => atom?.atom !== "discard" || (atom.self === undefined && atom.selector === undefined && (atom.count === undefined || (Number.isInteger(atom.count) && atom.count >= 1)));
 /* How long "you may play that card" lasts (script/effects/zones.mjs, mayPlay): this turn, until the end of your next turn,
    or for as long as it remains there ("ever": a card that moves is a new object, CR 400.7, Emrakul, the Exigent Doom). */
 const MAY_PLAY_UNTIL = ["end-of-turn", "your-next-end", "ever"];
@@ -343,7 +350,7 @@ function manaAbility(ability, id) {
   const [first, ...then] = ability.effects ?? [];
   if (first?.effect !== "addMana") return (ability.effects ?? []).some((e) => e?.effect === "addMana") ? "unbuilt" : null;
   const cost = ability.cost ?? [];
-  if ((ability.targets ?? []).length || !cost.every((a) => ["{T}", "mana", "payLife"].includes(a?.atom) || (a?.atom === "sacrifice" && (a.self === true || a.selector))
+  if ((ability.targets ?? []).length || !cost.every((a) => (["{T}", "mana", "payLife"].includes(a?.atom) && fixedLife(a)) || (a?.atom === "sacrifice" && (a.self === true || a.selector))
     || (["addCounters", "removeCounters"].includes(a?.atom) && a.self === true && typeof a.counter === "string")
     /* "{T}, Mill a card: Add {C}" (Millikin): its controller's top N cards, milled as the cost is paid (CR 701.17). */
     || (a?.atom === "mill" && Number.isInteger(a.count ?? 1) && (a.count ?? 1) >= 1)
@@ -841,7 +848,7 @@ export function compileScript(script) {
        instant or sorcery: "if the resulting spell is an instant or sorcery spell". */
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "flashback") {
       const cost = Array.isArray(ability.cost) ? ability.cost : [];
-      if (!cost.length || !cost.every((atom) => FLASHBACK_ATOMS.includes(atom?.atom)))
+      if (!cost.length || !cost.every((atom) => FLASHBACK_ATOMS.includes(atom?.atom) && fixedLife(atom) && plainDiscard(atom)))
         problems.push(`${ability.text}: a flashback cost of ${FLASHBACK_ATOMS.join(" and ")} only, and at least one`);
       const taps = cost.filter((atom) => atom?.atom === "tapCreature");
       if (taps.length > 1 || taps.some((atom) => !(Number.isInteger(atom.count) && atom.count >= 1) || !atom.selector || typeof atom.selector !== "object"))
@@ -921,7 +928,7 @@ export function compileScript(script) {
     }
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "evoke") {
       const cost = Array.isArray(ability.cost) ? ability.cost : [];
-      if (!cost.length || !cost.every((atom) => EVOKE_ATOMS.includes(atom?.atom) && (atom.atom !== "exileFromHand" || (atom.selector && typeof atom.selector === "object"))))
+      if (!cost.length || !cost.every((atom) => EVOKE_ATOMS.includes(atom?.atom) && fixedLife(atom) && (atom.atom !== "exileFromHand" || (atom.selector && typeof atom.selector === "object"))))
         problems.push(`${ability.text}: an evoke cost of ${EVOKE_ATOMS.join(", ")} (a card exiled from the hand by a selector), and at least one`);
       if ((identity.types ?? []).some((t) => ["Instant", "Sorcery", "Land"].includes(t))) problems.push(`${ability.text}: evoke on a card that never enters from the stack`);
       abilities.push({id, kind: "static", rule: "alternative-cost", evoke: true, text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
@@ -1165,7 +1172,7 @@ export function compileScript(script) {
        {3}{R} and exiling four other cards from your graveyard", Squee, Dubious Monarch), other cards of it to exile, a number
        (rules/actions.mjs, alternativeCosts). */
     if (ability.kind === "static" && ability.rule === "alternative-cost") {
-      for (const atom of ability.cost ?? []) if (!["mana", "payLife", "exileFromHand", "sacrifice"].includes(atom?.atom) || (atom.atom === "sacrifice" && !atom.selector))
+      for (const atom of ability.cost ?? []) if (!["mana", "payLife", "exileFromHand", "sacrifice"].includes(atom?.atom) || (atom.atom === "sacrifice" && !atom.selector) || !fixedLife(atom))
         if (!(ability.zone === "graveyard" && atom?.atom === "exileFromGraveyard" && atom.self !== true && Number.isInteger(atom.count) && atom.count >= 1))
           problems.push(`${ability.text}: an alternative cost of ${atom?.atom ?? "something"} nothing pays yet`);
       if (ability.zone !== undefined && ability.zone !== "graveyard") problems.push(`${ability.text}: an alternative cost is cast from where it is, or from the graveyard (\`zone: "graveyard"\`)`);

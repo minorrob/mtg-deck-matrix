@@ -92,6 +92,23 @@ export function withinIdentity(card, identity) {
   return colorIdentity(card).every((color) => identity.includes(color));
 }
 
+/**
+ * A player's commander's color identity (CR 903.4): the union of their commanders' (702.124c), as established when the
+ * game began (903.4a) -- the identity the definition carried, or read off the printed cost for an object without one.
+ * Empty for a player with no commander, which is what makes "any color in your commander's identity" add nothing.
+ */
+export function commanderIdentity(state, player) {
+  const found = new Set();
+  for (const object of Object.values(state.objects)) {
+    if (object.commander !== true || object.owner !== player) continue;
+    for (const color of object.colorIdentity ?? colorIdentity({manaCost: object.manaCost})) found.add(color);
+  }
+  return COLORS.filter((color) => found.has(color));
+}
+/** Whether a player has a commander (CR 903.3): one they own, wherever it is now. Without one, a commander's color identity
+    is undefined (CR 903.4f). */
+export const hasCommander = (state, player) => Object.values(state.objects).some((object) => object.commander === true && object.owner === player);
+
 /* The key a commander's tax and damage are kept under: the commander's own, or -- for an id that names nothing now --
    the id itself, which matches nothing and so counts nothing. */
 const keyFor = (state, objectId) => (state.objects[objectId] ? commanderKeyOf(state.objects[objectId]) : String(objectId));

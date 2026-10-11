@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,242 defined and playable today; 2,575 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,243 defined and playable today; 2,576 with every
 mechanic built, so only their definitions are left to write; 27 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -26,7 +26,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Replacement effects | 34 | 0 | 5 | 0 | 29 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
 | Options and conditions | 37 | 23 | 5 | 0 | 9 |
-| Amounts the game counts | 188 | 17 | 1 | 0 | 170 |
+| Amounts the game counts | 188 | 18 | 1 | 0 | 169 |
 | Choices | 15 | 12 | 0 | 0 | 3 |
 | Other keyword constructs | 16 | 9 | 0 | 1 | 6 |
 
@@ -930,7 +930,7 @@ The things that alone hold back the most of the most-played cards.
 | — | MaxOppDamageThisTurn | — | missing | 1 | 2 | 1 | 1 |
 | — | BloodthirstAmount | — | missing | 1 | 1 | 1 | 1 |
 | — | CardNumAttacksThisTurn | — | missing | 1 | 1 | 1 | 1 |
-| — | Colors in your commanders' identity | — | missing | 1 | 1 | 1 | 1 |
+| — | Colors in your commanders' identity | amount {commanderColors: "you"} (script/amount.mjs); a cost of it unpayable without a commander | built | 1 | 1 | 0 | 0 |
 | — | FinishedEndOfTurnsThisTurn | — | missing | 1 | 1 | 1 | 0 |
 | — | NonCombatDamageThisTurn | — | missing | 1 | 1 | 1 | 1 |
 | — | Domain | — | missing | 0 | 66 | 0 | 0 |

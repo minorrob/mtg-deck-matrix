@@ -1,0 +1,87 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bolrac-Clan Crusher",
+    "oracleId": "dbfa5409-5706-4de8-8152-e74b8d93910a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Ogre",
+      "Warrior"
+    ],
+    "manaCost": "{3}{R}{G}",
+    "colors": [
+      "G",
+      "R"
+    ],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "{T}, Remove a +1/+1 counter from a creature you control: This creature deals 2 damage to any target.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}, Remove a +1/+1 counter from a creature you control: This creature deals 2 damage to any target.",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "removeCountersAmong",
+          "count": 1,
+          "counter": "+1/+1",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Battle"
+              ]
+            },
+            {
+              "what": "player"
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 2,
+          "targets": {
+            "target": 0
+          },
+          "who": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}
