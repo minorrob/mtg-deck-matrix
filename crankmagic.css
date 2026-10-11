@@ -125,7 +125,7 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 .cm-q-tl .cm-seat-detail,.cm-q-bl .cm-seat-detail{text-align:right}
 .cm-seat-name{margin:0;font-weight:600;font-size:13px;line-height:1.25}
 .cm-seat-line{margin:0;color:var(--poster-ink)}
-.cm-seat-name span,.cm-seat-line span{padding:1px 6px;border-radius:5px;background:color-mix(in srgb,var(--poster-ground) 76%,transparent);-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.cm-seat-name span,.cm-seat-line span{padding:1px 6px;border-radius:5px;background:color-mix(in srgb,var(--poster-ground) 62%,transparent);-webkit-box-decoration-break:clone;box-decoration-break:clone}
 /* The player's own four controls, wrapping under their reading. */
 .cm-seat-controls{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .cm-q-tl .cm-seat-controls,.cm-q-bl .cm-seat-controls{justify-content:flex-end}
@@ -3534,7 +3534,7 @@ button.cm-vitals{cursor:pointer}
 .cm-full-mine{position:relative;min-height:0;min-width:0;display:grid;--hc:calc(112px * var(--hand-scale,1))}
 .cm-full-mine>.cm-mat{height:100%;padding-top:52px;--mat-reserve:var(--tray-h,calc(var(--hc) * 7 / 5 + 22px))}   /* the pill over it; the whole hand tray along its foot (item 25) */
 .cm-full-mine>.cm-mat[data-fit="full"]{--bc:min(calc(clamp(64px,var(--full-w,1200px) * .075,112px) * var(--board-scale,1)),var(--full-bc-max,112px))}
-.cm-full-pill{position:absolute;left:50%;top:8px;z-index:6;display:flex;align-items:center;gap:8px;padding:4px 6px 4px 12px;transform:translateX(-50%);border-radius:999px;background:var(--mat-scrim);border:1px solid rgba(255,255,255,.15);white-space:nowrap;max-width:calc(100% - 16px);color:var(--mat-ink)}
+.cm-full-pill{position:absolute;left:50%;top:8px;z-index:6;display:flex;align-items:center;gap:8px;padding:4px 6px 4px 12px;transform:translateX(-50%);border-radius:999px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.15);white-space:nowrap;max-width:calc(100% - 16px);color:var(--mat-ink)}
 .cm-full-pill .cm-board-waiting{color:var(--mat-ink)}
 .cm-full-pill .cm-board-next{color:color-mix(in srgb,var(--mat-ink) 80%,transparent)}   /* the theme's muted is a page's, not the pill's */
 #matrix-v2 .cm-full-corner .v-button.compact{min-height:0;height:28px;padding:0 10px}
@@ -3762,8 +3762,8 @@ button.cm-vitals{cursor:pointer}
    --focus-halo (crankmagic-design.css), so on any ground -- a light theme's panel, the dark felt, the brightest artwork --
    one of the two stands 3:1 from what is around it. */
 #matrix-v2 .cm-board :focus-visible,#matrix-v2 .cm-cloud-table :focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;box-shadow:0 0 0 2px var(--focus-halo)}
-/* a card keeps what its glow says (it can be used, it is chosen) inside the ring, and comes out over its neighbors */
-#matrix-v2 .cm-board .cm-bcard:focus-visible{z-index:3;box-shadow:0 0 0 2px var(--focus-halo),0 6px 14px -6px rgb(0 0 0 / .85)}
+/* a card keeps what its glow says (it can be used, it is chosen) inside the ring */
+#matrix-v2 .cm-board .cm-bcard:focus-visible{box-shadow:0 0 0 2px var(--focus-halo),0 6px 14px -6px rgb(0 0 0 / .85)}
 #matrix-v2 .cm-board .cm-bcard.is-bright:focus-visible{box-shadow:0 0 0 2px var(--focus-halo),0 0 0 7px var(--v-accent)}
 #matrix-v2 .cm-board .cm-bcard.is-picked:focus-visible{box-shadow:0 0 0 2px var(--focus-halo),0 0 0 7px var(--v-accent),0 0 18px var(--v-accent)}
 /* WORDS ON THE ACCENT, in the board and the lobby: on --accent-fill, under the theme's own ink */
@@ -3773,11 +3773,9 @@ button.cm-vitals{cursor:pointer}
 /* Full screen's frame is the table's dark in both themes: the rail's view switch, drawn on it with no ground of its own,
    takes the mat's ink (Felt & Cream's dark ink read 1.7:1 there) */
 #matrix-v2 .cm-full-rail .cm-board-views .v-button:not(.is-on){color:var(--mat-ink)}
-/* A focused control's ring is not painted over by its neighbors: the view switch's next button, the cards under the
-   hand's divider, the life counter on the rows' divider (each hid part of the ring, the accessibility pass found). Only
-   while the keyboard is on it: a bar lifted for a mouse's focus (its card-size slider dragged) lay over the life
-   counter's logo and took its click. */
-#matrix-v2 .cm-board-views .v-button:focus-visible{position:relative;z-index:1}
+/* A focused divider's ring is not painted over by its neighbors: the cards under the hand's divider, the life counter on
+   the rows' divider (each hid part of the ring, the accessibility pass found). Only while the keyboard is on it: a bar
+   lifted for a mouse's focus (its card-size slider dragged) lay over the life counter's logo and took its click. */
 .cm-board-traybar:has(:focus-visible),.cm-board-rowbar:has(>.cm-board-grip:focus-visible){z-index:4}
 /* a card picked to read already wears the aether ring, so its focus ring is the band and the ring a step further out */
 #matrix-v2 .cm-board .cm-bcard.is-selected:focus-visible{outline-offset:4px;box-shadow:0 0 0 4px var(--focus-halo),0 6px 14px -6px rgb(0 0 0 / .85)}

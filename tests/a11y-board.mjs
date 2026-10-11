@@ -32,10 +32,11 @@
  *               pop-up is role=dialog, aria-modal, named.
  *
  * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure. A11Y_SHOTS=<dir>
- * writes a screenshot of each view measured.
+ * writes a screenshot of each view measured; A11Y_VERBOSE=1 prints the worst word of each kind and the lowest rings;
+ * A11Y_FAIL_FAST=1 stops at the first failure and A11Y_FAIL_LOG=<file> appends it (or "passed"), for a breaks run.
  */
 import assert from "node:assert/strict";
-import {readFileSync, writeFileSync, mkdirSync} from "node:fs";
+import {readFileSync, writeFileSync, mkdirSync, appendFileSync} from "node:fs";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
 import {inflateSync} from "node:zlib";
@@ -705,6 +706,40 @@ try {
     await page.locator("#cm-board-tools").waitFor({state: "detached"});
     const back = await page.evaluate(() => document.activeElement.matches(".cm-full-rail [data-action=board-tools]"));
     ok(said === "true" && back, `Full screen's ⚙ says it opened Tools (aria-expanded ${said}), and Escape gives the focus back to it (${back})`);
+    /* THE SIDE COLUMN SCROLLS: with the Coach open (the column half as tall) and the card given its most room, the log's
+       clock, the column's last control, is brought into view when the keyboard reaches it, not cut off under the Coach */
+    await page.click(".cm-full-rail [data-action=board-coach]");
+    await page.locator("#cm-board-coach:not([hidden]) .cm-coach-input").waitFor();
+    const split = page.locator(".cm-full-side [data-drag=side]");
+    await page.keyboard.press("Shift");
+    await split.focus();
+    let moved = 0;
+    for (let was = await split.getAttribute("aria-valuenow"); moved < 40; moved += 1) {
+      await page.keyboard.press("ArrowDown");
+      const now = await split.getAttribute("aria-valuenow");
+      if (now === was) break;
+      was = now;
+    }
+    const clock = page.locator(".cm-full-side .cm-board-band [data-action=board-history]");
+    await clock.focus();
+    const inView = await clock.evaluate((el) => {
+      const r = el.getBoundingClientRect(), side = el.closest(".cm-full-side").getBoundingClientRect(), hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      return {whole: r.height > 0 && r.top >= side.top - 0.5 && r.bottom <= side.bottom + 0.5, top: !!hit && el.contains(hit)};
+    });
+    ok(inView.whole && inView.top, `with the Coach open and the card at its most room, Full screen's side column brings the log's clock into view when it has the focus (${JSON.stringify(inView)})`);
+    /* and what runs over the column is not lost (1.4.4): the wheel scrolls it to its foot, as it would at 200% */
+    const over = await page.evaluate(() => {const s = document.querySelector(".cm-full-side"); s.scrollTop = 0; return s.scrollHeight > s.clientHeight + 1;});
+    const sideBox = await page.locator(".cm-full-side").boundingBox();
+    await page.mouse.move(sideBox.x + sideBox.width / 2, sideBox.y + 20);
+    await page.mouse.wheel(0, 2000);
+    await page.waitForTimeout(500);
+    const foot = await page.evaluate(() => {const s = document.querySelector(".cm-full-side"); return s.scrollTop + s.clientHeight >= s.scrollHeight - 2;});
+    ok(over && foot, `and the column, run over, scrolls to its foot by the wheel (runs over: ${over}; its foot reached: ${foot})`);
+    await rest(page);
+    await split.focus();
+    for (let i = 0; i < moved; i += 1) await page.keyboard.press("ArrowUp");
+    await page.click(".cm-full-rail [data-action=board-coach]");
+    await page.locator("#cm-board-coach").waitFor({state: "hidden"});
     await view(page, "focus");
   }
   {
@@ -910,7 +945,8 @@ try {
       await page.keyboard.press("Shift");
       await page.locator(`.cm-board-mat .cm-bcard[data-card="${mine[0].cardId}"]`).focus();
       const glow = await page.evaluate((id) => getComputedStyle(document.querySelector(`.cm-board-mat .cm-bcard[data-card="${id}"]`)).boxShadow, mine[0].cardId);
-      ok(said && /, chosen\b/.test(said.name) && /7px/.test(glow), `a card chosen for a many-of question is said to be chosen ("${said && said.name}"), and keeps its glow inside the focus ring (${glow})`);
+      /* the bright ring (7px) and the chosen card's own glow (18px) both: focused, it still looks chosen */
+      ok(said && /, chosen\b/.test(said.name) && /7px/.test(glow) && /18px/.test(glow), `a card chosen for a many-of question is said to be chosen ("${said && said.name}"), and keeps its glow inside the focus ring (${glow})`);
       hand(ROB, robFrame);
       await page.waitForTimeout(300);
     }
@@ -928,6 +964,9 @@ try {
   /* ---- 5. THE POP-UP ANNOUNCED ---- */
   {
     const page = rob.page;
+    /* the pointer off the cards first: one left over a card shows it large, and says so, in the middle of these */
+    await rest(page);
+    await page.waitForTimeout(500);
     const region = await axOf(rob, "#cm-board-said");
     ok(region.length === 1 && region[0].live === "polite" && ["status", "log"].includes(region[0].role), `the board has one polite status region of its own (${JSON.stringify(region)})`);
     const inBoard = await axOf(rob, "#cm-board [aria-live], #cm-board [role=status], #cm-board [role=alert]");
@@ -1057,5 +1096,7 @@ if (process.env.A11Y_VERBOSE === "1") {
   for (const w of worst) console.log(`  ${w.worst.toFixed(2)} (p01 ${w.p01}, p05 ${w.p05}) of ${w.need}  ${w.where} .${w.cls} "${w.text}" -- ${w.label}`);
   for (const r of ringsSeen.sort((a, b) => a.share - b.share).slice(0, 12)) console.log(`  ring ${r.share} (p10 ${r.p10}) ${r.label}`);
 }
+/* A11Y_FAIL_LOG=<file>: one line a run, its first failure or "passed" (a breaks run's record of what caught each break) */
+if (process.env.A11Y_FAIL_LOG) appendFileSync(process.env.A11Y_FAIL_LOG, `${failures[0] || "passed"}\n`);
 assert.deepEqual(failures, [], `the accessibility pass failed at ${failures.length} place(s):\n  ` + failures.join("\n  "));
 console.log(`a11y-board: ${checks} checks passed — every word on the board and in the lobby at 4.5:1 from its pixels over all ${MATS.length} mats in both themes (the lowest ${worst[0] ? `${worst[0].worst} of ${worst[0].need}, ${worst[0].where} .${worst[0].cls}` : "-"}), the focus rings at 3:1, Tab in reading order through every control with nothing trapped, the keys as bound in Help, every card said with its state and nothing hidden, the questions announced.`);
