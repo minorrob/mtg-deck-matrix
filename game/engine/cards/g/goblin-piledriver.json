@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Goblin Piledriver",
+    "oracleId": "4d74d12b-1ffb-482f-8bac-635a8d4d32e9",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Warrior"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "Protection from blue (This creature can't be blocked, targeted, dealt damage, or enchanted by anything blue.)\nWhenever this creature attacks, it gets +2/+0 until end of turn for each other attacking Goblin.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Protection from blue",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "U"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks, it gets +2/+0 until end of turn for each other attacking Goblin.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "toughness": 0,
+          "power": {
+            "count": {
+              "what": "permanent",
+              "subtypes": [
+                "Goblin"
+              ],
+              "attacking": true,
+              "another": true
+            },
+            "times": 2
+          }
+        }
+      ]
+    }
+  ]
+}

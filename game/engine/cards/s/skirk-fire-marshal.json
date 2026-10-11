@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Skirk Fire Marshal",
+    "oracleId": "87105cdf-c28e-4fd9-83d0-0fef1704b174",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin"
+    ],
+    "manaCost": "{3}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Protection from red\nTap five untapped Goblins you control: This creature deals 10 damage to each creature and each player.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Protection from red",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "R"
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Tap five untapped Goblins you control: This creature deals 10 damage to each creature and each player.",
+      "cost": [
+        {
+          "atom": "tapCreature",
+          "count": 5,
+          "selector": {
+            "subtypes": [
+              "Goblin"
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "damageAll",
+          "amount": 10,
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          },
+          "who": "each"
+        }
+      ]
+    }
+  ]
+}
