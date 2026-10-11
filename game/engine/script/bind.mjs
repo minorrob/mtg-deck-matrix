@@ -317,6 +317,14 @@ export function bindEffect(effect, context, state = null) {
     else if (fact === undefined) delete bound[key];
     else bound[key] = fact;
   }
+  /* "THE PLAYER OR PLANESWALKER THAT CREATURE IS ATTACKING" (Raid Bombardment, Myr Battlesphere; CR 506.3, 508.1b): what the
+     creature an attack trigger is about attacks, as it attacked when the ability triggered (rules/trigger.mjs) -- the
+     planeswalker, while it is still on the battlefield (gone, nothing is dealt the damage, CR 506.4c), or else the player. */
+  if (bound.who === "attacked") {
+    const walker = context.about?.planeswalker;
+    if (walker === undefined || walker === null) bound.who = "that player";
+    else { bound.who = []; bound.targets = !state || state.objects[walker]?.zone === "battlefield" ? [walker] : []; }
+  }
   if ("targets" in bound) bound.targets = objectsOf(bound.targets, context);
   /* "Destroy all creatures with power greater than target creature's power" (Fell the Mighty; CR 608.2h): a selector's
      `power.moreThan`, a fact about a target, read as the resolution began -- a number, or null when that target is no

@@ -111,6 +111,9 @@ function checkEffect(effect, path, errors) {
      anyone "this combat" (Legion Warboss) -- effects/permanents.mjs, afterwards. */
   if (effect.mustAttack !== undefined && !["that player", "this combat"].includes(effect.mustAttack))
     errors.push({path: `${path}.mustAttack`, message: "What it must attack is \"that player\" (this turn) or anyone \"this combat\""});
+  /* "The player or planeswalker that creature is attacking" (Raid Bombardment; script/bind.mjs): damage, to that one alone. */
+  if (effect.who === "attacked" && (name !== "dealDamage" || effect.targets !== undefined))
+    errors.push({path: `${path}.who`, message: "\"The player or planeswalker it's attacking\" (who: \"attacked\") is dealt damage, by dealDamage with no other target"});
   /* Control for the turn, or "for as long as this creature remains on the battlefield" (CR 611.2b; Sower of Temptation),
      or for good when unsaid (effects/permanents.mjs). */
   if (name === "gainControl" && effect.until !== undefined && !CONTROL_DURATIONS.includes(effect.until))

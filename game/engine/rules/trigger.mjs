@@ -207,8 +207,11 @@ function subjects(state, event, condition, sourceId, controller) {
        declares every attacker (CR 508.1). */
     if (condition.atLeast && matched.length < condition.atLeast) return [];
     /* And its controller -- the attacking player (CR 508.1a): "it deals 1 damage to its controller" (Vengeful Ancestor), as
-       it last was should it leave before the trigger resolves (CR 608.2h). */
-    return matched.map((a) => ({card: a.card.cardId, player: a.defender?.playerId, controller: fields.player?.playerId}));
+       it last was should it leave before the trigger resolves (CR 608.2h). And the planeswalker it attacks, when it attacks
+       one (CR 506.3, 508.1b): "the player or planeswalker that creature is attacking" (Raid Bombardment; script/bind.mjs,
+       `who: "attacked"`) -- `player` is then that planeswalker's controller, the defending player. */
+    return matched.map((a) => ({card: a.card.cardId, player: a.defender?.playerId, controller: fields.player?.playerId,
+      ...(a.defender?.planeswalker ? {planeswalker: a.defender.planeswalker.cardId} : {})}));
   }
   /* "Whenever this Vehicle blocks" (CR 509.3a): each creature declared as a blocker that fits, once however many it
      blocks; "blocks a creature" (`eachBlocked`, 509.3b), once for each attacker it blocks -- about the blocker, the attacker

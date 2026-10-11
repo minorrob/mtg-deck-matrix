@@ -1,0 +1,118 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Myr Battlesphere",
+    "oracleId": "c53ba31a-ba27-4e17-9a92-311acb1cab29",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Myr",
+      "Construct"
+    ],
+    "manaCost": "{7}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 4,
+    "toughness": 7
+  },
+  "oracleText": "When this creature enters, create four 1/1 colorless Myr artifact creature tokens.\nWhenever this creature attacks, you may tap X untapped Myr you control. If you do, this creature gets +X/+0 until end of turn and deals X damage to the player or planeswalker it's attacking.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, create four 1/1 colorless Myr artifact creature tokens.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 4,
+          "token": {
+            "name": "Myr",
+            "types": [
+              "Artifact",
+              "Creature"
+            ],
+            "subtypes": [
+              "Myr"
+            ],
+            "colors": [],
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks, you may tap X untapped Myr you control. If you do, this creature gets +X/+0 until end of turn and deals X damage to the player or planeswalker it's attacking.",
+      "trigger": {
+        "on": "attacks"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "battlefield",
+          "selector": {
+            "subtypes": [
+              "Myr"
+            ],
+            "controller": "you",
+            "tapped": false
+          },
+          "count": {
+            "count": {
+              "what": "permanent",
+              "subtypes": [
+                "Myr"
+              ],
+              "controller": "you",
+              "tapped": false
+            }
+          },
+          "upTo": true,
+          "to": "stay",
+          "remember": true
+        },
+        {
+          "effect": "tap",
+          "targets": "remembered"
+        },
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": {
+            "rememberedCount": true
+          },
+          "toughness": 0,
+          "condition": {
+            "compare": {
+              "count": {
+                "rememberedCount": true
+              },
+              "atLeast": 1
+            }
+          }
+        },
+        {
+          "effect": "dealDamage",
+          "amount": {
+            "rememberedCount": true
+          },
+          "who": "attacked",
+          "condition": {
+            "compare": {
+              "count": {
+                "rememberedCount": true
+              },
+              "atLeast": 1
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
