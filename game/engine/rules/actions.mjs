@@ -1636,8 +1636,10 @@ function abilityOffers(state, player, id, ability) {
       : anyCounter ? Object.entries(object.counters ?? {}).filter(([, n]) => n > 0).map(([counter]) => ({counter})) : [null];
     for (const payment of [...(plain ? [plain] : []), ...(bends ? [{waterbend: true}] : [])])
     for (const costChoice of fodder)
-    /* What rider mana it spends, when it must spend some (rules/restricted-mana.mjs, riderChoices). */
-    for (const riders of (payment.payWays ? null : riderChoices(state, player, {ability: id}, payment.mana?.mana ?? {})) ?? [undefined])
+    /* What rider mana it spends, when it must spend some (rules/restricted-mana.mjs, riderChoices). Not a waterbend offer's:
+       its mana is known only once the permanents it taps are picked, so the rest is paid as anything but a spell is, the
+       plain mana first and the rider mana after (spendFor). */
+    for (const riders of (payment.payWays || payment.waterbend ? null : riderChoices(state, player, {ability: id}, payment.mana?.mana ?? {})) ?? [undefined])
       actions.push(...withModesOrTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text,
         ...(payment.waterbend ? {payment: null, waterbend: true} : offeredPayment(payment)), ...(X !== null ? {x: X} : {}), ...ridersOffer(state, riders),
         /* A loyalty ability says its loyalty cost (CR 606.4), for a pilot to weigh. */
