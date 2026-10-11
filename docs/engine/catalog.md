@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,242 defined and playable today; 2,575 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,242 defined and playable today; 2,578 with every
 mechanic built, so only their definitions are left to write; 27 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 53 | 0 | 5 | 136 |
+| Keyword abilities (CR 702) | 194 | 54 | 0 | 5 | 135 |
 | Keyword actions (CR 701) | 70 | 22 | 3 | 1 | 44 |
 | Effects | 192 | 70 | 1 | 2 | 119 |
 | Triggers | 138 | 20 | 4 | 2 | 112 |
@@ -36,7 +36,7 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 26 | 91 |
+| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 27 | 91 |
 | option | Remembering what an effect moved | — | missing | 21 | 83 |
 | option | You may play or cast a card from another zone | — | missing | 17 | 65 |
 | effect | ChooseColor | — | missing | 10 | 14 |
@@ -102,7 +102,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.90 | Infect | Infect | built | 4 | 45 | 0 | 0 |
 | 702.79 | Persist | — | missing | 4 | 24 | 4 | 3 |
 | 702.100 | Evolve | Evolve | built | 4 | 23 | 0 | 0 |
-| 702.61 | Split Second | — | missing | 4 | 22 | 4 | 3 |
+| 702.61 | Split Second | Split Second | built | 4 | 22 | 0 | 0 |
 | 702.175 | Offspring | — | missing | 4 | 21 | 4 | 4 |
 | 702.75 | Hideaway | Hideaway | built | 4 | 15 | 0 | 0 |
 | 702.62 | Suspend | — | missing | 3 | 72 | 3 | 3 |
@@ -828,7 +828,7 @@ The things that alone hold back the most of the most-played cards.
 | Fewer targets than the most ("up to", "any number of") | a target's count {min, max} (script/bind.mjs), picked as a pick-several | built | 126 | 1672 | 0 | 0 |
 | Remembering what an effect moved | — | missing | 124 | 1168 | 83 | 21 |
 | More than one target of a kind ("up to N") | a target's count {min, max} (script/bind.mjs); a count that is X is not built | partial | 123 | 1664 | 0 | 0 |
-| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 91 | 26 |
+| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 91 | 27 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost} | built | 104 | 684 | 0 | 0 |

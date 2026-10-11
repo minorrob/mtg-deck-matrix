@@ -175,7 +175,9 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   "choose a background",
   /* Paradigm (CR 702.192; Germination Practicum): a spell exiled as it resolves, cast again as a copy each precombat main
      phase after the first time one of its name resolves (rules/stack.mjs). */
-  "paradigm"];
+  "paradigm",
+  /* Train C, phase 2 (p5-keywords): split second (CR 702.61; keywords/timing.mjs). */
+  "split second"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

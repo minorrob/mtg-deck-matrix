@@ -11,15 +11,15 @@
   "cards": 3238,
   "defined": 1242,
   "provisional": 27,
-  "everyRule": 2575
+  "everyRule": 2578
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 53,
+    "built": 54,
     "partial": 0,
     "named": 5,
-    "missing": 136
+    "missing": 135
    },
    "entries": [
     {
@@ -578,13 +578,13 @@
      "kind": "keyword ability",
      "rule": "702.61",
      "name": "Split Second",
-     "engine": null,
-     "status": "missing",
+     "engine": "Split Second",
+     "status": "built",
      "forge": "Split second",
      "top": 4,
      "all": 22,
-     "blocks": 4,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -8948,7 +8948,7 @@
      "top": 123,
      "all": 1460,
      "blocks": 91,
-     "alone": 26
+     "alone": 27
     },
     {
      "kind": "option",

@@ -367,7 +367,7 @@ const casts = (s, seat, id) => legalActions(s, seat).some((a) => a.kind === "cas
 
 /* ---- the family is declared ---- */
 {
-  eq([...TIMING.timing], ["Flash", "Haste"], "timing is a family, and flash and haste are in it");
+  eq([...TIMING.timing], ["Flash", "Haste", "Split Second"], "timing is a family, and flash, haste and split second (tests/engine-split-second.mjs) are in it");
 }
 
 /* ---- summoning sickness reaches a creature's {T} abilities (CR 302.6) ---- */

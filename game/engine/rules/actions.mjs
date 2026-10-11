@@ -57,7 +57,7 @@ import {pushSpell, pushAbility, becameTarget} from "./stack.mjs";
 import {addMana, spend, parseManaCost, automaticPayment, canPay, chosenPayment, paymentOptions, paymentKey, paymentWords, PAY_CHOICES, manaValue, poolSize, tapPlans, convokeCanPay, convokePayments} from "./mana.mjs";
 import {commanderTax, recordCommanderCast, colorIdentity} from "./commander.mjs";
 import {COLORS, MANA_KEYS} from "./mana.mjs";
-import {sickForAbilities, hasFlash} from "../keywords/timing.mjs";
+import {sickForAbilities, hasFlash, splitSecondOnStack} from "../keywords/timing.mjs";
 import {targetChoices, targetName, isHostile, modalScript, isChoosing, countOf, targetCandidates, countedChoice, inWords, differentControllersProblem} from "../script/bind.mjs";
 import {moveOne, sacrificeOne, mill} from "../script/effects/zones.mjs";
 import {compileSelector, matchesSelector, selectMatching} from "../script/filter.mjs";
@@ -1272,6 +1272,9 @@ function offers(state, player) {
   const mana = manaOffers(state, player);
   actions.push(...mana);
   actions.push(...faceUpOffers(state, player));
+  /* SPLIT SECOND (CR 702.61a-b): a spell with it on the stack, and nothing else is cast or activated -- passing, the mana
+     abilities and the special actions above are all there is. */
+  if (splitSecondOnStack(state)) return actions;
   /* What a cast could tap, read once and only if a cast asks (castTapPlans). */
   let units = null;
   const tappable = () => (units ??= tapUnits(state, player, mana));
@@ -1431,6 +1434,8 @@ export function castChoicesNow(state, player, id) {
 function choicesNow(state, player, id) {
   const object = state.objects[id];
   if (!object || (object.types ?? []).includes("Land") || object.enchant || (object.spell?.additionalCost ?? []).length || castForbidden(state, player, id)) return [];
+  /* Nor while a spell with split second is on the stack (CR 702.61a): no spell is cast then, as an effect resolves either. */
+  if (splitSecondOnStack(state)) return [];
   const base = {kind: "cast", objectId: id, label: object.card, payment: {mana: {}, life: 0}, from: object.zone, tax: 0};
   const context = {controller: player, source: id};
   /* NAMED: a spell with a counted target ("up to two target creatures") is not cast this way yet -- its targets would be a

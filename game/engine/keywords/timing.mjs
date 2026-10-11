@@ -30,8 +30,9 @@ import {ruleChanged} from "../rules/statics.mjs";
 
 /** The family of §3.1, so `engine-coverage` counts these as behavior and not as words. */
 export const KEYWORD_FAMILIES = Object.freeze({
-  /** When a spell may be cast, and when a permanent may act. */
-  timing: Object.freeze(["Flash", "Haste"]),
+  /** When a spell may be cast, and when a permanent may act. Split second (CR 702.61a; Siege Smash): while a spell with it
+      is on the stack, no other spell is cast and no ability but a mana ability is activated (splitSecondOnStack). */
+  timing: Object.freeze(["Flash", "Haste", "Split Second"]),
   /** Where a spell may be cast from: Flashback (CR 702.34a), from its owner's graveyard for its flashback cost, then
       exiled. rules/actions.mjs offers the cast, rules/stack.mjs and effects/zones.mjs exile it. Escape (CR 702.138a), from
       its owner's graveyard for its escape cost, mana and "exile N other cards from your graveyard" picked as the cast is
@@ -80,6 +81,17 @@ export function summoningSick(state, id) {
 export function sickForAbilities(state, id) {
   return summoningSick(state, id) && !ruleChanged(state, "activate-as-though-haste", id);
 }
+
+/**
+ * SPLIT SECOND (CR 702.61a; Siege Smash): whether a spell with it is on the stack -- as it is there, its keywords derived.
+ * While one is, no player may cast another spell or activate an ability that is not a mana ability: rules/actions.mjs offers
+ * nothing else, and casts nothing as an effect resolves. Mana abilities and special actions (a face-down permanent turned
+ * face up) stay open, and triggered abilities trigger and go on the stack as ever (702.61b). Copied, a copy has it too
+ * (CR 707.2). Instances are redundant (702.61c).
+ */
+/* An ability on the stack has no object of its own (rules/stack.mjs, pushAbility): only a spell, or a copy of one, has it. */
+export const splitSecondOnStack = (state) => state.stack.some((entry) => state.objects[entry.objectId] !== undefined
+  && keywordsOf(state, entry.objectId).includes("Split Second"));
 
 /** CR 702.8a: this card may be cast any time its controller could cast an instant. */
 export const hasFlash = (state, id) => keywordsOf(state, id).includes("Flash");
