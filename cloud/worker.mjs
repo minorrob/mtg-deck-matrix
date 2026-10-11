@@ -25,6 +25,7 @@
  *   POST /api/ai/advise            the deck advisor (AI-4): the same door, the brief built here from the person's own
  *                                  library in the cloud (cloud/advise.mjs); its own switch, AI_ADVISE
  *   GET  /api/ai-advise            whether this person may ask the advisor (AI-4): {open}
+ *   GET  /api/ai-meter             this person's AI spending over the last 24 hours against their cap (AI-6)
  *   GET  /api/ai/login?to=#...     back to the app once signed in to the AI door
  */
 import {verifyAccess, Unauthorized} from "./access.mjs";
@@ -35,6 +36,17 @@ import {readAsk, openVersion, adviseBrief} from "./advise.mjs";
 import {tables} from "./tables.mjs";
 
 /** Whether this person may seat an AI on Claude: the same gates as the table's object checks when it seats one. */
+/* AI COACH SETTINGS (AI-6): the person's own spending over the last 24 hours against their cap, from the call log, for
+   the settings panel's meter; `open` false where the door is shut or they are not on its list. */
+async function aiMeter(env, email) {
+  if (!env.DB) return {open: false};
+  let config;
+  try {config = settings(env);} catch {return {open: false};}
+  const ai = createAi(env.DB);
+  if (!(await ai.allowed(email))) return {open: false};
+  const {mine} = await ai.spent(email);
+  return {open: true, spentCents: Math.round(mine / 10000 * 100) / 100, capCents: config.capPerson / 10000};
+}
 async function aiSeatOpen(env, email, flag = "AI_PILOT") {
   if (env[flag] !== "on" || !env.DB) return false;
   try {settings(env);} catch {return false;}
@@ -148,6 +160,7 @@ export async function handle(request, env, deps = {}) {
     if (method === "GET" && path === "/api/ai-seat") return reply(200, {open: await aiSeatOpen(env, person.email)});
     /* THE DECK ADVISOR (AI-4): a deck's page offers Ask the advisor only where the door would answer this person. */
     if (method === "GET" && path === "/api/ai-advise") return reply(200, {open: await aiSeatOpen(env, person.email, "AI_ADVISE")});
+    if (method === "GET" && path === "/api/ai-meter") return reply(200, await aiMeter(env, person.email));
     if (method === "GET" && path === "/api/library") return reply(200, {head: await library.head(person.id)});
     if (method === "PUT" && path === "/api/library") {
       const input = await body(request);
@@ -226,9 +239,9 @@ async function aiDoor(request, env, deps, url, ms) {
     }
     /* THE COACH: the table builds the asking person's brief from their own seat's view (game/room/coach-brief.mjs),
        never from anything the browser sends; a person with no seat there, or no game on, is refused by the table. */
-    const {tableId, question} = readQuestion(input);
+    const {tableId, question, hand} = readQuestion(input);
     if (!env.TABLES) return reply(503, {error: "Play is not switched on here yet."});
-    const asked = await env.TABLES.get(env.TABLES.idFromName(tableId)).fetch(new Request("https://table.internal/table/brief", {headers: {"x-crankmagic-email": who.email}}));
+    const asked = await env.TABLES.get(env.TABLES.idFromName(tableId)).fetch(new Request(`https://table.internal/table/brief${hand ? "" : "?hand=0"}`, {headers: {"x-crankmagic-email": who.email}}));
     const found = await asked.json().catch(() => null);
     if (!asked.ok || !found?.brief) return reply(asked.ok ? 502 : asked.status, {error: found?.error || "The table could not say what is on it."});
     return reply(200, await coach({ai, who, brief: found.brief, question, config, fetchImpl: deps.fetchImpl || fetch}));

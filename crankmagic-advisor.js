@@ -21,7 +21,7 @@ C.adviseOpen=false;
 if(document.querySelector('meta[name="crankmagic-accounts"]')?.content==='on')fetch('/api/ai-advise',{credentials:'same-origin',redirect:'manual',cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{C.adviseOpen=!!(j&&j.open);}).catch(()=>{});
 let advised=null;   /* the last answer, with the deck it is for */
 actions['deck-advise']=el=>{const d=M.deck(C.state,el.dataset.deck);advised=null;
-  modal('Ask the AI advisor · '+d.name,`${note('The advisor reads this deck and your own cards and lists as last saved to the cloud, and proposes swaps among them. Nothing changes until you save a swap as an upgrade.')}<label>Your goal (optional)<input id="cm-advise-ask" maxlength="300" placeholder="Make it faster, more removal under $20…"></label><div class="cm-actions">${b('Ask the advisor','deck-advise-send',{deck:d.id},true)}</div><div id="cm-advise-out" aria-live="polite"></div>`);};
+  modal('Ask the AI advisor · '+d.name,`${note('The advisor reads this deck and your own cards and lists as last saved to the cloud, and proposes swaps among them, and among cards you don’t own if your AI Coach settings allow. Nothing changes until you save a swap as an upgrade.')}<label>Your goal (optional)<input id="cm-advise-ask" maxlength="300" placeholder="Make it faster, more removal under $20…"></label><div class="cm-actions">${b('Ask the advisor','deck-advise-send',{deck:d.id},true)}</div><div id="cm-advise-out" aria-live="polite"></div>`);};
 actions['deck-advise-send']=async el=>{const d=M.deck(C.state,el.dataset.deck),out=$('#cm-advise-out'),ask=($('#cm-advise-ask')?.value||'').trim();
   out.innerHTML=`<p class="cm-muted">Asking the advisor…</p>`;el.disabled=true;
   let r,j=null;
@@ -41,7 +41,8 @@ actions['deck-advise-save']=async el=>{const d=M.deck(C.state,el.dataset.deck);
   if(!ticked.length)throw Error('Tick a swap to save it as an upgrade.');
   const byName=n=>Object.keys(C.state.cards).find(id=>C.card(id)?.name===n);
   let saved=0;
-  for(const c of ticked){const slot=d.slots.find(r=>r.purpose==='main'&&C.card(r.cardId)?.name===c.out),cardId=byName(c.in);
+  /* A card not owned (AI Coach settings: Suggest cards I don't own) is the catalog's, and joins the library as the upgrade's card. */
+  for(const c of ticked){const slot=d.slots.find(r=>r.purpose==='main'&&C.card(r.cardId)?.name===c.out),cardId=byName(c.in)||C.catalog.exact(c.in)?.id;
     if(!slot||!cardId)continue;
     await C.commit({type:'option',deckId:d.id,replaces:slot.id,cards:[C.catalog.get(cardId)||C.card(cardId)],option:{cardId,quantity:slot.quantity,purpose:'upgrade'},reserve:false});saved++;}
   actions.close();
