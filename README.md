@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 401 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 406 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1271,6 +1271,11 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-adventure-targets` - `tests/engine-adventure-targets.mjs`: an Adventure's counted targets asked and answered as the Adventure's (Meager Meal's up to one creature, Gaze in Wonder's one or two, Gone Fishing's two of yours)
 - `engine-dig-reveal` - `tests/engine-dig-reveal.mjs`: what a dig reveals shown to every player (Satyr Wayfinder's four, in the journal and in each seat's view while its controller chooses; Boughside Wanderers' card taken, alone)
 - `engine-history-records` - `tests/engine-history-records.mjs`: what happened this turn and this game -- creatures that died (morbid), cards drawn, noncombat damage, a scry or surveil, opponents' life lost (spectacle), spells cast, by name -- a graveyard card from the battlefield this turn, and what has dealt damage
+- `engine-attacked-recipient` - `tests/engine-attacked-recipient.mjs`: "the player or planeswalker that creature is attacking" (CR 506.3; Raid Bombardment, Myr Battlesphere), at four seats, with the planeswalker or the creature gone before the trigger resolves
+- `engine-attacks-alone` - `tests/engine-attacks-alone.mjs`: "attacks alone" and "attacks a player alone" (CR 506.5; Thoughtweft Imbuer, Jiang Yanggu), the cards discarded this turn by every route, and "during combat, players can't cast spells or activate abilities that aren't mana abilities" (Yuriko, Blade of the Mighty)
+- `engine-combat-moments` - `tests/engine-combat-moments.mjs`: delayed triggers at end of combat (Wall of Junk) and at the declare attackers step of your next turn (Meandering Towershell); a step that asks has begun for its triggers (the held draw too); an attack made of a creature put onto the battlefield attacking (CR 508.8), a planeswalker among what it may attack (CR 508.4); islandwalk
+- `engine-lose-game` - `tests/engine-lose-game.mjs`: "that player loses the game" (CR 104.3e; Strixhaven Stadium, Triskaidekaphobia), at once and together, a draw when all who remain do, against "you can't lose the game", the loser's own spell gone with them; and combat damage "to you"
+- `engine-combat-statics` - `tests/engine-combat-statics.mjs`: "attacking creatures you control get +1/+0" (Goblin Oriflamme), defender lifted while a Lesson is in your graveyard (Platypus-Bear), and negative power assigned as positive (CR 510.1a; Loot, the Anomaly)
 
 ## Design and execution record
 

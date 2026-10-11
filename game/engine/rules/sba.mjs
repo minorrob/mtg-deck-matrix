@@ -157,6 +157,21 @@ function removePlayerFromBoard(state, playerId, events) {
     moveOne(state, entry.objectId, "exile", events);
   }
 }
+/**
+ * A PLAYER WHO HAS LOST LEAVES THE GAME (CR 104.5, 800.4a): marked out, said, and everything of theirs gone -- as a
+ * state-based action finds the loss (above), or at once as an effect says they lose (script/effects/resources.mjs,
+ * loseGame; CR 104.3e), which is no state-based action.
+ */
+export function leaveGame(state, player, reason, events) {
+  player.lost = true;
+  player.lostTo = reason;
+  events.push(event("GameEventPlayerLivesChanged", state, {
+    player: {playerId: player.id, name: player.name},
+    oldLives: player.life, newLives: player.life, lost: true, lossReason: reason,
+  }));
+  removePlayerFromBoard(state, player.id, events);
+}
+
 /* A spell or ability that was resolving has left the stack with the player who left (800.4a): nothing is left of it to
    resolve, and a question it was asking anyone is withdrawn. */
 function cutShort(state) {
@@ -385,13 +400,7 @@ export function checkStateBasedActions(state) {
       /* "You can't lose the game" (Darksteel Angel; CR 104.3, 104.2b): no state-based action takes the game from its
          controller -- conceding still does (CR 104.3a). */
       if (reason !== "conceded" && playerRuled(state, "cant-lose", player.id)) continue;
-      player.lost = true;
-      player.lostTo = reason;
-      events.push(event("GameEventPlayerLivesChanged", state, {
-        player: {playerId: player.id, name: player.name},
-        oldLives: player.life, newLives: player.life, lost: true, lossReason: reason,
-      }));
-      removePlayerFromBoard(state, player.id, events);
+      leaveGame(state, player, reason, events);
       acted = true;
     }
 

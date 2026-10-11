@@ -100,7 +100,7 @@ function printed(state, id) {
    cannot ask what they are still deriving. Anything else would be ignored, and a static would affect more than it says:
    the card compiler refuses it (cards/index.mjs). */
 export const LAYER_AFFECTS_KEYS = Object.freeze(["anyOf", "what", "ids", "types", "subtypes", "supertypes", "controller", "token", "another", "self", "attachedBy", "colors", "colorless", "countersAtLeast", "tapped", "counters",
-  "keywords", "hasDealtDamage", "hasDealtCombatDamage"]);
+  "keywords", "hasDealtDamage", "hasDealtCombatDamage", "attacking"]);
 
 function affects(state, effect, current, sourceController) {
   const rule = effect.affects ?? {};
@@ -143,6 +143,9 @@ function affects(state, effect, current, sourceController) {
      combat damage, as the selector grammar reads it (script/filter.mjs) -- a fact of the game, which no layer changes. */
   if (rule.hasDealtDamage !== undefined && (state.objects[current.id]?.hasDealtDamage === true) !== rule.hasDealtDamage) return false;
   if (rule.hasDealtCombatDamage !== undefined && (state.objects[current.id]?.hasDealtCombatDamage === true) !== rule.hasDealtCombatDamage) return false;
+  /* "Attacking creatures you control get +1/+0" (Goblin Oriflamme): in this combat's attacks, declared or put onto the
+     battlefield attacking (CR 508.4) -- read off the combat, which no layer changes; over at the end of combat (CR 511.3). */
+  if (rule.attacking === true && !(state.combat?.attacks ?? []).some((attack) => attack.attacker === current.id)) return false;
   /* "Creatures you control with toxic have lifelink" (Skrelv's Hive): its keywords as the derivation has them so far -- an
      effect that gives or takes the keyword is one this depends on (CR 613.8a; dependsOn asks, and orders them). */
   if (rule.keywords && !rule.keywords.every((word) => (current.keywords ?? []).includes(word))) return false;

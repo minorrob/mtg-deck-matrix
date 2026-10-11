@@ -71,7 +71,12 @@ const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "trig
   "more-counters",
   /* "Can't ... block unless you control seven or more lands" (Topiary Stomper, CR 509.1b): read as each blocker is checked
      (rules/combat.mjs canBlock, through rules/statics.mjs ruleChanged, which asks every rule's condition). */
-  "cant-block"];
+  "cant-block",
+  /* An activation forbidden (CR 602.5; rules/statics.mjs, activationForbidden), as a cast forbidden is. */
+  "cant-activate",
+  /* "As long as there is a Lesson card in your graveyard, this creature can attack as though it didn't have defender"
+     (Platypus-Bear; CR 702.3b): rules/statics.mjs defenderLifted asks it as attackers are offered. */
+  "attacks-despite-defender"];
 
 /* What a flashback cost may be made of (CR 702.34a): mana, life ("Flashback--{1}{U}, Pay 3 life"), and creatures to tap
    ("Flashback--Tap three untapped white creatures you control", Battle Screech: `tapCreature`, its `count` and `selector`). */
@@ -144,7 +149,8 @@ const damageDealt = (t) => (t.to === "self" ? {on: "GameEventCardDamaged", to: "
     /* "Whenever a Dragon you control is dealt damage", "whenever a creature is dealt damage", "whenever enchanted creature
        is dealt damage": `to` "creature" (`filter` what was dealt it) or "enchanted"; about the creature dealt it. */
     : t.to === "creature" || t.to === "enchanted" ? {on: "GameEventCardDamaged", to: t.to, ...(t.filter ? {filter: t.filter} : {}), ...(t.combat ? {combat: true} : {})}
-    : ARRIVALS.includes(t.who ?? "self") && ["player", "opponent"].includes(t.to ?? "player")
+    /* "Whenever a creature deals combat damage to you" (Strixhaven Stadium): `to: "you"`, this ability's controller. */
+    : ARRIVALS.includes(t.who ?? "self") && ["player", "opponent", "you"].includes(t.to ?? "player")
     ? {on: "GameEventPlayerDamaged", who: t.who ?? "self", to: t.to ?? "player", ...(t.combat ? {combat: true} : {}), ...(t.noncombat ? {noncombat: true} : {}), ...(t.sourceYours ? {sourceYours: true} : {}), ...(t.filter ? {filter: t.filter} : {}),
       /* "Deals combat damage to a player or planeswalker" (Grateful Apparition): damage dealt to a planeswalker counts
          too, about its controller (rules/trigger.mjs). */
@@ -234,12 +240,16 @@ const TRIGGERS = {
        ability's controller attacked (`each: "defender"`, `defender: "opponent"`), about that player and the attacking one. */
     ...(t.each === "defender" && t.defender === "opponent" ? {defender: "opponent"} : {})}),
   /* "Whenever this creature attacks", "whenever a creature you control attacks": once per attacker (CR 508.1m). */
-  attacks: (t) => (ARRIVALS.includes(t.who ?? "self") ? {on: "GameEventAttackersDeclared", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {}),
+  attacks: (t) => (ARRIVALS.includes(t.who ?? "self") && [undefined, "opponent", "you", "player"].includes(t.defender) && [undefined, true].includes(t.alone)
+    ? {on: "GameEventAttackersDeclared", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {}),
     /* "Attack one of your opponents" -- "or a planeswalker they control" (`planeswalkers`, CR 506.3); "attacks with three or
-       more creatures" (rules/trigger.mjs). */
+       more creatures" (rules/trigger.mjs). "Attacks a player" (`defender: "player"`, Jiang Yanggu, Alone): a player, never a
+       planeswalker (CR 506.3). */
     ...(t.defender ? {defender: t.defender} : {}), ...(t.planeswalkers === true ? {planeswalkers: true} : {}), ...(t.atLeast ? {atLeast: t.atLeast} : {}),
     /* "Whenever Aurelia attacks for the first time each turn" (rules/trigger.mjs). */
-    ...(t.firstTime ? {firstTime: true} : {})} : null),
+    ...(t.firstTime ? {firstTime: true} : {}),
+    /* "Whenever a creature you control attacks alone" (Thoughtweft Imbuer; CR 506.5): the only creature declared. */
+    ...(t.alone === true ? {alone: true} : {})} : null),
   /* "Whenever this Vehicle attacks or blocks" (Smuggler's Copter; CR 509.3a): "whenever [a creature] blocks" -- once each
      combat for each creature declared as a blocker, however many it blocks; "whenever [a creature] blocks a creature"
      (`each: "attacker"`, 509.3b) once for each attacking creature it blocks. `who` and `filter` the blocker, read as blockers
@@ -425,7 +435,9 @@ function spendOnlyValid(only) {
    or "self" -- remembered as the trigger is made (`watch`, effects/permanents.mjs) -- and `thisTurn` for one that lasts
    the turn (CR 603.7b). One that waits for a moment says `at`: "end step" or "upkeep" -- or "your upkeep", the next upkeep
    of its controller's own turn ("exile those creatures at the beginning of your next upkeep", Rally the Ancestors). */
-const DELAYED_MOMENTS = ["end step", "upkeep", "your upkeep"];
+/* "At end of combat" (Wall of Junk; CR 511.2) and "at the beginning of the declare attackers step on your next turn"
+   (Meandering Towershell) too: the next end of combat step, and that step of a turn of its controller's after this one. */
+const DELAYED_MOMENTS = ["end step", "upkeep", "your upkeep", "end of combat", "your next declare attackers"];
 function withDelayedTriggers(abilities, problems) {
   const walk = (effect) => {
     if (!effect || typeof effect !== "object") return effect;
@@ -1158,6 +1170,9 @@ export function compileScript(script) {
     /* A layer static's `affects` is read by the layers' own matcher: a key it does not read is refused, not ignored. */
     if (ability.kind === "static" && ability.layer !== undefined)
       for (const key of Object.keys(ability.affects ?? {})) if (!LAYER_AFFECTS_KEYS.includes(key)) problems.push(`${ability.text}: a layer static's affects has no key ${JSON.stringify(key)}`);
+    /* "Attacking creatures you control" (rules/layers.mjs): attacking, never "not attacking", which the layers do not read. */
+    if (ability.kind === "static" && ability.layer !== undefined && ability.affects?.attacking !== undefined && ability.affects.attacking !== true)
+      problems.push(`${ability.text}: a layer static's affects says attacking: true, or nothing of attacking`);
     /* Escape given ("each nonland card in your graveyard has escape. The escape cost is equal to the card's mana cost plus
        exile three other cards from your graveyard", Underworld Breach): to the cards `affects` describes (the schema asks
        for it), its cost the cards to exile. */

@@ -26,11 +26,11 @@
  * unwind across the pause and rebuild itself.
  */
 
-import {cardsIn, moveObject, addObject, valueCostOf, rememberExileLooker, usesThisTurn, recordUse} from "../../state/index.mjs";
+import {cardsIn, moveObject, addObject, valueCostOf, rememberExileLooker, usesThisTurn, recordUse, recordDiscard} from "../../state/index.mjs";
 import {compileSelector} from "../filter.mjs";
 import {event, cardRef, moveOne, playersFor, sacrificeOne, destructionQuestion, destructionChoice} from "./zones.mjs";
 import {proliferate as giveEachAnother, addCounters, putCounter, moveCounters} from "./resources.mjs";
-import {makeCopies, afterwards, joinAttack, defendingPlayers, attachTo, createToken, effectUntil, COPY_KEYS} from "./permanents.mjs";
+import {makeCopies, afterwards, joinAttack, attackPlaces, attachTo, createToken, effectUntil, COPY_KEYS} from "./permanents.mjs";
 import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits, unlessPlans, planWords, payPlan} from "../../rules/mana.mjs";
 import {typesOf, characteristicsOf, everyCreatureTypeOf, controllerOf} from "../../rules/layers.mjs";
 import {pushCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
@@ -411,6 +411,7 @@ function discardOne(state, id, player, events) {
   const card = cardRef(state, id);
   const owner = state.objects[id].owner;
   const discarded = moveObject(state, id, "graveyard", owner);
+  recordDiscard(state, player);
   events.push(event("GameEventCardChangeZone", state, {
     card,
     becomes: discarded,
@@ -1226,25 +1227,27 @@ export const changeTargets = {
   },
 };
 
-/* ---- attackWhom: a creature put onto the battlefield attacking, with more than one defending player it could attack
-   (CR 508.4): which one, its controller's choice as it enters -- a question for each, in the order they were made.
+/* ---- attackWhom: a creature put onto the battlefield attacking, with more than one defending player or planeswalker it
+   could attack (CR 508.4): which one, its controller's choice as it enters -- a question for each, in the order they were made.
    Queued by what made them (effects/permanents.mjs, enterAttacking); never written in a card script. ---- */
 export const attackWhom = {
   /* Queued only with two defending players or more, and asked at once: nothing happens between. */
+  /* Each defending player, and each planeswalker one of them controls (CR 508.4; effects/permanents.mjs, attackPlaces). */
   open(state, params) {
-    state.awaiting = {kind: "effect-choice", effect: "attackWhom", player: params.player, tokens: [...params.tokens], players: defendingPlayers(state, params.player)};
+    state.awaiting = {kind: "effect-choice", effect: "attackWhom", player: params.player, tokens: [...params.tokens], places: attackPlaces(state, params.player)};
     return true;
   },
   choice(state, awaiting) {
     const id = awaiting.tokens[0];
-    return {id: `attackWhom:${id}`, title: `${state.objects[id].card} enters attacking: which player?`, mode: "one", min: 1, max: 1,
-      options: awaiting.players.map((p, index) => ({index, label: state.players[p].name, playerId: p}))};
+    return {id: `attackWhom:${id}`, title: `${state.objects[id].card} enters attacking: which player or planeswalker?`, mode: "one", min: 1, max: 1,
+      options: awaiting.places.map(({player, planeswalker}, index) => ({index, playerId: player,
+        ...(planeswalker === undefined ? {label: state.players[player].name} : {label: `${state.objects[planeswalker]?.card ?? "A planeswalker"} (${state.players[player].name})`, planeswalkerId: planeswalker})}))};
   },
   apply(state, awaiting, indices) {
     const option = attackWhom.choice(state, awaiting).options[(indices ?? [])[0]];
     if (!option) throw new Error("Invalid selection");
     const [id, ...rest] = awaiting.tokens;
-    joinAttack(state, id, option.playerId);
+    joinAttack(state, id, option.playerId, option.planeswalkerId);
     if (rest.length) { state.awaiting = {...awaiting, tokens: rest}; return {events: [], again: true}; }
     return {events: []};
   },

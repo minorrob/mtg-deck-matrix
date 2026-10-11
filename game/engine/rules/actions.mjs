@@ -52,7 +52,7 @@
  * `sacrifice` of the source itself; a card with any other is refused at prepare (cards/index.mjs).
  */
 
-import {cardsIn, moveObject, usesThisTurn, recordUse, showFace, showAdventure, turnFaceUp, eventCard, commanderKeyOf} from "../state/index.mjs";
+import {cardsIn, moveObject, usesThisTurn, recordUse, showFace, showAdventure, turnFaceUp, eventCard, commanderKeyOf, recordDiscard} from "../state/index.mjs";
 import {pushSpell, pushAbility, becameTarget} from "./stack.mjs";
 import {addMana, spend, parseManaCost, automaticPayment, canPay, chosenPayment, paymentOptions, paymentKey, paymentWords, PAY_CHOICES, manaValue, poolSize, tapPlans, convokeCanPay, convokePayments} from "./mana.mjs";
 import {commanderTax, recordCommanderCast, colorIdentity} from "./commander.mjs";
@@ -65,7 +65,7 @@ import {runEffects} from "../script/effects/index.mjs";
 import {changeLife} from "../script/effects/resources.mjs";
 import {unprepare, preparedCopyStays} from "../script/effects/attributes.mjs";
 import {checkStateBasedActions, gameOver} from "./sba.mjs";
-import {costReduction, costIncrease, abilityCostIncrease, playerStatics, freeCast, flashGranted, castForbidden, countersPlaced} from "./statics.mjs";
+import {costReduction, costIncrease, abilityCostIncrease, playerStatics, freeCast, flashGranted, castForbidden, countersPlaced, activationForbidden} from "./statics.mjs";
 import {countMana, amountOf, countEffect} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
@@ -1355,7 +1355,9 @@ function offers(state, player) {
     }
   }
 
-  return actions;
+  /* "During combat, players can't ... activate abilities that aren't mana abilities" (Yuriko, Blade of the Mighty; CR
+     602.5; rules/statics.mjs): no activation offered, from anywhere -- a mana ability (`activate-mana`, CR 605.3a) still is. */
+  return activationForbidden(state, player) ? actions.filter((a) => a.kind !== "activate") : actions;
 }
 
 /* AN ACTIVATED ABILITY'S OFFERS (CR 602.2), wherever it works from -- a permanent's, or a card's in a hand, the command zone
@@ -1998,7 +2000,7 @@ function performOffered(state, player, action, during) {
       }
       /* A card exiled from the hand (Force of Will) goes to exile; a discard or a sacrifice to its owner's graveyard. */
       const paid = kind === "sacrifice" ? sacrificeOne(state, id, events) : moveOne(state, id, kind === "exile" ? "exile" : "graveyard", events, {owner: state.objects[id].owner});
-      if (kind === "discard" && paid !== null) events[events.length - 1].data.fields.discarded = true;
+      if (kind === "discard" && paid !== null) { events[events.length - 1].data.fields.discarded = true; recordDiscard(state, player); }
     }
     /* Escape's other cards, and a graveyard alternative cost's, exiled as the rest of the cost is paid (CR 601.2h). */
     for (const id of [...exiling, ...othersExiling]) if (state.objects[id]) moveOne(state, id, "exile", events, {owner: state.objects[id].owner});
@@ -2099,7 +2101,7 @@ function performOffered(state, player, action, during) {
       /* Each card of "discard two cards" a discard of its own. */
       if (atom.atom === "discard" && atom.self !== true && action.costChoice?.discard !== undefined)
         for (const card of [].concat(action.costChoice.discard))
-          if (moveOne(state, card, "graveyard", events, {owner: state.objects[card].owner}) !== null) events[events.length - 1].data.fields.discarded = true;
+          if (moveOne(state, card, "graveyard", events, {owner: state.objects[card].owner}) !== null) { events[events.length - 1].data.fields.discarded = true; recordDiscard(state, player); }
       /* CR 701.21a: to sacrifice is to move a permanent you control to its owner's graveyard -- through the
          replacements and with its last known information, like any death, so "when this dies" still sees it. */
       if (atom.atom === "sacrifice" && atom.self === true) sacrificeOne(state, action.objectId, events);
@@ -2130,6 +2132,7 @@ function performOffered(state, player, action, during) {
       if (atom.atom === "discard" && atom.self === true && moveOne(state, action.objectId, "graveyard", events, {owner: object.owner}) !== null) {
         const fields = events[events.length - 1].data.fields;
         fields.discarded = true;
+        recordDiscard(state, player);
         if (ability.cycling === true) Object.assign(fields, {cycled: true}, action.x !== undefined ? {cycledX: action.x} : {});
       }
       /* Each permanent of the set chosen, sacrificed (CR 701.21a) -- with the offer, or picked once it was taken. "Draw cards

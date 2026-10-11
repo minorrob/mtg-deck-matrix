@@ -35,7 +35,7 @@
  *   CR 500.4: mana pools empty at the end of every step and phase, not at end of turn.
  */
 
-import {cardsIn, moveObject, eventCard, recordDraw} from "../state/index.mjs";
+import {cardsIn, moveObject, eventCard, recordDraw, recordDiscard} from "../state/index.mjs";
 import {attackers, blockers, combatDamage, endCombat} from "./combat.mjs";
 import {checkStateBasedActions, gameOver, finishCommanderReplacement, legendChoice, finishLegendRule, finishDestructionChoice} from "./sba.mjs";
 import {destructionChoice} from "../script/effects/zones.mjs";
@@ -477,6 +477,7 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
     const card = cardRef(state, id);
     const owner = state.objects[id].owner;
     const discarded = moveObject(state, id, "graveyard", owner);
+    recordDiscard(state, awaiting.player);
     events.push(event("GameEventCardChangeZone", state, {
       card,
       from: {zoneType: ZONE_LABEL.hand, player: {playerId: awaiting.player}},
@@ -528,6 +529,12 @@ function arrive(state, events) {
     events.push(...combatDamage.deal(state, {step: "regular"}));
   if (state.phase === "COMBAT_END") events.push(...endCombat(state));
   if (state.phase === "CLEANUP") cleanup(state, events);
+  /* A STEP WHOSE TURN-BASED ACTION STOPS TO ASK -- declaring attackers or blockers (CR 508.1, 509.1), the held draw, a
+     division of combat damage -- HAS BEGUN ALL THE SAME: what triggered as it began has triggered (CR 603.2), and waits for
+     the answer and a player's priority to go on the stack (CR 603.3). Read now, since priority is granted on the answer's
+     events alone: "at the beginning of the declare attackers step on your next turn" (Meandering Towershell), "at the
+     beginning of your draw step" under the held draw, were lost. */
+  if (state.awaiting) collectTriggers(state, events);
   state.passes = 0;
   grantStepPriority(state, events);
 }
@@ -702,6 +709,8 @@ export function advance(state) {
     for (const player of state.players) {
       if (player.lostThisTurn) player.lostThisTurn = 0;
       if (player.drawnThisTurn) player.drawnThisTurn = 0;
+      /* And the cards each discarded (state/index.mjs, recordDiscard). */
+      if (player.discardedThisTurn) player.discardedThisTurn = 0;
       /* And the loyalty abilities each activated (rules/actions.mjs). */
       if (player.loyaltyThisTurn) player.loyaltyThisTurn = 0;
       /* And what each gained and made this turn (script/amount.mjs, lifeGainedThisTurn, tokensCreatedThisTurn). */

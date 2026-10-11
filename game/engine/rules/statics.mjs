@@ -43,6 +43,9 @@ export const STATIC_RULES = Object.freeze({
   "can-be-commander": "cards/index.mjs",
   /** CR 510.1a's exception: assigns combat damage equal to its toughness rather than its power. combat.mjs. */
   "combat-damage-by-toughness": "rules/combat.mjs",
+  /** CR 510.1a's other exception: "If Loot's power is negative, he assigns combat damage as though his power were positive"
+      (Loot, the Anomaly): `affects` the creature, its power's size assigned when it is below zero. combatDamageOf, below. */
+  "negative-power-as-positive": "rules/combat.mjs",
   /** CR 402.2's exception: "You have no maximum hand size" (Reliquary Tower, Thought Vessel). turn.mjs, at cleanup. */
   "no-maximum-hand-size": "rules/turn.mjs",
   /** CR 601.2f: "Artifact spells you cast cost {1} less to cast" (the Medallions, Foundry Inspector). actions.mjs. */
@@ -99,6 +102,10 @@ export const STATIC_RULES = Object.freeze({
       turn" (CantBeCast): castForbidden, read where a cast is offered. rules/actions.mjs. And for a while, by an effect
       (effectUntil): "can't cast spells with the same name as that creature until your next turn" (Reflector Mage). */
   "cant-cast": "rules/actions.mjs",
+  /** CR 602.5: "During combat, players can't ... activate abilities that aren't mana abilities" (Yuriko, Blade of the
+      Mighty): `affects` the players it binds (a player selector), `duringCombat` -- the only form built -- and never a mana
+      ability (CR 605). activationForbidden, read where an activation is offered. rules/actions.mjs. */
+  "cant-activate": "rules/actions.mjs",
   /** "Creatures can't attack you unless their controller pays {2} for each" (CantAttackUnless): attackTax, paid as attackers
       are declared. rules/combat.mjs. */
   "attack-tax": "rules/combat.mjs",
@@ -220,7 +227,8 @@ export function freeCast(state, player, cardId) {
  * "CAN'T CAST" (Forge's CantBeCast): whether a static ability on the battlefield forbids this player casting this card now.
  * `rule: "cant-cast"`, its `affects` the players it binds (a player selector: "your opponents", "each player"), its
  * `condition` its own ("as long as this Equipment is attached to a creature"), and what it forbids: `fromAnywhereButHand`
- * (Drannith Magistrate), `duringYourTurn` -- its controller's turn (Conqueror's Flail) -- or `moreThan` N spells each turn,
+ * (Drannith Magistrate), `duringYourTurn` -- its controller's turn (Conqueror's Flail) -- `duringCombat` (Yuriko, Blade of
+ * the Mighty: the combat phase, CR 506.1), or `moreThan` N spells each turn,
  * those fitting `filter` (Deafening Silence: noncreature; Archon of Emeria: any), counted from what the player has cast this
  * turn. Read where a cast is offered (rules/actions.mjs), a free cast as an effect resolves among them.
  */
@@ -245,12 +253,37 @@ export function castForbidden(state, player, cardId) {
       /* "Your opponents can't cast spells with even mana values" (Void Winnower): spells of a kind. */
       if (ability.spells && compileSelector({...ability.spells, what: "card", zone: object.zone})(state, cardId, context)) return true;
       if (ability.duringYourTurn && state.activePlayer === holder.controller) return true;
+      if (ability.duringCombat && duringCombat(state)) return true;
       if (Number.isInteger(ability.moreThan)) {
         const {what: _ignored, ...shape} = ability.filter ?? {};
         const fits = (cast) => matchesLastKnown(shape, {...cast, controller: player}, {controller: player});
         const already = (state.players[player].castThisTurn ?? []).filter(fits).length;
         if (already >= ability.moreThan && fits({types: object.types ?? [], colors: object.colors ?? []})) return true;
       }
+    }
+  }
+  return false;
+}
+
+/* THE COMBAT PHASE (CR 506.1): its steps, from the beginning of combat to the end of combat (rules/turn.mjs). */
+const duringCombat = (state) => typeof state.phase === "string" && state.phase.startsWith("COMBAT_");
+
+/**
+ * "CAN'T ACTIVATE" (CR 602.5): whether a static ability on the battlefield forbids this player activating abilities now --
+ * `rule: "cant-activate"`, its `affects` the players it binds (a player selector), its `condition` its own, and when:
+ * `duringCombat` (Yuriko, Blade of the Mighty: "during combat, players can't ... activate abilities that aren't mana
+ * abilities"). Never a mana ability (CR 605): those are offered apart and nothing here reads them. Read where an
+ * activation is offered (rules/actions.mjs).
+ */
+export function activationForbidden(state, player) {
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static" || ability.rule !== "cant-activate") continue;
+      const context = {controller: holder.controller, source: holderId};
+      if (!compileSelector({what: "player", ...(ability.affects ?? {})})(state, player, context)) continue;
+      if (!conditionHolds(state, ability.condition, context)) continue;
+      if (ability.duringCombat && duringCombat(state)) return true;
     }
   }
   return false;
@@ -679,5 +712,9 @@ export function ruleChanged(state, rule, id) {
  * so. Every place combat reads an amount -- the unblocked hit, the blocker's, the assignment total, trample's
  * excess -- reads it here, so the four cannot disagree.
  */
-export const combatDamageOf = (state, id) =>
-  (ruleChanged(state, "combat-damage-by-toughness", id) ? toughnessOf(state, id) : powerOf(state, id));
+export const combatDamageOf = (state, id) => {
+  if (ruleChanged(state, "combat-damage-by-toughness", id)) return toughnessOf(state, id);
+  const power = powerOf(state, id);
+  /* "As though his power were positive" (Loot, the Anomaly): a power of -2 assigns 2 -- where CR 510.1a would assign none. */
+  return power < 0 && ruleChanged(state, "negative-power-as-positive", id) ? -power : power;
+};

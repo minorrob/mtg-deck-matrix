@@ -43,6 +43,9 @@ export const FORGE_API = {
   Poison: "poison",
   /* "You win the game" (batch 68). */
   WinsGame: "winGame",
+  /* "That player loses the game", "each player with exactly 13 life loses the game" (Train C phase 2, p6-combat; CR
+     104.3e): the players named, at once and together, each leaving the game as it happens (CR 104.5, 800.4a). */
+  LosesGame: "loseGame",
   /* Goad (batch 69): attacks each combat, not its goader if it can. */
   Goad: "goad",
   /* Earthbend (batch 65): the land a creature with haste, its counters, its return. */

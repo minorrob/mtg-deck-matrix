@@ -39,7 +39,8 @@
  * trigger's controller.
  *
  * DELAYED TRIGGERS (CR 603.7), created by a resolving effect: "at the beginning of the next end step" (M4 phase 3,
- * batch 13), "at the beginning of the next turn's upkeep", and on an event -- "when that creature dies this turn",
+ * batch 13), "at the beginning of the next turn's upkeep", "at end of combat" and "at the beginning of the declare attackers
+ * step on your next turn" (Train C, p6-combat), and on an event -- "when that creature dies this turn",
  * "whenever a creature dies this turn" (batch 17). Other moments ("when you next cast a creature spell") are not yet. WHAT IS DEFERRED AND NAMED: state triggers (CR 603.8), which trigger
  * while a condition holds rather than on an event.
  */
@@ -189,6 +190,9 @@ function subjects(state, event, condition, sourceId, controller) {
     return [{player: attacker, ...(those ? {cards: those} : {})}];
   }
   if (condition.on === "GameEventAttackersDeclared") {
+    /* "Whenever a creature you control attacks alone" (Thoughtweft Imbuer; CR 506.5): it is the only creature declared as an
+       attacker -- the event names every one declared, and one put onto the battlefield attacking never was (CR 508.4). */
+    if (condition.alone && (fields.attackers ?? []).length !== 1) return [];
     const matched = (fields.attackers ?? []).filter((a) => fits(state, a.card?.cardId, condition, sourceId, controller))
       /* "Attacks for the first time each turn": its first attack this turn is this one (rules/combat.mjs counts them). */
       .filter((a) => !condition.firstTime || usesThisTurn(state, a.card?.cardId, "attacked") === 1)
@@ -197,13 +201,18 @@ function subjects(state, event, condition, sourceId, controller) {
       .filter((a) => condition.defender !== "opponent" || (a.defender?.playerId !== undefined && a.defender.playerId !== controller
         && (!a.defender.planeswalker || condition.planeswalkers === true)))
       /* "Whenever a creature attacks you or a planeswalker you control" (Jace, Reality Sculptor): `defender` "you". */
-      .filter((a) => condition.defender !== "you" || (a.defender?.playerId === controller && (!a.defender.planeswalker || condition.planeswalkers === true)));
+      .filter((a) => condition.defender !== "you" || (a.defender?.playerId === controller && (!a.defender.planeswalker || condition.planeswalkers === true)))
+      /* "Attacks a player alone" (Jiang Yanggu, Alone; Yuriko): a player, not a planeswalker of theirs (CR 506.3). */
+      .filter((a) => condition.defender !== "player" || (a.defender?.playerId !== undefined && !a.defender.planeswalker));
     /* "Whenever a player attacks with three or more creatures" (Aurelia): the attack as a whole, counted -- one event
        declares every attacker (CR 508.1). */
     if (condition.atLeast && matched.length < condition.atLeast) return [];
     /* And its controller -- the attacking player (CR 508.1a): "it deals 1 damage to its controller" (Vengeful Ancestor), as
-       it last was should it leave before the trigger resolves (CR 608.2h). */
-    return matched.map((a) => ({card: a.card.cardId, player: a.defender?.playerId, controller: fields.player?.playerId}));
+       it last was should it leave before the trigger resolves (CR 608.2h). And the planeswalker it attacks, when it attacks
+       one (CR 506.3, 508.1b): "the player or planeswalker that creature is attacking" (Raid Bombardment; script/bind.mjs,
+       `who: "attacked"`) -- `player` is then that planeswalker's controller, the defending player. */
+    return matched.map((a) => ({card: a.card.cardId, player: a.defender?.playerId, controller: fields.player?.playerId,
+      ...(a.defender?.planeswalker ? {planeswalker: a.defender.planeswalker.cardId} : {})}));
   }
   /* "Whenever this Vehicle blocks" (CR 509.3a): each creature declared as a blocker that fits, once however many it
      blocks; "blocks a creature" (`eachBlocked`, 509.3b), once for each attacker it blocks -- about the blocker, the attacker
@@ -233,6 +242,8 @@ function subjects(state, event, condition, sourceId, controller) {
     if (toPermanent && !(state.objects[damaged] && characteristicsOf(state, damaged).types.includes("Planeswalker"))) return [];
     const to = toPermanent ? state.objects[damaged].controller : fields.target?.playerId, source = fields.source?.cardId;
     if (condition.to === "opponent" && to === controller) return [];
+    /* "Whenever a creature deals combat damage to you" (Strixhaven Stadium): this ability's controller, and no one else. */
+    if (condition.to === "you" && to !== controller) return [];
     if (!fits(state, source, condition, sourceId, controller)) return [];
     /* "Create that many Treasure tokens": the damage dealt (CR 120.3), with who dealt it and to whom. */
     return [{card: source, player: to, amount: fields.amount ?? 0}];
@@ -590,7 +601,10 @@ export function collectTriggers(state, events) {
        next turn's. */
     /* Paradigm's delayed trigger (CR 702.192a), at each of its controller's precombat main phases from then on: the first
        main phase of a turn (CR 505.1a) -- its controller's turns only (`yourTurn`), and again every time (`forever`). */
-    const moment = event.kind === "GameEventTurnPhase" ? {END_OF_TURN: "end step", UPKEEP: "upkeep", MAIN1: "precombat main"}[event.data?.fields?.phase] : undefined;
+    /* "At end of combat" (Wall of Junk; CR 511.2): as the end of combat step begins. "At the beginning of the declare attackers
+       step on your next turn" (Meandering Towershell): that step's beginning, read once attackers are declared (rules/turn.mjs). */
+    const moment = event.kind === "GameEventTurnPhase" ? {END_OF_TURN: "end step", UPKEEP: "upkeep", MAIN1: "precombat main", COMBAT_END: "end of combat",
+      COMBAT_DECLARE_ATTACKERS: "declare attackers"}[event.data?.fields?.phase] : undefined;
     /* SUSPEND (CR 702.62a): at the beginning of its owner's upkeep, a suspended card in exile with a time counter on it has
        one removed -- and when the last is, its owner may cast it without paying its mana cost (a creature so cast has haste,
        rules/actions.mjs). One triggered ability does both, in order. */
@@ -609,8 +623,11 @@ export function collectTriggers(state, events) {
          (Rally the Ancestors, `at: "your upkeep"`): the next upkeep of a turn that is its controller's -- another player's
          upkeep passes it by (CR 603.7). */
       const turnOf = event.data?.fields?.playerTurn?.playerId ?? state.activePlayer;
+      /* "On your next turn" (Meandering Towershell, `at: "your next declare attackers"`): a turn of its controller's begun after
+         the one it was made in -- not an extra combat later this turn (CR 500.8). */
       const due = state.delayedTriggers.filter((d) => (d.at === moment && (!d.yours || d.controller === turnOf) && (!d.yourTurn || d.controller === turnOf) && (d.player === undefined || d.player === turnOf))
-        || (moment === "upkeep" && d.at === "your upkeep" && d.controller === turnOf));
+        || (moment === "upkeep" && d.at === "your upkeep" && d.controller === turnOf)
+        || (moment === "declare attackers" && d.at === "your next declare attackers" && d.controller === turnOf && state.turn > d.madeOnTurn));
       state.delayedTriggers = state.delayedTriggers.filter((d) => !due.includes(d) || d.forever === true);
       for (const d of due) state.pendingTriggers.push({
         abilityId: "delayed", text: d.text ?? (moment === "upkeep" ? "At the beginning of the next upkeep" : "At the beginning of the next end step"), controller: d.controller,

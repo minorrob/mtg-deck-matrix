@@ -235,6 +235,9 @@ export function runResolution(state, rng = null) {
 
     resolving.queue.shift();
     resolving.events.push(...runEffect(state, effect, resolving.context, rng));
+    /* ITS CONTROLLER HAS LEFT THE GAME ("you lose the game", CR 104.3e; effects/resources.mjs loseGame): the spell or ability
+       left the stack with them (CR 800.4a), and nothing more of it is done. */
+    if (state.resolving !== resolving || state.players[resolving.context.controller]?.lost) break;
   }
 
   const events = unreported(resolving);

@@ -317,6 +317,14 @@ export function bindEffect(effect, context, state = null) {
     else if (fact === undefined) delete bound[key];
     else bound[key] = fact;
   }
+  /* "THE PLAYER OR PLANESWALKER THAT CREATURE IS ATTACKING" (Raid Bombardment, Myr Battlesphere; CR 506.3, 508.1b): what the
+     creature an attack trigger is about attacks, as it attacked when the ability triggered (rules/trigger.mjs) -- the
+     planeswalker, while it is still on the battlefield (gone, nothing is dealt the damage, CR 506.4c), or else the player. */
+  if (bound.who === "attacked") {
+    const walker = context.about?.planeswalker;
+    if (walker === undefined || walker === null) bound.who = "that player";
+    else { bound.who = []; bound.targets = !state || state.objects[walker]?.zone === "battlefield" ? [walker] : []; }
+  }
   if ("targets" in bound) bound.targets = objectsOf(bound.targets, context);
   /* "Destroy all creatures with power greater than target creature's power" (Fell the Mighty; CR 608.2h): a selector's
      `power.moreThan`, a fact about a target, read as the resolution began -- a number, or null when that target is no
@@ -436,7 +444,9 @@ export function targetRefs(effects) {
 
 /* The primitives that do something TO what they are aimed at. Read by a pilot choosing among an offer's targets --
    aim these at an opponent's things, the rest at your own -- and by nothing in the rules. */
-const HOSTILE = new Set(["destroy", "dealDamage", "moveZone", "tap", "counterSpell", "loseLife", "discard", "mill", "removeCounter"]);
+const HOSTILE = new Set(["destroy", "dealDamage", "moveZone", "tap", "counterSpell", "loseLife", "discard", "mill", "removeCounter",
+  /* "Target player loses the game" (CR 104.3e): aimed at an opponent. */
+  "loseGame"]);
 
 /** Whether an ability's effects are aimed against what they target: a removal spell, not a pump. */
 export function isHostile(effects) {

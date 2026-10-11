@@ -1,0 +1,71 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Triskaidekaphobia",
+    "oracleId": "d5b131c7-29d4-4745-95e3-70bdf9bf54b3",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "At the beginning of your upkeep, choose one —\n• Each player with exactly 13 life loses the game, then each player gains 1 life.\n• Each player with exactly 13 life loses the game, then each player loses 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, choose one —\n• Each player with exactly 13 life loses the game, then each player gains 1 life.\n• Each player with exactly 13 life loses the game, then each player loses 1 life.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Each player with exactly 13 life loses the game, then each player gains 1 life.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "loseGame",
+                  "who": "each",
+                  "withLife": 13
+                },
+                {
+                  "effect": "gainLife",
+                  "who": "each",
+                  "amount": 1
+                }
+              ]
+            },
+            {
+              "text": "Each player with exactly 13 life loses the game, then each player loses 1 life.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "loseGame",
+                  "who": "each",
+                  "withLife": 13
+                },
+                {
+                  "effect": "loseLife",
+                  "who": "each",
+                  "amount": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

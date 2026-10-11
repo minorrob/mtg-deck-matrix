@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1246,
+  "defined": 1248,
   "provisional": 27,
-  "everyRule": 2591
+  "everyRule": 2596
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -3206,10 +3206,10 @@
   },
   "Effects": {
    "tally": {
-    "built": 70,
+    "built": 71,
     "partial": 1,
     "named": 2,
-    "missing": 119
+    "missing": 118
    },
    "entries": [
     {
@@ -4092,13 +4092,13 @@
      "kind": "effect",
      "rule": null,
      "name": "LosesGame",
-     "engine": null,
-     "status": "missing",
+     "engine": "loseGame",
+     "status": "built",
      "forge": "LosesGame",
      "top": 6,
      "all": 45,
-     "blocks": 6,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",

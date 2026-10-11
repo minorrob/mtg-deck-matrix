@@ -52,6 +52,14 @@ export function recordDeath(state, was, zone) {
   state.players[was.controller].diedThisTurn = (state.players[was.controller].diedThisTurn ?? 0) + 1;
 }
 
+/** A card discarded (CR 701.9a): "for each card you've discarded this turn" (Jiang Yanggu, Alone; script/amount.mjs) counts
+ * each, by the player whose hand it left -- an effect's, a cost's, a cleanup's -- at once, so a count in the same
+ * resolution sees it. Cleared as a turn begins (rules/turn.mjs). */
+export function recordDiscard(state, player) {
+  const who = state.players[player];
+  who.discardedThisTurn = (who.discardedThisTurn ?? 0) + 1;
+}
+
 /**
  * A new game state.
  *

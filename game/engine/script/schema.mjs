@@ -111,6 +111,12 @@ function checkEffect(effect, path, errors) {
      anyone "this combat" (Legion Warboss) -- effects/permanents.mjs, afterwards. */
   if (effect.mustAttack !== undefined && !["that player", "this combat"].includes(effect.mustAttack))
     errors.push({path: `${path}.mustAttack`, message: "What it must attack is \"that player\" (this turn) or anyone \"this combat\""});
+  /* "Each player with exactly 13 life loses the game" (Triskaidekaphobia; effects/resources.mjs): a life total, a whole number. */
+  if (effect.withLife !== undefined && (name !== "loseGame" || !Number.isInteger(effect.withLife)))
+    errors.push({path: `${path}.withLife`, message: "\"With exactly N life\" is withLife: a whole number, on loseGame"});
+  /* "The player or planeswalker that creature is attacking" (Raid Bombardment; script/bind.mjs): damage, to that one alone. */
+  if (effect.who === "attacked" && (name !== "dealDamage" || effect.targets !== undefined))
+    errors.push({path: `${path}.who`, message: "\"The player or planeswalker it's attacking\" (who: \"attacked\") is dealt damage, by dealDamage with no other target"});
   /* Control for the turn, or "for as long as this creature remains on the battlefield" (CR 611.2b; Sower of Temptation),
      or for good when unsaid (effects/permanents.mjs). */
   if (name === "gainControl" && effect.until !== undefined && !CONTROL_DURATIONS.includes(effect.until))
@@ -351,6 +357,13 @@ function checkAbility(ability, path, errors) {
        the planeswalkers they control too. Attacking one of those is not attacking them (rules/statics.mjs). */
     if (ability.planeswalkers !== undefined && (ability.planeswalkers !== true || !(ability.rule === "attack-tax" || (ability.rule === "cant-attack" && ability.defender === "you"))))
       errors.push({path: `${path}.planeswalkers`, message: "\"Or planeswalkers you control\" is planeswalkers: true, on a tax on attacking you or a restriction on attacking you"});
+    /* "During combat, players can't cast spells or activate abilities that aren't mana abilities" (Yuriko, Blade of the
+       Mighty; CR 506.1): `duringCombat` true, on a cast or an activation forbidden -- and an activation forbidden only then,
+       its one built form (rules/statics.mjs, activationForbidden). */
+    if (ability.duringCombat !== undefined && (ability.duringCombat !== true || !["cant-cast", "cant-activate"].includes(ability.rule)))
+      errors.push({path: `${path}.duringCombat`, message: "\"During combat\" is duringCombat: true, on a cant-cast or cant-activate static"});
+    if (ability.rule === "cant-activate" && ability.duringCombat !== true)
+      errors.push({path, message: "An activation forbidden is forbidden during combat (duringCombat: true), its one form built"});
     if (ability.rule === "cant-be-blocked-by") {
       if (!ability.by && ability.byPowerBelowSource !== true) errors.push({path, message: "\"Can't be blocked by\" says by what: `by`, or `byPowerBelowSource`"});
       if (ability.by) checkSelector(ability.by, `${path}.by`, errors, {choice: true});
