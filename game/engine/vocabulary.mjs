@@ -187,7 +187,9 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   /* Suspend (CR 702.62), from the hand (keywords/timing.mjs). */
   "suspend",
   /* Partner with [name] (CR 702.124j): a deck rule and a trigger as it enters (cards/index.mjs). */
-  "partner with"];
+  "partner with",
+  /* Firebending N (CR 702.189): an attack trigger, its mana kept until end of combat (cards/index.mjs, rules/turn.mjs). */
+  "firebending"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

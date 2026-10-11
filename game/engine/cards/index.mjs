@@ -616,6 +616,16 @@ export function compileScript(script) {
       keywords.push("Prowess");
       return;
     }
+    /* FIREBENDING N (CR 702.189a; Fire Nation Cadets, Train C phase 2): the keyword IS a triggered ability -- "Whenever this
+       creature attacks, add N {R}" -- mana its controller does not lose as combat's steps end, until the combat phase does
+       (addMana's `untilEndOfCombat`, script/effects/resources.mjs; rules/turn.mjs). Each instance triggers. */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "firebending") {
+      if (!(Number.isInteger(ability.amount) && ability.amount >= 1)) problems.push(`${ability.text}: firebending needs its number, 1 or more`);
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.attacks({who: "self"}),
+        effects: [{effect: "addMana", mana: {R: ability.amount ?? 1}, untilEndOfCombat: true}]});
+      keywords.push("Firebending");
+      return;
+    }
     /* MENTOR (CR 702.134a; Legion Warboss): "Whenever this creature attacks, put a +1/+1 counter on target attacking creature
        with lesser power" -- the keyword IS that triggered ability; "lesser power" is less than this creature's power as it
        resolves, or as it last was if it has left (script/filter.mjs, `power.lessThan: "self"`; CR 608.2b). Instances
@@ -1027,6 +1037,9 @@ export function compileScript(script) {
       if (effect.effect === "addMana" && effect.spendOnly !== undefined && !spendOnlyValid(effect.spendOnly))
         problems.push(`addMana: a spending restriction says what it pays for -- a spell, an ability's source, or both, each a selector (${SPEND_ONLY_KEYS.join(", ")})`);
       if (effect.effect === "addMana") problems.push(...whenSpentProblems(effect));
+      /* Mana kept until end of combat (firebending): plain mana; restricted mana kept so is not built. */
+      if (effect.effect === "addMana" && effect.untilEndOfCombat !== undefined && (effect.untilEndOfCombat !== true || effect.spendOnly !== undefined))
+        problems.push("addMana: untilEndOfCombat is true, on mana that is not restricted");
     }
 
     if (ability.kind === "spell") {

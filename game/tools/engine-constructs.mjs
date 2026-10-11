@@ -179,6 +179,9 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   /* Mentor (CR 702.134a; Legion Warboss, Train B X11): the attack trigger, a +1/+1 counter on target attacking creature
      with power less than this creature's -- as it resolves, or as it last was if it has left (cards/index.mjs). */
   Mentor: "putCounter",
+  /* Firebending (CR 702.189a; Fire Nation Cadets, Train C phase 2): the attack trigger, N {R} kept until end of combat
+     (cards/index.mjs, rules/turn.mjs). */
+  Firebending: "addMana",
   /* Afterlife (X5c): the dies trigger, N 1/1 white and black Spirit tokens with flying (cards/index.mjs). */
   Afterlife: "createToken",
   /* Forge's etbCounter, "this creature enters with two +1/+1 counters on it" (X5e): the replacement `entersWithCounters` on

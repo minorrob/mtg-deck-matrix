@@ -11,15 +11,15 @@
   "cards": 3238,
   "defined": 1243,
   "provisional": 27,
-  "everyRule": 2596
+  "everyRule": 2598
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 60,
+    "built": 61,
     "partial": 0,
     "named": 5,
-    "missing": 129
+    "missing": 128
    },
    "entries": [
     {
@@ -662,13 +662,13 @@
      "kind": "keyword ability",
      "rule": "702.189",
      "name": "Firebending",
-     "engine": null,
-     "status": "missing",
+     "engine": "Firebending",
+     "status": "built",
      "forge": "Firebending",
      "top": 3,
      "all": 26,
-     "blocks": 3,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
