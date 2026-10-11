@@ -38,7 +38,7 @@ import {loseLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";
 import {damageOrderChoice} from "../../rules/replacement.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
 import {commanderTax} from "../../rules/commander.mjs";
-import {cantBeCountered} from "../../rules/statics.mjs";
+import {cantBeCountered, counterOrderChoice, cantBeSacrificed} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
 import {castNow, castChoicesNow} from "../../rules/actions.mjs";
 
@@ -620,7 +620,8 @@ export const proliferate = {
    ("Korvold ... sacrifice another permanent"). */
 const sacrificeable = (state, player, selector, source = null) => {
   const matches = compileSelector({...(selector ?? {}), what: "permanent", controller: "you"});
-  return state.zones.battlefield.filter((id) => matches(state, id, {controller: player, source}));
+  /* Never one that can't be sacrificed (Alexios; rules/statics.mjs): it is not theirs to choose. */
+  return state.zones.battlefield.filter((id) => matches(state, id, {controller: player, source}) && !cantBeSacrificed(state, id));
 };
 /* "A creature with the greatest power among creatures that player controls" (Crackling Doom), "the greatest mana value"
    (Soul Shatter): of what may be sacrificed, those with the most -- a tie is the player's choice among them. */
@@ -919,14 +920,14 @@ function payOptions(state, awaiting) {
   if (awaiting.sacrifice) {
     const alternatives = Array.isArray(awaiting.sacrifice.anyOf) ? awaiting.sacrifice.anyOf : [awaiting.sacrifice];
     const matchers = alternatives.map((one) => compileSelector({...one, what: "permanent", controller: "you"}));
+    /* What they could sacrifice: never one that can't be sacrificed (Alexios; rules/statics.mjs). */
+    const mine = state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player})) && !cantBeSacrificed(state, id));
     /* "Sacrifice three permanents": one option, to pay it, if they have that many; which ones is asked next (`sacrificing`). */
     if (awaiting.sacrificeCount) {
-      const mine = state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player})));
       return awaiting.sacrificing ? mine.map((id) => ({label: state.objects[id].card, cardId: id}))
         : mine.length >= awaiting.sacrificeCount ? [{label: `Sacrifice ${awaiting.sacrificeCount} permanents${also}`, pay: true, sacrificeMany: true}] : [];
     }
-    return state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player})))
-      .map((id) => ({label: `Sacrifice ${state.objects[id].card}${also}`, pay: true, sacrifice: id, cardId: id}));
+    return mine.map((id) => ({label: `Sacrifice ${state.objects[id].card}${also}`, pay: true, sacrifice: id, cardId: id}));
   }
   if (awaiting.discard) return cardsIn(state, "hand", player).map((id) => ({label: `Discard ${state.objects[id].card}${also}`, pay: true, discard: id, cardId: id}));
   /* "UNLESS YOU RETURN ANOTHER CREATURE YOU CONTROL TO ITS OWNER'S HAND" (Faerie Impostor; CR 118.12a, a cost other than
@@ -1650,6 +1651,75 @@ export const orderDamage = {
   },
 };
 
+/* ---- the order of the effects that change counters put on (CR 616.1) ----
+
+   Two or more replacement effects would change how many counters one effect puts on a permanent, and the order changes
+   how many: Hardened Scales' "plus one" and Branching Evolution's "twice that many", one +1/+1 counter on Rob's Bear -- 4
+   or 3. The permanent's controller chooses which applies first; asked BEFORE any of the effect's counters are put, a
+   placement at a time, and then the effect is done with every answer (`counterOrders`, by placement). The resolution puts
+   this question in front of a putCounter or putCounterAll that has one (script/resolution.mjs); an order that ends the
+   same either way is never asked (rules/statics.mjs, placeCounters). */
+export const orderCounters = {
+  /* Opened only with the question the resolution found in front of it (`question`), so there is always one to ask. */
+  open(state, params) {
+    const {question} = params;
+    state.awaiting = {kind: "effect-choice", effect: "orderCounters", player: question.player, key: question.key, id: question.id, counter: question.kind,
+      count: question.count, by: question.by, options: question.options, answered: (params.answers[question.key] ?? []).length, answers: params.answers, put: params.put};
+    return true;
+  },
+  choice(state, awaiting) {
+    return counterOrderChoice(state, awaiting);
+  },
+  /* The effect itself again, with this answer added, where it stood in the resolution: asked once more while another of
+     its placements is still to be ordered, and done once none is. */
+  apply(state, awaiting, indices) {
+    const chosen = Array.isArray(indices) && indices.length === 1 ? awaiting.options[indices[0]] : undefined;
+    if (chosen === undefined) throw new Error("Invalid selection");
+    const answers = {...awaiting.answers, [awaiting.key]: [...(awaiting.answers[awaiting.key] ?? []), chosen]};
+    return {events: [], splice: [{...awaiting.put, counterOrders: answers}]};
+  },
+  /* The permanent's controller has left the game, and the permanent with them (CR 800.4a): the effect again as it now
+     stands, the rest asked about and put on as before. */
+  left(state, awaiting) {
+    return {events: [], splice: [{...awaiting.put, counterOrders: awaiting.answers}]};
+  },
+};
+
+/* ---- whose Alms Collector replaces a draw (CR 616.1) ----
+
+   Maya would draw three cards, and Rob's and Trey's Alms Collectors would each replace it: "instead you and that player each
+   draw a card". Whichever applies first ends it -- Maya then draws one, which neither replaces -- so the two end differently,
+   and Maya chooses (CR 616.1), before any card is drawn. The answer is kept by drawing player (`drawOrders`), and the draw
+   done with it (effects/zones.mjs, draw). Opened only with the question the resolution found (script/resolution.mjs). */
+export const orderDraws = {
+  open(state, params) {
+    const {question} = params;
+    state.awaiting = {kind: "effect-choice", effect: "orderDraws", player: question.player, options: question.options, count: question.count,
+      answers: params.answers, draw: params.draw};
+    return true;
+  },
+  choice(state, awaiting) {
+    const name = (p) => state.players[p].name;
+    /* Each option by its effect's card -- "Rob's Alms Collector" -- and what it does; one whose controller has since left the
+       game, with it, is said to be gone (CR 800.4a). */
+    const card = (you) => state.objects[state.zones.battlefield.find((id) => state.objects[id].controller === you
+      && (state.objects[id].abilities ?? []).some((a) => a.kind === "static" && a.rule === "draws-instead"))]?.card;
+    return {id: `order-draws:${state.turn}:${awaiting.player}`, title: `${name(awaiting.player)} would draw ${awaiting.count} cards: whose replacement applies?`,
+      mode: "one", min: 1, max: 1,
+      options: awaiting.options.map((you, index) => ({index, player: you,
+        label: card(you) ? `${name(you)}'s ${card(you)}: ${name(you)} and ${name(awaiting.player)} each draw a card` : "An effect no longer there"}))};
+  },
+  apply(state, awaiting, indices) {
+    const chosen = Array.isArray(indices) && indices.length === 1 ? awaiting.options[indices[0]] : undefined;
+    if (chosen === undefined) throw new Error("Invalid selection");
+    return {events: [], splice: [{...awaiting.draw, drawOrders: {...awaiting.answers, [awaiting.player]: chosen}}]};
+  },
+  /* The drawing player has left the game: there is no draw of theirs to replace (CR 800.4a), and the rest goes on. */
+  left(state, awaiting) {
+    return {events: [], splice: [{...awaiting.draw, drawOrders: awaiting.answers}]};
+  },
+};
+
 /* ---- connive (CR 701.50; Train B, X11) ----
 
    "Each creature that convoked this spell connives" (Lethal Scheme): several permanents told to connive at once. The first
@@ -1753,5 +1823,5 @@ export const chooseInstead = {
   },
 };
 
-export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage,
+export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, orderCounters, orderDraws,
   conniveWhich, manaColors, counterKind, orderDestruction, chooseInstead});

@@ -23,7 +23,7 @@ import {selectMatching} from "../filter.mjs";
 import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
 import {typesOf, powerOf, toughnessOf, keywordsOf, isKeywordCounter, controllerOf} from "../../rules/layers.mjs";
-import {cantGainLife, countersPlaced, playerCountersPlaced} from "../../rules/statics.mjs";
+import {cantGainLife, lifeGained, countersPlaced, playerCountersPlaced, placeCounters} from "../../rules/statics.mjs";
 import {playerRuled, leaveGame} from "../../rules/sba.mjs";
 import {amountOf} from "../amount.mjs";
 import {recordUse} from "../../state/index.mjs";
@@ -103,6 +103,9 @@ export function changeLife(state, player, delta, events) {
   if (delta > 0 && cantGainLife(state, player)) return;
   /* "Their life total can't change" (Teferi's Reproach; CR 119.7-8): no gain, no loss. */
   if ((state.effects ?? []).some((e) => e.rule === "life-cant-change" && (e.players ?? []).includes(player))) return;
+  /* "If you would gain life, you gain twice that much life instead" (Rhox Faithmender; rules/statics.mjs, lifeGained): an
+     exchange of life totals and a life total set higher are gains too (CR 701.12b, 119.5). */
+  if (delta > 0) delta = lifeGained(state, player, delta);
   const before = state.players[player].life;
   state.players[player].life += delta;
   /* The life each player has lost this turn (Wound Reflection; script/amount.mjs), cleared as a turn begins (turn.mjs). */
@@ -284,13 +287,15 @@ export function damagePermanent(state, id, amount, events, {infect = false, by =
   else object.damage += amount;
 }
 
-/* `by`: the player putting them (rules/statics.mjs, countersPlaced) -- an effect's controller, an infect source's. */
-export function addCounters(state, id, kind, count, events, by = null) {
+/* `by`: the player putting them (rules/statics.mjs, countersPlaced) -- an effect's controller, an infect source's.
+   `orders`: the affected player's answers for the order of the effects that change them (CR 616.1; orderCounters). */
+export function addCounters(state, id, kind, count, events, by = null, orders = []) {
   if (count === 0) return;
   const object = state.objects[id];
   if (!object) return;
-  /* "Twice that many instead" (Branching Evolution; "if you would put", Innkeeper's Talent; rules/statics.mjs). */
-  if (object.zone === "battlefield") count = countersPlaced(state, id, kind, count, by);
+  /* "Twice that many instead" (Branching Evolution; "if you would put", Innkeeper's Talent), "that many plus one" (Hardened
+     Scales), "half that many" (Vorinclex): rules/statics.mjs. */
+  if (object.zone === "battlefield") count = countersPlaced(state, id, kind, count, by, orders);
   if (count === 0) return;
   const before = object.counters[kind] ?? 0;
   object.counters[kind] = before + count;
@@ -404,22 +409,59 @@ export function loseGame(state, params, context) {
   return events;
 }
 
+/* Who puts them, for "if you would put" (rules/statics.mjs): the effect's controller -- or, "that player ... puts a +1/+1
+   counter on it" (Alexios, Deimos of Kosmos: `puts: "that player"`), the player the trigger is about. */
+const putterOf = (params, context) => (params.puts === "that player" ? context.about.player : context.controller);
+
 /** `putCounter` — CR 121. */
 export function putCounter(state, params, context) {
   const events = [];
   /* A kind of counter its controller chooses (`counter: "chosen"`) is asked first, as it resolves (effects/asking.mjs,
      counterKind) -- never decided here, and never put on as a counter named "chosen". */
   if (params.counter === "chosen") throw new Error("putCounter with a chosen kind of counter asks its controller which: run it through resolution.mjs");
-  for (const id of params.targets ?? []) addCounters(state, id, params.counter ?? "+1/+1", params.count ?? 1, events, context.controller);
+  for (const {id, kind, count} of counterPlacements(state, params, context, false))
+    addCounters(state, id, kind, count, events, putterOf(params, context), params.counterOrders?.[placementKey(id, kind)] ?? []);
   return events;
 }
 
 /** `putCounterAll` — on everything a selector matches. */
 export function putCounterAll(state, params, context) {
   const events = [];
-  for (const id of selectMatching(state, params.selector ?? {what: "permanent"}, context))
-    addCounters(state, id, params.counter ?? "+1/+1", params.count ?? 1, events, context.controller);
+  for (const {id, kind, count} of counterPlacements(state, params, context, true))
+    addCounters(state, id, kind, count, events, context.controller, params.counterOrders?.[placementKey(id, kind)] ?? []);
   return events;
+}
+
+/* ---- CR 616.1, before counters are put on ----
+
+   The counter effects a resolution can stop to ask about (script/resolution.mjs; effects/asking.mjs, orderCounters), each
+   as the placements it makes -- so the question and the putting see the same ones. */
+const COUNTING = Object.freeze({putCounter, putCounterAll});
+function counterPlacements(state, params, context, all) {
+  const kind = params.counter ?? "+1/+1", count = params.count ?? 1;
+  const ids = all ? selectMatching(state, params.selector ?? {what: "permanent"}, context) : params.targets ?? [];
+  /* "Put this creature's counters on that token" (Ambitious Augmenter's dies trigger): each kind its source had as it last
+     existed, as many (CR 608.2h) -- put on as counters are, so what changes counters put on changes these too. */
+  if (params.countersOf === "self")
+    return ids.flatMap((id) => Object.entries(context.lastKnown?.counters ?? {}).map(([had, n]) => ({id, kind: had, count: n})));
+  return ids.map((id) => ({id, kind, count}));
+}
+/** Which placement an answer belongs to: the permanent, and the kind. */
+export const placementKey = (id, kind) => `${id}:${kind}`;
+
+/**
+ * The first placement of this counter effect whose replacement effects' order is the affected player's to choose and not
+ * yet chosen (CR 616.1), given `answers` (by placement, `placementKey`): `{player, options, count, id, kind, by, key}`, or
+ * null when there is none. It changes nothing.
+ */
+export function counterQuestion(state, effect, context, answers = {}) {
+  if (!COUNTING[effect?.effect]) return null;
+  for (const {id, kind, count} of counterPlacements(state, effect, context, effect.effect === "putCounterAll")) {
+    const key = placementKey(id, kind);
+    const {question} = placeCounters(state, {id}, kind, count, putterOf(effect, context), {orders: answers[key] ?? [], askable: true});
+    if (question) return {...question, id, kind, by: putterOf(effect, context), key};
+  }
+  return null;
 }
 
 /**

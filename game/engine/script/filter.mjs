@@ -80,7 +80,10 @@ export const exiledWithSource = (state, source) => (source === null || source ==
    as it left (rules/layers.mjs, lastKnown) still knows. These are the keys a departure's filter may use. */
 /* `self` (Rundvelt Hordemaster): "whenever this creature or another Goblin you control dies" -- the source itself, as it
    last was, whatever it then was (`anyOf: [{self: true}, {subtypes, controller}]`). */
-const LAST_KNOWN_KEYS = ["what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "controller", "token", "another", "attachedBy", "anyOf", "self"];
+/* `keywords` (Rampart Architect: "whenever a creature you control with defender dies") and `counters` (Shadow Urchin: "with
+   one or more counters on it", "any" or a kind): what it had as it last existed, through the layers (rules/layers.mjs). */
+const LAST_KNOWN_KEYS = ["what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "controller", "token", "another", "attachedBy", "anyOf", "self",
+  "keywords", "counters"];
 export function matchesLastKnown(selector, lki, context = {}) {
   if (!lki) return false;
   const s = selector ?? {};
@@ -102,6 +105,8 @@ export function matchesLastKnown(selector, lki, context = {}) {
   if (s.self === true && lki.cardId !== context.source) return false;
   /* "Equipped creature dies": the Equipment was attached to it as it died. */
   if (s.attachedBy === "self" && !(lki.attachments ?? []).includes(context.source)) return false;
+  if (s.keywords && !s.keywords.every((word) => (lki.keywords ?? []).includes(word))) return false;
+  if (s.counters !== undefined && !(s.counters === "any" ? Object.values(lki.counters ?? {}).some((n) => n > 0) : (lki.counters?.[s.counters] ?? 0) > 0)) return false;
   return true;
 }
 
@@ -159,6 +164,8 @@ function assertGrammar(selector) {
   if (selector.equipped !== undefined && selector.equipped !== true) throw new Error("A selector's equipped is true: an Equipment is attached to it");
   /* "With power less than this creature's power" (mentor, CR 702.134a): `power.lessThan` "self". */
   if (selector.power?.lessThan !== undefined && selector.power.lessThan !== "self") throw new Error("A selector's power.lessThan is \"self\": less than its source's power");
+  /* "With lesser toughness" than what a trigger is about, as it last existed (Colfenor): `toughness.lessThan` "that card". */
+  if (selector.toughness?.lessThan !== undefined && selector.toughness.lessThan !== "that card") throw new Error("A selector's toughness.lessThan is \"that card\": less than the toughness of what the trigger is about, as it last existed");
 }
 
 /* AN OBJECT'S CREATURE TYPES (CR 205.3m): the subtypes of a creature or a kindred card, through the layers on the
@@ -430,6 +437,13 @@ export function compileSelector(selector) {
       const toughness = characteristicsOf(state, id).toughness ?? 0;
       if (selector.toughness.min !== undefined && toughness < selector.toughness.min) return false;
       if (selector.toughness.max !== undefined && toughness > selector.toughness.max) return false;
+      /* "Return up to one other target creature card with lesser toughness" (Colfenor, the Last Yew): less than the toughness
+         of the creature the trigger is about as it last existed on the battlefield (CR 608.2h; rules/trigger.mjs keeps it,
+         `about.lastKnown`). None known, and nothing is less. */
+      if (selector.toughness.lessThan === "that card") {
+        const theirs = context.about?.lastKnown?.toughness;
+        if (!(toughness < theirs)) return false;
+      }
     }
     if (selector.self === true && id !== context.source) return false;
     /* RELATIVE TO WHAT A TRIGGER IS ABOUT: "it gets +1/+0 until end of turn for each other attacking creature that shares a

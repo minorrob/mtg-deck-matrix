@@ -354,7 +354,8 @@ export function bindEffect(effect, context, state = null) {
   if (isRef(bound.controller) || bound.controller === "that card's controller") { const [player] = playersOf(bound.controller, context, state); bound.controller = player ?? -1; }
   /* "That attacking player creates a ... token" (Combat Calligrapher): the player whose attack the trigger is about. */
   if (bound.controller === "attacking player") bound.controller = Number.isInteger(context.about?.attacker) ? context.about.attacker : -1;
-  if (isRef(bound.toPlayer)) {
+  /* "At the beginning of each player's upkeep, that player gains control of Alexios": the player the trigger is about. */
+  if (isRef(bound.toPlayer) || bound.toPlayer === "that player") {
     const [player] = playersOf(bound.toPlayer, context);
     if (player === undefined) delete bound.toPlayer; else bound.toPlayer = player;
   }

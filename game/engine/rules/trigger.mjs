@@ -340,10 +340,18 @@ function subjects(state, event, condition, sourceId, controller) {
     /* And, from the battlefield, its copiable values as it last existed when they were not its card's (rules/layers.mjs,
        lastKnown): "create a token that's a copy of that creature" (Hofri Ghostforge). */
     const copied = fields.from?.zoneType === "Battlefield" ? fields.leftBehind?.copiable : undefined;
-    return [{card: fields.becomes, ...(Number.isInteger(player) ? {player} : {}), ...(came ? {cameFrom: {...came}} : {}), ...(copied ? {copiedAs: structuredClone(copied)} : {})}];
+    return [{card: fields.becomes, ...(Number.isInteger(player) ? {player} : {}), ...(came ? {cameFrom: {...came}} : {}), ...(copied ? {copiedAs: structuredClone(copied)} : {}),
+      ...leftAs(fields)}];
   }
   return [{}];
 }
+
+/* WHAT LEFT THE BATTLEFIELD, AS IT LAST EXISTED THERE (CR 603.10a, 608.2h): "whenever a nontoken creature you control dies,
+   if it had counters on it, create X ... where X is the number of counters it had on it" (Felisa, Fang of Silverquill),
+   "return up to one other target creature card with lesser toughness" (Colfenor, the Last Yew). The card it became is a new
+   object (CR 400.7) with no counters and none of its changes, so what the trigger is about carries the departure's snapshot
+   (`lastKnown`) beside it, to its condition as it triggers and to its stack entry for when it resolves. */
+const leftAs = (fields) => (fields.from?.zoneType === "Battlefield" && fields.leftBehind ? {lastKnown: fields.leftBehind} : {});
 
 /** Whether an event matches a trigger condition. */
 function matches(state, event, condition, sourceId, controller) {
@@ -664,10 +672,12 @@ export function collectTriggers(state, events) {
         /* At its Class level as it last was (CR 716.2a, 603.10a). */
         if (Number.isInteger(ability.level) && (gone.level ?? 1) < ability.level) continue;
         if (!matches(state, event, ability.trigger, gone.cardId, gone.controller)) continue;
-        /* Its condition as it last was, too: the mode a Siege chose (CR 603.10a; script/condition.mjs). */
-        if (!conditionHolds(state, ability.condition, {controller: gone.controller, source: gone.cardId, lastKnown: gone})) continue;
+        /* Its condition as it last was, too (CR 603.10a; script/condition.mjs): the mode a Siege chose; "when this creature
+           dies, if it had a -1/-1 counter on it" (Retched Wretch), its intervening "if" asked as it triggers (CR 603.4) -- the
+           object is gone, and only the snapshot knows -- and about what left, as that last existed too (leftAs). */
+        const about = {...(event.data?.fields?.becomes !== undefined ? {card: event.data.fields.becomes} : {}), ...leftAs(event.data?.fields ?? {})};
+        if (!conditionHolds(state, ability.condition, {controller: gone.controller, source: gone.cardId, about, lastKnown: gone})) continue;
         /* Dying with the rest, it sees them all (CR 603.10a) -- once, for "one or more". */
-        const about = event.data?.fields?.becomes !== undefined ? {card: event.data.fields.becomes} : {};
         if (ability.trigger.batch && joined(`${gone.cardId}:${ability.id}`, about)) continue;
         state.pendingTriggers.push({
           abilityId: ability.id,
@@ -677,7 +687,7 @@ export function collectTriggers(state, events) {
           cause: gone,
           optional: ability.optional === true,
           /* "When this dies, return it to its owner's hand": the card it became (CR 400.7e). */
-          ...(event.data?.fields?.becomes !== undefined ? {about: {card: event.data.fields.becomes}} : {}),
+          about,
           ...scriptOf(ability),
         });
         const times = triggersAgain(state, event, gone.controller, gone.cardId, gone, departed);

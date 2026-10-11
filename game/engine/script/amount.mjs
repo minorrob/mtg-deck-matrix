@@ -198,8 +198,11 @@ export function amountOf(state, value, context = {}) {
   else if ("count" in value) n = matching(state, value.count, who).length;
   else if ("countersOn" in value) {
     const id = objectOf(value.countersOn, context);
-    /* A source sacrificed as the cost ("for each counter on this creature") is read as it last was (CR 608.2h). */
-    const counters = id !== null && state.objects[id] ? state.objects[id].counters : context.lastKnown?.counters;
+    /* A source sacrificed as the cost ("for each counter on this creature") is read as it last was (CR 608.2h). And "the
+       number of counters it had on it" (Felisa, Fang of Silverquill): what a trigger is about, gone from the battlefield, as
+       it last existed there (rules/trigger.mjs, `about.lastKnown`) -- the card it became has none (CR 400.7). */
+    const left = value.countersOn === "that card" ? context.about?.lastKnown?.counters : undefined;
+    const counters = left ?? (id !== null && state.objects[id] ? state.objects[id].counters : context.lastKnown?.counters);
     n = value.counter === "any" ? Object.values(counters ?? {}).reduce((a, b) => a + b, 0) : counters?.[value.counter] ?? 0;
   }
   /* "Draw cards equal to the sacrificed creature's toughness, then discard cards equal to its power" (Felothar the

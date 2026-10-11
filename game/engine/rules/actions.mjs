@@ -65,7 +65,7 @@ import {runEffects} from "../script/effects/index.mjs";
 import {changeLife} from "../script/effects/resources.mjs";
 import {unprepare, preparedCopyStays} from "../script/effects/attributes.mjs";
 import {checkStateBasedActions, gameOver} from "./sba.mjs";
-import {costReduction, costIncrease, abilityCostIncrease, playerStatics, freeCast, flashGranted, castForbidden, countersPlaced, activationForbidden} from "./statics.mjs";
+import {costReduction, costIncrease, abilityCostIncrease, playerStatics, freeCast, flashGranted, castForbidden, countersPlaced, activationForbidden, cantBeSacrificed} from "./statics.mjs";
 import {countMana, amountOf, countEffect} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
@@ -515,7 +515,7 @@ function additionalChoices(state, player, spellId, costs) {
     if (atom.atom === "sacrifice") {
       const alternatives = Array.isArray(atom.selector?.anyOf) ? atom.selector.anyOf : [atom.selector ?? {}];
       const matchers = alternatives.map((one) => compileSelector({...one, what: "permanent", controller: "you"}));
-      options = state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player}))).map((id) => ({sacrifice: id}));
+      options = state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player})) && !cantBeSacrificed(state, id)).map((id) => ({sacrifice: id}));
     }
     /* "Blight 1" (Cinder Strike): a creature of the caster's for the counters, one offer each -- and "you may" (`optional`),
        the offer that pays nothing too, first. */
@@ -711,7 +711,8 @@ function sacrificeChoices(state, player, sourceId, given) {
   const selector = namesChosen(given) ? withChosen(given, state.objects[sourceId]?.chosen) : given;
   const matches = (Array.isArray(selector?.anyOf) ? selector.anyOf : [selector ?? {}])
     .map((one) => compileSelector({...one, what: "permanent", controller: "you"}));
-  return state.zones.battlefield.filter((id) => matches.some((m) => m(state, id, {controller: player, source: sourceId})));
+  /* Never one that can't be sacrificed (Alexios; rules/statics.mjs): a cost it can't pay. */
+  return state.zones.battlefield.filter((id) => matches.some((m) => m(state, id, {controller: player, source: sourceId})) && !cantBeSacrificed(state, id));
 }
 const sacrificeAtom = (cost) => (cost ?? []).find((a) => a?.atom === "sacrifice" && a.selector);
 /* "EXILE A CARD FROM YOUR GRAVEYARD" AS A COST (Lorehold Excavation; Rubble Rouser's mana ability; CR 602.2b, 601.2h): the

@@ -21,9 +21,9 @@
 
 import {runEffect, eachOf} from "./effects/index.mjs";
 import {ASKING, commandersGoingHome} from "./effects/asking.mjs";
-import {damageQuestion, addCounters} from "./effects/resources.mjs";
+import {damageQuestion, addCounters, counterQuestion} from "./effects/resources.mjs";
 import {controllerOf} from "../rules/layers.mjs";
-import {destructionQuestion} from "./effects/zones.mjs";
+import {destructionQuestion, drawQuestion} from "./effects/zones.mjs";
 import {bindEffect} from "./bind.mjs";
 import {countEffect} from "./amount.mjs";
 import {conditionHolds} from "./condition.mjs";
@@ -198,6 +198,7 @@ export function runResolution(state, rng = null) {
     /* CR 903.9b: a commander this sends to its owner's hand or library may go to the command zone instead -- a
        replacement, so the owners are asked before anything moves (effects/asking.mjs, commanderHome). */
     const home = effect?.effect === "moveZone" || effect?.effect === "counterSpell" ? commandersGoingHome(state, effect) : [];
+    let asked = null;
     if (home.length) resolving.queue[0] = {effect: "commanderHome", commanders: home, move: effect};
     /* CR 616.1: damage that two or more effects would change, where the order changes how it ends -- the player dealt it
        chooses which applies first, before any of it is dealt (effects/asking.mjs, orderDamage). */
@@ -209,6 +210,14 @@ export function runResolution(state, rng = null) {
        counterKind). */
     else if ((effect?.effect === "putCounter" || effect?.effect === "moveCounters") && effect.counter === "chosen")
       resolving.queue[0] = {effect: "counterKind", then: effect};
+    /* CR 616.1: counters that two or more effects would change, where the order changes how many -- the permanent's
+       controller chooses which applies first, before any is put on (effects/asking.mjs, orderCounters). */
+    else if ((asked = counterQuestion(state, effect, resolving.context, effect?.counterOrders ?? {})))
+      resolving.queue[0] = {effect: "orderCounters", put: effect, answers: effect.counterOrders ?? {}, question: asked};
+    /* CR 616.1: a draw two players' Alms Collectors would replace -- the drawing player chooses whose, before any card is
+       drawn (effects/asking.mjs, orderDraws). */
+    else if ((asked = drawQuestion(state, effect, resolving.context, effect?.drawOrders ?? {})))
+      resolving.queue[0] = {effect: "orderDraws", draw: effect, answers: effect.drawOrders ?? {}, question: asked};
     /* CR 616.1: a destruction two or more effects would replace, ending differently (umbra armor; effects/zones.mjs) -- the
        permanent's controller chooses which, before anything is destroyed (effects/asking.mjs, orderDestruction). */
     else if (destructionQuestion(state, effect, resolving.context)) resolving.queue[0] = {effect: "orderDestruction", destroy: effect};

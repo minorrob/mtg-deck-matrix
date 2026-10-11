@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 406 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 413 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1276,6 +1276,13 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-combat-moments` - `tests/engine-combat-moments.mjs`: delayed triggers at end of combat (Wall of Junk) and at the declare attackers step of your next turn (Meandering Towershell); a step that asks has begun for its triggers (the held draw too); an attack made of a creature put onto the battlefield attacking (CR 508.8), a planeswalker among what it may attack (CR 508.4); islandwalk
 - `engine-lose-game` - `tests/engine-lose-game.mjs`: "that player loses the game" (CR 104.3e; Strixhaven Stadium, Triskaidekaphobia), at once and together, a draw when all who remain do, against "you can't lose the game", the loser's own spell gone with them; and combat damage "to you"
 - `engine-combat-statics` - `tests/engine-combat-statics.mjs`: "attacking creatures you control get +1/+0" (Goblin Oriflamme), defender lifted while a Lesson is in your graveyard (Platypus-Bear), and negative power assigned as positive (CR 510.1a; Loot, the Anomaly)
+- `engine-counters-replaced` - `tests/engine-counters-replaced.mjs`: counters put on, replaced -- that many plus one (Hardened Scales), half rounded down (Vorinclex), twice -- by whom, and the CR 616.1 order asked of the affected player where it changes how many
+- `engine-lki-dies` - `tests/engine-lki-dies.mjs`: what a creature was as it died -- the counters it had, its keywords, its toughness -- for a dies trigger as it triggers and resolves, through a wipe, a checkpoint and a theft
+- `engine-exile-if-dies` - `tests/engine-exile-if-dies.mjs`: "if that creature would die this turn, exile it instead" (Essence Burn) -- every way to die, never a death, a bounce and a new object not it, beside other exile-instead effects, this turn only
+- `engine-life-doubled` - `tests/engine-life-doubled.mjs`: "you gain twice that much life instead" (Rhox Faithmender) -- an effect's gain, lifelink in and out of combat, an exchange; four times for two; can't gain life
+- `engine-tokens-replaced` - `tests/engine-tokens-replaced.mjs`: tokens created, replaced -- twice that many (Anointed Procession), Dragons instead of artifact tokens (Draconic Visitor) -- whose control, copies, the effect's own words on what is made instead
+- `engine-draws-replaced` - `tests/engine-draws-replaced.mjs`: an opponent's two or more draws replaced, one each (Alms Collector), and whose of two players' asked of the drawing player before anything is drawn
+- `engine-cant-be-sacrificed` - `tests/engine-cant-be-sacrificed.mjs`: "can't be sacrificed" (Alexios, Deimos of Kosmos) -- told to, nothing happens; never among the choices of an effect or a cost -- and whose control and counter "that player" is
 
 ## Design and execution record
 

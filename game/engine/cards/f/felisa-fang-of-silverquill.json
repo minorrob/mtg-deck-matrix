@@ -1,0 +1,94 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Felisa, Fang of Silverquill",
+    "oracleId": "39144f72-789e-457a-a7e7-862f90c34e15",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire",
+      "Wizard"
+    ],
+    "manaCost": "{2}{W}{B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "Flying\nMentor (Whenever this creature attacks, put a +1/+1 counter on target attacking creature with lesser power.)\nWhenever a nontoken creature you control dies, if it had counters on it, create X tapped 2/1 white and black Inkling creature tokens with flying, where X is the number of counters it had on it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "Mentor (Whenever this creature attacks, put a +1/+1 counter on target attacking creature with lesser power.)",
+      "keyword": "mentor"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a nontoken creature you control dies, if it had counters on it, create X tapped 2/1 white and black Inkling creature tokens with flying, where X is the number of counters it had on it.",
+      "trigger": {
+        "on": "dies",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "token": false
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": {
+            "countersOn": "that card",
+            "counter": "any"
+          },
+          "token": {
+            "name": "Inkling",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Inkling"
+            ],
+            "colors": [
+              "W",
+              "B"
+            ],
+            "power": 2,
+            "toughness": 1,
+            "keywords": [
+              "Flying"
+            ]
+          },
+          "tapped": true
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "countersOn": "that card",
+            "counter": "any"
+          },
+          "atLeast": 1
+        }
+      }
+    }
+  ]
+}

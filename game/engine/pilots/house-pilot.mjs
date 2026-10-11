@@ -349,6 +349,13 @@ export function housePilot({seat, cards = () => null} = {}) {
         const best = options.reduce((b, o) => ((o.leaves ?? Infinity) < (b.leaves ?? Infinity) ? o : b));
         return {indices: [best.index]};
       }
+      /* CR 616.1: which effect changes the counters put on its own permanent first -- the most, or of -1/-1 counters the
+         fewest (the kind is in the question's id). */
+      if (id.startsWith("order-counters:") && options.length) {
+        const fewest = id.includes(":-1/-1:");
+        const best = options.reduce((b, o) => ((fewest ? o.least < b.least : o.puts > b.puts) ? o : b));
+        return {indices: [best.index]};
+      }
       /* Anything else (trigger order, the commander's zone, an effect's choice): the first legal answer,
          in the order offered, which is also what a careful reader would do by default. */
       if (choice.mode === "boolean") return {indices: [0]};

@@ -130,6 +130,10 @@ function checkEffect(effect, path, errors) {
      nothing it could say. */
   if (name === "effectUntil" && effect.rule === "cant-cast" && (effect.named === undefined || effect.who === undefined))
     errors.push({path, message: "A cast forbidden for a while names the spells (`named`) and the players (`who`)"});
+  /* "If that creature would die this turn, exile it instead" (rules/replacement.mjs): about what it names, fixed as it
+     resolves -- `targets`, and for this turn. */
+  if (name === "effectUntil" && effect.rule === "exile-if-dies" && (effect.targets === undefined || (effect.until ?? "end-of-turn") !== "end-of-turn"))
+    errors.push({path, message: "\"If it would die this turn, exile it instead\" names what it is about (`targets`), for this turn"});
   /* "Unless you pay {3}{W}{W}" (echo): a mana cost with its colors, `mana`, in place of a generic `amount`, never beside one. */
   if (name === "unlessPays" && effect.mana !== undefined) {
     let parsed = null;
@@ -364,6 +368,29 @@ function checkAbility(ability, path, errors) {
       errors.push({path: `${path}.duringCombat`, message: "\"During combat\" is duringCombat: true, on a cant-cast or cant-activate static"});
     if (ability.rule === "cant-activate" && ability.duringCombat !== true)
       errors.push({path, message: "An activation forbidden is forbidden during combat (duringCombat: true), its one form built"});
+    /* How many counters instead (CR 614.1a; rules/statics.mjs, placeCounters): "twice that many" `times`, "that many plus
+       one" `plus`, "half that many, rounded down" `half` -- one of them -- and who must be putting them. */
+    if (ability.rule === "more-counters") {
+      if (["times", "plus", "half"].filter((key) => ability[key] !== undefined).length > 1)
+        errors.push({path, message: "More counters instead is one of times, plus or half"});
+      if (ability.times !== undefined && !(Number.isInteger(ability.times) && ability.times >= 0)) errors.push({path: `${path}.times`, message: "times is a whole number, 0 or more"});
+      if (ability.plus !== undefined && !(Number.isInteger(ability.plus) && ability.plus !== 0)) errors.push({path: `${path}.plus`, message: "plus is a whole number, not 0: 1 for \"that many plus one\", -1 for \"that many minus one\""});
+      if (ability.half !== undefined && ability.half !== true) errors.push({path: `${path}.half`, message: "half is true: half that many, rounded down"});
+      if (ability.putBy !== undefined && !["you", "opponent"].includes(ability.putBy)) errors.push({path: `${path}.putBy`, message: "putBy is \"you\" or \"opponent\": who must be putting them"});
+      if (ability.players !== undefined && ability.players !== true) errors.push({path: `${path}.players`, message: "players is true: a player's counters too"});
+    }
+    /* "Twice that many of those tokens instead" (rules/statics.mjs, tokensCreated): how many times, 2 or more. */
+    if (ability.rule === "more-tokens" && !(Number.isInteger(ability.times) && ability.times >= 2))
+      errors.push({path: `${path}.times`, message: "More tokens instead says how many times as many: a whole number, 2 or more"});
+    /* "That many 5/5 red Dragon creature tokens with flying are created instead" of artifact tokens: the tokens it replaces
+       by their card types, and the token made instead. */
+    if (ability.rule === "tokens-instead") {
+      if (Object.keys(ability.affects ?? {}).some((key) => key !== "types")) errors.push({path: `${path}.affects`, message: "The tokens made instead of others are told by their card types: affects {types}"});
+      if (!(ability.token && isText(ability.token.name) && Array.isArray(ability.token.types))) errors.push({path: `${path}.token`, message: "What is made instead is a token: {name, types, ...}"});
+    }
+    /* "Twice that much life instead" (rules/statics.mjs, lifeGained): how many times, 2 or more. */
+    if (ability.rule === "more-life" && !(Number.isInteger(ability.times) && ability.times >= 2))
+      errors.push({path: `${path}.times`, message: "More life instead says how many times as much: a whole number, 2 or more"});
     if (ability.rule === "cant-be-blocked-by") {
       if (!ability.by && ability.byPowerBelowSource !== true) errors.push({path, message: "\"Can't be blocked by\" says by what: `by`, or `byPowerBelowSource`"});
       if (ability.by) checkSelector(ability.by, `${path}.by`, errors, {choice: true});

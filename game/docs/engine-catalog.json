@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1248,
+  "defined": 1253,
   "provisional": 27,
-  "everyRule": 2596
+  "everyRule": 2601
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -3785,7 +3785,7 @@
      "forge": "ReplaceToken",
      "top": 17,
      "all": 35,
-     "blocks": 17,
+     "blocks": 16,
      "alone": 0
     },
     {
@@ -3797,8 +3797,8 @@
      "forge": "ReplaceCounter",
      "top": 16,
      "all": 33,
-     "blocks": 14,
-     "alone": 0
+     "blocks": 12,
+     "alone": 9
     },
     {
      "kind": "effect",
@@ -7477,8 +7477,8 @@
      "forge": "CantSacrifice",
      "top": 2,
      "all": 10,
-     "blocks": 2,
-     "alone": 1
+     "blocks": 1,
+     "alone": 0
     },
     {
      "kind": "static",
@@ -8121,9 +8121,9 @@
   "Replacement effects": {
    "tally": {
     "built": 0,
-    "partial": 5,
+    "partial": 6,
     "named": 0,
-    "missing": 29
+    "missing": 28
    },
    "entries": [
     {
@@ -8171,19 +8171,19 @@
      "forge": "CreateToken",
      "top": 17,
      "all": 32,
-     "blocks": 17,
+     "blocks": 16,
      "alone": 0
     },
     {
      "kind": "replacement",
      "rule": null,
      "name": "AddCounter",
-     "engine": null,
-     "status": "missing",
+     "engine": "rules/statics",
+     "status": "partial",
      "forge": "AddCounter",
      "top": 15,
      "all": 30,
-     "blocks": 14,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -8207,7 +8207,7 @@
      "forge": "GainLife",
      "top": 6,
      "all": 21,
-     "blocks": 6,
+     "blocks": 5,
      "alone": 1
     },
     {
@@ -9314,10 +9314,10 @@
   },
   "Amounts the game counts": {
    "tally": {
-    "built": 20,
+    "built": 21,
     "partial": 2,
     "named": 0,
-    "missing": 166
+    "missing": 165
    },
    "entries": [
     {
@@ -9419,13 +9419,13 @@
     {
      "kind": "count",
      "rule": null,
-     "name": "CounterNum",
-     "engine": null,
-     "status": "missing",
+     "name": "That many counters (the number of counters a replacement changes)",
+     "engine": "more-counters' times, plus and half (rules/statics.mjs, placeCounters)",
+     "status": "built",
      "forge": "CounterNum",
      "top": 16,
      "all": 32,
-     "blocks": 14,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -9629,7 +9629,7 @@
      "forge": "LifeGained",
      "top": 5,
      "all": 20,
-     "blocks": 5,
+     "blocks": 4,
      "alone": 0
     },
     {

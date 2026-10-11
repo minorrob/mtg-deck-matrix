@@ -26,7 +26,7 @@ import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf, controllerOf, abilitiesOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector, matchesSelector} from "../filter.mjs";
 import {applyReplacements, enteringModifications, regenerated} from "../../rules/replacement.mjs";
-import {cantBeCountered, entersUntapped, countersPlaced} from "../../rules/statics.mjs";
+import {cantBeCountered, entersUntapped, countersPlaced, drawsInstead, cantBeSacrificed} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
 
@@ -284,7 +284,8 @@ const inRandomOrder = (list, rng) => {
  */
 export function sacrificeOne(state, id, events) {
   const object = state.objects[id];
-  if (!object) return null;
+  /* "Can't be sacrificed" (Alexios; rules/statics.mjs): told to, nothing happens to it. */
+  if (!object || cantBeSacrificed(state, id)) return null;
   const sacrificer = object.controller;
   const before = events.length;
   const moved = moveOne(state, id, "graveyard", events, {owner: object.owner});
@@ -518,18 +519,45 @@ export function draw(state, params, context) {
   const events = [];
   const count = params.count ?? 1;
   for (const player of playersFor(state, params.who, context.controller)) {
-    for (let i = 0; i < count; i += 1) {
-      const library = cardsIn(state, "library", player);
-      if (library.length === 0) { state.players[player].drewFromEmpty = true; break; }
-      const moved = moveOne(state, library[0], "hand", events, {owner: player});
-      if (moved !== null && state.objects[moved]?.zone === "hand") {
-        const fields = events[events.length - 1].data.fields;
-        fields.drawn = true;
-        fields.drawNumber = recordDraw(state, player);
-      }
+    /* "If an opponent would draw two or more cards, instead you and that player each draw a card" (Alms Collector; rules/
+       statics.mjs, drawsInstead): whose, when two players' would, as the drawing player chose (CR 616.1; effects/asking.mjs,
+       orderDraws) -- where nobody could be asked, the first in turn order after them. The two draw in turn order from the
+       active player, each one card. */
+    const instead = drawsInstead(state, player, count);
+    if (instead.length) {
+      const you = instead.includes(params.drawOrders?.[player]) ? params.drawOrders[player] : instead[0];
+      const seats = state.players.length, rank = (p) => (p - state.activePlayer + seats) % seats;
+      for (const who of [you, player].sort((a, b) => rank(a) - rank(b))) drawOne(state, who, events);
+      continue;
     }
+    for (let i = 0; i < count; i += 1) drawOne(state, player, events);
   }
   return events;
+}
+/* One card off the top of a player's library into their hand, said to be drawn; from an empty library, the mark that loses (CR 704.5b). */
+function drawOne(state, player, events) {
+  const library = cardsIn(state, "library", player);
+  if (library.length === 0) { state.players[player].drewFromEmpty = true; return; }
+  const moved = moveOne(state, library[0], "hand", events, {owner: player});
+  if (moved !== null && state.objects[moved]?.zone === "hand") {
+    const fields = events[events.length - 1].data.fields;
+    fields.drawn = true;
+    fields.drawNumber = recordDraw(state, player);
+  }
+}
+
+/* ---- CR 616.1, before cards are drawn ----
+
+   A draw of two or more two players' Alms Collectors would replace: the drawing player chooses whose applies, asked before any
+   card is drawn (script/resolution.mjs; effects/asking.mjs, orderDraws). `{player, options}`, the options the controllers
+   whose effects would apply; or null when no draw of the effect has such a choice not yet made (`answers`, by player). */
+export function drawQuestion(state, effect, context, answers = {}) {
+  if (effect?.effect !== "draw") return null;
+  for (const player of playersFor(state, effect.who, context.controller)) {
+    const instead = drawsInstead(state, player, effect.count ?? 1);
+    if (instead.length > 1 && !instead.includes(answers[player])) return {player, options: instead, count: effect.count};
+  }
+  return null;
 }
 
 /**
