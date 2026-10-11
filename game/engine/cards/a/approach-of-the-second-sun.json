@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Approach of the Second Sun",
+    "oracleId": "e4125377-34c0-4b54-bdf8-4e88f5d24565",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{6}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If this spell was cast from your hand and you've cast another spell named Approach of the Second Sun this game, you win the game. Otherwise, put Approach of the Second Sun into its owner's library seventh from the top and you gain 7 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "If this spell was cast from your hand and you've cast another spell named Approach of the Second Sun this game, you win the game. Otherwise, put Approach of the Second Sun into its owner's library seventh from the top and you gain 7 life.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "cast": {
+              "from": "hand"
+            },
+            "compare": {
+              "count": {
+                "spellsCastThisGame": "you",
+                "named": "Approach of the Second Sun"
+              },
+              "atLeast": 2
+            }
+          },
+          "then": [
+            {
+              "effect": "winGame"
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "moveZone",
+              "targets": "self",
+              "to": "library",
+              "position": 7
+            },
+            {
+              "effect": "gainLife",
+              "amount": 7
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

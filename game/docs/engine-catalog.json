@@ -9,17 +9,17 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1242,
+  "defined": 1245,
   "provisional": 27,
-  "everyRule": 2575
+  "everyRule": 2590
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 53,
+    "built": 54,
     "partial": 0,
     "named": 5,
-    "missing": 136
+    "missing": 135
    },
    "entries": [
     {
@@ -512,7 +512,7 @@
      "top": 5,
      "all": 37,
      "blocks": 5,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "keyword ability",
@@ -968,7 +968,7 @@
      "top": 2,
      "all": 10,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -1334,12 +1334,12 @@
      "kind": "keyword ability",
      "rule": "702.137",
      "name": "Spectacle",
-     "engine": null,
-     "status": "missing",
+     "engine": "Spectacle",
+     "status": "built",
      "forge": "Spectacle",
      "top": 1,
      "all": 11,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -8923,7 +8923,7 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 83,
+     "blocks": 82,
      "alone": 21
     },
     {
@@ -8947,7 +8947,7 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 91,
+     "blocks": 90,
      "alone": 26
     },
     {
@@ -9007,8 +9007,8 @@
      "forge": "MayPlay",
      "top": 99,
      "all": 625,
-     "blocks": 65,
-     "alone": 17
+     "blocks": 64,
+     "alone": 18
     },
     {
      "kind": "option",
@@ -9314,10 +9314,10 @@
   },
   "Amounts the game counts": {
    "tally": {
-    "built": 17,
-    "partial": 1,
+    "built": 20,
+    "partial": 2,
     "named": 0,
-    "missing": 170
+    "missing": 166
    },
    "entries": [
     {
@@ -9444,13 +9444,13 @@
      "kind": "count",
      "rule": null,
      "name": "Spells cast this turn",
-     "engine": null,
-     "status": "missing",
+     "engine": "amount {spellsCastThisTurn: \"you\" | \"that player\", filter?} -- by card type and controller",
+     "status": "partial",
      "forge": "ThisTurnCast",
      "top": 12,
      "all": 139,
-     "blocks": 12,
-     "alone": 8
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -9660,13 +9660,13 @@
      "kind": "count",
      "rule": null,
      "name": "Life your opponents lost this turn",
-     "engine": null,
-     "status": "missing",
+     "engine": "amount {lifeLostThisTurn: \"opponents\"} (effects/resources.mjs keeps each player's, rules/turn.mjs clears it)",
+     "status": "built",
      "forge": "LifeOppsLostThisTurn",
      "top": 3,
      "all": 26,
-     "blocks": 3,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -9744,13 +9744,13 @@
      "kind": "count",
      "rule": null,
      "name": "Morbid (a creature died this turn)",
-     "engine": null,
-     "status": "missing",
+     "engine": "amount {creaturesDiedThisTurn: \"you\" | \"that player\" | \"any\"} (state/index.mjs recordDeath, rules/turn.mjs clears it)",
+     "status": "built",
      "forge": "Morbid",
      "top": 2,
      "all": 41,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -9768,13 +9768,13 @@
      "kind": "count",
      "rule": null,
      "name": "Cards you drew this turn",
-     "engine": null,
-     "status": "missing",
+     "engine": "amount {cardsDrawnThisTurn: \"you\" | \"that player\"} (state/index.mjs recordDraw, rules/turn.mjs clears it)",
+     "status": "built",
      "forge": "YouDrewThisTurn",
      "top": 2,
      "all": 30,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -9809,7 +9809,7 @@
      "forge": "ValidStack",
      "top": 2,
      "all": 4,
-     "blocks": 2,
+     "blocks": 1,
      "alone": 1
     },
     {
@@ -10049,7 +10049,7 @@
      "forge": "ValidCommand",
      "top": 1,
      "all": 3,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -11942,7 +11942,7 @@
      "top": 1,
      "all": 52,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword construct",

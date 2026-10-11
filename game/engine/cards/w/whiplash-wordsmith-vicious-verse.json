@@ -1,0 +1,101 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Whiplash Wordsmith // Vicious Verse",
+    "oracleId": "e1ffb884-a89e-4e2a-9beb-8bd5838b6a94",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire",
+      "Sorcerer"
+    ],
+    "manaCost": "{3}{B/R}",
+    "colors": [
+      "B",
+      "R"
+    ],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\nAs long as an opponent was dealt noncombat damage this turn, this creature has flying and haste.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This creature enters prepared.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersPrepared": true
+      }
+    },
+    {
+      "kind": "static",
+      "text": "As long as an opponent was dealt noncombat damage this turn, this creature has flying and haste.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Flying",
+          "Haste"
+        ]
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "playersDealtNoncombatDamage": "opponent"
+          },
+          "atLeast": 1
+        }
+      }
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Vicious Verse",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{B/R}",
+      "colors": [
+        "B",
+        "R"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Vicious Verse deals 1 damage to target opponent.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Vicious Verse deals 1 damage to target opponent.",
+        "targets": [
+          {
+            "what": "player",
+            "who": "opponent"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 1,
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

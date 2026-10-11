@@ -87,9 +87,11 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
   const kinds = section("Amounts the game counts");
   ok(Object.keys(FORGE_COUNTS).every((k) => kinds.some((e) => e.forge === k)), "every kind of count the engine is measured against is an entry");
   eq(kinds.find((e) => e.forge === "xPaid").status, "built", "X is a built count");
-  eq([missingFor({apis: ["LoseLife"], counts: ["Devotion"]}), missingFor({apis: ["GainLife"], counts: ["ThisTurnCast"]}), missingFor({apis: ["Draw"], counts: ["NoSuchKind"]})],
-    [[], [{kind: "count", name: "ThisTurnCast", why: "not built"}], [{kind: "count", name: "NoSuchKind", why: "unknown"}]],
-    "Gray Merchant's devotion holds nothing back; Aetherflux Reservoir's spells-cast-this-turn does, and a kind nobody listed does too");
+  eq([missingFor({apis: ["LoseLife"], counts: ["Devotion"]}), missingFor({apis: ["GainLife"], counts: ["ThisTurnActivated"]}), missingFor({apis: ["Draw"], counts: ["NoSuchKind"]})],
+    [[], [{kind: "count", name: "ThisTurnActivated", why: "not built"}], [{kind: "count", name: "NoSuchKind", why: "unknown"}]],
+    "Gray Merchant's devotion holds nothing back; abilities activated this turn, not built, do, and a kind nobody listed does too");
+  /* Train C: Aetherflux Reservoir's spells cast this turn, partial -- by card type and controller -- holds nothing back. */
+  eq(missingFor({apis: ["GainLife"], counts: ["ThisTurnCast"]}), [], "Aetherflux Reservoir's spells cast this turn, partial, holds nothing back");
   eq(missingFor({apis: ["Draw"], options: ["Count"]}), [{kind: "count", name: "Count", why: "not measured by kind"}], "a card measured before kinds were is held back by any count, not waved through");
   ok(inventory.top.perCard["Gray Merchant of Asphodel"].counts.includes("Devotion"), "the measurement records the kind on the card itself");
   eq(section("Choices").find((e) => e.name === "A value for X").status, "built", "and a value for X is a built choice: one offer per value the pool can pay");

@@ -688,6 +688,10 @@ export const combatDamage = {
       /* What follows a prevention -- "each opponent mills that many cards" -- immediately afterward (CR 615.5). */
       if (hit.prevented === true || hit.amount <= 0) { events.push(...runFollowUps(state, hit)); continue; }
       hit.source = raw.source;
+      /* The source has dealt damage, and combat damage (CR 510.2), to a player or a permanent, for as long as it is this
+         object (CR 400.7): "has hexproof as long as they haven't dealt combat damage yet" (Ruric Thar, Magecrusher; script/
+         filter.mjs, hasDealtDamage and hasDealtCombatDamage). A hit prevented in full was never dealt (above). */
+      Object.assign(state.objects[hit.source], {hasDealtDamage: true, hasDealtCombatDamage: true});
       /* INFECT (CR 702.90b-c, batch 78): poison counters to a player, -1/-1 counters to a creature, in place of the rest. */
       const infect = infects(state, hit.source);
       if (hit.toPlayer !== undefined && hit.toPlayer !== null) {

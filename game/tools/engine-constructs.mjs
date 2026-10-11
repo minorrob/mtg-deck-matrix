@@ -317,12 +317,19 @@ export const FORGE_COUNTS = Object.freeze({
      Addendum's condition) -- for a target the spell has only then (CR 601.2c; script/bind.mjs, `onlyIf`). */
   IfCastInOwnMainPhase: {name: "If it was cast during its caster's main phase (\"if you cast this spell during your main phase\")", status: "built",
     engine: "condition {cast: {mainPhase: true}}; a target spec's onlyIf (script/bind.mjs)"},
-  LifeOppsLostThisTurn: {name: "Life your opponents lost this turn", status: "missing"},
+  /* Train C (Light Up the Stage's spectacle, CR 702.137a): every opponent's life lost this turn, together, those still in
+     the game (CR 800.4a) -- the record each player's own count was kept in (effects/resources.mjs). Its one form, built. */
+  LifeOppsLostThisTurn: {name: "Life your opponents lost this turn", status: "built", engine: "amount {lifeLostThisTurn: \"opponents\"} (effects/resources.mjs keeps each player's, rules/turn.mjs clears it)"},
   ThisTurnEntered: {name: "What entered or died this turn", status: "missing"},
-  ThisTurnCast: {name: "Spells cast this turn", status: "missing"},
+  /* Train C (Aetherflux Reservoir, Traxos, Academy Guardian): a player's spells this turn, as each was cast -- read by its
+     card types and controller (rules/actions.mjs keeps them; script/filter.mjs, matchesLastKnown) -- counted when the
+     amount is read (CR 608.2h). Partial: a spell's color, subtypes, mana value or name this turn are not read. */
+  ThisTurnCast: {name: "Spells cast this turn", status: "partial", engine: "amount {spellsCastThisTurn: \"you\" | \"that player\", filter?} -- by card type and controller"},
   ThisTurnActivated: {name: "Abilities activated this turn", status: "missing"},
   ResolvedThisTurn: {name: "Times this resolved this turn", status: "missing"},
-  YouDrewThisTurn: {name: "Cards you drew this turn", status: "missing"},
+  /* Train C (Fractal Anomaly, Lake-town Toymaker): each card a player drew this turn its own (CR 121.2; state/index.mjs,
+     recordDraw, at every draw). Its one form, built. */
+  YouDrewThisTurn: {name: "Cards you drew this turn", status: "built", engine: "amount {cardsDrawnThisTurn: \"you\" | \"that player\"} (state/index.mjs recordDraw, rules/turn.mjs clears it)"},
   RememberedSize: {name: "How many things an effect remembered", status: "missing"},
   RememberedNumber: {name: "A number an effect remembered", status: "missing"},
   TriggerRememberAmount: {name: "An amount the trigger carries", status: "missing"},
@@ -339,7 +346,10 @@ export const FORGE_COUNTS = Object.freeze({
   /* Train B (X11; Wayward Swordtooth): "unless you have the city's blessing" -- ascend's designation (CR 702.131;
      keywords/designations.mjs). */
   Blessing: {name: "The city's blessing (ascend)", status: "built", engine: "condition {citysBlessing} (script/condition.mjs)"},
-  Morbid: {name: "Morbid (a creature died this turn)", status: "missing"},
+  /* Train C (Dreaded Bat-Cloud, Essenceknit Scholar): a creature put into a graveyard from the battlefield (CR 700.4),
+     counted as it lands there for whoever controlled it as it last existed (state/index.mjs, recordDeath; every way it can
+     go there: effects/zones.mjs, rules/sba.mjs) -- "a creature died this turn" and "died under your control". Built. */
+  Morbid: {name: "Morbid (a creature died this turn)", status: "built", engine: "amount {creaturesDiedThisTurn: \"you\" | \"that player\" | \"any\"} (state/index.mjs recordDeath, rules/turn.mjs clears it)"},
   UrzaLands: {name: "The Urza lands", status: "missing"},
   Monarch: {name: "The monarch", status: "missing"},
   YourStartingLife: {name: "Your starting life total", status: "missing"},

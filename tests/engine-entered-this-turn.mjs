@@ -65,7 +65,8 @@ const BEAR = [{tap: "Forest"}, {tap: "Forest"}, {cast: "Bear"}, {resolve: true}]
 /* ---- the schema ---- */
 eq(amountProblems(CREATURES), [], "a count of the creatures that entered under your control");
 ok(amountProblems({permanentsEnteredThisTurn: "you", filter: {tapped: true}}).some((p) => p.includes("cannot use `tapped`")), "its filter is what a snapshot of what entered can answer");
-ok(amountProblems({permanentsLeftThisTurn: "you", filter: {types: ["Creature"]}}).some((p) => p.includes("Only permanentsEnteredThisTurn takes a filter")), "and no other count takes one");
+/* Train C: and the spells cast this turn, as each was cast (tests/engine-history-records.mjs). */
+ok(amountProblems({permanentsLeftThisTurn: "you", filter: {types: ["Creature"]}}).some((p) => p.includes("Only permanentsEnteredThisTurn and spellsCastThisTurn take a filter")), "and no other count takes one but the spells cast this turn");
 ok(amountProblems({permanentsEnteredThisTurn: "everyone"}).some((p) => p.includes("permanentsEnteredThisTurn is \"you\" or \"that player\"")), "whose: you, or that player");
 for (const name of ["Kinbinding", "Wary Farmer"]) ok(index.resolve(name)?.playable === true, `${name} is defined and playable`);
 
