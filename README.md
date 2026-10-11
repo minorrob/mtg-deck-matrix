@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 419 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 420 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1289,6 +1289,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-waterbend` - `tests/engine-waterbend.mjs`: waterbend as an activated ability's cost (CR 701.67; Giant Koi, Foggy Swamp Vinebender), artifacts and creatures tapped for its generic mana, never for an increase on it
 - `engine-cant-cast-self` - `tests/engine-cant-cast-self.mjs`: a card's own "you can't cast this spell unless ..." (Proft, Sinister Mastermind's threshold), read wherever it would be cast from
 - `engine-unless-tap` - `tests/engine-unless-tap.mjs`: "you may tap another untapped Merfolk you control. When you do, ..." (Meanders Guide; CR 118.12a, 603.12), each permanent its own option
+- `engine-revealed-hand` - `tests/engine-revealed-hand.mjs`: a discard chosen from a revealed hand (CR 701.9b, 701.20a; Render Speechless, Stinging Vitriol, Dai Li Indoctrination, Auntie's Sentence) -- every card shown to every seat while it is chosen, named in the journal, discarded by its own player -- and "any number of cards, then draws that many" (Steal the Show)
 
 ## Design and execution record
 

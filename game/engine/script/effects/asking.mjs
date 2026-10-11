@@ -452,42 +452,57 @@ export const discard = {
        the last has chosen (apply). */
     const seats = state.players.length, apnap = (p) => (p - state.activePlayer + seats) % seats;
     const asked = [...queue].sort((a, b) => apnap(a) - apnap(b));
+    /* "TARGET OPPONENT REVEALS THEIR HAND. YOU CHOOSE A NONLAND CARD FROM IT. THAT PLAYER DISCARDS THAT CARD" (Render
+       Speechless): the card chosen by this effect's controller (`chooser: "you"`, CR 701.9b) -- from that hand, revealed. */
+    if (params.chooser === "you") {
+      const outcome = chosenFromHand(state, {player: context.controller, count: params.count ?? 1, ...(params.selector ? {selector: params.selector} : {}),
+        source: context.source ?? null, decided: []}, asked);
+      if (!outcome.asked) return {events: outcome.events};
+      state.resolving?.events.push(...outcome.events);
+      return true;
+    }
     state.awaiting = {
       kind: "effect-choice", effect: "discard", player: asked[0], remaining: asked.slice(1),
       /* Whose discards are remembered: this effect's controller's, or the player a connive is for (`rememberOf`, script/
-         resolution.mjs), whose permanent the counter goes on. */
-      count: params.count ?? 1, ...(params.who !== undefined ? {who: params.who} : {}), controller: Number.isInteger(params.rememberOf) ? params.rememberOf : context.controller,
+         resolution.mjs), whose permanent the counter goes on -- or the one target player told to discard: "target player
+         discards any number of cards, then draws that many cards" (Steal the Show) counts what that player discarded. */
+      count: params.count ?? 1, ...(params.who !== undefined ? {who: params.who} : {}),
+      controller: Number.isInteger(params.rememberOf) ? params.rememberOf : Array.isArray(params.who) && params.who.length === 1 ? params.who[0] : context.controller,
       ...(params.remember ? {remembering: []} : {}),
       /* "You may discard UP TO two cards. If you do, draw that many cards" (Fable of the Mirror-Breaker, chapter II): how many,
          from none to that many, is the discarder's to say (CR 701.9a, 701.9b); "that many" counts what they discarded
-         (`remember`, then `rememberedCount`). */
-      ...(params.upTo === true ? {upTo: true} : {}),
+         (`remember`, then `rememberedCount`). "Discards ANY NUMBER of cards" (Steal the Show, `anyNumber`): from none to
+         every card in that hand. */
+      ...(params.upTo === true ? {upTo: true} : {}), ...(params.anyNumber === true ? {anyNumber: true} : {}),
     };
     return true;
   },
 
   choice(state, awaiting) {
+    if (awaiting.from !== undefined) return chosenFromHandChoice(state, awaiting);
     const hand = cardsIn(state, "hand", awaiting.player);
-    const count = Math.min(awaiting.count, hand.length);
+    const upTo = awaiting.upTo === true || awaiting.anyNumber === true;
+    const count = awaiting.anyNumber ? hand.length : Math.min(awaiting.count, hand.length);
     return {
       id: `discard:${awaiting.player}:${state.turn}`,
-      title: `Discard ${awaiting.upTo ? "up to " : ""}${count} card${count === 1 ? "" : "s"}`,
-      mode: count === 1 && !awaiting.upTo ? "one" : "many",
-      min: awaiting.upTo ? 0 : count,
+      title: awaiting.anyNumber ? "Discard any number of cards" : `Discard ${upTo ? "up to " : ""}${count} card${count === 1 ? "" : "s"}`,
+      mode: count === 1 && !upTo ? "one" : "many",
+      min: upTo ? 0 : count,
       max: count,
       options: cardOptions(state, hand),
     };
   },
 
   apply(state, awaiting, indices) {
+    if (awaiting.from !== undefined) return chosenFromHandApply(state, awaiting, indices);
     const events = [];
     const hand = cardsIn(state, "hand", awaiting.player);
     /* Resolved to ids before anything moves, because each move makes a new object and rewrites the
        hand underneath the positions the player answered with. */
     const chosen = (indices ?? []).map((index) => hand[index]).filter((id) => id !== undefined);
-    /* Each a card in that hand, once, and no more than it says -- fewer only when it says "up to". */
-    const most = Math.min(awaiting.count, hand.length);
-    if (new Set(chosen).size !== chosen.length || chosen.length > most || (!awaiting.upTo && chosen.length < most)) throw new Error("Invalid selection");
+    /* Each a card in that hand, once, and no more than it says -- fewer only when it says "up to" or "any number". */
+    const most = awaiting.anyNumber ? hand.length : Math.min(awaiting.count, hand.length);
+    if (new Set(chosen).size !== chosen.length || chosen.length > most || (!awaiting.upTo && !awaiting.anyNumber && chosen.length < most)) throw new Error("Invalid selection");
     /* CR 101.4: chosen now, discarded when the last player has chosen -- every player's at the same time. */
     const decided = [...(awaiting.decided ?? []), {player: awaiting.player, ids: chosen}];
     const next = (awaiting.remaining ?? []).filter((player) => cardsIn(state, "hand", player).length > 0);
@@ -495,22 +510,65 @@ export const discard = {
       state.awaiting = {...awaiting, player: next[0], remaining: next.slice(1), decided};
       return {events, again: true};
     }
-    /* What the effect's controller discarded, as the cards it became. A player who chose and has since left the game
-       discards nothing: their hand left with them (CR 800.4a). */
-    let remembering = awaiting.remembering;
-    for (const {player, ids} of decided.filter((d) => !state.players[d.player].lost)) {
-      const gone = ids.map((id) => discardOne(state, id, player, events));
-      if (remembering && player === awaiting.controller) remembering = [...remembering, ...gone];
-    }
-    return remembering ? {events, remembered: remembering} : events;
+    return discardDecided(state, awaiting, decided, events);
   },
 
   /* LEFT THE GAME WHILE ASKED (CR 800.4a; script/resolution.mjs, answerDeparted): their hand left with them, so they
-     discard nothing, and the next player is asked -- or, theirs the last answer, everyone's discards are made. */
+     discard nothing, and the next player is asked -- or, theirs the last answer, everyone's discards are made. The
+     controller choosing from a revealed hand has left, and the spell or ability with them: nothing is discarded. */
   left(state, awaiting) {
+    if (awaiting.from !== undefined) return [];
     return discard.apply(state, awaiting, []);
   },
 };
+
+/* What every player chose to discard, discarded at once (CR 101.4); and what the effect's controller discarded, as the cards
+   it became. A player who chose and has since left the game discards nothing: their hand left with them (CR 800.4a). */
+function discardDecided(state, awaiting, decided, events) {
+  let remembering = awaiting.remembering;
+  for (const {player, ids} of decided.filter((d) => !state.players[d.player].lost)) {
+    const gone = ids.map((id) => discardOne(state, id, player, events));
+    if (remembering && player === awaiting.controller) remembering = [...remembering, ...gone];
+  }
+  return remembering ? {events, remembered: remembering} : events;
+}
+
+/* A HAND REVEALED FOR ANOTHER PLAYER TO CHOOSE FROM (Render Speechless, Stinging Vitriol, Dai Li Indoctrination, Auntie's
+   Sentence; CR 701.9b, 701.20a): each hand in turn (APNAP, CR 101.4), every card of it revealed -- said in the journal, and
+   shown in every seat's view while its card is chosen (`handRevealed`, projection.mjs) -- and this effect's controller
+   asked which of the cards `selector` fits ("a nonland card") that player discards, the others shown and not offered.
+   None fits: the hand was still revealed, nothing is chosen from it, and the next is. Every card chosen is discarded, by
+   its hand's player, once the last is (discardDecided). The first hand to choose from asked, or the discards made. */
+function chosenFromHand(state, base, hands) {
+  const events = [];
+  for (const [n, from] of hands.entries()) {
+    const cards = cardsIn(state, "hand", from);
+    events.push(...revealedEvents(state, from, cards));
+    const fits = base.selector ? compileSelector({...base.selector, what: "card", zone: "hand"}) : null;
+    const offered = fits ? cards.filter((id) => fits(state, id, {controller: base.player, source: base.source})) : cards;
+    if (offered.length === 0) continue;
+    state.awaiting = {kind: "effect-choice", effect: "discard", ...base, from, cards, offered, remaining: hands.slice(n + 1), handRevealed: true};
+    return {asked: true, events};
+  }
+  discardDecided(state, base, base.decided, events);
+  return {events};
+}
+function chosenFromHandChoice(state, awaiting) {
+  const count = Math.min(awaiting.count, awaiting.offered.length);
+  return {
+    id: `discard-from:${awaiting.from}:${state.turn}`,
+    title: `${state.players[awaiting.from].name} revealed their hand: choose ${count === 1 ? "a card" : `${count} cards`} for them to discard`,
+    mode: count === 1 ? "one" : "many", min: count, max: count,
+    options: cardOptions(state, awaiting.offered),
+  };
+}
+function chosenFromHandApply(state, awaiting, indices) {
+  const chosen = (indices ?? []).map((index) => awaiting.offered[index]);
+  if (chosen.some((id) => id === undefined) || new Set(chosen).size !== chosen.length || chosen.length !== Math.min(awaiting.count, awaiting.offered.length)) throw new Error("Invalid selection");
+  const {from: _from, cards: _cards, offered: _offered, remaining, kind: _kind, effect: _effect, resolution: _resolution, handRevealed: _shown, ...base} = awaiting;
+  const outcome = chosenFromHand(state, {...base, decided: [...awaiting.decided, {player: awaiting.from, ids: chosen}]}, remaining);
+  return outcome.asked ? {events: outcome.events, again: true} : outcome.events;
+}
 
 /* ---- modal ---- */
 

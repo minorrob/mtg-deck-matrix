@@ -130,7 +130,11 @@ function libraryKnowledge(state, viewer) {
     if (revealed || (looked && owner === viewer)) known.add(ids[0]);
     for (const look of state.looks ?? []) if (look.viewer === viewer && look.ids.every((id, i) => ids[i] === id)) look.ids.forEach((id) => known.add(id));
   }
-  return {known, shown};
+  /* A hand revealed while a card is chosen from it (CR 701.20a; "target opponent reveals their hand"): its cards, to every
+     player, while that question is asked (`handRevealed`). */
+  const asking = state.awaiting;
+  const hand = new Set(asking?.handRevealed === true ? asking.cards : []);
+  return {known, shown, hand};
 }
 /* THE CARDS A QUESTION SHOWS THE PLAYER IT ASKS: what a scry, a surveil or a dig looks at, what a search offers (CR 701.22a,
    701.25a, 701.19a) -- the ids listed in the pending question (`state.awaiting`; a count or a player is not a list of
@@ -148,7 +152,7 @@ function askedAbout(state, viewer) {
 }
 function mayKnow(state, o, viewer, library) {
   if (library.asked.has(o.id)) return true;
-  if (o.zone === "hand") return o.owner === viewer;
+  if (o.zone === "hand") return o.owner === viewer || library.hand.has(o.id);
   if (o.zone === "library") return library.known.has(o.id);
   if (!PUBLIC_ZONES.has(o.zone)) return false;
   if (o.faceDown !== true) return true;

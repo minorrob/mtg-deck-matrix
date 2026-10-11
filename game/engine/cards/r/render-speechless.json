@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Render Speechless",
+    "oracleId": "6fdddab4-fcc9-4622-9c17-c69f9d4bca08",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}{B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target opponent reveals their hand. You choose a nonland card from it. That player discards that card.\nPut two +1/+1 counters on up to one target creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Target opponent reveals their hand. You choose a nonland card from it. That player discards that card.\nPut two +1/+1 counters on up to one target creature.",
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        },
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "discard",
+          "who": {
+            "target": 0
+          },
+          "chooser": "you",
+          "reveal": true,
+          "selector": {
+            "nonTypes": [
+              "Land"
+            ]
+          },
+          "count": 1
+        },
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 1
+          },
+          "counter": "+1/+1",
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

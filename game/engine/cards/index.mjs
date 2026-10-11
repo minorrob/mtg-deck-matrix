@@ -1013,6 +1013,15 @@ export function compileScript(script) {
       if (effect.effect === "addMana" && effect.spendOnly !== undefined && !spendOnlyValid(effect.spendOnly))
         problems.push(`addMana: a spending restriction says what it pays for -- a spell, an ability of a permanent or of a source anywhere, or more than one, each a selector (${SPEND_ONLY_KEYS.join(", ")})`);
       if (effect.effect === "addMana") problems.push(...whenSpentProblems(effect));
+      /* "Target opponent reveals their hand. You choose a nonland card from it. That player discards that card" (Render
+         Speechless; effects/asking.mjs): a discard chosen by this effect's controller (`chooser: "you"`, CR 701.9b) is from a
+         hand revealed (`reveal: true`, CR 701.20a) -- the two together, and one card or more of it; "any number" is the
+         discarder's own choice. */
+      if (effect.effect === "discard" && (effect.chooser !== undefined || effect.reveal !== undefined)
+        && !(effect.chooser === "you" && effect.reveal === true && effect.anyNumber === undefined && effect.upTo === undefined && effect.random === undefined && effect.all === undefined))
+        problems.push("discard: a card chosen by this effect's controller (`chooser: \"you\"`) from a hand revealed (`reveal: true`), the two together -- never up to, any number, at random or all");
+      if (effect.effect === "discard" && effect.anyNumber !== undefined && !(effect.anyNumber === true && effect.count === undefined && effect.upTo === undefined))
+        problems.push("discard: anyNumber is true, from none to every card in that hand -- with no count of its own");
     }
 
     if (ability.kind === "spell") {

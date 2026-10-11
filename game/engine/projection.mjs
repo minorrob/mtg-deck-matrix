@@ -139,6 +139,14 @@ function topLookedAtBy(state, viewer, ids) {
   return known;
 }
 
+/* A HAND REVEALED (CR 701.20a; effects/asking.mjs, discard's `handRevealed`): "target opponent reveals their hand. You
+   choose a nonland card from it" (Render Speechless) -- each card of it shown to every player while the card is chosen, and
+   to nobody once the question is gone, however it goes: those of this hand's cards the question revealed. */
+function handShown(state, ids) {
+  const asking = state.awaiting;
+  return asking?.handRevealed === true ? ids.filter((id) => asking.cards.includes(id)) : [];
+}
+
 function zoneFor(state, zone, owner, viewer) {
   const ids = zone === "battlefield" || zone === "exile"
     ? state.zones[zone].filter((id) => state.objects[id].owner === owner)
@@ -147,6 +155,7 @@ function zoneFor(state, zone, owner, viewer) {
   const visible = rule === "public" || (rule === "owner" && viewer === owner);
   const looked = zone === "library" ? topLookedAtBy(state, viewer, ids) : 0;
   const cards = visible ? ids.map((id) => cardFor(state, id, true, viewer)).filter(Boolean)
+    : zone === "hand" ? handShown(state, ids).map((id) => cardFor(state, id, true)).filter(Boolean)
     : zone === "library" && ids.length && (looked || topSeenBy(state, owner, viewer)) ? ids.slice(0, Math.max(1, looked)).map((id) => cardFor(state, id, true)).filter(Boolean) : [];
   return {
     count: ids.length,
