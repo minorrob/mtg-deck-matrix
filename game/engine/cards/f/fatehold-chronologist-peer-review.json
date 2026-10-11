@@ -1,0 +1,92 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fatehold Chronologist // Peer Review",
+    "oracleId": "1063822f-47d3-42e9-8a21-f62b12609fe1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bird",
+      "Wizard"
+    ],
+    "manaCost": "{1}{W/U}",
+    "colors": [
+      "W",
+      "U"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "Flying\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "replacement",
+      "text": "This creature enters prepared.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersPrepared": true
+      }
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Peer Review",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{2}{W/U}",
+      "colors": [
+        "W",
+        "U"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Create a 2/2 colorless Wizard Soldier creature token named Cadet. Surveil 1.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Create a 2/2 colorless Wizard Soldier creature token named Cadet. Surveil 1.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 1,
+            "token": {
+              "name": "Cadet",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Wizard",
+                "Soldier"
+              ],
+              "colors": [],
+              "power": 2,
+              "toughness": 2
+            }
+          },
+          {
+            "effect": "surveil",
+            "count": 1
+          }
+        ]
+      }
+    ]
+  }
+}

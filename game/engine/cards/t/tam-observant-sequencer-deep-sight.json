@@ -1,0 +1,87 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tam, Observant Sequencer // Deep Sight",
+    "oracleId": "702e871d-90d8-4468-8f69-5ae42af2c9d3",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Gorgon",
+      "Wizard"
+    ],
+    "manaCost": "{2}{G}{U}",
+    "colors": [
+      "U",
+      "G"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "Landfall — Whenever a land you control enters, Tam becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Landfall — Whenever a land you control enters, Tam becomes prepared.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "alterAttribute",
+          "targets": "self",
+          "attribute": "prepared"
+        }
+      ]
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Deep Sight",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{G}{U}",
+      "colors": [
+        "U",
+        "G"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "You draw a card and gain 1 life.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "You draw a card and gain 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          },
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    ]
+  }
+}

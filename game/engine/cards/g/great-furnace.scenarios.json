@@ -1,0 +1,142 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Great Furnace",
+  "fixtures": {
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Played untapped, it taps for {R}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Great Furnace"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Great Furnace"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Great Furnace",
+              "is": false
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Great Furnace"
+              },
+              "count": 1,
+              "mana": [
+                {
+                  "R": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Great Furnace"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "An artifact land: Disenchant may aim at Maya's Great Furnace, and destroys it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Disenchant"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Great Furnace",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Disenchant"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Great Furnace"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Disenchant",
+          "targets": [
+            {
+              "card": "Great Furnace"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Great Furnace"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Forest"
+          ]
+        }
+      ]
+    }
+  ]
+}

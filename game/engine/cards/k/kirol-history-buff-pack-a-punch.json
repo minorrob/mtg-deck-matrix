@@ -1,0 +1,103 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kirol, History Buff // Pack a Punch",
+    "oracleId": "df1c0d06-2109-4297-9271-8a003fc892bc",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire",
+      "Cleric"
+    ],
+    "manaCost": "{R}{W}",
+    "colors": [
+      "W",
+      "R"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Whenever one or more cards leave your graveyard, Kirol becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever one or more cards leave your graveyard, Kirol becomes prepared.",
+      "trigger": {
+        "on": "left graveyard",
+        "batch": true
+      },
+      "effects": [
+        {
+          "effect": "alterAttribute",
+          "targets": "self",
+          "attribute": "prepared"
+        }
+      ]
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Pack a Punch",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{1}{R}{W}",
+      "colors": [
+        "W",
+        "R"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Mill a card. Put two +1/+1 counters on target creature. It gains trample until end of turn.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Mill a card. Put two +1/+1 counters on target creature. It gains trample until end of turn.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "mill",
+            "count": 1
+          },
+          {
+            "effect": "putCounter",
+            "targets": {
+              "target": 0
+            },
+            "counter": "+1/+1",
+            "count": 2
+          },
+          {
+            "effect": "pump",
+            "targets": {
+              "target": 0
+            },
+            "power": 0,
+            "toughness": 0,
+            "keywords": [
+              "Trample"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

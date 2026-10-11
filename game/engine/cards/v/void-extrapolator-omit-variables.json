@@ -1,0 +1,94 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Void Extrapolator // Omit Variables",
+    "oracleId": "517f84b5-cf99-410d-96ea-910740231dac",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Aetherborn",
+      "Warlock"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\nThreshold — This creature gets +1/+1 as long as there are seven or more cards in your graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This creature enters prepared.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersPrepared": true
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Threshold — This creature gets +1/+1 as long as there are seven or more cards in your graveyard.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "count": {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you"
+            }
+          },
+          "atLeast": 7
+        }
+      }
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Omit Variables",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{U/B}",
+      "colors": [
+        "U",
+        "B"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Mill three cards. (Put the top three cards of your library into your graveyard.)",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Mill three cards.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "mill",
+            "count": 3
+          }
+        ]
+      }
+    ]
+  }
+}

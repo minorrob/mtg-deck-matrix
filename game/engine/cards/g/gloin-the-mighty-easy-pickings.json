@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Glóin the Mighty // Easy Pickings",
+    "oracleId": "6505a53b-00db-44c4-8eaa-09a1a01451a4",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dwarf",
+      "Warrior"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "At the beginning of your first main phase, add {R}{R}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your first main phase, add {R}{R}.",
+      "trigger": {
+        "on": "step",
+        "step": "MAIN1"
+      },
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "R": 2
+          }
+        }
+      ]
+    }
+  ],
+  "adventure": {
+    "identity": {
+      "name": "Easy Pickings",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [
+        "Adventure"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Easy Pickings deals 1 damage to each creature your opponents control. (Then exile this card. You may cast the creature later from exile.)",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Easy Pickings deals 1 damage to each creature your opponents control.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "damageAll",
+            "amount": 1,
+            "selector": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "opponent"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

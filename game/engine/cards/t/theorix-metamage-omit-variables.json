@@ -1,0 +1,120 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Theorix Metamage // Omit Variables",
+    "oracleId": "92a0aa44-0ef7-4e6f-8288-7c33067c5fd1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Shade",
+      "Wizard"
+    ],
+    "manaCost": "{2}{U/B}",
+    "colors": [
+      "U",
+      "B"
+    ],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\nThreshold — This creature gets +1/+0 and has flying as long as there are seven or more cards in your graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This creature enters prepared.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersPrepared": true
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Threshold — This creature gets +1/+0 and has flying as long as there are seven or more cards in your graveyard.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 0
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "count": {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you"
+            }
+          },
+          "atLeast": 7
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Threshold — This creature gets +1/+0 and has flying as long as there are seven or more cards in your graveyard.",
+      "layer": 6,
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Flying"
+        ]
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "count": {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you"
+            }
+          },
+          "atLeast": 7
+        }
+      }
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Omit Variables",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{U/B}",
+      "colors": [
+        "U",
+        "B"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Mill three cards. (Put the top three cards of your library into your graveyard.)",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Mill three cards.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "mill",
+            "count": 3
+          }
+        ]
+      }
+    ]
+  }
+}
