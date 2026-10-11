@@ -21,8 +21,10 @@
  *   ws   {type:"view"}        the sender's view again
  */
 import {startRoom, openRoom, RoomError, basicCards} from "../game/room/room.mjs";
-import {tableOn, TableError} from "../game/room/table.mjs";
+import {tableOn, TableError, llmWaiting} from "../game/room/table.mjs";
 import {tableDefinition} from "../game/engine/cards/definitions.mjs";
+import {agentBrief, pickOf} from "../game/room/agent-brief.mjs";
+import {createAi, settings, pilot, pilotWorst, Closed} from "./ai.mjs";
 
 /* WHAT THE TABLE PLAYS (M5; the plan review's A2 and C4): the basic lands, and every definition in the engine's card
    directory (game/engine/cards/definitions.mjs, generated from it). A deck whose every card is one of these takes a
@@ -52,6 +54,10 @@ const MATCH_KEY = "room-match";
    6.7 s at 100 -- about 17 s on the slowest machine measured, which runs these games about 2.6 times slower
    (docs/review-response-2026-10-05.md, "Slices"). A person's decision ends a slice sooner. */
 export const SLICE_STEPS = 100;
+/* The LLM seat's decisions one alarm answers before it comes back for the rest, and the game's own cap, in cents, when
+   AI_CAP_PILOT_GAME_CENTS is not set (Rob, 2026-10-10: "0.25 per game is good"). */
+export const AGENT_TURNS = 8;
+export const PILOT_GAME_CENTS = 25;
 
 export class GameRoom {
   constructor(ctx, env, {cards = tableCards, slice = SLICE_STEPS} = {}) {
@@ -174,6 +180,8 @@ export class GameTable extends GameRoom {
   constructor(ctx, env, options = {}) {
     super(ctx, env, options);
     this.now = options.now || (() => Date.now());
+    /* The model's fetch, for a suite to stand in for (the LLM seat); the platform's otherwise. */
+    this.fetchImpl = options.fetchImpl || null;
     this.table = tableOn(this.storage, {cards: this.cards, slice: this.slice, ...(options.random ? {random: options.random} : {})});
   }
 
@@ -189,7 +197,13 @@ export class GameTable extends GameRoom {
     try {
       if (!email) return reply(401, {error: "Sign in to use a table."});
       const route = `${request.method} ${url.pathname}`;
-      if (route === "POST /table/create") {const b = await body(); return reply(201, {table: await t.create({tableId: b.tableId, host: email, hostName: b.hostName, seats: b.seats, playtest: this.env?.PLAYTEST_TABLES === "on"})});}
+      if (route === "POST /table/create") {
+        const b = await body();
+        /* An AI on Claude is seated only where the AI door would let this host spend on it (AI-2). */
+        const llm = Array.isArray(b.seats) && b.seats.some((s) => s && s.kind === "ai" && s.level === "llm");
+        return reply(201, {table: await t.create({tableId: b.tableId, host: email, hostName: b.hostName, seats: b.seats, playtest: this.env?.PLAYTEST_TABLES === "on",
+          llmAllowed: llm && (await this.pilotOpen(email)) === null})});
+      }
       /* With the table, the object's own time: a countdown is read against the clock that set it, not the device's. */
       if (route === "GET /table") return reply(200, {table: await t.view(email), now});
       if (route === "GET /table/record") return reply(200, {record: await t.record(email, url.searchParams.get("match") || undefined)});
@@ -236,8 +250,58 @@ export class GameTable extends GameRoom {
     const room = await this.load();
     if (room && room.continuing) await room.resume();
     await this.table.tick(this.now());
+    await this.agentTurns(await this.load());
     await this.schedule();
     await this.share(room);
+  }
+
+  /* THE LLM SEAT'S TURNS (AI-2, docs/plan-to-done-2026-09-30.md). The room stops at the seat's close calls
+   * (game/engine/pilots/agent-pilot.mjs) and the table answers them here, on its alarm, so a person's own request is
+   * never held for a model. Each is asked of the model through the AI door (cloud/ai.mjs `pilot`), under the host's
+   * name and caps, within the game's own cap (AI_CAP_PILOT_GAME_CENTS, 25 by default: Rob, 2026-10-10, "0.25 per game
+   * is good"). Whenever the model may not or cannot answer -- the door shut, the cap reached, a failure, an option that
+   * was not offered, an answer the rules refuse -- the seat's own pilot answers (room.houseAnswer). Either way the
+   * answer goes through `act`, onto the tape. AGENT_TURNS a call, then the alarm comes back for the rest. */
+  async agentTurns(room) {
+    for (let n = 0; n < AGENT_TURNS && llmWaiting(room); n += 1) {
+      const seatId = room.waitingOn, view = room.view(seatId);
+      const house = room.houseAnswer(seatId);
+      const chosen = await this.agentChoice(room, view, house.indices).catch(() => null);
+      const send = (asked, answer) => room.act(seatId, {actionId: crypto.randomUUID(), revision: asked.revision, kind: "answer", choiceId: asked.decision.id, ...answer});
+      try {await send(view, chosen ? {indices: chosen} : house);}
+      catch (error) {
+        if (!(error instanceof RoomError) || !chosen) throw error;
+        const again = room.view(seatId);
+        await send(again, room.houseAnswer(seatId));
+      }
+      this.broadcast();
+    }
+  }
+
+  /** Null when this host may ask the model for an LLM seat; otherwise why not. */
+  async pilotOpen(email) {
+    if (this.env?.AI_PILOT !== "on") return "The AI seat on Claude is not switched on here.";
+    try {settings(this.env);} catch (error) {return error.message;}
+    if (!this.env.DB || !(await createAi(this.env.DB).allowed(email))) return "That account is not on CrankMagic's list for AI features.";
+    return null;
+  }
+
+  /** The model's indices for the seat's decision, or null when it may not or cannot answer. */
+  async agentChoice(room, view, hint) {
+    const host = await this.table.host();
+    if ((await this.pilotOpen(host)) !== null) return null;
+    const config = settings(this.env), brief = agentBrief(view, hint);
+    const key = `pilot-spent/${room.matchId}`, spent = Number(await this.ctx.storage.get(key)) || 0;
+    const cap = (Number(this.env.AI_CAP_PILOT_GAME_CENTS) > 0 ? Number(this.env.AI_CAP_PILOT_GAME_CENTS) : PILOT_GAME_CENTS) * 10000;
+    if (spent + pilotWorst(brief, config.model) > cap) return null;
+    const ai = createAi(this.env.DB);
+    let asked;
+    try {asked = await pilot({ai, who: {email: host}, brief, config, fetchImpl: this.fetchImpl ?? fetch});}
+    catch (error) {if (error instanceof Closed) return null; throw error;}
+    await this.ctx.storage.put(key, spent + asked.micros);
+    const indices = pickOf(view.decision, asked.answer);
+    await asked.done(indices ? "ok" : "ungrounded");
+    return indices;
   }
 
   /** Everyone's view after a change, from the room it was made in. A game that just ended is no longer the

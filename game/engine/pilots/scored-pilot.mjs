@@ -230,7 +230,7 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
   }
 
   /* ---- Which spells, with the mana it has ---- */
-  function castPlan(view, actions) {
+  function castPlan(view, actions, scores = null) {
     const self = me(view);
     const offers = actions.filter((a) => a.kind === "cast" && a.x === undefined && !a.convoke);
     if (!offers.length) return null;
@@ -260,6 +260,7 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
     /* The largest spell of the plan is cast first; the same first spell is one choice, at its best plan's score. */
     const firsts = new Map();
     for (const p of plans) if (!firsts.has(p.first.objectId) || p.value > firsts.get(p.first.objectId).value) firsts.set(p.first.objectId, p);
+    if (scores) {scores.push(...[...firsts.values()].map((p) => p.value)); return null;}
     const chosen = pick([...firsts.values()], setting, roll(view, `cast:${view.stackSize}:${spells.map((s) => s.a.objectId).join(",")}`), temperature);
     return chosen ? chosen.first : null;
   }
@@ -353,7 +354,7 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
   }
 
   /* ---- Which creatures attack ---- */
-  function attackPlan(view, choice) {
+  function attackPlan(view, choice, scores = null) {
     const self = me(view);
     const mine = new Map(creaturesOf(view, seat).map((c) => [c.cardId, c]));
     const foes = opponents(view);
@@ -412,6 +413,8 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
       }
     }
     if (!plans.length) return null;
+    /* Holding back is one plan, however many opponents there are. */
+    if (scores) {scores.push(...plans.filter((p, i) => p.set.length || plans.findIndex((q) => !q.set.length) === i).map((p) => p.value)); return null;}
     const chosen = pick(plans, setting, roll(view, `attack:${choice.id}`), temperature);
     return {indices: meetRequirements(choice, chosen.set.map((r) => r.o.index), chosen.p.playerId)};
   }
@@ -470,6 +473,18 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
       }
       const planned = (on.has("cast") ? castPlan(view, actions) : null) ?? (on.has("ability") ? abilityPlan(view, actions) : null);
       return planned ?? floor.choose(view, actions);
+    },
+
+    /** How close its two best plans are -- the best's score less the second's, Infinity with fewer than two -- for the
+        spells it would cast (`{actions}`) or an attack (`{choice}`): where a seat that may ask a model (the LLM seat, AI-2)
+        finds its close calls. */
+    margin(view, offer = {}) {
+      me(view);
+      const scores = [];
+      if (offer.actions && on.has("cast")) castPlan(view, offer.actions, scores);
+      else if (offer.choice && String(offer.choice.id ?? "").startsWith("declare-attackers:") && on.has("attack")) attackPlan(view, offer.choice, scores);
+      const sorted = scores.sort((a, b) => b - a);
+      return sorted.length < 2 ? Infinity : sorted[0] - sorted[1];
     },
 
     answer(view, choice) {
