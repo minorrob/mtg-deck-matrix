@@ -16,7 +16,7 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | Gate item | State | Proof, or whose step |
 | --- | --- | --- |
 | G-A: G1, 1,400 games | **done: 1,400 of 1,400 clean** | PR #686's head ccb250d1: every game finished, none refused, every replay identical, 0 leaks in 105,656 checks of every seat's view |
-| G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**, with a daily cap of its own ($1.50, released at 905394dc); **AI-2's L1 built** (Normal and Easy, measured against L0: Normal 61%, Easy 56%, L0 itself 51%); **the LLM seat built behind its switch**, its privacy wording Rob's to approve; **AI-5 built** (each deck says whether the table can play it; Play this deck); **AI-3's Train C running** (Rob's library: 825 of 1,132 cards playable, 307 being defined); AI-4 and AI-6 not built | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
+| G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**, with a daily cap of its own ($1.50, released at 905394dc); **AI-2's L1 built** (Normal and Easy, measured against L0: Normal 61%, Easy 56%, L0 itself 51%); **the LLM seat built behind its switch**, its privacy wording Rob's to approve; **AI-5 built and on staging** (each deck says whether the table can play it; Play this deck); **AI-4, the deck advisor, built behind its switch**, its privacy wording Rob's to approve; **AI-3's Train C running** (Rob's library: 825 of 1,132 cards playable, 307 being defined); AI-6 not built | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
 | G-B: the whole gate green twice on main | done | dispatched Tests runs on main, every suite: 2499 on def8fa89 and 2503 on eff40fdc, both green |
 | G-B: `play-e2e` under wrangler dev | done | 35 checks at every staging release |
 | G-B: hidden information in every frame | done | `play-journeys` reads every frame to both people; G1's oracle 102,879 checks, no leak |
@@ -891,3 +891,18 @@ learn* and names the cards the table cannot play yet.
     writes into a page already gone. It was removed.
 - **Not built:** learning a card at *Prepare decks* (AI-3's online half). Until then *to learn* means the table refuses
   the deck by name, as Change deck already said.
+
+**#696 merged on main 317be8f0 on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` b56404d4 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 03:18:11 UTC as
+version ba942e7f, its `play-worker.js` byte-identical to the release's dry-run bundle (2,477,826 bytes, sha256
+09f40cf9…). Its AI bindings are the Coach's alone, as before.
+
+**AI-4: the deck advisor, built behind its switch (2026-10-11).** *Ask the AI advisor* under a deck's More menu, where
+the AI door would answer the person. The page sends the deck's id and a goal; the Worker builds the brief itself from
+the person's library as last saved to the cloud, with the catalog's facts slimmed for the Worker, and asks the door's
+model at low effort. Swaps naming a card not in the brief are dropped and counted. Each swap is a row to tick, and a
+ticked one is saved as the deck's linked upgrade; nothing else changes.
+- **Proof:** `advisor` 43 checks (the seven decks' briefs equal the whole catalog's), `advisor-page` 9,
+  `release-pages` 204; 28 breaks caught.
+- **Rob's, left:** the privacy wording in `docs/ai-door.md` ("The deck advisor"), then staging's profile switches it on;
+  the eval with his key, and the swaps he would refuse.
