@@ -1275,7 +1275,12 @@ try {
   const socketsBefore = routes[ROB].length;
   let release; held[MAYA] = {promise: new Promise((r) => {release = r;})};
   await dropSocket(ROB);
-  await waitText(maya.page, ".cm-board-tile[data-seat='0'] .cm-board-tile-flag", /Dropped · back by/, 10000);
+  await waitText(maya.page, ".cm-board-tile[data-seat='0'] .cm-board-tile-flag", /Dropped · back by/, 10000).catch(async (error) => {
+    /* What Maya's board showed instead, and what her socket had brought: a timeout here says why. */
+    const flag = await maya.page.evaluate(() => document.querySelector(".cm-board-tile[data-seat='0'] .cm-board-tile-flag")?.innerText ?? "(no flag)");
+    const last = frames[MAYA].slice(-6).map((f) => {try {const j = JSON.parse(f); return j.type + (j.seatId ? ` ${j.seatId}` : "");} catch {return "?";}});
+    throw new Error(`Maya was not told Rob dropped: her flag reads "${flag}"; her last frames: ${last.join(", ")}; sockets Rob ${routes[ROB].length}, Maya ${routes[MAYA].length} (${error.message})`);
+  });
   ok(true, "Maya is told at once that Rob dropped, and until when, by the room over her socket (her table reads held)");
   delete held[MAYA]; release();
   await rob.page.waitForFunction(() => document.querySelector(".cm-board-strip") && !document.querySelector(".cm-board-conn"), null, {timeout: 20000});
