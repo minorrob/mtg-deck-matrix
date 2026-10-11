@@ -161,3 +161,37 @@ it; the table's object checks again as it seats one, and refuses otherwise).
 > order of any library, or anyone's name: players are named by their seat. Each request is logged under the host's
 > account with what it cost, the day's limits hold it, and each game is capped at 25¢. Anthropic does not use what it
 > is sent to train its models.
+
+## The deck advisor (AI-4), through the same door
+
+The plan's AI-4: *"AI suggestions to update a deck ... from an agent that lets a very low-cost model be very good at
+advising seasoned players."* **Ask the AI advisor** is under a deck's More menu where the door would answer the person:
+its own switch, `AI_ADVISE`, the door's key, caps and model set, and the person on the allowlist (`GET /api/ai-advise`
+says whether to offer it).
+- **The page sends the deck's id and the person's goal** (at most 300 characters), nothing more (`crankmagic-advisor.js`).
+- **The Worker builds the brief** from the person's latest version in the cloud (`cloud/advise.mjs`): the deck, its
+  measured roles and curve, the hundred, the candidates the code finds among the person's own cards and lists (the bench,
+  To buy, Watching, on order), and the constraints (`cloud/advise-brief.mjs`). Each card's facts come from the catalog,
+  slimmed for the Worker (`cloud/advise-cards.mjs`, generated from `data/cards.json`). A deck not yet saved to the cloud is
+  refused, saying so. Cards the person does not own are never offered: that is a setting of theirs (AI-6), off until it
+  is built.
+- **The call** (`cloud/ai.mjs`, `advise`) is the door's model at low effort, with the advisor's instruction as a cached
+  prefix and the answer's schema (`{changes: [{out, in, role, why}], keep, summary}`). The eval asks with the same body
+  (`tests/ai-advise-eval/run.mjs`), so it measures what is shipped. Logged as `advise`, on the day's caps.
+- **Grounding:** a swap is shown only when its card out is in the deck and not the commander or kept, and its card in is a
+  candidate; the rest are dropped and counted, and an answer with none left is not shown.
+- **The answer is a review, never a change.** Each swap is a row to tick; a ticked swap is saved as the deck's linked
+  upgrade (the card in, for the card out's slot), and the person applies it from the Upgrades tab when they choose.
+- **Not on staging yet:** `tools/release-pages.mjs` sets `AI_ADVISE` only for a profile whose `ai.advise` is true, and
+  refuses a release that does so where `privacy.html` does not say what the advisor sends. The wording below waits on Rob.
+- **Rob's, as well:** the eval (`node tests/ai-advise-eval/run.mjs --yes`, with his key) and the swaps he would refuse,
+  in `tests/ai-advise-eval/rubric.json` (*"the rubric is an afternoon of his, before AI-4 is judged"*).
+
+### The privacy wording for the deck advisor (for Rob to approve)
+
+> **The deck advisor.** On a deck's page, if you are invited to AI features, you may ask Claude, Anthropic's AI model, to
+> suggest swaps. CrankMagic sends Anthropic that deck's list, each card with its roles, whether you own it, its market
+> price and rank; the cards you own, have ordered, or have on your To buy and Watching lists that could go in it; the
+> deck's own settings; and the goal you type, if any. It never sends your name or email, what you paid for a card, or another person's library. Each
+> request is logged under your account with what it cost, and the day's limits hold it. A suggestion changes nothing until
+> you save it, and Anthropic does not use what it is sent to train its models.

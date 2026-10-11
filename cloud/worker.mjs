@@ -22,17 +22,21 @@
  *                                  allowlist, the key and the spend caps -- shut until Rob opens each (ai.mjs, M6)
  *   POST /api/ai/coach             the Coach at a table (X13): the same door, the brief built by the table for the
  *                                  asker's own seat, and its own switch, AI_COACH, until the privacy page names it
+ *   POST /api/ai/advise            the deck advisor (AI-4): the same door, the brief built here from the person's own
+ *                                  library in the cloud (cloud/advise.mjs); its own switch, AI_ADVISE
+ *   GET  /api/ai-advise            whether this person may ask the advisor (AI-4): {open}
  *   GET  /api/ai/login?to=#...     back to the app once signed in to the AI door
  */
 import {verifyAccess, Unauthorized} from "./access.mjs";
 import {createLibrary, Conflict, Invalid, LIMITS} from "./library.mjs";
 import {archidekt, ImportError} from "./import.mjs";
-import {createAi, settings, explain, coach, readQuestion, Closed} from "./ai.mjs";
+import {createAi, settings, explain, coach, advise, readQuestion, Closed} from "./ai.mjs";
+import {readAsk, openVersion, adviseBrief} from "./advise.mjs";
 import {tables} from "./tables.mjs";
 
 /** Whether this person may seat an AI on Claude: the same gates as the table's object checks when it seats one. */
-async function aiSeatOpen(env, email) {
-  if (env.AI_PILOT !== "on" || !env.DB) return false;
+async function aiSeatOpen(env, email, flag = "AI_PILOT") {
+  if (env[flag] !== "on" || !env.DB) return false;
   try {settings(env);} catch {return false;}
   return createAi(env.DB).allowed(email);
 }
@@ -142,6 +146,8 @@ export async function handle(request, env, deps = {}) {
     /* AN AI ON CLAUDE (AI-2): New table offers one only where the table's object would seat it (cloud/game-room.mjs
        `pilotOpen`): the switch on, the door's key, caps and model set, and this person on the allowlist. */
     if (method === "GET" && path === "/api/ai-seat") return reply(200, {open: await aiSeatOpen(env, person.email)});
+    /* THE DECK ADVISOR (AI-4): a deck's page offers Ask the advisor only where the door would answer this person. */
+    if (method === "GET" && path === "/api/ai-advise") return reply(200, {open: await aiSeatOpen(env, person.email, "AI_ADVISE")});
     if (method === "GET" && path === "/api/library") return reply(200, {head: await library.head(person.id)});
     if (method === "PUT" && path === "/api/library") {
       const input = await body(request);
@@ -173,7 +179,7 @@ export async function handle(request, env, deps = {}) {
 /* THE AI DOOR (M6; cloud/ai.mjs, docs/ai-door.md). Its own Access application, so a library sign-in -- which may
    be the emailed code -- never opens it; then the allowlist, the key and the caps, each shut until Rob sets it. */
 const AI_BODY = 64 * 1024;
-const AI_ROUTES = {"/api/ai/explain": "Explain", "/api/ai/coach": "The Coach"};
+const AI_ROUTES = {"/api/ai/explain": "Explain", "/api/ai/coach": "The Coach", "/api/ai/advise": "The advisor"};
 async function aiDoor(request, env, deps, url, ms) {
   if (!env.AI_ACCESS_AUD) return reply(503, {error: "AI features are not switched on here yet."});
   let who;
@@ -198,13 +204,26 @@ async function aiDoor(request, env, deps, url, ms) {
   if (!(await ai.allowed(who.email))) return reply(403, {error: "Your account is not on CrankMagic's list for AI features. Ask the person who invited you."});
   /* The Coach sends a person's hand and board, which the privacy page must say before it is offered: its own switch. */
   if (feature === "The Coach" && env.AI_COACH !== "on") return reply(503, {error: "The Coach is not switched on here yet."});
+  /* The advisor sends a deck's list and the person's own cards and lists: its own switch, as the Coach has. */
+  if (feature === "The advisor" && env.AI_ADVISE !== "on") return reply(503, {error: "The deck advisor is not switched on here yet."});
   try {
     const config = settings(env);
     const text = await request.text();
-    if (text.length > AI_BODY) return reply(413, {error: `That is more than ${feature === "Explain" ? "a score explanation" : "a question for the Coach"} needs. Nothing was sent to the AI.`});
+    if (text.length > AI_BODY) return reply(413, {error: `That is more than ${({"Explain": "a score explanation", "The advisor": "a question for the advisor"})[feature] ?? "a question for the Coach"} needs. Nothing was sent to the AI.`});
     let input;
     try {input = JSON.parse(text);} catch {return reply(400, {error: "That request is not JSON."});}
     if (feature === "Explain") return reply(200, await explain({ai, who, input, config, fetchImpl: deps.fetchImpl || fetch}));
+    /* THE ADVISOR: the brief is built here from the person's own library in the cloud (cloud/advise.mjs), never from
+       anything the browser sends but the deck's id and the goal. */
+    if (feature === "The advisor") {
+      const {deckId, ask} = readAsk(input);
+      const library = createLibrary(env.DB, {now: () => new Date(ms()).toISOString(), ...(deps.newId ? {newId: deps.newId} : {})});
+      const person = await library.user(who.email), head = await library.head(person.id);
+      if (!head) return reply(409, {error: "Your library is not in the cloud yet. Let this device save it, then ask again."});
+      const found = await library.version(person.id, head.id);
+      const brief = adviseBrief(await openVersion(found.body), deckId, ask);
+      return reply(200, {...await advise({ai, who, brief, config, fetchImpl: deps.fetchImpl || fetch}), savedAt: head.savedAt});
+    }
     /* THE COACH: the table builds the asking person's brief from their own seat's view (game/room/coach-brief.mjs),
        never from anything the browser sends; a person with no seat there, or no game on, is refused by the table. */
     const {tableId, question} = readQuestion(input);

@@ -166,6 +166,9 @@ export const aiVars = (profile) => (profile.ai ? {
   /* An AI on Claude (AI-2) sends that seat's view of the game: its own switch, on only once the privacy page says so; and
      each game's cap (Rob, 2026-10-10: "0.25 per game is good"). */
   ...(profile.ai.pilot ? {AI_PILOT: "on", AI_CAP_PILOT_GAME_CENTS: String(profile.ai.pilotGameCents ?? 25)} : {}),
+  /* The deck advisor (AI-4) sends a deck's list and the person's own cards and lists: its own switch, on only once the
+     privacy page says so. */
+  ...(profile.ai.advise ? {AI_ADVISE: "on"} : {}),
 } : {});
 /* RATE LIMITS ON /api/* (M3): requests a minute, counted at the edge by Cloudflare's Rate Limiting bindings,
    which cloud/worker.mjs asks before it does anything. Per IP first, so a flood is turned away before any
@@ -431,6 +434,8 @@ export function verify(built, profile) {
       /* An AI on Claude sends its seat's view: never switched on where the privacy policy does not say so, nor uncapped. */
       if (ai.AI_PILOT === "on" && !(built.get("privacy.html")?.toString("utf8") || "").includes("<strong>AI players on Claude.</strong>")) problems.push("an AI on Claude is switched on (AI_PILOT) but privacy.html does not say what it sends");
       if (ai.AI_PILOT === "on" && !(Number(ai.AI_CAP_PILOT_GAME_CENTS) > 0)) problems.push("an AI on Claude is switched on (AI_PILOT) without a cap for each game (AI_CAP_PILOT_GAME_CENTS)");
+      /* The deck advisor sends a deck's list and the person's own cards and lists: never on where the privacy policy does not say so. */
+      if (ai.AI_ADVISE === "on" && !(built.get("privacy.html")?.toString("utf8") || "").includes("<strong>The deck advisor.</strong>")) problems.push("the deck advisor is switched on (AI_ADVISE) but privacy.html does not say what it sends");
       for (const f of ["cloud/worker.mjs", "cloud/access.mjs", "cloud/library.mjs"]) if (!files.has(f)) problems.push(`${f} is missing, so the Worker cannot be bundled`);
       if (![...files].some((f) => /^cloud\/migrations\/.+\.sql$/.test(f))) problems.push("the database migrations are missing");
       if (!(built.get(".assetsignore")?.toString("utf8") || "").split("\n").includes("cloud/")) problems.push(".assetsignore would publish the Worker's source as files");

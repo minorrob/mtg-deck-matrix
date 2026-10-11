@@ -31,6 +31,8 @@
 /* The models the door calls: Claude Haiku 5.5, the lowest-cost and Rob's choice, and Claude Sonnet 5.5, the dearest he
    allows. No server-side fallback is asked for, since it can re-run a declined request on a dearer model; a refusal is
    said plainly (422). */
+import * as Advise from "./advise-brief.mjs";
+
 export const DEFAULT_MODEL = "claude-haiku-5-5";
 export const MODELS = ["claude-haiku-5-5", "claude-sonnet-5-5"];
 const API = "https://api.anthropic.com/v1/messages";
@@ -316,3 +318,39 @@ export async function pilot({ai, who, brief, config, fetchImpl = fetch}) {
 }
 /** The worst a pilot call could cost, before it is made: what the table holds against the game's cap. */
 export const pilotWorst = (brief, model) => costMicros(model, JSON.stringify(pilotBody(brief, model)).length, PILOT_MAX_TOKENS);
+
+/* THE DECK ADVISOR (AI-4 in docs/plan-to-done-2026-09-30.md). A person asks about one of their decks; the Worker builds
+ * the brief from their own library in the cloud (cloud/advise.mjs: the deck, its measured roles and curve, the hundred,
+ * the candidates the code finds among their own cards and lists, the constraints), and the model chooses among the
+ * candidates and says why, in a fixed shape (advise-brief.js ANSWER_SCHEMA). A change is shown only when its card out
+ * is in the hundred and not kept, and its card in is a candidate (checkAnswer); one that is not is dropped and counted,
+ * and an answer with no change left is not shown. Logged as `advise`, on the day's caps. The answer is a review, never
+ * a change: the page saves a ticked swap as the deck's linked upgrade, and nothing else moves.
+ *   The prompt is the eval's (tests/ai-advise-eval/run.mjs reads adviseBody), so the eval measures what is shipped. */
+export const ADVISE_MAX_TOKENS = 4000;
+export const ADVISE_SYSTEM = [
+  "You advise a seasoned Commander player on changes to one of their decks.",
+  "You get a brief built by code: the deck, its measured roles (weakest first) and curve, the hundred (the cards in the deck, each with its roles and state), the candidates (cards the player could bring in), and the constraints, among them the player's own goal (constraints.ask), when they gave one.",
+  "Choose up to ten changes, each taking one card out of the hundred and bringing one candidate in. Name only cards from the brief, exactly as written. Never take out a card listed in constraints.keep.",
+  "Prefer changes that serve the player's goal, fill the short roles, suit the commander and the deck's mechanics, and respect the per-card cap and the bracket's game-changer cap. A card marked as a substitute is holding a seat; say so when you replace it.",
+  "Give one plain sentence of why for each change, in American English, with no prices and no rules rulings. Return only JSON matching the schema.",
+].join(" ");
+export function adviseBody(brief, model) {
+  return {
+    model, max_tokens: ADVISE_MAX_TOKENS, system: [{type: "text", text: ADVISE_SYSTEM, cache_control: {type: "ephemeral"}}],
+    output_config: {effort: "low", format: {type: "json_schema", schema: Advise.ANSWER_SCHEMA}},
+    messages: [{role: "user", content: JSON.stringify(brief)}],
+  };
+}
+/** Ask the advisor about one deck: `{changes, keep, summary, dropped, model, meter}`. Throws Closed as `ask` does. */
+export async function advise({ai, who, brief, config, fetchImpl = fetch}) {
+  const {answer, spend, done, meter} = await ask({ai, who, feature: "advise", body: adviseBody(brief, config.model), maxTokens: ADVISE_MAX_TOKENS, config, fetchImpl,
+    declined: "The advisor declined to advise on this deck."});
+  const checked = Advise.checkAnswer(brief, answer);
+  if (!checked.changes.length && checked.ungrounded.length) {
+    await done("ungrounded");
+    throw new Closed("The advisor's answer named cards that are not in this deck or among its candidates, so it is not shown.", 502);
+  }
+  await done(checked.ungrounded.length ? "ungrounded" : "ok");
+  return {changes: checked.changes, keep: checked.keep, summary: checked.summary, dropped: checked.ungrounded.length, model: spend.model, meter: meter(spend.micros)};
+}

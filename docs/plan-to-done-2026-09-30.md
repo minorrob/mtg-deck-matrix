@@ -637,6 +637,23 @@ sketch strategy considerations and copilot recommendations.
 - **Whether the advisor may name cards Rob does not own is a setting, not a rule** — see AI-6.
 - **Proof:** `tests/ai-door.mjs`: the brief's shape from a fixture library (candidates inside the identity and the
   cap; the weak roles first; never a hidden field); grounding refused; the review flow receives the swaps; the cap.
+- **Status, 2026-10-11: the route and the review built, behind the advisor's own switch** (`AI_ADVISE`, off on staging
+  until Rob approves its privacy wording in `docs/ai-door.md`):
+  - **the route:** `POST /api/ai/advise` takes the deck's id and the goal, nothing more. The Worker builds the brief
+    from the person's latest version in the cloud (`cloud/advise.mjs`): the list reading, its candidates the person's
+    own cards and lists. Each card's facts come from the catalog, slimmed to 287 KB for the Worker
+    (`cloud/advise-cards.mjs`, from `data/cards.json` by `tools/build-advise-cards.mjs`); for each of Rob's seven decks
+    the brief is the one the whole catalog makes. The brief builder is now an ES module the Worker bundles
+    (`cloud/advise-brief.mjs`). The call is the door's model at low effort with a cached instruction, logged as
+    `advise`; grounding drops and counts any swap naming a card not in the brief.
+  - **the review:** *Ask the AI advisor* under a deck's More menu, offered only where `GET /api/ai-advise` says the
+    door would answer. Each swap is a row to tick; a ticked swap is saved as the deck's linked upgrade (the card in, for
+    the card out's slot), and nothing else changes.
+  - **the eval** asks with the shipped body (`adviseBody`), on the door's own models.
+  - **Proof:** `advisor` 43 checks, `advisor-page` 9, `release-pages` 204, `generators` (the card table's `--check`),
+    `coach`, `ai-door`, `cloud-worker`, `advise-brief` unchanged and green; 28 breaks caught.
+  - **Rob's, left:** approve the privacy wording; run the eval with his key (`tests/ai-advise-eval/run.mjs --yes`) and
+    add the swaps he would refuse to its rubric. Cards he does not own wait on AI-6's setting.
 
 ### AI-6. AI Coach Settings, under Tools
 
