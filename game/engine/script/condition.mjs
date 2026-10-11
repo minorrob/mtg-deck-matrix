@@ -49,6 +49,9 @@
  *   {opponentPoisonAtLeast: 3}         an opponent of its controller, still in the game, has at least that many poison
  *                                      counters (CR 122.1f): Corrupted's "as long as an opponent has three or more poison
  *                                      counters" (Skrelv's Hive; an ability word, CR 207.2c, with no rules meaning of its own)
+ *   {lifeAboveAnotherOpponent: "that player"}  the player a trigger is about has more life than another opponent of its
+ *                                      controller still in the game (CR 119.1, 800.4a): "if that opponent has more life than
+ *                                      another of your opponents" (Breena, the Demagogue) -- with no other, it has not
  *
  * The keys are closed, like every other grammar here: an unknown one is refused at the schema rather than read as true.
  */
@@ -66,7 +69,9 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   /* Evolve's comparison (CR 702.100a); prowl's damage, and its cost paid (CR 702.76a). */
   "evolves", "prowl", "prowled",
   /* Ascend's city's blessing (CR 702.131). */
-  "citysBlessing"];
+  "citysBlessing",
+  /* Breena, the Demagogue's "more life than another of your opponents" (CR 119.1). */
+  "lifeAboveAnotherOpponent"];
 /* Where a permanent may have come from, for `cameFrom`: a library (effects/zones.mjs and rules/stack.mjs record it). */
 const CAME_FROM = ["library"];
 /* The mana a condition may ask was spent to cast its object: the five colors and colorless (CR 106.1). */
@@ -274,6 +279,13 @@ export function conditionHolds(state, condition, {controller, source = null, abo
      is no opponent (CR 800.4a). */
   if (condition.opponentPoisonAtLeast !== undefined
     && !state.players.some((p) => p.id !== controller && !p.lost && (p.poison ?? 0) >= condition.opponentPoisonAtLeast)) return false;
+  /* "If that opponent has more life than another of your opponents" (Breena, the Demagogue): the player the trigger is about,
+     against each opponent of the controller still in the game (CR 800.4a) -- one with less is enough (that player is never
+     less than itself), and none is no such opponent. */
+  if (condition.lifeAboveAnotherOpponent === "that player") {
+    const them = state.players[about?.player];
+    if (!them || !state.players.some((p) => p.id !== controller && !p.lost && p.life < them.life)) return false;
+  }
   /* "If you have 40 or more life" (Felidar Sovereign). */
   if (condition.lifeAtLeast !== undefined && state.players[controller].life < condition.lifeAtLeast) return false;
   /* "If it's not your turn, you may exile a blue card from your hand rather than pay this spell's mana cost". */
@@ -305,6 +317,7 @@ export function conditionProblems(condition) {
   if ("yourTurn" in condition && condition.yourTurn !== true) problems.push("yourTurn is true");
   if ("enduringStory" in condition && typeof condition.enduringStory !== "boolean") problems.push("enduringStory is true or false");
   if ("citysBlessing" in condition && typeof condition.citysBlessing !== "boolean") problems.push("citysBlessing is true or false");
+  if ("lifeAboveAnotherOpponent" in condition && condition.lifeAboveAnotherOpponent !== "that player") problems.push("lifeAboveAnotherOpponent is \"that player\": the player the trigger is about");
   if ("notYourTurn" in condition && condition.notYourTurn !== true) problems.push("notYourTurn is true");
   if ("loyaltyThisTurn" in condition && condition.loyaltyThisTurn !== true) problems.push("loyaltyThisTurn is true");
   if ("evolves" in condition && condition.evolves !== true) problems.push("evolves is true");

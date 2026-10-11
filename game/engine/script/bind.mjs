@@ -345,6 +345,9 @@ function objectsOf(value, context) {
 function playersOf(value, context, state = null) {
   /* "That player": the one who cast, was dealt the damage, or drew (trigger.mjs). */
   if (value === "that player") return context.about?.player !== undefined && context.about.player !== null ? [context.about.player] : [];
+  /* "That attacking player draws a card" (Breena, the Demagogue): the player whose attack the trigger is about (rules/trigger.mjs,
+     `attacker`), as Combat Calligrapher's token's controller is. */
+  if (value === "attacking player") return Number.isInteger(context.about?.attacker) ? [context.about.attacker] : [];
   /* "It deals 1 damage to its controller" (Vengeful Ancestor, batch 75): the controller of what the trigger is about -- the
      attacking creature -- now, while it is on the battlefield; gone, the one it last had (CR 608.2h), as it attacked. */
   if (value === "that card's controller") {

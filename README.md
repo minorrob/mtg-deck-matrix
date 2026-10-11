@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 424 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 425 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1294,6 +1294,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-target-groups` - `tests/engine-target-groups.mjs`: a counted target's choices together -- "up to two target cards from a single graveyard" (Unlicensed Hearse), "two target creature cards that share a creature type" (Unbury) -- a way to aim it for each group, picked within it, held to it as cast and as it resolves (CR 601.2c, 608.2b)
 - `engine-sacrifice-sparing` - `tests/engine-sacrifice-sparing.mjs`: "each player sacrifices all other creatures they control that don't share a creature type with the chosen creature they control" (Winnowing; CR 205.3m) -- the chosen creature's kin spared, its controller's only, through the layers, a changeling sharing every type
 - `engine-cast-trigger-choice` - `tests/engine-cast-trigger-choice.mjs`: "whenever you cast an Equipment spell or a spell that targets a creature you control" (Danitha, Sword of Hope; CR 601.2c) -- a spell cast trigger's choice of spells, each a filter of the spell, of what it targets, or both
+- `engine-player-extremes` - `tests/engine-player-extremes.mjs`: every player's, compared -- the fewest cards in hand among all players (Naktamun Lorespinner), the graveyards with seven or more cards (Master's Councillors), more life than another of your opponents and that attacking player (Breena, the Demagogue) -- players who have left aside (CR 800.4a)
 
 ## Design and execution record
 
