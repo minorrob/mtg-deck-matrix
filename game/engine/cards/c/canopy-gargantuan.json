@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Canopy Gargantuan",
+    "oracleId": "ec1e69b1-f664-494b-8da2-c7199872b08b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon"
+    ],
+    "manaCost": "{5}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 7,
+    "toughness": 7
+  },
+  "oracleText": "Flying, ward {2}\nAt the beginning of your upkeep, put a number of +1/+1 counters on each other creature you control equal to that creature's toughness.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "ward {2}",
+      "keyword": "ward",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, put a number of +1/+1 counters on each other creature you control equal to that creature's toughness.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "repeatFor",
+          "each": "creature",
+          "effects": [
+            {
+              "effect": "branch",
+              "if": {
+                "about": "that card",
+                "is": {
+                  "controller": "you",
+                  "another": true
+                }
+              },
+              "then": [
+                {
+                  "effect": "putCounter",
+                  "targets": "that card",
+                  "counter": "+1/+1",
+                  "count": {
+                    "toughnessOf": "that card"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

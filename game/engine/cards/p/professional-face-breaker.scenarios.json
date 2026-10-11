@@ -1,0 +1,181 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Professional Face-Breaker",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Treasure": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [
+        "Treasure"
+      ],
+      "manaCost": null,
+      "colors": [],
+      "token": true
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It and a Bear deal combat damage to Maya: one Treasure, not two",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Professional Face-Breaker",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Professional Face-Breaker",
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 36
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Professional Face-Breaker",
+            "Bear",
+            "Treasure"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Professional Face-Breaker",
+            "has": [
+              "Menace"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A Treasure sacrificed: the top card, an Island, exiled and played this turn",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Professional Face-Breaker",
+            "Treasure"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Professional Face-Breaker"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Island"
+              ]
+            }
+          ]
+        },
+        {
+          "play": "Island"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Professional Face-Breaker",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "Only this turn: next turn the exiled Island is not playable",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Professional Face-Breaker",
+            "Treasure"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Professional Face-Breaker"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "offers": {
+            "kind": "play-land",
+            "card": "Island"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}
