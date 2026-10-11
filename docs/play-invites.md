@@ -31,3 +31,56 @@ If your plan offers only Cloudflare's own block page, keep it and set its messag
 you signed in with, or write to admin@crankmagic.com. A table's link never adds anyone to the list."
 
 Nothing about this is deployed until Play's release is, which waits on Rob's go (staging first).
+
+## G-E: people Rob invites, on staging first (Part 7)
+
+G-E is the people Rob invites playing on **staging**, using its games and its workshop, before production. Staging's
+Access application, "CrankMagic staging", admits Rob and the session's service token. Production's,
+"CrankMagic accounts", holds the Invited policy above. So an invitee has to be admitted on staging too.
+
+### Rob's steps
+
+1. **One list for both applications (recommended).**
+   - Zero Trust → **Access controls** → **Policies** → the **Rule groups** tab → **Add a group**: name it
+     "CrankMagic invitees", and include each person by **Emails**.
+   - In production's "CrankMagic accounts" Invited policy, include the group (the **Rule groups** selector) in place
+     of its list of addresses.
+   - On staging's application, add an Allow policy, "Invited", that includes the same group.
+
+   Then an address added once is on both, and removed once is off both. Without a group, each address goes into
+   both policies, and comes out of both.
+2. **Staging's block page:** do as above for production, with `https://staging.crankmagic.com/not-invited.html`.
+3. **Check the list below**, then send each person `https://staging.crankmagic.com/`, and a table's link when there's a
+   game. They sign in with Google, or with the one-time code Access emails them.
+4. **Taking someone off:** remove them from the group.
+
+### Before the first invite
+
+| Item | State | Whose |
+| --- | --- | --- |
+| Staging admits the invitees (the group, above) | not set | Rob |
+| Staging's block page sends refusals to `not-invited.html` | not set | Rob |
+| Monitoring: the Worker's 5xx and sync-conflict lines in Workers Logs; the weekly check (`tools/ops-week.mjs`) | built | done |
+| Monitoring: the two alerts and their email (`docs/ops.md`) | not set | Rob |
+| Backups: D1 Time Travel, 30 days | confirmed | done |
+| Backups: the nightly copy to R2, its window, and what deletion promises (`docs/ops.md`) | not set | Rob |
+| The Coach's privacy wording | approved, on staging | done |
+| *AI players on Claude* and *The deck advisor* privacy wording (`docs/ai-door.md`) | waiting | Rob; both stay off until then |
+| AI spend caps: 300¢ a day for each person, the Coach's own $1.50 | set | done |
+| Account deletion | built | done |
+| Access's free plan: 50 people | | Rob, as the list grows |
+| A finding reaches the triage with its game (below) | built | done once released |
+
+### Their findings
+
+*Send feedback*, in the menu (☰), opens a mail to admin@crankmagic.com, which forwards to Rob. The mail already
+names:
+- where the person was;
+- the release (`Version`);
+- when the board holds a game, which game and its turn (`Game`), with a line asking for the game's record.
+
+Staging's tables are playtest tables, so that record, from the game-over panel's *Download*, is the whole game. A
+finding then goes in the same shape as the agents' (`docs/uat/playtest-findings.md`), in a run folder of its own:
+- `docs/uat/<date>-invites/`, holding `playtest-findings.csv` and `records/`;
+- triaged by `node tools/playtest-triage.mjs docs/uat/<date>-invites --games <n>`, with *n* the games the records
+  cover. G-E's end is Rob's word, not a count of games.

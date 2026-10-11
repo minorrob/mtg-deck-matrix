@@ -1412,6 +1412,8 @@ globalThis.CrankBoard = Object.freeze({
     },
     /** A game of yours that is on: {tableId, turn}, or null. Play opens it. */
     live() {return tableId && view && view.status !== "finished" ? {tableId, turn: view.state.turn} : null;},
+    /** The game the board holds, on or just over, for a report to name (Send feedback): {tableId, matchId, turn, over}, or null. */
+    held() {return tableId && view && view.matchId ? {tableId, matchId: view.matchId, turn: view.state.turn, over: view.status === "finished"} : null;},
     /** What a room view means for your record: {outcome, reason}, or null while the game goes on for you. */
     outcomeOf,
     /** The picture the board draws for a card by its name: the library's record, else the shipped card records'. */
