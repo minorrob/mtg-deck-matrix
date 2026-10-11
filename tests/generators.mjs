@@ -116,6 +116,8 @@ const CHECKABLE = [
   ["tools/data-manifest.mjs", ["--check"]],
   ["tools/commander-strategies.mjs", ["--check"]],
   ["tools/build-precons.mjs", ["--check"]],
+  /* The deck advisor's card facts for the Worker, slimmed from data/cards.json (AI-4). */
+  ["tools/build-advise-cards.mjs", ["--check"]],
   /* The most-played 80% of Commander cards, re-derived from the EDHREC co-play it was measured from. */
   ["game/tools/engine-top-cards.mjs", ["--check"]],
   /* The engine catalog: every keyword action and ability of the rules and every construct the cards use, with where the

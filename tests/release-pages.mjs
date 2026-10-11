@@ -223,6 +223,14 @@ const said = new Map([...withPilot].map(([f, b]) => [f, f === "privacy.html" ? B
 ok(!verify(said, pilotProfile).some((p) => p.includes("AI on Claude")), "and one whose privacy policy says it is not");
 const uncappedPilot = playConfig(said, (c) => ({...c, vars: {...c.vars, AI_CAP_PILOT_GAME_CENTS: "0"}}));
 ok(verify(uncappedPilot, {...pilotProfile, ai: {...pilotProfile.ai, pilotGameCents: 0}}).some((p) => p.includes("without a cap for each game")), "nor one without each game's cap");
+/* THE DECK ADVISOR (AI-4): its own switch, from the profile; not on staging until Rob approves what the privacy page says it sends. */
+eq(sw2.vars.AI_ADVISE, undefined, "staging offers no deck advisor yet: its switch is off");
+const advisorProfile = {...stagingProfile, ai: {...stagingProfile.ai, advise: true}};
+eq(aiVars(advisorProfile).AI_ADVISE, "on", "a profile that says so switches it on");
+const withAdvisor = playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_ADVISE: "on"}}));
+ok(verify(withAdvisor, advisorProfile).some((p) => p.includes("the deck advisor is switched on (AI_ADVISE) but privacy.html does not say what it sends")), "a release that offers the advisor where the privacy policy does not say what it sends is refused");
+const advisorSaid = new Map([...withAdvisor].map(([f, b]) => [f, f === "privacy.html" ? Buffer.from(b.toString("utf8").replace("</main>", "<p><strong>The deck advisor.</strong> …</p></main>")) : b]));
+ok(!verify(advisorSaid, advisorProfile).some((p) => p.includes("deck advisor")), "and one whose privacy policy says it is not");
 ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_MODEL: "claude-opus-5-5"}})), {...stagingProfile, ai: {...stagingProfile.ai, model: "claude-opus-5-5"}}).some((p) => p.includes("not one the AI door calls")), "and a profile naming a model dearer than Sonnet, even its own (Rob: Sonnet or the lowest-cost models, always)");
 ok(verify(playConfig(built, (c) => ({...c, durable_objects: sw2.durable_objects})), profile).some((p) => p.includes("release without Play")), "and production binding a table");
 ok(verify(new Map([...sb, [".assetsignore", Buffer.from(sb.get(".assetsignore").toString().replace("game/\n", ""))]]), stagingProfile).some((p) => p.includes("engine's source as files")), "a Play release that would publish the engine's source is named");
