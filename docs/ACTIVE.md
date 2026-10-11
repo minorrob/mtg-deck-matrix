@@ -853,3 +853,15 @@ When the model cannot answer, the seat's own pilot does. Every answer is on the 
 - **Rob's, left:** approve the privacy wording in `docs/ai-door.md` ("AI players on Claude"). Then it goes on
   `privacy.html` and staging's profile switches it on.
 - **Then:** the bench against L1 with a real model, on staging or with a key in the environment.
+
+**#694 merged on main 4a10c030 on green Actions; staging released.** The first `tools/release-staging.sh` run did not
+release. Its Play walk (play-e2e, under `wrangler dev`) stopped at the third table: polling the table for its countdown,
+one reply came back with no table, and the walk read it as one. The same walk passed on its own straight after, and the
+second release run passed both walks (release-acceptance 22, play-e2e 35) and released it to `release/cloud-staging`
+68724131. Workers Builds deployed it at 00:57:22 UTC on 2026-10-11 as version 05b81554, its `play-worker.js`
+byte-identical to the release's dry-run bundle (2,477,269 bytes, sha256 a4eb41299cb7…). Its AI bindings carry no
+`AI_PILOT`: the LLM seat is not offered on staging until Rob approves its privacy wording.
+- **The walk's reply, made to say itself:** the reply's body was not kept. A refusal is the likely one: the person's
+  rate limit is 120 requests a minute, and the walk polls twice a second on a slow machine. Both of the walk's
+  countdown polls now wait out a reply with no table and, if the wait runs out, name the table's last answer
+  (`tests/uat/play-e2e.mjs`, `tableUntil`). play-e2e 35 checks.

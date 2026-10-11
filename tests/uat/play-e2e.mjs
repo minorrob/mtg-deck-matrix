@@ -120,6 +120,14 @@ try {
     const r = await fetch(u, {method: m, cache: "no-store", ...(m === "GET" ? {} : {headers: {"content-type": "application/json", "x-crankmagic": "play"}, body: JSON.stringify(b || {})})});
     return {status: r.status, json: await r.json().catch(() => null)};
   }, [method, p, body]);
+  /* A table read until `pred` holds. A reply with no table -- a refusal, such as the person's rate limit (120 a minute,
+     tools/release-pages.mjs) met by a long poll on a slow machine -- is waited out like any other not-yet, and the last
+     one is named if the wait runs out, so a failure says what the table answered. */
+  const tableUntil = async (what, u, pred, timeout) => {
+    let last = null;
+    try {return await until(what, async () => {last = await api("GET", u); const t = last.json?.table; return t && pred(t) ? t : null;}, timeout);}
+    catch (error) {throw Error(`${error.message}; the table last answered ${last ? `${last.status} ${JSON.stringify(last.json).slice(0, 200)}` : "nothing"}`);}
+  };
 
   /* 1. The Play tab. */
   await page.goto(`${BASE}/index.html#game`);
@@ -164,7 +172,7 @@ try {
   eq((await api("POST", `${url}/start`)).status, 200, "Rob starts the countdown");
 
   /* 3. The object's alarm ends it; the board opens over the socket. */
-  const playing = await until("the countdown to end on the object's alarm", async () => {const t = (await api("GET", url)).json.table; return t.phase === "playing" && t;}, 45000);
+  const playing = await tableUntil("the countdown to end on the object's alarm", url, (t) => t.phase === "playing", 45000);
   ok(/^[a-z0-9]+g1$/.test(playing.matchId), `the game is on (${playing.matchId}), launched by the Durable Object's alarm in workerd`);
   await page.goto(`${BASE}/index.html#table?id=${id}`);
   await page.locator("#cm-board").waitFor({timeout: 30000});
@@ -384,7 +392,7 @@ try {
   for (const seatId of [0, 1, 2]) await api("POST", `${url3}/deck`, {seatId, deck: goblins});
   await api("POST", `${url3}/ready`, {ready: true});
   await api("POST", `${url3}/start`);
-  const match = (await until("the third table's countdown to end", async () => {const t = (await api("GET", url3)).json.table; return t.phase === "playing" && t;}, 45000)).matchId;
+  const match = (await tableUntil("the third table's countdown to end", url3, (t) => t.phase === "playing", 45000)).matchId;
   eq((await api("POST", `${url3}/concede`)).json.table.phase, "rematch", "at a third table, Rob and two AI seats, Rob concedes as the game begins, and the table moves on at once");
   const done = (await api("GET", `${url3}/record?match=${match}`)).json.record;
   eq([done.result.reason, done.result.winner, done.departures.s0, done.refusals.since], [NO_PERSON_REASON, null, "conceded", 0], "the game ended there, the AI seats not playing it out, and its record says why");
