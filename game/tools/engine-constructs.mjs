@@ -224,7 +224,10 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   /* Cumulative upkeep (CR 702.24a; Mystic Remora, Train B X11): the upkeep trigger, its intervening "if", an age counter,
      and "sacrifice it unless you pay" its mana cost once for each age counter, generic or colored (cards/index.mjs,
      effects/asking.mjs). Named, not built: a cost that is not mana (life, a sacrifice, a discard). */
-  "Cumulative upkeep": "unlessPays"};
+  "Cumulative upkeep": "unlessPays",
+  /* Firebending N (CR 702.189a; Boiling Rock Rioter, Train C phase 2): the attack trigger, N {R} kept until the combat phase
+     ends (cards/index.mjs; effects/resources.mjs, rules/turn.mjs). */
+  Firebending: "addMana"};
 
 /* "PROTECTION FROM [QUALITY]" printed as a keyword (CR 702.16a; Karmic Guide's "protection from black"): built for the
    qualities rules/protection.mjs reads -- a color, a card type, everything -- compiled from the keyword (cards/index.mjs).

@@ -179,7 +179,9 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
      phase after the first time one of its name resolves (rules/stack.mjs). */
   "paradigm",
   /* Train C: spectacle (CR 702.137; Light Up the Stage), an alternative cost once an opponent lost life this turn. */
-  "spectacle"];
+  "spectacle",
+  /* Train C phase 2: firebending (CR 702.189; Boiling Rock Rioter), an attack trigger whose {R} lasts through combat. */
+  "firebending"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

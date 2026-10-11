@@ -592,7 +592,7 @@ export function compileScript(script) {
        on the condition `selfCounters` (script/condition.mjs). */
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "station") {
       if (!["Spacecraft", "Planet"].some((t) => (identity.subtypes ?? []).includes(t))) problems.push(`${ability.text}: station on a card that is not a Spacecraft or a Planet`);
-      abilities.push({id, kind: "activated", text: ability.text, timing: "sorcery", cost: [{atom: "tapCreature", selector: {types: ["Creature"]}}],
+      abilities.push({id, kind: "activated", text: ability.text, timing: "sorcery", cost: [{atom: "tapCreature", selector: {types: ["Creature"], another: true}}],
         effects: [{effect: "putCounter", targets: "self", counter: "charge", count: {powerOf: "that card"}}]});
       keywords.push("Station");
       return;
@@ -646,6 +646,16 @@ export function compileScript(script) {
       abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS["spell cast"]({caster: "you", filter: {nonTypes: ["Creature"]}}),
         effects: [{effect: "pump", targets: "self", power: 1, toughness: 1}]});
       keywords.push("Prowess");
+      return;
+    }
+    /* FIREBENDING N (CR 702.189a; Boiling Rock Rioter): "Whenever this creature attacks, add N {R}. Until end of combat, you
+       don't lose this mana as steps and phases end" -- the keyword IS that triggered ability, its mana kept through the combat
+       phase (effects/resources.mjs, addMana's `untilEndOfCombat`; rules/turn.mjs). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "firebending") {
+      if (!(Number.isInteger(ability.amount) && ability.amount >= 1)) problems.push(`${ability.text}: firebending needs its number, 1 or more`);
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.attacks({who: "self"}),
+        effects: [{effect: "addMana", mana: {R: ability.amount ?? 0}, untilEndOfCombat: true}]});
+      keywords.push("Firebending");
       return;
     }
     /* MENTOR (CR 702.134a; Legion Warboss): "Whenever this creature attacks, put a +1/+1 counter on target attacking creature

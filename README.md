@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 426 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 427 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1296,6 +1296,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-prevention-shields` - `tests/engine-prevention-shields.mjs`: a player's prevention shields (Inkshield, Deflecting Palm; CR 609.7a, 615.5, 615.8, 616.1): who they shield, a source chosen, used up once, what follows dealt by the card the spell became, ordered with the other effects by the player dealt the damage
 - `engine-vote` - `tests/engine-vote.mjs`: voting (Fateful Tempest's council's dilemma; CR 701.38, 800.4a): each player from the caster in turn order, the votes so far in the question, one who has left casting none; the votes for a choice and the total mana value of what was milled counted
 - `engine-unless-times` - `tests/engine-unless-times.mjs`: a cost paid any number of times and "that many" after it (Bloodthirsty Adversary; CR 118.12a, 601.2h, 603.12): each count the mana pays offered, the cost that many times over paid as one, the reflexive trigger's X and "up to X" targets
+- `engine-firebending` - `tests/engine-firebending.mjs`: firebending and casting what it exiled as it attacks (Boiling Rock Rioter; CR 702.189a, 500.5, 607.2a, 608.2g, 601.2g-h): N {R} kept through the combat phase's steps, the mana that would be lost spent first; a tap cost that may tap its own source; an Ally exiled with this creature cast with its mana cost paid, the ways to pay asked
 
 ## Design and execution record
 

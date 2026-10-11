@@ -38,6 +38,12 @@ export function addMana(state, params, context) {
      pay for read as it is added, as a mana ability's is (rules/restricted-mana.mjs). */
   if (params.spendOnly) addRestricted(state, context.controller, mana, params.spendOnly, context.source);
   else addToPool(state.players[context.controller].manaPool, mana);
+  /* "Until end of combat, you don't lose this mana as steps and phases end" (firebending, CR 702.189a): how much of the pool
+     is kept so, until the combat phase ends (rules/turn.mjs, emptyManaPools). */
+  if (params.untilEndOfCombat === true && !params.spendOnly) {
+    const kept = (state.players[context.controller].combatMana ??= {});
+    for (const [color, n] of Object.entries(mana)) if (n > 0) kept[color] = (kept[color] ?? 0) + n;
+  }
   return [event("GameEventManaPool", state, {
     player: {playerId: context.controller, name: state.players[context.controller].name},
     produced: {...mana},

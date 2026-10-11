@@ -197,13 +197,21 @@ const skipsFirstDraw = (state) =>
 /* CR 500.4. Reported only when there was something to empty: an empty pool emptying again is not
    news, and a board that announces it every step buries what matters. */
 function emptyManaPools(state, events) {
+  /* "UNTIL END OF COMBAT, YOU DON'T LOSE THIS MANA AS STEPS AND PHASES END" (firebending, CR 702.189a; effects/resources.mjs,
+     addMana's `untilEndOfCombat`): kept as each step of the combat phase ends but the last, gone as the phase ends (CR 500.5,
+     500.5a). The mana that would be lost is the mana spent first -- the kept mana can do all it can and more, so keeping it
+     takes nothing from the player, as plain mana is spent before rider mana (rules/restricted-mana.mjs) -- so what is kept
+     is the lesser of what was made so and what is left. */
+  const combatGoesOn = String(state.phase ?? "").startsWith("COMBAT_") && state.phase !== "COMBAT_END";
   for (const player of state.players) {
     /* And the mana that could be spent only on some things (rules/restricted-mana.mjs). */
     emptyRestricted(player);
-    const total = Object.values(player.manaPool).reduce((a, b) => a + b, 0);
+    const kept = combatGoesOn ? Object.fromEntries(Object.entries(player.combatMana ?? {}).map(([color, n]) => [color, Math.min(n, player.manaPool[color] ?? 0)]).filter(([, n]) => n > 0)) : {};
+    if (Object.keys(kept).length) player.combatMana = kept; else delete player.combatMana;
+    const total = Object.entries(player.manaPool).reduce((a, [color, n]) => a + n - (kept[color] ?? 0), 0);
     if (total === 0) continue;
-    const had = {...player.manaPool};
-    for (const color of Object.keys(player.manaPool)) player.manaPool[color] = 0;
+    const had = Object.fromEntries(Object.entries(player.manaPool).map(([color, n]) => [color, n - (kept[color] ?? 0)]));
+    for (const color of Object.keys(player.manaPool)) player.manaPool[color] = kept[color] ?? 0;
     events.push(event("GameEventManaPool", state, {player: {playerId: player.id, name: player.name}, emptied: had}));
   }
 }
