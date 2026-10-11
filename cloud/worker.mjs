@@ -251,16 +251,35 @@ async function aiDoor(request, env, deps, url, ms) {
   }
 }
 
-export default {
-  async fetch(request, env) {
-    /* The platform runs this script for /api/* -- and for any path that matches no file, since a Worker
-       with assets gets what the assets cannot answer. Those are not the API's: they go back to the files,
-       so a mistyped address is an honest 404, not a request to sign in. */
-    if (!new URL(request.url).pathname.startsWith("/api/")) return env.ASSETS ? env.ASSETS.fetch(request) : new Response("Not found", {status: 404});
-    try {return await handle(request, env);}
-    catch (error) {
-      console.error("crankmagic api:", error && error.stack || error);
-      return reply(500, {error: "The cloud library had a problem, and nothing was changed. Try again in a moment."});
-    }
-  },
-};
+/* MONITORING (M3, docs/ops.md): one structured line for each answer the operator should hear about, for Workers Logs
+   to keep and its alerts to count -- every 5xx (a 503 is a feature switched off, so an alert leaves it out by its
+   status), and a save refused because the library moved on another device. The line names the route's resource
+   only (/api/tables, never a table's id or an invitation's code), never the person, and for an error its name and
+   where it was thrown, not its message, which can carry what was sent. */
+export function opsLine(request, status, error = null) {
+  const {pathname} = new URL(request.url);
+  const conflict = status === 409 && request.method === "PUT" && pathname === "/api/library";
+  if (status < 500 && !conflict) return null;
+  const route = pathname.split("/").slice(0, 3).join("/");
+  return {ops: conflict ? "sync-conflict" : "5xx", status, method: request.method, route,
+    ...(error ? {error: error.name || typeof error, at: String(error.stack || "").split("\n").slice(1, 4).map((l) => l.trim()).join(" | ")} : {})};
+}
+
+/** The Worker's answer to one request, with its monitoring line. */
+export async function serve(request, env, options = {}, log = console) {
+  /* The platform runs this script for /api/* -- and for any path that matches no file, since a Worker
+     with assets gets what the assets cannot answer. Those are not the API's: they go back to the files,
+     so a mistyped address is an honest 404, not a request to sign in. */
+  if (!new URL(request.url).pathname.startsWith("/api/")) return env.ASSETS ? env.ASSETS.fetch(request) : new Response("Not found", {status: 404});
+  let response, failure = null;
+  try {response = await handle(request, env, options);}
+  catch (error) {
+    failure = error;
+    response = reply(500, {error: "The cloud library had a problem, and nothing was changed. Try again in a moment."});
+  }
+  const line = opsLine(request, response.status, failure);
+  if (line) log[line.status >= 500 ? "error" : "log"](line);
+  return response;
+}
+
+export default {fetch: (request, env) => serve(request, env)};
