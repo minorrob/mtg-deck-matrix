@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 478 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 479 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1125,6 +1125,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `game-leave` — `tests/game-leave.mjs`
 - `table-lobby` — `tests/table-lobby.mjs`
 - `table-board` — `tests/table-board.mjs`
+- `a11y-board` — `tests/a11y-board.mjs` (WCAG 2.1 AA on the board and the lobby: every word's contrast from the screen's pixels over all the mats in both themes, the focus rings, Tab in reading order, the keys as bound in Help, every card's label with its state and nothing hidden, the questions announced)
 - `room-beats` — `tests/room-beats.mjs`
 - `room-resolve-all` — `tests/room-resolve-all.mjs`
 - `coach` — `tests/coach.mjs`

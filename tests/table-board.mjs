@@ -670,7 +670,8 @@ try {
   await rob.page.locator("#cm-board-coach:not([hidden]) .cm-coach-input").waitFor();
   const docked = await rob.page.evaluate(() => {
     const c = document.getElementById("cm-board-coach").getBoundingClientRect(), side = document.querySelector(".cm-full-side").getBoundingClientRect(), band = document.querySelector(".cm-full-side .cm-board-band").getBoundingClientRect(), host = document.getElementById("cm-board").getBoundingClientRect();
-    return {col: Math.abs(c.left - side.left) < 1 && Math.abs(c.width - side.width) < 1, under: c.top >= band.bottom - 0.5 && c.top >= side.bottom, lower: c.top > host.top + host.height * 0.45 && c.bottom <= host.bottom + 0.5, width: Math.round(c.width)};
+    /* the log as the side column shows it: the column scrolls (the accessibility pass), so the log may run on below it */
+    return {col: Math.abs(c.left - side.left) < 1 && Math.abs(c.width - side.width) < 1, under: c.top >= Math.min(band.bottom, side.bottom) - 0.5 && c.top >= side.bottom, lower: c.top > host.top + host.height * 0.45 && c.bottom <= host.bottom + 0.5, width: Math.round(c.width)};
   });
   ok(await seenAt(rob.page, "#cm-board-coach") && docked.col && docked.under && docked.lower, `and the Coach is seen, in the side column's lower half under the log (${docked.width}px), not a slide-over`);
   await shot(rob.page, "coach-full-1400");
@@ -781,9 +782,10 @@ try {
   const peekWidth = await rob.page.evaluate(() => document.querySelector("#cm-board-peek .cm-bcard").getBoundingClientRect().width);
   const peekBox = await rob.page.evaluate(() => {const r = document.querySelector("#cm-board-peek .cm-bcard").getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2), innerWidth / 2, innerHeight / 2];});
   ok(Math.round(peekWidth) === 400 && Math.abs(peekBox[0] - peekBox[2]) < 2 && Math.abs(peekBox[1] - peekBox[3]) < 2 && (await text(rob.page, "#cm-board-peek")).includes(robCardName), `a card under the pointer shows large at the center of the screen, 400px (${robCardName})`);
-  /* The accessibility pass: the pop-up is said as well as shown, a polite status naming the card, its picture not read twice. */
-  const peekSaid = await rob.page.evaluate(() => {const p = document.getElementById("cm-board-peek"), sr = p.querySelector(".cm-sr-only"), r = sr && sr.getBoundingClientRect(); return {role: p.getAttribute("role"), live: p.getAttribute("aria-live"), said: sr ? sr.textContent : "", hidden: !!p.querySelector("[aria-hidden=true] .cm-bcard"), tiny: !!r && r.width <= 1 && r.height <= 1};});
-  ok(peekSaid.role === "status" && peekSaid.live === "polite" && peekSaid.said === `Showing ${robCardName}` && peekSaid.hidden && peekSaid.tiny, `and a screen reader is told: "${peekSaid.said}", politely, the picture itself hidden from it (${JSON.stringify(peekSaid)})`);
+  /* The accessibility pass: the pop-up is said as well as shown, by the board's one polite status region beside the board
+     (tests/a11y-board.mjs), its picture not read twice. */
+  const peekSaid = await rob.page.evaluate(() => {const p = document.getElementById("cm-board-peek"), s = document.getElementById("cm-board-said"); return {hidden: p.getAttribute("aria-hidden"), role: s && s.getAttribute("role"), live: s && s.getAttribute("aria-live"), said: s ? s.textContent : "", beside: !!s && !s.closest("#cm-board")};});
+  ok(peekSaid.hidden === "true" && peekSaid.role === "status" && peekSaid.live === "polite" && peekSaid.said === `Showing ${robCardName}` && peekSaid.beside, `and a screen reader is told: "${peekSaid.said}", politely, the picture itself hidden from it (${JSON.stringify(peekSaid)})`);
   await rob.page.mouse.move(5, 5);
   await rob.page.locator("#cm-board-peek").waitFor({state: "detached", timeout: 5000});
   /* Rob, 2026-10-09: ending the game left a card shown large, "I couldn't click off of it" -- the board redrawn under a

@@ -39,7 +39,9 @@ The countdown ends on the table's alarm, and the page hands itself to the board.
 `#cm-board` is the board; `data-view` on it is `table`, `focus` or `full`, and `data-phone` is set on a phone.
 
 **The strip** (one 48px line): the turn (`.cm-board-turn`), the step (`.cm-board-step`), what the table waits on
-(`.cm-board-waiting`, `role=status`), and then these controls:
+(`.cm-board-waiting`), and then these controls. What a screen reader is told -- each question as it arrives, the turns
+that went by, the card shown large -- is said once by `#cm-board-said` (`role=status`), beside the board rather than in
+it, so the board drawn again with every view does not say it twice:
 
 - **The pass button, `data-action=board-pass`.** Its words say what passing does:
   - *Next step* on your turn with the stack empty;
@@ -76,10 +78,10 @@ few seconds (*The AI players are still taking their turns*); try again when the 
   `data-action=board-zoom-do` button per way (`.cm-board-choices`, *Choose one:*), each with `data-index`.
 - **A question of numbers** (combat damage among blockers, a split, an X) has one `input[data-board-amount=<n>]` per row
   (`label.cm-board-amount`). Fill each, then `data-action=board-confirm`.
-- **Turns that went by while you waited** float as `section.cm-board-went` (`role=status`, named *Turns 3–5 went by*), a
+- **Turns that went by while you waited** float as `section.cm-board-went` (named *Turns 3–5 went by*), a
   few lines a turn, the History holding the rest. It goes by itself after a few seconds; `data-action=board-went-close`
   (*OK*) puts it away sooner. Nothing waits on it.
-- **Cards** are `button.cm-bcard`. `aria-label` is the name, then its state as the card shows it (*tapped*, power/toughness such as *2/2*, *3 damage*, *1 +1/+1 counter*), then, after a colon, what it can do now: `Llanowar Elves, tapped, 1/1` or `Forest: Play Forest`. A hidden card is a `div` labeled *A hidden card*. `data-card` is the object id, which changes when the card moves (CR 400.7).
+- **Cards** are `button.cm-bcard`. `aria-label` is the name, then its state as the card shows it (*tapped*, power/toughness such as *2/2*, *attacking Maya*, *blocked*, *blocking Llanowar Elves*, *3 damage*, *1 +1/+1 counter*, *chosen*, *selected*), then, after a colon, what it can do now: `Llanowar Elves, tapped, 1/1` or `Forest: Play Forest`. A face-down permanent is a `button.cm-bcard.is-back` labeled *Face-down creature* and its state, never its name; any other card not shown is a `div` labeled *A hidden card*. `data-card` is the object id, which changes when the card moves (CR 400.7).
 
 **Your hand** (`section[aria-label="Your hand"]`):
 

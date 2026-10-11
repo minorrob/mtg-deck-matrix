@@ -840,6 +840,12 @@ where each item now sits against Parts 2 and 3. `docs/plan-groups.md` (the libra
   priced at the dearest; the workbook builder reads both print groups (`tools/build-live-load.mjs`); proof
   `tests/library-r3.mjs` check 9.
 - **An accessibility pass on the board and the lobby** (Part 6).
+  **Status, 2026-10-11: done** (`tests/a11y-board.mjs`, 288 checks, 72 breaks caught). Contrast is measured from the
+  screen's pixels over every playmat in both themes: the worst word went from 1.07:1 to 4.77:1, and the focus rings
+  are two-tone. Focus order, focus kept through each redraw, modals that trap and return focus, every bound key in
+  Help, and card names that carry their combat state without a hidden card's name are all covered. One polite status
+  region announces the questions and the peek. Left: "token" and "summoning sick" in a card's name (the projection
+  carries neither), and primary buttons outside Play on two light themes.
 - **A browser and device matrix** for the end-to-end walk (Part 6).
 
 ## Part 6 — Validation: does the whole plan cover what the app needs?
