@@ -1121,6 +1121,12 @@ export function compileScript(script) {
          other effect's, and not a rule changed for players' casting, which keeps no source. */
       if (effect.until === "this leaves" && !(["gainControl", "exileUntil"].includes(effect.effect) || (effect.effect === "effectUntil" && effect.rule !== "cant-cast")))
         problems.push(`${effect.effect}: "for as long as this remains on the battlefield" (until "this leaves") is effectUntil's, gainControl's and exileUntil's`);
+      /* "Choose one that hasn't been chosen" (Gollum, Riddle Master): a triggered ability's one effect, choosing one, its
+         modes chosen as it is put on the stack (rules/trigger.mjs) -- not a spell's, an activated ability's, nor a choice
+         made as something resolves, which are not built. */
+      if (effect.effect === "modal" && effect.unchosen !== undefined && !(effect.unchosen === true && ability.kind === "triggered" && (ability.effects ?? []).length === 1
+        && ability.effects[0] === effect && effect.chooser === undefined && (effect.choose ?? 1) === 1 && effect.mayChooseNone === undefined))
+        problems.push("modal: \"choose one that hasn't been chosen\" (unchosen: true) is a triggered ability's one effect, choosing one");
       /* "You may play that card" until a time (effects/zones.mjs): this turn, or the end of its controller's next turn. */
       if (effect.effect === "mayPlay") {
         if (!MAY_PLAY_UNTIL.includes(effect.until ?? "end-of-turn")) problems.push(`mayPlay: until ${MAY_PLAY_UNTIL.join(" or ")}`);
@@ -1414,6 +1420,9 @@ export function compileScript(script) {
       const lone = (ability.effects ?? []).length === 1 ? ability.effects[0] : null;
       const modal = lone?.effect === "modal" && lone.chooser === undefined
         ? {choose: lone.choose ?? 1, ...(lone.mayChooseNone ? {mayChooseNone: true} : {}), ...(lone.differentPlayers ? {differentPlayers: true} : {}),
+          /* "Choose one that hasn't been chosen" (Gollum, Riddle Master): each mode once, for as long as its permanent is
+             the object it is (rules/trigger.mjs, modesTaken). */
+          ...(lone.unchosen === true ? {unchosen: true} : {}),
           modes: (lone.modes ?? []).map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? []}))} : null;
       if (modal && (ability.optional || (ability.targets ?? []).length)) problems.push(`${ability.text}: a modal triggered ability names its targets in its modes, and "you may" as mayChooseNone`);
       if (modal && modal.modes.some((m) => m.targets.some((t) => t && typeof t === "object" && t.count !== undefined)))

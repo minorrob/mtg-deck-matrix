@@ -1,0 +1,100 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gollum, Riddle Master",
+    "oracleId": "514b451b-814d-45fb-a2ba-8fe6f0bdad60",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Halfling",
+      "Horror"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "As Gollum enters, choose odd or even. (Zero is even.)\nWhenever an opponent casts a spell with mana value of the chosen quality, choose one that hasn't been chosen —\n• Put a +1/+1 counter on Gollum.\n• Each opponent loses 2 life and you gain 2 life.\n• Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "As Gollum enters, choose odd or even. (Zero is even.)",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "choose": [
+          "Odd",
+          "Even"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent casts a spell with mana value of the chosen quality, choose one that hasn't been chosen —\n• Put a +1/+1 counter on Gollum.\n• Each opponent loses 2 life and you gain 2 life.\n• Draw a card.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "opponent",
+        "filter": {
+          "manaValue": {
+            "parity": "$chosen"
+          }
+        }
+      },
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "unchosen": true,
+          "modes": [
+            {
+              "text": "Put a +1/+1 counter on Gollum.",
+              "effects": [
+                {
+                  "effect": "putCounter",
+                  "targets": "self",
+                  "counter": "+1/+1",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "text": "Each opponent loses 2 life and you gain 2 life.",
+              "effects": [
+                {
+                  "effect": "loseLife",
+                  "who": "opponent",
+                  "amount": 2
+                },
+                {
+                  "effect": "gainLife",
+                  "amount": 2
+                }
+              ]
+            },
+            {
+              "text": "Draw a card.",
+              "effects": [
+                {
+                  "effect": "draw",
+                  "count": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

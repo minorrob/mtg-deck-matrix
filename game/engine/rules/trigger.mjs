@@ -631,6 +631,9 @@ export function collectTriggers(state, events) {
             ...(object.spent ? {spent: {...object.spent}} : {}),
             /* And the alternative cost it was cast for (rules/stack.mjs, `paidFor`), as it triggers, for the same reason. */
             ...(typeof object.paidFor === "string" ? {paidFor: object.paidFor} : {}),
+            /* "Choose one that hasn't been chosen" (Gollum, Riddle Master): the modes its permanent had chosen as it triggered,
+               for its modes to be chosen by should the permanent be gone by then (CR 113.7a; modesTaken). */
+            ...(ability.modal?.unchosen ? {modesChosen: [...(object.modesChosen?.[ability.id] ?? [])]} : {}),
             /* What it is about ("that player", "that card", "that much"), when the event says. */
             ...(about.card !== undefined || about.player !== undefined || about.amount !== undefined ? {about} : {}),
             /* What it does, from the card script (phase 2.4), carried to the stack with it. */
@@ -841,7 +844,7 @@ export function askTriggerTargets(state) {
     /* A modal trigger (CR 603.3c): its modes and their targets, asked together. With no legal way, it is removed -- also
        when it "may" choose none, which is then the only choice. */
     if (entry.script.modal) {
-      if (!modalWays(state, entry.script.modal, context).length) { state.stack.splice(state.stack.indexOf(entry), 1); continue; }
+      if (!modalWays(state, entry.script.modal, context, modesTaken(state, entry)).length) { state.stack.splice(state.stack.indexOf(entry), 1); continue; }
       state.awaiting = {kind: "trigger-targets", player: entry.playerId, stackId: entry.stackId};
       return true;
     }
@@ -905,8 +908,9 @@ export function resolveTriggerCounted(state, awaiting, indices) {
 
 /* EACH WAY TO CHOOSE A MODAL TRIGGER'S MODES AND THEIR TARGETS (CR 603.3c, 700.2): as many modes as it says, none twice
    (CR 700.2d), each with a way to aim its targets; a mode with no legal target can't be chosen. "Each mode must target a
-   different player": no player twice among them. */
-function modalWays(state, modal, context) {
+   different player": no player twice among them. "Choose one that hasn't been chosen": never one in `taken` (modesTaken) --
+   all of them chosen, and there is no way, so it is removed from the stack (CR 603.3c). */
+function modalWays(state, modal, context, taken = []) {
   const ways = [];
   const n = Math.min(modal.choose, modal.modes.length);
   const pick = (from, chosen) => {
@@ -918,10 +922,18 @@ function modalWays(state, modal, context) {
       }
       return;
     }
-    for (let i = from; i < modal.modes.length; i += 1) pick(i + 1, [...chosen, i]);
+    for (let i = from; i < modal.modes.length; i += 1) if (!taken.includes(i)) pick(i + 1, [...chosen, i]);
   };
   pick(0, []);
   return ways;
+}
+/* "CHOOSE ONE THAT HASN'T BEEN CHOSEN" (Gollum, Riddle Master; CR 700.2, 400.7): the modes of this ability its permanent has
+   chosen, kept on the permanent by ability (`modesChosen`) -- a new object has chosen none -- or, the permanent gone before
+   this trigger's modes are chosen, those it had chosen as it triggered (CR 113.7a; collectTriggers). */
+function modesTaken(state, entry) {
+  if (!entry.script?.modal?.unchosen) return [];
+  const source = entry.cardId === null ? undefined : state.objects[entry.cardId];
+  return source ? source.modesChosen?.[entry.abilityId] ?? [] : entry.modesChosenWas ?? [];
 }
 
 /** The choice (§12.1): each legal way to aim the trigger, with what it is aimed at. */
@@ -931,7 +943,7 @@ export function triggerTargetsChoice(state, awaiting) {
      may choose none, that too. */
   if (entry.script.modal) {
     const modal = entry.script.modal;
-    const options = modalWays(state, modal, context).map(({modes, targets}, index) => {
+    const options = modalWays(state, modal, context, modesTaken(state, entry)).map(({modes, targets}, index) => {
       let at = 0;
       const label = modes.map((m) => {
         const mine = targets.slice(at, at += modal.modes[m].targets.length);
@@ -972,6 +984,10 @@ export function resolveTriggerTargets(state, awaiting, indices) {
       return [];
     }
     const {modal, ...rest} = entry.script;
+    /* The modes chosen, remembered on the permanent for its next time (modesTaken) -- once chosen, chosen, whatever then
+       becomes of this trigger. */
+    const source = modal.unchosen && entry.cardId !== null ? state.objects[entry.cardId] : undefined;
+    if (source) source.modesChosen = {...(source.modesChosen ?? {}), [entry.abilityId]: [...(source.modesChosen?.[entry.abilityId] ?? []), ...option.modes]};
     entry.script = {...rest, ...modalScript(modal, option.modes)};
     entry.modes = [...option.modes];
   }
@@ -1005,6 +1021,7 @@ function putOnStack(state, triggers) {
     /* Its targets are asked for once every trigger of the round is on the stack (askTriggerTargets) -- and a modal one's
        modes with them (CR 603.3c). */
     if ((entry.script?.targets ?? []).length || entry.script?.modal) entry.stage = "targeting";
+    if (trigger.modesChosen) entry.modesChosenWas = [...trigger.modesChosen];
     const at = state.pendingTriggers.indexOf(trigger);
     if (at >= 0) state.pendingTriggers.splice(at, 1);
   }

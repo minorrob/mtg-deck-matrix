@@ -38,6 +38,7 @@ import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {hasSubtype, isCreatureType} from "../keywords/types.mjs";
 import {protectedFrom, hexproofFrom} from "../rules/protection.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
+import {NONE_CHOSEN} from "./chosen.mjs";
 
 /* The steps after blockers are declared, in which an attacker is blocked or unblocked (CR 509.1h). */
 const BLOCKERS_DECLARED = ["COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAGE", "COMBAT_DAMAGE", "COMBAT_END"];
@@ -170,6 +171,9 @@ function assertGrammar(selector) {
   /* A mana value's most may be an amount counted (Betor): one of the amount grammar's (script/amount.mjs). */
   const most = selector.manaValue?.max;
   if (most !== null && typeof most === "object" && amountProblems(most).length) throw new Error(`A selector's manaValue.max: ${amountProblems(most).join("; ")}`);
+  /* Odd or even: named, or the quality its permanent chose ("$chosen"; none chosen yet, NONE_CHOSEN). */
+  if (selector.manaValue?.parity !== undefined && !["Odd", "Even", "$chosen", NONE_CHOSEN].includes(selector.manaValue.parity))
+    throw new Error("A selector's manaValue.parity is \"Odd\", \"Even\" or \"$chosen\", the quality its permanent chose");
   if (selector.unequalPowerToughness !== undefined && selector.unequalPowerToughness !== true) throw new Error("unequalPowerToughness is true");
   if (selector.exiledThisTurn !== undefined && selector.exiledThisTurn !== true) throw new Error("exiledThisTurn is true");
   if (selector.exiledWith !== undefined && selector.exiledWith !== "self") throw new Error("A selector's exiledWith is \"self\": a card this source's linked ability exiled");
@@ -223,6 +227,9 @@ function matchesManaValue(state, id, rule, context = {}) {
   if (rule.exactly !== undefined) return value === (rule.exactly === "X" ? context.x ?? 0 : rule.exactly);
   /* "With even mana values" (Void Winnower): zero is even. */
   if (rule.even !== undefined && (value % 2 === 0) !== rule.even) return false;
+  /* "A spell with mana value of the chosen quality" (Gollum, Riddle Master): "Odd" or "Even" as its permanent chose as it
+     entered (`parity: "$chosen"`, script/chosen.mjs) -- zero is even; before anything is chosen, none. */
+  if (rule.parity !== undefined && rule.parity !== (value % 2 === 0 ? "Even" : "Odd")) return false;
   if (rule.min !== undefined && value < rule.min) return false;
   /* "With mana value X or less" (Rally the Ancestors): the X paid, as `exactly` reads it. "Less than or equal to the amount
      of life you lost this turn" (Betor, Ancestor's Voice): an amount counted as the selector is asked (script/amount.mjs) --
