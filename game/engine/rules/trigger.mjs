@@ -77,7 +77,9 @@ function spellWas(state, spell) {
   const object = state.objects[spell];
   if (!object) return {};
   return {was: {cardId: spell, types: [...(object.types ?? [])], subtypes: [...(object.subtypes ?? [])], supertypes: [...(object.supertypes ?? [])],
-    controller: object.controller, token: object.token === true}};
+    controller: object.controller, token: object.token === true,
+    /* The sources of the mana spent to cast it (CR 106.3): "if mana from a Treasure was spent to cast it" (Smaug). */
+    ...(object.spentFrom ? {spentFrom: structuredClone(object.spentFrom)} : {})}};
 }
 
 /**

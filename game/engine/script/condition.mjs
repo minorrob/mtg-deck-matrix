@@ -49,6 +49,9 @@
  *   {opponentPoisonAtLeast: 3}         an opponent of its controller, still in the game, has at least that many poison
  *                                      counters (CR 122.1f): Corrupted's "as long as an opponent has three or more poison
  *                                      counters" (Skrelv's Hive; an ability word, CR 207.2c, with no rules meaning of its own)
+ *   {spentFrom: selector}              mana from a source the selector describes, as that source was as it made the mana
+ *                                      (CR 106.3), was spent to cast the spell the trigger is about (CR 601.2h): "if mana from
+ *                                      a Treasure was spent to cast it" (Smaug, Wicked Worm)
  *   {lifeAboveAnotherOpponent: "that player"}  the player a trigger is about has more life than another opponent of its
  *                                      controller still in the game (CR 119.1, 800.4a): "if that opponent has more life than
  *                                      another of your opponents" (Breena, the Demagogue) -- with no other, it has not
@@ -71,7 +74,9 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   /* Ascend's city's blessing (CR 702.131). */
   "citysBlessing",
   /* Breena, the Demagogue's "more life than another of your opponents" (CR 119.1). */
-  "lifeAboveAnotherOpponent"];
+  "lifeAboveAnotherOpponent",
+  /* Smaug, Wicked Worm's "if mana from a Treasure was spent to cast it" (CR 106.3, 601.2h). */
+  "spentFrom"];
 /* Where a permanent may have come from, for `cameFrom`: a library (effects/zones.mjs and rules/stack.mjs record it). */
 const CAME_FROM = ["library"];
 /* The mana a condition may ask was spent to cast its object: the five colors and colorless (CR 106.1). */
@@ -279,6 +284,13 @@ export function conditionHolds(state, condition, {controller, source = null, abo
      is no opponent (CR 800.4a). */
   if (condition.opponentPoisonAtLeast !== undefined
     && !state.players.some((p) => p.id !== controller && !p.lost && (p.poison ?? 0) >= condition.opponentPoisonAtLeast)) return false;
+  /* "If mana from a Treasure was spent to cast it" (Smaug, Wicked Worm): the sources of the mana spent to cast the spell the
+     trigger is about, as each was as it made the mana (rules/actions.mjs, `spentFrom`) -- or, the spell gone, as it last was
+     on the stack (`about.was`, rules/trigger.mjs; CR 608.2h). One the selector describes is enough. */
+  if (condition.spentFrom !== undefined) {
+    const spell = about?.card !== undefined && about.card !== null ? state.objects[about.card] : undefined;
+    if (!(spell?.spentFrom ?? about?.was?.spentFrom ?? []).some((was) => matchesLastKnown(condition.spentFrom, was, {controller, source}))) return false;
+  }
   /* "If that opponent has more life than another of your opponents" (Breena, the Demagogue): the player the trigger is about,
      against each opponent of the controller still in the game (CR 800.4a) -- one with less is enough (that player is never
      less than itself), and none is no such opponent. */
@@ -318,6 +330,9 @@ export function conditionProblems(condition) {
   if ("enduringStory" in condition && typeof condition.enduringStory !== "boolean") problems.push("enduringStory is true or false");
   if ("citysBlessing" in condition && typeof condition.citysBlessing !== "boolean") problems.push("citysBlessing is true or false");
   if ("lifeAboveAnotherOpponent" in condition && condition.lifeAboveAnotherOpponent !== "that player") problems.push("lifeAboveAnotherOpponent is \"that player\": the player the trigger is about");
+  if ("spentFrom" in condition) {
+    try { matchesLastKnown(condition.spentFrom ?? {}, {}, {}); } catch (error) { problems.push(`What spentFrom asks of the mana's source: ${error.message}`); }
+  }
   if ("notYourTurn" in condition && condition.notYourTurn !== true) problems.push("notYourTurn is true");
   if ("loyaltyThisTurn" in condition && condition.loyaltyThisTurn !== true) problems.push("loyaltyThisTurn is true");
   if ("evolves" in condition && condition.evolves !== true) problems.push("evolves is true");

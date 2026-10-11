@@ -71,7 +71,7 @@ import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
 import {lastKnown, characteristicsOf, abilitiesOf, deriving, derivingAfresh, onceAQuestion, keywordsOf, colorsOf, controllerOf} from "./layers.mjs";
 import {namesChosen, withChosen, chosenFor} from "../script/chosen.mjs";
-import {poolFor, spendFor, addRestricted, addRider, riderChoices} from "./restricted-mana.mjs";
+import {poolFor, spendFor, addRestricted, addRider, riderChoices, addProvenance} from "./restricted-mana.mjs";
 import {askEntering} from "./entering.mjs";
 import {collectTriggers, openTriggers, manaTriggered} from "./trigger.mjs";
 
@@ -302,8 +302,14 @@ function costChoice(state, awaiting) {
   if (action.payWays === true && action.payWith === undefined) {
     const ways = action.kind === "activate" ? abilityPayments(state, player, action) : castPayments(state, player, action);
     const name = state.objects[action.objectId]?.card ?? "That card";
+    /* And for a spell, with rider mana among it -- mana that does something when spent, or whose source is asked after (rules/
+       restricted-mana.mjs, riderChoices) -- each way to spend it its own answer, as a cast the pool pays one way offers them
+       (`riders`; CR 601.2h: the caster chooses the mana). */
+    const options = ways.flatMap((way) => (action.kind === "activate" ? null : riderChoices(state, player, {spell: action.objectId}, way.mana) ?? null)?.map((riders) => ({way, riders})) ?? [{way}])
+      .map(({way, riders}, index) => ({index, label: `${paymentWords(way)}${riders?.length ? `, with the mana from ${ridersOffer(state, riders).riderNames.join(", ")}` : ""}`, key: paymentKey(way),
+        ...(riders ? {riders} : {})}));
     return {id: `choose-cost:${action.objectId}${action.kind === "activate" ? `:${action.abilityId}` : ""}`, title: `${name}: which mana pays for it`,
-      mode: "one", min: 1, max: 1, cost: "pool", options: ways.map((way, index) => ({index, label: paymentWords(way), key: paymentKey(way)}))};
+      mode: "one", min: 1, max: 1, cost: "pool", options};
   }
   if (action.kind === "activate") return activationCostChoice(state, awaiting);
   const name = state.objects[action.objectId]?.card ?? "That card";
@@ -390,7 +396,7 @@ export function resolveCastCost(state, awaiting, indices) {
     throw new Error("Invalid selection");
   const ids = picked.map((i) => choice.options[i].cardId);
   const way = choice.cost === "mana" ? castTapPlans(state, awaiting.player, awaiting.action, TAP_CHOICES)[picked[0]] : null;
-  const action = {...structuredClone(awaiting.action), ...(choice.cost === "pool" ? {payWith: choice.options[picked[0]].key} : way ? {tapPlan: way.key} : choice.cost === "tap" ? {flashbackTap: ids}
+  const action = {...structuredClone(awaiting.action), ...(choice.cost === "pool" ? {payWith: choice.options[picked[0]].key, ...(choice.options[picked[0]].riders ? {payRiders: choice.options[picked[0]].riders} : {})} : way ? {tapPlan: way.key} : choice.cost === "tap" ? {flashbackTap: ids}
     : choice.cost === "convoke" ? {convokeTap: ids} : choice.cost === "waterbend" ? {waterbendTap: ids} : choice.cost === "tapAny" ? {tapChosen: ids} : choice.cost === "behold" ? {beheld: ids} : choice.cost === "exileOthers" ? {othersExiled: ids} : choice.cost === "sacrifice" ? {sacrificeSet: ids} : choice.cost === "escalate" ? {escalateTapped: ids}
     : choice.cost === "counters" ? {counterSet: picked.map((i) => ({id: choice.options[i].cardId, counter: choice.options[i].counter}))} : {escapeExile: ids})};
   state.awaiting = null;
@@ -1085,7 +1091,8 @@ function grantPlayed(state, id, permission, player) {
 function ridersOffer(state, riders) {
   if (riders === undefined) return {};
   const entries = Object.values(state.players).flatMap((p) => p.manaRiders ?? []);
-  return {riders, riderNames: riders.map((id) => state.objects[entries.find((e) => e.id === id)?.source]?.card ?? "mana")};
+  /* A source gone since -- a Treasure sacrificed for its mana -- named as it was (`from`). */
+  return {riders, riderNames: riders.map((id) => { const entry = entries.find((e) => e.id === id); return state.objects[entry?.source]?.card ?? entry?.from?.name ?? "mana"; })};
 }
 const viaOf = (state, via) => (via !== null && via !== undefined ? {via, viaName: state.objects[via]?.card ?? (state.effects ?? []).find(e => e.id === via)?.name ?? null} : {});
 
@@ -1945,7 +1952,11 @@ function performOffered(state, player, action, during) {
     if (ability.exileFromGraveyard && action.costChoice?.exile !== undefined) moveOne(state, action.costChoice.exile, "exile", events, {owner: state.objects[action.costChoice.exile].owner});
     /* "Spend this mana only to cast a creature spell of the chosen type": beside the pool (rules/restricted-mana.mjs). */
     if (ability.spendOnly) addRestricted(state, player, produced, ability.spendOnly, action.objectId);
-    else addMana(pool, produced);
+    else {
+      addMana(pool, produced);
+      /* Its source as it is now, before a sacrifice of its cost (CR 106.3): "mana from a Treasure". */
+      addProvenance(state, player, produced, action.objectId);
+    }
     /* "When that mana is spent to cast ..." (Path of Ancestry, Study Hall): in the pool, its rider remembered beside it. */
     if (ability.whenSpent) addRider(state, player, produced, {...ability.whenSpent, ability: ability.id}, action.objectId);
     events.push(event("GameEventManaPool", state, {
@@ -2027,7 +2038,8 @@ function performOffered(state, player, action, during) {
     const payment = fromPool ?? (tappedFor && covered(spending, tappedFor.mana) ? tappedFor : null);
     if (!payment || (back && back.life > state.players[player].life) || (way && way.life > state.players[player].life)) throw new Error(`${object.card} cannot be paid for from this pool`);
     const card = cardRef(state, action.objectId);
-    const paid = spendFor(state, player, {spell: action.objectId}, payment.mana, action.riders ?? null);
+    /* The rider mana chosen with the offer (`riders`), or with the way the pool pays it (`payRiders`, costChoice). */
+    const paid = spendFor(state, player, {spell: action.objectId}, payment.mana, action.riders ?? action.payRiders ?? null);
     if (payment.life > 0) changeLife(state, player, -payment.life, events);
     if (back?.life) changeLife(state, player, -back.life, events);
     if (way?.life) changeLife(state, player, -way.life, events);
@@ -2133,6 +2145,9 @@ function performOffered(state, player, action, during) {
        without paying its mana cost spent none. A copy is not cast and has none (CR 707.10). */
     const spent = Object.fromEntries(Object.entries(payment.mana ?? {}).filter(([, n]) => n > 0));
     if (Object.keys(spent).length && state.objects[entry.objectId]) state.objects[entry.objectId].spent = spent;
+    /* And the sources of that mana asked after, as each was as it made it (CR 106.3): "if mana from a Treasure was spent to
+       cast it" (Smaug, Wicked Worm; script/condition.mjs, `spentFrom`). */
+    if (paid.from.length && state.objects[entry.objectId]) state.objects[entry.objectId].spentFrom = paid.from;
     for (const [kind, id] of extraPaid) {
       /* "Blight 1": its counters on the creature chosen, put as any counters are (CR 701.68a). */
       if (kind === "blight") {

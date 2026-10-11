@@ -27,10 +27,20 @@
  * and the rider mana can still do more, so keeping it takes nothing from the player -- unless there is not enough plain
  * mana, and then which riders go is theirs to say, too. A pool spent elsewhere (an "unless that player pays" cost, a ward)
  * spends the plain mana first in the same way (ridersOf keeps no more riders of a key than the pool holds).
+ *
+ * MANA FROM A SOURCE OF A KIND (CR 106.3, 601.2h): "if mana from a Treasure was spent to cast it" (Smaug, Wicked Worm). The
+ * source of mana is the object whose ability made it (CR 106.3) -- as it was as it made it: a Treasure is sacrificed for its
+ * mana. Mana a mana ability makes whose source an ability in the game asks after (a `spentFrom` condition, script/
+ * condition.mjs) -- and only that: nothing else can tell one mana of a type from another -- is remembered beside the pool
+ * as rider mana is, its source as it then was (`from`). Spent to cast a spell, the spell remembers it (rules/actions.mjs, `spentFrom`). And where it would
+ * be read -- a spell cast by a player who controls a permanent that asks after it -- which mana pays is the player's to say,
+ * each way its own offer, as a rider's is (riderChoices); elsewhere the other mana is spent first, as a rider's is, keeping
+ * every way for a spell after.
  */
-import {compileSelector} from "../script/filter.mjs";
+import {compileSelector, matchesLastKnown} from "../script/filter.mjs";
 import {chosenFor} from "../script/chosen.mjs";
 import {spend, MANA_KEYS} from "./mana.mjs";
+import {lastKnown, controllerOf} from "./layers.mjs";
 
 /** The keys a mana ability's `spendOnly` may carry. */
 export const SPEND_ONLY_KEYS = Object.freeze(["spell", "ability", "abilitySource", "uncounterable"]);
@@ -66,6 +76,29 @@ export function addRider(state, player, mana, whenSpent, source) {
     list.push({id: state.manaSerial, key, source, whenSpent: structuredClone(whenSpent)});
   }
 }
+
+/* What the abilities in the game ask of the source of mana spent (`spentFrom`): each a selector of the source as it last was. */
+const provenanceAsked = (state, objects = Object.values(state.objects)) => objects.flatMap((object) => (object.abilities ?? [])
+  .map((ability) => ability.condition?.spentFrom).filter(Boolean));
+
+/** Mana `source` made for `player`, in the pool: remembered with what its source was, when an ability in the game asks
+    (CR 106.3). */
+export function addProvenance(state, player, mana, source) {
+  /* Its source as it now is, read only when something asks (lastKnown runs the layers). */
+  let was = null;
+  if (!provenanceAsked(state).some((selector) => matchesLastKnown(selector, (was ??= lastKnown(state, source)), {controller: player}))) return;
+  const from = {cardId: source, name: was.name, controller: was.controller, types: was.types, subtypes: was.subtypes, supertypes: was.supertypes, token: was.token};
+  const list = (state.players[player].manaRiders ??= []);
+  for (const [key, n] of Object.entries(mana)) for (let i = 0; i < n; i += 1) {
+    state.manaSerial = (state.manaSerial ?? 0) + 1;
+    list.push({id: state.manaSerial, key, source, from: structuredClone(from)});
+  }
+}
+/* Whether spending this mana on `use` is read: a spell cast by a player who controls a permanent with an ability asking after
+   the source of the mana spent, and this mana's source what it asks (CR 601.2h). */
+const provenanceRead = (state, player, entry, use) => Boolean(entry.from) && use.spell !== undefined
+  && provenanceAsked(state, state.zones.battlefield.filter((id) => controllerOf(state, id) === player).map((id) => state.objects[id]))
+    .some((selector) => matchesLastKnown(selector, entry.from, {controller: player}));
 
 /** The rider mana a player has: no more of a key than the pool holds -- the plain mana spent first by whatever spent it
  *  without saying (the oldest riders kept). It only reads: spendFor and the pool's emptying write the list. */
@@ -109,9 +142,10 @@ export function riderChoices(state, player, use, mana) {
     const plain = (pool[key] ?? 0) - mine.length;
     const groups = [];
     for (const r of mine) {
-      const kind = `${r.source}:${r.whenSpent?.ability ?? ""}`;
+      /* Mana from sources alike -- two Treasures' -- is alike (`from`). */
+      const kind = r.from ? `from:${JSON.stringify([r.from.types, r.from.subtypes, r.from.supertypes, r.from.token])}` : `${r.source}:${r.whenSpent?.ability ?? ""}`;
       const group = groups.find((g) => g.kind === kind);
-      if (group) group.ids.push(r.id); else groups.push({kind, ids: [r.id], triggers: triggersOn(state, player, r, use)});
+      if (group) group.ids.push(r.id); else groups.push({kind, ids: [r.id], triggers: triggersOn(state, player, r, use) || provenanceRead(state, player, r, use)});
     }
     const here = [];
     const walk = (g, picked, total) => {
@@ -141,8 +175,9 @@ export function poolFor(state, player, use) {
  * Spend `mana` on `use`: the restricted mana that admits it first, then the pool -- of it, the rider mana `riders` names
  * (an offer's choice, riderChoices), or, unnamed, the plain mana first and then the oldest riders.
  *
- * @returns {{uncounterable: boolean, triggered: Array}} whether any of it said "that spell can't be countered", and the
- *   rider entries spent that trigger on this use (the caller makes their triggers, about the spell as it now is)
+ * @returns {{uncounterable: boolean, triggered: Array, from: Array}} whether any of it said "that spell can't be countered", the
+ *   rider entries spent that trigger on this use (the caller makes their triggers, about the spell as it now is), and the
+ *   sources, as each was, of the mana spent whose source is asked after (CR 106.3)
  */
 export function spendFor(state, player, use, mana, riders = null) {
   const list = restricted(state, player);
@@ -176,7 +211,7 @@ export function spendFor(state, player, use, mana, riders = null) {
     state.players[player].manaRiders = mine.filter((r) => !spent.includes(r));
   }
   spend(state.players[player].manaPool, left);
-  return {uncounterable, triggered: spent.filter((r) => triggersOn(state, player, r, use))};
+  return {uncounterable, triggered: spent.filter((r) => triggersOn(state, player, r, use)), from: spent.filter((r) => r.from).map((r) => r.from)};
 }
 
 /** Empty it with the pool (CR 500.4), the riders of the pool's mana too. @returns {number} how much there was */
