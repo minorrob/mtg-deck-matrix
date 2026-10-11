@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wall of Reverence",
+    "oracleId": "0810983f-818a-43e6-a7b5-ebe0bc8b9f6a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit",
+      "Wall"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 6
+  },
+  "oracleText": "Defender, flying\nAt the beginning of your end step, you may gain life equal to the power of target creature you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender",
+      "keyword": "defender"
+    },
+    {
+      "kind": "keyword",
+      "text": "flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, you may gain life equal to the power of target creature you control.",
+      "trigger": {
+        "on": "end step"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": {
+            "powerOf": {
+              "target": 0
+            }
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

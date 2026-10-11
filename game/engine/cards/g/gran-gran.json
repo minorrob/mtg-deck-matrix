@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gran-Gran",
+    "oracleId": "0259a9ed-0558-4183-b737-871ed5573c32",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Peasant",
+      "Ally"
+    ],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "Whenever Gran-Gran becomes tapped, draw a card, then discard a card.\nNoncreature spells you cast cost {1} less to cast as long as there are three or more Lesson cards in your graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever Gran-Gran becomes tapped, draw a card, then discard a card.",
+      "trigger": {
+        "on": "becomes tapped",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "discard",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Noncreature spells you cast cost {1} less to cast as long as there are three or more Lesson cards in your graveyard.",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "nonTypes": [
+          "Creature"
+        ]
+      },
+      "amount": 1,
+      "condition": {
+        "compare": {
+          "count": {
+            "count": {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "subtypes": [
+                "Lesson"
+              ]
+            }
+          },
+          "atLeast": 3
+        }
+      }
+    }
+  ]
+}

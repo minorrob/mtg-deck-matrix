@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Koth, the Geomancer",
+    "oracleId": "3b17da84-ae4d-4fc1-a327-85e54e6156c6",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warrior"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "Reach\nLandfall — Whenever a land you control enters, Koth deals 1 damage to each opponent. If that land is a Mountain, add {R}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Reach",
+      "keyword": "reach"
+    },
+    {
+      "kind": "triggered",
+      "text": "Landfall — Whenever a land you control enters, Koth deals 1 damage to each opponent. If that land is a Mountain, add {R}.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "who": "opponent"
+        },
+        {
+          "effect": "addMana",
+          "mana": {
+            "R": 1
+          },
+          "condition": {
+            "about": "that card",
+            "is": {
+              "subtypes": [
+                "Mountain"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

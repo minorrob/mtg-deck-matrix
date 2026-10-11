@@ -1,0 +1,355 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mirkwood Bats",
+  "fixtures": {
+    "Muster": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Create a 1/1 white Soldier creature token.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 1,
+            "token": {
+              "name": "Soldier",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Soldier"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": 1,
+              "toughness": 1
+            }
+          }
+        ]
+      }
+    },
+    "Double Muster": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Create two 1/1 white Soldier creature tokens.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 2,
+            "token": {
+              "name": "Soldier",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Soldier"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": 1,
+              "toughness": 1
+            }
+          }
+        ]
+      }
+    },
+    "Altar": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "abilities": [
+        {
+          "id": "sac",
+          "kind": "activated",
+          "text": "Sacrifice a creature: You gain 1 life.",
+          "cost": [
+            {
+              "atom": "sacrifice",
+              "selector": {
+                "types": [
+                  "Creature"
+                ]
+              }
+            }
+          ],
+          "targets": [],
+          "effects": [
+            {
+              "effect": "gainLife",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob creates a token, then two: each opponent loses 1 life for each",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mirkwood Bats",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Muster",
+            "Double Muster"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Muster"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Double Muster"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 37
+        },
+        {
+          "seat": 2,
+          "life": 37
+        },
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Mirkwood Bats",
+            "has": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rob sacrifices a token: Maya loses 1; sacrificing his Bear, nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mirkwood Bats",
+            "Altar",
+            "Bear",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Muster"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Muster"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 39
+            }
+          ]
+        },
+        {
+          "activate": "Altar",
+          "sacrifice": "Soldier"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 38
+            }
+          ]
+        },
+        {
+          "activate": "Altar",
+          "sacrifice": "Bear"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "life": 42
+        }
+      ]
+    },
+    {
+      "name": "Maya creating a token, and sacrificing it, is not Rob doing so",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mirkwood Bats"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Altar"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Muster"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Muster",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "activate": "Altar",
+          "seat": 1,
+          "sacrifice": "Soldier"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 41
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

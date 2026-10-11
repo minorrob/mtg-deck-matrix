@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mirkwood Bats",
+    "oracleId": "0636b6c3-0662-420a-b30d-f0a14e7c512d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bat"
+    ],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Flying\nWhenever you create or sacrifice a token, each opponent loses 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you create or sacrifice a token, each opponent loses 1 life.",
+      "trigger": {
+        "on": "token created"
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "who": "opponent",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you create or sacrifice a token, each opponent loses 1 life.",
+      "trigger": {
+        "on": "sacrificed",
+        "sacrificer": "you",
+        "filter": {
+          "token": true
+        }
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "who": "opponent",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}
