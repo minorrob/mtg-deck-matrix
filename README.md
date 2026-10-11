@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 421 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 422 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1291,6 +1291,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-unless-tap` - `tests/engine-unless-tap.mjs`: "you may tap another untapped Merfolk you control. When you do, ..." (Meanders Guide; CR 118.12a, 603.12), each permanent its own option
 - `engine-revealed-hand` - `tests/engine-revealed-hand.mjs`: a discard chosen from a revealed hand (CR 701.9b, 701.20a; Render Speechless, Stinging Vitriol, Dai Li Indoctrination, Auntie's Sentence) -- every card shown to every seat while it is chosen, named in the journal, discarded by its own player -- and "any number of cards, then draws that many" (Steal the Show)
 - `engine-discard-triggers` - `tests/engine-discard-triggers.mjs`: "when you discard this card" (CR 113.6k; Titanbones, Towering Heart) from the zone it went to, its own discard alone -- at cleanup and as a cost -- and "whenever a player discards one or more cards" (CR 603.2c; Tinybones, Pocket Nuisance), once for each player each action
+- `engine-graveyard-upkeep` - `tests/engine-graveyard-upkeep.mjs`: a triggered ability that works from its card's graveyard (CR 113.6m; Squee, Goblin Nabob) -- there alone, for its owner, once for each card, finding nothing once the card has left
 
 ## Design and execution record
 

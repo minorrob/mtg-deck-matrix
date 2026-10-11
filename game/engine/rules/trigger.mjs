@@ -56,7 +56,10 @@ import {targetChoices, targetName, isHostile, isChoosing, targetCandidates, coun
 
 /* An ability lives where its card is (CR 113.6). A triggered ability of a permanent watches the
    game only while that permanent is on the battlefield, so an ability on a card in a graveyard is
-   not watching anything — which is why a dead creature's "whenever a creature enters" stays quiet. */
+   not watching anything — which is why a dead creature's "whenever a creature enters" stays quiet.
+   Unless the ability says it works there: "at the beginning of your upkeep, you may return this card
+   from your graveyard to your hand" (Squee, Goblin Nabob; `zone: "graveyard"`) moves its card out of
+   the graveyard, so it functions there and only there (CR 113.6b, 113.6m). */
 const WATCHING_ZONES = ["battlefield"];
 
 /* Whether a player is the one a trigger asks about: "you" its controller, "opponent" anyone else, "any" anyone. */
@@ -540,6 +543,8 @@ export function collectTriggers(state, events) {
   };
   /* The board does not change while this reads it: each permanent's abilities are read once, for every event. */
   const abilitiesNow = abilitiesReader(state);
+  /* The cards in graveyards with a triggered ability that works there (WATCHING_ZONES), read once for every event. */
+  const fromGraveyards = state.zones.graveyard.flat().filter((id) => (state.objects[id]?.abilities ?? []).some((a) => a.kind === "triggered" && a.zone === "graveyard"));
   for (const event of events ?? []) {
     /* An arrival waiting to be told what it is a copy of triggers once it is (rules/entering.mjs). */
     if (event.data?.fields?.awaitingCopy === true) continue;
@@ -554,8 +559,8 @@ export function collectTriggers(state, events) {
     /* And a spell just cast, on the stack: its own "when you cast this spell" alone (CR 603.2). */
     const castSpell = event.kind === "GameEventSpellAbilityCast" && event.data?.fields?.sa?.isSpell ? state.stack.find((e) => e.stackId === event.data.fields.sa.stackId)?.objectId : undefined;
     const justCast = castSpell !== undefined && state.objects[castSpell] ? [castSpell] : [];
-    for (const zone of [...WATCHING_ZONES, "cycled", "discarded", "cast"]) {
-      for (const id of zone === "cycled" ? wentTo : zone === "discarded" ? discardedTo : zone === "cast" ? justCast : state.zones[zone]) {
+    for (const zone of [...WATCHING_ZONES, "graveyard", "cycled", "discarded", "cast"]) {
+      for (const id of zone === "cycled" ? wentTo : zone === "discarded" ? discardedTo : zone === "cast" ? justCast : zone === "graveyard" ? fromGraveyards : state.zones[zone]) {
         const object = state.objects[id];
         /* A permanent's abilities now, the ones given it included (layers.mjs); a card's elsewhere. */
         for (const own of abilitiesNow(id)) {
@@ -563,6 +568,8 @@ export function collectTriggers(state, events) {
           const ability = chosenFor(own, object);
           /* A triggered mana ability happened with the mana ability that triggered it (manaTriggered). */
           if (ability.kind !== "triggered" || !ability.trigger || ability.trigger.manaAbility) continue;
+          /* One that works from a graveyard works from there alone; the rest never do (WATCHING_ZONES). */
+          if ((zone === "graveyard") !== (ability.zone === "graveyard")) continue;
           /* An ability of a Class level its permanent has not reached, it does not have (CR 716.2a, 716.2d). */
           if (Number.isInteger(ability.level) && (object.level ?? 1) < ability.level) continue;
           if (zone === "cycled" && !(ability.trigger.cycled && ability.trigger.who === "self")) continue;

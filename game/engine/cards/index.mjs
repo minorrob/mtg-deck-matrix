@@ -1215,7 +1215,11 @@ export function compileScript(script) {
         /* "This ability triggers only once each turn". */
         ...(ability.limit ? {limit: ability.limit} : {}),
         /* Had only at that Class level or greater (CR 716.2a; classLevel, above). */
-        ...(Number.isInteger(ability.level) ? {level: ability.level} : {})});
+        ...(Number.isInteger(ability.level) ? {level: ability.level} : {}),
+        /* "At the beginning of your upkeep, you may return this card from your graveyard to your hand" (Squee, Goblin Nabob):
+           an ability that works from its card's graveyard, and only there (CR 113.6m; rules/trigger.mjs). */
+        ...(ability.zone === "graveyard" ? {zone: "graveyard"} : {})});
+      if (ability.zone !== undefined && ability.zone !== "graveyard") problems.push(`${ability.text}: a triggered ability works from the battlefield, or from a graveyard (\`zone: "graveyard"\`)`);
       return;
     }
     /* A condition on a static (Forge's IsPresentStatic) is read by the layers (rules/layers.mjs), and a static that works
