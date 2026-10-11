@@ -184,6 +184,30 @@ function cutShort(state) {
  *
  * @returns {Array} events for the caller to journal
  */
+/* An Aura put into its owner's graveyard by a state-based action (CR 704.5m, 704.5z): through the replacements and with its
+   last known information, so "when this Aura is put into a graveyard" still sees it. Unlike an Equipment, it does not
+   stay. */
+function auraToGraveyard(state, id, events) {
+  const object = state.objects[id];
+  const host = object.attachedTo === null || object.attachedTo === undefined ? null : state.objects[object.attachedTo];
+  if (host) host.attachments = (host.attachments ?? []).filter((a) => a !== id);
+  const card = cardRef(state, id);
+  const leftBehind = lastKnown(state, id);
+  const {proposal} = applyReplacements(state, {event: "zone-change", objectId: id, from: "battlefield", to: "graveyard", player: object.controller});
+  const fell = moveObject(state, id, proposal.to, PER_PLAYER.includes(proposal.to) ? object.owner : null);
+  /* An Aura that is a creature too, put there (CR 303.4d), dies (CR 700.4; state/index.mjs). */
+  recordDeath(state, leftBehind, proposal.to);
+  events.push(event("GameEventCardChangeZone", state, {
+    card, leftBehind,
+    /* What it became (CR 400.7e): an Aura's "return it to its owner's hand" finds the card in the graveyard. */
+    ...(PUBLIC_ZONES.includes(proposal.to) ? {becomes: fell} : {}),
+    from: {zoneType: "Battlefield", player: {playerId: object.controller}},
+    to: {zoneType: ZONE_LABEL[proposal.to] ?? proposal.to, player: {playerId: object.owner}},
+  }));
+  /* What it exiled "until this Aura leaves the battlefield", back (CR 610.3; Ossification). */
+  returnExiledUntil(state, id, events, leftBehind);
+}
+
 export function checkStateBasedActions(state) {
   /* Continuous control changes also confer hideaway's look permission (CR 406.3, 702.75a). Record it before a state-based
      action can remove the source or an effect granting control; projections only read these permissions. */
@@ -243,23 +267,22 @@ export function checkStateBasedActions(state) {
       if (!object.enchant) continue;
       const host = object.attachedTo === null || object.attachedTo === undefined ? null : state.objects[object.attachedTo];
       if (host && host.zone === "battlefield" && host.id !== id && matchesSelector(object.enchant, state, object.attachedTo, {controller: object.controller, source: id})) continue;
-      if (host) host.attachments = (host.attachments ?? []).filter((a) => a !== id);
-      const card = cardRef(state, id);
-      const leftBehind = lastKnown(state, id);
-      const {proposal} = applyReplacements(state, {event: "zone-change", objectId: id, from: "battlefield", to: "graveyard", player: object.controller});
-      const fell = moveObject(state, id, proposal.to, PER_PLAYER.includes(proposal.to) ? object.owner : null);
-      /* An Aura that is a creature too, put there (CR 303.4d), dies (CR 700.4; state/index.mjs). */
-      recordDeath(state, leftBehind, proposal.to);
-      events.push(event("GameEventCardChangeZone", state, {
-        card, leftBehind,
-        /* What it became (CR 400.7e): an Aura's "return it to its owner's hand" finds the card in the graveyard. */
-        ...(PUBLIC_ZONES.includes(proposal.to) ? {becomes: fell} : {}),
-        from: {zoneType: "Battlefield", player: {playerId: object.controller}},
-        to: {zoneType: ZONE_LABEL[proposal.to] ?? proposal.to, player: {playerId: object.owner}},
-      }));
-      /* What it exiled "until this Aura leaves the battlefield", back (CR 610.3; Ossification). */
-      returnExiledUntil(state, id, events, leftBehind);
+      auraToGraveyard(state, id, events);
       acted = true;
+    }
+
+    /* CR 704.5z (303.7a): a permanent with two or more Roles attached that one player controls -- each but the one with the
+       latest timestamp is put into its owner's graveyard ("if you control another Role on it, put that one into the
+       graveyard", Royal Treatment), as an Aura put there is. Another player's Role on it stays. */
+    for (const id of [...state.zones.battlefield]) {
+      const roles = (state.objects[id]?.attachments ?? []).filter((a) => state.objects[a]?.zone === "battlefield" && (state.objects[a].subtypes ?? []).includes("Role"));
+      for (const player of new Set(roles.map((a) => controllerOf(state, a)))) {
+        const theirs = roles.filter((a) => controllerOf(state, a) === player);
+        if (theirs.length < 2) continue;
+        const newest = theirs.reduce((a, b) => (state.objects[b].timestamp > state.objects[a].timestamp ? b : a));
+        for (const role of theirs) if (role !== newest) auraToGraveyard(state, role, events);
+        acted = true;
+      }
     }
 
     /* CR 704.5n: an Equipment attached to a permanent that has gone, or is no longer a creature, becomes unattached and

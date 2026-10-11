@@ -357,6 +357,11 @@ export function housePilot({seat, cards = () => null} = {}) {
         const rest = options.map((o) => o.index).filter((i) => !wanted.includes(i));
         return {indices: [...wanted, ...rest].slice(0, Math.max(min, Math.min(max, wanted.length)))};
       }
+      /* Where a counter moves (Forgotten Ancient): onto a creature of its own, else no more. */
+      if (id.startsWith("move-counters:") && options.length) {
+        const own = options.find((o) => o.cardId !== undefined && controllerIn(view, o.cardId) === seat);
+        return {indices: [(own ?? options[options.length - 1]).index]};
+      }
       /* CR 616.1: which effect changes damage dealt to it or its own first -- the one that leaves the least. */
       if (id.startsWith("order-damage:") && options.length) {
         const best = options.reduce((b, o) => ((o.leaves ?? Infinity) < (b.leaves ?? Infinity) ? o : b));

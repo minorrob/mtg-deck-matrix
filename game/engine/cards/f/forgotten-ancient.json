@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Forgotten Ancient",
+    "oracleId": "2ef75cf3-30dc-4852-a6d1-1d6391fad022",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 0,
+    "toughness": 3
+  },
+  "oracleText": "Whenever a player casts a spell, you may put a +1/+1 counter on this creature.\nAt the beginning of your upkeep, you may move any number of +1/+1 counters from this creature onto other creatures.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever a player casts a spell, you may put a +1/+1 counter on this creature.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "any"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "optional": true
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, you may move any number of +1/+1 counters from this creature onto other creatures.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "moveCounters",
+          "from": "self",
+          "counter": "+1/+1",
+          "anyNumber": true,
+          "onto": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "another": true
+          }
+        }
+      ]
+    }
+  ]
+}

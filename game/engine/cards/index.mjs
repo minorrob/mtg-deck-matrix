@@ -26,7 +26,7 @@
  * A table refuses it at prepare, never on the turn it is drawn.
  */
 
-import {ADDED_PHASES} from "../script/effects/permanents.mjs";
+import {ADDED_PHASES, PREDEFINED_TOKENS} from "../script/effects/permanents.mjs";
 import {isCounted} from "../script/amount.mjs";
 import {validateScript, SCRIPT_SCHEMA} from "../script/schema.mjs";
 import {isBuilt, NEEDS_A_DECISION, EFFECTS, REPEAT_EACH} from "../script/effects/index.mjs";
@@ -1015,6 +1015,11 @@ export function compileScript(script) {
         problems.push("removeCounter: upTo goes with counters of any kinds (`counter: \"any\"`)");
       if (effect.effect === "removeCounter" && effect.counter === "any" && !(Number.isInteger(effect.count) && effect.count >= 1 && [undefined, true].includes(effect.upTo) && effect.removing === undefined))
         problems.push("removeCounter: counters of any kinds are a number of them, 1 or more, `upTo: true` or exactly -- which ones asked as it resolves");
+      /* "Create a Royal Role token attached to that creature" (Royal Treatment; CR 303.4i): an Aura token, one, created attached
+         to one object -- a target, or what the effect is about (effects/permanents.mjs, createToken). */
+      if (effect.effect === "createToken" && effect.attachedTo !== undefined && !(PREDEFINED_TOKENS[effect.token?.predefined]?.enchant && (effect.count ?? 1) === 1
+        && (Number.isInteger(effect.attachedTo?.target) || ["that card", "remembered"].includes(effect.attachedTo))))
+        problems.push("createToken: a token created attached is one Aura token (a Role), attached to a target or what the effect is about");
       /* "From among those cards" wherever each went (Spirit of Resilience): a choice among cards an earlier part named
          (effects/asking.mjs, chooseCard) -- never a search of every zone. */
       if (effect.effect === "chooseCard" && effect.zone === "any" && effect.among === undefined)

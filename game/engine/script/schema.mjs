@@ -191,8 +191,16 @@ function checkEffect(effect, path, errors) {
      or "chosen", its controller's choice among the kinds there (effects/asking.mjs, counterKind). */
   if (name === "moveCounters") {
     if (effect.from === undefined) errors.push({path: `${path}.from`, message: "moveCounters says what it moves counters from: `from`, an object"});
-    if (effect.targets === undefined) errors.push({path: `${path}.targets`, message: "moveCounters says what it moves them onto: `targets`, an object"});
+    if ((effect.targets === undefined) === (effect.onto === undefined)) errors.push({path: `${path}.targets`, message: "moveCounters says what it moves them onto: `targets`, an object, or `onto`, what its controller may choose among"});
     if (typeof effect.counter !== "string") errors.push({path: `${path}.counter`, message: "moveCounters names the kind of counter it moves, or \"chosen\" for its controller's choice"});
+    /* "Move any number of +1/+1 counters from this creature onto other creatures" (Forgotten Ancient): `onto`, a selector of
+       the permanents, with `anyNumber` and a kind named (effects/asking.mjs, countersOnto). */
+    if (effect.onto !== undefined) {
+      checkSelector(effect.onto, `${path}.onto`, errors);
+      if (effect.anyNumber !== true || effect.counter === "chosen" || effect.count !== undefined)
+        errors.push({path: `${path}.onto`, message: "Counters moved onto permanents chosen as it resolves are any number (`anyNumber: true`) of a kind named, with no count"});
+    }
+    if (effect.anyNumber !== undefined && effect.onto === undefined) errors.push({path: `${path}.anyNumber`, message: "anyNumber goes with `onto`"});
   }
   /* A designation (alterAttribute, script/effects/attributes.mjs): monstrous or prepared. */
   if (name === "alterAttribute" && !["monstrous", "prepared"].includes(effect.attribute))

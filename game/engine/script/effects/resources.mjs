@@ -525,6 +525,8 @@ export function removeCounter(state, params, context) {
 export function moveCounters(state, params, context) {
   const events = [];
   if (params.counter === "chosen") throw new Error("moveCounters with a chosen kind of counter asks its controller which: run it through resolution.mjs");
+  /* "Onto other creatures" (Forgotten Ancient): where each goes is asked (effects/asking.mjs, countersOnto), never decided here. */
+  if (params.onto !== undefined) throw new Error("moveCounters onto permanents its controller chooses asks where: run it through resolution.mjs");
   const [from] = params.from ?? [], [to] = params.targets ?? [];
   const kind = params.counter ?? "+1/+1", n = Math.max(0, params.count ?? 1);
   if (from === undefined || to === undefined || from === to || n === 0) return events;

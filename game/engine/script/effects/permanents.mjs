@@ -64,6 +64,17 @@ export const PREDEFINED_TOKENS = Object.freeze({
       {id: "jace-draw", kind: "activated", text: "\u22123: Draw a card.", targets: [], loyalty: -3, timing: "sorcery",
         cost: [{atom: "removeCounters", self: true, counter: "loyalty", count: 3}], effects: [{effect: "draw", count: 1}]},
     ]},
+  /* CR 111.10m (Royal Treatment): a Role (CR 303.7) -- a colorless Aura Role enchantment token with enchant creature, named
+     Royal, "Enchanted creature gets +1/+1 and has ward {1}" (its ward the triggered ability the keyword is, as a card's
+     compiles; cards/index.mjs). Created attached to what it enchants (createToken's `attachedTo`). */
+  "Royal Role": {name: "Royal", types: ["Enchantment"], subtypes: ["Aura", "Role"], colors: [], enchant: {what: "permanent", types: ["Creature"]},
+    abilities: [
+      {id: "royal-pt", kind: "static", text: "Enchanted creature gets +1/+1 and has ward {1}.", layer: 7, sublayer: "c",
+        affects: {what: "permanent", attachedBy: "self"}, apply: {power: 1, toughness: 1}},
+      {id: "royal-ward", kind: "static", text: "Enchanted creature gets +1/+1 and has ward {1}.", layer: 6, affects: {what: "permanent", attachedBy: "self"},
+        apply: {addKeywords: ["Ward"], addAbilities: [{id: "ward", kind: "triggered", text: "ward {1}", trigger: {on: "GameEventBecomesTarget", who: "self", by: "opponent"},
+          effects: [{effect: "unlessPays", who: "that player", amount: 1, effects: [{effect: "counterSpell", stack: "that"}]}]}]}},
+    ]},
   /* CR 111.10v (Splinter, the Mentor) */
   Mutagen: {name: "Mutagen", types: ["Artifact"], subtypes: ["Mutagen"],
     abilities: [{id: "mutagen", kind: "activated", text: "{1}, {T}, Sacrifice this token: Put a +1/+1 counter on target creature. Activate only as a sorcery.",
@@ -393,11 +404,17 @@ export function createToken(state, params, context) {
   const controller = params.controller ?? context.controller;
   /* A target player who is no longer one creates nothing. */
   if (!state.players[controller]) return events;
+  /* "Create a Royal Role token attached to that creature" (Royal Treatment): `attachedTo`, an object bound as a target is --
+     an Aura token created attached to what its Enchant could not enchant, or to nothing, is not created (CR 303.4i). An Aura
+     token's alone: the compiler refuses it of any other (cards/index.mjs). */
+  const [host] = params.attachedTo ?? [];
+  if (params.attachedTo !== undefined && !enchantable(state, spec.enchant, controller).includes(host)) return events;
   const made = [];
   /* "Twice that many of those tokens instead" (Anointed Procession), artifact tokens made Dragons instead (Draconic Visitor):
      what is made, and how many (rules/statics.mjs, tokensCreated). */
   const {count: many, instead} = tokensCreated(state, controller, count, spec);
   for (let i = 0; i < many; i += 1) made.push(makeToken(state, instead ?? spec, controller, params, context, events));
+  if (params.attachedTo !== undefined) for (const id of made) attachTo(state, id, host);
   /* "They gain haste until end of turn" (Ovika), and the rest a made permanent may gain (afterwards). */
   afterwards(state, made, {...params, controller}, context);
   /* "Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all OTHER creatures" (Martial Coup): the
@@ -425,6 +442,8 @@ function makeToken(state, spec, controller, params, context, events) {
     toughness: sized(spec.toughness),
     keywords: spec.keywords ?? [],
     abilities: spec.abilities ?? [],
+    /* An Aura token's Enchant (a Role's, CR 303.7): what the state-based actions hold it to (CR 704.5m). */
+    ...(spec.enchant ? {enchant: spec.enchant} : {}),
     owner: controller,
     controller,
     token: true,

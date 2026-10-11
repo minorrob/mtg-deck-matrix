@@ -27,7 +27,7 @@
  */
 
 import {cardsIn, moveObject, addObject, valueCostOf, rememberExileLooker, usesThisTurn, recordUse, recordDiscard} from "../../state/index.mjs";
-import {compileSelector} from "../filter.mjs";
+import {compileSelector, selectMatching} from "../filter.mjs";
 import {event, cardRef, moveOne, playersFor, sacrificeOne, destructionQuestion, destructionChoice} from "./zones.mjs";
 import {proliferate as giveEachAnother, addCounters, putCounter, moveCounters, removeCounter} from "./resources.mjs";
 import {makeCopies, afterwards, joinAttack, attackPlaces, attachTo, createToken, effectUntil, COPY_KEYS} from "./permanents.mjs";
@@ -1855,6 +1855,63 @@ export const countersToRemove = {
   },
 };
 
+/* ---- counters moved onto permanents, split (CR 122.5; Train C, w2d) ----
+
+   "You may move any number of +1/+1 counters from this creature onto other creatures" (Forgotten Ancient): a moveCounters
+   onto any of what `onto` describes (`anyNumber`), up to as many of its kind as are on `from`, where each goes its
+   controller's choice -- asked a counter at a time, each permanent `onto` matches an option, and "No more" -- and then
+   every one moved at once: off the source together, and onto each permanent together, so what changes counters put on
+   sees one placement on each (CR 122.6, 616.1). Put here by the resolution before it is done (script/resolution.mjs).
+   Nothing on it, or nothing to move them onto, and nobody is asked. */
+const ontoName = (state, awaiting, id) => {
+  const alike = awaiting.candidates.filter((other) => state.objects[other]?.card === state.objects[id]?.card);
+  return alike.length > 1 ? `${state.objects[id].card} (${alike.indexOf(id) + 1})` : state.objects[id]?.card ?? "A permanent no longer there";
+};
+function countersMovedOnto(state, awaiting) {
+  const events = [], source = state.objects[awaiting.from], kind = awaiting.counter;
+  /* All or nothing (CR 122.5): the source still there with as many, each destination still there. */
+  const plan = awaiting.plan.filter((id) => state.objects[id]?.zone === "battlefield");
+  if (!plan.length || source?.zone !== "battlefield" || (source.counters?.[kind] ?? 0) < plan.length) return events;
+  const before = source.counters[kind];
+  source.counters[kind] = before - plan.length;
+  events.push(event("GameEventCardCounters", state, {card: cardRef(state, awaiting.from), type: kind, oldValue: before, newValue: source.counters[kind]}));
+  for (const id of awaiting.candidates) {
+    const n = plan.filter((to) => to === id).length;
+    if (n > 0) addCounters(state, id, kind, n, events, awaiting.player);
+  }
+  return events;
+}
+export const countersOnto = {
+  open(state, params, context) {
+    const then = params.then, [from] = then.from ?? [], kind = then.counter;
+    const n = from !== undefined && state.objects[from]?.zone === "battlefield" ? state.objects[from].counters?.[kind] ?? 0 : 0;
+    const candidates = selectMatching(state, then.onto, context).filter((id) => id !== from);
+    if (n === 0 || !candidates.length) return false;
+    state.awaiting = {kind: "effect-choice", effect: "countersOnto", player: context.controller, from, counter: kind, remaining: n, candidates, plan: []};
+    return true;
+  },
+  choice(state, awaiting) {
+    const name = state.objects[awaiting.from]?.card ?? "that permanent";
+    const moved = awaiting.plan.length ? `; ${awaiting.plan.length} chosen` : "";
+    return {id: `move-counters:${awaiting.player}:${state.turn}:${awaiting.from}:${awaiting.plan.length}`,
+      title: `Move a ${awaiting.counter} counter from ${name} onto (${awaiting.remaining} left${moved})`, mode: "one", min: 1, max: 1,
+      options: [...awaiting.candidates.map((id, index) => ({index, label: ontoName(state, awaiting, id), cardId: id})), {index: awaiting.candidates.length, label: "No more"}]};
+  },
+  apply(state, awaiting, indices) {
+    const i = Array.isArray(indices) && indices.length === 1 ? indices[0] : undefined;
+    if (!(Number.isInteger(i) && i >= 0 && i <= awaiting.candidates.length)) throw new Error("Invalid selection");
+    if (i === awaiting.candidates.length) return {events: countersMovedOnto(state, awaiting)};
+    const next = {...awaiting, plan: [...awaiting.plan, awaiting.candidates[i]], remaining: awaiting.remaining - 1};
+    if (next.remaining === 0) return {events: countersMovedOnto(state, next)};
+    state.awaiting = next;
+    return {events: [], again: true};
+  },
+  /* Its controller has left the game, and the ability with them (CR 800.4a): nothing moves. */
+  left() {
+    return {events: []};
+  },
+};
+
 /* ---- orderDestruction (CR 616.1): a destroy whose destruction of one permanent two or more effects would replace, ending
    differently -- two Auras with umbra armor, or one and a regeneration shield -- asks that permanent's controller which,
    before anything is destroyed (effects/zones.mjs, destructionQuestion; script/resolution.mjs puts this in the destroy's place
@@ -1895,4 +1952,4 @@ export const chooseInstead = {
 };
 
 export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, orderCounters, orderDraws,
-  conniveWhich, manaColors, counterKind, countersToRemove, orderDestruction, chooseInstead});
+  conniveWhich, manaColors, counterKind, countersToRemove, countersOnto, orderDestruction, chooseInstead});

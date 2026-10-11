@@ -339,6 +339,8 @@ export function bindEffect(effect, context, state = null) {
     bound.selector = {...bound.selector, controller: player ?? -1};
   }
   if ("spells" in bound) bound.spells = objectsOf(bound.spells, context);
+  /* "Create a Royal Role token attached to that creature" (Royal Treatment): what the token enters attached to. */
+  if ("attachedTo" in bound) bound.attachedTo = objectsOf(bound.attachedTo, context);
   /* "Until this card is cast from exile" (Emrakul, the Exigent Doom): which card's cast ends it. */
   if ("untilCast" in bound) bound.untilCast = objectsOf(bound.untilCast, context);
   /* "Counter that spell or ability" (ward): the stack entry the trigger is about, by its stack id (rules/trigger.mjs). */
