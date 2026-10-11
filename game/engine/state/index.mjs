@@ -226,6 +226,7 @@ export function showFace(state, id, face) {
 /* AN ADVENTURER CARD (CR 715): two sets of characteristics, its own (`main`) and its Adventure's (`adventure`) -- an instant
    or sorcery with the subtype Adventure (715.2). It has the Adventure's only while it is cast as one and on the stack as one
    (715.3a-b); anywhere else, its own alone (715.4). */
+const PRESENT_ONLY = ["subtypes", "supertypes", "colors"];
 const adventureSide = (adventurer, shown) => Object.fromEntries(FACE_KEYS.map((key) => [key, (shown ? adventurer.adventure : adventurer.main)[key]]));
 
 /** Show an adventurer card as its Adventure (`shown`), or as itself again: what is weighed as it is cast as an Adventure
@@ -235,9 +236,11 @@ export function showAdventure(state, id, shown) {
   const object = state.objects[id];
   if (!object?.adventurer) return;
   /* A characteristic the side shown has not (a creature's spell, an Adventure's power) is absent, not present as nothing:
-     shown and put back for an offer, the card is exactly as it was -- asking what may be done changes no state. */
+     shown and put back for an offer, the card is exactly as it was -- asking what may be done changes no state. And as
+     addObject holds them, subtypes, supertypes and colors are present only when there are some (An Unexpected Party, an
+     enchantment with no subtypes). */
   for (const [key, value] of Object.entries(adventureSide(object.adventurer, shown))) {
-    if (value === undefined) delete object[key];
+    if (value === undefined || (PRESENT_ONLY.includes(key) && Array.isArray(value) && !value.length)) delete object[key];
     else object[key] = value;
   }
   if (shown) object.face = "adventure"; else delete object.face;
