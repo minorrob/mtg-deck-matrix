@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gandalf the White",
+    "oracleId": "5b3b5f6a-375e-4479-9384-a942eda83f9b",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Avatar",
+      "Wizard"
+    ],
+    "manaCost": "{3}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Flash\nYou may cast legendary spells and artifact spells as though they had flash.\nIf a legendary permanent or an artifact entering or leaving the battlefield causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "static",
+      "text": "You may cast legendary spells and artifact spells as though they had flash.",
+      "rule": "cast-as-though-flash",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "spells": {
+        "anyOf": [
+          {
+            "supertypes": [
+              "Legendary"
+            ]
+          },
+          {
+            "types": [
+              "Artifact"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "If a legendary permanent or an artifact entering or leaving the battlefield causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time.",
+      "rule": "triggers-again",
+      "affects": {
+        "what": "permanent",
+        "controller": "you"
+      },
+      "cause": {
+        "event": "enters or leaves",
+        "filter": {
+          "anyOf": [
+            {
+              "supertypes": [
+                "Legendary"
+              ]
+            },
+            {
+              "types": [
+                "Artifact"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

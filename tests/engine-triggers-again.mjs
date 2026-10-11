@@ -117,7 +117,7 @@ const enter = (id) => [{effect: "moveZone", targets: [id], to: "battlefield"}];
   /* What may cause it. */
   const script = structuredClone(loadCardScripts().find(({script: one}) => one.identity.name === "Panharmonicon").script);
   script.abilities[0].cause = {event: "casts"};
-  eq(validateScript(script).errors.some((e) => /enters, dies or attacks/.test(e.message)), true, "a cause that is not an arrival, a death or an attack is refused");
+  eq(validateScript(script).errors.some((e) => /enters, dies, attacks, or enters or leaves/.test(e.message)), true, "a cause that is not an arrival, a death, an attack, or an arrival or a departure is refused");
 }
 
 console.log(`engine-triggers-again: ${checks} checks passed — one more for each static: by what caused it (entering, attacking, dying, its own death read as it was) or whose it is; never an opponent's; a one-or-more trigger again about all of them.`);

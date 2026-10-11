@@ -379,9 +379,9 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
         errors.push({path: `${path}.${key}`, message: `${key} is true`});
       if (ability.spells && typeof ability.spells === "object") checkSelector(ability.spells, `${path}.spells`, errors, {choice: true});
     }
-    /* What causes a trigger to trigger again: an arrival, a death, an attack (rules/trigger.mjs). */
-    if (ability.rule === "triggers-again" && ability.cause !== undefined && !["enters", "dies", "attacks"].includes(ability.cause?.event))
-      errors.push({path: `${path}.cause`, message: "What causes it to trigger again is an event: enters, dies or attacks"});
+    /* What causes a trigger to trigger again: an arrival, a death, an attack, or an arrival or a departure (rules/trigger.mjs). */
+    if (ability.rule === "triggers-again" && ability.cause !== undefined && !["enters", "dies", "attacks", "enters or leaves"].includes(ability.cause?.event))
+      errors.push({path: `${path}.cause`, message: "What causes it to trigger again is an event: enters, dies, attacks, or enters or leaves"});
     /* A restriction on attacking (CR 508.1c): whom, in its words, and a condition under which it does not apply. */
     if (ability.rule === "cant-attack") {
       if (ability.defender !== undefined && !CANT_ATTACK_DEFENDERS.includes(ability.defender))

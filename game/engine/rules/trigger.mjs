@@ -459,8 +459,12 @@ function triggersAgain(state, event, controller, sourceId, lastSeen = null, depa
 }
 /* The event a trigger triggered on, as a `triggers-again` names it: something entering (what arrived, where it is now),
    dying (as it last was), or attacking. */
+/* "If a legendary permanent or an artifact entering or leaving the battlefield causes a triggered ability ... to trigger"
+   (Gandalf the White; CR 603.2d, 603.6a, 603.10a): "enters or leaves", the arrival as it now is, or a departure to anywhere
+   as it last existed on the battlefield -- only a move from the battlefield keeps that (effects/zones.mjs, `leftBehind`). */
 function causedBy(state, event, cause, context) {
   const fields = event.data?.fields ?? {};
+  if (cause.event === "enters or leaves") return causedBy(state, event, {...cause, event: "enters"}, context) || matchesLastKnown(cause.filter ?? {}, fields.leftBehind, context);
   if (cause.event === "enters") {
     const arrived = fields.enteredAs ?? fields.card?.cardId;
     return event.kind === "GameEventCardChangeZone" && fields.to?.zoneType === "Battlefield" && state.objects[arrived]?.zone === "battlefield"
