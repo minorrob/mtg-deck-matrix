@@ -965,7 +965,7 @@ function amassOnto(state, army, params, player, source, events) {
   addCounters(state, army, "+1/+1", count, events, player);
   const current = [...typesOf(state, army), ...(state.objects[army].subtypes ?? [])];
   if (!current.includes(params.subtype) && !everyCreatureTypeOf(state, army))
-    effectUntil(state, {id: `amass:${params.subtype}:${army}`, layer: 4, targets: [army], apply: {addTypes: [params.subtype]}, until: "ever"}, {controller: player, source});
+    effectUntil(state, {id: `amass:${params.subtype}:${army}`, layer: 4, targets: [army], apply: {addSubtypes: [params.subtype]}, until: "ever"}, {controller: player, source});
 }
 export const amass = {
   open(state, params, context) {
