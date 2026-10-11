@@ -1,0 +1,311 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ratonhnhaké꞉ton",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Their Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Blade": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [
+        "Equipment"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "abilities": [
+        {
+          "id": "b",
+          "kind": "static",
+          "text": "Equipped creature gets +2/+0.",
+          "layer": 7,
+          "sublayer": "c",
+          "affects": {
+            "what": "permanent",
+            "attachedBy": "self"
+          },
+          "apply": {
+            "power": 2,
+            "toughness": 0
+          }
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It hits Maya: a 1/1 black Assassin with menace -- and when Rob does, his Blade returns from the graveyard attached to that token",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ratonhnhaké꞉ton"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Blade"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Ratonhnhaké꞉ton"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 37
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Ratonhnhaké꞉ton",
+                "Assassin"
+              ]
+            },
+            {
+              "stack": 1
+            },
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Blade"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Blade"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Ratonhnhaké꞉ton",
+            "Assassin",
+            "Blade"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Assassin",
+            "power": 3,
+            "toughness": 1
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Assassin",
+            "has": [
+              "Menace"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "No Equipment card in Rob's graveyard: the token, and the reflexive trigger has nothing to target",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ratonhnhaké꞉ton"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Ratonhnhaké꞉ton"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Ratonhnhaké꞉ton",
+            "Assassin"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Hexproof until it has dealt damage; after it has, it has none -- and Maya's Bear can block it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ratonhnhaké꞉ton"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Ratonhnhaké꞉ton",
+                "has": [
+                  "Hexproof"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Ratonhnhaké꞉ton"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Ratonhnhaké꞉ton",
+                "lacks": [
+                  "Hexproof"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Ratonhnhaké꞉ton"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Their Bear",
+              "Ratonhnhaké꞉ton"
+            ]
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 37
+        }
+      ]
+    }
+  ]
+}
