@@ -242,13 +242,13 @@
   function gamePanel() {
     return `<section class="v-panel cm-table-game" id="cm-table-game"><h2>The game is over</h2><p class="cm-muted">Its record is kept.</p></section>`;
   }
-  function draw(t) {
+  function draw(t, asked) {
     current = t;
     applyRememberedMat(t);
     if (t.seats.some((s) => s && s.you) && t.phase !== "rematch") keepSeat(t.tableId);
     else if (seatKept() === t.tableId) keepSeat(null);
     /* While the game is on, the page is the board's (crankmagic-board.js); it keeps its own socket. */
-    if (C.board && C.board.wants(t)) return C.board.show(t);
+    if (C.board && C.board.wants(t)) return C.board.show(t, asked);
     /* The table is read every two seconds; a read that changed nothing leaves the page as it is (Rob, 2026-09-29:
        every redraw restarted the seats' seas, and it loses whatever the reader was pointing at). */
     const key = JSON.stringify(t);
@@ -279,10 +279,11 @@
   }
   /* `live` says whether the page still wants this table: a read that lands after the person left draws nothing. */
   async function refresh(id, live = () => true) {
+    const asked = performance.now();   /* the board weighs the read against the room's newer frames by when it was asked */
     const {table, now} = await api("GET", tableUrl(id));
     if (!live()) return table;
     if (Number.isFinite(now)) skew = now - Date.now();
-    draw(table);
+    draw(table, asked);
     return table;
   }
 

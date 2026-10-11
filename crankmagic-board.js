@@ -136,6 +136,7 @@ globalThis.CrankBoard = Object.freeze({
   let tableId = null, table = null, view = null, socket = null, status = "idle", retry = 0, retryTimer = null;
   let focus = null, picked = [], amounts = [], sending = false, tools = false, confirmEnd = false, closedByUs = false;
   const away = new Map();   /* seat number -> until, from the table and from the room's "away" frames */
+  const awaySaid = new Map();   /* seat number -> {until, at}: the room's last "away" frame for it, and when it came */
   let attached = false;     /* the table page is showing the board (the board can hold a game with the page elsewhere) */
   /* THE TABLE VIEW'S TWO BARS AND THE THREE CARD SIZES (items 4-6). The bar between the rows shares the tabletop's
      height between the other seats' row and yours -- with two seats side by side, the width between the two boards
@@ -189,13 +190,15 @@ globalThis.CrankBoard = Object.freeze({
     if (socket) try {socket.close(1000, "leaving the board");} catch {}
     socket = null; status = "idle";
   }
+  /* What a room's "away" frame says of a seat: dropped, and back by when; or not away (null). */
+  function heard(seat, until) {if (until) away.set(seat, until); else away.delete(seat);}
   function receive(data) {
     let frame;
     try {frame = JSON.parse(data);} catch {return;}
     if (frame.type === "view") adopt(frame.view);
     else if (frame.type === "receipt") {sending = false; draw();}
     else if (frame.type === "refused") {sending = false; C.notice(frame.error || "The table did not take that.", true); if (frame.view) adopt(frame.view, true); else draw();}
-    else if (frame.type === "away") {const seat = Number(String(frame.seatId).slice(1)); if (frame.until) away.set(seat, frame.until); else away.delete(seat); draw();}
+    else if (frame.type === "away") {const seat = Number(String(frame.seatId).slice(1)); awaySaid.set(seat, {until: frame.until, at: performance.now()}); heard(seat, frame.until); draw();}
   }
   /* Newest wins. The room's revision counts decisions; a game ended between them keeps its revision, so an
      equal one is taken too, and a refusal's own view always is. */
@@ -1369,8 +1372,9 @@ globalThis.CrankBoard = Object.freeze({
 
   /* ---- what the lobby hands over ---- */
   C.board = {
-    /** The table is playing (or just finished): draw the board in the page, and keep the socket open. */
-    show(t) {
+    /** The table is playing (or just finished): draw the board in the page, and keep the socket open. `asked` is
+        when the page asked for this read of the table (performance.now()). */
+    show(t, asked) {
       if (tableId !== t.tableId) {C.board.close(); tableId = t.tableId; view = null; focus = null; away.clear();}
       attached = true;
       /* The table's list of who is away is the truth; the room's "away" frames only say it sooner. What it says
@@ -1380,6 +1384,10 @@ globalThis.CrankBoard = Object.freeze({
       table = t;
       away.clear();
       for (const a of t.away || []) away.set(a.seatId, a.until);
+      /* Newest wins, as views do: a read asked before the room's last frame about a seat came may have been answered
+         before it, so that frame's word on the seat stands until a read asked after it lands (a read in flight as
+         someone dropped would take their flag down for a poll). */
+      for (const [seat, w] of awaySaid) if (w.at > asked) heard(seat, w.until);
       if (!document.getElementById("cm-board")) {
         records = null; saidKey = null;
         C.main.innerHTML = `<div class="cm-board" id="cm-board" data-view="${mode}"></div><aside class="cm-board-coach" id="cm-board-coach" aria-label="CrankMagic Coach" hidden></aside><p class="cm-sr-only" id="cm-board-said" role="status" aria-live="polite" aria-atomic="true"></p>`;

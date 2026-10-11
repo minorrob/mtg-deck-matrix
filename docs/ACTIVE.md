@@ -11,7 +11,7 @@ staging with its deployed bytes compared:
 - the A11y pass (#701).
 
 It then ran G-B again on main bf0e9d21, with all of it in (the rows below): the journeys, the gallery and the A11y checks pass;
-the gate passed once and failed once in one `table-board` check, now instrumented and re-running. **What is left is Rob's:**
+the gate passed once and failed once in one `table-board` check: root-caused to a race in the board, fixed, and re-running. **What is left is Rob's:**
 - the privacy wording for *AI players on Claude* and *The deck advisor* (`docs/ai-door.md`);
 - the advisor's eval with his key;
 - confirming his library plays as he expects;
@@ -40,7 +40,7 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**, with a daily cap of its own ($1.50, released at 905394dc); **AI-2's L1 built** (Normal and Easy, measured against L0: Normal 61%, Easy 56%, L0 itself 51%); **the LLM seat built behind its switch**, its privacy wording Rob's to approve; **AI-5 built and on staging** (each deck says whether the table can play it; Play this deck); **AI-4, the deck advisor, built behind its switch**, its privacy wording Rob's to approve; **AI-3's Train C done: 1,130 of Rob's 1,132 cards play** (the two left, each with its reason), Rob's to confirm; **AI-6, AI Coach settings, built** | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
 | G-A: M3's monitoring and backups | **monitoring built** (Workers Logs keeps the Worker's own 5xx and sync-conflict lines; `tools/ops-week.mjs`, the weekly check); Time Travel confirmed, 30 days | **Rob:** the two alerts and their email; R2 turned on, the nightly copy's window and what deletion promises (`docs/ops.md`) |
 | G-A: the A11y pass | **done**: WCAG 2.1 AA on the board and the lobby, measured from the screen's pixels | `tests/a11y-board.mjs` 288 checks, 72 breaks caught (the A11y record below) |
-| G-B: the whole gate green twice on main | **again with G-A complete: once green, once red; re-running** | dispatched Tests runs on main bf0e9d21 (AI-4, AI-6, M3, Train C and the A11y pass in): run 2572 green; run 2573 red once, in `table-board`'s drop check (Maya not told within 10 s that Rob dropped). Not reproduced in seven local runs, a full CI-shaped run among them; the check now says why when it times out, and two more runs on main follow this merge. Before: 2499 on def8fa89 and 2503 on eff40fdc, both green |
+| G-B: the whole gate green twice on main | **again with G-A complete: once green, once red; re-running** | dispatched Tests runs on main bf0e9d21 (AI-4, AI-6, M3, Train C and the A11y pass in): run 2572 green; run 2573 red once, in `table-board`'s drop check (Maya not told within 10 s that Rob dropped). **Root-caused and fixed:** a read of her table the room answered just before Rob dropped, landing just after its "away" frame, took her flag down, and her later reads were held, so it stayed down. Now newest wins: a read asked before the room's frame came leaves the frame's word standing (the race record below). Two more runs on main follow this merge. Before: 2499 on def8fa89 and 2503 on eff40fdc, both green |
 | G-B: `play-e2e` under wrangler dev | done | 35 checks at every staging release |
 | G-B: hidden information in every frame | done | `play-journeys` reads every frame to both people; G1's oracle 102,879 checks, no leak |
 | G-B: the five-second rule | **done** | over a real network, Rob on staging (2026-10-10): ten turns against the AI, the longest wait *"about 3 seconds"*; here, `play-journeys` median 280 ms, longest 1.0 s; G1's 700 games with a person: each game's longest wait a median 172 ms, 99th percentile 1.6 s, the worst 3.5 s, none over 5 s |
@@ -1019,3 +1019,20 @@ failed in 172 places; it now passes 288 checks.
 `release/cloud-staging` 03a69b16 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 11:17:16 UTC as
 version 51634bdc, its `play-worker.js` byte-identical to the release's dry-run bundle and to #700's (3,301,891 bytes,
 sha256 f236861e…): the A11y pass changed the browser's files only. Its AI bindings are the Coach's alone.
+
+**G-B's one red, root-caused (2026-10-11).** Tests run 2573 on main bf0e9d21 failed once in `tests/table-board.mjs`:
+Maya's board was not told within 10 s that Rob's socket had dropped. Seven local runs passed. Reading the path
+found the race: the lobby reads the table every two seconds, and each read redraws who is away from the table alone
+(`C.board.show`). A read the room answered just before Rob dropped, landing just after the room's "away" frame,
+took Maya's flag down. In the check her later reads are held, so it stayed down past 10 s; on a real network it
+would have come back at the next read, two seconds on.
+- **Proof the race was the cause:** forced on main as it was (the read let through as the room told her, both landing
+  before the check first looked), the drop check failed exactly as run 2573 did: a 10 s timeout, her flag "", her
+  socket having brought `away s0`. With the fix, the same forcing passes. A new check makes the race happen every
+  time: one of Maya's reads is answered before the drop and kept on its way back until the room has told her; it
+  failed on main as it was.
+- **The fix, newest wins, as views already do:** the lobby says when it asked for each read, and the board keeps the
+  room's last frame about a seat over a read asked before that frame came (`crankmagic-board.js`,
+  `crankmagic-table.js`).
+- **Checks:** `table-board` 251 checks; `tools/table-away-breaks.py` 6 breaks, every one caught.
+- The timeout's message still says what Maya's flag read and what her socket last brought, should it fail again.

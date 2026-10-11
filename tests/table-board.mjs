@@ -104,6 +104,8 @@ const serial = (fn) => (queue = queue.then(fn, fn));
 const writes = [];
 /* A person's table reads can be held, so the room's socket is the only way news can reach them. */
 const held = {};
+/* ...and one read, once answered, can be kept on the way back, as a slow network keeps it: it lands after newer news. */
+const late = {};
 async function answer(route, email) {
   const req = route.request(), url = new URL(req.url()), method = req.method();
   if (method === "GET" && held[email]) await held[email].promise;
@@ -111,7 +113,9 @@ async function answer(route, email) {
   const m = /^\/api\/tables\/([a-z0-9]+)(?:\/([a-z]+))?$/.exec(url.pathname);
   if (!m) return route.fulfill({status: 404, json: {error: "No such endpoint."}});
   const r = await serial(() => object.fetch(new Request(`https://table.internal${m[2] ? `/table/${m[2]}` : "/table"}${url.search}`, {method, headers: {"content-type": "application/json", "x-crankmagic-email": email}, ...(method === "GET" ? {} : {body: req.postData() || "{}"})})));
-  return route.fulfill({status: r.status, contentType: "application/json", body: await r.text()});
+  const body = await r.text();
+  if (method === "GET" && !m[2] && late[email]) {const kept = late[email]; delete late[email]; kept.answered(); await kept.promise;}
+  return route.fulfill({status: r.status, contentType: "application/json", body});
 }
 
 /* THE SOCKET, CARRIED. The page's WebSocket is answered here: its server end is a socket the object accepts
@@ -1272,16 +1276,26 @@ try {
   await maya.page.click("[data-action=board-view][data-view=focus][aria-label='Leave full screen']");
 
   /* DROPPED: the room ends Rob's socket; his board reconnects; Maya is told, then the table says he is back. */
-  const socketsBefore = routes[ROB].length;
+  const socketsBefore = routes[ROB].length, robFlag = ".cm-board-tile[data-seat='0'] .cm-board-tile-flag";
+  /* One of Maya's reads (her table is read every two seconds) is answered by the room before Rob drops, and kept on
+     the way back until the room has told her he dropped. Her board counts the reads it is handed, so the check below
+     knows that one has landed. */
+  await maya.page.evaluate(() => {const board = globalThis.__cm.board, show = board.show; board.show = function (...a) {globalThis.__shown = (globalThis.__shown || 0) + 1; return show.apply(this, a);};});
+  let lateGo; const lateAnswered = new Promise((answered) => {late[MAYA] = {answered, promise: new Promise((go) => {lateGo = go;})};});
+  await Promise.race([lateAnswered, new Promise((_, no) => setTimeout(() => no(new Error("Maya's table was not read within 10 s")), 10000))]);
   let release; held[MAYA] = {promise: new Promise((r) => {release = r;})};
   await dropSocket(ROB);
-  await waitText(maya.page, ".cm-board-tile[data-seat='0'] .cm-board-tile-flag", /Dropped · back by/, 10000).catch(async (error) => {
+  await waitText(maya.page, robFlag, /Dropped · back by/, 10000).catch(async (error) => {
     /* What Maya's board showed instead, and what her socket had brought: a timeout here says why. */
-    const flag = await maya.page.evaluate(() => document.querySelector(".cm-board-tile[data-seat='0'] .cm-board-tile-flag")?.innerText ?? "(no flag)");
+    const flag = await maya.page.evaluate((q) => document.querySelector(q)?.innerText ?? "(no flag)", robFlag);
     const last = frames[MAYA].slice(-6).map((f) => {try {const j = JSON.parse(f); return j.type + (j.seatId ? ` ${j.seatId}` : "");} catch {return "?";}});
     throw new Error(`Maya was not told Rob dropped: her flag reads "${flag}"; her last frames: ${last.join(", ")}; sockets Rob ${routes[ROB].length}, Maya ${routes[MAYA].length} (${error.message})`);
   });
   ok(true, "Maya is told at once that Rob dropped, and until when, by the room over her socket (her table reads held)");
+  const reads = await maya.page.evaluate(() => globalThis.__shown || 0);
+  lateGo();
+  await maya.page.waitForFunction((n) => (globalThis.__shown || 0) > n, reads, {timeout: 10000});
+  ok(/Dropped · back by/.test(await text(maya.page, robFlag)), "and the read the room answered before he dropped, landing after it told her, leaves that up: the room's word is the newer (newest wins)");
   delete held[MAYA]; release();
   await rob.page.waitForFunction(() => document.querySelector(".cm-board-strip") && !document.querySelector(".cm-board-conn"), null, {timeout: 20000});
   ok(routes[ROB].length === socketsBefore + 1, "Rob's board opens a new socket by itself, and the room sends his view again");
