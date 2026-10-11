@@ -28,7 +28,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Options and conditions | 37 | 24 | 5 | 0 | 8 |
 | Amounts the game counts | 188 | 17 | 1 | 0 | 170 |
 | Choices | 15 | 12 | 0 | 0 | 3 |
-| Other keyword constructs | 16 | 9 | 0 | 1 | 6 |
+| Other keyword constructs | 16 | 10 | 0 | 1 | 5 |
 
 ## What to build next
 
@@ -39,9 +39,9 @@ The things that alone hold back the most of the most-played cards.
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 28 | 90 |
 | option | Remembering what an effect moved | — | missing | 21 | 83 |
 | option | You may play or cast a card from another zone | — | missing | 17 | 65 |
+| count | Spells cast this turn | — | missing | 9 | 12 |
 | count | What entered or died this turn | — | missing | 9 | 9 |
 | count | Cards in a library | — | missing | 8 | 12 |
-| count | Spells cast this turn | — | missing | 8 | 12 |
 | effect | RingTemptsYou | — | missing | 8 | 11 |
 | trigger | CounterAddedOnce | counter added once | named | 6 | 10 |
 | effect | ChangeTargets | — | missing | 6 | 8 |
@@ -874,7 +874,7 @@ The things that alone hold back the most of the most-played cards.
 | — | A comparison ("if you control ...") | {if: condition, then, else}; a modal's chooseMore, as it is cast | built | 17 | 146 | 0 | 0 |
 | — | CounterNum | — | missing | 16 | 32 | 14 | 0 |
 | — | Cards in a library | — | missing | 13 | 63 | 12 | 8 |
-| — | Spells cast this turn | — | missing | 12 | 139 | 12 | 8 |
+| — | Spells cast this turn | — | missing | 12 | 139 | 12 | 9 |
 | — | Life you gained this turn | amount {lifeGainedThisTurn} (effects/resources.mjs and rules/combat.mjs keep it) | built | 12 | 84 | 0 | 0 |
 | — | What entered or died this turn | — | missing | 11 | 174 | 9 | 9 |
 | 700.5 | Devotion to a color (CR 700.5) | {devotion: [color]} | built | 11 | 49 | 0 | 0 |
@@ -1090,6 +1090,6 @@ The things that alone hold back the most of the most-played cards.
 | Protection from white | Protection from white | built | 2 | 32 | 0 | 0 |
 | Strive | — | missing | 2 | 20 | 2 | 2 |
 | Multikicker | — | named | 2 | 19 | 1 | 0 |
-| Partner with | — | missing | 1 | 52 | 1 | 0 |
+| Partner with | Partner with | built | 1 | 52 | 0 | 0 |
 | MayFlashSac | — | missing | 1 | 10 | 1 | 0 |
 | DeckLimit | — | missing | 1 | 5 | 1 | 0 |

@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 403 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 404 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1273,6 +1273,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-suspend-hand` - `tests/engine-suspend-hand.mjs`: suspend from the hand (Knight of Old Benalia), a special action at the timing it could be cast, exiled with its time counters and suspended
 - `engine-protection-multicolored` - `tests/engine-protection-multicolored.mjs`: protection from multicolored (Argentum Masticore), and "sacrifice it unless you discard a card; when you discard a card this way", about the card discarded
 - `engine-hexproof-from` - `tests/engine-hexproof-from.mjs`: a color chosen as it resolves (Skrelv, Defector Mite), hexproof from that color and unblockable by creatures of it until end of turn
+- `engine-partner-with` - `tests/engine-partner-with.mjs`: partner with [name] (for Pir, Imaginative Rascal), two commanders that name each other, and the trigger as it enters: its target player may search their library for the card it names
 
 ## Design and execution record
 

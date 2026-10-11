@@ -136,10 +136,11 @@ export const BEHAVIORAL_KEYWORDS = new Set([...Object.values(KEYWORD_FAMILIES), 
    activated ability with the `attach` effect, and what the Equipment grants a static ability on the creature it is
    attached to (`attachedBy`). Cycling is "{cost}, discard this card: draw a card" activated from the hand (CR 702.29a),
    and typecycling the same searching for a card of the type (702.29e): built with activation from the hand (batch 9). */
-/* Keywords that are a deck rule, held at the table and never in the game: the partner abilities (CR 702.124), read from
-   the card's own words (cards/index.mjs, partnersIn) and held by room/table.mjs when a deck names two commanders. Not
-   "Partner with", which is also a trigger as the card enters (702.124j). */
-export const DECK_RULE_KEYWORDS = {Partner: "room/table.mjs", "Choose a Background": "room/table.mjs"};
+/* Keywords that are a deck rule, held at the table: the partner abilities (CR 702.124), read from the card's own words
+   (cards/index.mjs, partnersIn) and held by room/table.mjs when a deck names two commanders. "Partner with" (702.124j) is
+   also a trigger as the card enters, its target player searching for the partner it names (cards/index.mjs; Train C
+   phase 2). */
+export const DECK_RULE_KEYWORDS = {Partner: "room/table.mjs", "Choose a Background": "room/table.mjs", "Partner with": "room/table.mjs"};
 
 /* Keywords that are a way of casting or entering, held by the rules module named (Train B, X11):
    AlternateAdditionalCost -- "as an additional cost to cast this spell, sacrifice an artifact or discard a card" (Demand

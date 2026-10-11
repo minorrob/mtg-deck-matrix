@@ -123,8 +123,8 @@ export function partnersIn(text) {
 }
 
 /* The partner abilities a card script may name as keywords, each with what partnersIn reads from the card's words: Partner
-   and a named one ("Partner--Character select"), and Choose a Background. Not yet "Partner with [name]", which is also a
-   trigger as the card enters (702.124j), nor Doctor's companion. */
+   and a named one ("Partner--Character select"), and Choose a Background. "Partner with [name]" (702.124j) is also a trigger
+   as the card enters, compiled below (`partner with`); not yet Doctor's companion. */
 const DECK_RULES = {
   partner: {name: "Partner", kinds: ["partner", "text"]},
   "choose a background": {name: "Choose a Background", kinds: ["background"]},
@@ -1076,6 +1076,23 @@ export function compileScript(script) {
           modes: (only.modes ?? []).map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? [], ...(m.cost !== undefined ? {cost: m.cost} : {})}))} : null;
       if (modal && (ability.targets ?? []).length) problems.push("a modal spell chosen as it is cast names its targets in its modes, not beside them");
       spell = {id, text: ability.text, targets: ability.targets ?? [], effects: ability.effects, ...(modal ? {modal} : {}), ...(ability.additionalCost ? {additionalCost: ability.additionalCost} : {})};
+      return;
+    }
+    /* PARTNER WITH [NAME] (CR 702.124j; Pir, Imaginative Rascal): two abilities. A deck rule -- two legendary cards may be one's
+       commanders if each says "Partner with" the other (room/table.mjs, from `partners` above) -- and a triggered ability:
+       "When this permanent enters, target player may search their library for a card named [name], reveal it, put it into
+       their hand, then shuffle" -- the target player's "may" theirs to answer (a modal they choose, CR 603.5), the search
+       theirs too, and their library shuffled whether or not a card is found (CR 701.23). The name is the keyword's `name`, and
+       the card's words must say it. */
+    if (word === "partner with") {
+      const name = typeof ability.name === "string" ? ability.name.trim() : "";
+      if (!name || !partnersIn(script.oracleText).some((p) => p.kind === "with" && p.name.toLowerCase() === name.toLowerCase()))
+        problems.push(`${ability.text}: Partner with names the card, \`name\`, as the card's words do (CR 702.124j)`);
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.enters({who: "self"}), targets: [{what: "player"}],
+        effects: [{effect: "modal", chooser: {target: 0}, title: `Search your library for a card named ${name}?`, modes: [
+          {text: "Search", effects: [{effect: "chooseCard", zone: "library", who: {target: 0}, selector: {named: name}, to: "hand", reveal: true, shuffle: true}]},
+          {text: "Don't search", effects: []}]}]});
+      keywords.push("Partner with");
       return;
     }
     /* A PARTNER ABILITY (CR 702.124): a deck rule the table holds (room/table.mjs, from `partners` above), nothing for the

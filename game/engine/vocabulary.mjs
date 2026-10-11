@@ -185,7 +185,9 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   /* Tiered (CR 702.183): each mode its own additional cost (keywords/timing.mjs). */
   "tiered",
   /* Suspend (CR 702.62), from the hand (keywords/timing.mjs). */
-  "suspend"];
+  "suspend",
+  /* Partner with [name] (CR 702.124j): a deck rule and a trigger as it enters (cards/index.mjs). */
+  "partner with"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

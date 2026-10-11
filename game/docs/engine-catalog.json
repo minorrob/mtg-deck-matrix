@@ -9450,7 +9450,7 @@
      "top": 12,
      "all": 139,
      "blocks": 12,
-     "alone": 8
+     "alone": 9
     },
     {
      "kind": "count",
@@ -11770,10 +11770,10 @@
   },
   "Other keyword constructs": {
    "tally": {
-    "built": 9,
+    "built": 10,
     "partial": 0,
     "named": 1,
-    "missing": 6
+    "missing": 5
    },
    "entries": [
     {
@@ -11936,12 +11936,12 @@
      "kind": "keyword construct",
      "rule": null,
      "name": "Partner with",
-     "engine": null,
-     "status": "missing",
+     "engine": "Partner with",
+     "status": "built",
      "forge": "Partner with",
      "top": 1,
      "all": 52,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
