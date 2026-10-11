@@ -25,6 +25,9 @@ what to write down is in `docs/uat/playtest-findings.md`.
 6. **File findings as they happen**, one row each in the run's `playtest-findings.csv`, with `outcome` left empty.
 7. **Hand the run over:** the folder `docs/uat/<date>-playtest/`, holding the findings, the records and the
    screenshots the rows name. A run is 50 games.
+   - Before the folder is committed, keep one copy of each game and gzip it (`gzip -9`). A record is up to about
+     1 MB and a tenth of that gzipped, so a run's records come to a few MB. The triage tool reads `.json.gz` as it
+     reads `.json`.
 8. **The triage** is this side's step:
    - `node tools/playtest-triage.mjs docs/uat/<date>-playtest` replays every game and judges every seat's view at
      every answer;

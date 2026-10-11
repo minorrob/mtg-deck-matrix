@@ -23,7 +23,7 @@
  * four at a time (the first table D1-D4, the next D2-D5, and so on round). RECORDS=<run folder> makes every table a
  * playtest table, as staging's are, and after each natural end both people download the full record from the
  * board's game-over panel into <run folder>/records/, which tools/playtest-triage.mjs then replays and judges, as it
- * will Grok Bot's runs.
+ * will Grok Bot's runs. REAL_FIRST=<k> starts at table k, so two runs side by side play other pods, under other ids.
  */
 import assert from "node:assert/strict";
 import {readFileSync, mkdirSync, writeFileSync} from "node:fs";
@@ -40,8 +40,9 @@ const ok = (c, m) => {assert.ok(c, m); checks += 1; console.log(`  ok  ${m}`);};
 const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1; console.log(`  ok  ${m}`);};
 const DECK_ID = process.env.REAL_DECK_ID || "D5";
 assert.ok(/^(D2|D5)$/.test(DECK_ID), "REAL_DECK_ID must be D2 or D5, the completed committed deck lists");
-const GAMES = Number(process.env.REAL_GAMES || 1), RECORDS = process.env.RECORDS || "";
-assert.ok(Number.isInteger(GAMES) && GAMES >= 1, "REAL_GAMES is a number of tables, 1 or more");
+/* REAL_FIRST numbers the first table, so runs side by side play different pods under different match ids. */
+const GAMES = Number(process.env.REAL_GAMES || 1), FIRST = Number(process.env.REAL_FIRST || 1), RECORDS = process.env.RECORDS || "";
+assert.ok(Number.isInteger(GAMES) && GAMES >= 1 && Number.isInteger(FIRST) && FIRST >= 1, "REAL_GAMES is a number of tables, and REAL_FIRST the first one's number, each 1 or more");
 if (RECORDS) mkdirSync(path.join(RECORDS, "records"), {recursive: true});
 const SHOTS = process.env.UAT_SHOTS || "";
 if (SHOTS) mkdirSync(SHOTS, {recursive: true});
@@ -56,7 +57,7 @@ const cards = tableCards;
 const ROB = "rob@example.com", MAYA = "maya@example.com";
 let clock = Date.parse("2026-09-30T20:00:00Z");
 const objects = new Map(), frames = {[ROB]: [], [MAYA]: []}, sent = {};   /* sent[tableId][email:seat]: the deck the lobby sent */
-let nextId = 0, queue = Promise.resolve();
+let nextId = FIRST - 1, queue = Promise.resolve();
 const serial = (fn) => (queue = queue.then(fn, fn));
 const objectCtx = () => {
   const map = new Map(), sockets = [];
@@ -202,7 +203,7 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
     if(!moved) await rob.page.waitForTimeout(100);
   }
   const result=current(rob);
-  eq(result.status,'finished',`real ${DECK_ID} game finishes naturally`);
+  eq(result.status,'finished',`table ${n}: the real ${GAMES === 1 ? DECK_ID : 'decks\''} game finishes naturally`);
   eq(current(maya).status,'finished','second browser sees the same natural end');
   assert.notEqual(result.result?.reason,'ended early');
   eq(current(maya).result,result.result,'separate browser sessions agree on result');
@@ -231,7 +232,7 @@ try {
   const rob=await person(ROB,{width:1400,height:900});
   const maya=await person(MAYA,{width:1280,height:720});
   /* One table of the one deck; or n tables, the seven decks four at a time. */
-  for (let n = 1; n <= GAMES; n += 1) await journey(n,rob,maya,GAMES === 1 ? [deck,deck,deck,deck] : [0,1,2,3].map((j)=>DECKS[(n-1+j)%DECKS.length]));
+  for (let n = FIRST; n < FIRST + GAMES; n += 1) await journey(n,rob,maya,GAMES === 1 ? [deck,deck,deck,deck] : [0,1,2,3].map((j)=>DECKS[(n-1+j)%DECKS.length]));
 } finally {for (const alarm of alarms) clearInterval(alarm); await close();}
 console.log(`${DECK_ID} real browser: ${checks} checks passed`);
 process.exit(0);
