@@ -162,7 +162,7 @@ export function housePilot({seat, cards = () => null} = {}) {
         a spell, a face-down card turned up -- and no mana it would tap, which it does only in its own main phase with
         the stack empty. The room then passes for it without working out its view (game/room/room.mjs). */
     passes(actions, stackSize) {
-      return !actions.some((a) => a.kind === "play-land" || a.kind === "cast" || a.kind === "turn-face-up" || (a.kind === "activate" && a.loyalty !== undefined)
+      return !actions.some((a) => a.kind === "play-land" || a.kind === "cast" || a.kind === "turn-face-up" || a.kind === "suspend" || (a.kind === "activate" && a.loyalty !== undefined)
         || (a.kind === "activate-mana" && stackSize === 0));
     },
 
@@ -186,6 +186,10 @@ export function housePilot({seat, cards = () => null} = {}) {
       const untapped = actions.filter((a) => a.kind === "activate-mana" && !a.costChoice);
       if (best && best.x !== undefined && untapped.length && view.turnPlayerId === seat && MAIN.includes(view.phase) && view.stackSize === 0) return untapped[0];
       if (best) return best;
+      /* A card suspended from its hand (CR 702.62a), when the pool already pays its suspend cost and nothing is cast: it comes
+         back free in a few turns. */
+      const suspend = actions.find((a) => a.kind === "suspend");
+      if (suspend) return suspend;
       /* A manifested creature card of its own turned face up (CR 701.40b), when the pool already pays and nothing is cast. */
       const faceUp = actions.find((a) => a.kind === "turn-face-up");
       if (faceUp) return faceUp;
@@ -366,6 +370,19 @@ export function housePilot({seat, cards = () => null} = {}) {
         const rank = (o) => (isLand(yard.get(o.cardId)) ? -1 : manaValue(o.label.replace(/ \(\d+\)$/, "")));
         const order = options.map((o, i) => i).sort((a, b) => rank(options[a]) - rank(options[b]) || a - b);
         return {indices: firstOf(choice, order, min)};
+      }
+      /* Which counters to remove (Mabel, Bitter Recluse): from another player's permanent all it may but -1/-1 counters; from
+         its own, its -1/-1 counters alone -- and only as many others as it must. */
+      if (id.startsWith("remove-counters:") && options.length) {
+        const own = controllerIn(view, options[0].cardId) === seat, harmful = (i) => options[i].counter === "-1/-1";
+        const wanted = options.map((o) => o.index).filter((i) => own === harmful(i));
+        const rest = options.map((o) => o.index).filter((i) => !wanted.includes(i));
+        return {indices: [...wanted, ...rest].slice(0, Math.max(min, Math.min(max, wanted.length)))};
+      }
+      /* Where a counter moves (Forgotten Ancient): onto a creature of its own, else no more. */
+      if (id.startsWith("move-counters:") && options.length) {
+        const own = options.find((o) => o.cardId !== undefined && controllerIn(view, o.cardId) === seat);
+        return {indices: [(own ?? options[options.length - 1]).index]};
       }
       /* CR 616.1: which effect changes damage dealt to it or its own first -- the one that leaves the least. */
       if (id.startsWith("order-damage:") && options.length) {

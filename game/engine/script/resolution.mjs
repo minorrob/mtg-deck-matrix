@@ -129,9 +129,12 @@ export function runResolution(state, rng = null) {
     /* "IF YOU WOULD PROLIFERATE, PROLIFERATE TWICE INSTEAD" (Tekuthal, Inquiry Dominus; CR 614.1a, 701.34): replaced as it
        reaches the head, before anything is chosen, by as many proliferates as the replacements make (rules/statics.mjs,
        proliferateTimes) -- each its own choice of permanents and players, one after another (CR 701.34a). */
+    /* "PROLIFERATE X TIMES, where X is the number of planeswalker types among planeswalkers you control" (Tam, the
+       Possibility; CR 701.34a): `count`, counted as it reaches the head (CR 608.2h) -- that many proliferates, one after
+       another, each one the replacements may change; none, and nothing is done. */
     if (effect?.effect === "proliferate" && effect.replaced !== true) {
-      const times = proliferateTimes(state, resolving.context.controller);
-      if (times > 1) {
+      const times = proliferateTimes(state, resolving.context.controller) * (Number.isInteger(effect.count) ? effect.count : 1);
+      if (times !== 1) {
         resolving.queue.shift();
         resolving.queue.unshift(...Array.from({length: times}, () => ({...structuredClone(effect), replaced: true})));
         continue;
@@ -210,6 +213,14 @@ export function runResolution(state, rng = null) {
        counterKind). */
     else if ((effect?.effect === "putCounter" || effect?.effect === "moveCounters") && effect.counter === "chosen")
       resolving.queue[0] = {effect: "counterKind", then: effect};
+    /* "Remove up to three counters from another target creature or planeswalker" (Mabel, Bitter Recluse): which counters,
+       of any kinds, its controller chooses as it resolves (CR 608.2d; effects/asking.mjs, countersToRemove). */
+    else if (effect?.effect === "removeCounter" && effect.counter === "any" && effect.removing === undefined)
+      resolving.queue[0] = {effect: "countersToRemove", then: effect};
+    /* "You may move any number of +1/+1 counters from this creature onto other creatures" (Forgotten Ancient): where each
+       goes, its controller's choice as it resolves (effects/asking.mjs, countersOnto). */
+    else if (effect?.effect === "moveCounters" && effect.onto !== undefined)
+      resolving.queue[0] = {effect: "countersOnto", then: effect};
     /* CR 616.1: counters that two or more effects would change, where the order changes how many -- the permanent's
        controller chooses which applies first, before any is put on (effects/asking.mjs, orderCounters). */
     else if ((asked = counterQuestion(state, effect, resolving.context, effect?.counterOrders ?? {})))
@@ -322,6 +333,8 @@ function carryOn(state, outcome, rng) {
   if (!Array.isArray(outcome) && outcome.searched === true) state.resolving.context.searched = true;
   /* "Choose a creature type": the type, for the effects after it ("$chosen", script/bind.mjs). */
   if (!Array.isArray(outcome) && typeof outcome.chosen === "string") state.resolving.context.chosen = outcome.chosen;
+  /* "Choose a color": the color, for the effects after it ("$chosenColor", script/chosen.mjs). */
+  if (!Array.isArray(outcome) && typeof outcome.chosenColor === "string") state.resolving.context.chosenColor = outcome.chosenColor;
   /* "You may pay {X}" (Halo Forager; CR 107.3f): the X its payer chose and paid, for what follows -- "when you do, ... with
      mana value X". */
   if (!Array.isArray(outcome) && Number.isInteger(outcome.paidX)) state.resolving.context.x = outcome.paidX;

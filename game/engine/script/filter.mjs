@@ -36,7 +36,7 @@ import {usesThisTurn, valueCostOf} from "../state/index.mjs";
 import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf, subtypesOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {hasSubtype, isCreatureType} from "../keywords/types.mjs";
-import {protectedFrom} from "../rules/protection.mjs";
+import {protectedFrom, hexproofFrom} from "../rules/protection.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
 
 /* The steps after blockers are declared, in which an attacker is blocked or unblocked (CR 509.1h). */
@@ -208,6 +208,8 @@ function canBeTargetedBy(state, id, chooser, source = null) {
   if (keywords.includes("Hexproof") && controllerOf(state, id) !== chooser) return false;
   /* Protection (CR 702.16b; rules/protection.mjs): no target of a spell or ability from a source with the quality. */
   if (protectedFrom(state, {card: id}, source)) return false;
+  /* Hexproof from a color (CR 702.11d; rules/protection.mjs): no target of an opponent's spell or ability of that color. */
+  if (hexproofFrom(state, id, chooser, source)) return false;
   return true;
 }
 
@@ -340,11 +342,13 @@ export function compileSelector(selector) {
       if (state.objects[context.source]?.attachedTo !== id) return false;
     }
 
-    /* CR 109.5 */
+    /* CR 109.5 -- "other": another than the source, or, an ability's source gone, another than what it was as it last
+       existed (`lastKnown`, which the stack keeps for it: CR 113.7a, 608.2h) -- Reckless Bushwhacker's "other creatures you
+       control", the Bushwhacker shocked in response: every creature its controller still controls. */
     if (selector.another === true) {
-      if (context.source === undefined || context.source === null)
-        throw new Error("A selector using `another` needs the source it is another than (CR 109.5)");
-      if (id === context.source) return false;
+      const self = context.source ?? context.lastKnown?.cardId ?? null;
+      if (self === null) throw new Error("A selector using `another` needs the source it is another than (CR 109.5)");
+      if (id === self) return false;
     }
 
     if (selector.manaValue && !matchesManaValue(state, id, selector.manaValue, context)) return false;

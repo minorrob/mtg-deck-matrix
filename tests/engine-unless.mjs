@@ -194,9 +194,10 @@ function run(s, until) {
 
 /* ---- the measurement ---- */
 {
-  eq([missingFor({apis: ["Draw"], options: ["UnlessCost", "UnlessCostMana"]}), missingFor({apis: ["LoseLife"], options: ["UnlessCost", "UnlessCostDiscard"]})],
-    [[], [{kind: "option", name: "UnlessCostDiscard", why: "not built"}]],
-    "\"unless that player pays {1}\" is built; Painful Quandary's \"unless they discard a card\" is not");
+  eq([missingFor({apis: ["Draw"], options: ["UnlessCost", "UnlessCostMana"]}), missingFor({apis: ["LoseLife"], options: ["UnlessCost", "UnlessCostDiscard"]}),
+    missingFor({apis: ["LoseLife"], options: ["UnlessCost", "UnlessCostSac"]})],
+    [[], [], [{kind: "option", name: "UnlessCostSac", why: "not built"}]],
+    "\"unless that player pays {1}\" is built, and \"unless they discard a card\" (Train C phase 2); an unless-sacrifice is not");
 }
 
 console.log(`engine-unless: ${checks} checks passed — "unless a player pays" asked of the player named, paid by tapping for them or else the consequences in order; a reveal as a land enters; the first noncreature spell each turn.`);

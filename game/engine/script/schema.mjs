@@ -37,7 +37,7 @@ import {compileSelector} from "./filter.mjs";
 import {targetRefs} from "./bind.mjs";
 import {LAYERS} from "../rules/layers.mjs";
 import {STATIC_RULES, CANT_ATTACK_DEFENDERS} from "../rules/statics.mjs";
-import {amountProblems, AMOUNT_PARAMS} from "./amount.mjs";
+import {amountProblems, AMOUNT_PARAMS, isCounted} from "./amount.mjs";
 import {conditionProblems} from "./condition.mjs";
 import {isCreatureType} from "../keywords/types.mjs";
 import {parseManaCost} from "../rules/mana.mjs";
@@ -98,11 +98,19 @@ function checkEffect(effect, path, errors) {
     if (keys.length === 1 && FACT_KEYS.includes(keys[0]) && Number.isInteger(value[keys[0]]?.target)) continue;
     for (const message of amountProblems(value)) errors.push({path: `${path}.${key}`, message});
   }
+  /* "Each player ... discards half the cards in their hand, then sacrifices half the permanents they control" (Pox Plague;
+     effects/asking.mjs): a count counted for each player as they are asked -- on a discard or a sacrifice of a counted
+     amount, nothing whole, at random or kept. */
+  if (effect.perPlayer !== undefined && (effect.perPlayer !== true || !["discard", "sacrifice"].includes(name) || !isCounted(effect.count)
+    || ["all", "random", "keep", "keepTypes", "keepPowerAtMost"].some((key) => effect[key] !== undefined)))
+    errors.push({path: `${path}.perPlayer`, message: "perPlayer is true, on a discard or a sacrifice whose count is counted for each player"});
   /* An effect's own condition ("if this spell was cast from a graveyard", "if you do"; resolution.mjs asks it): closed, as
      an ability's is -- an unknown key refused here rather than read as true. */
   for (const message of conditionProblems(effect.condition)) errors.push({path: `${path}.condition`, message});
-  /* A reflexive trigger's own targets (CR 603.12): selectors, and every `{target: n}` its effects name declared among them. */
+  /* A reflexive trigger's own targets (CR 603.12): selectors, and every `{target: n}` its effects name declared among them.
+     What it is about: this resolution's, or what the effect before it remembered (`about: "remembered"`). */
   if (name === "immediateTrigger") {
+    if (effect.about !== undefined && effect.about !== "remembered") errors.push({path: `${path}.about`, message: "A reflexive trigger is about what its resolution is, or `about: \"remembered\"`"});
     for (const [index, spec] of (effect.targets ?? []).entries()) {
       /* A counted one ("up to that many target ...", CR 601.2c): its count beside the selector, its most a number or X. */
       const {count, ...selector} = spec && typeof spec === "object" ? spec : {};
@@ -215,8 +223,16 @@ function checkEffect(effect, path, errors) {
      or "chosen", its controller's choice among the kinds there (effects/asking.mjs, counterKind). */
   if (name === "moveCounters") {
     if (effect.from === undefined) errors.push({path: `${path}.from`, message: "moveCounters says what it moves counters from: `from`, an object"});
-    if (effect.targets === undefined) errors.push({path: `${path}.targets`, message: "moveCounters says what it moves them onto: `targets`, an object"});
+    if ((effect.targets === undefined) === (effect.onto === undefined)) errors.push({path: `${path}.targets`, message: "moveCounters says what it moves them onto: `targets`, an object, or `onto`, what its controller may choose among"});
     if (typeof effect.counter !== "string") errors.push({path: `${path}.counter`, message: "moveCounters names the kind of counter it moves, or \"chosen\" for its controller's choice"});
+    /* "Move any number of +1/+1 counters from this creature onto other creatures" (Forgotten Ancient): `onto`, a selector of
+       the permanents, with `anyNumber` and a kind named (effects/asking.mjs, countersOnto). */
+    if (effect.onto !== undefined) {
+      checkSelector(effect.onto, `${path}.onto`, errors);
+      if (effect.anyNumber !== true || effect.counter === "chosen" || effect.count !== undefined)
+        errors.push({path: `${path}.onto`, message: "Counters moved onto permanents chosen as it resolves are any number (`anyNumber: true`) of a kind named, with no count"});
+    }
+    if (effect.anyNumber !== undefined && effect.onto === undefined) errors.push({path: `${path}.anyNumber`, message: "anyNumber goes with `onto`"});
   }
   /* A designation (alterAttribute, script/effects/attributes.mjs): monstrous or prepared. */
   if (name === "alterAttribute" && !["monstrous", "prepared"].includes(effect.attribute))
@@ -295,9 +311,13 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
   if (modal) {
     for (const [m, mode] of (modal.modes ?? []).entries()) {
       for (const [index, spec] of (mode.targets ?? []).entries()) {
-        const {count, ...selector} = spec && typeof spec === "object" ? spec : {};
+        const {count, differentControllers, ...selector} = spec && typeof spec === "object" ? spec : {};
         if (count !== undefined && !countValid(count))
           errors.push({path: `${path}.effects[0].modes[${m}].targets[${index}].count`, message: "A target's count is `{min, max}`"});
+        /* "Any number of target tapped creatures with different controllers" (Cloud's Limit Break's Blade Beam): a mode's
+           counted target may say it, as an ability's may (script/bind.mjs). */
+        if (differentControllers !== undefined && !(differentControllers === true && count !== undefined))
+          errors.push({path: `${path}.effects[0].modes[${m}].targets[${index}].differentControllers`, message: "\"Controlled by different players\" is differentControllers: true, on a counted target"});
         if (spec && typeof spec === "object" && "anyOf" in spec) (selector.anyOf ?? []).forEach((one, at) => checkSelector(one, `${path}.effects[0].modes[${m}].targets[${index}].anyOf[${at}]`, errors));
         else checkSelector(spec && typeof spec === "object" ? selector : spec, `${path}.effects[0].modes[${m}].targets[${index}]`, errors);
       }

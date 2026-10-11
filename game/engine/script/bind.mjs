@@ -51,7 +51,7 @@
 
 import {compileSelector, selectMatching} from "./filter.mjs";
 import {powerOf, toughnessOf, controllerOf} from "../rules/layers.mjs";
-import {namesChosen, withChosen} from "./chosen.mjs";
+import {namesChosen, withChosen, namesChosenColor, withChosenColor} from "./chosen.mjs";
 import {valueCostOf, shownName} from "../state/index.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {amountOf, AMOUNT_PARAMS} from "./amount.mjs";
@@ -309,7 +309,9 @@ function playersOf(value, context, state = null) {
    ability's permanent chose as it entered -- wherever an effect names it. */
 export function bindEffect(effect, context, state = null) {
   if (!effect || typeof effect !== "object") return effect;
-  const bound = namesChosen(effect) ? withChosen(effect, context.chosen) : {...effect};
+  const chosen = namesChosen(effect) ? withChosen(effect, context.chosen) : {...effect};
+  /* And "that color", chosen earlier in this resolution (script/chosen.mjs, "$chosenColor"). */
+  const bound = namesChosenColor(effect) ? withChosenColor(chosen, context.chosenColor) : chosen;
   /* Facts first: a number for an amount, a player where a player goes. */
   for (const [key, value] of Object.entries(bound)) {
     /* Who chooses by `ownerOf` is the owner as the object now is (below), not a fact read as the resolution began. */
@@ -341,6 +343,8 @@ export function bindEffect(effect, context, state = null) {
     bound.selector = {...bound.selector, controller: player ?? -1};
   }
   if ("spells" in bound) bound.spells = objectsOf(bound.spells, context);
+  /* "Create a Royal Role token attached to that creature" (Royal Treatment): what the token enters attached to. */
+  if ("attachedTo" in bound) bound.attachedTo = objectsOf(bound.attachedTo, context);
   /* "Until this card is cast from exile" (Emrakul, the Exigent Doom): which card's cast ends it. */
   if ("untilCast" in bound) bound.untilCast = objectsOf(bound.untilCast, context);
   /* "Counter that spell or ability" (ward): the stack entry the trigger is about, by its stack id (rules/trigger.mjs). */
@@ -355,11 +359,14 @@ export function bindEffect(effect, context, state = null) {
   if ("from" in bound) bound.from = objectsOf(bound.from, context);
   /* What is attached, when it is not the ability's source: "you may attach it to target creature you control" (Sigarda's
      Aid, "it" the Equipment that entered). Gone, it is nothing -- never the source in its place. */
-  if (typeof bound.source === "string") { const [id] = objectsOf(bound.source, context); bound.source = id ?? -1; }
+  /* "Attach target Equipment you control to up to one target creature you control" (Iron Hills Stalwart; CR 701.3a): one of
+     the ability's targets -- illegal as it resolves, it is nothing, and nothing moves (CR 608.2b). */
+  if (typeof bound.source === "string" || isRef(bound.source)) { const [id] = objectsOf(bound.source, context); bound.source = id ?? -1; }
   if ("who" in bound) bound.who = playersOf(bound.who, context, state);
   /* "Target opponent creates a 1/1 Spirit" (Forbidden Orchard): a token's controller, a target player -- or no one. "That
-     creature's controller creates a 1/1 Myr" (Genesis Chamber): the controller of what the trigger is about. */
-  /* "Each opponent may create X ... tokens" (Tempt with Vengeance): that opponent's, the player a repetition is about. */
+     creature's controller creates a 1/1 Myr" (Genesis Chamber): the controller of what the trigger is about. "Each opponent
+     creates a 1/1 white Human creature token" (Slaughter Specialist; CR 111.2), "each opponent may create X ... tokens"
+     (Tempt with Vengeance): "that player", the one a repetition is about (effects/index.mjs, repeatFor). */
   if (isRef(bound.controller) || bound.controller === "that card's controller" || bound.controller === "that player") { const [player] = playersOf(bound.controller, context, state); bound.controller = player ?? -1; }
   /* "That attacking player creates a ... token" (Combat Calligrapher): the player whose attack the trigger is about. */
   if (bound.controller === "attacking player") bound.controller = Number.isInteger(context.about?.attacker) ? context.about.attacker : -1;
@@ -398,21 +405,39 @@ export function bindEffect(effect, context, state = null) {
  * reveal cards ... until you reveal that many creature cards" (Synthetic Destiny).
  */
 const THIS_WAY = ["rememberedCount", "lifeLostThisWay", "cardTypesAmong"];
-export function rememberNow(effects, context, {keepThat = false, state = null} = {}) {
+/* An effect's counts of this resolution ("that many" of what the effect before it did), counted now. */
+function thisWayNow(bound, context, state) {
+  for (const key of AMOUNT_PARAMS)
+    if (bound[key] && typeof bound[key] === "object" && THIS_WAY.some((kind) => kind in bound[key])) bound[key] = amountOf(state, bound[key], context);
+  return bound;
+}
+/* Each effect, and those nested in it -- a branch's, a repetition's, a modal's modes' -- as `one` makes it. */
+function walkEffects(effects, one) {
   const walk = (effect) => {
     if (!effect || typeof effect !== "object") return effect;
-    const kept = {};
-    if (keepThat) for (const key of ["targets", "spells", "who", "toPlayer", "chooser"])
-      if (["that card", "that player", "that card's controller"].includes(effect[key])) kept[key] = effect[key];
-    const bound = {...bindEffect(effect, context), ...kept};
-    for (const key of AMOUNT_PARAMS)
-      if (bound[key] && typeof bound[key] === "object" && THIS_WAY.some((kind) => kind in bound[key])) bound[key] = amountOf(state, bound[key], context);
+    const bound = one(effect);
     for (const key of ["effects", "then", "otherwise"]) if (Array.isArray(bound[key])) bound[key] = bound[key].map(walk);
     if (Array.isArray(bound.modes)) bound.modes = bound.modes.map((mode) => ({...mode, effects: (mode.effects ?? []).map(walk)}));
     return bound;
   };
   return (effects ?? []).map(walk);
 }
+export function rememberNow(effects, context, {keepThat = false, state = null} = {}) {
+  return walkEffects(effects, (effect) => {
+    const kept = {};
+    if (keepThat) for (const key of ["targets", "spells", "who", "toPlayer", "chooser"])
+      if (["that card", "that player", "that card's controller"].includes(effect[key])) kept[key] = effect[key];
+    return thisWayNow({...bindEffect(effect, context), ...kept}, context, state);
+  });
+}
+
+/**
+ * A REFLEXIVE TRIGGER'S "THAT MANY" (CR 603.12): "When one or more nonland cards are exiled this way, put that many +1/+1
+ * counters on target attacking creature" (Augusta, Order Returned) -- how many the resolution that made it did, counted
+ * as it triggers, while there is that resolution to count; by the time it resolves there is only its own (effects/
+ * permanents.mjs, immediateTrigger). Nothing else is bound: its targets are its own, chosen as it goes on the stack.
+ */
+export const countThisWay = (effects, context, state) => walkEffects(effects, (effect) => thisWayNow({...effect}, context, state));
 
 /**
  * A MODAL SPELL'S CHOSEN MODES AS ONE SCRIPT (CR 700.2): their targets in the order chosen, and their effects with each
