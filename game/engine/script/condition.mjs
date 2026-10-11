@@ -168,8 +168,10 @@ export function conditionHolds(state, condition, {controller, source = null, abo
     }
   }
   if (condition.cast !== undefined && !castHolds(condition.cast, cast)) return false;
-  /* "Khans -- ...": what its permanent chose as it entered (the Sieges). */
-  if (condition.chosen !== undefined && (source === null || state.objects[source]?.chosen !== condition.chosen)) return false;
+  /* "Khans -- ...": what its permanent chose as it entered (the Sieges) -- or, gone, as it last was: Outpost Siege destroyed
+     with the creatures its Dragons watches sees them leave (CR 603.10a; rules/trigger.mjs passes its last known
+     information). Asked as it triggers, never as it resolves (rules/trigger.mjs, scriptOf). */
+  if (condition.chosen !== undefined && ((source !== null && state.objects[source] ? state.objects[source].chosen : lastKnown?.chosen) ?? null) !== condition.chosen) return false;
   /* "Sacrifice it unless it escaped" (Uro; CR 702.138b): whether its own permanent was cast with escape (rules/stack.mjs). */
   if (condition.escaped !== undefined && ((source !== null && state.objects[source]?.escaped === true) !== condition.escaped)) return false;
   /* "If its evoke cost was paid" (CR 702.74a): whether its own permanent was cast for its evoke cost (rules/stack.mjs). */

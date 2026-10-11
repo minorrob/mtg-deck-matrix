@@ -647,7 +647,8 @@ export function collectTriggers(state, events) {
         /* At its Class level as it last was (CR 716.2a, 603.10a). */
         if (Number.isInteger(ability.level) && (gone.level ?? 1) < ability.level) continue;
         if (!matches(state, event, ability.trigger, gone.cardId, gone.controller)) continue;
-        if (!conditionHolds(state, ability.condition, {controller: gone.controller, source: gone.cardId})) continue;
+        /* Its condition as it last was, too: the mode a Siege chose (CR 603.10a; script/condition.mjs). */
+        if (!conditionHolds(state, ability.condition, {controller: gone.controller, source: gone.cardId, lastKnown: gone})) continue;
         /* Dying with the rest, it sees them all (CR 603.10a) -- once, for "one or more". */
         const about = event.data?.fields?.becomes !== undefined ? {card: event.data.fields.becomes} : {};
         if (ability.trigger.batch && joined(`${gone.cardId}:${ability.id}`, about)) continue;
@@ -676,8 +677,13 @@ export function collectTriggers(state, events) {
 
 /* A scripted trigger's effects, for the stack entry; nothing for a kernel trigger that has none. */
 /* A modal trigger's modes travel with it, to be chosen as it is put on the stack (CR 603.3c). */
+/* Its condition goes with it as its intervening "if", asked again as it resolves (CR 603.4; rules/stack.mjs) -- all of it
+   but the mode its permanent chose ("Dragons -- Whenever a creature you control leaves the battlefield", Outpost Siege):
+   that says whether the permanent has the ability, asked as it triggers, and once triggered the ability resolves whether
+   or not its source is still there (CR 113.7a). */
+const stackCondition = ({chosen: _mode, ...rest}) => (Object.keys(rest).length ? {condition: rest} : {});
 const scriptOf = (ability) => ((ability.effects ?? []).length || ability.modal ? {script: {targets: ability.targets ?? [], effects: ability.effects ?? [],
-  ...(ability.condition ? {condition: ability.condition} : {}), ...(ability.modal ? {modal: ability.modal} : {})}} : {});
+  ...(ability.condition ? stackCondition(ability.condition) : {}), ...(ability.modal ? {modal: ability.modal} : {})}} : {});
 
 /** How many triggers are waiting to go on the stack. */
 export const pendingCount = (state) => (state.pendingTriggers ?? []).length;
