@@ -1,0 +1,263 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "The Misty Mountains Cold",
+    "oracleId": "c50282bd-4b57-4c7b-9598-ea67ba49248b",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Saga"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after IV.)\nI, II, III, IV — Create a Treasure token. Then if you control four or more Treasures, sacrifice this Saga. If you do, create a 6/6 red Dragon creature token with flying. (A Treasure token is an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "As this Saga enters and after your draw step, add a lore counter. Sacrifice after IV.",
+      "keyword": "saga"
+    },
+    {
+      "kind": "triggered",
+      "text": "I, II, III, IV — Create a Treasure token. Then if you control four or more Treasures, sacrifice this Saga. If you do, create a 6/6 red Dragon creature token with flying.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 1
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Treasure"
+          }
+        },
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "sacrifice": true,
+          "remember": true,
+          "condition": {
+            "present": {
+              "what": "permanent",
+              "subtypes": [
+                "Treasure"
+              ],
+              "controller": "you"
+            },
+            "atLeast": 4
+          }
+        },
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Dragon",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Dragon"
+            ],
+            "colors": [
+              "R"
+            ],
+            "power": 6,
+            "toughness": 6,
+            "keywords": [
+              "Flying"
+            ]
+          },
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "I, II, III, IV — Create a Treasure token. Then if you control four or more Treasures, sacrifice this Saga. If you do, create a 6/6 red Dragon creature token with flying.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 2
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Treasure"
+          }
+        },
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "sacrifice": true,
+          "remember": true,
+          "condition": {
+            "present": {
+              "what": "permanent",
+              "subtypes": [
+                "Treasure"
+              ],
+              "controller": "you"
+            },
+            "atLeast": 4
+          }
+        },
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Dragon",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Dragon"
+            ],
+            "colors": [
+              "R"
+            ],
+            "power": 6,
+            "toughness": 6,
+            "keywords": [
+              "Flying"
+            ]
+          },
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "I, II, III, IV — Create a Treasure token. Then if you control four or more Treasures, sacrifice this Saga. If you do, create a 6/6 red Dragon creature token with flying.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 3
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Treasure"
+          }
+        },
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "sacrifice": true,
+          "remember": true,
+          "condition": {
+            "present": {
+              "what": "permanent",
+              "subtypes": [
+                "Treasure"
+              ],
+              "controller": "you"
+            },
+            "atLeast": 4
+          }
+        },
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Dragon",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Dragon"
+            ],
+            "colors": [
+              "R"
+            ],
+            "power": 6,
+            "toughness": 6,
+            "keywords": [
+              "Flying"
+            ]
+          },
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "I, II, III, IV — Create a Treasure token. Then if you control four or more Treasures, sacrifice this Saga. If you do, create a 6/6 red Dragon creature token with flying.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 4
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Treasure"
+          }
+        },
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "sacrifice": true,
+          "remember": true,
+          "condition": {
+            "present": {
+              "what": "permanent",
+              "subtypes": [
+                "Treasure"
+              ],
+              "controller": "you"
+            },
+            "atLeast": 4
+          }
+        },
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Dragon",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Dragon"
+            ],
+            "colors": [
+              "R"
+            ],
+            "power": 6,
+            "toughness": 6,
+            "keywords": [
+              "Flying"
+            ]
+          },
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ]
+    }
+  ]
+}
