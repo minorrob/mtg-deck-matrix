@@ -138,6 +138,13 @@ function checkEffect(effect, path, errors) {
     if (effect.sacrifice !== undefined || effect.discard !== undefined)
       errors.push({path: `${path}.returnToHand`, message: "An \"unless\" cost returns a permanent, sacrifices one or discards a card: one of them"});
   }
+  /* "You may tap another untapped Merfolk you control" (Meanders Guide): a selector of the payer's permanents, the cost's only
+     part beside mana or life. */
+  if (name === "unlessPays" && effect.tap !== undefined) {
+    checkSelector(effect.tap, `${path}.tap`, errors);
+    if (effect.sacrifice !== undefined || effect.discard !== undefined || effect.returnToHand !== undefined)
+      errors.push({path: `${path}.tap`, message: "An \"unless\" cost taps a permanent, returns one, sacrifices one or discards a card: one of them"});
+  }
   /* "You may pay {X}. When you do, ..." (Halo Forager): X chosen as it is paid, so no amount beside it, and only a "you may". */
   if (name === "unlessPays" && effect.amountX !== undefined && !(effect.amountX === true && effect.ifPaid === true && effect.amount === undefined && effect.mana === undefined))
     errors.push({path: `${path}.amountX`, message: "\"You may pay {X}\" is `amountX: true` with `ifPaid: true`, and no amount or mana beside it"});
@@ -355,6 +362,11 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
        the planeswalkers they control too. Attacking one of those is not attacking them (rules/statics.mjs). */
     if (ability.planeswalkers !== undefined && (ability.planeswalkers !== true || !(ability.rule === "attack-tax" || (ability.rule === "cant-attack" && ability.defender === "you"))))
       errors.push({path: `${path}.planeswalkers`, message: "\"Or planeswalkers you control\" is planeswalkers: true, on a tax on attacking you or a restriction on attacking you"});
+    /* A card's own restriction on casting it (Proft, Sinister Mastermind): what lets it be cast, a condition, said. */
+    if (ability.rule === "cant-cast-self") {
+      if (ability.unless === undefined) errors.push({path: `${path}.unless`, message: "\"You can't cast this spell unless ...\" says what: `unless`, a condition"});
+      else for (const message of conditionProblems(ability.unless)) errors.push({path: `${path}.unless`, message});
+    }
     /* What a chosen target must be for the spell to cost less (CR 601.2f): "if it targets an attacking creature" (Run Behind). */
     if (ability.rule === "this-costs-less" && ability.targeting !== undefined) checkSelector(ability.targeting, `${path}.targeting`, errors);
     if (ability.rule === "cant-be-blocked-by") {

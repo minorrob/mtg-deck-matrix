@@ -115,6 +115,10 @@ export const STATIC_RULES = Object.freeze({
   "doesnt-untap": "rules/turn.mjs",
   /** "Lands you control enter untapped" (Horizon Explorer): entersUntapped, as a land arrives. effects/zones.mjs. */
   "lands-enter-untapped": "script/effects/zones.mjs",
+  /** "Threshold -- You can't cast this spell unless there are seven or more cards in your graveyard" (Proft, Sinister
+      Mastermind; CR 601.2): the card's own restriction, `unless` the condition that lets it be cast, asked of its caster
+      wherever the card would be cast from -- a hand, the command zone, a graveyard. castForbidden, below. */
+  "cant-cast-self": "rules/actions.mjs",
   /** "You may cast this card from your graveyard or from exile" (Squee): the card's own, read where it is. rules/actions.mjs. */
   "cast-self-from": "rules/actions.mjs",
   /** "You have hexproof" (Crystal Barricade; CR 702.11c): its controller can't be the target of spells or abilities their
@@ -235,6 +239,9 @@ export function freeCast(state, player, cardId) {
 export function castForbidden(state, player, cardId) {
   const object = state.objects[cardId];
   if (!object) return false;
+  /* THE CARD'S OWN (cant-cast-self): "you can't cast this spell unless there are seven or more cards in your graveyard". */
+  for (const own of object.abilities ?? [])
+    if (own.kind === "static" && own.rule === "cant-cast-self" && !conditionHolds(state, own.unless, {controller: player, source: cardId})) return true;
   /* AN EFFECT WITH A DURATION (effects/permanents.mjs, effectUntil's `rule: "cant-cast"`): "that creature's owner can't cast
      spells with the same name as that creature until your next turn" (Reflector Mage) -- the players it names, and the
      spells `spells` describes (a name, CR 201.2a), from any zone they would be cast from. */
