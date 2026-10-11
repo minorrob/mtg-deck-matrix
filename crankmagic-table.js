@@ -21,20 +21,22 @@
 (globalThis.CrankFeatures ||= []).push(function (C) {
   const {esc: e, button: b, actions, views} = C;
   /* HELP: THE TABLE AND THE BOARD, the keys among it (the accessibility pass, docs/plan-to-done-2026-09-30.md Part 6):
-     from the lobby's head and from the board's menu. */
+     from the lobby's head and from the board's menu. The keys are the ones crankmagic-board.js's handlers bind, saying
+     what they do there; tests/a11y-board.mjs reads both and holds them to each other. */
   C.HELP.table = {title: "Play: the table and the board", body: `<div class="cm-help"><h3>The table</h3>
     <p>Up to four seats. Invite people by link, QR code or email, or seat an AI. Everyone brings a deck from their own library and marks Ready, and the host starts the countdown. The host can change the table's rules (starting life, bracket limit) until a seat is ready.</p>
     <h3>The board</h3>
     <p><strong>Table</strong> shows every board at once. <strong>Focus</strong> puts one board on the mat, beside the seats. <strong>Full screen</strong> gives the game the whole screen. The pass button says what passing will do: <em>Next step</em>, <em>Resolve</em> and the spell's name, or <em>Pass</em>. Your draw happens by itself, and a spell you cast resolves unless someone responds; to be asked first, turn on <em>Hold priority after I cast</em> in Tools. A step where you have nothing to do passes by itself, and the history says so.</p>
     <h3>Keys</h3>
     <ul class="cm-help-keys">
-      <li><kbd>Tab</kbd> moves through the strip, then the boards, then your hand. <kbd>Enter</kbd> or <kbd>Space</kbd> presses what has the focus.</li>
-      <li><kbd>Space</kbd>, with nothing focused, fans your hand. <kbd>1</kbd>–<kbd>9</kbd> holds that card up, <kbd>Enter</kbd> does its first thing, and <kbd>Escape</kbd> puts it back.</li>
-      <li><kbd>Escape</kbd> steps back: a held card, the fanned hand, an open menu, the Panel, full screen.</li>
-      <li><kbd>⌘</kbd>/<kbd>Ctrl</kbd> <kbd>+</kbd> and <kbd>−</kbd> change the card size.</li>
-      <li>On a divider (the bar between the rows, the one atop your hand, the Panel's, the side column's), <kbd>↑</kbd> and <kbd>↓</kbd> move it. On the seat pane's edge, <kbd>←</kbd> and <kbd>→</kbd> move it.</li>
+      <li><kbd>Tab</kbd> and <kbd>Shift</kbd>+<kbd>Tab</kbd> move through the board in the order it is laid out: the strip, the seats, the boards, what the table asks you, then your hand. <kbd>Enter</kbd> or <kbd>Space</kbd> presses what has the focus.</li>
+      <li><kbd>Space</kbd>, with nothing focused, fans your hand, and in the fanned hand puts it away. While it is fanned, <kbd>1</kbd>–<kbd>9</kbd> holds that card up, and <kbd>Enter</kbd> does the held card's first thing (or presses the button that has the focus).</li>
+      <li><kbd>Escape</kbd> puts away the card shown large, and steps back one thing a press: an open menu (History, Tools, ☰, the steps, You can also); the Coach; a held card, back into the fan; the fanned hand; the Panel; then full screen. In a dialog, it closes the dialog.</li>
+      <li><kbd>⌘</kbd>/<kbd>Ctrl</kbd> <kbd>+</kbd> and <kbd>−</kbd> make the cards 10% larger or smaller.</li>
+      <li>On a divider (the bar between the rows, the one atop your hand, the Panel's, the side column's), <kbd>↑</kbd> and <kbd>↓</kbd> move it. On the seat pane's edge, and on the bar between two boards side by side, <kbd>←</kbd> and <kbd>→</kbd> move it.</li>
+      <li>In the Coach, <kbd>Enter</kbd> sends your question, and <kbd>Shift</kbd>+<kbd>Enter</kbd> starts a new line.</li>
     </ul>
-    <p>Every card says its name and state to a screen reader: tapped, its power and toughness, damage, counters, and what it can do now. The card shown large under the pointer is announced as well. Sound starts at your first click on the board, and Tools › Sound sets it.</p></div>`};
+    <p>Every card says its name and what is shown on it to a screen reader: tapped, its power and toughness, damage, counters, attacking or blocking, chosen or selected, and what it can do now; a face-down card is said to be one, and nothing more. Each question the table asks you is said as it arrives, and so is the card shown large under the pointer. Sound starts at your first click on the board, and Tools › Sound sets it.</p></div>`};
   const cloudPlay = () => document.querySelector('meta[name="crankmagic-play"]')?.content === "cloud"
     && document.querySelector('meta[name="crankmagic-accounts"]')?.content === "on";
   const POLL_MS = 2000;
@@ -259,9 +261,12 @@
       const {state, inner} = seatBox(s, t);
       return art.quadrant(corner, s.you ? "is-you" : "", [], state, inner);
     }).join("");
-    C.main.innerHTML = C.pageHead("Play", "", "table", `<p class="cm-muted">${t.youAreHost ? "Your table." : "You were invited to this table."} Four seats at most; it starts when everyone is ready.</p>`)
-      + (t.phase === "rematch" ? gamePanel() : "")
-      + `<div class="cm-lobby-table cm-cloud-table" data-phase="${e(t.phase)}">${seats}${centerPanel(t)}</div>`;
+    /* Drawn anew, the lobby keeps the focus on the control the keyboard was on (the accessibility pass). */
+    C.keepFocus(C.main, () => {
+      C.main.innerHTML = C.pageHead("Play", "", "table", `<p class="cm-muted">${t.youAreHost ? "Your table." : "You were invited to this table."} Four seats at most; it starts when everyone is ready.</p>`)
+        + (t.phase === "rematch" ? gamePanel() : "")
+        + `<div class="cm-lobby-table cm-cloud-table" data-phase="${e(t.phase)}">${seats}${centerPanel(t)}</div>`;
+    });
     art.startSeas();
   }
 
@@ -293,8 +298,9 @@
     if (!id) return newTable(params.get("deck"));
     let stop = false, timer = null;
     const tick = () => {
-      const seconds = document.getElementById("cm-table-seconds");
-      if (seconds && current && current.countdownAt) seconds.textContent = String(Math.max(0, Math.ceil((current.countdownAt - tableNow()) / 1000)));
+      const seconds = document.getElementById("cm-table-seconds"), left = current && current.countdownAt ? String(Math.max(0, Math.ceil((current.countdownAt - tableNow()) / 1000))) : null;
+      /* written only when it changes: the count is a live region, said each time it is written */
+      if (seconds && left !== null && seconds.textContent !== left) seconds.textContent = left;
     };
     const loop = async () => {
       if (stop) return;

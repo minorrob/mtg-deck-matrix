@@ -18,6 +18,7 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | G-A: G1, 1,400 games | **done: 1,400 of 1,400 clean** | PR #686's head ccb250d1: every game finished, none refused, every replay identical, 0 leaks in 105,656 checks of every seat's view |
 | G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**, with a daily cap of its own ($1.50, released at 905394dc); **AI-2's L1 built** (Normal and Easy, measured against L0: Normal 61%, Easy 56%, L0 itself 51%); **the LLM seat built behind its switch**, its privacy wording Rob's to approve; **AI-5 built and on staging** (each deck says whether the table can play it; Play this deck); **AI-4, the deck advisor, built behind its switch**, its privacy wording Rob's to approve; **AI-3's Train C done: 1,130 of Rob's 1,132 cards play** (the two left, each with its reason), Rob's to confirm; **AI-6, AI Coach settings, built** | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
 | G-A: M3's monitoring and backups | **monitoring built** (Workers Logs keeps the Worker's own 5xx and sync-conflict lines; `tools/ops-week.mjs`, the weekly check); Time Travel confirmed, 30 days | **Rob:** the two alerts and their email; R2 turned on, the nightly copy's window and what deletion promises (`docs/ops.md`) |
+| G-A: the A11y pass | **done**: WCAG 2.1 AA on the board and the lobby, measured from the screen's pixels | `tests/a11y-board.mjs` 288 checks, 72 breaks caught (the A11y record below) |
 | G-B: the whole gate green twice on main | done | dispatched Tests runs on main, every suite: 2499 on def8fa89 and 2503 on eff40fdc, both green |
 | G-B: `play-e2e` under wrangler dev | done | 35 checks at every staging release |
 | G-B: hidden information in every frame | done | `play-journeys` reads every frame to both people; G1's oracle 102,879 checks, no leak |
@@ -968,3 +969,26 @@ before Train C; 305 of the other 307 are now defined, each with scenarios that c
 - **Found and fixed on the way** (each from a check that failed first): step-beginning triggers lost when the step's
   turn-based action asks (a held draw, declare attackers or blockers) -- live tables; a negative printed power read as
   null; an adventurer card changed just by listing what it may do; an attack tax the house pilot couldn't pay.
+
+**#700 merged on main cd3c794a on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 6eac25f9 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 10:10:30 UTC as
+version 0261051e, its `play-worker.js` byte-identical to the release's dry-run bundle (3,301,891 bytes, sha256
+f236861e…; it grew with the engine from 2,825,718, and is 647 KiB gzipped). Its AI bindings are the Coach's alone. So
+staging's table plays 1,130 of Rob's 1,132 library cards.
+
+**The A11y pass: WCAG 2.1 AA on the board and the lobby (2026-10-11).** The new suite, run first against the base,
+failed in 172 places; it now passes 288 checks.
+- **Contrast (1.4.3, 1.4.11):** each word is measured from the screen's pixels over all 30 playmats, both themes and
+  all three views. The worst went from 1.07:1 (the hand's "3/3", light) to 4.77:1. The focus rings are two-tone, and
+  the 24 that vanished on light or mid-tone art now meet 3:1 along 97-100% of their edge. Tokens only, no raw hex.
+- **Focus (2.4.3, 2.4.7, 2.1.1, 2.1.2):** the page behind the board no longer takes Tab, Table view tabs in reading
+  order, focus survives each redraw, menus say `aria-expanded`, and modals trap and return focus.
+- **Keys in Help (2.1.1):** every key the board binds, checked against the handlers.
+- **Card names (1.1.1, 4.1.2):** combat state, chosen and selected; a face-down permanent is "Face-down creature",
+  never its name; a check scans every name and label for hidden cards.
+- **Announced (4.1.2, 4.1.3):** one polite status region beside the board, and the dialogs named and modal.
+- **Proof:** `tests/a11y-board.mjs` 288 checks, 72 breaks caught; `table-board`, `table-lobby`, `browser-geometry`,
+  `page-budget`, `play-journeys` (82) and the rest green. `table-board`'s Coach-under-the-log check measures the side
+  column as it scrolls now.
+- **Left:** "token" and "summoning sick" in a card's name (the engine's projection carries neither); primary buttons
+  outside Play on the light and steel-cobalt themes (an app-wide token change).

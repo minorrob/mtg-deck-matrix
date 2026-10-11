@@ -86,11 +86,13 @@ globalThis.CrankBoard = Object.freeze({
     return disabled ? html.replace("<button ", "<button disabled ") : html;
   };
   /* An icon button: the glyph shown, the words for a reader. */
-  const ib = (glyph, action, label, data = {}, {cls = "compact", disabled = false, pressed = null} = {}) =>
-    `<button type="button" class="v-button ${cls}" data-action="${e(action)}" ${Object.entries(data).map(([k, v]) => `data-${k}="${e(v)}"`).join(" ")} aria-label="${e(label)}" title="${e(label)}"${pressed === null ? "" : ` aria-pressed="${pressed}"`}${disabled ? " disabled" : ""}>${glyph}</button>`;
+  const ib = (glyph, action, label, data = {}, {cls = "compact", disabled = false, pressed = null, expanded = null} = {}) =>
+    `<button type="button" class="v-button ${cls}" data-action="${e(action)}" ${Object.entries(data).map(([k, v]) => `data-${k}="${e(v)}"`).join(" ")} aria-label="${e(label)}" title="${e(label)}"${pressed === null ? "" : ` aria-pressed="${pressed}"`}${expanded === null ? "" : ` aria-expanded="${expanded}"`}${disabled ? " disabled" : ""}>${glyph}</button>`;
   /* A button with a drawn glyph before its words (the app's button escapes its label, so it cannot carry one). */
-  const gb = (glyph, label, action, data = {}, {cls = "compact"} = {}) =>
-    `<button type="button" class="v-button ${cls} cm-board-glyphed" data-action="${e(action)}" ${Object.entries(data).map(([k, v]) => `data-${k}="${e(v)}"`).join(" ")}>${glyph}<span>${e(label)}</span></button>`;
+  const gb = (glyph, label, action, data = {}, {cls = "compact", expanded = null} = {}) =>
+    `<button type="button" class="v-button ${cls} cm-board-glyphed" data-action="${e(action)}" ${Object.entries(data).map(([k, v]) => `data-${k}="${e(v)}"`).join(" ")}${expanded === null ? "" : ` aria-expanded="${expanded}"`}>${glyph}<span>${e(label)}</span></button>`;
+  /* A button that opens a menu says whether it is open (WCAG 4.1.2). */
+  const opens = (html, open) => html.replace("<button ", `<button aria-expanded="${!!open}" `);
   /* THE TWO GLYPHS, each drawn once and used in every place (Rob, 2026-09-30). The history is a clock, everywhere it
      opens: the strip's History ▾, Full screen's rail, the phone's rail, the band's own button -- never ☰, which is
      the menu. The Coach is a speech bubble with the wand in it (Part 4's recommendation, decision 21), not the ✦
@@ -369,22 +371,37 @@ globalThis.CrankBoard = Object.freeze({
   /* A card shown to be READ -- the Panel's and Full screen's column (pick), the pop-up (peek), Card zoom (zoom) -- is
      drawn upright, a tapped one with a small Tapped mark (Rob, 2026-09-30, item 17); on the mat it lies sideways. */
   const UPRIGHT = new Set(["pick", "peek", "zoom"]);
+  /* IN COMBAT (the accessibility pass): what a card is doing in the combat on the table (the view's own combat, which
+     is public), in the words its label and its mark say it -- attacking whom, blocked; blocking which. */
+  const cardWord = (id) => {const c = findCard(id); return c && c.name ? c.name : "a face-down creature";};
+  function combatOf(c) {
+    const fight = view.state.combat, words = [];
+    for (const a of (fight && fight.attacks) || []) {
+      if (a.attacker === c.cardId) words.push({mark: "attacking", said: `attacking ${a.planeswalker !== undefined ? cardWord(a.planeswalker) : a.defender === view.seat ? "you" : nameOf(a.defender)}${a.blocked ? ", blocked" : ""}`});
+      if ((a.blockers || []).includes(c.cardId)) words.push({mark: "blocking", said: `blocking ${cardWord(a.attacker)}`});
+    }
+    return words;
+  }
   function card(c, {where = "mat", action = "board-card"} = {}) {
-    if (!c.name) return `<div class="cm-bcard is-back" aria-label="A hidden card"></div>`;
     const opts = optionsFor(c.cardId), mine = view.decision && !sending;
     const bright = mine && opts.length > 0, chosen = opts.some((o) => picked.includes(o.index));
-    const creature = c.types.includes("Creature") && c.power !== null, upright = UPRIGHT.has(where);
-    const cls = ["cm-bcard", c.tapped && !upright ? "is-tapped" : "", bright ? "is-bright" : "", chosen ? "is-picked" : "", coachShown.has(c.cardId) ? "is-coach-shown" : "", (where === "hand" || where === "fan") && mine && !bright ? "is-dim" : "", selected === c.cardId && where !== "pick" ? "is-selected" : ""].filter(Boolean).join(" ");
-    const marks = [c.tapped && upright ? `<span class="cm-bcard-mark is-state">Tapped</span>` : "", c.damage ? `<span class="cm-bcard-mark">${c.damage} damage</span>` : "", ...Object.entries(c.counters || {}).map(([k, n]) => `<span class="cm-bcard-mark">${n} ${e(k)}</span>`)].join("");
-    /* Its name first, then its state as a person looking at it would say it: tapped, its power and toughness, damage
-       marked, counters; then what it can do now (the accessibility pass). */
-    const state = [c.tapped ? "tapped" : "", creature ? `${c.power}/${c.toughness}` : "", c.damage ? `${c.damage} damage` : "", ...Object.entries(c.counters || {}).map(([k, n]) => `${n} ${k} counter${n === 1 ? "" : "s"}`)].filter(Boolean);
+    const creature = c.name && c.types.includes("Creature") && c.power !== null, upright = UPRIGHT.has(where), fight = combatOf(c);
+    const cls = ["cm-bcard", c.name ? "" : "is-back", c.tapped && !upright ? "is-tapped" : "", bright ? "is-bright" : "", chosen ? "is-picked" : "", coachShown.has(c.cardId) ? "is-coach-shown" : "", (where === "hand" || where === "fan") && mine && !bright ? "is-dim" : "", selected === c.cardId && where !== "pick" ? "is-selected" : ""].filter(Boolean).join(" ");
+    const marks = [c.tapped && upright ? `<span class="cm-bcard-mark is-state">Tapped</span>` : "", ...fight.map((f) => `<span class="cm-bcard-mark is-combat">${f.mark}</span>`), c.damage ? `<span class="cm-bcard-mark">${c.damage} damage</span>` : "", ...Object.entries(c.counters || {}).map(([k, n]) => `<span class="cm-bcard-mark">${n} ${e(k)}</span>`)].join("");
+    /* Its name first, then what is shown on it as a person looking at it would say it: tapped, its power and toughness,
+       in combat, damage marked, counters, chosen or picked to read; then what it can do now (the accessibility pass). */
+    const state = [c.tapped ? "tapped" : "", creature ? `${c.power}/${c.toughness}` : "", ...fight.map((f) => f.said), c.damage ? `${c.damage} damage` : "", ...Object.entries(c.counters || {}).map(([k, n]) => `${n} ${k} counter${n === 1 ? "" : "s"}`),
+      chosen ? "chosen" : "", selected === c.cardId && where !== "pick" ? "selected" : ""].filter(Boolean);
     /* What it can do, each kind once ("Cast Zap, 4 ways"), not the card's name once per target. */
     const can = [...new Set(opts.map((o) => verbFor(o)))];
-    const label = `${c.name}${state.length ? ", " + state.join(", ") : ""}${bright ? `: ${can.join(" or ")}${opts.length > can.length ? `, ${opts.length} ways` : ""}` : ""}`;
+    /* A FACE-DOWN CARD (CR 708.2a) is the back of a card, and says so: never its name, not even to the player allowed to
+       look at it (CR 708.5) -- the board does not show it, so it does not say it. */
+    const named = c.name || (c.faceDown ? `Face-down ${(c.types || []).includes("Creature") ? "creature" : "card"}` : "A hidden card");
+    const label = `${named}${state.length ? ", " + state.join(", ") : ""}${bright ? `: ${can.join(" or ")}${opts.length > can.length ? `, ${opts.length} ways` : ""}` : ""}`;
+    if (!c.name && !c.faceDown) return `<div class="cm-bcard is-back" role="img" aria-label="${e(label)}"></div>`;
     return `<button type="button" class="${cls}" data-action="${action}" data-card="${c.cardId}" aria-label="${e(label)}">
-      <span class="cm-bcard-name">${e(c.name)}</span>${creature ? `<span class="cm-bcard-pt">${c.power}/${c.toughness}</span>` : ""}
-      <img src="${e(pictureOf(c.name))}" alt="" loading="lazy" referrerpolicy="no-referrer">${marks ? `<span class="cm-bcard-marks">${marks}</span>` : ""}</button>`;
+      ${c.name ? `<span class="cm-bcard-name">${e(c.name)}</span>` : ""}${creature ? `<span class="cm-bcard-pt">${c.power}/${c.toughness}</span>` : ""}
+      ${c.name ? `<img src="${e(pictureOf(c.name))}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ""}${marks ? `<span class="cm-bcard-marks">${marks}</span>` : ""}</button>`;
   }
 
   /* ---- the strip ---- */
@@ -436,37 +453,39 @@ globalThis.CrankBoard = Object.freeze({
   function strip() {
     const s = view.state, turnName = s.turnPlayerId === null ? "" : nameOf(s.turnPlayerId);
     const {at, step, detail, next} = stepInfo();
-    const conn = status === "open" ? "" : `<span class="cm-board-conn" role="status">${status === "reconnecting" ? "Reconnecting…" : "Connecting…"}</span>`;
+    /* Said by the board's one status region (say), not by a live region drawn again with every view. */
+    const conn = status === "open" ? "" : `<span class="cm-board-conn">${status === "reconnecting" ? "Reconnecting…" : "Connecting…"}</span>`;
     return `<header class="cm-board-strip">
-      <span class="cm-board-tools">${ib("☰", "board-menu", "Menu", {}, {pressed: menuOpen})}${menuOpen ? menu() : ""}</span>
+      <span class="cm-board-tools">${ib("☰", "board-menu", "Menu", {}, {expanded: menuOpen})}${menuOpen ? menu() : ""}</span>
       <span class="cm-board-turn">${s.turn ? `Turn ${s.turn} · ${e(turnName)}` : "Before turn 1"}</span>
       <span class="cm-board-step">${e(step)}${e(detail)}</span>
       <span class="cm-board-tools">${at < 0 ? "" : `<button type="button" class="cm-board-count" data-action="board-steps" aria-expanded="${stepsOpen}" aria-label="Step ${at + 1} of ${STEPS.length}; show the steps">${at + 1} / ${STEPS.length} ▾</button>`}${stepsOpen ? stepsMenu() : ""}</span>
-      <span class="cm-board-prompt">${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}<span class="cm-board-waiting" role="status" aria-live="polite">${e(waitingText())}</span>${conn}</span>
+      <span class="cm-board-prompt">${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}<span class="cm-board-waiting">${e(waitingText())}</span>${conn}</span>
       ${passButton()}
       ${resolveAllButton()}
       ${b(skipWords(), "board-skip", {}, false, {cls: `compact${skipping === null ? "" : " is-on"}`, disabled: view.status === "finished"})}
       ${alsoButton()}
       <span class="cm-board-divider" aria-hidden="true"></span>
       ${switcher()}
-      <span class="cm-board-tools">${gb(CLOCK, "History ▾", "board-history")}${historyOpen ? historyMenu() : ""}</span>
-      <span class="cm-board-tools">${b("Tools ▾", "board-tools", {}, false, {cls: "compact"})}${tools ? toolsMenu() : ""}</span>
+      <span class="cm-board-tools">${gb(CLOCK, "History ▾", "board-history", {}, {expanded: historyOpen})}${historyOpen ? historyMenu() : ""}</span>
+      <span class="cm-board-tools">${opens(b("Tools ▾", "board-tools", {}, false, {cls: "compact"}), tools)}${tools ? toolsMenu() : ""}</span>
       ${b(panelOpen ? "Panel ◂" : "Panel ▸", "board-panel", {}, false, {cls: "compact"})}
     </header>`;
   }
   function switcher(icons = false) {
     return `<span class="cm-board-views" role="group" aria-label="View">${VIEWS.map(([k, icon, label]) => `<button type="button" class="v-button compact${mode === k ? " is-on" : ""}" data-action="board-view" data-view="${k}" aria-pressed="${mode === k}"${icons ? ` aria-label="${label}" title="${label}"` : ""}>${icons ? icon : `${icon} ${label}`}</button>`).join("")}</span>`;
   }
-  /* ☰: the app's pages, over the game. The surface is the whole window, so the rail lives here. */
+  /* ☰: the app's pages, over the game. The surface is the whole window, so the rail lives here. A list of links and a
+     button, so it is a navigation region, not an ARIA menu (whose items would want arrow keys it does not take). */
   function menu() {
     const links = [["Decks", "#decks"], ["Library", "#cards"], ["Explore", "#discover"], ["Play", "#game"], ["Settings", "#settings"]];
-    return `<div class="cm-board-menu cm-board-nav" role="menu" id="cm-board-nav"><ul>${links.map(([l, h]) => `<li><a role="menuitem" href="${h}">${l}</a></li>`).join("")}</ul>
+    return `<nav class="cm-board-menu cm-board-nav" id="cm-board-nav" aria-label="Pages"><ul>${links.map(([l, h]) => `<li><a href="${h}">${l}</a></li>`).join("")}</ul>
       <p class="cm-muted">The game keeps going, and your seat with it: Play, or Game on in the rail, brings you back.</p>
-      <button type="button" class="v-button compact" data-action="page-help" data-help="table">Keys and help</button></div>`;
+      <button type="button" class="v-button compact" data-action="page-help" data-help="table">Keys and help</button></nav>`;
   }
   function stepsMenu() {
     const at = stepAt(view.state.phase);
-    return `<div class="cm-board-menu cm-board-steps" role="dialog" aria-label="This turn's steps" id="cm-board-steps"><h3>This turn</h3>${ribbon(true, at)}<p class="cm-muted">Done steps are struck through; the current one is in brass.</p></div>`;
+    return `<div class="cm-board-menu cm-board-steps" role="group" aria-label="This turn's steps" id="cm-board-steps"><h3>This turn</h3>${ribbon(true, at)}<p class="cm-muted">Done steps are struck through; the current one is in brass.</p></div>`;
   }
   function toolsMenu() {
     const over = view.status === "finished", left = !!departed(view.seat);
@@ -482,7 +501,7 @@ globalThis.CrankBoard = Object.freeze({
       <label class="cm-board-hold"><input type="checkbox" data-board-hold${stored(HOLD_KEY) === "on" ? " checked" : ""}> Hold priority after I cast</label>
       <p class="cm-muted cm-board-hold-help">When you cast a spell or activate an ability, it resolves unless someone responds${stored(HOLD_KEY) === "on" ? "; with Hold priority on, you are asked first, to respond to it yourself" : ""}.</p>
       <p class="cm-muted cm-board-yield-help">${yours ? "Skip to end passes your priority for you through the rest of your turn" : `Yield this turn passes your priority for you through the rest of ${e(nameOf(view.state.turnPlayerId))}'s turn`}. It stops the moment anything is on the stack or you are asked anything else, so you can still answer a spell. Until then you hold priority: with a card you could use, you are asked at every step.</p>`;
-    return `<div class="cm-board-menu" role="menu" id="cm-board-tools">
+    return `<div class="cm-board-menu" role="group" aria-label="Tools" id="cm-board-tools">
       <div class="cm-actions cm-board-menu-row">${gb(COACH, "Recommended actions", "board-coach", {}, {cls: ""})}${b("Table vitals", "board-vitals", {})}${b("AI Coach settings…", "ai-settings", {})}</div>
       ${priority}
       <div class="cm-board-size">${C.cardScaleSlider()}<p class="cm-muted">${lo}% – ${hi}% · the table's size: it sets Board cards and Hand cards too · remembered on this device · ⌘/Ctrl + / − also work</p></div>
@@ -583,7 +602,8 @@ globalThis.CrankBoard = Object.freeze({
   function tableView() {
     const ps = players(), n = ps.length, active = view.state.turnPlayerId;
     const side = n === 2, bottom = side ? ["b"] : ["c", "d"];
-    const boards = ps.map((p) => {const area = areaOf(p.playerId), low = bottom.includes(area); return `<div class="cm-board-slot" data-area="${area}" style="grid-area:${area};--row-w:var(${low ? "--bot-w" : "--top-w"})">${mat(p, {size: "table", head: low && !side ? "bottom" : "top", focusButton: true})}</div>`;}).join("");
+    /* In the order they sit, the top row left to right and then the bottom, so Tab reads the table as it is laid out. */
+    const boards = [...ps].sort((x, y) => areaOf(x.playerId).localeCompare(areaOf(y.playerId))).map((p) => {const area = areaOf(p.playerId), low = bottom.includes(area); return `<div class="cm-board-slot" data-area="${area}" style="grid-area:${area};--row-w:var(${low ? "--bot-w" : "--top-w"})">${mat(p, {size: "table", head: low && !side ? "bottom" : "top", focusButton: true})}</div>`;}).join("");
     const rows = side
       ? `<div class="cm-board-rowbar is-upright">${grip("rows", "The boards' widths: drag, or use the arrow keys", Math.round(rowShare() * 100), [ROWS[0] * 100, ROWS[1] * 100], "vertical")}${scaleSlider("board", "Board cards")}</div>`
       : `<div class="cm-board-rowbar">${grip("rows", "The rows' sizes: drag, or use the arrow keys", Math.round(rowShare() * 100), [ROWS[0] * 100, ROWS[1] * 100])}${scaleSlider("board", "Board cards")}</div>`;
@@ -638,12 +658,12 @@ globalThis.CrankBoard = Object.freeze({
     const {step, next} = stepInfo();
     const rail = `<nav class="cm-full-rail" aria-label="Board"><span class="cm-full-turn" title="Turn ${s.turn}">T${s.turn}</span>${switcher(true)}
       ${ib("⟳", "board-rotate", "Rotate: the next seat's board", {by: "1"})}
-      <span class="cm-board-tools">${ib(CLOCK, "board-history", "History")}${historyOpen ? historyMenu() : ""}</span>
+      <span class="cm-board-tools">${ib(CLOCK, "board-history", "History", {}, {expanded: historyOpen})}${historyOpen ? historyMenu() : ""}</span>
       ${ib(COACH, "board-coach", "CrankMagic Coach", {}, {pressed: coach.open})}
-      <span class="cm-board-tools">${ib("⚙", "board-tools", "Tools")}${tools ? toolsMenu() : ""}</span>
+      <span class="cm-board-tools">${ib("⚙", "board-tools", "Tools", {}, {expanded: tools})}${tools ? toolsMenu() : ""}</span>
       <span class="cm-board-spacer"></span>${ib("⎋", "board-view", "Leave full screen", {view: "focus"})}</nav>`;
     const pill = `<div class="cm-full-pill"><span class="cm-board-step">${e(step)}</span>${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}
-      <span class="cm-board-waiting" role="status" aria-live="polite">${e(waitingText())}</span>
+      <span class="cm-board-waiting">${e(waitingText())}</span>
       ${passButton()}${b(skipWords(true), "board-skip", {}, false, {cls: "compact"})}</div>`;
     /* The big board's corner: whose it is and their vitals; when it is not yours, ⟳ and My board are there too. */
     const viewing = big.playerId !== view.seat;
@@ -801,19 +821,19 @@ globalThis.CrankBoard = Object.freeze({
       return `<li><strong>${e(t.head)}</strong><span>${said}${more > 0 ? ` · and ${more} more in the History` : ""}</span></li>`;
     }).join("");
     const now = view.state.turnPlayerId === view.seat ? `Turn ${w.now} is yours.` : `Turn ${w.now} · ${e(nameOf(view.state.turnPlayerId))}`;
-    return `<section class="cm-board-decision cm-board-went" role="status" aria-label="${e(span)}"><h3>${e(span)}</h3>
+    return `<section class="cm-board-decision cm-board-went" aria-label="${e(span)}"><h3>${e(span)}</h3>
       <ol class="cm-board-went-list">${rows}</ol><div class="cm-board-decision-foot"><span class="cm-muted">${now}</span>${b("OK", "board-went-close", {}, false, {cls: "compact"})}</div></section>`;
   }
   function ask() {
     const d = view.decision, inner = `${went()}${stack()}${d && d.kind !== "priority" && d.kind !== "draw" ? decision() : ""}`;
     return inner ? `<div class="cm-board-ask">${inner}</div>` : "";
   }
+  const alsoCount = () => {const d = view.decision; return d && d.kind === "priority" ? new Set(d.options.filter((o) => o.act !== "pass" && o.act !== "resolve-all").map((o) => `${o.act}|${o.label}`)).size : 0;};
   function alsoButton() {
     const d = view.decision;
     if (!d || d.kind !== "priority" || view.status === "finished") return "";
-    const n = new Set(d.options.filter((o) => o.act !== "pass" && o.act !== "resolve-all").map((o) => `${o.act}|${o.label}`)).size;
-    if (!n) return "";
-    return `<span class="cm-board-tools">${b(`You can also ▾`, "board-also", {}, false, {cls: `compact${alsoOpen ? " is-on" : ""}`})}${alsoOpen ? `<div class="cm-board-menu cm-board-also" role="dialog" aria-label="What you can do">${decision()}</div>` : ""}</span>`;
+    if (!alsoCount()) return "";
+    return `<span class="cm-board-tools">${opens(b(`You can also ▾`, "board-also", {}, false, {cls: `compact${alsoOpen ? " is-on" : ""}`}), alsoOpen)}${alsoOpen ? `<div class="cm-board-menu cm-board-also" role="dialog" aria-label="What you can do">${decision()}</div>` : ""}</span>`;
   }
   /* YOUR HAND on its slate tray (item 14): ✋ (Show hand) with the count beside it, and what is in it by type -- Land,
      Creature, Instant (any card with flash too), Other -- each as X/Y, castable now over in hand. Castable is what the
@@ -899,11 +919,11 @@ globalThis.CrankBoard = Object.freeze({
       const c = findCard(Number(el.dataset.card));
       if (!c || !c.name || !document.getElementById("cm-board")) return;
       const div = old || Object.assign(document.createElement("div"), {id: "cm-board-peek", className: "cm-board-peek"});
-      /* Said as well as shown: a polite status names the card, and the picture itself is not read twice. */
-      div.setAttribute("role", "status");
-      div.setAttribute("aria-live", "polite");
-      div.innerHTML = `<span class="cm-sr-only">Showing ${e(c.name)}</span><div aria-hidden="true">${card(c, {where: "peek", action: "none"})}</div>`;
+      /* Said as well as shown, by the board's status region; the picture itself is not read twice. */
+      div.setAttribute("aria-hidden", "true");
+      div.innerHTML = card(c, {where: "peek", action: "none"});
       if (!old) document.getElementById("cm-board").append(div);
+      say(`Showing ${c.name}`);
     }, 350);
   }
   function stillUnder(id) {
@@ -968,7 +988,7 @@ globalThis.CrankBoard = Object.freeze({
         <div><h2><span class="cm-coach-brand">CrankMagic </span>Coach</h2><p class="cm-muted" id="cm-coach-context">${e(coachContext())}</p></div>
         <details class="cm-coach-more"${moreOpen ? " open" : ""}><summary aria-label="More">⋯</summary><div>${b("Clear chat", "board-coach-clear")}</div></details>
         <button type="button" class="v-button compact" data-action="board-coach" aria-label="Close the Coach">✕</button></header>
-      <ol class="cm-coach-thread" aria-live="polite">${coach.thread.map(bubble).join("") || `<li class="cm-coach-empty cm-muted">Ask about your board, your hand, or the table.</li>`}
+      <ol class="cm-coach-thread">${coach.thread.map(bubble).join("") || `<li class="cm-coach-empty cm-muted">Ask about your board, your hand, or the table.</li>`}
         ${coach.typing ? `<li class="cm-coach-msg is-coach is-typing" aria-label="The Coach is typing"><span class="cm-coach-avatar">${COACH}</span><p><i></i><i></i><i></i></p></li>` : ""}</ol>
       <div class="cm-coach-prompts">${COACH_PROMPTS.map((q) => `<button type="button" class="v-button compact" data-action="board-coach-ask" data-q="${e(q)}">${e(q)}</button>`).join("")}</div>
       <form class="cm-coach-compose" data-coach-form><textarea class="cm-coach-input" rows="1" placeholder="Ask the coach…" aria-label="Ask the coach"></textarea>
@@ -1009,6 +1029,8 @@ globalThis.CrankBoard = Object.freeze({
     coach.typing = false;
     coach.thread.push({from: "coach", ...said});
     drawCoach();
+    /* the reply said by the board's status region: the thread is drawn anew with each message */
+    say(`The Coach: ${String(said.text).replace(/\[\[([^\]]{1,200})\]\]/g, "$1")}`);
   }
   function banner() {
     if (view.status === "finished") {
@@ -1020,8 +1042,47 @@ globalThis.CrankBoard = Object.freeze({
         <div class="cm-actions">${b("Back to the table", "board-leave", {}, true)}${recordButton()}</div></div></div>`;
     }
     const gone = departed(view.seat);
-    if (gone) return `<p class="cm-board-banner" role="status">You have left this game; the others play on.</p>`;
+    if (gone) return `<p class="cm-board-banner">${LEFT}</p>`;
     return "";
+  }
+  const LEFT = "You have left this game; the others play on.";
+  /* THE BOARD'S ONE STATUS REGION (WCAG 4.1.3): a polite live region beside the board, not in it, so the board drawn
+     again with every view never makes it anew -- a region made anew with its words already in it is heard twice, or
+     not at all. What it says is what has just happened to you: the question the table asks, the turns that went by, the
+     game's end, the card shown large. Each is said once, when it changes. */
+  let saidKey = null;
+  function say(text) {
+    const el = document.getElementById("cm-board-said");
+    if (el && el.textContent !== text) el.textContent = text;
+  }
+  function announcement() {
+    if (!view) return {key: `status:${status}`, text: status === "reconnecting" ? "Reconnecting to the table…" : "Opening the board…"};
+    if (status === "reconnecting") return {key: "status:reconnecting", text: "Reconnecting to the table…"};
+    if (view.status === "finished") {
+      const r = view.result || {}, head = r.endedBy !== undefined || r.reason === "ended early" ? "The game was ended early" : r.winner === view.seatId ? "You won" : r.winner ? `${seatName(r.winner)} won` : "The game is over";
+      return {key: `over:${view.matchId}`, text: `${head}.${r.reason && r.reason !== "ended early" ? ` ${r.reason[0].toUpperCase()}${r.reason.slice(1)}.` : ""}`};
+    }
+    if (departed(view.seat)) return {key: "left", text: LEFT};
+    if (wentBy) {
+      const w = wentBy, span = w.from === w.to ? `Turn ${w.from} went by.` : `Turns ${w.from} to ${w.to} went by.`;
+      return {key: `went:${w.from}:${w.to}`, text: `${span} ${view.state.turnPlayerId === view.seat ? `Turn ${w.now} is yours.` : `Turn ${w.now}, ${nameOf(view.state.turnPlayerId)}.`}`};
+    }
+    const d = view.decision;
+    if (d && sending) return {key: saidKey, text: ""};   /* an answer on its way: nothing new to say until the table's */
+    if (d) {
+      if (d.kind === "draw") return {key: `ask:${d.id}`, text: `${stepNow()}. Draw a card.`};
+      if (d.kind === "priority") {const w = waitingText(); return {key: `ask:${d.id}`, text: `${stepNow()}. ${w || "Your move"}: ${passLabel()}${alsoCount() ? ", or something else you can do" : ""}.`};}
+      const opts = d.options || [], shown = opts.slice(0, 6).map((o) => o.label);
+      return {key: `ask:${d.id}`, text: `${d.title}${shown.length ? ` Choices: ${shown.join(", ")}${opts.length > shown.length ? `, and ${opts.length - shown.length} more` : ""}.` : ""}`};
+    }
+    const w = waitingText();
+    return {key: `wait:${w}`, text: w};
+  }
+  function announce() {
+    const {key, text} = announcement();
+    if (key === saidKey) return;
+    saidKey = key;
+    say(text);
   }
   /* A view arrives whenever anyone acts; the history's filter keeps its focus and caret through the redraw. */
   function draw() {
@@ -1051,10 +1112,34 @@ globalThis.CrankBoard = Object.freeze({
     chip.innerHTML = over ? `<b>Game over</b><span>Return</span>` : `<b>Game on</b><span>Turn ${turn}</span><span>Return</span>`;
     chip.setAttribute("aria-label", over ? "Your game is over: return to the table" : `Your game is on, turn ${turn}: return to it`);
   }
+  /* Drawn anew at every view, the board keeps the focus on the control the keyboard was on (C.keepFocus), holds it in
+     Show hand while that is open, and says what has just happened in its status region. */
+  let handWas = null, handFrom = null;
   function render() {
     const host = document.getElementById("cm-board");
     if (!host) return;
-    if (!view) {host.innerHTML = `<p class="cm-board-loading" role="status">${status === "reconnecting" ? "Reconnecting to the table…" : "Opening the board…"}</p>`; return;}
+    if (showing && !handWas) handFrom = C.focusKey(document.activeElement);
+    C.keepFocus(host, () => paint(host));
+    holdHand(host);
+    handWas = showing;
+    announce();
+  }
+  /* SHOW HAND IS A MODAL POP-UP (role=dialog, aria-modal; WCAG 2.4.3): while it is open the rest of the board and the
+     Coach are inert, so Tab stays in it; it takes the focus as it opens, and gives it back to what had it when it closes. */
+  function holdHand(host) {
+    const fan = host.querySelector(":scope > .cm-hand-show"), coachEl = document.getElementById("cm-board-coach");
+    for (const el of host.children) if (el !== fan) el.inert = !!fan;
+    if (coachEl) coachEl.inert = !!fan;
+    if (fan) {
+      if (!fan.contains(document.activeElement)) (fan.querySelector("[data-action=board-hand-do]:not([disabled])") || fan.querySelector(".cm-hand-held .cm-bcard, .cm-hand-fan .cm-bcard") || fan.querySelector(".cm-hand-close")).focus({preventScroll: true});
+    } else if (handWas) {
+      const back = C.focusFind(handFrom);
+      handFrom = null;
+      if (back && back.isConnected && !back.closest("[inert]")) back.focus({preventScroll: true});
+    }
+  }
+  function paint(host) {
+    if (!view) {host.innerHTML = `<p class="cm-board-loading">${status === "reconnecting" ? "Reconnecting to the table…" : "Opening the board…"}</p>`; return;}
     if (phone()) {
       host.dataset.view = "focus";
       host.dataset.phone = innerHeight > innerWidth ? "portrait" : "landscape";
@@ -1277,6 +1362,11 @@ globalThis.CrankBoard = Object.freeze({
     observer.observe(document.getElementById("cm-board"));
   }
 
+  /* THE PAGE UNDER THE BOARD (WCAG 2.4.3, 2.4.7): the board covers the whole window, so the rail, the skip link and the
+     footer under it are inert while it is up -- else Tab walks into controls nobody can see. ☰ is the way to the pages. */
+  const SHELL = [".cm-sidebar", ".cm-skip", ".cm-legal"];
+  function shell(covered) {for (const q of SHELL) for (const el of document.querySelectorAll(q)) el.inert = covered;}
+
   /* ---- what the lobby hands over ---- */
   C.board = {
     /** The table is playing (or just finished): draw the board in the page, and keep the socket open. */
@@ -1291,11 +1381,12 @@ globalThis.CrankBoard = Object.freeze({
       away.clear();
       for (const a of t.away || []) away.set(a.seatId, a.until);
       if (!document.getElementById("cm-board")) {
-        records = null;
-        C.main.innerHTML = `<div class="cm-board" id="cm-board" data-view="${mode}"></div><aside class="cm-board-coach" id="cm-board-coach" aria-label="CrankMagic Coach" hidden></aside>`;
+        records = null; saidKey = null;
+        C.main.innerHTML = `<div class="cm-board" id="cm-board" data-view="${mode}"></div><aside class="cm-board-coach" id="cm-board-coach" aria-label="CrankMagic Coach" hidden></aside><p class="cm-sr-only" id="cm-board-said" role="status" aria-live="polite" aria-atomic="true"></p>`;
         draw();
         watch();
       } else if (said() !== before) draw();
+      shell(true);
       if (!socket && status !== "reconnecting") connect();
     },
     /** Whether the board is what this table's page should show. */
@@ -1304,6 +1395,7 @@ globalThis.CrankBoard = Object.freeze({
         stay, and the rail says a game is on. */
     detach() {
       attached = false;
+      shell(false);
       if (audio) audio.stopBgm(400);
       stopSea(); if (observer) {observer.disconnect(); observer = null;} peek(null); leaveFullscreen();
       tools = false; confirmEnd = false; historyOpen = false; menuOpen = false; stepsOpen = false; alsoOpen = false; showing = null; held = null;
@@ -1318,6 +1410,7 @@ globalThis.CrankBoard = Object.freeze({
     pictureOf,
     close() {
       attached = false;
+      shell(false);
       if (audio) audio.stopBgm(400);
       disconnect(); stopSea(); if (observer) {observer.disconnect(); observer = null;}
       document.getElementById("cm-game-on")?.remove();
@@ -1397,9 +1490,12 @@ globalThis.CrankBoard = Object.freeze({
     draw();
   };
   actions["board-pane"] = () => {paneShut = !paneShut; draw();};
-  actions["board-menu"] = () => {menuOpen = !menuOpen; stepsOpen = false; tools = false; historyOpen = false; alsoOpen = false; draw();};
-  actions["board-also"] = () => {alsoOpen = !alsoOpen; menuOpen = false; stepsOpen = false; tools = false; historyOpen = false; draw();};
-  actions["board-steps"] = () => {stepsOpen = !stepsOpen; menuOpen = false; tools = false; historyOpen = false; draw();};
+  /* The button a menu was opened from, for Escape to give the focus back to. */
+  let popupFrom = null;
+  const opened = (el, open) => {popupFrom = open ? C.focusKey(el) : null;};
+  actions["board-menu"] = (el) => {menuOpen = !menuOpen; stepsOpen = false; tools = false; historyOpen = false; alsoOpen = false; opened(el, menuOpen); draw();};
+  actions["board-also"] = (el) => {alsoOpen = !alsoOpen; menuOpen = false; stepsOpen = false; tools = false; historyOpen = false; opened(el, alsoOpen); draw();};
+  actions["board-steps"] = (el) => {stepsOpen = !stepsOpen; menuOpen = false; tools = false; historyOpen = false; opened(el, stepsOpen); draw();};
   actions["board-panel"] = () => {panelOpen = !panelOpen; if (panelOpen && coach.open) {coach.open = false; drawCoach();} draw();};
   let lastPhone = null;
   addEventListener("resize", () => {
@@ -1495,7 +1591,14 @@ globalThis.CrankBoard = Object.freeze({
     if (!document.getElementById("cm-board") || !view || document.querySelector("#cm-dialog[open]")) return;
     const tag = (document.activeElement && document.activeElement.tagName) || "";
     const typing = /^(INPUT|SELECT|TEXTAREA)$/.test(tag);
-    if (event.key === "Escape" && (historyOpen || menuOpen || stepsOpen || tools)) {historyOpen = false; menuOpen = false; stepsOpen = false; tools = false; confirmEnd = false; draw(); return;}
+    /* A menu closed by Escape gives the focus back to the button that opened it, if the focus was on the board. */
+    if (event.key === "Escape" && (historyOpen || menuOpen || stepsOpen || tools || alsoOpen)) {
+      const a = document.activeElement, back = !a || a === document.body || a.closest("#cm-board") ? popupFrom : null;
+      historyOpen = false; menuOpen = false; stepsOpen = false; tools = false; alsoOpen = false; confirmEnd = false; popupFrom = null; draw();
+      const el = C.focusFind(back);
+      if (el && el.isConnected) el.focus({preventScroll: true});
+      return;
+    }
     if (coach.open && event.target && event.target.matches && event.target.matches(".cm-coach-input") && event.key === "Enter" && !event.shiftKey) {
       event.preventDefault(); event.target.form.requestSubmit(); return;
     }
@@ -1517,6 +1620,9 @@ globalThis.CrankBoard = Object.freeze({
       return;
     }
     if (showing === "held" && event.key === "Enter") {
+      /* a button of the pop-up with the focus (one of the held card's ways, Back to hand) is pressed, as Help says */
+      const a = document.activeElement;
+      if (a && a.matches("button") && a.closest(".cm-hand-show") && !a.closest(".cm-hand-held")) return;
       const first = optionsFor(held)[0];
       if (first) {event.preventDefault(); showing = null; held = null; option(first.index);}
       return;
@@ -1528,7 +1634,7 @@ globalThis.CrankBoard = Object.freeze({
       if (mode === "full") setMode("focus");
     }
   });
-  actions["board-tools"] = () => {tools = !tools; confirmEnd = false; historyOpen = false; menuOpen = false; stepsOpen = false; draw();};
+  actions["board-tools"] = (el) => {tools = !tools; confirmEnd = false; historyOpen = false; menuOpen = false; stepsOpen = false; opened(el, tools); draw();};
   actions["board-coach"] = () => {coach.open = !coach.open; tools = false; historyOpen = false; if (coach.open) panelOpen = false; draw(); drawCoach(); if (coach.open) document.querySelector("#cm-board-coach .cm-coach-input")?.focus();};
   actions["board-coach-ask"] = (el) => ask_(el.dataset.q);
   /* Show me: the cards an answer names, lit on the board for four seconds. Why?: each play's reason, one sentence. */
@@ -1557,7 +1663,7 @@ globalThis.CrankBoard = Object.freeze({
     historyOpen = false;
     document.getElementById("cm-board-history")?.remove();
   });
-  actions["board-history"] = () => {historyOpen = !historyOpen; tools = false; menuOpen = false; stepsOpen = false; draw(); if (historyOpen) document.querySelector("#cm-board-history .cm-history-filter")?.focus();};
+  actions["board-history"] = (el) => {historyOpen = !historyOpen; tools = false; menuOpen = false; stepsOpen = false; opened(el, historyOpen); draw(); if (historyOpen) document.querySelector("#cm-board-history .cm-history-filter")?.focus();};
   actions["board-end"] = async (el) => {
     if (el.dataset.confirm !== "1") {confirmEnd = true; draw(); return;}
     confirmEnd = false; tools = false;
