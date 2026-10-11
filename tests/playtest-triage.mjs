@@ -113,7 +113,9 @@ try {
   /* 4. FINDINGS: answered, adjudicated, nothing grave left open. */
   eq(findingOwes(row({status: "fixed", outcome: "PR #705, tests/engine-x.mjs"})), [], "a fixed row naming its PR owes nothing");
   ok(findingOwes(row({status: "fixed", outcome: "fixed it"})).some((o) => /names no PR/.test(o)), "a fixed row naming no PR owes it");
-  ok(findingOwes(row({status: "as-intended", outcome: "the rule says so"})).some((o) => /without a CR citation/.test(o)), "ruled as intended without a CR citation: owed");
+  ok(findingOwes(row({class: "rules", status: "as-intended", outcome: "the rule says so"})).some((o) => /rules finding ruled as intended without a CR citation/.test(o)), "a rules finding ruled as intended without a CR citation: owed");
+  ok(findingOwes(row({class: "card", status: "as-intended", outcome: "the card says so"})).some((o) => /card finding ruled as intended without a CR citation/.test(o)), "and a card finding: owed");
+  eq(findingOwes(row({class: "ui", status: "as-intended", outcome: "the panel puts itself away after six seconds, by design"})), [], "a ui finding ruled as intended by its design, said why: owes no CR rule");
   ok(findingOwes(row({status: "as-intended", cr_rule: "CR 510.1a"})).some((o) => /without saying why/.test(o)), "or without saying why: owed");
   ok(findingOwes(row({class: "rules"})).some((o) => /rules finding not yet adjudicated/.test(o)), "an open rules finding: not adjudicated");
   ok(findingOwes(row({class: "card"})).some((o) => /card finding not yet adjudicated/.test(o)), "an open card finding: not adjudicated");

@@ -1,7 +1,8 @@
 /* PLAYTEST FINDINGS HAVE ONE SHAPE (docs/uat/playtest-findings.md, docs/plan-to-100.md M8). Grok Bot's agents hand
  * over one row per finding; a row the triage loop cannot read -- a missing column, a severity outside S1-S4, a class
  * it does not know -- is refused here rather than discovered halfway through a triage. A closed row says how: a fixed one
- * names its PR, one ruled as intended its CR rule and why (tools/playtest-triage.mjs reads the same columns). Every
+ * names its PR, one ruled as intended why (and a rules or card finding its CR rule; tools/playtest-triage.mjs reads the
+ * same columns). Every
  * playtest CSV under docs/uat/ is checked: the template, and each run's findings once they arrive. */
 import assert from "node:assert/strict";
 import {readFileSync, readdirSync, statSync} from "node:fs";

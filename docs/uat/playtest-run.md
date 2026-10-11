@@ -31,6 +31,6 @@ what to write down is in `docs/uat/playtest-findings.md`.
 8. **The triage** is this side's step:
    - `node tools/playtest-triage.mjs docs/uat/<date>-playtest` replays every game and judges every seat's view at
      every answer;
-   - each finding is classed, then fixed with a test or ruled as intended with its CR rule;
+   - each finding is classed, then fixed with a test or ruled as intended, a rules or card finding with its CR rule;
    - its `outcome` is written;
    - the run is triaged again until the exit criteria are met.

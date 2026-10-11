@@ -10,7 +10,7 @@
  * says that seat may know -- never by the projection being judged:
  *
  *   Knowing    a hand is its owner's; a library is no one's, but a top card revealed to all, or to its owner, and the
- *              cards a player looked at while they stay on top (CR 401.2, 401.4, 701.20e); a face-down permanent is its
+ *              cards a player looked at while they stay on top (CR 401.2, 401.5, 701.20e); a face-down permanent is its
  *              controller's (708.5), a face-down exiled card its lookers' (406.3); a name with a copy anywhere public is
  *              no secret, nor one that was public at an earlier check (a history line stays true after the card is gone).
  *   Reading    a card's name in a name field exactly, and anywhere else as a whole name -- not "Opt" in "Option", and not
@@ -78,7 +78,7 @@ const card = (name, owner, extra = {}) => ({card: name, types: ["Creature"], pow
   const topName = s.objects[top].card, nextName = s.objects[second].card;
   ok(secretsFor(s, 0).has(topName), "a library's top card is secret with nothing revealing it");
   const revealer = addObject(s, card("Revealer", 1, {abilities: [{kind: "static", rule: "top-revealed"}]}), "battlefield");
-  ok(!secretsFor(s, 0).has(topName) && secretsFor(s, 0).has(nextName), "played with the top card revealed, the top is known to all, the next is not (CR 401.4)");
+  ok(!secretsFor(s, 0).has(topName) && secretsFor(s, 0).has(nextName), "played with the top card revealed, the top is known to all, the next is not (CR 401.5)");
   s.objects[revealer].abilities = [{kind: "static", rule: "look-at-top"}];
   ok(secretsFor(s, 0).has(topName) && !secretsFor(s, 1).has(topName), "\"you may look at the top card\": its owner alone");
   s.objects[revealer].abilities = [];

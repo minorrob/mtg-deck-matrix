@@ -48,11 +48,13 @@ export function readFindings(text) {
   return lines.slice(1).map((line) => Object.fromEntries(cells(line).map((v, k) => [COLUMNS[k], v])));
 }
 
-/** What a closed finding owes its reader: a fixed one names its PR, one ruled as intended its CR rule and why. */
+/** What a closed finding owes its reader: a fixed one names its PR; one ruled as intended says why, and a rules or card
+    finding its CR rule too. A ui, ux or performance finding ruled as intended answers to the design, which its outcome
+    says (the rehearsal's PT-R-01: Turns went by puts itself away by design), with no rule of the game to cite. */
 export function unanswered(row) {
   const owes = [];
   if (row.status === "fixed" && !/(#\d+|\/pull\/\d+)/.test(row.outcome || "")) owes.push("fixed, but its outcome names no PR");
-  if (row.status === "as-intended" && !row.cr_rule) owes.push("ruled as intended without a CR citation");
+  if (row.status === "as-intended" && (row.class === "rules" || row.class === "card") && !row.cr_rule) owes.push(`a ${row.class} finding ruled as intended without a CR citation`);
   if (row.status === "as-intended" && !row.outcome) owes.push("ruled as intended without saying why");
   return owes;
 }

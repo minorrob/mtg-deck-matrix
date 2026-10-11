@@ -111,7 +111,7 @@ function cardFor(state, id, canSeeFace, viewer = null) {
 }
 
 /* THE TOP OF A LIBRARY, when a permanent its owner controls says so (rules/statics.mjs): "play with the top card of
-   your library revealed" shows it to everyone (CR 401.4), "you may look at the top card of your library any time" to
+   your library revealed" shows it to everyone (CR 401.5), "you may look at the top card of your library any time" to
    its owner alone. Never more than that one card, and never without such a permanent. */
 function topSeenBy(state, owner, viewer) {
   let revealed = false, looked = false;

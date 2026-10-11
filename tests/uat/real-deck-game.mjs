@@ -35,6 +35,7 @@ import {build, worktreeSource} from "../../tools/release-pages.mjs";
 import {joinLocation} from "../../cloud/worker.mjs";
 import {boardPerson} from "./board-person.mjs";
 import {replayRecord} from "../../tools/playtest-triage.mjs";
+import {checkLeaks} from "../../tools/fuzz-live.mjs";
 
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1; console.log(`  ok  ${m}`);};
@@ -210,6 +211,7 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
   eq(current(maya).result,result.result,'separate browser sessions agree on result');
   ok(reloaded,'reconnect exercised during a pending game');
   /* The record each person downloads from the game-over panel: on a playtest table, the whole game. */
+  const judged=[new Set(),new Set()];
   if (RECORDS) for (const [person,seat] of [[rob,0],[maya,1]]) {
     const [download] = await Promise.all([person.page.waitForEvent('download',{timeout:15000}), person.page.click('.cm-board-over [data-action=board-record]')]);
     const record = JSON.parse(readFileSync(await download.path(),'utf8'));
@@ -217,17 +219,25 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
     writeFileSync(path.join(RECORDS,'records',`${record.matchId}-seat${seat}.json`), JSON.stringify(record));
     /* And judged at once as the triage will judge it: replayed, every seat's view at every answer read by G1's oracle. */
     if (seat === 0) {
-      const judged = await replayRecord(record, {cards: tableCards});
-      ok(judged.same && !judged.exception && !judged.leaks.length, `table ${n}: the record replays to the same journal, and no seat was sent a card it may not know (${judged.leakChecks} checks)${judged.leaks.length ? `: ${JSON.stringify(judged.leaks[0])}` : judged.exception ? `: ${judged.exception}` : ''}`);
+      /* G1's oracle, and beside it what each person's seat was shown of another's hand or library at each answer it
+         judged: the frames below are held to that. */
+      const judge = async (room, ...rest) => {
+        for (const s of [0,1]) room.view(room.seats[s].seatId).state.players.forEach((p,o)=>{if (o!==s) for (const z of ['Hand','Library']) for (const c of p.zones[z]?.cards??[]) if (c.name) judged[s].add(`${o}|${z}|${c.name}`);});
+        return checkLeaks(room, ...rest);
+      };
+      const replayed = await replayRecord(record, {cards: tableCards, judge});
+      ok(replayed.same && !replayed.exception && !replayed.leaks.length, `table ${n}: the record replays to the same journal, and no seat was sent a card it may not know (${replayed.leakChecks} checks)${replayed.leaks.length ? `: ${JSON.stringify(replayed.leaks[0])}` : replayed.exception ? `: ${replayed.exception}` : ''}`);
     }
   }
   for(const [person,seat] of [[rob,0],[maya,1]]) {
     const views=viewsAt(person.email,id);
-    /* A name in another seat's hand or library, said by card, zone, owner and turn. A library's top is the rules' to
-       show when its owner controls a permanent that plays it revealed (CR 401.4: Conspicuous Snoop); the rest
-       tools/playtest-triage.mjs's oracle judges from the record, above. */
+    /* A name in another seat's hand or library, said by card, zone, owner and turn. With the records, which cards the
+       rules show there is G1's oracle's to judge (above: a top Conspicuous Snoop plays revealed, CR 401.5, or one
+       Chaos Warp revealed, known while it stays on top, CR 701.20a and 701.20d), and a frame may name only a card the
+       oracle passed as shown to that seat. Without them, a library's top a permanent its owner controls plays revealed (CR 401.5). */
     const revealsTop=(p)=>(p.zones.Battlefield?.cards??[]).some((c)=>c.name&&(cards(c.name)?.abilities??[]).some((a)=>a.kind==='static'&&a.rule==='top-revealed'));
-    const shown=views.flatMap((v)=>v.state.players.flatMap((p,s)=>s===seat?[]:['Hand','Library'].flatMap((z)=>(p.zones[z]?.cards??[]).filter((c,i)=>c.name&&!(z==='Library'&&i===0&&revealsTop(p))).map((c)=>({turn:v.state.turn,owner:s,zone:z,name:c.name})))));
+    const passed=(p,s,z,c,i)=>RECORDS ? judged[seat].has(`${s}|${z}|${c.name}`) : z==='Library'&&i===0&&revealsTop(p);
+    const shown=views.flatMap((v)=>v.state.players.flatMap((p,s)=>s===seat?[]:['Hand','Library'].flatMap((z)=>(p.zones[z]?.cards??[]).filter((c,i)=>c.name&&!passed(p,s,z,c,i)).map((c)=>({turn:v.state.turn,owner:s,zone:z,name:c.name})))));
     ok(!shown.length,`seat ${seat}: all ${views.length} frames hide other hands and libraries${shown.length?` -- but ${shown.length} named a card there, first ${JSON.stringify(shown[0])}`:''}`);
     await person.page.locator('.cm-board-over').waitFor({timeout:10000});
     await shot(person.page,`${DECK_ID.toLowerCase()}-natural-end-seat${seat}`);
