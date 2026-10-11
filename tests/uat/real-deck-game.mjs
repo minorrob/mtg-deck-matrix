@@ -34,6 +34,7 @@ import {GameTable, tableCards} from "../../cloud/game-room.mjs";
 import {build, worktreeSource} from "../../tools/release-pages.mjs";
 import {joinLocation} from "../../cloud/worker.mjs";
 import {boardPerson} from "./board-person.mjs";
+import {replayRecord} from "../../tools/playtest-triage.mjs";
 
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1; console.log(`  ok  ${m}`);};
@@ -214,12 +215,19 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
     const record = JSON.parse(readFileSync(await download.path(),'utf8'));
     eq([record.kind,record.matchId],['full',result.matchId ?? record.matchId],`seat ${seat}: the game-over panel downloads the full record`);
     writeFileSync(path.join(RECORDS,'records',`${record.matchId}-seat${seat}.json`), JSON.stringify(record));
+    /* And judged at once as the triage will judge it: replayed, every seat's view at every answer read by G1's oracle. */
+    if (seat === 0) {
+      const judged = await replayRecord(record, {cards: tableCards});
+      ok(judged.same && !judged.exception && !judged.leaks.length, `table ${n}: the record replays to the same journal, and no seat was sent a card it may not know (${judged.leakChecks} checks)${judged.leaks.length ? `: ${JSON.stringify(judged.leaks[0])}` : judged.exception ? `: ${judged.exception}` : ''}`);
+    }
   }
   for(const [person,seat] of [[rob,0],[maya,1]]) {
     const views=viewsAt(person.email,id);
-    /* A name in another seat's hand or library, said by card, zone, owner and turn: some the rules show (a card
-       revealed, a library's top played revealed), which tools/playtest-triage.mjs's oracle judges from the record. */
-    const shown=views.flatMap((v)=>v.state.players.flatMap((p,s)=>s===seat?[]:['Hand','Library'].flatMap((z)=>(p.zones[z]?.cards??[]).filter((c)=>c.name).map((c)=>({turn:v.state.turn,owner:s,zone:z,name:c.name})))));
+    /* A name in another seat's hand or library, said by card, zone, owner and turn. A library's top is the rules' to
+       show when its owner controls a permanent that plays it revealed (CR 401.4: Conspicuous Snoop); the rest
+       tools/playtest-triage.mjs's oracle judges from the record, above. */
+    const revealsTop=(p)=>(p.zones.Battlefield?.cards??[]).some((c)=>c.name&&(cards(c.name)?.abilities??[]).some((a)=>a.kind==='static'&&a.rule==='top-revealed'));
+    const shown=views.flatMap((v)=>v.state.players.flatMap((p,s)=>s===seat?[]:['Hand','Library'].flatMap((z)=>(p.zones[z]?.cards??[]).filter((c,i)=>c.name&&!(z==='Library'&&i===0&&revealsTop(p))).map((c)=>({turn:v.state.turn,owner:s,zone:z,name:c.name})))));
     ok(!shown.length,`seat ${seat}: all ${views.length} frames hide other hands and libraries${shown.length?` -- but ${shown.length} named a card there, first ${JSON.stringify(shown[0])}`:''}`);
     await person.page.locator('.cm-board-over').waitFor({timeout:10000});
     await shot(person.page,`${DECK_ID.toLowerCase()}-natural-end-seat${seat}`);
