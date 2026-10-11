@@ -52,7 +52,8 @@
  * `sacrifice` of the source itself; a card with any other is refused at prepare (cards/index.mjs).
  */
 
-import {cardsIn, moveObject, usesThisTurn, recordUse, showFace, showAdventure, shownFaceDown, turnFaceUp, eventCard, commanderKeyOf, recordDiscard} from "../state/index.mjs";
+import {cardsIn, moveObject, usesThisTurn, recordUse, showFace, showAdventure, shownFaceDown, shownFaceUp, turnFaceUp, eventCard, commanderKeyOf, recordDiscard} from "../state/index.mjs";
+import {mayLookAt} from "../projection.mjs";
 import {pushSpell, pushAbility, becameTarget, crimeCommitted} from "./stack.mjs";
 import {spend, parseManaCost, automaticPayment, canPay, chosenPayment, paymentOptions, paymentKey, paymentWords, PAY_CHOICES, manaValue, poolSize, tapPlans, convokeCanPay, convokePayments} from "./mana.mjs";
 import {commanderTax, recordCommanderCast, commanderIdentity} from "./commander.mjs";
@@ -191,7 +192,9 @@ function convokeCost(state, player, action) {
 }
 /* A cast's own question, or what it costs, weighed as the card is cast: as its Adventure, when it is cast as one (CR 715.3a). */
 /* And face down, when it is cast with disguise (CR 702.168b). */
-const asCast = (state, action, fn) => (action?.adventure === true ? withAdventure(state, action.objectId, fn) : action?.disguise === true ? withFaceDown(state, action.objectId, fn) : fn());
+/* And face up, a card exiled face down that is being played (CR 406.3a; withFaceUp) -- as an Adventure too, then. */
+const asCast = (state, action, fn) => withFaceUp(state, action?.objectId, () => (action?.adventure === true ? withAdventure(state, action.objectId, fn)
+  : action?.disguise === true ? withFaceDown(state, action.objectId, fn) : fn()));
 /* The ways the pool pays the rest once the creatures a convoke picked have paid their part (rules/mana.mjs,
    convokePayments): each untapped and the caster's, none twice -- refused otherwise, before anything is tapped, saying what
    to do instead. `cost` is the total cost, as the payment reckons it; the question reckons it as convokeCost does. */
@@ -1028,9 +1031,20 @@ const landDropsLeft = (state, player) => (state.players[player].landAllowance ??
    turns, and one with a `limit` only until this source has been used that many times this turn (recordUse, as a card is
    played through it). */
 const playKey = (ability) => `play-from:${ability.id}`;
+/* "You may play them IF YOU CONTROL A WIZARD" (Flameshape): a permission's `condition`, asked whenever the card would be
+   played -- never once as the permission was made -- so it is open while the condition holds and closed again once it does
+   not (a Wizard gone). */
 const permissionOpen = (state, player, ability, source) => (!ability.yourTurn || state.activePlayer === player)
-  && (ability.limit === undefined || usesThisTurn(state, source, playKey(ability)) < ability.limit);
+  && (ability.limit === undefined || usesThisTurn(state, source, playKey(ability)) < ability.limit)
+  && conditionHolds(state, ability.condition, {controller: player, source});
+/* A card exiled face down (CR 406.3a-b) -- the one face-down card a permission can name: none names a permanent or a spell --
+   is weighed as the card it is (withFaceUp), and only for a player who may look at it (projection.mjs, mayLookAt): the one
+   asked is the one who may see what the offer names. */
 const permits = (state, player, ability, id, kind, source) => {
+  if (state.objects[id]?.faceDown === true && !mayLookAt(state, state.objects[id], player)) return false;
+  return withFaceUp(state, id, () => permitsShown(state, player, ability, id, kind, source));
+};
+const permitsShown = (state, player, ability, id, kind, source) => {
   const which = kind === "land" ? ability.lands : ability.spells;
   return Boolean(which) && !(ability.notAdventure && state.objects[id].face === "adventure") && isLand(state.objects[id]) === (kind === "land")
     && (which === true || (typeof which === "object" && matchesSelector({...which, what: "card", zone: state.objects[id].zone}, state, id, {controller: player, source})));
@@ -1056,7 +1070,7 @@ const allPlayPermissions = (state, player) => onceAQuestion(state, `play-permiss
   }
   return [...statics, ...(state.effects ?? []).filter(e => e.rule === "may-play" && e.player === player).map(e => ({source: e.id,
     ability: {id: e.id, ids: e.affects.ids, spells: true, lands: !e.spellsOnly, free: e.free === true, notAdventure: e.notAdventure === true,
-      ...(e.graveyardToLibraryBottom ? {graveyardToLibraryBottom: true} : {})}}))];
+      ...(e.graveyardToLibraryBottom ? {graveyardToLibraryBottom: true} : {}), ...(e.onlyIf !== undefined ? {condition: e.onlyIf} : {})}}))];
 });
 /* The life a cast through this permission costs instead of its mana cost -- "pay life equal to its mana value" (Bolas's
    Citadel; CR 118.9) -- or null when it is paid for as usual. X is 0 (CR 107.3b): no alternative cost of the Citadel's
@@ -1121,8 +1135,9 @@ function playableElsewhere(state, player, kind) {
      controller may cast it, for as long as it stays there. */
   if (kind === "spell") for (const id of state.zones.exile)
     if (state.objects[id].prepareOf !== undefined && preparedCopyStays(state, id) && controllerOf(state, state.objects[id].prepareOf) === player && !found.includes(id)) found.push(id);
-  /* Keep resolved permissions after the card's own zone permissions, preserving stable offer order. */
-  for (const {ability, source} of allPlayPermissions(state, player)) if (ability.ids)
+  /* Keep resolved permissions after the card's own zone permissions, preserving stable offer order -- each while it is open
+     (permissionOpen: Flameshape's Wizard). */
+  for (const {ability, source} of allPlayPermissions(state, player)) if (ability.ids && permissionOpen(state, player, ability, source))
     for (const id of permittedFrom(state, player, ability))
       if (permits(state, player, ability, id, kind, source) && !found.includes(id)) found.push(id);
   return found;
@@ -1252,6 +1267,25 @@ function withFaceDown(state, id, fn) {
   state.objects[id] = shownFaceDown(card);
   try { return derivingAfresh(state, fn); }
   finally { if (state.objects[id]?.disguised === true && state.objects[id].zone !== "stack") state.objects[id] = card; }
+}
+
+/* A CARD EXILED FACE DOWN, PLAYED (CR 406.3a): it "has no characteristics, but the spell or ability that exiled it may allow
+   it to be played from exile ... the card is turned face up just before the player announces that they are playing the
+   card" (Flameshape). So a permission to play it is weighed with the card shown face up for the length of `fn`
+   (state/index.mjs, shownFaceUp) -- a land as a land, under the land drop's rules (CR 305.1-305.2), a spell by its own cost,
+   timing and targets (CR 601.2), an adventurer card as itself or as its Adventure (715.3) -- with its derivations made
+   afresh, and face down again after, unless `fn` played it: it is then a new object on the stack or the battlefield,
+   revealed to every player as it is played (CR 400.7). Anything else, as it is -- a face-down permanent too, whose ability's
+   question (asCast) is no play of a card. Only the permission's player is asked, and only one who may look at it (permits,
+   CR 406.3b), so no other seat is ever offered, or shown, what it is (projection.mjs). Cast face down from there (708.4) is
+   not built: a face-down card offers no disguise. */
+function withFaceUp(state, id, fn) {
+  const card = state.objects[id];
+  if (card?.faceDown !== true || card.zone !== "exile") return fn();
+  const shown = shownFaceUp(card);
+  state.objects[id] = shown;
+  try { return derivingAfresh(state, fn); }
+  finally { if (state.objects[id] === shown) state.objects[id] = card; }
 }
 
 /* WHERE AN ADVENTURE MAY BE CAST FROM (CR 715.3, 715.3d): its owner's hand, the command zone (a commander, CR 903.8), or
@@ -1445,9 +1479,10 @@ function offers(state, player) {
       /* A modal double-faced card with a land on its back (CR 712.12): played with that face up. */
       if (backLand(state.objects[id])) actions.push({kind: "play-land", objectId: id, label: state.objects[id].mdfc.back.card, face: "back"});
     }
-    /* From the graveyard, or the top of the library, when a permanent says so: the same land drop (CR 305.2). */
-    for (const id of playableElsewhere(state, player, "land")) for (const via of permissionWays(state, player, id, "land"))
-      actions.push({kind: "play-land", objectId: id, label: state.objects[id].card, from: state.objects[id].zone, ...viaOf(state, via)});
+    /* From the graveyard, or the top of the library, when a permanent says so: the same land drop (CR 305.2). And from exile
+       face down, named as the land it is to the one player offered it (withFaceUp, CR 406.3a). */
+    for (const id of playableElsewhere(state, player, "land")) actions.push(...withFaceUp(state, id, () => permissionWays(state, player, id, "land")
+      .map((via) => ({kind: "play-land", objectId: id, label: state.objects[id].card, from: state.objects[id].zone, ...viaOf(state, via)}))));
   }
 
   /* CR 605.3a: any time you have priority, whatever the step. */
@@ -1479,7 +1514,8 @@ function offers(state, player) {
     /* And by its own alternative cost from the graveyard (CR 118.9; Squee, Dubious Monarch): its other cards picked once taken. */
     ...cardsIn(state, "graveyard", player).filter((id) => alternativeCosts(state, player, id).some((w) => w.fromGraveyard)).map((id) => ({id, from: "graveyard", graveyardCost: true})),
   ];
-  for (const entry of castable) actions.push(...castOffers(state, player, entry, tappable));
+  /* A card exiled face down, by its own cost, timing and targets (withFaceUp, CR 406.3a, 601.2). */
+  for (const entry of castable) actions.push(...withFaceUp(state, entry.id, () => castOffers(state, player, entry, tappable)));
   /* Disguise (CR 702.168a): face down for {3}, from wherever the card could be cast as that face-down spell -- its owner's
      hand, the command zone (a commander), or a zone a permission opens to it, the permission weighed face down too: Mystic
      Forge's "colorless spells" takes it in, Thundermane Dragon's "power 4 or greater" does not (702.168b). Never for
@@ -1497,12 +1533,13 @@ function offers(state, player) {
      exceed Maralen's limit even when the Adventure is eligible, or the converse. */
   const adventurers = new Set([...castable.filter(e => !e.flashback && !e.escape).map(e => e.id),
     ...allPlayPermissions(state, player).flatMap(({ability}) => permittedFrom(state, player, ability))]);
-  for (const id of adventurers) {
-    if (!state.objects[id]?.adventurer) continue;
+  /* One exiled face down is an adventurer card only as the card it is (withFaceUp, CR 406.3a, 715.3). */
+  for (const id of adventurers) actions.push(...withFaceUp(state, id, () => {
+    if (!state.objects[id]?.adventurer) return [];
     const from = state.objects[id].zone;
-    actions.push(...withAdventure(state, id, () => adventureFrom(state, player, id, from)
-      ? permissionWays(state, player, id, "spell").flatMap(via => castOffers(state, player, {id, from, via, adventure: true}, tappable)) : []));
-  }
+    return withAdventure(state, id, () => adventureFrom(state, player, id, from)
+      ? permissionWays(state, player, id, "spell").flatMap(via => castOffers(state, player, {id, from, via, adventure: true}, tappable)) : []);
+  }));
 
   /* CR 602.2: a permanent's activated abilities, whenever its controller has priority; a sorcery-speed one only
      when a sorcery could be cast. */
@@ -1704,8 +1741,9 @@ function idle(state, player, actions) {
   };
   /* And an adventurer card's Adventure, where it may be cast as one (CR 715.3): an instant there is mana for, in the
      opponent's turn, is something to do. */
-  return !spells.some((id) => castableNow(id)
-    || (Boolean(state.objects[id]?.adventurer) && withAdventure(state, id, () => adventureFrom(state, player, id, state.objects[id].zone) && castableNow(id))));
+  /* And a card exiled face down that they may play, as the card it is (withFaceUp, CR 406.3a). */
+  return !spells.some((id) => withFaceUp(state, id, () => castableNow(id)
+    || (Boolean(state.objects[id]?.adventurer) && withAdventure(state, id, () => adventureFrom(state, player, id, state.objects[id].zone) && castableNow(id)))));
 }
 
 /* Two actions are the same offer when they agree on everything that identifies them. Comparing by
@@ -1878,9 +1916,10 @@ function perform(state, player, action, during = null) {
   }
   /* CAST AS AN ADVENTURE (CR 715.3): the card shown as its Adventure from here on -- its targets, its cost, the spell put on
      the stack -- and as itself again if it is not cast after all (a question asked first, a cost refused). */
-  if (action?.kind === "cast" && action.adventure === true) return withAdventure(state, action.objectId, () => performOffered(state, player, action, during));
   /* CAST WITH DISGUISE (CR 702.168b): shown face down from here on, and put on the stack so (rules/stack.mjs). */
-  if (action?.kind === "cast" && action.disguise === true) return withFaceDown(state, action.objectId, () => performOffered(state, player, action, during));
+  /* PLAYED FROM EXILE FACE DOWN (CR 406.3a): turned face up from here on -- announced, put on the stack or the battlefield
+     and named to every player as the card it is -- and face down again if it is not played after all (asCast). */
+  if (action?.kind === "cast" || action?.kind === "play-land") return asCast(state, action, () => performOffered(state, player, action, during));
   return performOffered(state, player, action, during);
 }
 

@@ -62,8 +62,9 @@ const VISIBILITY = {
 /* WHO MAY LOOK AT A FACE-DOWN CARD. On the battlefield, its controller (CR 708.5). In exile, nobody unless an instruction
    allows it (CR 406.3): hideaway's "the player who controls the permanent that exiled this card may look at this card"
    (702.75a) -- `lookers`, each player who has been allowed to, and who goes on being able to until it leaves exile (406.3)
-   -- and never its owner merely for owning it. */
-function mayLookAt(state, object, viewer, controller) {
+   -- and never its owner merely for owning it. And the one answer the rules ask too: a card exiled face down is played
+   only by a player who may look at it (CR 406.3b; rules/actions.mjs), so an offer naming it is never made to anyone else. */
+export function mayLookAt(state, object, viewer, controller = null) {
   if (object.zone === "battlefield") return viewer === controller;
   if (object.zone === "exile") {
     const by = object.exiledBy !== undefined ? state.objects[object.exiledBy] : null;

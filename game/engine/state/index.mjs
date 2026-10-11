@@ -217,7 +217,10 @@ const FACE_DOWN_EXILED = Object.freeze({card: null, types: [], subtypes: [], sup
 /* A permanent's copiable values (CR 707.2): what a copy effect writes onto it (effects/permanents.mjs, becomeCopy), its own
    kept beside them as `uncopied` -- only the values it has, so it is the same object woken from storage as in memory. */
 export const COPY_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "spell", "enchant"]);
-const CARD_KEYS = ["card", "types", "subtypes", "supertypes", "manaCost", "colors", "power", "toughness", "loyalty", "keywords", "abilities", "spell", "enchant", "mdfc", "preparation"];
+/* An adventurer card's two sets of characteristics (`adventurer`, CR 715.2) are the card's too: kept beside it face down, so a
+   card exiled face down and played from there may still be cast as its Adventure (715.3), and one manifested leaves the
+   battlefield as the card it is (708.9). */
+const CARD_KEYS = ["card", "types", "subtypes", "supertypes", "manaCost", "colors", "power", "toughness", "loyalty", "keywords", "abilities", "spell", "enchant", "mdfc", "preparation", "adventurer"];
 
 /**
  * TO TURN A FACE-DOWN PERMANENT FACE UP (CR 708.8): its copiable values go back to the card's own -- a double-faced card's
@@ -261,6 +264,16 @@ export function shownFaceDown(object) {
   const faceDownCard = Object.fromEntries(CARD_KEYS.filter((key) => object[key] !== undefined).map((key) => [key, object[key]]));
   const rest = Object.fromEntries(Object.entries(object).filter(([key]) => !CARD_KEYS.includes(key)));
   return {...rest, ...structuredClone(FACE_DOWN_DISGUISED), faceDown: true, disguised: true, faceDownCard};
+}
+
+/** A card exiled face down, as it is turned face up to be played (CR 406.3a: "the card is turned face up just before the
+    player announces that they are playing the card"): the card it is kept beside (`faceDownCard`), in the exiled card's
+    place, with its owner and its marks -- what is weighed as it is offered and played. A new object for the same card, as
+    shownFaceDown's is: rules/actions.mjs puts it in the card's place for the offer and the play, and the card back, face
+    down and untouched, unless the play moved it. */
+export function shownFaceUp(object) {
+  const rest = Object.fromEntries(Object.entries(object).filter(([key]) => !CARD_KEYS.includes(key) && key !== "faceDown" && key !== "faceDownCard"));
+  return {...rest, ...structuredClone(object.faceDownCard ?? {})};
 }
 
 /** Show an adventurer card as its Adventure (`shown`), or as itself again: what is weighed as it is cast as an Adventure

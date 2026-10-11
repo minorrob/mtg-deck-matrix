@@ -198,6 +198,9 @@ function checkEffect(effect, path, errors) {
   /* "For as long as it remains exiled": a permission only for a card in exile now. */
   if (name === "mayPlay" && effect.zone !== undefined && effect.zone !== "exile")
     errors.push({path: `${path}.zone`, message: "mayPlay's zone is \"exile\": a card there now, for as long as it remains exiled"});
+  /* "If you control a Wizard" (Flameshape): a permission's condition, closed as an effect's own is -- an unknown key refused
+     here rather than read as true. */
+  if (name === "mayPlay") for (const message of conditionProblems(effect.onlyIf)) errors.push({path: `${path}.onlyIf`, message});
   /* Amass (CR 701.47a): the creature type its Army is, "Goblin" for "amass Goblins 2"; the Army chosen remembered or not. */
   if (name === "amass") {
     if (!isText(effect.subtype) || !isCreatureType(effect.subtype))

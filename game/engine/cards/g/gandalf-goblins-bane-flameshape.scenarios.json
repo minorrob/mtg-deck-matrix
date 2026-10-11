@@ -1,0 +1,881 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Gandalf, Goblins' Bane // Flameshape",
+  "fixtures": {
+    "Shock": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s0",
+        "text": "Shock deals 2 damage to target player.",
+        "targets": [
+          {
+            "what": "player"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 2,
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Apprentice": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Wizard"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Doom": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s0",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob casts a noncreature spell: Gandalf gets +1/+1 until end of turn and deals 1 damage to Maya",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gandalf, Goblins' Bane // Flameshape",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Shock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Shock",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Gandalf, Goblins' Bane",
+                "power": 3,
+                "toughness": 4
+              }
+            },
+            {
+              "seat": 1,
+              "life": 39
+            },
+            {
+              "seat": 0,
+              "life": 40
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 37
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Gandalf, Goblins' Bane",
+            "power": 2,
+            "toughness": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "A creature spell: no trigger",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gandalf, Goblins' Bane // Flameshape",
+            "Mountain",
+            "Mountain",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Ogre"
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Gandalf, Goblins' Bane",
+            "power": 2,
+            "toughness": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flameshape: the top two exiled face down -- Rob may look at them, Maya sees two face-down cards; with no Wizard, neither may be played",
+      "library": [
+        "Shock",
+        "Mountain"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Gandalf, Goblins' Bane // Flameshape"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Flameshape"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            null,
+            null,
+            "Gandalf, Goblins' Bane"
+          ],
+          "faceDown": [
+            "Shock",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 18
+        },
+        {
+          "seat": 1,
+          "of": 0,
+          "zone": "exile",
+          "cards": [
+            null,
+            null,
+            "Gandalf, Goblins' Bane"
+          ],
+          "faceDown": [
+            null,
+            null
+          ]
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1
+          }
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Shock",
+            "seat": 0
+          },
+          "count": 0
+        },
+        {
+          "offers": {
+            "kind": "play-land",
+            "card": "Mountain",
+            "seat": 0
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Gandalf cast from exile is a Wizard: the exiled Shock cast from exile, turned face up, and Gandalf's trigger; gone to the graveyard, it may not be cast from there",
+      "library": [
+        "Shock",
+        "Mountain"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Gandalf, Goblins' Bane // Flameshape"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Flameshape"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Gandalf, Goblins' Bane"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Mountain",
+                "Mountain",
+                "Mountain",
+                "Mountain",
+                "Mountain",
+                "Mountain",
+                "Mountain",
+                "Gandalf, Goblins' Bane"
+              ]
+            },
+            {
+              "offers": {
+                "kind": "play-land",
+                "card": "Mountain",
+                "seat": 0
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Shock",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            },
+            {
+              "seat": 1,
+              "of": 0,
+              "zone": "exile",
+              "cards": [
+                null
+              ],
+              "faceDown": [
+                null
+              ]
+            },
+            {
+              "event": "GameEventSpellAbilityCast",
+              "where": {
+                "card": {
+                  "cardId": 50,
+                  "name": "Shock",
+                  "owner": 0,
+                  "controller": 0,
+                  "faceDown": false
+                }
+              }
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 37
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Shock"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            null
+          ],
+          "faceDown": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1
+          }
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Shock",
+            "seat": 0
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "A land played from among them, as Rob's land for the turn: the other not on turn 1, nor on Maya's turn, and on Rob's next",
+      "library": [
+        "Forest",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Apprentice",
+            "Mountain",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Gandalf, Goblins' Bane // Flameshape",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Flameshape"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "play-land",
+                "card": "Forest",
+                "seat": 0
+              },
+              "count": 2
+            }
+          ]
+        },
+        {
+          "play": "Forest"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Apprentice",
+                "Mountain",
+                "Mountain",
+                "Forest"
+              ]
+            },
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                null,
+                "Gandalf, Goblins' Bane"
+              ],
+              "faceDown": [
+                "Forest"
+              ]
+            },
+            {
+              "offers": {
+                "kind": "play-land",
+                "card": "Forest",
+                "seat": 0
+              },
+              "count": 0
+            },
+            {
+              "offers": {
+                "kind": "play-land",
+                "card": "Plains",
+                "seat": 0
+              },
+              "count": 0
+            },
+            {
+              "event": "GameEventLandPlayed",
+              "where": {
+                "land": {
+                  "cardId": 47,
+                  "name": "Forest",
+                  "owner": 0,
+                  "controller": 0,
+                  "faceDown": false
+                }
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "play-land",
+                "card": "Forest",
+                "seat": 0
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "play-land",
+            "card": "Forest",
+            "seat": 0
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "Any Wizard: with an Apprentice out the Shock may be cast at once; once the Apprentice is gone, neither card may be played",
+      "library": [
+        "Shock",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Apprentice",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Gandalf, Goblins' Bane // Flameshape",
+            "Doom"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Flameshape"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Shock",
+                "seat": 0
+              },
+              "count": 2
+            },
+            {
+              "offers": {
+                "kind": "play-land",
+                "card": "Forest",
+                "seat": 0
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "cast": "Doom",
+          "targets": [
+            {
+              "card": "Apprentice"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Apprentice",
+            "Doom"
+          ]
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Shock",
+            "seat": 0
+          },
+          "count": 0
+        },
+        {
+          "offers": {
+            "kind": "play-land",
+            "card": "Forest",
+            "seat": 0
+          },
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "faceDown": [
+            "Shock",
+            "Forest"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "An adventurer card exiled face down may be cast as its Adventure from there",
+      "library": [
+        "Glóin the Mighty // Easy Pickings",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Apprentice",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Gandalf, Goblins' Bane // Flameshape"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Apprentice"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Flameshape"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "faceDown": [
+                "Glóin the Mighty",
+                "Forest"
+              ]
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Easy Pickings",
+                "seat": 0
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "cast": "Easy Pickings"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Apprentice"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Apprentice",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            null,
+            "Gandalf, Goblins' Bane",
+            "Glóin the Mighty"
+          ]
+        }
+      ]
+    }
+  ]
+}
