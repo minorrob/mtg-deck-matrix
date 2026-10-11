@@ -144,7 +144,6 @@
       if (!el || !cloudPlay() || !playable(d)) return;
       let r;
       try {r = await readiness(d);} catch {return;}
-      if (el.dataset.deck !== d.id || !el.isConnected) return;
       el.innerHTML = `<span class="cm-deck-play-line">${e(readinessText(r))}</span>`
         + (r.count ? ` <span class="cm-muted">The table cannot play ${r.unknown.length === 1 ? "this one" : "these"} yet: ${e(r.unknown.slice(0, 6).join(", "))}${r.unknown.length > 6 ? ", …" : ""}.</span>`
           : ` ${b("Play this deck", "deck-play", {deck: d.id}, true, {cls: "compact"})}`);

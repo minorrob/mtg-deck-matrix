@@ -578,8 +578,8 @@ function groupDeck(groupId){
   return form(`New deck from ${g.name}`,f('Deck name','name',leaders[0].name+' deck','required maxlength="160"')+s('Commander','commanderId',leaders.map(c=>[c.id,c.name]),leaders[0].id)+note(`This makes a new draft deck whose list is the ${rows.reduce((n,r)=>n+r.quantity,0)} cards in ${g.name}, and the deck stays linked to ${g.name}.`)+(copies?`<label class="cm-checkbox cm-full"><input type="checkbox" name="move" checked> Put the ${copies} cop${copies===1?'y':'ies'} you own from ${e(g.name)} (now on the Bench) in the deck's box</label>`:''),
     async data=>{const id='deck:'+C.uid();
       const fromPrecon=pendingPrecon&&pendingPrecon.name===g.name?pendingPrecon:null;pendingPrecon=null;
-      const {play,...precon}=fromPrecon||{};
-      await commit({type:'createDeck',deckId:id,name:data.name,commanders:[data.commanderId],groupId:g.id,...(fromPrecon?{precon}:{}),
+      const play=fromPrecon?.play;   /* the library keeps a precon's id, name and set alone (collection-model.js) */
+      await commit({type:'createDeck',deckId:id,name:data.name,commanders:[data.commanderId],groupId:g.id,...(fromPrecon?{precon:fromPrecon}:{}),
         slots:rows.some(r=>r.cardId===data.commanderId)?rows:[{cardId:data.commanderId,quantity:1},...rows]});
       if(data.move&&bench.length)await commit({type:'bulk',op:'place',deckId:id,lotIds:bench.map(l=>l.id),asStandIn:true});
       if(play&&C.play?.open())go('table',{deck:id});else go('decks',{deck:id});},'Create draft');

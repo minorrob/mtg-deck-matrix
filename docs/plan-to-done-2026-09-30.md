@@ -681,6 +681,21 @@ table are not yet one thing.
   history line.
 - **Proof:** `tests/decks-hub.mjs` and `tests/deck-page-r3.mjs`: the readiness line and *Play this deck*;
   `tests/table-lobby.mjs`: the deck arrives at the seat; `tests/precons.mjs`: *Play it*.
+- **Status, 2026-10-11: built**, where Play is in the cloud (`crankmagic-table.js`, `C.play`; production leaves it out):
+  - **the readiness:** each tile reads *Playable at the table* or *13 cards to learn for the table*; the deck's page reads
+    *Playable at the table · all 100 cards known*, or *87 of 100 known · 13 to learn* and names the cards the table
+    cannot play yet. It is read from `POST /api/tables/known` (`cloud/tables.mjs`): which names a table cannot play,
+    asked with no table, of one object that answers from the engine's cards alone. The hub asks once for every deck.
+  - **Play this deck** opens New table saying *You bring … to seat 1.*, and seats the deck once the table is made; seated
+    at a table whose game has not begun, it offers *Bring … there*. A deck the table cannot play whole is named with
+    its cards and not brought.
+  - **New from Wizards' Play it:** the precon's import, then the deck, then New table with it.
+  - **Proof:** all of it in `tests/table-lobby.mjs`, the suite that runs staging's own page with Play on (88 checks,
+    13 new, through the Worker's real front door now); the door in `tests/game-table.mjs` (159); the other suites
+    named above unchanged and green. 21 breaks: 20 caught; the one missed was a guard no suite could see (an
+    answer landing after the page moved on writes into a page already gone), so it was removed.
+  - **Left:** *to learn* still means the table refuses the deck by name, until AI-3's online half learns a card at
+    *Prepare decks*; the deck page's Record gaining the game's history line.
 
 ## Part 4 — The order, the estimates, and what Rob decides
 
