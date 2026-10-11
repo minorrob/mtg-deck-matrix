@@ -211,6 +211,18 @@ delete uncapped.ai.coachCapCents;
 ok(verify(playConfig(sb, (c) => ({...c, vars: Object.fromEntries(Object.entries(c.vars).filter(([k]) => k !== "AI_CAP_COACH_CENTS"))})), uncapped).some((p) => p.includes("without a daily cap of its own")), "and a release that switches the Coach on without its cap is refused");
 ok(sb.get("privacy.html").toString("utf8").includes("It never sends another player's hand, the order of any library"), "the published privacy policy says what the Coach sends and never sends");
 eq(aiVars({...stagingProfile, ai: {...stagingProfile.ai, coach: true}}).AI_COACH, "on", "and a profile that says so turns it on");
+/* AN AI ON CLAUDE (AI-2): its own switch and each game's cap, from the profile; not on staging until Rob approves what the
+   privacy page says it sends. */
+eq([sw2.vars.AI_PILOT, sw2.vars.AI_CAP_PILOT_GAME_CENTS], [undefined, undefined], "staging seats no AI on Claude yet: its switch is off");
+const pilotProfile = {...stagingProfile, ai: {...stagingProfile.ai, pilot: true}};
+eq([aiVars(pilotProfile).AI_PILOT, aiVars(pilotProfile).AI_CAP_PILOT_GAME_CENTS, aiVars({...stagingProfile, ai: {...stagingProfile.ai, pilot: true, pilotGameCents: 10}}).AI_CAP_PILOT_GAME_CENTS],
+  ["on", "25", "10"], "a profile that says so switches it on, each game capped at 25 cents unless it says otherwise (Rob: \"0.25 per game is good\")");
+const withPilot = playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_PILOT: "on", AI_CAP_PILOT_GAME_CENTS: "25"}}));
+ok(verify(withPilot, pilotProfile).some((p) => p.includes("privacy.html does not say what it sends") && p.includes("AI on Claude")), "a release that seats an AI on Claude where the privacy policy does not say what it sends is refused");
+const said = new Map([...withPilot].map(([f, b]) => [f, f === "privacy.html" ? Buffer.from(b.toString("utf8").replace("</main>", "<p><strong>AI players on Claude.</strong> …</p></main>")) : b]));
+ok(!verify(said, pilotProfile).some((p) => p.includes("AI on Claude")), "and one whose privacy policy says it is not");
+const uncappedPilot = playConfig(said, (c) => ({...c, vars: {...c.vars, AI_CAP_PILOT_GAME_CENTS: "0"}}));
+ok(verify(uncappedPilot, {...pilotProfile, ai: {...pilotProfile.ai, pilotGameCents: 0}}).some((p) => p.includes("without a cap for each game")), "nor one without each game's cap");
 ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_MODEL: "claude-opus-5-5"}})), {...stagingProfile, ai: {...stagingProfile.ai, model: "claude-opus-5-5"}}).some((p) => p.includes("not one the AI door calls")), "and a profile naming a model dearer than Sonnet, even its own (Rob: Sonnet or the lowest-cost models, always)");
 ok(verify(playConfig(built, (c) => ({...c, durable_objects: sw2.durable_objects})), profile).some((p) => p.includes("release without Play")), "and production binding a table");
 ok(verify(new Map([...sb, [".assetsignore", Buffer.from(sb.get(".assetsignore").toString().replace("game/\n", ""))]]), stagingProfile).some((p) => p.includes("engine's source as files")), "a Play release that would publish the engine's source is named");

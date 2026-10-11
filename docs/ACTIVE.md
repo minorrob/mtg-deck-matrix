@@ -16,7 +16,7 @@ keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of 
 | Gate item | State | Proof, or whose step |
 | --- | --- | --- |
 | G-A: G1, 1,400 games | **done: 1,400 of 1,400 clean** | PR #686's head ccb250d1: every game finished, none refused, every replay identical, 0 leaks in 105,656 checks of every seat's view |
-| G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**, with a daily cap of its own ($1.50, released at 905394dc); **AI-2's L1 built** (Normal and Easy, measured against L0: Normal 61%, Easy 56%, L0 itself 51%); the LLM seat, and AI-3 to AI-6, not built | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
+| G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**, with a daily cap of its own ($1.50, released at 905394dc); **AI-2's L1 built** (Normal and Easy, measured against L0: Normal 61%, Easy 56%, L0 itself 51%); **the LLM seat built behind its switch**, its privacy wording Rob's to approve; AI-3 to AI-6 not built | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
 | G-B: the whole gate green twice on main | done | dispatched Tests runs on main, every suite: 2499 on def8fa89 and 2503 on eff40fdc, both green |
 | G-B: `play-e2e` under wrangler dev | done | 35 checks at every staging release |
 | G-B: hidden information in every frame | done | `play-journeys` reads every frame to both people; G1's oracle 102,879 checks, no leak |
@@ -830,3 +830,26 @@ or discards, counters, life), in its own main phase with the stack empty, once n
   - facts without abilities or subtypes;
   - facts read anew;
   - the quick pass not told the turn.
+
+**#692 and #693 on staging.** #692 (862fae14) was released to `release/cloud-staging` 076d3828 and deployed at 22:30:08
+UTC as version a5ff4906 (2,455,957 bytes, sha256 1641c4f82dcf…). #693 merged on main dc03fa81 on green Actions; it was
+released to 3da63aed and deployed at 22:50:02 UTC as version 9b85364a (2,463,462 bytes, sha256 93027a433636…). Each
+release passed release-acceptance (22) and play-e2e (35), and each deployed `play-worker.js` is byte-identical to its
+release's dry-run bundle. **New tables on staging seat L1 AIs at Normal or Easy, abilities and all.**
+
+**AI-2: the LLM seat, built behind its switch (2026-10-10).** *An AI · Claude* on New table, offered and seated only
+where the AI door would let the host spend on it. It plays L1 at Normal, and at its close calls the room offers it the
+decision as it would a person. A close call is the spells it would cast, or an attack, with L1's two best plans within a
+point of each other. The table's object asks Claude Haiku 5.5 on its alarm, with the seat's own view, no person's name,
+and L1's choice as the hint. Each call is logged as `pilot` under the host, within the day's caps and the game's 25¢.
+When the model cannot answer, the seat's own pilot does. Every answer is on the tape, so a replay never asks the model.
+- **Proof:**
+  - `room-agent-seat` 23 checks;
+  - `agent-seat-table` 16;
+  - `coach` 55;
+  - `table-lobby` 75;
+  - `release-pages` 200;
+  - **35 breaks caught**: when it consults (at every decision, never, on any turn, the margin always wide, holding back counted per opponent); the room (a consult ignored at a choice or at priority, the llm setting dropped, the seat made as L1, houseAnswer for a person); the table (seated without the door, llm dropped, no alarm for the seat); the object (the gate skipped, the switch or the allowlist ignored, the game's cap ignored, spend not kept, any index used, the model never asked); the brief (names sent, every hand in it, the hint dropped, a repeated index allowed); the call (on Sonnet, effort not low, logged as the Coach); the Worker's question (the switch or the allowlist ignored); the release (the switch always on, without the privacy wording, without the game's cap); the lobby (Claude always, or never, offered).
+- **Rob's, left:** approve the privacy wording in `docs/ai-door.md` ("AI players on Claude"). Then it goes on
+  `privacy.html` and staging's profile switches it on.
+- **Then:** the bench against L1 with a real model, on staging or with a key in the environment.

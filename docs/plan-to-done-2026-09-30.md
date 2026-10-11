@@ -512,6 +512,30 @@ So the settings are in order, each step measured: L0 51%, Easy 56%, Normal 61%.
 - **Time:** the slowest decision was 176 ms, on a board of a hundred Goblins.
 - **Refused answers:** none, from either pilot.
 
+**Status, 2026-10-10: the LLM seat built, behind its switch.** *An AI · Claude* on New table, where the AI door would
+let the host spend on it (`AI_PILOT` on, the key, caps and model set, the host on the allowlist).
+- **Where the model comes in:** the seat plays L1 at Normal except at its close calls, where L1's two best plans for
+  the spells it would cast or an attack score within a point of each other (`game/engine/pilots/agent-pilot.mjs`).
+- **How it is asked:** the room offers the seat that decision as it would a person. The table's object asks Claude
+  Haiku 5.5 on its alarm, with the seat's own view, no person's name and L1's choice as the hint
+  (`game/room/agent-brief.mjs`, `cloud/ai.mjs` `pilot`, `cloud/game-room.mjs` `agentTurns`).
+- **What holds it:** each call is logged as `pilot` under the host, on the day's caps and within the game's 25¢. When
+  the model cannot answer, the seat's own pilot does (`room.houseAnswer`). Either answer is on the tape, so a replay
+  never asks the model.
+- **Proof** (a stand-in model; no network):
+  - `room-agent-seat`: only close calls are offered to it; its answers replay; a room reopened while it waits still
+    waits.
+  - `agent-seat-table`: the door's gates at seating; no name sent; logged under the host; the game's cap; a wrong
+    index or a failed call handled.
+  - `coach`: `GET /api/ai-seat`.
+  - `table-lobby`: the option appears only where open.
+  - `release-pages`: the switch, refused without the privacy wording or the game's cap.
+- **Rob's, left:** approve the privacy wording drafted in `docs/ai-door.md` ("AI players on Claude"). Then it goes on
+  `privacy.html`, staging's profile gets `ai.pilot: true`, and the next staging release seats an AI on Claude.
+- **Then measured:** the plan's 100 seeded games against L1 need the key. It is a Worker secret, not in the session's
+  container, so the bench runs on staging's playtest tables, or here with a key Rob sets in the environment. That costs
+  about 1¢ to 3¢ a game, by the estimate above.
+
 Sources: [AI Factory's Spades, MCTS with knowledge](https://ojs.aaai.org/index.php/AIIDE/article/view/12679);
 [Information Set MCTS](https://eprints.whiterose.ac.uk/75048); [determinized MCTS for
 Magic](https://eprints.whiterose.ac.uk/75050); [evolved evaluation functions for a collectible card

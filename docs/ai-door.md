@@ -127,3 +127,37 @@ It is in the "AI features" section of `privacy.html`, and the staging profile ha
 > collection. Anthropic processes it to write the answer and does not use it to train its models. CrankMagic keeps the
 > same record of each request as for other AI features, and deletes it with your account.
 
+
+## An AI on Claude (AI-2), through the same door
+
+Rob, 2026-10-10: *"Use Haiku 5.5. 0.25 per game is good"* and *"I do want to deliver on L0 as part of the LLM AI seat
+capability"*. A host may seat **An AI · Claude** on New table where the door would let them spend on it: its own switch,
+`AI_PILOT`, the door's key, caps and model set, and the host on the allowlist (`GET /api/ai-seat` says whether to offer
+it; the table's object checks again as it seats one, and refuses otherwise).
+- **The seat** plays L1 at Normal (`game/engine/pilots/scored-pilot.mjs`), except at its close calls. A close call is
+  the spells it would cast, or an attack, when L1's two best plans score within a point of each other
+  (`game/engine/pilots/agent-pilot.mjs`). There the room offers the seat that one decision as it would a person.
+- **The table's object** answers it on its alarm, so no person's request waits on a model (`cloud/game-room.mjs`,
+  `agentTurns`).
+  - **The brief** (`game/room/agent-brief.mjs`) is built from the seat's own view: its hand, the board as everyone
+    sees it, the stack, the turn and the decision's options. L1's own choice is included as the hint. Every person's
+    name becomes their seat ("Seat 1"), in the brief and in the options' words. Never another hand or a library's
+    order.
+  - **The call** (`cloud/ai.mjs`, `pilot`) is Claude Haiku 5.5 at low effort, answering `{indices, why}`. It is logged
+    as `pilot` under the host, on the day's caps, and within the game's own cap: `AI_CAP_PILOT_GAME_CENTS`, 25 unless
+    a profile says otherwise. The object keeps what the game has spent.
+  - **When the model cannot answer** (the cap reached, a failure, an index the decision does not have, an answer the
+    rules refuse), the seat's own pilot answers (`room.houseAnswer`). Either answer goes through `act`, onto the tape,
+    so a replay never asks the model.
+- **Not on staging yet:** `tools/release-pages.mjs` sets `AI_PILOT` (with the game's cap) only for a profile whose
+  `ai.pilot` is true. It refuses a release that does so where `privacy.html` does not say what the seat sends, or
+  without the game's cap. The wording below waits on Rob.
+
+### The privacy wording for an AI on Claude (for Rob to approve)
+
+> **AI players on Claude.** At a table, its host may seat an AI that plays on Claude, Anthropic's AI model, if they are
+> invited to AI features. At some of that AI's decisions, CrankMagic sends Anthropic the AI seat's own view of the game:
+> its hand, the board as every player at the table sees it, and the choices it has. It never sends a person's hand, the
+> order of any library, or anyone's name: players are named by their seat. Each request is logged under the host's
+> account with what it cost, the day's limits hold it, and each game is capped at 25¢. Anthropic does not use what it
+> is sent to train its models.

@@ -8,6 +8,7 @@
  *   GET  /api/auth/login?to=#…     after Access has signed the person in, back to the app (a same-site path only)
  *   GET  /api/join/:table/:code    an invitation's link: back to the app at #table/<table>/<code>, after Access's sign-in
  *   GET  /api/me                   who is signed in, and the version their devices converge on
+ *   GET  /api/ai-seat              whether this person may seat an AI on Claude at a new table (AI-2): {open}
  *   GET  /api/library              the head: {head} (null before a first save)
  *   PUT  /api/library              save {parent, revision, device, checksum, body, force?} -> 200 {head} | 409 {head}
  *   POST /api/library/kept         file this device's version without moving the head (the losing side of a choice)
@@ -28,6 +29,13 @@ import {createLibrary, Conflict, Invalid, LIMITS} from "./library.mjs";
 import {archidekt, ImportError} from "./import.mjs";
 import {createAi, settings, explain, coach, readQuestion, Closed} from "./ai.mjs";
 import {tables} from "./tables.mjs";
+
+/** Whether this person may seat an AI on Claude: the same gates as the table's object checks when it seats one. */
+async function aiSeatOpen(env, email) {
+  if (env.AI_PILOT !== "on" || !env.DB) return false;
+  try {settings(env);} catch {return false;}
+  return createAi(env.DB).allowed(email);
+}
 
 /** An invitation's link, `/api/join/<table>/<code>`: where it sends the person -- the app, at the seat's fragment -- or
     null when the path is not one (the suites' browsers ask this too, behind their stand-in for Access). */
@@ -131,6 +139,9 @@ export async function handle(request, env, deps = {}) {
     const joined = method === "GET" ? joinLocation(url) : null;
     if (joined) return new Response(null, {status: 302, headers: {location: joined, "cache-control": "no-store", "referrer-policy": "no-referrer"}});
     if (method === "GET" && path === "/api/me") return reply(200, {email: person.email, since: person.createdAt, head: await library.head(person.id)});
+    /* AN AI ON CLAUDE (AI-2): New table offers one only where the table's object would seat it (cloud/game-room.mjs
+       `pilotOpen`): the switch on, the door's key, caps and model set, and this person on the allowlist. */
+    if (method === "GET" && path === "/api/ai-seat") return reply(200, {open: await aiSeatOpen(env, person.email)});
     if (method === "GET" && path === "/api/library") return reply(200, {head: await library.head(person.id)});
     if (method === "PUT" && path === "/api/library") {
       const input = await body(request);

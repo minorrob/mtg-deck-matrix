@@ -106,7 +106,7 @@
   function seatBox(s, t) {
     const art = C.seatArt;
     /* An AI seat says its setting (AI-2): Easy or Normal. */
-    const who = `Seat ${s.seatId + 1} · ${s.you ? "You" : s.kind === "ai" ? `AI · ${s.level === "easy" ? "Easy" : "Normal"}` : s.name}`;
+    const who = `Seat ${s.seatId + 1} · ${s.you ? "You" : s.kind === "ai" ? `AI · ${({easy: "Easy", llm: "Claude"})[s.level] || "Normal"}` : s.name}`;
     const state = seatState(s, t);
     const pseudo = s.deck ? {name: s.deck.name, commanders: (s.deck.commander || []).map((name) => ({name}))} : null;
     const away = (t.away || []).find((a) => a.seatId === s.seatId);
@@ -276,6 +276,18 @@
       <div class="cm-actions">${b("Create the table", "table-create", {}, true)}</div></form></section>`;
     const kept = seatKept();
     if (kept) waitingSeat(kept);
+    offerClaude();
+  }
+  /* AN AI ON CLAUDE (AI-2), offered beside Normal and Easy only where this person may seat one (GET /api/ai-seat). */
+  async function offerClaude() {
+    let open = false;
+    try {({open} = await api("GET", "/api/ai-seat"));} catch {return;}
+    const form = document.getElementById("cm-table-new");
+    if (!open || !form) return;
+    for (const select of form.querySelectorAll("select[name^=kind]")) {
+      if (select.querySelector("option[value=ai-llm]")) continue;
+      select.querySelector("option[value=ai-easy]").insertAdjacentHTML("afterend", `<option value="ai-llm">An AI · Claude</option>`);
+    }
   }
   /* The kept seat, if it is still yours and its game not over: said first, above New table. */
   async function waitingSeat(id) {
@@ -296,9 +308,10 @@
     const form = document.getElementById("cm-table-new");
     const v = Object.fromEntries(new FormData(form));
     if (!v.hostName.trim()) throw Error("Give your name at the table.");
-    /* An AI at Normal or Easy (AI-2): Normal scores its choices; Easy, now and then, takes the second best. */
+    /* An AI at Normal or Easy (AI-2): Normal scores its choices; Easy, now and then, takes the second best; Claude asks a
+       model at its close calls. */
     const seats = [2, 3, 4].filter((n) => v[`kind${n}`] !== "none").map((n) => (v[`kind${n}`].startsWith("ai")
-      ? {kind: "ai", level: v[`kind${n}`] === "ai-easy" ? "easy" : "normal", name: v[`name${n}`]}
+      ? {kind: "ai", level: ({"ai-easy": "easy", "ai-llm": "llm"})[v[`kind${n}`]] || "normal", name: v[`name${n}`]}
       : {kind: v[`kind${n}`], name: v[`name${n}`]}));
     if (!seats.length) throw Error("A table needs at least one other seat: a person or an AI.");
     const {table} = await api("POST", "/api/tables", {hostName: v.hostName, seats});

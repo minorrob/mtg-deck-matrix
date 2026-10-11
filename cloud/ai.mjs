@@ -279,3 +279,40 @@ export async function coach({ai, who, brief, question, config, fetchImpl = fetch
   const plays = (answer.plays ?? []).map((p) => ({card: String(p.card).replace(/^\[\[|\]\]$/g, "").trim(), action: String(p.action ?? "").trim(), why: String(p.why ?? "").trim()}));
   return {answer: text, plays, ...(answer.threat ? {threat: {seat: answer.threat.seat, why: String(answer.threat.why ?? "").trim()}} : {}), show: answer.show ?? [], model: spend.model, meter: meter(spend.micros)};
 }
+
+/* THE LLM SEAT (AI-2 in docs/plan-to-done-2026-09-30.md). At its close calls the room offers the seat one decision; the
+ * table builds the brief from the seat's own view (game/room/agent-brief.mjs: its hand, the board as everyone sees it,
+ * no person's name) and asks the model to choose among the decision's options only, with the house pilot's choice as
+ * the hint. Rob, 2026-10-10: "Use Haiku 5.5. 0.25 per game is good": the door's model, at low effort, a short answer,
+ * logged as `pilot` under the host who seated it. The table holds the game's 25 cents (cloud/game-room.mjs); the door
+ * holds the day's caps, as for every feature. What comes back is indices, read by `pickOf`; anything else is not used. */
+export const PILOT_MAX_TOKENS = 300;
+export const PILOT_SYSTEM = [
+  "You play one seat in a game of Magic: The Gathering (Commander). You are asked one decision at a time.",
+  "Choose only among the decision's options, by their index: one index when its mode is \"one\", between its min and max indices when it is \"many\".",
+  "housePilotWouldChoose is a heuristic's choice: take it unless another option is clearly better.",
+  "You see your own hand and the board as every player sees it; nobody's hand but yours, and no library's order. Do not guess at them.",
+  "Play to win. In why, one short sentence.",
+].join(" ");
+const PILOT_SCHEMA = {
+  type: "object",
+  properties: {indices: {type: "array", items: {type: "integer"}}, why: {type: "string"}},
+  required: ["indices", "why"],
+  additionalProperties: false,
+};
+export function pilotBody(brief, model) {
+  return {
+    model, max_tokens: PILOT_MAX_TOKENS, system: PILOT_SYSTEM,
+    output_config: {effort: "low", format: {type: "json_schema", schema: PILOT_SCHEMA}},
+    messages: [{role: "user", content: JSON.stringify(brief)}],
+  };
+}
+/** The model's choice for the LLM seat: `{answer: {indices, why}, micros, done}`; the caller checks the indices (`pickOf`)
+    and logs the outcome with `done` ("ok", or "ungrounded" when they are not the decision's). Throws Closed as `ask` does. */
+export async function pilot({ai, who, brief, config, fetchImpl = fetch}) {
+  const {answer, spend, done} = await ask({ai, who, feature: "pilot", body: pilotBody(brief, config.model), maxTokens: PILOT_MAX_TOKENS, config, fetchImpl,
+    declined: "The AI declined this decision."});
+  return {answer, micros: spend.micros, model: spend.model, done};
+}
+/** The worst a pilot call could cost, before it is made: what the table holds against the game's cap. */
+export const pilotWorst = (brief, model) => costMicros(model, JSON.stringify(pilotBody(brief, model)).length, PILOT_MAX_TOKENS);

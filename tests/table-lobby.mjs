@@ -167,6 +167,8 @@ try {
   ok(!/Coming Soon/.test(await pageText(rob.page, "#cm-main")), "with the cloud-Play mark, the Play tab opens a new table");
 
   /* HOST: a new table. */
+  /* The AI door not open to Rob (GET /api/ai-seat says so): no AI on Claude is offered. */
+  await rob.page.route("**/api/ai-seat", (r) => r.fulfill({json: {open: false}}));
   await rob.page.goto(`${base}/index.html#table`);
   await rob.page.locator("#cm-table-new").waitFor({timeout: 30000});
   /* The accessibility pass: the page's "?" opens the table's help, the board's keys among it. */
@@ -432,9 +434,14 @@ try {
      decks, is told how to bring one, and Restore opens from the dialog itself, so the seat stays theirs. */
   {
     const nina = await person("nina@example.com", {width: 1400, height: 900}, {library: false});
+    /* Where the AI door is open to her (GET /api/ai-seat, stood in for here), New table offers an AI on Claude too. */
+    await nina.page.route("**/api/ai-seat", (r) => r.fulfill({json: {open: true}}));
     await nina.page.goto(`${base}/index.html#table`);
     const form = nina.page.locator("#cm-table-new");
     await form.waitFor({timeout: 30000});
+    await form.locator("select[name=kind2] option[value=ai-llm]").waitFor({state: "attached", timeout: 10000});
+    eq(await form.locator("select[name=kind2] option").allTextContents(), ["A person I will invite", "An AI · Normal", "An AI · Easy", "An AI · Claude", "Nobody"],
+      "with the AI door open to her, New table offers an AI on Claude beside Normal and Easy (AI-2)");
     await form.locator("input[name=hostName]").fill("Nina");
     await form.locator("select[name=kind2]").selectOption("ai");
     await nina.page.click("[data-action=table-create]");

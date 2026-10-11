@@ -213,6 +213,20 @@ DB.raw.prepare("INSERT INTO ai_calls (id, email, feature, model, input_tokens, o
 const full = await ask({env: capped});
 eq([full.status, full.json.error], [429, "The Coach has reached its spend cap for the last 24 hours. Try again tomorrow."], "the Coach's own spending, anyone's, with this call's worst case would pass its cap: the Coach is refused, saying so");
 DB.raw.prepare("DELETE FROM ai_calls WHERE id IN ('expl', 'mate')").run();
+/* AN AI ON CLAUDE (AI-2): New table asks GET /api/ai-seat, through the library's own sign-in, whether to offer one. */
+{
+  const seatAsk = async (env, email = ROB) => {
+    const h = b64url(JSON.stringify({alg: "RS256", kid: "k1", typ: "JWT"}));
+    const p = b64url(JSON.stringify({aud: ["aud-library"], iss: `https://${TEAM}`, email, exp: clock / 1000 + 3600, iat: clock / 1000}));
+    const jwt = `${h}.${p}.${b64url(await crypto.subtle.sign("RSASSA-PKCS1-v1_5", privateKey, new TextEncoder().encode(`${h}.${p}`)))}`;
+    const r = await handle(new Request("https://crankmagic.test/api/ai-seat", {headers: {"cf-access-jwt-assertion": jwt}}), env, {fetchImpl, now: clock});
+    return {status: r.status, json: await r.json()};
+  };
+  const PILOT = {...OPEN, AI_PILOT: "on"};
+  eq([(await seatAsk(OPEN)).json, (await seatAsk(PILOT)).json, (await seatAsk(PILOT, STRANGER)).json, (await seatAsk({...PILOT, ANTHROPIC_API_KEY: undefined})).json],
+    [{open: false}, {open: true}, {open: false}, {open: false}],
+    "an AI on Claude is offered only with its switch on, the door's key and caps set, and the person on the allowlist");
+}
 const login = await ask({method: "GET", path: `/api/ai/login?to=${encodeURIComponent(`#table?id=${TABLE}`)}`});
 eq([login.status, login.location], [302, `https://crankmagic.test/#table?id=${TABLE}`], "signed in to the AI door, back to the table");
 eq((await ask({method: "GET", path: "/api/ai/login?to=https://elsewhere.example"})).location, "https://crankmagic.test/", "and never anywhere else");
