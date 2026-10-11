@@ -1964,7 +1964,10 @@ function performOffered(state, player, action, during) {
       ...(action.tapAny === true ? {tapped: tappedAny.length} : {}),
       /* Cast for its surge or freerunning cost (CR 702.117a, 702.173a): "if this spell's freerunning cost was paid"
          (script/condition.mjs, `paidFor`), and the permanent it becomes (rules/stack.mjs). */
-      ...(way?.paidFor ? {paidFor: way.paidFor} : {})};
+      ...(way?.paidFor ? {paidFor: way.paidFor} : {}),
+      /* The Phyrexian mana symbols of its cost paid with life, two life each (CR 107.4f): compleated reads it as the permanent
+         enters (CR 702.150a; rules/replacement.mjs). */
+      ...(payment.life > 0 ? {phyrexianLife: payment.life / 2} : {})};
     /* Kicked that many times (multikicker, CR 702.33c): the permanent it becomes knows it as it enters (rules/stack.mjs). */
     if (action.kicked) entry.kicked = action.kicked;
     /* Cast as an Adventure (CR 715.3): exiled as it resolves, and castable as itself from there (rules/stack.mjs, 715.3d). */

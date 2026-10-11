@@ -189,7 +189,9 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   /* Partner with [name] (CR 702.124j): a deck rule and a trigger as it enters (cards/index.mjs). */
   "partner with",
   /* Firebending N (CR 702.189): an attack trigger, its mana kept until end of combat (cards/index.mjs, rules/turn.mjs). */
-  "firebending"];
+  "firebending",
+  /* Compleated (CR 702.150): fewer loyalty counters for Phyrexian mana paid with life (rules/replacement.mjs). */
+  "compleated"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

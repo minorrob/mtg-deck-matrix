@@ -367,7 +367,7 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     }
     const entering = to === "battlefield"
       ? enteringModifications(state, {objectId: entry.objectId, player: entry.playerId,
-        types: object.types, abilities: object.abilities, x: entry.x ?? 0, escaped: entry.escaped === true, kicked: entry.kicked ?? 0})
+        types: object.types, abilities: object.abilities, x: entry.x ?? 0, escaped: entry.escaped === true, kicked: entry.kicked ?? 0, phyrexianLife: entry.cast?.phyrexianLife ?? 0})
       : null;
     const arrived = moveObject(state, entry.objectId, to, ["graveyard", "library"].includes(to) ? owner : null);
     /* Rebound's delayed trigger (CR 702.88a, 603.7d: its controller the spell's): at the beginning of THEIR next upkeep, the

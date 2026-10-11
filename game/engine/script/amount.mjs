@@ -12,7 +12,8 @@
  *   {count: selector}                    how many things the selector matches now -- "for each creature you control",
  *                                        "the number of cards in your hand" ({what: "card", zone: "hand", controller: "you"})
  *   {countersOn: ref, counter: kind}     counters of a kind on an object ("for each burden counter on The One Ring"), or
- *                                        of every kind, `counter: "any"` ("for each counter on this creature")
+ *                                        of every kind, `counter: "any"` ("for each counter on this creature"); on a target
+ *                                        player, theirs ("target player's poison counters", Vraska, Betrayal's Sting)
  *   {powerOf: ref}                       an object's power ("Krenko's power"): "self", or "that card"
  *   {toughnessOf: ref}                   its toughness ("its controller gains life equal to its toughness", Condemn)
  *   {greatestPower: selector}            the greatest power among what the selector matches, 0 if nothing (CR 208.1)
@@ -120,6 +121,12 @@ function matching(state, selector, who) {
 /* The player an amount refers to: you, or the player a trigger or repetition is about. */
 const playerOf = (ref, context) => (ref === "that player" ? context.about?.player ?? null : ref === "you" ? context.controller ?? null : null);
 
+/* A target player an amount refers to ({target: n}), while they are one. */
+function targetPlayer(ref, context) {
+  const chosen = ref && typeof ref === "object" && Number.isInteger(ref.target) ? (context.targets ?? [])[ref.target] : null;
+  return chosen?.kind === "player" ? chosen.id : null;
+}
+
 /* The object an amount refers to: the source, or what the trigger is about. */
 function objectOf(ref, context) {
   if (ref === "self") return context.source ?? null;
@@ -175,7 +182,11 @@ export function amountOf(state, value, context = {}) {
   /* "Greater than this creature's power or toughness" (increment, Berta): the lesser of them. */
   else if ("lesserOf" in value) n = Math.min(...value.lesserOf.map((one) => amountOf(state, one, context)));
   else if ("count" in value) n = matching(state, value.count, who).length;
-  else if ("countersOn" in value) {
+  else if ("countersOn" in value && targetPlayer(value.countersOn, context) !== null) {
+    const player = state.players[targetPlayer(value.countersOn, context)];
+    const counters = {...(player?.counters ?? {}), poison: player?.poison ?? 0};
+    n = value.counter === "any" ? Object.values(counters).reduce((a, b) => a + b, 0) : counters[value.counter] ?? 0;
+  } else if ("countersOn" in value) {
     const id = objectOf(value.countersOn, context);
     /* A source sacrificed as the cost ("for each counter on this creature") is read as it last was (CR 608.2h). */
     const counters = id !== null && state.objects[id] ? state.objects[id].counters : context.lastKnown?.counters;

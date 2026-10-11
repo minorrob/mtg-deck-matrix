@@ -741,6 +741,14 @@ export function compileScript(script) {
       keywords.push("Riot");
       return;
     }
+    /* COMPLEATED (CR 702.150a; Vraska, Betrayal's Sting, Train C phase 2): a planeswalker whose caster paid life for Phyrexian
+       mana symbols of its cost enters with two fewer loyalty counters for each (rules/replacement.mjs, enteringModifications;
+       rules/actions.mjs remembers the symbols paid with life). Only on a planeswalker card with a Phyrexian symbol in its cost. */
+    if (word === "compleated") {
+      if (!(identity.types ?? []).includes("Planeswalker") || !/\/P\}/.test(identity.manaCost ?? "")) problems.push(`${ability.text}: compleated is a planeswalker's, with a Phyrexian mana symbol in its cost`);
+      keywords.push("Compleated");
+      return;
+    }
     /* UMBRA ARMOR (CR 702.89a): "If enchanted permanent would be destroyed, instead remove all damage marked on it and destroy
        this Aura" -- the static `umbra-armor` on the Aura, read wherever a permanent would be destroyed (effects/zones.mjs,
        destructionReplaced). Only on an Aura. */

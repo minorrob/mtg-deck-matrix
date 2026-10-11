@@ -65,8 +65,10 @@ export const KEYWORD_FAMILIES = Object.freeze({
       among the spell's additional costs; rules/actions.mjs makes each mode its own cast). */
   pay: Object.freeze(["Convoke", "Evoke", "Prowl", "Escalate", "Overload", "Surge", "Freerunning", "Tiered"]),
   /** How a permanent enters: Riot (CR 702.136a), with a +1/+1 counter or with haste, its controller's choice as it arrives --
-      a replacement on its own entering (cards/index.mjs, rules/replacement.mjs), asked once it is there (rules/entering.mjs). */
-  enter: Object.freeze(["Riot"]),
+      a replacement on its own entering (cards/index.mjs, rules/replacement.mjs), asked once it is there (rules/entering.mjs).
+      Compleated (CR 702.150a): two fewer loyalty counters for each Phyrexian symbol of its cost its caster paid with life
+      (rules/replacement.mjs, enteringModifications). */
+  enter: Object.freeze(["Riot", "Compleated"]),
 });
 
 /**
