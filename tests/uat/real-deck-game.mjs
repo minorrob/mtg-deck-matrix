@@ -18,9 +18,15 @@
  * REAL_DECK_ID=D2 selects the committed Chulane list; this never uses an external backup.
  * REAL_DECKS_REQUIRED=1 refuses a missing browser; UAT_SHOTS=<dir> saves each end screen.
  * This deliberate full-game acceptance run is outside the regular suite inventory.
+ *
+ * G-D'S DRESS REHEARSAL (M8; docs/uat/playtest-findings.md). REAL_GAMES=<n> plays n tables in a row, the seven decks
+ * four at a time (the first table D1-D4, the next D2-D5, and so on round). RECORDS=<run folder> makes every table a
+ * playtest table, as staging's are, and after each natural end both people download the full record from the
+ * board's game-over panel into <run folder>/records/, which tools/playtest-triage.mjs then replays and judges, as it
+ * will Grok Bot's runs.
  */
 import assert from "node:assert/strict";
-import {readFileSync, mkdirSync} from "node:fs";
+import {readFileSync, mkdirSync, writeFileSync} from "node:fs";
 import path from "node:path";
 import {openBrowser, loadLiveState, ROOT} from "./browser-runner.mjs";
 import {basicCards} from "../../game/room/room.mjs";
@@ -34,6 +40,9 @@ const ok = (c, m) => {assert.ok(c, m); checks += 1; console.log(`  ok  ${m}`);};
 const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1; console.log(`  ok  ${m}`);};
 const DECK_ID = process.env.REAL_DECK_ID || "D5";
 assert.ok(/^(D2|D5)$/.test(DECK_ID), "REAL_DECK_ID must be D2 or D5, the completed committed deck lists");
+const GAMES = Number(process.env.REAL_GAMES || 1), RECORDS = process.env.RECORDS || "";
+assert.ok(Number.isInteger(GAMES) && GAMES >= 1, "REAL_GAMES is a number of tables, 1 or more");
+if (RECORDS) mkdirSync(path.join(RECORDS, "records"), {recursive: true});
 const SHOTS = process.env.UAT_SHOTS || "";
 if (SHOTS) mkdirSync(SHOTS, {recursive: true});
 const shot = async (page, name) => {if (SHOTS) await page.screenshot({path: path.join(SHOTS, `${name}.png`)});};
@@ -55,7 +64,8 @@ const objectCtx = () => {
     list: async ({prefix}) => new Map([...map].filter(([k]) => k.startsWith(prefix)).sort()), setAlarm: async () => {}, deleteAlarm: async () => {}},
   acceptWebSocket: (s, tags) => {s.tags = tags; sockets.push(s);}, getWebSockets: () => sockets.filter((s) => !s.closed), getTags: (s) => s.tags};
 };
-const tableFor = (id) => {if (!objects.has(id)) objects.set(id, new GameTable(objectCtx(), {}, {cards, now: () => clock})); return objects.get(id);};
+/* With RECORDS, a playtest table, as the Worker's PLAYTEST_TABLES makes staging's: its record is the whole game. */
+const tableFor = (id) => {if (!objects.has(id)) objects.set(id, new GameTable(objectCtx(), RECORDS ? {PLAYTEST_TABLES: "on"} : {}, {cards, now: () => clock})); return objects.get(id);};
 async function answer(route, email) {
   const req = route.request(), url = new URL(req.url()), method = req.method();
   const m = /^\/api\/tables(?:\/([a-z0-9]+)(?:\/([a-z]+))?)?$/.exec(url.pathname);
@@ -174,7 +184,7 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
   async function answer(person, seat) {
     if (!await people[seat]()) return false;
     actions++;
-    if(actions%25===0) console.log(`${DECK_ID} browser: ${actions} actions, turn ${current(person).state.turn}`);
+    if(actions%25===0) console.log(`${GAMES === 1 ? DECK_ID : `table ${n}`} browser: ${actions} actions, turn ${current(person).state.turn}`);
     return true;
   }
   for(let i=0;i<3000;i++) {
@@ -203,6 +213,13 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
     await person.page.locator('.cm-board-over').waitFor({timeout:10000});
     await shot(person.page,`${DECK_ID.toLowerCase()}-natural-end-seat${seat}`);
   }
+  /* The record each person downloads from the game-over panel: on a playtest table, the whole game. */
+  if (RECORDS) for (const [person,seat] of [[rob,0],[maya,1]]) {
+    const [download] = await Promise.all([person.page.waitForEvent('download',{timeout:15000}), person.page.click('.cm-board-over [data-action=board-record]')]);
+    const record = JSON.parse(readFileSync(await download.path(),'utf8'));
+    eq([record.kind,record.matchId],['full',result.matchId ?? record.matchId],`seat ${seat}: the game-over panel downloads the full record`);
+    writeFileSync(path.join(RECORDS,'records',`${record.matchId}-seat${seat}.json`), JSON.stringify(record));
+  }
   const room=tableFor(id).room;
   console.log(JSON.stringify({checks,actions,turns:result.state.turn,result:result.result,refusals:room.refusals},null,2));
   eq(room.refusals.total,0,'AI answers were never refused during the whole match');
@@ -213,7 +230,8 @@ try {
   const deck=DECKS.find(d=>d.id===`deck:live:${DECK_ID}`); assert.ok(deck);
   const rob=await person(ROB,{width:1400,height:900});
   const maya=await person(MAYA,{width:1280,height:720});
-  await journey(1,rob,maya,[deck,deck,deck,deck]);
+  /* One table of the one deck; or n tables, the seven decks four at a time. */
+  for (let n = 1; n <= GAMES; n += 1) await journey(n,rob,maya,GAMES === 1 ? [deck,deck,deck,deck] : [0,1,2,3].map((j)=>DECKS[(n-1+j)%DECKS.length]));
 } finally {for (const alarm of alarms) clearInterval(alarm); await close();}
 console.log(`${DECK_ID} real browser: ${checks} checks passed`);
 process.exit(0);

@@ -49,6 +49,8 @@ network proxy. If the board says it is reconnecting and never connects, report i
 
 Never put a token in a finding, a record, a log or a chat.
 
+A run, step by step (the decks to paste, the tables to make, the records to hand over): `docs/uat/playtest-run.md`.
+
 ### Rob's steps: the four agents' access, staging only
 
 1. **Make the tokens.** Zero Trust → **Access controls** → **Service credentials** → **Service Tokens** →
