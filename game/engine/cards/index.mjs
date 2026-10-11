@@ -686,15 +686,16 @@ export function compileScript(script) {
       return;
     }
     /* PROTECTION FROM [QUALITY] (CR 702.16a), printed: "protection from black" (Karmic Guide) -- the keyword with its quality
-       in `from` ({colors}, {types}, or "everything"), compiled to the static `protection` on this permanent; what protection
-       does (DEBT, CR 702.16b-f) is read where each thing happens (rules/protection.mjs). */
+       in `from` ({colors}, {types}, {multicolored: true} -- "protection from multicolored", Argentum Masticore -- or
+       "everything"), compiled to the static `protection` on this permanent; what protection does (DEBT, CR 702.16b-f) is
+       read where each thing happens (rules/protection.mjs). */
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "protection") {
       const from = ability.from;
       const valid = from === "everything" || (from && typeof from === "object" && !Array.isArray(from) && Object.keys(from).length > 0
-        && Object.keys(from).every((k) => ["colors", "types"].includes(k))
+        && Object.keys(from).every((k) => ["colors", "types", "multicolored"].includes(k)) && [undefined, true].includes(from.multicolored)
         && (from.colors ?? []).every((c) => ["W", "U", "B", "R", "G"].includes(c)) && (from.types ?? []).every((t) => typeof t === "string" && t.length > 0)
-        && [...(from.colors ?? []), ...(from.types ?? [])].length > 0);
-      if (!valid) problems.push(`${ability.text}: protection says from what: \`from\`, {colors: [...]}, {types: [...]} or "everything"`);
+        && ([...(from.colors ?? []), ...(from.types ?? [])].length > 0 || from.multicolored === true));
+      if (!valid) problems.push(`${ability.text}: protection says from what: \`from\`, {colors: [...]}, {types: [...]}, {multicolored: true} or "everything"`);
       abilities.push({id, kind: "static", rule: "protection", text: ability.text, affects: {self: true}, from: valid ? structuredClone(from) : {}});
       keywords.push("Protection");
       return;

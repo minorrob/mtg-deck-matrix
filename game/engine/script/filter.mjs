@@ -36,7 +36,7 @@ import {usesThisTurn, valueCostOf} from "../state/index.mjs";
 import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf, subtypesOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {hasSubtype, isCreatureType} from "../keywords/types.mjs";
-import {protectedFrom} from "../rules/protection.mjs";
+import {protectedFrom, hexproofFrom} from "../rules/protection.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
 
 /* The steps after blockers are declared, in which an attacker is blocked or unblocked (CR 509.1h). */
@@ -175,6 +175,8 @@ function canBeTargetedBy(state, id, chooser, source = null) {
   if (keywords.includes("Hexproof") && controllerOf(state, id) !== chooser) return false;
   /* Protection (CR 702.16b; rules/protection.mjs): no target of a spell or ability from a source with the quality. */
   if (protectedFrom(state, {card: id}, source)) return false;
+  /* Hexproof from a color (CR 702.11d; rules/protection.mjs): no target of an opponent's spell or ability of that color. */
+  if (hexproofFrom(state, id, chooser, source)) return false;
   return true;
 }
 

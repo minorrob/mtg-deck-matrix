@@ -310,6 +310,8 @@ function carryOn(state, outcome, rng) {
   if (!Array.isArray(outcome) && outcome.searched === true) state.resolving.context.searched = true;
   /* "Choose a creature type": the type, for the effects after it ("$chosen", script/bind.mjs). */
   if (!Array.isArray(outcome) && typeof outcome.chosen === "string") state.resolving.context.chosen = outcome.chosen;
+  /* "Choose a color": the color, for the effects after it ("$chosenColor", script/chosen.mjs). */
+  if (!Array.isArray(outcome) && typeof outcome.chosenColor === "string") state.resolving.context.chosenColor = outcome.chosenColor;
   /* "You may pay {X}" (Halo Forager; CR 107.3f): the X its payer chose and paid, for what follows -- "when you do, ... with
      mana value X". */
   if (!Array.isArray(outcome) && Number.isInteger(outcome.paidX)) state.resolving.context.x = outcome.paidX;

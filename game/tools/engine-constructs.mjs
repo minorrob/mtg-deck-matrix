@@ -55,6 +55,8 @@ export const FORGE_API = {
   Charm: "modal", RepeatEach: "repeatFor", Branch: "branch", DelayedTrigger: "delayedTrigger",
   ImmediateTrigger: "immediateTrigger", Counter: "counterSpell", CopySpellAbility: "copySpell",
   AddTurn: "addTurn", AddPhase: "addPhase", ChooseCard: "chooseCard", ChooseType: "chooseType",
+  /* ChooseColor ("choose a color", as it resolves; Skrelv, Defector Mite, Train C phase 2): CR 105.1. */
+  ChooseColor: "chooseColor",
   /* GenericChoice ("create a Food token or a Treasure token", "target opponent may have you draw three cards"): the modal
      question at resolution, its chooser any player (batch 52). */
   GenericChoice: "modal", TwoPiles: "twoPiles", Connive: "connive",
@@ -223,9 +225,10 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   "Cumulative upkeep": "unlessPays"};
 
 /* "PROTECTION FROM [QUALITY]" printed as a keyword (CR 702.16a; Karmic Guide's "protection from black"): built for the
-   qualities rules/protection.mjs reads -- a color, a card type, everything -- compiled from the keyword (cards/index.mjs).
-   Not a player, a name, "multicolored", "each color" or "the color of your choice". */
-const PROTECTION_QUALITIES = /^protection from (white|blue|black|red|green|everything|artifacts|creatures|enchantments|instants|lands|planeswalkers|sorceries)$/i;
+   qualities rules/protection.mjs reads -- a color, a card type, multicolored (Argentum Masticore, Train C phase 2),
+   everything -- compiled from the keyword (cards/index.mjs). Not a player, a name, "each color" or "the color of your
+   choice". */
+const PROTECTION_QUALITIES = /^protection from (white|blue|black|red|green|multicolored|everything|artifacts|creatures|enchantments|instants|lands|planeswalkers|sorceries)$/i;
 
 /** Whether a keyword is built: one a rules module acts on, an ability keyword whose primitive is built, or a deck rule the
     table holds. The one rule `missingFor` and the catalog (engine-catalog.mjs) both read. */
@@ -245,7 +248,9 @@ export const FORGE_OPTIONS = Object.freeze({
   UnlessCostMana: {name: "Unless a player pays mana (\"unless that player pays {1}\")", status: "built", engine: "unlessPays (generic mana)"},
   UnlessCostPayLife: {name: "Unless a player pays life (a shock land's 2 life)", status: "built", engine: "unlessPay life, as it enters"},
   UnlessCostReveal: {name: "Unless a player reveals a card (\"reveal an Island or Swamp card\")", status: "built", engine: "unlessReveal, as it enters"},
-  UnlessCostDiscard: {name: "Unless a player discards a card", status: "missing"},
+  /* Ward's discard (CR 702.21a), and "sacrifice this creature unless you discard a card. When you discard a card this way"
+     (Argentum Masticore, Train C phase 2): each card in the payer's hand its own option, the card discarded remembered. */
+  UnlessCostDiscard: {name: "Unless a player discards a card", status: "built", engine: "unlessPays's discard: each card in the payer's hand an option; the discarded card remembered (\"this way\")"},
   UnlessCostSac: {name: "Unless a player sacrifices a permanent", status: "missing"},
   UnlessCostOther: {name: "Unless a player pays some other cost (taps, exiles, ...)", status: "missing"},
   /* Judged kind by kind (FORGE_COUNTS below), not as one: "for each creature you control" is built, "for each spell

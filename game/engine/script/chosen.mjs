@@ -33,3 +33,22 @@ export function withChosen(value, chosen) {
 
 /** A permanent's ability, read with that permanent's own choice. Unchanged when it names none. */
 export const chosenFor = (ability, holder) => (namesChosen(ability) ? withChosen(ability, holder?.chosen) : ability);
+
+/* "THAT COLOR" ("$chosenColor"): the color a chooseColor chose earlier in the same resolution (effects/asking.mjs;
+   script/resolution.mjs, the context's `chosenColor`) -- "choose a color. Another target creature you control gains ...
+   hexproof from that color" (Skrelv, Defector Mite). Its own name, so a permanent's entering choice ("$chosen", read as its
+   abilities are) never takes its place; before anything is chosen, NONE_CHOSEN, a color nothing has. */
+const namedColor = new WeakMap();
+/** Whether an effect names the color chosen as it resolves. */
+export function namesChosenColor(value) {
+  if (!value || typeof value !== "object") return false;
+  let known = namedColor.get(value);
+  if (known === undefined) { known = JSON.stringify(value).includes('"$chosenColor"'); namedColor.set(value, known); }
+  return known;
+}
+/** The value with every "$chosenColor" replaced by that color's letter (or NONE_CHOSEN). */
+export function withChosenColor(value, color) {
+  const choice = color ?? NONE_CHOSEN;
+  const walk = (v) => (Array.isArray(v) ? v.map(walk) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, walk(x)])) : v === "$chosenColor" ? choice : v);
+  return walk(value);
+}

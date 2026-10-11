@@ -101,8 +101,10 @@ function checkEffect(effect, path, errors) {
   /* An effect's own condition ("if this spell was cast from a graveyard", "if you do"; resolution.mjs asks it): closed, as
      an ability's is -- an unknown key refused here rather than read as true. */
   for (const message of conditionProblems(effect.condition)) errors.push({path: `${path}.condition`, message});
-  /* A reflexive trigger's own targets (CR 603.12): selectors, and every `{target: n}` its effects name declared among them. */
+  /* A reflexive trigger's own targets (CR 603.12): selectors, and every `{target: n}` its effects name declared among them.
+     What it is about: this resolution's, or what the effect before it remembered (`about: "remembered"`). */
   if (name === "immediateTrigger") {
+    if (effect.about !== undefined && effect.about !== "remembered") errors.push({path: `${path}.about`, message: "A reflexive trigger is about what its resolution is, or `about: \"remembered\"`"});
     for (const [index, selector] of (effect.targets ?? []).entries()) checkSelector(selector, `${path}.targets[${index}]`, errors, {choice: true});
     for (const n of targetRefs(effect.effects ?? []))
       if (n < 0 || n >= (effect.targets ?? []).length) errors.push({path: `${path}.effects`, message: `A reflexive trigger's effect names target ${n}, and it declares ${(effect.targets ?? []).length}`});

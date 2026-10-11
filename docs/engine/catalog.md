@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,242 defined and playable today; 2,583 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,243 defined and playable today; 2,596 with every
 mechanic built, so only their definitions are left to write; 27 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -20,12 +20,12 @@ many most-played cards need it among other missing things; **Alone** how many it
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 60 | 0 | 5 | 129 |
 | Keyword actions (CR 701) | 70 | 22 | 3 | 1 | 44 |
-| Effects | 192 | 70 | 1 | 2 | 119 |
+| Effects | 192 | 71 | 1 | 2 | 118 |
 | Triggers | 138 | 20 | 4 | 2 | 112 |
 | Static abilities | 77 | 14 | 2 | 0 | 61 |
 | Replacement effects | 34 | 0 | 5 | 0 | 29 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
-| Options and conditions | 37 | 23 | 5 | 0 | 9 |
+| Options and conditions | 37 | 24 | 5 | 0 | 8 |
 | Amounts the game counts | 188 | 17 | 1 | 0 | 170 |
 | Choices | 15 | 12 | 0 | 0 | 3 |
 | Other keyword constructs | 16 | 9 | 0 | 1 | 6 |
@@ -36,10 +36,9 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 27 | 91 |
+| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 28 | 90 |
 | option | Remembering what an effect moved | — | missing | 21 | 83 |
 | option | You may play or cast a card from another zone | — | missing | 17 | 65 |
-| effect | ChooseColor | — | missing | 10 | 14 |
 | count | What entered or died this turn | — | missing | 9 | 9 |
 | count | Cards in a library | — | missing | 8 | 12 |
 | count | Spells cast this turn | — | missing | 8 | 12 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | effect | Discover | discover | named | 6 | 6 |
 | count | How many things an effect remembered | — | missing | 5 | 8 |
 | keyword ability | Warp | — | missing | 5 | 7 |
+| option | Unless a player sacrifices a permanent | — | missing | 5 | 7 |
 
 ## Keyword abilities (CR 702)
 
@@ -381,7 +381,7 @@ The things that alone hold back the most of the most-played cards.
 | ReplaceCounter | replaceCounters | named | 16 | 33 | 14 | 0 |
 | Fight | fight | built | 15 | 148 | 0 | 0 |
 | WinsGame | winGame | built | 15 | 43 | 0 | 0 |
-| ChooseColor | — | missing | 14 | 132 | 14 | 10 |
+| ChooseColor | chooseColor | built | 14 | 132 | 0 | 0 |
 | Branch | branch | built | 14 | 113 | 0 | 0 |
 | Regenerate | regenerate | built | 12 | 269 | 0 | 0 |
 | AnimateAll | animateAll | built | 12 | 133 | 0 | 0 |
@@ -577,7 +577,7 @@ The things that alone hold back the most of the most-played cards.
 | TapAll | — | missing | 1 | 2 | 1 | 1 |
 | AttackerUnblockedOnce | — | missing | 1 | 1 | 1 | 1 |
 | DamagePreventedOnce | — | missing | 1 | 1 | 1 | 1 |
-| ManaAdded | — | missing | 1 | 1 | 1 | 0 |
+| ManaAdded | — | missing | 1 | 1 | 1 | 1 |
 | SacrificedOnce | — | missing | 1 | 1 | 1 | 1 |
 | ChaosEnsues | — | missing | 0 | 158 | 0 | 0 |
 | TurnFaceUp | — | missing | 0 | 126 | 0 | 0 |
@@ -828,7 +828,7 @@ The things that alone hold back the most of the most-played cards.
 | Fewer targets than the most ("up to", "any number of") | a target's count {min, max} (script/bind.mjs), picked as a pick-several | built | 126 | 1672 | 0 | 0 |
 | Remembering what an effect moved | — | missing | 124 | 1168 | 83 | 21 |
 | More than one target of a kind ("up to N") | a target's count {min, max} (script/bind.mjs); a count that is X is not built | partial | 123 | 1664 | 0 | 0 |
-| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 91 | 27 |
+| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 90 | 28 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost} | built | 104 | 684 | 0 | 0 |
@@ -853,8 +853,8 @@ The things that alone hold back the most of the most-played cards.
 | Except it isn't legendary (a copy) | except.nonLegendary | built | 10 | 43 | 0 | 0 |
 | Unless a player reveals a card ("reveal an Island or Swamp card") | unlessReveal, as it enters | built | 10 | 22 | 0 | 0 |
 | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 9 | 160 | 8 | 4 |
-| Unless a player sacrifices a permanent | — | missing | 7 | 89 | 7 | 4 |
-| Unless a player discards a card | — | missing | 5 | 83 | 5 | 2 |
+| Unless a player sacrifices a permanent | — | missing | 7 | 89 | 7 | 5 |
+| Unless a player discards a card | unlessPays's discard: each card in the payer's hand an option; the discarded card remembered ("this way") | built | 5 | 83 | 0 | 0 |
 | Populate (copy a creature token you control) | populate | built | 5 | 27 | 0 | 0 |
 | Unless a player pays some other cost (taps, exiles, ...) | — | missing | 3 | 162 | 2 | 2 |
 | Grants a triggered ability ("has 'whenever ...'") | a static's apply.addAbilities; a pump's abilities (rules/layers.mjs, abilitiesOf) | built | 3 | 15 | 0 | 0 |

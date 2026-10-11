@@ -1018,8 +1018,12 @@ export const unlessPays = {
 function unlessPaid(state, awaiting, option, events) {
   /* Paying life is losing it (CR 119.4, 119.3). */
   if ((awaiting.life ?? 0) > 0) events.push(...loseLife(state, {amount: awaiting.life, who: [awaiting.player]}, {controller: awaiting.player, source: awaiting.source}));
+  /* A discard: the card it became, remembered -- "when you discard a card this way, ... the mana value of the discarded card"
+     (Argentum Masticore; script/resolution.mjs keeps it for what follows, a reflexive trigger's `about`). */
+  let discarded = null;
   if (option.discard !== undefined && state.objects[option.discard]) {
-    if (moveOne(state, option.discard, "graveyard", events, {owner: awaiting.player}) !== null) events[events.length - 1].data.fields.discarded = true;
+    discarded = moveOne(state, option.discard, "graveyard", events, {owner: awaiting.player});
+    if (discarded !== null) events[events.length - 1].data.fields.discarded = true;
   }
   for (const id of option.sacrifice === undefined ? [] : [].concat(option.sacrifice)) if (state.objects[id]) sacrificeOne(state, id, events);
   /* Returned to its owner's hand (CR 400.3), as a cost is paid: still there and still the payer's, or it cannot be. */
@@ -1027,9 +1031,10 @@ function unlessPaid(state, awaiting, option, events) {
     if (state.objects[option.bounce]?.zone !== "battlefield" || controllerOf(state, option.bounce) !== awaiting.player) throw new Error("That permanent can no longer be returned to its owner's hand");
     moveOne(state, option.bounce, "hand", events);
   }
-  if (awaiting.ifPaid) return {events, splice: structuredClone(awaiting.effects), ...(awaiting.amountX ? {paidX: awaiting.amount} : {})};
+  const remembered = discarded !== null ? {remembered: [discarded]} : {};
+  if (awaiting.ifPaid) return {events, splice: structuredClone(awaiting.effects), ...(awaiting.amountX ? {paidX: awaiting.amount} : {}), ...remembered};
   /* "If they do, you create a Lander token" (Divert Disaster): what paying leads to. */
-  return awaiting.whenPaid ? {events, splice: structuredClone(awaiting.whenPaid)} : events;
+  return awaiting.whenPaid ? {events, splice: structuredClone(awaiting.whenPaid), ...remembered} : events;
 }
 
 /* ---- chooseType (CR 205.3m): "choose a creature type" -- one of the creature types among the cards in the game, which is
@@ -1051,6 +1056,27 @@ export const chooseType = {
     const type = awaiting.types[(indices ?? [])[0]];
     if (type === undefined) throw new Error("Invalid selection");
     return {events: [], chosen: type};
+  },
+};
+
+/* ---- chooseColor (CR 105.1, 105.3): "choose a color" as an effect resolves (Skrelv, Defector Mite) -- one of the five, its
+   controller's choice; what is chosen, the effects after it name as "$chosenColor" (its letter: `colors: ["$chosenColor"]`;
+   script/bind.mjs, chosen.mjs). ---- */
+const COLOR_NAMES = Object.freeze([["W", "White"], ["U", "Blue"], ["B", "Black"], ["R", "Red"], ["G", "Green"]]);
+export const chooseColor = {
+  open(state, params, context) {
+    state.awaiting = {kind: "effect-choice", effect: "chooseColor", player: context.controller, source: context.source ?? null};
+    return true;
+  },
+  choice(state, awaiting) {
+    const name = awaiting.source !== null ? state.objects[awaiting.source]?.card : null;
+    return {id: `chooseColor:${awaiting.player}:${state.turn}`, title: `${name ? `${name}: c` : "C"}hoose a color`, mode: "one", min: 1, max: 1,
+      options: COLOR_NAMES.map(([color, label], index) => ({index, label, color}))};
+  },
+  apply(state, awaiting, indices) {
+    const picked = (indices ?? []).length === 1 ? COLOR_NAMES[indices[0]] : undefined;
+    if (!picked) throw new Error("Choose one color");
+    return {events: [], chosenColor: picked[0]};
   },
 };
 
@@ -1723,5 +1749,5 @@ export const chooseInstead = {
   },
 };
 
-export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage,
+export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, chooseColor, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage,
   conniveWhich, manaColors, counterKind, orderDestruction, chooseInstead});

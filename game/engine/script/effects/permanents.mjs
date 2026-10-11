@@ -593,6 +593,12 @@ export function effectUntil(state, params, context) {
        rule changed for players (`players`): their protection, their life total that can't change. */
     ...(params.until === "their-next-turn" || ["protection", "life-cant-change"].includes(params.rule) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
     ...(params.rule === "protection" ? {from: params.from ?? "everything"} : {}),
+    /* "Hexproof from that color until end of turn" (Skrelv, Defector Mite; CR 702.11d): its colors, chosen as it resolves
+       ("$chosenColor", script/bind.mjs), read where a target is chosen (rules/protection.mjs, hexproofFrom). */
+    ...(params.rule === "hexproof-from" ? {colors: [...(params.colors ?? [])]} : {}),
+    /* "It can't be blocked by creatures of that color this turn" (Skrelv): which blockers, a selector (rules/statics.mjs,
+       cantBeBlockedBy, `by`). */
+    ...(params.rule === "cant-be-blocked-by" ? {by: structuredClone(params.by ?? {})} : {}),
     /* "Until this card is cast from exile" (Emrakul, the Exigent Doom): `untilCast` the card, as `until: "ever"` otherwise is,
        until that cast (rules/actions.mjs). */
     ...(Array.isArray(params.untilCast) && params.untilCast.length ? {untilCast: params.untilCast[0]} : {}),
@@ -813,13 +819,16 @@ export function addPhase(state, params, context) {
  * condition saying whether it did ("this way", script/condition.mjs) -- and goes on the stack the next time a player
  * would receive priority, with the other triggers waiting then, its targets chosen as it does (CR 603.3d; none legal,
  * and it is removed). `effects` what it does, `targets` its own; "that card" and "that player" what this resolution is
- * about.
+ * about -- or, `about: "remembered"`, "that card" what the effect before it remembered: "when you discard a card this way,
+ * destroy target nonland permanent ... with mana value less than or equal to the mana value of the discarded card"
+ * (Argentum Masticore; effects/asking.mjs, unlessPays's discard).
  */
 export function immediateTrigger(state, params, context) {
   const source = context.source ?? null;
+  const about = params.about === "remembered" && context.remembered?.[0] !== undefined ? {...(context.about ?? {}), card: context.remembered[0]} : context.about;
   (state.pendingTriggers ??= []).push({abilityId: "reflexive", text: params.text ?? "When you do", controller: context.controller,
     source: {cardId: source, name: source !== null ? state.objects[source]?.card ?? null : null}, cause: null, optional: false,
-    ...(context.about ? {about: structuredClone(context.about)} : {}),
+    ...(about ? {about: structuredClone(about)} : {}),
     /* And the X of the resolution that made it (Halo Forager's "you may pay {X}. When you do, ... with mana value X"):
        what its targets and effects read as X (rules/trigger.mjs). */
     ...(Number.isInteger(context.x) ? {x: context.x} : {}),
