@@ -79,14 +79,15 @@ export function targetAlternatives(spec) {
   return list.map((selector) => ({...selector, target: true}));
 }
 
-/** A counted target's bounds, `{min, max}` (`max` null for "any number"), or null for a single target. */
-export function countOf(spec) {
+/** A counted target's bounds, `{min, max}` (`max` null for "any number"), or null for a single target. "Up to that many
+    target ..." (Bloodthirsty Adversary's reflexive trigger, `max: "X"`): the X it was made with (CR 603.12, 107.3). */
+export function countOf(spec, context = {}) {
   const count = spec && typeof spec === "object" ? spec.count : undefined;
-  return count && typeof count === "object" ? {min: count.min ?? 0, max: count.max ?? null} : null;
+  return count && typeof count === "object" ? {min: count.min ?? 0, max: count.max === "X" ? Math.max(0, context?.x ?? 0) : count.max ?? null} : null;
 }
 /** The placeholder a counted target holds in an offer until its controller picks (rules/turn.mjs, "choose-targets"), and
     how many there are to pick from (`of`): "up to two" with none to pick does nothing, for a pilot weighing the offer. */
-export const choosing = (spec, of) => ({kind: "choose", ...countOf(spec), ...(of !== undefined ? {of} : {})});
+export const choosing = (spec, of, context = {}) => ({kind: "choose", ...countOf(spec, context), ...(of !== undefined ? {of} : {})});
 export const isChoosing = (t) => Boolean(t) && !Array.isArray(t) && t.kind === "choose";
 
 const COUNT_WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
@@ -100,7 +101,8 @@ export function countWords({min = 0, max = null} = {}) {
   return `${inWords(min)} ${max === min + 1 ? "or" : "to"} ${inWords(max)} targets`;
 }
 
-const kindOf = (selector) => ((selector.what ?? "permanent") === "player" ? "player" : "object");
+/* An ability on the stack (CR 115.2, script/filter.mjs) is no object: chosen as `{kind: "ability", id}`, its entry's stack id. */
+const kindOf = (selector) => ((selector.what ?? "permanent") === "player" ? "player" : selector.what === "ability" ? "ability" : "object");
 
 /* The targets chosen for other instances of "target" that this one must differ from (`distinctFrom`), as the offer or the
    stack entry holds them so far (`context.chosenTargets`, or the way being built). */
@@ -139,10 +141,10 @@ export function targetChoices(state, specs, context) {
     const candidates = targetCandidates(state, spec, context);
     /* A counted target is one placeholder in each way, picked once the offer is taken -- or no way at all, when fewer than
        its least are there to choose (CR 601.2c). */
-    const count = countOf(spec);
+    const count = countOf(spec, context);
     if (count) {
       if (candidates.length < count.min) return [];
-      choices = choices.map((chosen) => [...chosen, choosing(spec, candidates.filter((c) => !otherThan(spec, chosen).some((o) => sameTarget(o, c))).length)]);
+      choices = choices.map((chosen) => [...chosen, choosing(spec, candidates.filter((c) => !otherThan(spec, chosen).some((o) => sameTarget(o, c))).length, context)]);
       continue;
     }
     const next = [];
@@ -161,7 +163,7 @@ export function targetChoices(state, specs, context) {
  * with whose it is when it is not the chooser's, and two that would read alike numbered.
  */
 export function countedChoice(state, spec, context, {id, name, hostile = false}) {
-  const count = countOf(spec) ?? {min: 1, max: 1};
+  const count = countOf(spec, context) ?? {min: 1, max: 1};
   const candidates = targetCandidates(state, spec, context);
   const options = candidates.map((c, index) => {
     const whose = c.kind === "object" && state.objects[c.id] && controllerOf(state, c.id) !== context.controller ? ` (${state.players[controllerOf(state, c.id)]?.name}'s)` : "";
@@ -347,6 +349,12 @@ export function bindEffect(effect, context, state = null) {
   if ("untilCast" in bound) bound.untilCast = objectsOf(bound.untilCast, context);
   /* "Counter that spell or ability" (ward): the stack entry the trigger is about, by its stack id (rules/trigger.mjs). */
   if (bound.stack === "that") bound.stack = context.about?.stackId !== undefined && context.about.stackId !== null ? [context.about.stackId] : [];
+  /* "Change the target of target spell or ability" (Bolt Bend): the stack entries among target n -- an ability by its own
+     stack id, a spell by its entry's. */
+  if (isRef(bound.stack)) {
+    const chosen = [].concat((context.targets ?? [])[bound.stack.target] ?? []).filter(Boolean);
+    bound.stack = chosen.map((t) => (t.kind === "ability" ? t.id : t.kind === "object" ? state?.stack.find((e) => e.objectId === t.id)?.stackId : undefined)).filter((id) => id !== undefined);
+  }
   /* Where the damage comes from, when it is not the spell: "target creature you control deals damage ..." (damageAll). */
   if ("from" in bound) bound.from = objectsOf(bound.from, context);
   /* What is attached, when it is not the ability's source: "you may attach it to target creature you control" (Sigarda's
@@ -357,8 +365,8 @@ export function bindEffect(effect, context, state = null) {
   if ("who" in bound) bound.who = playersOf(bound.who, context, state);
   /* "Target opponent creates a 1/1 Spirit" (Forbidden Orchard): a token's controller, a target player -- or no one. "That
      creature's controller creates a 1/1 Myr" (Genesis Chamber): the controller of what the trigger is about. "Each opponent
-     creates a 1/1 white Human creature token" (Slaughter Specialist; CR 111.2): "that player", the one a repetition is about
-     (effects/index.mjs, repeatFor). */
+     creates a 1/1 white Human creature token" (Slaughter Specialist; CR 111.2), "each opponent may create X ... tokens"
+     (Tempt with Vengeance): "that player", the one a repetition is about (effects/index.mjs, repeatFor). */
   if (isRef(bound.controller) || bound.controller === "that card's controller" || bound.controller === "that player") { const [player] = playersOf(bound.controller, context, state); bound.controller = player ?? -1; }
   /* "That attacking player creates a ... token" (Combat Calligrapher): the player whose attack the trigger is about. */
   if (bound.controller === "attacking player") bound.controller = Number.isInteger(context.about?.attacker) ? context.about.attacker : -1;
@@ -498,6 +506,11 @@ export function targetName(state, chosen) {
   if (Array.isArray(chosen)) return chosen.length ? chosen.map((t) => targetName(state, t)).join(" and ") : "no target";
   if (chosen.kind === "choose") return countWords(chosen);
   if (chosen.kind === "player") return state.players[chosen.id]?.name ?? `Seat ${chosen.id + 1}`;
+  /* An ability on the stack: its source's, as the stack says it (a face-down source's has no name, CR 708.2a). */
+  if (chosen.kind === "ability") {
+    const entry = state.stack.find((e) => e.stackId === chosen.id);
+    return entry ? `${entry.faceDown || !entry.name ? "An" : `${entry.name}'s`} ${entry.kind === "trigger" ? "triggered" : "activated"} ability` : "an ability, now gone";
+  }
   /* A face-down permanent has no name (CR 708.2a): it is said to be face down. */
   return shownName(state.objects[chosen.id]);
 }

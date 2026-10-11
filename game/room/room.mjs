@@ -53,12 +53,12 @@ import {gameOver, concede} from "../engine/rules/sba.mjs";
 import {beginMulligans} from "../engine/rules/mulligan.mjs";
 import {projectFor} from "../engine/projection.mjs";
 import {controllerOf, characteristicsOf} from "../engine/rules/layers.mjs";
-import {countWords, inWords} from "../engine/script/bind.mjs";
+import {countWords, inWords, targetName} from "../engine/script/bind.mjs";
 import {createRng} from "../engine/rng.mjs";
 import {createJournal, hashState} from "../engine/journal.mjs";
 import {createController} from "../engine/controller.mjs";
 import {createMatchStore} from "../engine/storage.mjs";
-import {housePilot} from "../engine/pilots/house-pilot.mjs";
+import {housePilot, meetRequirements} from "../engine/pilots/house-pilot.mjs";
 import {scoredPilot, SETTINGS} from "../engine/pilots/scored-pilot.mjs";
 import {agentPilot} from "../engine/pilots/agent-pilot.mjs";
 import {addToHistory} from "./history.mjs";
@@ -156,6 +156,9 @@ export function leastAnswer(choice) {
     return {indices: [], amounts};
   }
   if (choice.mode === "integer") return {indices: [], value: choice.min ?? 0};
+  /* What the record requires ("attacks each combat if able", CR 508.1d), and no more: each where it is free first, and
+     never past what the player can pay for (an attack tax, CR 508.1h; `budget`). */
+  if (Array.isArray(choice.requires) && choice.requires.length) return {indices: meetRequirements(choice, [])};
   return {indices: options.slice(0, Math.max(choice.min ?? 0, choice.mode === "one" || choice.mode === "boolean" ? 1 : 0)).map((o) => o.index)};
 }
 
@@ -198,7 +201,7 @@ export function offerDetails(state, seat, actions) {
     if (a.kind === "suspend") parts.push(a.payWith !== undefined ? `${a.text ?? "suspend"}, paying ${paymentWords(a.payment)}` : a.text ?? "suspend");
     /* A counted target (script/bind.mjs): what is still to be picked ("up to two targets"), or the ones picked. */
     const aimed = (t) => (!t ? "" : Array.isArray(t) ? (t.length ? t.map(aimed).join(" and ") : "no target") : t.kind === "choose" ? countWords(t)
-      : t.kind === "player" ? player(t.id) : object(t.id, plain));
+      : t.kind === "player" ? player(t.id) : t.kind === "ability" ? targetName(state, t) : object(t.id, plain));
     if ((a.targets ?? []).length) parts.push(`→ ${a.targets.map(aimed).join(", ")}`);
     /* What the cost takes: one card, or a set of them ("sacrificing Bear and Wolf", "discarding Ponder and Opt"), each
        said with what it does to them. */

@@ -421,8 +421,9 @@ export function createToken(state, params, context) {
   if (!spec) throw new Error(`No predefined token named ${params.token.predefined}`);
   const count = params.count ?? 1;
   const controller = params.controller ?? context.controller;
-  /* A target player who is no longer one creates nothing. */
-  if (!state.players[controller]) return events;
+  /* A target player who is no longer one creates nothing -- nor one who has left the game (CR 800.4b: no token is created
+     under their control; Tempt with Vengeance's "may create" answered for them, CR 800.4g). */
+  if (!state.players[controller] || state.players[controller].lost) return events;
   /* "Create a Royal Role token attached to that creature" (Royal Treatment): `attachedTo`, an object bound as a target is --
      an Aura token created attached to what its Enchant could not enchant, or to nothing, is not created (CR 303.4i). An Aura
      token's alone: the compiler refuses it of any other (cards/index.mjs). */
@@ -660,6 +661,17 @@ export function effectUntil(state, params, context) {
        rule changed for players (`players`): their protection, their life total that can't change. */
     ...(params.until === "their-next-turn" || ["protection", "life-cant-change"].includes(params.rule) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
     ...(params.rule === "protection" ? {from: params.from ?? "everything"} : {}),
+    /* A PREVENTION SHIELD OF A PLAYER'S (CR 615; rules/replacement.mjs, preventionsFor): "prevent all combat damage that would
+       be dealt to you this turn" (Inkshield) -- `who`, the players it shields -- "the next time a source of your choice
+       would deal damage to you this turn" (Deflecting Palm) -- `from`, the sources chosen (CR 609.7a), and `next`, used up
+       by the first damage it prevents (CR 615.8) -- and what follows, `then` (CR 615.5), done by its controller and dealt by
+       the spell that made it (`dealer`, followed to the card it becomes, rules/stack.mjs), its name for the order's
+       question (CR 616.1). */
+    ...(params.rule === "prevent-damage" && params.who !== undefined ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
+    ...(params.rule === "prevent-damage" && Array.isArray(params.from) ? {sources: [...params.from]} : {}),
+    ...(params.rule === "prevent-damage" && params.next === true ? {next: true} : {}),
+    ...(params.rule === "prevent-damage" && Array.isArray(params.then) ? {then: structuredClone(params.then), dealer: context.source ?? null} : {}),
+    ...(params.rule === "prevent-damage" ? {name: state.objects[context.source]?.card ?? context.lastKnown?.name ?? "An effect"} : {}),
     /* "Hexproof from that color until end of turn" (Skrelv, Defector Mite; CR 702.11d): its colors, chosen as it resolves
        ("$chosenColor", script/bind.mjs), read where a target is chosen (rules/protection.mjs, hexproofFrom). */
     ...(params.rule === "hexproof-from" ? {colors: [...(params.colors ?? [])]} : {}),

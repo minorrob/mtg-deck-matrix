@@ -341,6 +341,10 @@ function carryOn(state, outcome, rng) {
   /* "You may pay {X}" (Halo Forager; CR 107.3f): the X its payer chose and paid, for what follows -- "when you do, ... with
      mana value X". */
   if (!Array.isArray(outcome) && Number.isInteger(outcome.paidX)) state.resolving.context.x = outcome.paidX;
+  /* "Each opponent may ...": a player who did (effects/asking.mjs, modal's `did`), for "for each opponent who does". */
+  if (!Array.isArray(outcome) && Number.isInteger(outcome.did)) state.resolving.context.whoDid = [...(state.resolving.context.whoDid ?? []), outcome.did];
+  /* A vote's count, by choice (effects/asking.mjs, vote; CR 701.38), for "for each past vote". */
+  if (!Array.isArray(outcome) && outcome.votes && typeof outcome.votes === "object") state.resolving.context.votes = {...outcome.votes};
 
   /* The effect that asked is finished. A modal hands back the chosen modes' effects, which go in
      front of whatever was already queued. */

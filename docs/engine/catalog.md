@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,262 defined and playable today; 2,637 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,266 defined and playable today; 2,640 with every
 mechanic built, so only their definitions are left to write; 27 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -44,11 +44,11 @@ The things that alone hold back the most of the most-played cards.
 | count | Cards in a library | — | missing | 8 | 12 |
 | effect | RingTemptsYou | — | missing | 8 | 11 |
 | trigger | CounterAddedOnce | counter added once | named | 6 | 10 |
-| effect | ChangeTargets | — | missing | 6 | 8 |
 | effect | ChoosePlayer | — | missing | 6 | 8 |
 | option | Imprint (a card exiled with this) | — | missing | 6 | 8 |
 | effect | Discover | discover | named | 6 | 6 |
 | count | How many things an effect remembered | — | missing | 5 | 8 |
+| effect | ChangeTargets | — | missing | 5 | 7 |
 | keyword ability | Warp | — | missing | 5 | 7 |
 | option | Unless a player sacrifices a permanent | — | missing | 5 | 7 |
 
@@ -393,7 +393,7 @@ The things that alone hold back the most of the most-played cards.
 | Poison | poison | built | 11 | 36 | 0 | 0 |
 | AddTurn | addTurn | built | 10 | 65 | 0 | 0 |
 | BecomeMonarch | — | missing | 10 | 62 | 10 | 3 |
-| ChangeTargets | — | missing | 10 | 43 | 8 | 6 |
+| ChangeTargets | — | missing | 10 | 43 | 7 | 5 |
 | Earthbend | earthbend | built | 10 | 36 | 0 | 0 |
 | Phases | phaseOut | built | 9 | 56 | 0 | 0 |
 | RemoveCounter | removeCounter | built | 8 | 198 | 0 | 0 |
@@ -401,7 +401,7 @@ The things that alone hold back the most of the most-played cards.
 | Repeat | — | missing | 8 | 58 | 8 | 0 |
 | RollDice | — | missing | 7 | 131 | 7 | 3 |
 | Amass | amass | built | 7 | 72 | 0 | 0 |
-| StoreSVar | — | missing | 6 | 68 | 6 | 2 |
+| StoreSVar | — | missing | 6 | 68 | 5 | 1 |
 | Shuffle | shuffle | built | 6 | 66 | 0 | 0 |
 | LosesGame | loseGame | built | 6 | 45 | 0 | 0 |
 | Discover | discover | named | 6 | 35 | 6 | 6 |
@@ -427,7 +427,7 @@ The things that alone hold back the most of the most-played cards.
 | DigMultiple | — | missing | 2 | 12 | 2 | 2 |
 | ExchangeLifeVariant | exchangeLife | built | 2 | 3 | 0 | 0 |
 | NameCard | — | missing | 1 | 87 | 1 | 1 |
-| ChooseSource | — | missing | 1 | 67 | 1 | 1 |
+| ChooseSource | — | missing | 1 | 67 | 0 | 0 |
 | DamageResolve | — | missing | 1 | 64 | 1 | 1 |
 | Explore | — | missing | 1 | 42 | 1 | 0 |
 | ExchangeControl | — | missing | 1 | 35 | 1 | 1 |

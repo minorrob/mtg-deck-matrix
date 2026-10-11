@@ -84,7 +84,7 @@ export const PRIMITIVES = Object.freeze({
   flow: Object.freeze([
     "modal", "sequence", "repeatFor", "branch", "delayedTrigger", "immediateTrigger", "counterSpell",
     "copySpell", "addTurn", "chooseCard", "chooseType", "chooseColor", "genericChoice", "twoPiles", "connive",
-    "investigate", "cleanup", "addPhase", "changeTargets",
+    "investigate", "cleanup", "addPhase", "changeTargets", "chooseSource", "vote",
   ]),
 });
 

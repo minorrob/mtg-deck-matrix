@@ -1,0 +1,87 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Boiling Rock Rioter",
+    "oracleId": "5193172c-9024-409e-bd9e-0387971d65fe",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Rogue",
+      "Ally"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Firebending 1 (Whenever this creature attacks, add {R}. This mana lasts until end of combat.)\nTap an untapped Ally you control: Exile target card from a graveyard.\nWhenever this creature attacks, you may cast an Ally spell from among cards you own exiled with this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Firebending 1",
+      "keyword": "firebending",
+      "amount": 1
+    },
+    {
+      "kind": "activated",
+      "text": "Tap an untapped Ally you control: Exile target card from a graveyard.",
+      "cost": [
+        {
+          "atom": "tapCreature",
+          "selector": {
+            "subtypes": [
+              "Ally"
+            ]
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "link": true
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks, you may cast an Ally spell from among cards you own exiled with this creature.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "play",
+          "from": "selector",
+          "selector": {
+            "zone": "exile",
+            "exiledWith": "self",
+            "owner": "you",
+            "subtypes": [
+              "Ally"
+            ]
+          },
+          "payMana": true
+        }
+      ]
+    }
+  ]
+}

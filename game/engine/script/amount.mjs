@@ -49,6 +49,12 @@
  *   {commanderColors: "you"}             the number of colors in your commanders' color identity (CR 903.4; War Room) --
  *                                        undefined for a player with no commander (903.4f), so a cost of it is unpayable
  *                                        (commanderless, below)
+ *   {playersWhoDid: true}                how many players did what this resolution offered them ("each opponent may ...
+ *                                        for each opponent who does", Tempt with Vengeance; effects/asking.mjs, modal's `did`)
+ *   {votes: choice}                      the votes cast for that choice in this resolution's vote ("a card for each past
+ *                                        vote", Fateful Tempest; CR 701.38; effects/asking.mjs, vote)
+ *   {totalManaValue: "remembered"}       the mana values of what the effect before it remembered, added together ("the total
+ *                                        mana value of cards milled this way")
  *   {colorsSpent: "self"}                converge: the colors of mana spent to cast its own object (Sundering Archaic)
  *   {planeswalkerTypesAmong: selector}   the different planeswalker types among what the selector matches (Tam, the
  *                                        Possibility; CR 205.3j)
@@ -56,7 +62,8 @@
  *                                        the Restless; CR 903.8)
  *
  * and any of them may say `atMost` ("{1} less IF you control a creature with flying": the count, at most 1), `times` and
- * `plus`: "twice X", "1 plus the number of ...", and `times: -1` for "-X/-X" and
+ * `plus`: "twice X", "1 plus the number of ...", `times: "X"` for "X ... for each" (X tokens for each opponent who does),
+ * and `times: -1` for "-X/-X" and
  * "-1/-1 for each Swamp you control" -- the only way an amount comes out below nothing; every other is at least 0.
  * Before them, `half` ("half the cards in their hand", Pox Plague) and `per` ("+2/+0 for every seven cards in your
  * graveyard", Dark Matter Manipulator: per 7, times 2) divide the count, rounded down as those cards print it (CR 107.1a).
@@ -88,7 +95,7 @@ export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf"
   "countersRemovedThisWay", "movedCount", "tappedThisWay", "cardsDiscardedThisTurn",
   /* What happened this turn, and this game (Train C): the records state/index.mjs, rules/combat.mjs and the effects keep. */
   "creaturesDiedThisTurn", "cardsDrawnThisTurn", "playersDealtNoncombatDamage", "scriedOrSurveilledThisTurn", "spellsCastThisTurn", "spellsCastThisGame",
-  "commanderColors",
+  "commanderColors", "playersWhoDid", "votes", "totalManaValue",
   /* Train C, phase 2 (w2b-amounts): converge, and the planeswalker types among a set. */
   "colorsSpent", "planeswalkerTypesAmong"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named"];
@@ -145,7 +152,10 @@ export function amountProblems(value) {
   if ("lesserOf" in value && !(Array.isArray(value.lesserOf) && value.lesserOf.length >= 2)) problems.push("lesserOf is two or more amounts");
   else if ("lesserOf" in value) for (const one of value.lesserOf) problems.push(...amountProblems(one).map((p) => `lesserOf: ${p}`));
   if ("devotion" in value && !(Array.isArray(value.devotion) && value.devotion.length && value.devotion.every((c) => COLORS.includes(c)))) problems.push("Devotion is to one or more colors: {devotion: [\"B\"]}");
-  for (const key of ["times", "plus", "atMost"]) if (key in value && !Number.isInteger(value[key])) problems.push(`An amount's ${key} is a whole number`);
+  for (const key of ["times", "plus", "atMost"]) if (key in value && !Number.isInteger(value[key]) && !(key === "times" && value[key] === "X")) problems.push(`An amount's ${key} is a whole number${key === "times" ? ', or "X"' : ""}`);
+  if ("playersWhoDid" in value && value.playersWhoDid !== true) problems.push("playersWhoDid is true");
+  if ("votes" in value && !(typeof value.votes === "string" && value.votes.length)) problems.push("votes names the choice voted for");
+  if ("totalManaValue" in value && value.totalManaValue !== "remembered") problems.push('totalManaValue is "remembered"');
   if ("if" in value) {
     problems.push(...conditionProblems(value.if).map((p) => `An amount's condition: ${p}`));
     for (const key of ["then", "else"]) if (key in value) problems.push(...amountProblems(value[key]));
@@ -243,6 +253,15 @@ export function amountOf(state, value, context = {}) {
     ...(context.targets ? {targets: context.targets} : {})};
   let n = 0;
   if ("x" in value) n = Math.max(0, context.x ?? 0);
+  /* "For each opponent who does" (Tempt with Vengeance): the players who did what this resolution offered (CR 207.2c). */
+  else if ("playersWhoDid" in value) n = (context.whoDid ?? []).length;
+  /* "For each past vote" (Fateful Tempest; CR 701.38): this resolution's votes for that choice. */
+  else if ("votes" in value) n = context.votes?.[value.votes] ?? 0;
+  /* "The total mana value of cards milled this way" (CR 202.3): what the effect before it remembered, as the cards are now. */
+  else if ("totalManaValue" in value) n = (context.remembered ?? []).reduce((sum, id) => {
+    const cost = state.objects[id] ? valueCostOf(state.objects[id]) : null;
+    return sum + (cost ? manaValue(parseManaCost(cost)) : 0);
+  }, 0);
   /* "A charge counter on it for each time it was kicked" (Everflowing Chalice; multikicker, CR 702.33c). */
   else if ("kicked" in value) n = context.kicked ?? 0;
   /* The creatures its additional cost tapped, as the spell was cast (CR 601.2h): what the cast recorded; a copy was not cast
@@ -481,8 +500,10 @@ export function amountOf(state, value, context = {}) {
   if (value.half === true) n = Math.floor(n / 2);
   if (Number.isInteger(value.per)) n = Math.floor(n / value.per);
   /* `atMost`: "{1} less if you control a creature with flying" is the count of them, at most 1. */
-  const total = Math.min(value.atMost ?? Infinity, n) * (value.times ?? 1) + (value.plus ?? 0);
-  return (value.times ?? 1) < 0 ? total : Math.max(0, total);
+  /* `times: "X"`: X for each ("X ... tokens for each opponent who does"), X chosen as it was cast (CR 107.3a). */
+  const times = value.times === "X" ? Math.max(0, context.x ?? 0) : value.times ?? 1;
+  const total = Math.min(value.atMost ?? Infinity, n) * times + (value.plus ?? 0);
+  return times < 0 ? total : Math.max(0, total);
 }
 
 /** The parameters of an effect that take a number, and so may take a count -- "the top X cards" (`fromTop`, Villainous

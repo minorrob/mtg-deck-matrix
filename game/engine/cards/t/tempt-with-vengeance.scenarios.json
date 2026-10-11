@@ -1,0 +1,310 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Tempt with Vengeance",
+  "scenarios": [
+    {
+      "name": "X=2, four players: Maya creates two and Sam two, Trey declines -- Rob two, and two more for each who did: six",
+      "seats": 4,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tempt with Vengeance"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Tempt with Vengeance",
+          "x": 2
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1,
+                "options": [
+                  "Create them",
+                  "Don't"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Create them"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 2
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Don't"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 3
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Create them"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elemental",
+            "Elemental",
+            "Elemental",
+            "Elemental",
+            "Elemental",
+            "Elemental",
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Elemental",
+            "Elemental"
+          ]
+        },
+        {
+          "seat": 2,
+          "zone": "battlefield",
+          "cards": []
+        },
+        {
+          "seat": 3,
+          "zone": "battlefield",
+          "cards": [
+            "Elemental",
+            "Elemental"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Nobody takes the offer: Rob has his two, and no more",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tempt with Vengeance"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Tempt with Vengeance",
+          "x": 2
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't"
+          ]
+        },
+        {
+          "choose": [
+            "Don't"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elemental",
+            "Elemental",
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": []
+        },
+        {
+          "seat": 2,
+          "zone": "battlefield",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "Rob's tokens have haste: cast in his main phase, all six attack this turn",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tempt with Vengeance"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Tempt with Vengeance",
+          "x": 2
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Create them"
+          ]
+        },
+        {
+          "choose": [
+            "Create them"
+          ]
+        },
+        {
+          "attack": [
+            "Elemental",
+            "Elemental",
+            "Elemental",
+            "Elemental",
+            "Elemental",
+            "Elemental"
+          ],
+          "at": "Maya"
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 34
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elemental",
+            "Elemental",
+            "Elemental",
+            "Elemental",
+            "Elemental",
+            "Elemental",
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Elemental",
+            "Elemental"
+          ]
+        },
+        {
+          "seat": 2,
+          "zone": "battlefield",
+          "cards": [
+            "Elemental",
+            "Elemental"
+          ]
+        }
+      ]
+    }
+  ]
+}

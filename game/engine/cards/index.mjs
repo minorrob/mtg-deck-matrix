@@ -614,7 +614,7 @@ export function compileScript(script) {
        on the condition `selfCounters` (script/condition.mjs). */
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "station") {
       if (!["Spacecraft", "Planet"].some((t) => (identity.subtypes ?? []).includes(t))) problems.push(`${ability.text}: station on a card that is not a Spacecraft or a Planet`);
-      abilities.push({id, kind: "activated", text: ability.text, timing: "sorcery", cost: [{atom: "tapCreature", selector: {types: ["Creature"]}}],
+      abilities.push({id, kind: "activated", text: ability.text, timing: "sorcery", cost: [{atom: "tapCreature", selector: {types: ["Creature"], another: true}}],
         effects: [{effect: "putCounter", targets: "self", counter: "charge", count: {powerOf: "that card"}}]});
       keywords.push("Station");
       return;
@@ -1109,6 +1109,12 @@ export function compileScript(script) {
         problems.push("setState: a Class's level (`level`, 1 or more) or `transform: true`, one of them -- flipping and turning face up or down are not built");
       /* An added phase is a combat, a main or a beginning phase (effects/permanents.mjs). */
       if (effect.effect === "addPhase" && !(effect.phases ?? ["combat"]).every((kind) => ADDED_PHASES.includes(kind))) problems.push(`addPhase: a phase of ${ADDED_PHASES.join(", ")}`);
+      /* What follows a prevention shield's prevention is done at once, inside the damage event (CR 615.5): nothing in it may
+         stop to ask -- and only a shield has it. */
+      if (effect.effect === "effectUntil" && effect.then !== undefined) {
+        if (effect.rule !== "prevent-damage" || !Array.isArray(effect.then)) problems.push("effectUntil: `then` is what follows a prevention shield's prevention, a list");
+        for (const inner of Array.isArray(effect.then) ? effect.then : []) if (!EFFECTS[inner?.effect]) problems.push(`effectUntil: ${inner?.effect} follows a prevention, and it asks a question or is not built`);
+      }
       /* "You may play that card" until a time (effects/zones.mjs): this turn, or the end of its controller's next turn. */
       if (effect.effect === "mayPlay") {
         if (!MAY_PLAY_UNTIL.includes(effect.until ?? "end-of-turn")) problems.push(`mayPlay: until ${MAY_PLAY_UNTIL.join(" or ")}`);

@@ -111,7 +111,13 @@ function checkEffect(effect, path, errors) {
      What it is about: this resolution's, or what the effect before it remembered (`about: "remembered"`). */
   if (name === "immediateTrigger") {
     if (effect.about !== undefined && effect.about !== "remembered") errors.push({path: `${path}.about`, message: "A reflexive trigger is about what its resolution is, or `about: \"remembered\"`"});
-    for (const [index, selector] of (effect.targets ?? []).entries()) checkSelector(selector, `${path}.targets[${index}]`, errors, {choice: true});
+    for (const [index, spec] of (effect.targets ?? []).entries()) {
+      /* A counted one ("up to that many target ...", CR 601.2c): its count beside the selector, its most a number or X. */
+      const {count, ...selector} = spec && typeof spec === "object" ? spec : {};
+      if (count !== undefined && !countValid(count, {x: true}))
+        errors.push({path: `${path}.targets[${index}].count`, message: "A reflexive trigger's target count is `{min, max}`, its max a whole number or \"X\" (up to that many)"});
+      checkSelector(spec && typeof spec === "object" ? selector : spec, `${path}.targets[${index}]`, errors, {choice: true});
+    }
     for (const n of targetRefs(effect.effects ?? []))
       if (n < 0 || n >= (effect.targets ?? []).length) errors.push({path: `${path}.effects`, message: `A reflexive trigger's effect names target ${n}, and it declares ${(effect.targets ?? []).length}`});
   }
@@ -164,6 +170,11 @@ function checkEffect(effect, path, errors) {
       errors.push({path: `${path}.tap`, message: "An \"unless\" cost taps a permanent, returns one, sacrifices one or discards a card: one of them"});
   }
   /* "You may pay {X}. When you do, ..." (Halo Forager): X chosen as it is paid, so no amount beside it, and only a "you may". */
+  /* "You may pay {2}{R} any number of times. When you pay this cost one or more times, ..." (Bloodthirsty Adversary): a mana
+     cost, how many times chosen as it is paid, so no amount beside it, and only a "you may". */
+  if (name === "unlessPays" && effect.timesAny !== undefined && !(effect.timesAny === true && effect.ifPaid === true && typeof effect.mana === "string" && effect.mana.length
+    && effect.amount === undefined && effect.amountX === undefined && effect.manaTimes === undefined))
+    errors.push({path: `${path}.timesAny`, message: "\"You may pay a cost any number of times\" is `timesAny: true` with `ifPaid: true` and a `mana` cost, nothing else to pay beside it"});
   if (name === "unlessPays" && effect.amountX !== undefined && !(effect.amountX === true && effect.ifPaid === true && effect.amount === undefined && effect.mana === undefined))
     errors.push({path: `${path}.amountX`, message: "\"You may pay {X}\" is `amountX: true` with `ifPaid: true`, and no amount or mana beside it"});
   if (name === "play" && effect.exileInstead !== undefined && effect.exileInstead !== true)
@@ -174,6 +185,19 @@ function checkEffect(effect, path, errors) {
      library (Memory Lapse) -- any other word would be read as the graveyard. */
   if (name === "counterSpell" && effect.to !== undefined && !["exile", "top"].includes(effect.to))
     errors.push({path: `${path}.to`, message: "A countered spell goes to its owner's graveyard, or `to` \"exile\" or \"top\" instead"});
+  /* "If a permanent spell is countered this way, exile it instead" (Thranduil's Decree): a permanent spell's place instead. */
+  if (name === "counterSpell" && effect.permanentTo !== undefined && effect.permanentTo !== "exile")
+    errors.push({path: `${path}.permanentTo`, message: "A countered permanent spell goes to exile instead: `permanentTo: \"exile\"`"});
+  /* A vote (CR 701.38): two or more choices, each words of their own. */
+  if (name === "vote" && !(Array.isArray(effect.choices) && effect.choices.length >= 2 && effect.choices.every((c) => typeof c === "string" && c.length) && new Set(effect.choices).size === effect.choices.length))
+    errors.push({path: `${path}.choices`, message: "A vote is among two or more choices, each its own words"});
+  /* "Each opponent may ...": the mode that is doing so, kept for "for each opponent who does" (script/amount.mjs). */
+  if (name === "modal") (effect.modes ?? []).forEach((mode, m) => {
+    if (mode?.did !== undefined && mode.did !== true) errors.push({path: `${path}.modes[${m}].did`, message: "A mode that is doing what was offered says `did: true`"});
+  });
+  /* "For as long as it remains exiled": a permission only for a card in exile now. */
+  if (name === "mayPlay" && effect.zone !== undefined && effect.zone !== "exile")
+    errors.push({path: `${path}.zone`, message: "mayPlay's zone is \"exile\": a card there now, for as long as it remains exiled"});
   /* Amass (CR 701.47a): the creature type its Army is, "Goblin" for "amass Goblins 2"; the Army chosen remembered or not. */
   if (name === "amass") {
     if (!isText(effect.subtype) || !isCreatureType(effect.subtype))
@@ -219,6 +243,8 @@ function checkEffect(effect, path, errors) {
     for (const message of conditionProblems(effect.if)) errors.push({path: `${path}.if`, message});
     for (const key of ["then", "otherwise"]) if (effect[key] !== undefined && !Array.isArray(effect[key])) errors.push({path: `${path}.${key}`, message: `A branch's ${key} is a list of effects`});
   }
+  /* What follows a prevention shield's prevention (Inkshield, Deflecting Palm; CR 615.5): effects, each held to the rest. */
+  if (name === "effectUntil" && Array.isArray(effect.then)) effect.then.forEach((child, index) => checkEffect(child, `${path}.then[${index}]`, errors));
   const children = COMPOSERS[name];
   if (!children) return;
   const nested = children(effect);
@@ -239,10 +265,11 @@ function checkSelector(selector, path, errors, {choice = false} = {}) {
 }
 
 /* A target's count: `min` a whole number (0 when absent), `max` a whole number at least 1 and at least `min`, or absent. */
-const countValid = (count) => Boolean(count) && typeof count === "object" && !Array.isArray(count)
+/* `x`: "up to that many" -- a reflexive trigger's `max: "X"`, the X it was made with (Bloodthirsty Adversary). */
+const countValid = (count, {x = false} = {}) => Boolean(count) && typeof count === "object" && !Array.isArray(count)
   && Object.keys(count).every((k) => k === "min" || k === "max")
   && (count.min === undefined || (Number.isInteger(count.min) && count.min >= 0))
-  && (count.max === undefined || (Number.isInteger(count.max) && count.max >= 1 && count.max >= (count.min ?? 0)));
+  && (count.max === undefined || (x && count.max === "X" && (count.min ?? 0) === 0) || (Number.isInteger(count.max) && count.max >= 1 && count.max >= (count.min ?? 0)));
 
 /* `permanent`: the card is a permanent card, whose spell ability may say only its additional cost (below). */
 function checkAbility(ability, path, errors, {permanent = false} = {}) {

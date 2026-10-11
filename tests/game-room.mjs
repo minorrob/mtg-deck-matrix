@@ -22,6 +22,7 @@ import {randomUUID} from "node:crypto";
 import {memoryStorage} from "../game/engine/storage.mjs";
 import {createRng} from "../game/engine/rng.mjs";
 import {randomLegalPilot} from "../game/engine/pilots/random-legal.mjs";
+import {housePilot} from "../game/engine/pilots/house-pilot.mjs";
 import {hashState} from "../game/engine/journal.mjs";
 import {startRoom, openRoom, RoomError, basicCards} from "../game/room/room.mjs";
 import {loadCardIndex} from "../game/tools/engine-cards.mjs";
@@ -246,12 +247,20 @@ try {
 } finally {
   /* nothing to close: all in memory */
 }
-/* A PILOT'S REFUSED ANSWER IS NOT THE GAME'S END (the plan review's C2; probe R's seed 11 ended a table this way). The
-   house pilot cannot see what attacking costs (Propaganda: {2} for each creature attacking its controller), so it
-   declares an attack its controller cannot pay for; the rules refuse it before changing anything. The room says so in
-   the history and answers for it with the least legal answer -- here, no attack -- and the game goes on to its end. */
+/* A PILOT'S REFUSED ANSWER IS NOT THE GAME'S END (the plan review's C2; probe R's seed 11 ended a table this way). A
+   pilot declares an attack its controller cannot pay for (Propaganda: {2} for each creature attacking its controller) --
+   the house pilot did, until the declare-attackers record said what attacking takes from the mana there is
+   (tests/engine-attack-tax-answers.mjs); here a house pilot made to, on purpose, attacking with all it has -- and the
+   rules refuse it before changing anything. The room says so in the history and answers for it with the least legal
+   answer -- here, no attack -- and the game goes on to its end. */
 {
   const index = loadCardIndex();
+  const overreaching = (args) => {
+    const pilot = housePilot(args);
+    return {...pilot, answer: (view, choice) => (/^declare-attackers:/.test(choice.id) && choice.budget
+      ? {indices: choice.options.filter((o, i, all) => all.findIndex((p) => p.cardId === o.cardId) === i).map((o) => o.index)}
+      : pilot.answer(view, choice))};
+  };
   const refusalCards = (name) => (name === "Propaganda" ? index.definition("Propaganda") : cards(name));
   const zero = def("Zero Bear", {types: ["Creature"], power: 1, toughness: 1, manaCost: "{0}"});
   const pod = {seats: [
@@ -259,7 +268,7 @@ try {
     {seatId: "ai-b", name: "Prop", pilot: "house", commander: [def("General p", {types: ["Creature"], supertypes: ["Legendary"], power: 3, toughness: 3, manaCost: "{9}"})],
       cards: [...Array(30).fill("Island"), ...Array(69).fill("Propaganda")]},
   ]};
-  const room = await startRoom({storage: memoryStorage(), matchId: "refused1", cards: refusalCards, pod, seed: "refused"});
+  const room = await startRoom({storage: memoryStorage(), matchId: "refused1", cards: refusalCards, pod, seed: "refused", pilot: overreaching});
   const said = room.history.filter((h) => /was refused/.test(h.text));
   ok(said.length > 0 && /cost \{\d+\} to attack with/.test(said[0].text), `the refused attack is said in the history (${said[0]?.text})`);
   ok(room.refusals.total >= said.length && room.refusals.since === 0 && /cost \{\d+\} to attack with/.test(room.refusals.first[0].reason),

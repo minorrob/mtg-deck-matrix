@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1262,
+  "defined": 1266,
   "provisional": 27,
-  "everyRule": 2637
+  "everyRule": 2640
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -3979,8 +3979,8 @@
      "forge": "ChangeTargets",
      "top": 10,
      "all": 43,
-     "blocks": 8,
-     "alone": 6
+     "blocks": 7,
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -4075,8 +4075,8 @@
      "forge": "StoreSVar",
      "top": 6,
      "all": 68,
-     "blocks": 6,
-     "alone": 2
+     "blocks": 5,
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -4387,8 +4387,8 @@
      "forge": "ChooseSource",
      "top": 1,
      "all": 67,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",

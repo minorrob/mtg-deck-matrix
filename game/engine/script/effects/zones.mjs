@@ -475,7 +475,9 @@ export function manifest(state, params, context) {
  * object (CR 400.7) and leaves the permission behind -- played, or put back into a library.
  */
 export function mayPlay(state, params, context) {
-  const ids = (params.targets ?? []).filter((id) => state.objects[id]);
+  /* "For as long as it remains exiled" (Thranduil's Decree, `zone: "exile"`): only a card there now -- one put elsewhere never
+     starts the duration, and the effect does nothing to it (CR 611.2b). */
+  const ids = (params.targets ?? []).filter((id) => state.objects[id] && (params.zone === undefined || state.objects[id].zone === params.zone));
   const player = context.controller;
   if (!ids.length || !state.players[player]) return [];
   const effects = (state.effects ??= []);
@@ -806,6 +808,9 @@ export function mill(state, params, context) {
  */
 export function counterSpell(state, params, context) {
   const events = [];
+  /* "If a permanent spell is countered this way, exile it instead" (Thranduil's Decree): what it countered and moved, as the
+     cards they became (CR 400.7), for the effects after it (`remember`). */
+  const moved = [];
   const fromSpells = (params.spells ?? []).map((id) => state.stack.find((entry) => entry.objectId === id)?.stackId).filter((id) => id !== undefined);
   /* `stack`: the entries a trigger is about (ward's "counter it"), bound to their stack ids (script/bind.mjs). */
   for (const stackId of [...(params.targets ?? []), ...(Array.isArray(params.stack) ? params.stack : []), ...fromSpells]) {
@@ -822,18 +827,22 @@ export function counterSpell(state, params, context) {
          owner's library instead of into that player's graveyard" (Memory Lapse, `to: "top"`) -- or, a commander whose owner
          chose so, the command zone (CR 903.9b; effects/asking.mjs, commandersGoingHome). */
       const owner = state.objects[entry.objectId].owner;
-      const to = entry.flashback || entry.graveyardToExile || params.to === "exile" ? "exile"
+      /* "If a permanent spell is countered this way, exile it instead" (Thranduil's Decree, `permanentTo: "exile"`): a spell that
+         would become a permanent as it resolved (CR 110.1, 608.3; rules/stack.mjs, `permanent`), exiled; any other, to its
+         owner's graveyard. */
+      const to = entry.flashback || entry.graveyardToExile || params.to === "exile" || (params.permanentTo === "exile" && entry.permanent === true) ? "exile"
         : (params.commanderHome ?? []).includes(entry.objectId) ? "command" : params.to === "top" || entry.graveyardToLibraryBottom ? "library" : "graveyard";
-      const moved = moveOne(state, entry.objectId, to, events, {owner});
+      const landed = moveOne(state, entry.objectId, to, events, {owner});
+      if (landed !== null && state.objects[landed]) moved.push(landed);
       /* "Exile it with three time counters on it ... it gains suspend" (Delay; CR 702.62): in exile, suspended. */
-      if (to === "exile" && moved !== null && state.objects[moved] && Number.isInteger(params.timeCounters)) {
-        state.objects[moved].counters.time = (state.objects[moved].counters.time ?? 0) + params.timeCounters;
-        if (params.suspend === true) state.objects[moved].suspended = true;
+      if (to === "exile" && landed !== null && state.objects[landed] && Number.isInteger(params.timeCounters)) {
+        state.objects[landed].counters.time = (state.objects[landed].counters.time ?? 0) + params.timeCounters;
+        if (params.suspend === true) state.objects[landed].suspended = true;
       }
-      if (to === "library" && params.to === "top" && moved !== null && state.objects[moved]) {
+      if (to === "library" && params.to === "top" && landed !== null && state.objects[landed]) {
         const library = state.zones.library[owner];
-        library.splice(library.indexOf(moved), 1);
-        library.unshift(moved);
+        library.splice(library.indexOf(landed), 1);
+        library.unshift(landed);
       }
     }
     events.push(event("GameEventSpellResolved", state, {
@@ -841,6 +850,6 @@ export function counterSpell(state, params, context) {
       kind: entry.kind, countered: true, hasFizzled: false,
     }));
   }
-  void context;
+  if (params.remember) context.remembered = moved;
   return events;
 }

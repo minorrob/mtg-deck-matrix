@@ -607,10 +607,15 @@ export const modal = {
     const modes = (params.modes ?? []).filter((mode) => !(done && mode.once === true));
     if (modes.length === 0 || (done && modes.every((mode) => !(mode.effects ?? []).length))) return false;
     const choose = Math.min(params.choose ?? 1, modes.length);
+    const chooser = Number.isInteger(params.chooser) ? params.chooser : context.controller;
     state.awaiting = {
       /* Usually the controller's; "its controller may draw up to two cards" is that player's (`chooser`, bound to them). */
-      kind: "effect-choice", effect: "modal", player: Number.isInteger(params.chooser) ? params.chooser : context.controller,
-      modes: modes.map((mode) => ({text: mode.text ?? "", effects: structuredClone(mode.effects ?? []), ...(mode.once === true ? {once: true} : {})})),
+      kind: "effect-choice", effect: "modal", player: chooser,
+      /* "EACH OPPONENT MAY ... FOR EACH OPPONENT WHO DOES" (Tempt with Vengeance's tempting offer; CR 207.2c, 101.4): a mode that
+         says `did` is the player doing so, kept for the effects after it (script/amount.mjs, playersWhoDid) -- the player asked,
+         `doer`, even when another chooses for one who has left the game (CR 800.4g; resolution.mjs, chooseInstead). */
+      ...(modes.some((mode) => mode.did === true) ? {doer: chooser} : {}),
+      modes: modes.map((mode) => ({text: mode.text ?? "", effects: structuredClone(mode.effects ?? []), ...(mode.once === true ? {once: true} : {}), ...(mode.did === true ? {did: true} : {})})),
       choose,
       /* A "you may" asks in the card's own words (cards/index.mjs): its sentence, then Yes or No. */
       ...(params.title ? {title: String(params.title)} : {}),
@@ -643,7 +648,9 @@ export const modal = {
     const chosen = (indices ?? []).map((index) => awaiting.modes[index]).filter(Boolean);
     /* Taken: done once this turn ("do this only once each turn"). */
     if (awaiting.onceOf && chosen.some((mode) => mode.once === true)) recordUse(state, awaiting.onceOf.source, awaiting.onceOf.key);
-    return {events: [], splice: chosen.flatMap((mode) => mode.effects)};
+    /* Done by the player asked, if they are still in the game: one who has left does nothing (CR 800.4b). */
+    const did = chosen.some((mode) => mode.did === true) && Number.isInteger(awaiting.doer) && !state.players[awaiting.doer]?.lost;
+    return {events: [], splice: chosen.flatMap((mode) => mode.effects), ...(did ? {did: awaiting.doer} : {})};
   },
 
   /* Its chooser has left the game ("target opponent may draw a card", Tataru Taru): a choice other than paying, so another
@@ -998,6 +1005,7 @@ const exileWords = (state, awaiting) => {
 function costWords(awaiting, state) {
   if (awaiting.exileFromGraveyard) return exileWords(state, awaiting);
   if (awaiting.amountX) return "pay {X}";
+  if (awaiting.timesAny) return `pay ${awaiting.mana} any number of times`;
   const paid = [awaiting.mana ?? null, awaiting.amount > 0 ? `{${awaiting.amount}}` : null, lifeAsked(awaiting) ? `${awaiting.life} life` : null].filter(Boolean);
   const other = awaiting.discard ? "discard a card" : awaiting.sacrificeCount ? `sacrifice ${awaiting.sacrificeCount} permanents` : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}`
     : awaiting.returnToHand ? `return ${otherNoun(awaiting.returnToHand)} you control to its owner's hand`
@@ -1011,8 +1019,19 @@ function xOptions(state, player) {
   for (let x = 0; canPayGeneric(state, player, x); x += 1) options.push({label: `Pay {${x}}`, pay: true, x});
   return options;
 }
+/* "YOU MAY PAY {2}{R} ANY NUMBER OF TIMES" (Bloodthirsty Adversary; `timesAny`, CR 118.12a, 601.2g-h's payment repeated):
+   how many times is the payer's to choose -- each count their pool and plain mana sources could pay, once and up -- and
+   what follows knows it ("when you pay this cost one or more times ... that many", `paidX`, script/resolution.mjs). */
+const TIMES = ["once", "twice"];
+function timesOptions(state, awaiting) {
+  const options = [];
+  for (let n = 1; unlessPlans(state, awaiting.player, awaiting.mana.repeat(n), 1).plans.length; n += 1)
+    options.push({label: `Pay ${awaiting.mana} ${TIMES[n - 1] ?? `${n} times`}`, pay: true, times: n});
+  return options;
+}
 function payOptions(state, awaiting) {
   if (awaiting.amountX && awaiting.amount === undefined) return xOptions(state, awaiting.player);
+  if (awaiting.timesAny && awaiting.paidTimes === undefined) return timesOptions(state, awaiting);
   const {player} = awaiting, amount = awaiting.amount ?? 0, life = awaiting.life ?? 0;
   if (amount > 0 && !canPayGeneric(state, player, amount)) return [];
   if (awaiting.mana && !unlessPlans(state, player, awaiting.mana, 1).plans.length) return [];
@@ -1067,6 +1086,8 @@ export const unlessPays = {
     /* "You may pay {4}. If you do, ..." (Mana Vault), mana alone, by a player who cannot pay it: no choice to make, and
        nothing happens. */
     if (params.ifPaid && !params.life && !params.discard && !params.sacrifice && !params.returnToHand && !canPayGeneric(state, payer, Math.max(0, params.amount ?? 0))) return false;
+    /* Any number of times, by a player who cannot pay it once: likewise nothing to choose. */
+    if (params.timesAny === true && !unlessPlans(state, payer, String(params.mana ?? ""), 1).plans.length) return false;
     /* "You may exile this spell and four cards named Sphinx's Approach": with fewer there, or this spell no card to exile,
        there is no paying it, and nothing is asked. */
     if (params.exileFromGraveyard && !payOptions(state, {player: payer, amount: 0, exileFromGraveyard: params.exileFromGraveyard, exileSelf: params.exileSelf === true, source: context.source ?? null}).length) return false;
@@ -1078,6 +1099,7 @@ export const unlessPays = {
       ...(params.returnToHand ? {returnToHand: structuredClone(params.returnToHand)} : {}),
       ...(params.tap ? {tap: structuredClone(params.tap)} : {}),
       ...(params.amountX === true ? {amountX: true} : {}),
+      ...(params.timesAny === true ? {timesAny: true} : {}),
       ...(params.exileFromGraveyard ? {exileFromGraveyard: structuredClone(params.exileFromGraveyard), ...(params.exileSelf === true ? {exileSelf: true} : {})} : {}),
       effects: structuredClone(params.effects ?? []), source: context.source ?? null,
       /* "You may pay {1}. If you do, ...": the effects when it is paid, not when it is not. */
@@ -1152,6 +1174,8 @@ export const unlessPays = {
     if (!option.pay) return unpaid(awaiting);
     /* The X chosen is the amount paid. */
     if (option.x !== undefined) return unlessPays.paid(state, {...awaiting, amount: option.x}, option);
+    /* So many times: the cost that many times over, paid as one (CR 601.2h). */
+    if (option.times !== undefined) return unlessPays.paid(state, {...awaiting, mana: awaiting.mana.repeat(option.times), paidTimes: option.times}, option);
     return unlessPays.paid(state, awaiting, option);
   },
   /* Paying, with the option chosen: its mana, then the rest. `spent`, what a mana cost with colors was already paid with. */
@@ -1213,7 +1237,7 @@ function unlessPaid(state, awaiting, option, events) {
     moveOne(state, option.bounce, "hand", events);
   }
   const remembered = discarded !== null ? {remembered: [discarded]} : {};
-  if (awaiting.ifPaid) return {events, splice: structuredClone(awaiting.effects), ...(awaiting.amountX ? {paidX: awaiting.amount} : {}), ...remembered};
+  if (awaiting.ifPaid) return {events, splice: structuredClone(awaiting.effects), ...(awaiting.amountX ? {paidX: awaiting.amount} : awaiting.timesAny ? {paidX: awaiting.paidTimes} : {}), ...remembered};
   /* "If they do, you create a Lander token" (Divert Disaster): what paying leads to. */
   return awaiting.whenPaid ? {events, splice: structuredClone(awaiting.whenPaid), ...remembered} : events;
 }
@@ -1316,8 +1340,11 @@ function retargetOptions(state, question) {
   /* A counted target's list holding its one target (changeTargets): that one. */
   const was = entry.targets[question.index];
   const current = (Array.isArray(was) ? was[0] : was) ?? null;
-  const others = targetCandidates(state, spec, {controller: entry.playerId, source: entry.objectId})
-    .filter((c) => !(c.kind === "object" && c.id === entry.objectId))
+  /* An ability's source is the object it came from (entry.cardId), while it is still that object (CR 113.7a). */
+  const source = entry.objectId ?? (entry.cardId !== null && state.objects[entry.cardId] ? entry.cardId : null);
+  const others = targetCandidates(state, spec, {controller: entry.playerId, source, ...(entry.about ? {about: entry.about} : {}), ...(entry.x !== undefined ? {x: entry.x} : {})})
+    /* Never itself (CR 115.5): a spell its own object, an ability its own entry. */
+    .filter((c) => !(c.kind === "object" && c.id === entry.objectId) && !(c.kind === "ability" && c.id === entry.stackId))
     .filter((c) => !(current && c.kind === current.kind && c.id === current.id));
   return {entry, current, others};
 }
@@ -1378,7 +1405,8 @@ export const copySpell = {
    has and nobody is asked. */
 export const changeTargets = {
   open(state, params, context) {
-    const entry = state.stack.find((e) => e.objectId !== null && (params.spells ?? []).includes(e.objectId));
+    /* The spell it names by its object (`spells`), or the spell or ability by its stack entry (`stack`, Bolt Bend). */
+    const entry = state.stack.find((e) => (e.objectId !== null && (params.spells ?? []).includes(e.objectId)) || (Array.isArray(params.stack) && params.stack.includes(e.stackId)));
     if (!entry) return false;
     /* "With a single target" (its own targeting asked that): the one there is -- a counted target's list holding one
        included, the others empty. */
@@ -1406,6 +1434,97 @@ export const changeTargets = {
       if (option.target.kind === "object") events.push(...becameTarget(state, entry, option.target.id));
     }
     return {events};
+  },
+};
+
+/* ---- chooseSource: "the next time a source of your choice would deal damage to you this turn" (Deflecting Palm) ----
+   CR 609.7a: chosen as the effect is made, from a permanent; a spell on the stack, a permanent spell included; an object an
+   object on the stack refers to -- the source of an ability there, a target -- or one a delayed trigger waiting to trigger
+   does; or a face-up object in the command zone. Each while it is still an object: one gone from where it was is a new
+   object, or none, and damage from a source that has left is dealt by no object the rules can still name (NAMED: what an
+   ability of a departed source deals is sourceless here, as protection reads it too). Remembered for the effects after it.
+   Nothing to choose, and nothing is asked. */
+function sourcesToChoose(state) {
+  const found = [];
+  const add = (id) => { if (id !== null && id !== undefined && state.objects[id] && !found.includes(id)) found.push(id); };
+  for (const id of state.zones.battlefield) add(id);
+  /* Each entry's card: a spell's own object, an ability's source. */
+  for (const entry of state.stack) {
+    add(entry.cardId);
+    for (const t of (entry.targets ?? []).flat()) if (t?.kind === "object") add(t.id);
+  }
+  for (const delayed of state.delayedTriggers ?? []) add(delayed.source);
+  for (const id of state.zones.command.flat()) if (state.objects[id]?.faceDown !== true) add(id);
+  return found;
+}
+export const chooseSource = {
+  open(state, params, context) {
+    const sources = sourcesToChoose(state);
+    if (!sources.length) return false;
+    state.awaiting = {kind: "effect-choice", effect: "chooseSource", player: context.controller, sources};
+    return true;
+  },
+  choice(state, awaiting) {
+    const whose = (id) => {
+      const o = state.objects[id], holder = o.zone === "battlefield" ? controllerOf(state, id) : o.controller;
+      return holder === awaiting.player ? "" : ` (${state.players[holder]?.name ?? `Seat ${holder + 1}`}'s)`;
+    };
+    const where = (id) => ({stack: ", a spell", command: ", in the command zone", graveyard: ", in a graveyard", exile: ", in exile", hand: ", in a hand", library: ", in a library"})[state.objects[id].zone] ?? "";
+    const options = awaiting.sources.filter((id) => state.objects[id]).map((id, index) => ({index, label: `${targetName(state, {kind: "object", id})}${where(id)}${whose(id)}`, cardId: id}));
+    for (const option of options) {
+      const alike = options.filter((o) => o.label === option.label);
+      if (alike.length > 1) alike.forEach((o, n) => { o.label = `${o.label} (${n + 1})`; });
+    }
+    return {id: `chooseSource:${state.turn}:${awaiting.player}`, title: "Choose a source of damage", mode: "one", min: 1, max: 1, options};
+  },
+  apply(state, awaiting, indices) {
+    const option = chooseSource.choice(state, awaiting).options[(indices ?? [])[0]];
+    if (!option) throw new Error("Invalid selection");
+    return {events: [], remembered: [option.cardId]};
+  },
+  /* Its chooser has left the game: the spell left with them (CR 800.4a), and no shield is theirs to make. */
+  left() {
+    return {events: [], remembered: []};
+  },
+};
+
+/* ---- vote: "starting with you, each player votes for past or present" (Fateful Tempest's council's dilemma; CR 701.38) ----
+   Each player in the game votes for one of the choices -- words with no rules meaning (701.38b) -- starting with the
+   effect's controller and going on in turn order (701.38a), each seeing the votes cast before theirs. The votes are kept,
+   counted by choice, for the effects after it (`votes`, script/resolution.mjs; script/amount.mjs, `{votes: choice}`). A
+   player who has left the game is no longer a player to vote (CR 800.4a): asked, they are answered for as no vote (`left`;
+   script/resolution.mjs, answerDeparted), and the next is asked. */
+const tallied = (votes, choices) => Object.fromEntries(choices.map((c) => [c, votes.filter((v) => v.choice === c).length]));
+export const vote = {
+  open(state, params, context) {
+    const seats = state.players.length, choices = [...new Set(params.choices ?? [])];
+    const voters = Array.from({length: seats}, (_, k) => (context.controller + k) % seats);
+    if (choices.length < 2) return false;
+    state.awaiting = {kind: "effect-choice", effect: "vote", player: voters[0], voters: voters.slice(1), choices, votes: [], ...(params.title ? {title: String(params.title)} : {})};
+    return true;
+  },
+  choice(state, awaiting) {
+    const tally = tallied(awaiting.votes, awaiting.choices);
+    const sofar = awaiting.votes.length ? ` -- so far ${awaiting.choices.map((c) => `${c} ${tally[c]}`).join(", ")}` : "";
+    return {id: `vote:${state.turn}:${awaiting.player}:${awaiting.votes.length}`, title: `${awaiting.title ?? "Vote"}${sofar}`, mode: "one", min: 1, max: 1,
+      options: awaiting.choices.map((c, index) => ({index, label: c}))};
+  },
+  apply(state, awaiting, indices) {
+    const choice = awaiting.choices[(indices ?? [])[0]];
+    if (choice === undefined) throw new Error("Invalid selection");
+    return vote.next(state, {...awaiting, votes: [...awaiting.votes, {player: awaiting.player, choice}]});
+  },
+  /* The next player asked, or the votes counted. */
+  next(state, awaiting) {
+    const rest = awaiting.voters;
+    if (rest.length) {
+      state.awaiting = {...awaiting, player: rest[0], voters: rest.slice(1)};
+      return {events: [], again: true};
+    }
+    return {events: [], votes: tallied(awaiting.votes, awaiting.choices)};
+  },
+  left(state, awaiting) {
+    return vote.next(state, awaiting);
   },
 };
 
@@ -1697,7 +1816,14 @@ export const chooseCard = {
    "You may cast ANY NUMBER of spells from among those cards" (Etali, Villainous Wealth; batch 79, `anyNumber`): asked
    again after each one, of what is left that can still be cast, until the player says "Don't cast" or nothing is left --
    each a choice of theirs, in the order they choose (CR 608.2g). Cast this way, each goes on the stack above the last. */
-const playable = (state, player, pool, {most, free, anyMana}) => {
+/* "YOU MAY CAST AN ALLY SPELL FROM AMONG CARDS YOU OWN EXILED WITH THIS CREATURE" (Boiling Rock Rioter; `payMana`, CR 608.2g,
+   601.2g-h): cast as the effect resolves, its mana cost paid -- colored symbols and all -- from the pool and the caster's
+   plain mana sources (rules/mana.mjs, unlessPlans), one not offered when there is no way to pay it; which way, the
+   caster's when there are more (CR 605.3a). NAMED: a card with {X} in its cost is not offered this way -- X would be its
+   caster's to choose, and unlessPlans has no ways to pay one -- nor one with an additional cost to choose (castChoicesNow). */
+const manaCostOf = (state, id, adventure) => (adventure ? state.objects[id].adventurer?.adventure?.manaCost : state.objects[id].manaCost) ?? "";
+const payableCost = (state, player, cost) => !cost || unlessPlans(state, player, cost, 1).plans.length > 0;
+const playable = (state, player, pool, {most, free, anyMana, payMana = false}) => {
   /* Its mana value as it would be cast: an adventurer card cast as its Adventure has the Adventure's (CR 715.3a). */
   const valueOf = (id, adventure = false) => {
     const cost = adventure ? state.objects[id].adventurer?.adventure?.manaCost : state.objects[id].manaCost;
@@ -1707,6 +1833,10 @@ const playable = (state, player, pool, {most, free, anyMana}) => {
   /* A card cast a moment ago is on the stack as a new object (CR 400.7): its id here no longer names anything. */
   return pool.filter((id) => state.objects[id] && (valueOf(id) <= most || (Boolean(state.objects[id].adventurer) && valueOf(id, true) <= most)))
     .flatMap((id) => castChoicesNow(state, player, id).filter((action) => valueOf(id, action.adventure === true) <= most).flatMap((action) => {
+      if (payMana) {
+        const cost = manaCostOf(state, id, action.adventure === true);
+        return payableCost(state, player, cost) ? [{...action, cost}] : [];
+      }
       const pay = owed(id, action.adventure === true);
       return pay === null || !canPayGeneric(state, player, pay) ? [] : [{...action, owed: pay}];
     }));
@@ -1733,10 +1863,12 @@ export const play = {
       }) : null;
     const pool = copied !== null ? [copied] : copies !== null ? copies : from === "hand" ? cardsIn(state, "hand", player)
       : from === "command" ? cardsIn(state, "command", player).filter((id) => state.objects[id].commander === true)
+      /* "From among cards you own exiled with this creature" (`from: "selector"`): the cards the selector finds now. */
+      : from === "selector" ? selectMatching(state, {what: "card", ...(params.selector ?? {})}, context).filter((id) => !["battlefield", "stack"].includes(state.objects[id]?.zone))
       : (params.targets ?? []).filter((id) => state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone)
         /* "For each player, you may cast a card that player milled this way" (The Ur-Sphinx): `ownedBy` "that player". */
         && (params.ownedBy !== "that player" || state.objects[id].owner === context.about?.player));
-    const terms = {most, free: params.free === true, anyMana: params.anyMana === true};
+    const terms = {most, free: params.free === true, anyMana: params.anyMana === true, payMana: params.payMana === true};
     /* "If that spell would be put into a graveyard, exile it instead" (Halo Forager): the spell cast, so marked (rules/actions.mjs). */
     const exileInstead = params.exileInstead === true ? {exileInstead: true} : {};
     const choices = playable(state, player, pool, terms);
@@ -1749,13 +1881,25 @@ export const play = {
   choice(state, awaiting) {
     /* What it still costs (a commander's tax, "for its mana value in any mana"): which mana pays, when that is a choice. */
     if (awaiting.paying) return paymentChoice(`play-mana:${awaiting.player}:${state.turn}:${awaiting.cast ?? 0}`, awaiting.paying.owed, paymentUnits(state, awaiting.player));
+    /* Its mana cost, colors and all, when there is more than one way to pay it: which. */
+    if (awaiting.planning) {
+      const {units, plans} = unlessPlans(state, awaiting.player, awaiting.planning.cost);
+      return {id: `play-plan:${awaiting.player}:${state.turn}:${awaiting.cast ?? 0}`, title: `Pay ${awaiting.planning.cost}: choose the mana`, mode: "one", min: 1, max: 1,
+        options: plans.map((plan, index) => ({index, label: planWords(units, plan)}))};
+    }
     return {id: `play:${awaiting.player}:${state.turn}${awaiting.again ? `:${awaiting.cast}` : ""}`, title: awaiting.cast ? "Cast another spell?" : "Cast a spell?", mode: "one", min: 1, max: 1,
       options: [...awaiting.choices.map((c, index) => ({index, label: c.targetNames?.length ? `${c.label} → ${c.targetNames.join(", ")}` : c.label, cardId: c.objectId})),
         {index: awaiting.choices.length, label: "Don't cast"}]};
   },
   apply(state, awaiting, indices) {
     let chosen, events;
-    if (awaiting.paying) {
+    if (awaiting.planning) {
+      chosen = awaiting.choices[awaiting.planning.index];
+      const {units, plans} = unlessPlans(state, awaiting.player, awaiting.planning.cost);
+      const plan = plans[(indices ?? [])[0]];
+      if (!plan || (indices ?? []).length !== 1) throw new Error("Invalid selection");
+      events = payPlan(state, awaiting.player, units, plan);
+    } else if (awaiting.paying) {
       chosen = awaiting.choices[awaiting.paying.index];
       events = payWithUnits(state, awaiting.player, paymentUnits(state, awaiting.player), indices, awaiting.paying.owed);
     } else {
@@ -1763,23 +1907,35 @@ export const play = {
       if (index === awaiting.choices.length) return {events: []};
       chosen = awaiting.choices[index];
       if (!chosen) throw new Error("Invalid selection");
+      /* Its mana cost, colors and all (`payMana`): the one way there is, paid at once; more, and which is asked. */
+      if (chosen.cost !== undefined) {
+        const {units, plans} = chosen.cost ? unlessPlans(state, awaiting.player, chosen.cost) : {units: [], plans: []};
+        if (chosen.cost && !plans.length) throw new Error(`${chosen.cost} can no longer be paid`);
+        if (plans.length > 1) {
+          state.awaiting = {...awaiting, planning: {index, cost: chosen.cost}};
+          return {events: [], again: true};
+        }
+        events = plans.length ? payPlan(state, awaiting.player, units, plans[0]) : [];
+      } else
       /* Which mana pays what it still costs is the player's when the ways differ (rules/mana.mjs, paymentUnits). */
       if (chosen.owed && paymentIsAChoice(paymentUnits(state, awaiting.player), chosen.owed)) {
         state.awaiting = {...awaiting, paying: {index, owed: chosen.owed}};
         return {events: [], again: true};
       }
-      events = chosen.owed ? payGeneric(state, awaiting.player, chosen.owed) : [];
+      if (chosen.cost === undefined) events = chosen.owed ? payGeneric(state, awaiting.player, chosen.owed) : [];
     }
     const action = {...chosen};
     delete action.owed;
+    delete action.cost;
     events.push(...castNow(state, awaiting.player, action, awaiting.exileInstead ? {graveyardToExile: true} : {}));
     /* Any number: asked again, of what is still there to cast. */
     if (awaiting.again) {
-      const {pool, most, free, anyMana} = awaiting.again;
-      const choices = playable(state, awaiting.player, pool, {most: most ?? Infinity, free, anyMana});
+      const {pool, most, free, anyMana, payMana} = awaiting.again;
+      const choices = playable(state, awaiting.player, pool, {most: most ?? Infinity, free, anyMana, payMana});
       if (choices.length) {
         const next = {...awaiting, choices, cast: awaiting.cast + 1};
         delete next.paying;
+        delete next.planning;
         state.awaiting = next;
         return {events, again: true};
       }
@@ -1805,7 +1961,9 @@ export function commandersGoingHome(state, params) {
     return (params.spells ?? []).filter((id) => {
       const entry = state.stack.find((e) => e.objectId === id);
       const library = params.to === "top" || ([undefined, "graveyard"].includes(params.to) && entry?.graveyardToLibraryBottom);
-      return library && state.objects[id]?.commander === true && entry && !entry.flashback && !entry.graveyardToExile && !cantBeCountered(state, id);
+      return library && state.objects[id]?.commander === true && entry && !entry.flashback && !entry.graveyardToExile && !cantBeCountered(state, id)
+        /* A permanent spell exiled instead (Thranduil's Decree; effects/zones.mjs, counterSpell) goes to no library. */
+        && !(params.permanentTo === "exile" && entry.permanent === true);
     });
   }
   if (params.sacrifice === true || params.fromTop !== undefined) return [];
@@ -2155,4 +2313,4 @@ export const chooseInstead = {
 };
 
 export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, chooseColor, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, orderCounters, orderDraws,
-  conniveWhich, manaColors, counterKind, countersToRemove, countersOnto, orderDestruction, chooseInstead});
+  conniveWhich, manaColors, counterKind, countersToRemove, countersOnto, orderDestruction, chooseInstead, chooseSource, vote});

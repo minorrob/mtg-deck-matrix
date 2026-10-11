@@ -718,9 +718,10 @@ function untapChoices(state, player, count) {
   return sets;
 }
 const tapAtom = (cost) => (cost ?? []).find((a) => a?.atom === "tapCreature");
-/* "Tap another untapped creature you control": each one it may be, one offer each -- a summoning-sick one too, since it is
-   not its own {T} (CR 302.6). */
-const tapChoices = (state, player, sourceId, selector) => state.zones.battlefield.filter((id) => id !== sourceId && state.objects[id].controller === player
+/* "Tap another untapped creature you control" (station; the selector's `another`), "tap an untapped Ally you control"
+   (Boiling Rock Rioter: itself among them, CR 109.5 -- the cost says no "other"): each one it may be, one offer each -- a
+   summoning-sick one too, since it is not its own {T} (CR 302.6). */
+const tapChoices = (state, player, sourceId, selector) => state.zones.battlefield.filter((id) => state.objects[id].controller === player
   && !state.objects[id].tapped && compileSelector({...selector, what: "permanent"})(state, id, {controller: player, source: sourceId}));
 /* "Tap three untapped creatures you control" (Kithkeeper): each set of `count` of them, ids ascending, no more than
    CREW_OFFERS_MAX (as crew). Its own source may be among them, since the cost says no "other" (a selector's `another` says

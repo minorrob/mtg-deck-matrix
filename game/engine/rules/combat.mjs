@@ -256,6 +256,7 @@ export const attackers = {
     /* "OTHER GOBLIN CREATURES YOU CONTROL ATTACK EACH COMBAT IF ABLE" (CR 508.1d): which must be among the attackers, said in
        the record with what to do instead -- every answerer held to it by controller.mjs, and a pilot able to keep to it. */
     const requires = requiresOf(state, options);
+    const budget = taxBudget(state, awaiting.player, options);
     return {
       id: `declare-attackers:${state.turn}`,
       title: "Declare attackers",
@@ -271,6 +272,7 @@ export const attackers = {
       exclusiveBy: "cardId",
       ...(capped ? {capped} : {}),
       ...(requires.length ? {requires} : {}),
+      ...(budget ? {budget} : {}),
       options,
     };
   },
@@ -366,6 +368,22 @@ const taxUnits = (state, player, picked) => {
   const attacking = new Set(picked.map((o) => o.cardId));
   return paymentUnits(state, player).filter((u) => !(u.from === "tap" && attacking.has(u.id) && !hasNow(state, u.id, "Vigilance")));
 };
+/* AN ATTACK TAX THE PLAYER CAN'T PAY (CR 508.1d, 508.1h; Propaganda with no mana, and a Goblin that must attack): said in the
+   record, so every answerer -- the pilots, the room's least answer -- declares only what can be paid for. Each option's
+   `mana` is what declaring it takes from the mana the player could pay with: its tax, and one more when the creature is
+   one of those sources and attacking taps it (taxUnits). A declaration can be paid for just when its options' `mana`
+   totals no more than the record's `budget.most`, every unit the player has. No tax on any option, and no budget. */
+function taxBudget(state, player, options) {
+  const taxes = options.map((o) => attackTax(state, [o]));
+  if (!taxes.some((n) => n > 0)) return null;
+  const units = paymentUnits(state, player);
+  const tapped = new Set(units.filter((u) => u.from === "tap").map((u) => u.id).filter((id) => !hasNow(state, id, "Vigilance")));
+  options.forEach((o, i) => {
+    const mana = taxes[i] + (tapped.has(o.cardId) ? 1 : 0);
+    if (mana > 0) o.mana = mana;
+  });
+  return {by: "mana", most: units.length};
+}
 
 /* The attack, declared: who attacks whom, tapped (CR 508.1f), and said. */
 function declareAttacks(state, player, picked, events) {

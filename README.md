@@ -897,7 +897,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 454 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 462 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1324,6 +1324,14 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-transformed` - `tests/engine-transformed.mjs`: "whenever this creature transforms into" a face (CR 701.27e; Ashling, Rekindled // Ashling, Rimebound), this permanent's own turning over and never entering transformed, and an ability's two mana of one color, kept for what it may pay for (CR 106.6)
 - `engine-delayed-mana` - `tests/engine-delayed-mana.mjs`: a delayed triggered mana ability (CR 603.7, 605.1b; Molten Tide, Pyre Rhymer's prepared spell) -- added at once with the mana ability that triggers it, never on the stack, for what it names, its controller's, until it ends
 - `engine-opening-hand` - `tests/engine-opening-hand.mjs`: an opening hand's actions (CR 103.6b; Chancellor of the Forge) asked once the mulligans are done, the starting player first, a card at a time -- revealed to everyone until the first turn begins -- and the delayed trigger at the first upkeep (CR 603.7g)
+- `engine-attack-tax-answers` - `tests/engine-attack-tax-answers.mjs`: an attack tax the attacker can't pay (CR 508.1d, 508.1h): the declare-attackers record says what each attack takes from the mana there is, and L0, L1, the random pilot and the room's least answer declare only what can be paid for -- a required Goblin goes where it is free
+- `engine-counter-exile-cast` - `tests/engine-counter-exile-cast.mjs`: a permanent spell countered and exiled instead, and cast free for as long as it remains exiled (Thranduil's Decree; CR 701.6a, 611.2b, 400.7): what the counter moved remembered, a permission only for a card in exile now
+- `engine-ability-target` - `tests/engine-ability-target.mjs`: an ability on the stack as a target (Bolt Bend; CR 115.2, 115.5, 115.7a, 115.9a): chosen by its stack entry, by whose and "with a single target", gone once it leaves; an effect's stack entries; its new target held to the ability's own requirements; the room's offer and the pilots' aim read off the stack
+- `engine-tempting-offer` - `tests/engine-tempting-offer.mjs`: a tempting offer (Tempt with Vengeance; CR 207.2c, 101.4, 800.4b, 800.4g): each opponent asked a "may" in turn order, those who did kept and counted (playersWhoDid, X for each with times X), one who leaves answered for, given nothing and not counted
+- `engine-prevention-shields` - `tests/engine-prevention-shields.mjs`: a player's prevention shields (Inkshield, Deflecting Palm; CR 609.7a, 615.5, 615.8, 616.1): who they shield, a source chosen, used up once, what follows dealt by the card the spell became, ordered with the other effects by the player dealt the damage
+- `engine-vote` - `tests/engine-vote.mjs`: voting (Fateful Tempest's council's dilemma; CR 701.38, 800.4a): each player from the caster in turn order, the votes so far in the question, one who has left casting none; the votes for a choice and the total mana value of what was milled counted
+- `engine-unless-times` - `tests/engine-unless-times.mjs`: a cost paid any number of times and "that many" after it (Bloodthirsty Adversary; CR 118.12a, 601.2h, 603.12): each count the mana pays offered, the cost that many times over paid as one, the reflexive trigger's X and "up to X" targets
+- `engine-pay-mana-play` - `tests/engine-pay-mana-play.mjs`: casting what this creature exiled as it attacks, its mana cost paid (Boiling Rock Rioter; CR 607.2a, 608.2g, 601.2g-h, 605.3a): an Ally exiled with this creature cast from the pool and its caster's plain sources, colored symbols and all, the ways to pay asked; an {X} or unpayable one not offered; a tap cost that may tap its own source unless it says another
 
 ## Design and execution record
 
