@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Draconic Visitor",
+    "oracleId": "6745e850-68f6-480b-a1e0-e06180dde169",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon"
+    ],
+    "manaCost": "{3}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Flying\nIf one or more artifact tokens would be created under your control, that many 5/5 red Dragon creature tokens with flying are created instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "static",
+      "text": "If one or more artifact tokens would be created under your control, that many 5/5 red Dragon creature tokens with flying are created instead.",
+      "rule": "tokens-instead",
+      "affects": {
+        "types": [
+          "Artifact"
+        ]
+      },
+      "token": {
+        "name": "Dragon",
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "colors": [
+          "R"
+        ],
+        "power": 5,
+        "toughness": 5,
+        "keywords": [
+          "Flying"
+        ]
+      }
+    }
+  ]
+}

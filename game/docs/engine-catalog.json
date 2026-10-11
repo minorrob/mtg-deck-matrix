@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1245,
+  "defined": 1246,
   "provisional": 27,
-  "everyRule": 2578
+  "everyRule": 2579
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -3785,7 +3785,7 @@
      "forge": "ReplaceToken",
      "top": 17,
      "all": 35,
-     "blocks": 17,
+     "blocks": 16,
      "alone": 0
     },
     {
@@ -8171,7 +8171,7 @@
      "forge": "CreateToken",
      "top": 17,
      "all": 32,
-     "blocks": 17,
+     "blocks": 16,
      "alone": 0
     },
     {

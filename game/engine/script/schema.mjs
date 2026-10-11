@@ -366,6 +366,15 @@ function checkAbility(ability, path, errors) {
       if (ability.putBy !== undefined && !["you", "opponent"].includes(ability.putBy)) errors.push({path: `${path}.putBy`, message: "putBy is \"you\" or \"opponent\": who must be putting them"});
       if (ability.players !== undefined && ability.players !== true) errors.push({path: `${path}.players`, message: "players is true: a player's counters too"});
     }
+    /* "Twice that many of those tokens instead" (rules/statics.mjs, tokensCreated): how many times, 2 or more. */
+    if (ability.rule === "more-tokens" && !(Number.isInteger(ability.times) && ability.times >= 2))
+      errors.push({path: `${path}.times`, message: "More tokens instead says how many times as many: a whole number, 2 or more"});
+    /* "That many 5/5 red Dragon creature tokens with flying are created instead" of artifact tokens: the tokens it replaces
+       by their card types, and the token made instead. */
+    if (ability.rule === "tokens-instead") {
+      if (Object.keys(ability.affects ?? {}).some((key) => key !== "types")) errors.push({path: `${path}.affects`, message: "The tokens made instead of others are told by their card types: affects {types}"});
+      if (!(ability.token && isText(ability.token.name) && Array.isArray(ability.token.types))) errors.push({path: `${path}.token`, message: "What is made instead is a token: {name, types, ...}"});
+    }
     /* "Twice that much life instead" (rules/statics.mjs, lifeGained): how many times, 2 or more. */
     if (ability.rule === "more-life" && !(Number.isInteger(ability.times) && ability.times >= 2))
       errors.push({path: `${path}.times`, message: "More life instead says how many times as much: a whole number, 2 or more"});

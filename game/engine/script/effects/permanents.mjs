@@ -25,7 +25,7 @@ import {event, cardRef, moveOne} from "./zones.mjs";
 import {typesOf, controllerOf} from "../../rules/layers.mjs";
 import {protectedFrom} from "../../rules/protection.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
-import {countersPlaced} from "../../rules/statics.mjs";
+import {countersPlaced, tokensCreated} from "../../rules/statics.mjs";
 
 /* A continuous effect needs a timestamp to be ordered by (CR 613.7), and it has to be part of the
    state so a checkpoint carries it. The state's own counter is the right source: it is monotonic
@@ -252,7 +252,11 @@ export function makeCopies(state, ids, params, context, events) {
     const original = params.asItLastWas === true && context.about?.copiedAs && state.objects[id] ? context.about.copiedAs : state.objects[id];
     if (!original) continue;
     const except = params.except?.addAbilities ? {...params.except, addAbilities: rememberedIn(params.except.addAbilities, context.remembered)} : params.except;
-    for (let i = 0; i < (params.count ?? 1); i += 1) {
+    /* Twice as many copies (Anointed Procession), or Dragons instead of a copy that would be an artifact (Draconic Visitor):
+       rules/statics.mjs, tokensCreated -- read against what the copy would be. */
+    const {count, instead} = tokensCreated(state, controller, params.count ?? 1, copiable(original, except));
+    for (let i = 0; i < count; i += 1) {
+      if (instead) { made.push(makeToken(state, instead, controller, params, context, events)); continue; }
       const values = copiable(original, except);
       /* A copy of an Aura enchants something as it enters, or is not made (CR 303.4f-g). */
       const hosts = values.enchant ? enchantable(state, values.enchant, controller) : null;
@@ -372,49 +376,55 @@ export function createToken(state, params, context) {
   /* A target player who is no longer one creates nothing. */
   if (!state.players[controller]) return events;
   const made = [];
-  /* "An X/X green Dinosaur Beast ... where X is the amount of damage those creatures dealt" (Quartzwood Crasher): its size
-     counted as it is made. */
-  /* "X/X ... where X is the mana value of the exiled card" (linkedTokens): "X", the X this effect was given. */
-  const sized = (value) => (value === "X" || (value !== null && typeof value === "object") ? amountOf(state, value, context) : value ?? null);
-  for (let i = 0; i < count; i += 1) {
-    const id = addObject(state, {
-      card: spec.name ?? "Token",
-      types: spec.types ?? ["Creature"],
-      /* A Goblin token is a Goblin (CR 111.4): "sacrifice a Goblin" has to find it. */
-      subtypes: spec.subtypes ?? [],
-      /* "Colorless snow artifact tokens named Replicated Ring" (batch 72): its supertypes (state/index.mjs keeps none empty). */
-      supertypes: spec.supertypes ?? [],
-      /* "A 1/1 red Elemental" is red (CR 111.4): "white creatures you control" has to find a white token. */
-      colors: spec.colors ?? [],
-      power: sized(spec.power),
-      toughness: sized(spec.toughness),
-      keywords: spec.keywords ?? [],
-      abilities: spec.abilities ?? [],
-      owner: controller,
-      controller,
-      token: true,
-    }, "battlefield");
-    /* "Create a tapped Treasure token": the effect says so as well as a spec can. */
-    if (spec.tapped || params.tapped) state.objects[id].tapped = true;
-    events.push(event("GameEventCardChangeZone", state, {
-      card: cardRef(state, id),
-      /* The token is the object that arrived: "for each of them, create a token that's a copy of it" names it. */
-      becomes: id, ...(state.objects[id]?.tapped ? {enteredTapped: true} : {}),
-      from: {zoneType: null, player: {playerId: controller}},
-      to: {zoneType: "Battlefield", player: {playerId: controller}},
-      createdAsToken: true,
-    }));
-    made.push(id);
-    /* The tokens each player has made this turn ("only if you created a token this turn", Idol of Oblivion): its creator
-       is its controller unless the effect says otherwise (CR 111.2). Cleared as a turn begins (rules/turn.mjs). */
-    state.players[controller].tokensThisTurn = (state.players[controller].tokensThisTurn ?? 0) + 1;
-  }
+  /* "Twice that many of those tokens instead" (Anointed Procession), artifact tokens made Dragons instead (Draconic Visitor):
+     what is made, and how many (rules/statics.mjs, tokensCreated). */
+  const {count: many, instead} = tokensCreated(state, controller, count, spec);
+  for (let i = 0; i < many; i += 1) made.push(makeToken(state, instead ?? spec, controller, params, context, events));
   /* "They gain haste until end of turn" (Ovika), and the rest a made permanent may gain (afterwards). */
   afterwards(state, made, {...params, controller}, context);
   /* "Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all OTHER creatures" (Martial Coup): the
      tokens this made, for the effects after it. */
   if (params.remember) context.remembered = made;
   return events;
+}
+
+/* One token of this spec, under `controller`'s control, as the effect says it is made (tapped), said so. */
+function makeToken(state, spec, controller, params, context, events) {
+  /* "An X/X green Dinosaur Beast ... where X is the amount of damage those creatures dealt" (Quartzwood Crasher): its size
+     counted as it is made. */
+  /* "X/X ... where X is the mana value of the exiled card" (linkedTokens): "X", the X this effect was given. */
+  const sized = (value) => (value === "X" || (value !== null && typeof value === "object") ? amountOf(state, value, context) : value ?? null);
+  const id = addObject(state, {
+    card: spec.name ?? "Token",
+    types: spec.types ?? ["Creature"],
+    /* A Goblin token is a Goblin (CR 111.4): "sacrifice a Goblin" has to find it. */
+    subtypes: spec.subtypes ?? [],
+    /* "Colorless snow artifact tokens named Replicated Ring" (batch 72): its supertypes (state/index.mjs keeps none empty). */
+    supertypes: spec.supertypes ?? [],
+    /* "A 1/1 red Elemental" is red (CR 111.4): "white creatures you control" has to find a white token. */
+    colors: spec.colors ?? [],
+    power: sized(spec.power),
+    toughness: sized(spec.toughness),
+    keywords: spec.keywords ?? [],
+    abilities: spec.abilities ?? [],
+    owner: controller,
+    controller,
+    token: true,
+  }, "battlefield");
+  /* "Create a tapped Treasure token": the effect says so as well as a spec can. */
+  if (spec.tapped || params.tapped) state.objects[id].tapped = true;
+  events.push(event("GameEventCardChangeZone", state, {
+    card: cardRef(state, id),
+    /* The token is the object that arrived: "for each of them, create a token that's a copy of it" names it. */
+    becomes: id, ...(state.objects[id]?.tapped ? {enteredTapped: true} : {}),
+    from: {zoneType: null, player: {playerId: controller}},
+    to: {zoneType: "Battlefield", player: {playerId: controller}},
+    createdAsToken: true,
+  }));
+  /* The tokens each player has made this turn ("only if you created a token this turn", Idol of Oblivion): its creator
+     is its controller unless the effect says otherwise (CR 111.2). Cleared as a turn begins (rules/turn.mjs). */
+  state.players[controller].tokensThisTurn = (state.players[controller].tokensThisTurn ?? 0) + 1;
+  return id;
 }
 
 /**

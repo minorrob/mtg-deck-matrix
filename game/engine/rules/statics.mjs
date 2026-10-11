@@ -100,6 +100,13 @@ export const STATIC_RULES = Object.freeze({
       from its controller's side, `times`. lifeGained, read wherever life is gained: changeLife (script/effects/resources.mjs)
       and lifelink in combat (rules/combat.mjs). */
   "more-life": "script/effects/resources.mjs",
+  /** "If an effect would create one or more tokens under your control, it creates twice that many of those tokens instead"
+      (Anointed Procession; CR 614.1a): `times`. tokensCreated, read where tokens are made (script/effects/permanents.mjs). */
+  "more-tokens": "script/effects/permanents.mjs",
+  /** "If one or more artifact tokens would be created under your control, that many 5/5 red Dragon creature tokens with
+      flying are created instead" (Draconic Visitor): `affects` the tokens it replaces, `token` what is made instead.
+      tokensCreated (script/effects/permanents.mjs). */
+  "tokens-instead": "script/effects/permanents.mjs",
   /** "Your opponents can't cast spells from anywhere other than their hands", "during your turn", "more than one spell each
       turn" (CantBeCast): castForbidden, read where a cast is offered. rules/actions.mjs. And for a while, by an effect
       (effectUntil): "can't cast spells with the same name as that creature until your next turn" (Reflector Mage). */
@@ -279,6 +286,34 @@ export function cantGainLife(state, player) {
     }
   }
   return false;
+}
+
+/**
+ * WHAT TOKENS AN EFFECT CREATES (CR 614.1a, 111.1): `count` tokens like `values` -- a token's spec, or the copiable values
+ * of a copy -- about to be created under `controller`'s control, after
+ *   `tokens-instead`  "if one or more artifact tokens would be created under your control, that many 5/5 red Dragon creature
+ *                     tokens with flying are created instead" (Draconic Visitor): its controller's; `affects` the tokens it
+ *                     replaces, by their card types, read as a description of what is not yet there (script/filter.mjs,
+ *                     matchesLastKnown); `token` what is made instead, as many;
+ *   `more-tokens`     "if an effect would create one or more tokens under your control, it creates twice that many of
+ *                     those tokens instead" (Anointed Procession): `affects` the player creating them, "you" its
+ *                     controller; `times`.
+ * Each applies once (CR 614.5). Every Draconic Visitor makes the same Dragons, and doubling and making Dragons instead end
+ * the same in either order, so nobody is asked (CR 616.1).
+ *
+ * @returns {{count: number, instead: ?object}} how many, and the spec made instead when one is
+ */
+export function tokensCreated(state, controller, count, values) {
+  let n = count, instead = null;
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static") continue;
+      if (ability.rule === "tokens-instead" && holder.controller === controller && matchesLastKnown(ability.affects, values)) instead = ability.token;
+      if (ability.rule === "more-tokens" && compileSelector({what: "player", ...ability.affects})(state, controller, {controller: holder.controller, source: holderId})) n *= ability.times;
+    }
+  }
+  return {count: n, instead};
 }
 
 /**
