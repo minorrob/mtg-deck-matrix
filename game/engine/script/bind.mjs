@@ -333,6 +333,11 @@ export function bindEffect(effect, context, state = null) {
     const fact = factValue(bound.selector.power.moreThan, context);
     bound.selector = {...bound.selector, power: {...bound.selector.power, moreThan: Number.isInteger(fact) ? fact : null}};
   }
+  /* "Each opponent may sacrifice a permanent of their choice that shares a card type with it" (Braids, Arisen Nightmare; CR
+     608.2h): `sharesCardTypeWith` "moved" bound to the card types of what the effect before it moved, as each last existed
+     (effects/asking.mjs, sacrifice's `movedWas`) -- a land animated into a creature shares both. */
+  if (bound.selector && typeof bound.selector === "object" && bound.selector.sharesCardTypeWith === "moved")
+    bound.selector = {...bound.selector, sharesCardTypeWith: [...new Set((context.movedWas ?? []).flatMap((was) => was.types ?? []))]};
   /* "Exile target player's graveyard": a selector's controller bound to the target player, or to nobody. */
   if (bound.selector && typeof bound.selector === "object" && isRef(bound.selector.controller)) {
     const [player] = playersOf(bound.selector.controller, context);

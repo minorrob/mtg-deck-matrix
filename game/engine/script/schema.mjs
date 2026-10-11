@@ -197,6 +197,17 @@ function checkEffect(effect, path, errors) {
   /* A designation (alterAttribute, script/effects/attributes.mjs): monstrous or prepared. */
   if (name === "alterAttribute" && !["monstrous", "prepared"].includes(effect.attribute))
     errors.push({path: `${path}.attribute`, message: "alterAttribute gives or takes a designation: \"monstrous\" or \"prepared\""});
+  /* "Each opponent may sacrifice ... For each opponent who doesn't, ..." (Braids, Arisen Nightmare; effects/asking.mjs): a
+     sacrifice that may be declined (`optional`), and what follows for each player who sacrifices nothing (`ifNot`), held to
+     the effect grammar -- only beside `optional`. */
+  if (name === "sacrifice") {
+    if (effect.optional !== undefined && effect.optional !== true) errors.push({path: `${path}.optional`, message: "A sacrifice that may be declined is optional: true"});
+    if (effect.ifNot !== undefined) {
+      if (effect.optional !== true || !Array.isArray(effect.ifNot) || !effect.ifNot.length)
+        errors.push({path: `${path}.ifNot`, message: "What follows a sacrifice declined is a list of effects, beside optional: true"});
+      else effect.ifNot.forEach((child, index) => checkEffect(child, `${path}.ifNot[${index}]`, errors));
+    }
+  }
   /* A branch's test: a condition, and there must be one. */
   if (name === "branch") {
     if (effect.if === undefined) errors.push({path: `${path}.if`, message: "A branch says what decides it: `if`, a condition"});

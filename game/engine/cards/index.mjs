@@ -347,6 +347,8 @@ function effectsIn(list, out = []) {
     effectsIn(effect.otherwise, out);
     /* What follows paying an "unless" cost (Divert Disaster's Lander). */
     effectsIn(effect.whenPaid, out);
+    /* What follows a sacrifice declined (Braids, Arisen Nightmare). */
+    effectsIn(effect.ifNot, out);
   }
   return out;
 }

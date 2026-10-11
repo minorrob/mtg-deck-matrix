@@ -32,7 +32,7 @@ import {event, cardRef, moveOne, playersFor, sacrificeOne, destructionQuestion, 
 import {proliferate as giveEachAnother, addCounters, putCounter, moveCounters} from "./resources.mjs";
 import {makeCopies, afterwards, joinAttack, attackPlaces, attachTo, createToken, effectUntil, COPY_KEYS} from "./permanents.mjs";
 import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits, unlessPlans, planWords, payPlan} from "../../rules/mana.mjs";
-import {typesOf, characteristicsOf, everyCreatureTypeOf, controllerOf} from "../../rules/layers.mjs";
+import {typesOf, characteristicsOf, everyCreatureTypeOf, controllerOf, lastKnown} from "../../rules/layers.mjs";
 import {pushCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
 import {loseLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";
 import {damageOrderChoice} from "../../rules/replacement.mjs";
@@ -708,7 +708,14 @@ export const sacrifice = {
     }
     const queue = everyone.filter((p) => mustSacrifice(state, p, asked));
     if (keeping(params) && params.keep !== undefined) asked.everyone = everyone;
+    /* "EACH OPPONENT MAY SACRIFICE A PERMANENT OF THEIR CHOICE THAT SHARES A CARD TYPE WITH IT. FOR EACH OPPONENT WHO DOESN'T,
+       THAT PLAYER LOSES 2 LIFE AND YOU DRAW A CARD" (Braids, Arisen Nightmare): `optional`, each player named may sacrifice
+       none -- asked in turn order from the active player as any sacrifice is (CR 101.4), the sacrifices made together once
+       the last has chosen -- and `ifNot`, what follows for each of them who sacrifices nothing, a player with nothing to
+       sacrifice among them, "that player" each in turn order (unrefused, below). */
+    if (params.optional === true) Object.assign(asked, {optional: true, everyone, ...(Array.isArray(params.ifNot) ? {ifNot: structuredClone(params.ifNot)} : {})});
     if (queue.length === 0) {
+      if (asked.optional) return {events: [], splice: unrefused(state, asked, [])};
       /* Nobody has a choice to make, and what the keeping does is still done: each keeps all they have. */
       if (!asked.everyone) return false;
       const events = [];
@@ -744,9 +751,10 @@ export const sacrifice = {
     const count = Math.min(awaiting.count, mine.length);
     return {
       id: `sacrifice:${awaiting.player}:${state.turn}`,
-      title: `Sacrifice ${count === 1 ? "a permanent" : `${count} permanents`}`,
-      mode: count === 1 ? "one" : "many",
-      min: count,
+      title: `${awaiting.optional ? "You may sacrifice" : "Sacrifice"} ${count === 1 ? "a permanent" : `${count} permanents`}`,
+      /* "May sacrifice": none of them is an answer too. */
+      mode: count === 1 && !awaiting.optional ? "one" : "many",
+      min: awaiting.optional ? 0 : count,
       max: count,
       /* A token said so: it is public (CR 111.1), and the cheapest thing to give up. */
       options: mine.map((id, index) => ({index, label: state.objects[id].card, cardId: id, ...(state.objects[id].token ? {token: true} : {})})),
@@ -786,18 +794,23 @@ export const sacrifice = {
       state.awaiting = {...awaiting, player: next[0], remaining: next.slice(1), decided};
       return {events, again: true};
     }
-    if (awaiting.everyone) return finishKeeping(state, awaiting, decided, events);
-    /* What the effect's controller sacrificed, as the objects it became (a token's until it ceases to exist, CR 704.5d). */
+    if (awaiting.everyone && !awaiting.optional) return finishKeeping(state, awaiting, decided, events);
+    /* What the effect's controller sacrificed, as the objects it became (a token's until it ceases to exist, CR 704.5d) --
+       and as each last existed on the battlefield (`movedWas`, CR 608.2h): "a permanent that shares a card type with it"
+       (Braids, Arisen Nightmare) asks what it was, an animated land a creature too. */
     let remembering = awaiting.remembering;
+    const movedWas = [];
     for (const {player, ids} of decided) {
       const gone = [];
       for (const id of ids) {
+        const was = awaiting.remember === player ? lastKnown(state, id) : null;
         const moved = sacrificeOne(state, id, events);
-        if (moved !== null) gone.push(moved);
+        if (moved !== null) { gone.push(moved); if (was) movedWas.push(was); }
       }
       if (awaiting.remember === player) remembering = [...remembering, ...gone];
     }
-    return remembering ? {events, remembered: remembering} : events;
+    const refused = awaiting.optional ? unrefused(state, awaiting, decided) : null;
+    return remembering || refused ? {events, ...(remembering ? {remembered: remembering, movedWas} : {}), ...(refused ? {splice: refused} : {})} : events;
   },
 
   /* Left the game while asked (CR 800.4a): what they controlled left or was exiled with them, so they sacrifice nothing,
@@ -806,6 +819,19 @@ export const sacrifice = {
     return sacrifice.apply(state, awaiting, []);
   },
 };
+
+/* WHAT FOLLOWS A "MAY SACRIFICE" NOT TAKEN (`ifNot`): for each player named who sacrificed nothing -- declined, or had nothing
+   to -- in turn order from the active player, its effects with that player "that player" (a mark before them, as a
+   repetition's are spliced, script/resolution.mjs), and the resolution's own subject back after the last. None, and
+   nothing follows. */
+function unrefused(state, awaiting, decided) {
+  if (!Array.isArray(awaiting.ifNot)) return [];
+  const gave = new Set(decided.filter((d) => d.ids.length > 0).map((d) => d.player));
+  const refusers = awaiting.everyone.filter((player) => !gave.has(player) && !state.players[player].lost);
+  const before = state.resolving?.context?.about;
+  return [...refusers.flatMap((player) => [{effect: "__about", about: {...(before ?? {}), player}}, ...structuredClone(awaiting.ifNot)]),
+    {effect: "__about", ...(before !== undefined ? {about: before} : {})}];
+}
 
 /* ---- populate (CR 701.30): create a token that's a copy of a creature token you control -- which one is the player's
    choice; with none, nothing happens. What the copy then gains, or when it is sacrificed, rides along (makeCopies). ---- */
