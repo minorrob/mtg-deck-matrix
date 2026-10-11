@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Prismatic Lens",
+  "scenarios": [
+    {
+      "name": "{T}: Add {C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Prismatic Lens"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Prismatic Lens",
+          "mana": {
+            "C": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Prismatic Lens",
+          "is": true
+        }
+      ]
+    },
+    {
+      "name": "{1}, {T}: the Wastes pays the {1}, and the Lens adds {G}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Prismatic Lens",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Prismatic Lens",
+          "mana": {
+            "G": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1,
+            "C": 0
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Prismatic Lens",
+          "is": true
+        }
+      ]
+    }
+  ]
+}

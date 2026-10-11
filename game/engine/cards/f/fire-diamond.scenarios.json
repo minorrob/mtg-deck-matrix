@@ -1,0 +1,94 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Fire Diamond",
+  "scenarios": [
+    {
+      "name": "Cast, it enters tapped (CR 614.1c); untapped on his next turn, it taps for {R}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Fire Diamond"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Fire Diamond"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Fire Diamond",
+              "is": true
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Fire Diamond"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Fire Diamond"
+              },
+              "count": 1,
+              "mana": [
+                {
+                  "R": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Fire Diamond"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Fire Diamond",
+          "is": true
+        }
+      ]
+    }
+  ]
+}

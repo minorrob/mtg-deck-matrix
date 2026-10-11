@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Magistrate's Scepter",
+    "oracleId": "487485a6-cf79-48c0-bea9-0ec6b3ee253c",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{4}, {T}: Put a charge counter on this artifact.\n{T}, Remove three charge counters from this artifact: Take an extra turn after this one.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{4}, {T}: Put a charge counter on this artifact.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "charge",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}, Remove three charge counters from this artifact: Take an extra turn after this one.",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "removeCounters",
+          "self": true,
+          "counter": "charge",
+          "count": 3
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addTurn",
+          "who": "you"
+        }
+      ]
+    }
+  ]
+}
