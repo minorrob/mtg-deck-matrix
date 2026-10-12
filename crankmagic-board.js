@@ -126,6 +126,7 @@ globalThis.CrankBoard = Object.freeze({
   const WENT_MS = 6000;
   let historyOpen = false, historyFilter = "", menuOpen = false, stepsOpen = false, panelOpen = false, paneShut = false, alsoOpen = false;
   let skipping = null;                 /* Skip to end: the turn being skipped through, or null */
+  let preferSaid = null;              /* the way of playing last told to the room: {key, revision} (prefer) */
   /* The Coach: open or not, its thread ({from: "you"|"coach", text} or {divider}), and whether it is "typing". */
   const coach = {open: false, thread: [], typing: false, asked: 0};
   const COACH_PROMPTS = ["What's my best play?", "Who's the threat?", "Plan my next turn", "Explain the stack"];
@@ -197,6 +198,8 @@ globalThis.CrankBoard = Object.freeze({
     try {frame = JSON.parse(data);} catch {return;}
     if (frame.type === "view") adopt(frame.view);
     else if (frame.type === "receipt") {sending = false; draw();}
+    /* A way of playing the room did not take (the AI seats were playing on) is sent again once the game moves (prefer). */
+    else if (frame.type === "refused" && frame.of === "prefer") {if (frame.view) adopt(frame.view, true);}
     else if (frame.type === "refused") {sending = false; C.notice(frame.error || "The table did not take that.", true); if (frame.view) adopt(frame.view, true); else draw();}
     else if (frame.type === "away") {const seat = Number(String(frame.seatId).slice(1)); awaySaid.set(seat, {until: frame.until, at: performance.now()}); heard(seat, frame.until); draw();}
   }
@@ -222,6 +225,19 @@ globalThis.CrankBoard = Object.freeze({
     skip();
     draw();
     fileResult(view);
+    prefer();
+  }
+  /* STOP AT EVERY STEP OF MY TURN (Settings; Rob, 2026-10-11): the person's way of playing, kept with their preferences
+     (`play.stepByStep`) and told to the room whenever a view says otherwise. Once for each wish and revision: a refused
+     wish's view has the revision it was sent at, so it is sent again only when the game moves on. */
+  function prefer() {
+    if (!view || view.status === "finished" || view.continuing || !socket || socket.readyState !== 1) return;
+    const want = (((C.state.preferences || {}).play || {}).stepByStep) === true;
+    if (want === (view.stepByStep === true)) return;
+    const key = `${view.matchId}:${want}`;
+    if (preferSaid && preferSaid.key === key && preferSaid.revision >= view.revision) return;
+    preferSaid = {key, revision: view.revision};
+    socket.send(JSON.stringify({type: "prefer", stepByStep: want}));
   }
   /* What a view sounds like (B8): the moments between it and the last, then the bed for where the game is. Only while
      the board is on the page and the player has pressed it once; the first view of a game is history. */
@@ -315,6 +331,9 @@ globalThis.CrankBoard = Object.freeze({
   const players = () => (view ? view.state.players : []);
   const seatName = (seatId) => ((view.seats.find((s) => s.seatId === seatId) || {}).name || seatId);
   const nameOf = (i) => (i === view.seat ? "You" : (players()[i] || {}).name || `Seat ${i + 1}`);
+  /* The game's turn counts every player's; on your own the strip adds which of yours it is (Rob, 2026-10-11: "It says we
+     are on turn 3, but I only played one land"). The room counts them (game/room/room.mjs, `yourTurn`). */
+  const ordinal = (n) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th"}`;
   const departed = (i) => (view.departures || {})[`s${i}`] || null;
   const visibleCards = (p) => Object.values(p.zones).flatMap((z) => z.cards);
   const commanderOf = (p) => visibleCards(p).find((c) => c.commander && c.name) || null;
@@ -434,9 +453,13 @@ globalThis.CrankBoard = Object.freeze({
   /* ONE BUTTON THAT SAYS WHAT PASSING WILL DO (item 10): the same pass to the room, in the words for now -- Next
      step on your turn with the stack empty, Resolve and the spell's name with something on it, Pass on another
      player's turn. In the draw step of your turn it is Draw a card, and the click draws (item 13). */
+  /* In your own end step it is End turn (Rob, 2026-10-11: "passing the turn to the next player should always require
+     player confirmation"): the room always asks you there (game/room/room.mjs, `endsTurn`). */
   function passLabel() {
     const s = view.state, top = s.stack.length ? s.stack[s.stack.length - 1] : null;
     if (top) return top.name ? `Resolve ${top.name}` : "Let it resolve";
+    const d = view.decision, pass = d && d.kind === "priority" ? d.options.find((o) => o.act === "pass") : null;
+    if (pass && pass.endsTurn) return "End turn";
     return s.turnPlayerId === view.seat ? "Next step" : "Pass";
   }
   function passButton() {
@@ -460,7 +483,7 @@ globalThis.CrankBoard = Object.freeze({
     const conn = status === "open" ? "" : `<span class="cm-board-conn">${status === "reconnecting" ? "Reconnecting…" : "Connecting…"}</span>`;
     return `<header class="cm-board-strip">
       <span class="cm-board-tools">${ib("☰", "board-menu", "Menu", {}, {expanded: menuOpen})}${menuOpen ? menu() : ""}</span>
-      <span class="cm-board-turn">${s.turn ? `Turn ${s.turn} · ${e(turnName)}` : "Before turn 1"}</span>
+      <span class="cm-board-turn"${view.yourTurn ? ` title="Turn ${s.turn} of the game, counting every player's; your ${ordinal(view.yourTurn)} turn"` : ""}>${s.turn ? `Turn ${s.turn} · ${e(turnName)}${view.yourTurn ? ` (your ${ordinal(view.yourTurn)})` : ""}` : "Before turn 1"}</span>
       <span class="cm-board-step">${e(step)}${e(detail)}</span>
       <span class="cm-board-tools">${at < 0 ? "" : `<button type="button" class="cm-board-count" data-action="board-steps" aria-expanded="${stepsOpen}" aria-label="Step ${at + 1} of ${STEPS.length}; show the steps">${at + 1} / ${STEPS.length} ▾</button>`}${stepsOpen ? stepsMenu() : ""}</span>
       <span class="cm-board-prompt">${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}<span class="cm-board-waiting">${e(waitingText())}</span>${conn}</span>
@@ -681,7 +704,7 @@ globalThis.CrankBoard = Object.freeze({
   function pickPanel() {
     const id = hover ?? selected, pick = id === null ? null : findCard(id);
     if (!pick || !pick.name) return `<p class="cm-full-pick-empty cm-muted">Hover a card to read it here; click one to keep it.</p>`;
-    return `<section class="cm-full-pick" aria-label="${e(pick.name)}">${card(pick, {where: "pick", action: "board-zoom-open"})}<div class="cm-board-options">${optionsFor(pick.cardId).map((o) => `<button type="button" class="v-button compact primary" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${e(sayFor(o))}</button>`).join("")}</div></section>`;
+    return `<section class="cm-full-pick" aria-label="${e(pick.name)}">${card(pick, {where: "pick", action: "board-zoom-open"})}<div class="cm-board-options">${optionsFor(pick.cardId).map((o) => `<button type="button" class="v-button compact primary" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${sayHtml(o)}</button>`).join("")}</div></section>`;
   }
   function drawPick() {const el = document.getElementById("cm-full-pick"); if (el && view) el.innerHTML = pickPanel();}
   /* TABLE VITALS (the handoff's 560px dialog): every seat's life and poison, and every commander's damage to
@@ -749,7 +772,7 @@ globalThis.CrankBoard = Object.freeze({
     if (!panelOpen) return "";
     const id = hover ?? selected, pick = id === null ? null : findCard(id);
     return `<aside class="cm-board-panel" aria-label="Panel" style="--split:${Math.round(splitOf("panel") * 100)}%"><header><h2>Panel</h2>${ib("✕", "board-panel", "Close the panel")}</header>
-      <section class="cm-panel-pick">${pick && pick.name ? `<div class="cm-panel-card">${card(pick, {where: "pick", action: "board-zoom-open"})}<div class="cm-board-options">${optionsFor(pick.cardId).map((o) => `<button type="button" class="v-button compact primary" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${e(sayFor(o))}</button>`).join("")}</div></div>` : `<p class="cm-muted">Click a card on the board or in your hand to keep it here.</p>`}</section>
+      <section class="cm-panel-pick">${pick && pick.name ? `<div class="cm-panel-card">${card(pick, {where: "pick", action: "board-zoom-open"})}<div class="cm-board-options">${optionsFor(pick.cardId).map((o) => `<button type="button" class="v-button compact primary" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${sayHtml(o)}</button>`).join("")}</div></div>` : `<p class="cm-muted">Click a card on the board or in your hand to keep it here.</p>`}</section>
       ${splitBar("panel")}${stack()}
       <section class="cm-panel-history"><h3>History · newest first</h3>${historyList()}</section></aside>`;
   }
@@ -763,6 +786,9 @@ globalThis.CrankBoard = Object.freeze({
   /* The room's `detail` says which way an offer is -- what it is aimed at, what pays its cost, which mana -- where one
      card can be used more than one way (game/room/room.mjs offerDetails). */
   const sayFor = (o) => (o.detail ? `${verbFor(o)} ${o.detail}` : verbFor(o));
+  /* As HTML, an offer that helps an opponent or is aimed against your own marked where it says so (Rob, 2026-10-12: "some
+     indicator ... distinguishing it from spells that are negative"; game/room/room.mjs, `leaning`). */
+  const sayHtml = (o) => (o.lean ? e(sayFor(o)).replace(e(o.lean), `<span class="cm-lean${o.lean.startsWith("helps") ? " is-helps" : " is-against"}">⚠ ${e(o.lean)}</span>`) : e(sayFor(o)));
   function decision() {
     const d = view.decision;
     if (!d || view.status === "finished" || d.kind === "draw") return "";
@@ -783,7 +809,7 @@ globalThis.CrankBoard = Object.freeze({
       const ways = (o) => new Set(d.options.filter((x) => x.act === o.act && x.label === o.label && x.detail).map((x) => x.detail)).size;
       body = [...seen.values()].map(({o, n}) => ways(o) > 1
         ? `<button type="button" class="v-button compact" data-action="board-choose" data-card="${o.cardId}"${sending ? " disabled" : ""}>${e(verbFor(o))} <span class="cm-muted">· ${ways(o)} ways</span></button>`
-        : `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${e(sayFor(o))}${n > 1 ? ` <span class="cm-muted">×${n}</span>` : ""}</button>`).join("");
+        : `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${sayHtml(o)}${n > 1 ? ` <span class="cm-muted">×${n}</span>` : ""}</button>`).join("");
       return `<section class="cm-board-decision is-also" id="cm-board-decision" aria-label="What you can do"><h3>You can also</h3><div class="cm-board-options">${body}</div></section>`;
     }
     if (["one", "boolean", "index"].includes(d.mode)) body = d.options.map((o) => opt(o)).join("");
@@ -878,7 +904,7 @@ globalThis.CrankBoard = Object.freeze({
       const c = cards.find((x) => x.cardId === held);
       if (!c) {showing = "fan"; return showHand();}
       const opts = optionsFor(c.cardId);
-      const acts = opts.map((o, i) => `<button type="button" class="v-button${i === 0 ? " primary" : ""}" data-action="board-hand-do" data-index="${o.index}"${sending ? " disabled" : ""}>${e(sayFor(o))}${i === 0 ? " · Enter" : ""}</button>`).join("");
+      const acts = opts.map((o, i) => `<button type="button" class="v-button${i === 0 ? " primary" : ""}" data-action="board-hand-do" data-index="${o.index}"${sending ? " disabled" : ""}>${sayHtml(o)}${i === 0 ? " · Enter" : ""}</button>`).join("");
       return `<div class="cm-hand-show is-held" role="dialog" aria-modal="true" aria-label="${e(c.name)}, held">${close}
         <div class="cm-hand-held">${card(c, {where: "held", action: "board-hand-back"})}</div>
         <div class="cm-actions cm-hand-acts">${acts || `<span class="cm-muted">Nothing to do with it now.</span>`}${b("Back to hand", "board-hand-back")}</div>
@@ -900,7 +926,7 @@ globalThis.CrankBoard = Object.freeze({
     const c = findCard(cardId);
     if (!c || !c.name) return;
     const opts = optionsFor(c.cardId);
-    const acts = opts.map((o) => `<button type="button" class="v-button primary" data-action="board-zoom-do" data-index="${o.index}"${sending ? " disabled" : ""}>${e(sayFor(o))}</button>`).join("");
+    const acts = opts.map((o) => `<button type="button" class="v-button primary" data-action="board-zoom-do" data-index="${o.index}"${sending ? " disabled" : ""}>${sayHtml(o)}</button>`).join("");
     /* More than one way to use it: the ways listed to choose from, as many as there are, above Close. */
     if (opts.length > 1) return C.modal(c.name, `<div class="cm-board-zoom is-choosing">${card(c, {where: "zoom", action: "close"})}</div><p class="cm-board-choose-say">Choose one:</p><div class="cm-board-choices" role="group" aria-label="Ways to use ${e(c.name)}">${acts}</div><div class="cm-form-footer">${b("Close", "close")}</div>`);
     C.modal(c.name, `<div class="cm-board-zoom">${card(c, {where: "zoom", action: "close"})}</div><div class="cm-form-footer">${acts}${b("Close", "close", {}, !acts)}</div>`);
@@ -1396,6 +1422,7 @@ globalThis.CrankBoard = Object.freeze({
       } else if (said() !== before) draw();
       shell(true);
       if (!socket && status !== "reconnecting") connect();
+      prefer();
     },
     /** Whether the board is what this table's page should show. */
     wants(t) {return t.phase === "playing" || (t.tableId === tableId && !!view);},

@@ -233,7 +233,10 @@ ok(proof.same && proof.tape === tape.length + more, `its tape of ${proof.tape} a
     return (decision) => {asks.set(decision.id, (asks.get(decision.id) ?? 0) + 1); return random(decision);};
   };
   const broken = [{name: "Forests", commander: [], cards: HOUSE.cards}, {name: "Broken", commander: [], cards: [...Array(50).fill("Forest"), ...Array(10).fill("Broken Spell")]}];
-  const failed = await playGame({decks: broken, seed: 1, cards, humans: [0], matchId: "broken", people: counting}).then(() => null, (e) => e);
+  /* Seed 5: one whose Broken Spell resolves in the House's play, after the person's answer. (Where the person's own pass
+     resolves it, that pass is refused with the engine's words, 422 -- section 4. Which it is turns on the person's random
+     stream, so the seed is the one that lands here: since a person is asked at their own end step, seed 1 no longer does.) */
+  const failed = await playGame({decks: broken, seed: 5, cards, humans: [0], matchId: "broken", people: counting}).then(() => null, (e) => e);
   ok(failed instanceof RoomError && failed.status === 500 && /noSuchEffect/.test(failed.message) && Math.max(...asks.values()) === 1,
     `an engine failure after a person's answer stops the harness at once, each question asked once (${failed?.status}: ${failed?.message})`);
 }

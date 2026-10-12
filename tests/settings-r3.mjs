@@ -5,12 +5,13 @@
  *   1. The Menu holds what §4.7 lists (the theme, Settings, backup and restore, help, the tour,
  *      feedback, sharing) and none of what moved: Excel, the emailed export, history and Undo,
  *      Confirmations, Clear all data, the card data ages. Reset comparison picks is gone.
- *   2. Menu → Settings opens #settings, with the design's sections and AI Coach (AI-6): Account, Appearance, Prices, AI Coach, Data,
- *      About. Every entry that left the Menu is there, and Publish your To Trade list is in the
+ *   2. Menu → Settings opens #settings, with the design's sections, Play and AI Coach (AI-6): Account, Appearance, Play, Prices,
+ *      AI Coach, Data, About. Every entry that left the Menu is there, and Publish your To Trade list is in the
  *      Library's More menu.
  *   3. The theme can be chosen here too, and both places show the same choice.
  *   4. Reduce motion is saved: it stills transitions and the rail's animation, survives a reload, and
- *      turns off again.
+ *      turns off again. So is Play's Stop at every step of my turn (Rob, 2026-10-11), with the preferences the board
+ *      tells the room (tests/table-board.mjs).
  *   5. The default budget cap is what a deck with no cap of its own is held to, on the deck's own
  *      page; empty goes back to the pod's rule.
  *   6. About names the card data's ages, and on a phone the cards stack in one column.
@@ -51,7 +52,7 @@ try {
   /* 2. Settings, with everything that left the Menu. */
   await toSettings(page);
   ok(page.url().endsWith("#settings"), `Menu → Settings opens #settings (${page.url()})`);
-  eq(await page.$$eval(".cm-settings-card h2", (hs) => hs.map((h) => h.textContent)), ["Account", "Appearance", "Prices", "AI Coach", "Data", "About"], "Settings has the design's five sections, and AI Coach (AI-6)");
+  eq(await page.$$eval(".cm-settings-card h2", (hs) => hs.map((h) => h.textContent)), ["Account", "Appearance", "Play", "Prices", "AI Coach", "Data", "About"], "Settings has the design's five sections, Play and AI Coach (AI-6)");
   /* AI COACH SETTINGS (AI-6): six controls, their defaults, saved with the preferences; the meter from the door. */
   await page.route(`${base}/api/ai-meter`, (r) => r.fulfill({json: {open: true, spentCents: 0.4, capCents: 25}}));
   const aiPanel = async () => {await page.locator(".cm-settings-card", {has: page.locator("h2", {hasText: "AI Coach"})}).getByRole("button", {name: "AI Coach settings…"}).click(); await page.locator("#cm-ai-settings").waitFor({timeout: 10000});};
@@ -116,6 +117,20 @@ try {
   await page.getByRole("button", {name: "Reduce motion"}).click();
   await page.waitForFunction(() => !document.documentElement.dataset.motion);
   ok((await motion()).aether === "running", "and turning it off sets the rail moving again");
+  /* Play's Stop at every step of my turn: off by default, saved with the preferences, kept through a reload. */
+  const steps = () => page.evaluate(async () => ({pressed: document.querySelector('[data-action="set-step-by-step"]').getAttribute("aria-pressed"),
+    saved: await (async () => {const r = await CrankRepository.open(); try {return ((await r.getState()).preferences.play || {}).stepByStep ?? null;} finally {r.close();}})()}));
+  eq(await steps(), {pressed: "false", saved: null}, "Stop at every step of my turn is off by default");
+  ok(/never ends by itself/.test(await page.locator(".cm-settings-card", {hasText: "Stop at every step"}).innerText()), "and Play says your turn never ends by itself, either way");
+  await page.getByRole("button", {name: "Stop at every step of my turn"}).click();
+  await page.waitForFunction(() => document.querySelector('[data-action="set-step-by-step"]')?.getAttribute("aria-pressed") === "true");
+  eq(await steps(), {pressed: "true", saved: true}, "pressed, it is saved with the preferences (play.stepByStep), which the board tells the room");
+  await page.reload();
+  await page.locator(".cm-settings").waitFor({timeout: 60000});
+  eq(await steps(), {pressed: "true", saved: true}, "and kept through a reload");
+  await page.getByRole("button", {name: "Stop at every step of my turn"}).click();
+  await page.waitForFunction(() => document.querySelector('[data-action="set-step-by-step"]')?.getAttribute("aria-pressed") === "false");
+  eq(await steps(), {pressed: "false", saved: false}, "and off again");
 
   /* 5. The default budget cap. */
   const deck = "deck:live:D6";
@@ -217,4 +232,4 @@ try {
 } finally {
   await close();
 }
-console.log(`settings-r3: ${checks} checks passed — the Menu slimmed to INTAKE §4.7, Settings holds the rest in five sections and AI Coach, Reduce motion is saved and stills the page, and the default cap reaches a deck's own page.`);
+console.log(`settings-r3: ${checks} checks passed — the Menu slimmed to INTAKE §4.7, Settings holds the rest in five sections, Play and AI Coach, Reduce motion (which stills the page) and Stop at every step are saved, and the default cap reaches a deck's own page.`);

@@ -490,6 +490,12 @@ seat controls a hundred permanents. `room-resolve-all` holds Resolve all (Rob, 2
 top of the stack read off it, offered as one decision in a game that asked for it and in no other, the room passing for
 that seat through that run only -- asked again when another player's ability lands on top, no more passes than were
 there, kept across a wake and replayed -- and the board's button beside the pass, with the run one line on the stack.
+`room-untap-mana` holds Untap (Rob, 2026-10-11): a land tapped for mana, its mana unspent and nothing since, offered back
+to its person -- any of a run of taps, the game then exactly as before the first, to its hash -- and never a tap that did
+more (a pain land's damage), nor after a pass; kept with the room, replayed, and never taken by the fuzz harness's person.
+`table-basics` holds the table's basic lands as basic lands (Rob, 2026-10-11, Rampant Growth finding nothing): the table
+plays the engine's own definitions, the room's own basics are Basic and of their land type, and every card's scenarios
+pass played with the table's own lookup.
 `coach` holds the Coach (X13): its brief, the person's own hand, the board as everyone sees it and their deck as a sorted
 list, never another hand or a library's order; the table building it for the AI door alone; POST /api/ai/coach behind the
 door's gates and its own switch, asking Haiku 5.5 in one to three sentences, aiming for one; an answer naming anything not
@@ -897,7 +903,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 483 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 485 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1129,6 +1135,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `a11y-board` — `tests/a11y-board.mjs` (WCAG 2.1 AA on the board and the lobby: every word's contrast from the screen's pixels over all the mats in both themes, the focus rings, Tab in reading order, the keys as bound in Help, every card's label with its state and nothing hidden, the questions announced)
 - `room-beats` — `tests/room-beats.mjs`
 - `room-resolve-all` — `tests/room-resolve-all.mjs`
+- `room-untap-mana` — `tests/room-untap-mana.mjs`
+- `table-basics` — `tests/table-basics.mjs`
 - `coach` — `tests/coach.mjs`
 - `board-choices` — `tests/board-choices.mjs`
 - `crankmagic-audio` — `tests/crankmagic-audio.mjs`

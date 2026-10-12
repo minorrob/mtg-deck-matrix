@@ -35,6 +35,30 @@ byte with the dry run):**
 Staging serves main 039c86dd. Every gate item that is this side's is done; what is left is Rob's (the list above, and
 G-D's 50 games by Grok Bot once the agents' tokens are in).
 
+### Rob's playtest notes, 2026-10-11
+
+Rob played Focus at staging and sent his notes through the evening, with screenshots. What each was, and where it stands:
+
+| # | Rob's note | What it was | Where it stands |
+|---|---|---|---|
+| 1 | "It says we are on turn 3, but I only played one land" | The strip's turn is the game's, counting every player's: turn 3 was his second. | **Built.** The room counts each seat's own turns (`yourTurn`); the strip reads *Turn 3 · You (your 2nd)*. |
+| 2 | "Passing the turn to the next player should always require player confirmation, never happen automatically" | His end step, with nothing to do, passed by itself, ending his turn. | **Built.** The sixth beat, `endAsks`, kept with the match as the others are: a person's own end step is always asked, and the button there reads **End turn**. A game made before it replays as it was played. |
+| 3 | "It's skipping turns when I didn't play a land" | The data says otherwise: 405 steps passed by themselves in 40 games, and not one was a main phase with the land drop unused. Playing a land is something to do (`nothingToDo`), and a spell is counted with the mana the lands on the mat could make. What he saw was note 2: the turn ending without him. | **Answered** by note 2's fix; no main phase was ever skipped. |
+| 4 | "The option to require manual transition from each of the 7 steps … a toggle in settings" | No such setting. | **Built.** Settings › Play › *Stop at every step of my turn*: kept with his preferences, told to the room by the board, on the tape (`prefer`), so a game replays where it asked. |
+| 5 | "I should also be able to click the card to untap it again" | Mana tapped and not spent could not be taken back. | **Built.** The seventh beat, `untapMana` (game/engine/rules/untap-mana.mjs): a land tapped for mana, its mana unspent and nothing since, is lit and says *Untap*; a click puts it upright. Proved by the state's hash: the game is exactly as it was before the tap. A pain land, a sacrifice or a mana trigger is never offered. Rob: "You can only untap a land if it hasn't been spent", which is the rule as built. |
+| 6 | Rampant Growth: "Search your library: nothing to find", with 19 basics in his library | **A real bug, at every table.** The table's card lookup took the room's bare basics first: no Basic supertype, no land type. Every "basic land card" search failed (Rampant Growth, Fertilid, Fabled Passage), and so did "a Plains card" and "unless you control a Forest or an Island" (Hinterland Harbor). | **Fixed.** The table plays the engine's own definitions, basics included; the room's basics are Basic and of their land type (CR 205.4c, 305.6). tests/table-basics.mjs plays all 3,876 card scenarios through the table's lookup. |
+| 7 | Valorous Stance offered only the indestructible mode on an opponent's Fertilid | As intended: Fertilid is printed 0/0, so with two +1/+1 counters it is 2/2, and the destroy mode needs toughness 4 or greater (CR 700.2a). Counters do count (CR 613.4c), as Rob asked. | **As intended.** And his follow-up is built: an option that helps an opponent says *helps Maya*, one aimed at your own *against your own* (room.mjs `leaning`), marked on the board. |
+| 8 | Freyalise's Elf Druid token's mana ability | Already fixed in #703 (another session), and on staging. | **Done** earlier. |
+| 9 | A *Turn Resources* tab beside *Panel*: by land and card type, how many can be played this turn, how many in all, the mana tapped | Not built. | **Open.** The worker building notes 9 to 14 was stopped; its partial diff is unused. |
+| 10 | The right pane lies over the mat; it should sit beside it like the left one, its width dragged within the same bounds | The right pane is an overlay. | **Open**, with the hover card no taller than the mat (his note of the same day). |
+| 11 | Hovering a stack entry ("1. Fertilid") shows the card beside the On the stack box | Not built. | **Open.** |
+| 12 | A sorcery or instant is not seen while it resolves ("they should appear on the battlefield while being resolved") | The stack is a list of names. | **Open.** |
+| 13 | The Lands row cuts off its last cards with no scroll bar | The zone clips. | **Open.** |
+| 14 | Show hand: the end of a long card name ran under the next card (found by a11y-board, not Rob) | The fan overlaps each card's right edge. | **Fixed.** A covered card's name wraps within what shows of it. |
+
+Breaks: `game/tools/batch/breaks-turn-flow.py` (the room, 15), `breaks-turn-flow-board.py` (the board and Settings, 10),
+`breaks-untap-mana.py` (14), `breaks-table-basics.py` (3), `breaks-leaning.py` (8).
+
 ## RESUMED, 2026-10-08: the review-response session (Claude, a cloud container), on Rob's "Keep building"
 
 The review-response session paused on 2026-10-06 at 97% of the week's usage (Rob: pause at 90% and "write up a
