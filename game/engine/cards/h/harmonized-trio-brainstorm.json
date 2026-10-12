@@ -1,0 +1,88 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Harmonized Trio // Brainstorm",
+    "oracleId": "f6036065-7196-44d4-8a27-2199f0e1a03c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Merfolk",
+      "Bard",
+      "Wizard"
+    ],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{T}, Tap two untapped creatures you control: This creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}, Tap two untapped creatures you control: This creature becomes prepared.",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "tapCreature",
+          "count": 2,
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "alterAttribute",
+          "targets": "self",
+          "attribute": "prepared"
+        }
+      ]
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Brainstorm",
+      "types": [
+        "Instant"
+      ],
+      "subtypes": [],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Draw three cards, then put two cards from your hand on top of your library in any order.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Draw three cards, then put two cards from your hand on top of your library in any order.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 3
+          },
+          {
+            "effect": "chooseCard",
+            "zone": "hand",
+            "count": 2,
+            "to": "top"
+          }
+        ]
+      }
+    ]
+  }
+}

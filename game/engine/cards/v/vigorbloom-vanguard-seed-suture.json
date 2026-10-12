@@ -1,0 +1,103 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vigorbloom Vanguard // Seed Suture",
+    "oracleId": "bd416426-d037-45e3-9647-816bf982cbea",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Troll",
+      "Druid"
+    ],
+    "manaCost": "{1}{G/W}",
+    "colors": [
+      "W",
+      "G"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\nEach creature you control with a +1/+1 counter on it has vigilance.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This creature enters prepared.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersPrepared": true
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Each creature you control with a +1/+1 counter on it has vigilance.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "counters": "+1/+1"
+      },
+      "apply": {
+        "addKeywords": [
+          "Vigilance"
+        ]
+      }
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Seed Suture",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{G/W}",
+      "colors": [
+        "W",
+        "G"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Put a +1/+1 counter on target creature. You gain 1 life.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Put a +1/+1 counter on target creature. You gain 1 life.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "putCounter",
+            "targets": {
+              "target": 0
+            },
+            "counter": "+1/+1",
+            "count": 1
+          },
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    ]
+  }
+}

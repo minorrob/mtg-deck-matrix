@@ -58,6 +58,8 @@ export const SELECTOR_KEYS = Object.freeze([
   "otherThan", "sharesCreatureTypeWith",
   /* "Each equipped creature" (Hemlock Vial). */
   "equipped",
+  /* "If this creature isn't prepared" (Paradox Shaper // Omit Variables; CR 722.3): the prepared designation. */
+  "prepared",
   /* "Creatures your opponents control without flying or reach" (Sidar Kondo of Jamuraa), "a creature without flanking"
      (CR 702.25a): none of these keywords, through the layers. */
   "nonKeywords",
@@ -199,6 +201,7 @@ function assertGrammar(selector) {
   for (const key of ["otherThan", "sharesCreatureTypeWith"])
     if (selector[key] !== undefined && selector[key] !== "that card") throw new Error(`A selector's ${key} is "that card": the object a trigger is about`);
   if (selector.equipped !== undefined && selector.equipped !== true) throw new Error("A selector's equipped is true: an Equipment is attached to it");
+  if (selector.prepared !== undefined && typeof selector.prepared !== "boolean") throw new Error("A selector's prepared is true or false: whether the permanent is prepared (CR 722.3)");
   /* "With power less than this creature's power" (mentor, CR 702.134a): `power.lessThan` "self". */
   if (selector.power?.lessThan !== undefined && selector.power.lessThan !== "self") throw new Error("A selector's power.lessThan is \"self\": less than its source's power");
   /* "With lesser toughness" than what a trigger is about, as it last existed (Colfenor): `toughness.lessThan` "that card". */
@@ -427,6 +430,9 @@ export function compileSelector(selector) {
     }
     /* "Whenever a goaded creature attacks" (effects/permanents.mjs goad). */
     if (selector.goaded === true && !(state.effects ?? []).some((e) => e.rule === "goaded" && e.affects.ids.includes(id))) return false;
+    /* "At the beginning of your upkeep, if this creature isn't prepared, it becomes prepared" (Paradox Shaper; CR 722.3a-b,
+       603.4): whether it has the prepared designation now -- a permanent's alone (script/effects/attributes.mjs). */
+    if (selector.prepared !== undefined && (object.prepared === true) !== selector.prepared) return false;
     /* "With a +1/+1 counter on it", or `"any"`: "permanents you control with counters on them" (Mutational Advantage). */
     if (selector.counters !== undefined && !(selector.counters === "any" ? Object.values(object.counters ?? {}).some((n) => n > 0)
       : (object.counters?.[selector.counters] ?? 0) > 0)) return false;

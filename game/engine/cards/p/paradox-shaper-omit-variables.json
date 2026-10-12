@@ -1,0 +1,105 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Paradox Shaper // Omit Variables",
+    "oracleId": "511951ed-fbff-4e44-9429-27f237496672",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Octopus",
+      "Wizard"
+    ],
+    "manaCost": "{1}{U/B}",
+    "colors": [
+      "U",
+      "B"
+    ],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "At the beginning of your upkeep, if this creature isn't prepared, it becomes prepared.\n{2}: Put target card from your graveyard on the bottom of your library.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, if this creature isn't prepared, it becomes prepared.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "alterAttribute",
+          "targets": "self",
+          "attribute": "prepared"
+        }
+      ],
+      "condition": {
+        "present": {
+          "self": true,
+          "prepared": false
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{2}: Put target card from your graveyard on the bottom of your library.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "library"
+        }
+      ]
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Omit Variables",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{U/B}",
+      "colors": [
+        "U",
+        "B"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Mill three cards. (Put the top three cards of your library into your graveyard.)",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Mill three cards.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "mill",
+            "count": 3
+          }
+        ]
+      }
+    ]
+  }
+}

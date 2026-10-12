@@ -1,0 +1,96 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Campus Composer // Aqueous Aria",
+    "oracleId": "9b3155c1-c662-4ff1-80e2-4064e6233dc5",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Merfolk",
+      "Bard"
+    ],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Ward {2}\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Ward {2}",
+      "keyword": "ward",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ]
+    },
+    {
+      "kind": "replacement",
+      "text": "This creature enters prepared.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersPrepared": true
+      }
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Aqueous Aria",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{4}{U}",
+      "colors": [
+        "U"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Create a 3/3 blue and red Elemental creature token with flying.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Create a 3/3 blue and red Elemental creature token with flying.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 1,
+            "token": {
+              "name": "Elemental",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Elemental"
+              ],
+              "colors": [
+                "U",
+                "R"
+              ],
+              "power": 3,
+              "toughness": 3,
+              "keywords": [
+                "Flying"
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

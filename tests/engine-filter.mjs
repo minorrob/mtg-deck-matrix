@@ -172,6 +172,20 @@ const names = (state, ids) => ids.map((id) => state.objects[id].card).sort();
   ok(match(s, theirs, {controller: 1}), "and takes its context each time, so one compiled selector serves every seat");
 }
 
+/* ---- "if this creature isn't prepared" (Paradox Shaper // Omit Variables; CR 722.3) ---- */
+{
+  const {s, mine, alsoMine} = board();
+  s.objects[mine].prepared = true;
+  eq(names(s, selectMatching(s, {what: "permanent", types: ["Creature"], prepared: true}, {controller: 0})), ["Mine"],
+    "`prepared: true` is the permanent with the prepared designation");
+  eq(names(s, selectMatching(s, {what: "permanent", types: ["Creature"], controller: "you", prepared: false}, {controller: 0})), ["Also Mine"],
+    "and `prepared: false` every one without it");
+  ok(!compileSelector({what: "permanent", self: true, prepared: false})(s, mine, {controller: 0, source: mine})
+    && compileSelector({what: "permanent", self: true, prepared: false})(s, alsoMine, {controller: 0, source: alsoMine}),
+    "read of a source itself, as an intervening \"if\" asks it");
+  refuses(() => compileSelector({prepared: "no"}), /prepared/, "and `prepared` is true or false, not a word that would read as true");
+}
+
 /* ---- selectors are plain data ---- */
 {
   const selector = {what: "permanent", types: ["Creature"], controller: "you", another: true, manaValue: {max: 3}};

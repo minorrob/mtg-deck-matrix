@@ -739,9 +739,13 @@ const tapChoices = (state, player, sourceId, selector) => state.zones.battlefiel
   && !state.objects[id].tapped && compileSelector({...selector, what: "permanent"})(state, id, {controller: player, source: sourceId}));
 /* "Tap three untapped creatures you control" (Kithkeeper): each set of `count` of them, ids ascending, no more than
    CREW_OFFERS_MAX (as crew). Its own source may be among them, since the cost says no "other" (a selector's `another` says
-   so when one does), and a summoning-sick one too: none of it is the creature's own {T} (CR 302.6). Too few, and none. */
-function tapSets(state, player, sourceId, selector, count) {
+   so when one does), and a summoning-sick one too: none of it is the creature's own {T} (CR 302.6). Too few, and none.
+   Unless the cost is also its own {T} (`ownTap`; "{T}, Tap two untapped creatures you control", Harmonized Trio //
+   Brainstorm): the {T} taps it, so it is no untapped creature for the rest of the cost to tap (CR 602.2b, 601.2h) -- as a
+   mana ability's (manaTappers). */
+function tapSets(state, player, sourceId, selector, count, ownTap = false) {
   const able = state.zones.battlefield.filter((id) => !state.objects[id].tapped && characteristicsOf(state, id).controller === player
+    && !(ownTap && id === sourceId)
     && compileSelector({...selector, what: "permanent"})(state, id, {controller: player, source: sourceId})).sort((a, b) => a - b);
   const sets = [];
   const walk = (from, chosen) => {
@@ -1635,7 +1639,7 @@ function abilityOffers(state, player, id, ability) {
       : toss ? discardSets(cardsIn(state, "hand", player).filter((c) => c !== id && (!toss.selector || compileSelector({...toss.selector, what: "card", zone: "hand"})(state, c, {controller: player, source: id}))),
         toss.count ?? 1).map((d) => ({discard: d}))
       : crew ? crewChoices(state, player, id, crew.power).map((set) => ({crew: set}))
-      : tapper ? ((tapper.count ?? 1) > 1 ? tapSets(state, player, id, tapper.selector, tapper.count).map((set) => ({tapAll: set}))
+      : tapper ? ((tapper.count ?? 1) > 1 ? tapSets(state, player, id, tapper.selector, tapper.count, (ability.cost ?? []).some((a) => a?.atom === "{T}")).map((set) => ({tapAll: set}))
         : tapChoices(state, player, id, tapper.selector).map((t) => ({tap: t})))
       : untapper ? untapChoices(state, player, untapper.count).map((set) => ({untap: set}))
       : blighter ? blightChoices(state, player).map((c) => ({blight: c}))

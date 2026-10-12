@@ -1,0 +1,100 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Diviner of Victory // Unwind History",
+    "oracleId": "e7b78acd-5288-4528-97a8-a5b43de90bf5",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dwarf",
+      "Wizard"
+    ],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\nWhenever you scry or surveil, this creature gets +1/+1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This creature enters prepared.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersPrepared": true
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you scry or surveil, this creature gets +1/+1 until end of turn.",
+      "trigger": {
+        "on": "scried"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 1
+        }
+      ]
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Unwind History",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{1}{U}",
+      "colors": [
+        "U"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Return target creature an opponent controls with mana value 3 or less to its owner's hand. Surveil 1.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Return target creature an opponent controls with mana value 3 or less to its owner's hand. Surveil 1.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "opponent",
+            "manaValue": {
+              "max": 3
+            }
+          }
+        ],
+        "effects": [
+          {
+            "effect": "moveZone",
+            "targets": {
+              "target": 0
+            },
+            "to": "hand"
+          },
+          {
+            "effect": "surveil",
+            "count": 1
+          }
+        ]
+      }
+    ]
+  }
+}
