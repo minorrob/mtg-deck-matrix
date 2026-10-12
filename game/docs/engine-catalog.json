@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1270,
+  "defined": 1272,
   "provisional": 27,
-  "everyRule": 2640
+  "everyRule": 2644
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -5693,7 +5693,7 @@
      "forge": "CounterAddedOnce",
      "top": 10,
      "all": 47,
-     "blocks": 10,
+     "blocks": 9,
      "alone": 6
     },
     {
@@ -9316,10 +9316,10 @@
   },
   "Amounts the game counts": {
    "tally": {
-    "built": 24,
+    "built": 25,
     "partial": 2,
     "named": 0,
-    "missing": 162
+    "missing": 161
    },
    "entries": [
     {
@@ -9523,7 +9523,7 @@
      "forge": "Amount",
      "top": 10,
      "all": 43,
-     "blocks": 10,
+     "blocks": 9,
      "alone": 2
     },
     {
@@ -9686,13 +9686,13 @@
      "kind": "count",
      "rule": null,
      "name": "Your experience counters",
-     "engine": null,
-     "status": "missing",
+     "engine": "amount {countersOn: \"you\", counter: \"experience\"} (script/amount.mjs); putCounter's who gives them",
+     "status": "built",
      "forge": "YourCountersExperience",
      "top": 3,
      "all": 15,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",

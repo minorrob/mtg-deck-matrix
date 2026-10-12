@@ -396,7 +396,9 @@ export const FORGE_COUNTS = Object.freeze({
   TimesKicked: {name: "Times kicked", status: "missing"},
   Kicked: {name: "Whether it was kicked", status: "missing"},
   PromisedGift: {name: "A gift promised", status: "missing"},
-  YourCountersExperience: {name: "Your experience counters", status: "missing"},
+  /* Train D (Ezuri, Claw of Progress): "the number of experience counters you have" -- a player's own counters, counted (CR
+     122.1); "you get an experience counter" is putCounter's `who` (effects/resources.mjs). */
+  YourCountersExperience: {name: "Your experience counters", status: "built", engine: "amount {countersOn: \"you\", counter: \"experience\"} (script/amount.mjs); putCounter's who gives them"},
 });
 
 /* Forge's trigger modes that stand for many events, some of which the compiler builds. */

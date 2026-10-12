@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,270 defined and playable today; 2,640 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,272 defined and playable today; 2,644 with every
 mechanic built, so only their definitions are left to write; 27 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -26,7 +26,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Replacement effects | 34 | 0 | 6 | 0 | 28 |
 | Costs | 26 | 5 | 2 | 10 | 9 |
 | Options and conditions | 37 | 24 | 5 | 0 | 8 |
-| Amounts the game counts | 188 | 24 | 2 | 0 | 162 |
+| Amounts the game counts | 188 | 25 | 2 | 0 | 161 |
 | Choices | 15 | 12 | 0 | 0 | 3 |
 | Other keyword constructs | 16 | 10 | 0 | 1 | 5 |
 
@@ -43,7 +43,7 @@ The things that alone hold back the most of the most-played cards.
 | count | What entered or died this turn | — | missing | 9 | 9 |
 | count | Cards in a library | — | missing | 8 | 12 |
 | effect | RingTemptsYou | — | missing | 8 | 11 |
-| trigger | CounterAddedOnce | counter added once | named | 6 | 10 |
+| trigger | CounterAddedOnce | counter added once | named | 6 | 9 |
 | effect | ChoosePlayer | — | missing | 6 | 8 |
 | option | Imprint (a card exiled with this) | — | missing | 6 | 8 |
 | effect | Discover | discover | named | 6 | 6 |
@@ -540,7 +540,7 @@ The things that alone hold back the most of the most-played cards.
 | TapsForMana | tapped for mana | built | 18 | 64 | 0 | 0 |
 | Sacrificed | sacrificed | built | 17 | 114 | 0 | 0 |
 | Discarded | discarded | built | 17 | 76 | 0 | 0 |
-| CounterAddedOnce | counter added once | named | 10 | 47 | 10 | 6 |
+| CounterAddedOnce | counter added once | named | 10 | 47 | 9 | 6 |
 | AttackersDeclaredOneTarget | attackers declared | built | 8 | 32 | 0 | 0 |
 | SpellCastOrCopy | — | missing | 6 | 31 | 6 | 4 |
 | LifeLost | life lost | built | 6 | 20 | 0 | 0 |
@@ -880,7 +880,7 @@ The things that alone hold back the most of the most-played cards.
 | 700.5 | Devotion to a color (CR 700.5) | {devotion: [color]} | built | 11 | 49 | 0 | 0 |
 | — | That much life ("loses that much life", the life gained) | {lifeGained: true}: the life the trigger is about (batch 68) | built | 11 | 38 | 0 | 0 |
 | — | Your life total | — | missing | 10 | 92 | 10 | 4 |
-| — | Amount | — | missing | 10 | 43 | 10 | 2 |
+| — | Amount | — | missing | 10 | 43 | 9 | 2 |
 | — | How many things an effect remembered | — | missing | 8 | 71 | 8 | 5 |
 | — | Times this resolved this turn | — | missing | 7 | 31 | 7 | 5 |
 | — | The monarch | — | missing | 7 | 15 | 7 | 0 |
@@ -894,7 +894,7 @@ The things that alone hold back the most of the most-played cards.
 | — | Times kicked | — | missing | 3 | 30 | 2 | 0 |
 | — | Life your opponents lost this turn | amount {lifeLostThisTurn: "opponents"} (effects/resources.mjs keeps each player's, rules/turn.mjs clears it) | built | 3 | 26 | 0 | 0 |
 | — | An amount the trigger carries | — | missing | 3 | 21 | 3 | 2 |
-| — | Your experience counters | — | missing | 3 | 15 | 3 | 3 |
+| — | Your experience counters | amount {countersOn: "you", counter: "experience"} (script/amount.mjs); putCounter's who gives them | built | 3 | 15 | 0 | 0 |
 | — | Abilities activated this turn | — | missing | 3 | 13 | 3 | 3 |
 | — | A gift promised | — | missing | 3 | 11 | 3 | 0 |
 | — | Number | — | missing | 3 | 8 | 3 | 0 |

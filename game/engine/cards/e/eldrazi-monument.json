@@ -1,0 +1,87 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Eldrazi Monument",
+    "oracleId": "c7ee1b21-d02e-49ef-95d6-d6dbf2f886ae",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures you control get +1/+1 and have flying and indestructible.\nAt the beginning of your upkeep, sacrifice a creature. If you can't, sacrifice this artifact.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Creatures you control get +1/+1 and have flying and indestructible.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Creatures you control get +1/+1 and have flying and indestructible.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Flying",
+          "Indestructible"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, sacrifice a creature. If you can't, sacrifice this artifact.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "count": 1,
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "remember": true
+        },
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "sacrifice": true,
+          "condition": {
+            "compare": {
+              "count": {
+                "rememberedCount": true
+              },
+              "fewerThan": 1
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

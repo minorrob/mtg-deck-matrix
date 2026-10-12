@@ -903,7 +903,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 485 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 486 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1391,6 +1391,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-unchosen-modes` - `tests/engine-unchosen-modes.mjs`: "as Gollum enters, choose odd or even" and "choose one that hasn't been chosen" (Gollum, Riddle Master; CR 614.12, 202.3, 603.3c, 700.2, 400.7) -- a spell's mana value of the chosen quality, zero even and X counted; each mode once, remembered on the permanent as it is chosen, a second trigger at once seeing the first's choice, the snapshot as it triggered when it has gone, a new object afresh, the last trigger removed when none is left
 - `engine-face-down-play` - `tests/engine-face-down-play.mjs`: playing a card exiled face down (Gandalf, Goblins' Bane // Flameshape; CR 406.3, 406.3a-b, 601.2, 305.1) -- looked at and exiled face down, offered as the card it is (a land under the land drop's rules, a spell by its own cost and timing, an adventurer card as its Adventure) to the one player who may look at it, while "if you control a Wizard" holds and it remains exiled; turned face up and revealed as it is played, hidden from every other seat and from G1's leak judge until then; the table's words its modes and costs; asking changes nothing
 - `fuzz-library` - `tests/fuzz-library.mjs`: G1 over Rob's whole library (`tools/fuzz-live.mjs --library`) -- each seed's four decks Commander decks of his library (a legendary creature the table plays, 99 cards of its color identity, none twice but basics), the same for the same seed; a game's exception said with its seed and the run going on; seed 229, the waterbend paid with rider mana that stalled a table, played clean through the real room
+- `engine-counters-put` - `tests/engine-counters-put.mjs`: counters put on players and on a creature you control (Ezuri, Claw of Progress; Simic Ascendancy; CR 122.1, 122.6, 701.34a) -- "you get an experience counter", each player named, doubled as Innkeeper's Talent doubles them, counted as "the number of experience counters you have" for its controller alone; "whenever one or more +1/+1 counters are put on a creature you control", about the creature and that many, not another player's creature, a noncreature or another kind; the compiler refusing a player's counters of no kind, chosen, +1/+1 or poison
 
 ## Design and execution record
 
