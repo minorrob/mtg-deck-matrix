@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Curse-Marred Demon",
+    "oracleId": "f30a084c-5705-40f5-8e0d-2083d33973c7",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Demon"
+    ],
+    "manaCost": "{2}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Flying, trample\nWhen this creature enters, search your library for a card, put it into your hand, shuffle, then discard a card at random.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, search your library for a card, put it into your hand, shuffle, then discard a card at random.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {},
+          "shuffle": true,
+          "to": "hand"
+        },
+        {
+          "effect": "discard",
+          "count": 1,
+          "random": true
+        }
+      ]
+    }
+  ]
+}
