@@ -28,6 +28,7 @@
  */
 
 import {characteristicsOf, deriving, staticAbilities} from "./rules/layers.mjs";
+import {conditionHolds} from "./script/condition.mjs";
 import {commanderKeyOf} from "./state/index.mjs";
 
 export const PROJECTION_SCHEMA = "CommanderProbeProjection@1";
@@ -103,6 +104,8 @@ function cardFor(state, id, canSeeFace, viewer = null) {
     /* Monstrous (CR 701.37b) and prepared (CR 722.3a): designations, which anyone can see (script/effects/attributes.mjs). */
     ...(object.monstrous === true ? {monstrous: true} : {}),
     ...(object.prepared === true ? {prepared: true} : {}),
+    /* Solved (CR 719.3b): a Case's designation, which anyone can see. */
+    ...(object.solved === true ? {solved: true} : {}),
     commander: object.commander === true,
     /* Which commander (state/index.mjs, commanderKeyOf): the key its damage is kept under in every player's
        `health.commanderDamage`, the same in every zone, so the board can say whose commander dealt it. */
@@ -123,9 +126,13 @@ function topSeenBy(state, owner, viewer) {
     for (const ability of held(id)) {
       if (ability.kind !== "static") continue;
       if (ability.rule === "top-revealed") revealed = true;
-      if (ability.rule === "look-at-top") looked = true;
+      /* "Solved -- You may look at the top card of your library any time" (Case of the Locked Hothouse): while its condition holds. */
+      if (ability.rule === "look-at-top" && conditionHolds(state, ability.condition, {controller: owner, source: id})) looked = true;
     }
   }
+  /* And for a while, by an effect of theirs: "until end of turn, you may look at the top card of your library any time"
+     (Gwenom, Remorseless; script/effects/permanents.mjs, effectUntil). */
+  if ((state.effects ?? []).some((e) => e.rule === "look-at-top" && (e.players ?? []).includes(owner))) looked = true;
   return revealed || (looked && viewer === owner);
 }
 

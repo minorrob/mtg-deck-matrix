@@ -75,6 +75,9 @@ export const SELECTOR_KEYS = Object.freeze([
   /* "A permanent of their choice that shares a card type with it" (Braids, Arisen Nightmare; CR 205.2a): with what an effect
      before it moved, as it last existed. */
   "sharesCardTypeWith",
+  /* "Unless ... it's only the color its controller chose" (Selective Obliteration; CR 105.2): the one color its controller chose
+     as this resolution did (effects/asking.mjs, chooseColor's `chooser`), and no other. */
+  "onlyChosenColor",
 ]);
 
 /** The card types (CR 205.2a). */
@@ -197,6 +200,7 @@ function assertGrammar(selector) {
     if (selector[key] !== undefined && typeof selector[key] !== "boolean") throw new Error(`A selector's ${key} is true or false`);
   if (selector.fromBattlefieldThisTurn !== undefined && selector.fromBattlefieldThisTurn !== true) throw new Error("A selector's fromBattlefieldThisTurn is true: a graveyard card put there from the battlefield this turn");
   if (selector.xInManaCost !== undefined && selector.xInManaCost !== true) throw new Error("A selector's xInManaCost is true: {X} among the symbols of its mana cost");
+  if (selector.onlyChosenColor !== undefined && typeof selector.onlyChosenColor !== "boolean") throw new Error("A selector's onlyChosenColor is true or false: only the color its controller chose");
   const shared = selector.sharesCardTypeWith;
   if (shared !== undefined && shared !== "moved" && !(Array.isArray(shared) && shared.every((type) => CARD_TYPES.includes(type))))
     throw new Error("A selector's sharesCardTypeWith is \"moved\": a card type of what the effect before it moved, as it last existed");
@@ -316,6 +320,13 @@ export function compileSelector(selector) {
     if (selector.colorless === false && colorsOf(state, id).length === 0) return false;
     /* "A multicolored spell" (CR 105.2b, Mage Tower Referee): two or more colors, through the layers. */
     if (selector.multicolored === true && colorsOf(state, id).length < 2) return false;
+    /* "It's only the color its controller chose" (Selective Obliteration; CR 105.2): exactly one color, through the layers, and
+       that one the color its controller chose as this resolved (`chosenColors`, by chooser; script/resolution.mjs) -- a
+       controller who chose none has no such color. `false`, any other permanent. */
+    if (selector.onlyChosenColor !== undefined) {
+      const chosen = context.chosenColors?.[controllerOf(state, id)], colors = colorsOf(state, id);
+      if ((chosen !== undefined && colors.length === 1 && colors[0] === chosen) !== selector.onlyChosenColor) return false;
+    }
     /* "An instant or sorcery card that shares a color with this planeswalker" (Kasmina): a color of its source's, now. */
     if (selector.sharesColor === "self") {
       const source = context.source !== null && context.source !== undefined && state.objects[context.source] ? colorsOf(state, context.source) : [];

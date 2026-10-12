@@ -25,7 +25,7 @@ import {event, cardRef, moveOne} from "./zones.mjs";
 import {typesOf, controllerOf, staticAbilities} from "../../rules/layers.mjs";
 import {protectedFrom} from "../../rules/protection.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
-import {countersPlaced, tokensCreated} from "../../rules/statics.mjs";
+import {countersPlaced, enteringCountersPlaced, tokensCreated} from "../../rules/statics.mjs";
 import {removeFromCombat} from "../../rules/combat.mjs";
 
 /* A continuous effect needs a timestamp to be ordered by (CR 613.7), and it has to be part of the
@@ -167,6 +167,9 @@ function copiable(object, except = {}) {
        the original's, part of its copiable values -- compiled with the card (cards/index.mjs), bound as it is made. */
     abilities: [...structuredClone(object.abilities ?? []), ...structuredClone(except.addAbilities ?? [])],
     power: except.setPower ?? object.power ?? null, toughness: except.setToughness ?? object.toughness ?? null,
+    /* Its printed loyalty (CR 707.2): a planeswalker copied as it enters has that many loyalty counters (CR 306.5b; Spark
+       Double, rules/replacement.mjs ownEntering). */
+    ...(Number.isInteger(object.loyalty) ? {loyalty: object.loyalty} : {}),
     ...(object.spell ? {spell: structuredClone(object.spell)} : {}),
     ...(object.enchant ? {enchant: structuredClone(object.enchant)} : {}),
   };
@@ -284,7 +287,7 @@ function rememberedIn(abilities, remembered) {
 }
 export function makeCopies(state, ids, params, context, events) {
   const controller = params.controller ?? context.controller;
-  const made = [], added = [], pending = [];
+  const made = [];
   for (const id of ids) {
     /* "A copy of THAT CREATURE" (Hofri Ghostforge; CR 707.2, 608.2h): the creature the trigger is about, its copiable values as
        it last existed on the battlefield (`asItLastWas`) -- a creature that was copying something, or face down, is that
@@ -294,11 +297,11 @@ export function makeCopies(state, ids, params, context, events) {
     const except = params.except?.addAbilities ? {...params.except, addAbilities: rememberedIn(params.except.addAbilities, context.remembered)} : params.except;
     /* Twice as many copies (Anointed Procession), Dragons instead of a copy that would be an artifact (Draconic Visitor), a
        Soldier beside a creature's (Queen Allenal): rules/statics.mjs, tokensCreated -- read against what the copy would be,
-       in the order its controller chose for this original (tokenQuestion). */
-    const {count, instead, plus} = tokensCreated(state, controller, params.count ?? 1, copiable(original, except), {orders: params.tokenOrders?.[copyEventKey(id)] ?? []});
-    pending.push(plus);
-    for (let i = 0; i < count; i += 1) {
-      if (instead) { made.push(makeToken(state, instead, controller, params, context, events)); continue; }
+       in the order its controller chose for this original (tokenQuestion). The copies are the effect's own; what is made
+       instead of them, or beside them, is made as its token says, and as the effect makes its tokens (tapped, hasty). */
+    const {groups} = tokensCreated(state, controller, params.count ?? 1, copiable(original, except), {orders: params.tokenOrders?.[copyEventKey(id)] ?? []});
+    for (const {token, count, own} of groups) for (let i = 0; i < count; i += 1) {
+      if (!own) { made.push(makeToken(state, token, controller, params, context, events)); continue; }
       const values = copiable(original, except);
       /* A copy of an Aura enchants something as it enters, or is not made (CR 303.4f-g). */
       const hosts = values.enchant ? enchantable(state, values.enchant, controller) : null;
@@ -314,9 +317,7 @@ export function makeCopies(state, ids, params, context, events) {
     }
   }
   afterwards(state, made, {...params, controller}, context);
-  /* What a replacement added beside them, made after them and given nothing of theirs (addedTokens). */
-  for (const plus of pending) added.push(...addedTokens(state, plus, controller, context, events));
-  return [...made, ...added];
+  return made;
 }
 /* Which event of a copy effect an order answers: the original by its id, or the source as it last existed (`lastKnown`). */
 const copyEventKey = (id) => (id?.values ? "lastKnown" : String(id));
@@ -471,24 +472,19 @@ export function createToken(state, params, context) {
   if (params.attachedTo !== undefined && !enchantable(state, spec.enchant, controller).includes(host)) return events;
   const made = [];
   /* "Twice that many of those tokens instead" (Anointed Procession), artifact tokens made Dragons instead (Draconic Visitor),
-     "those tokens plus a 1/1 white Soldier" (Queen Allenal): what is made, how many, and what beside them, in the order
-     their controller chose (rules/statics.mjs, tokensCreated; effects/asking.mjs, orderTokens). */
-  const {count: many, instead, plus} = tokensCreated(state, controller, count, spec, {orders: params.tokenOrders?.[TOKEN_EVENT] ?? []});
-  for (let i = 0; i < many; i += 1) made.push(makeToken(state, instead ?? spec, controller, params, context, events));
-  if (params.attachedTo !== undefined) for (const id of made) attachTo(state, id, host);
+     "those tokens plus a 1/1 white Soldier" (Queen Allenal), "one of each" (Academy Manufactor): what is made, in the order
+     their controller chose (rules/statics.mjs, tokensCreated; effects/asking.mjs, orderTokens) -- each as the effect says its
+     tokens are made, tapped, attacking or gaining haste, whatever a replacement made of them (their rulings; CR 614.6). */
+  const {groups} = tokensCreated(state, controller, count, spec, {orders: params.tokenOrders?.[TOKEN_EVENT] ?? []});
+  for (const {token, count: many} of groups) for (let i = 0; i < many; i += 1) made.push(makeToken(state, token, controller, params, context, events));
+  /* An Aura among them enters attached (Royal Treatment's Role, twice that many of it too); a Food added beside it does not. */
+  if (params.attachedTo !== undefined) for (const id of made) if (state.objects[id].enchant) attachTo(state, id, host);
   /* "They gain haste until end of turn" (Ovika), and the rest a made permanent may gain (afterwards). */
   afterwards(state, made, {...params, controller}, context);
-  const added = addedTokens(state, plus, controller, context, events);
   /* "Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all OTHER creatures" (Martial Coup): the
      tokens this made, for the effects after it -- the ones a replacement added among them (CR 614.6). */
-  if (params.remember) context.remembered = [...made, ...added];
+  if (params.remember) context.remembered = made;
   return events;
-}
-
-/* WHAT A REPLACEMENT ADDS BESIDE THE TOKENS (`tokens-plus`; Queen Allenal of Ruadach, CR 614.1a): each the token it names and
-   nothing more -- not tapped, not attacking, gaining nothing the effect says of "those tokens" or "it". */
-function addedTokens(state, plus, controller, context, events) {
-  return (plus ?? []).flatMap(({token, count}) => Array.from({length: count}, () => makeToken(state, token, controller, {}, context, events)));
 }
 
 /* The answers kept for the order of the effects changing tokens (CR 616.1; effects/asking.mjs, orderTokens): by the event --
@@ -558,7 +554,7 @@ function makeToken(state, spec, controller, params, context, events) {
   /* "An Incubator token that enters the battlefield with N +1/+1 counters on it" (incubate, CR 701.53a): given as it enters,
      before the event that says it entered (CR 122.6), by its controller (122.6a) -- "twice that many instead" sees them. */
   for (const [counter, n] of Object.entries(params.entersWithCounters ?? {})) {
-    const placed = countersPlaced(state, id, counter, n, controller);
+    const placed = enteringCountersPlaced(state, id, counter, n, controller);
     if (placed > 0) state.objects[id].counters[counter] = (state.objects[id].counters[counter] ?? 0) + placed;
   }
   events.push(event("GameEventCardChangeZone", state, {
@@ -636,7 +632,7 @@ export function earthbend(state, params, context) {
     if (count > 0) {
       const before = state.objects[id].counters["+1/+1"] ?? 0;
       state.objects[id].counters["+1/+1"] = before + count;
-      events.push(event("GameEventCardCounters", state, {card: cardRef(state, id), type: "+1/+1", oldValue: before, newValue: before + count}));
+      events.push(event("GameEventCardCounters", state, {card: cardRef(state, id), type: "+1/+1", oldValue: before, newValue: before + count, by: context.controller}));
     }
     const back = [{effect: "moveZone", targets: "that card", to: "battlefield", tapped: true}];
     for (const to of ["Graveyard", "Exile"])
@@ -720,9 +716,12 @@ export function effectUntil(state, params, context) {
      the spells it forbids by `named`, that creature's name as it resolves ({nameOf: {target: 0}}; CR 201.2a). Read where a
      cast is offered (rules/statics.mjs, castForbidden). Lands are played, not cast, and stay playable (the card's ruling). A
      name that could not be read (the creature gone) forbids nothing. */
+  /* "If you do, you can't cast additional spells this turn" (Conduit of Worlds): every spell (`allSpells`), its controller's
+     ("you"). */
   if (params.rule === "cant-cast") {
-    if (typeof params.named !== "string" || !Array.isArray(params.who) || !params.who.length) return [];
-    pushEffect(state, {id: params.id ?? `effect:${context.source ?? "effect"}`, rule: "cant-cast", players: [...params.who], spells: {named: params.named},
+    const who = params.who === "you" ? [context.controller] : params.who;
+    if (!(typeof params.named === "string" || params.allSpells === true) || !Array.isArray(who) || !who.length) return [];
+    pushEffect(state, {id: params.id ?? `effect:${context.source ?? "effect"}`, rule: "cant-cast", players: [...who], spells: params.allSpells === true ? {} : {named: params.named},
       affects: {what: "player"}, apply: {}, until: params.until ?? "end-of-turn", sourceController: context.controller});
     return [];
   }
@@ -756,8 +755,15 @@ export function effectUntil(state, params, context) {
     /* "Until that player's next turn" (Teferi's Reproach): `their-next-turn`, the player `who` names (rules/turn.mjs). And a
        rule changed for players (`players`): their protection, their life total that can't change. */
     /* And "you have no maximum hand size for the rest of the game" (Wisdom of Ages; CR 402.2, 611.2a): read at cleanup
-       (rules/statics.mjs, playerRuleChanged). */
-    ...(params.until === "their-next-turn" || ["protection", "life-cant-change", "no-maximum-hand-size"].includes(params.rule) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
+       (rules/statics.mjs, playerRuleChanged). And "until end of turn, you may look at the top card of your library any time"
+       (Gwenom, Remorseless; CR 401.2): read as the library is shown (projection.mjs, topSeenBy). */
+    ...(params.until === "their-next-turn" || ["protection", "life-cant-change", "no-maximum-hand-size", "damage-doubled", "look-at-top"].includes(params.rule) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
+    /* "If a source would deal damage to that player or a permanent that player controls, it deals double that damage
+       instead" (Lightning, Army of One; rules/replacement.mjs, rememberedReplacement): `who` the players it remembers, its
+       name for the order's question (CR 616.1). "That creature enters with an additional +1/+1 counter on it" (Summon:
+       Fenrir): `counter` and `count`, about the spell `targets` names. */
+    ...(params.rule === "damage-doubled" ? {name: state.objects[context.source]?.card ?? context.lastKnown?.name ?? "An effect"} : {}),
+    ...(params.rule === "enters-with-counters" ? {counters: {counter: params.counter, count: params.count ?? 1}} : {}),
     ...(params.rule === "protection" ? {from: params.from ?? "everything"} : {}),
     /* A PREVENTION SHIELD OF A PLAYER'S (CR 615; rules/replacement.mjs, preventionsFor): "prevent all combat damage that would
        be dealt to you this turn" (Inkshield) -- `who`, the players it shields -- "the next time a source of your choice
@@ -1071,7 +1077,11 @@ export function addPhase(state, params, context) {
  */
 export function immediateTrigger(state, params, context) {
   const source = context.source ?? null;
-  const about = params.about === "remembered" && context.remembered?.[0] !== undefined ? {...(context.about ?? {}), card: context.remembered[0]} : context.about;
+  /* What it remembered moved off the battlefield ("you may sacrifice another creature. When you do, Ziatora deals damage
+     equal to that creature's power", Ziatora, the Incinerator): "that creature" as it last existed there (CR 608.2h) -- the
+     effect before it kept each as it left (`movedWas`, effects/asking.mjs and effects/zones.mjs), one for each it moved. */
+  const was = params.about === "remembered" && (context.movedWas ?? []).length === (context.remembered ?? []).length ? context.movedWas?.[0] : undefined;
+  const about = params.about === "remembered" && context.remembered?.[0] !== undefined ? {...(context.about ?? {}), card: context.remembered[0], ...(was ? {lastKnown: structuredClone(was)} : {})} : context.about;
   (state.pendingTriggers ??= []).push({abilityId: "reflexive", text: params.text ?? "When you do", controller: context.controller,
     source: {cardId: source, name: source !== null ? state.objects[source]?.card ?? null : null}, cause: null, optional: false,
     ...(about ? {about: structuredClone(about)} : {}),

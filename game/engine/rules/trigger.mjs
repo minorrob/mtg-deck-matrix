@@ -449,9 +449,11 @@ function matches(state, event, condition, sourceId, controller) {
   /* "Whenever one or more +1/+1 counters are put on this" (cards/index.mjs, `counter added`): more of them than before. */
   /* "On a creature you control" (Simic Ascendancy; `who: "any"`): the permanent they were put on, as `filter` describes it
      now -- "you" this ability's controller. */
+  /* "Whenever YOU put ..." (Exemplar of Light; `putBy`): put by this ability's controller, as the event says who did. */
   if (condition.on === "GameEventCardCounters" && condition.counterAdded)
     return (condition.who === "any" ? fits(state, fields.card?.cardId, condition, sourceId, controller) : fields.card?.cardId === sourceId)
-      && fields.type === condition.counter && (fields.newValue ?? 0) > (fields.oldValue ?? 0);
+      && fields.type === condition.counter && (fields.newValue ?? 0) > (fields.oldValue ?? 0)
+      && (condition.putBy !== "you" || fields.by === controller);
   if (condition.on === "GameEventCardCounters")
     return fields.card?.cardId === sourceId && fields.type === condition.counter && (fields.oldValue ?? 0) < condition.reaches && (fields.newValue ?? 0) >= condition.reaches;
 
@@ -764,7 +766,11 @@ export function collectTriggers(state, events) {
     for (const d of [...(state.delayedTriggers ?? [])]) {
       /* A delayed triggered mana ability happened with the mana ability that triggered it (manaTriggered). */
       if (!d.on || d.fresh || d.on.manaAbility) continue;
-      if (d.watch !== undefined && (d.watch === null || event.data?.fields?.card?.cardId !== d.watch)) continue;
+      /* What it waits on is what the event is about -- the creature that dies -- or, for damage dealt to a player (or a
+         planeswalker, `planeswalkers`), the source that dealt it: "whenever that creature deals combat damage to a player or
+         planeswalker this turn" (Hunter's Insight; CR 603.7c). */
+      const watched = d.on.on === "GameEventPlayerDamaged" ? event.data?.fields?.source?.cardId : event.data?.fields?.card?.cardId;
+      if (d.watch !== undefined && (d.watch === null || watched !== d.watch)) continue;
       for (const about of subjects(state, event, d.on, d.source, d.controller)) {
         state.pendingTriggers.push({
           abilityId: "delayed", text: d.text ?? "A delayed trigger", controller: d.controller,

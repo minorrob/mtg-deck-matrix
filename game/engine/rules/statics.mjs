@@ -128,7 +128,8 @@ export const STATIC_RULES = Object.freeze({
       and lifelink in combat (rules/combat.mjs). */
   "more-life": "script/effects/resources.mjs",
   /** "If an effect would create one or more tokens under your control, it creates twice that many of those tokens instead"
-      (Anointed Procession; CR 614.1a): `times`. tokensCreated, read where tokens are made (script/effects/permanents.mjs). */
+      (Anointed Procession; CR 614.1a): `affects` the player whose tokens they are -- "you", or anyone's (Primal Vigor) --
+      `times`. tokensCreated, read where tokens are made (script/effects/permanents.mjs). */
   "more-tokens": "script/effects/permanents.mjs",
   /** "If an opponent would draw two or more cards, instead you and that player each draw a card" (Alms Collector; CR
       614.1a): `affects` the players whose draws it replaces, from its controller's side. drawsInstead, read by the draw
@@ -148,8 +149,11 @@ export const STATIC_RULES = Object.freeze({
   "tokens-instead": "script/effects/permanents.mjs",
   /** "If one or more creature tokens would be created under your control, those tokens plus a 1/1 white Soldier creature
       token are created instead" (Queen Allenal of Ruadach; CR 614.1a): `affects` the tokens it adds to, by their card
-      types, `token` the one it adds. tokensCreated (script/effects/permanents.mjs). */
+      types and subtypes (any token, unsaid: Peregrin Took), `token` the one it adds. tokensCreated (script/effects/permanents.mjs). */
   "tokens-plus": "script/effects/permanents.mjs",
+  /** "If you would create a Clue, Food, or Treasure token, instead create one of each" (Academy Manufactor; CR 614.1a):
+      `each`, the tokens it names, each a predefined token (CR 111.10). tokensCreated (script/effects/permanents.mjs). */
+  "tokens-each": "script/effects/permanents.mjs",
   /** "Your opponents can't cast spells from anywhere other than their hands", "during your turn", "more than one spell each
       turn" (CantBeCast): castForbidden, read where a cast is offered. rules/actions.mjs. And for a while, by an effect
       (effectUntil): "can't cast spells with the same name as that creature until your next turn" (Reflector Mage). */
@@ -296,7 +300,9 @@ export function freeCast(state, player, cardId) {
         if (manaValue(parseManaCost(object.manaCost ?? "")) > cap) continue;
       }
       if (ability.limit && usesThisTurn(state, holderId, `free:${ability.id}`) >= ability.limit) continue;
-      return {source: holderId, abilityId: ability.id, limited: Boolean(ability.limit)};
+      /* "By paying life equal to its mana value rather than paying its mana cost" (Demon of Fate's Design; CR 118.9): the
+         alternative cost is that life, not nothing (`payLife`, rules/actions.mjs). */
+      return {source: holderId, abilityId: ability.id, limited: Boolean(ability.limit), ...(ability.payLife ? {payLife: ability.payLife} : {})};
     }
   }
   return null;
@@ -393,78 +399,118 @@ export function cantGainLife(state, player) {
 
 /**
  * WHAT TOKENS AN EFFECT CREATES (CR 614.1a, 111.1): `count` tokens like `values` -- a token's spec, or the copiable values
- * of a copy -- about to be created under `controller`'s control, after
- *   `tokens-instead`  "if one or more artifact tokens would be created under your control, that many 5/5 red Dragon creature
- *                     tokens with flying are created instead" (Draconic Visitor): its controller's; `affects` the tokens it
- *                     replaces, by their card types, read as a description of what is not yet there (script/filter.mjs,
- *                     matchesLastKnown); `token` what is made instead, as many;
- *   `more-tokens`     "if an effect would create one or more tokens under your control, it creates twice that many of
- *                     those tokens instead" (Anointed Procession): `affects` the player creating them, "you" its
- *                     controller; `times` -- of every token the event then makes, one an adder added included;
- *   `tokens-plus`     "if one or more creature tokens would be created under your control, those tokens plus a 1/1 white
- *                     Soldier creature token are created instead" (Queen Allenal of Ruadach): its controller's; `affects`
- *                     the tokens it adds to, by their card types, as the event then stands -- Dragons made instead of
- *                     Treasures, or a Soldier another adder added, are creature tokens; `token` the one it adds (`plus`).
- * Each applies once (CR 614.5), and after each the rest are asked again whether they now apply (CR 616.1e). Every Draconic
- * Visitor makes the same Dragons, and Dragons instead change what is made, never how many, ending the same in any order:
- * they apply first, and nobody is asked. Nor is anybody of doublers alone, or adders alone. A doubler and an adder end
- * differently -- the Soldier doubled, or not -- and their order is the affected player's, the tokens' controller (CR
- * 616.1): a resolution asks before any is made (effects/asking.mjs, orderTokens), each answer kept with the effect and
- * replayed here through `orders`; `askable` when the caller can stop to ask, the next unanswered choice coming back as
- * `question`. Where nothing can stop to ask, the order that makes the most.
+ * of a copy -- about to be created under `controller`'s control. The event is the tokens it would make, in groups, each one
+ * token's values and how many of it, the effect's own first (`own`: made as the effect makes them, so a copy is a copy).
+ * Each replacement effect rewrites the event as it then stands (CR 614.6):
+ *   `more-tokens`     "it creates twice that many of those tokens instead" (Anointed Procession, Parallel Lives, Doubling
+ *                     Season; Primal Vigor's for every player): `affects` the player creating them, "you" its controller;
+ *                     every group `times` as many;
+ *   `tokens-instead`  "that many 4/4 white Angel creature tokens with flying and vigilance are created instead" of creature
+ *                     tokens (Divine Visitation; Draconic Visitor's Dragons of artifact ones): its controller's; each group
+ *                     `affects` describes, by card types, made as `token` instead, as many;
+ *   `tokens-plus`     "those tokens plus a 1/1 white Soldier creature token" of creature tokens (Queen Allenal of Ruadach),
+ *                     "plus an additional Treasure token" of Treasure tokens (Xorn), "plus an additional Food token" of any
+ *                     (Peregrin Took): its controller's; one `token` more, while a group `affects` describes -- by card
+ *                     types and subtypes, any token unsaid -- is made;
+ *   `tokens-each`     "if you would create a Clue, Food, or Treasure token, instead create one of each" (Academy
+ *                     Manufactor): its controller's; each group of a kind `each` names -- a token with that kind's subtype --
+ *                     joined by as many of each other kind (its rulings: that many of each; three times that many with two).
+ * What is not yet there is read as a description (script/filter.mjs, matchesLastKnown): a Treasure is an artifact token
+ * before it is made. Every token in the event is made as the effect says its tokens are -- tapped, attacking, gaining haste,
+ * with counters (effects/permanents.mjs) -- but none has the abilities the effect's own were created with: a replacement
+ * says what its tokens are (the rulings of Queen Allenal, Divine Visitation, Doubling Season and Mondrak, Glory Dominus).
  *
- * @returns {{count: number, instead: ?object, plus: Array<{token: object, count: number}>, question?: object}} how many,
- *   the spec made instead when one is, and the tokens added beside them
+ * Each applies once (CR 614.5), and only while it applies to the event as it now stands (CR 616.1e-f): an adder of creature
+ * tokens adds to a Treasure only once something has made it one. Their order is the affected player's -- the tokens'
+ * controller (CR 616.1) -- whenever two orders end differently: a doubler and an adder, Dragons and an adder of artifact
+ * tokens, Angels and the Queen's Soldier (Angels and a Soldier, or Angels only). Doublers alone, adders alone, or the same
+ * Dragons twice end the same in any order, and nobody is asked. A resolution asks before any is made (effects/asking.mjs,
+ * orderTokens), each answer kept with the effect and replayed here through `orders`; `askable` when the caller can stop to
+ * ask, the next unanswered choice coming back as `question`. Where nothing can stop to ask, the order that makes the most.
+ *
+ * @returns {{groups: Array<{token: object, count: number, own?: true}>, question?: object}} what is made, the effect's own
+ *   first; where it stopped to ask, the event as it then stood
  */
 export function tokensCreated(state, controller, count, values, {orders = [], askable = false} = {}) {
-  const {instead, made, changers} = tokenChangers(state, controller, values);
-  let event = {count, plus: []}, rest = changers, used = 0;
-  for (let now = applying(rest, made, event); now.length; now = applying(rest, made, event)) {
+  const {event, question} = tokenEvent(state, controller, count, values, orders, askable);
+  return question ? {groups: event, question} : {groups: event};
+}
+/* The event as `orders` leave it: done, or stopped at the next question, with the effects not yet applied (`rest`). */
+function tokenEvent(state, controller, count, values, orders, askable) {
+  let event = [{token: values, count, own: true}], rest = tokenChangers(state, controller), used = 0;
+  for (let now = applying(rest, event); now.length; now = applying(rest, event)) {
     let next = now[0];
-    if (now.length > 1 && tokenEnds(rest, made, event).size > 1) {
+    if (now.length > 1 && tokenEnds(rest, event).size > 1) {
       const answered = orders[used] === undefined ? undefined : now.find((c) => tokenEffectKey(c) === orders[used]);
       if (answered) { used += 1; next = answered; }
-      else if (askable) return {count: event.count, instead, plus: event.plus, question: {player: controller, options: now.map(tokenEffectKey)}};
-      else next = now.reduce((top, c) => (mostAfter(rest, made, c, event) > mostAfter(rest, made, top, event) ? c : top), now[0]);
+      else if (askable) return {event, rest, question: {player: controller, options: now.map(tokenEffectKey)}};
+      else next = now.reduce((top, c) => (mostAfter(rest, c, event) > mostAfter(rest, top, event) ? c : top), now[0]);
     }
     event = tokenChange(next.ability, event);
     rest = rest.filter((c) => c !== next);
   }
-  return {count: event.count, instead, plus: event.plus};
+  return {event, rest};
 }
-/* The effects that would change tokens made under `controller`'s control like `values`: what is made instead, and the rest. */
-function tokenChangers(state, controller, values) {
-  let instead = null;
+/* The effects that would change tokens made under `controller`'s control: a doubler of the player its `affects` names, the
+   rest of their own controller's. */
+const TOKENS_CHANGED = ["tokens-instead", "tokens-plus", "tokens-each"];
+function tokenChangers(state, controller) {
   const changers = [];
   const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
     for (const ability of held(holderId)) {
       if (ability.kind !== "static") continue;
-      if (ability.rule === "tokens-instead" && holder.controller === controller && matchesLastKnown(ability.affects, values)) instead = ability.token;
       if (ability.rule === "more-tokens" && compileSelector({what: "player", ...ability.affects})(state, controller, {controller: holder.controller, source: holderId})) changers.push({holderId, ability});
-      if (ability.rule === "tokens-plus" && holder.controller === controller) changers.push({holderId, ability});
+      if (!TOKENS_CHANGED.includes(ability.rule) || holder.controller !== controller) continue;
+      /* A predefined token is given its definition as the card is compiled (cards/index.mjs, predefinedIn); one that was not
+         would be made as a nameless creature. */
+      if ([ability.token, ...(ability.each ?? [])].some((token) => token?.predefined)) throw new Error(`${ability.text ?? ability.rule}: a predefined token not compiled into its definition`);
+      changers.push({holderId, ability});
     }
   }
-  return {instead, made: instead ?? values, changers};
+  return changers;
 }
-/* Which of them apply to the event as it now stands: a doubler always; an adder while it makes a token it adds to. */
-const applying = (rest, made, event) => rest.filter(({ability}) => ability.rule === "more-tokens"
-  || (event.count > 0 && matchesLastKnown(ability.affects, made)) || event.plus.some((p) => matchesLastKnown(ability.affects, p.token)));
+const live = (event) => event.filter((g) => g.count > 0);
+/* Whether `affects` describes a token not yet made: by card types and subtypes; any token, unsaid. */
+const describes = (affects, token) => matchesLastKnown(affects ?? {}, token);
+/* Which of `each` a token is (tokens-each): the one whose subtype it has -- a Food Golem is a Food. */
+const kindOf = (ability, token) => (ability.each ?? []).find((kind) => (kind.subtypes ?? []).some((t) => (token.subtypes ?? []).includes(t)));
+/* Which of them apply to the event as it now stands (CR 616.1f): a doubler to any tokens; the rest while a token they
+   describe is made. */
+const applying = (rest, event) => rest.filter(({ability}) => live(event).some((g) => (ability.rule === "more-tokens" ? true
+  : ability.rule === "tokens-each" ? Boolean(kindOf(ability, g.token)) : describes(ability.affects, g.token))));
 /* What one of them makes of the event. */
-const tokenChange = (ability, event) => (ability.rule === "more-tokens"
-  ? {count: event.count * ability.times, plus: event.plus.map((p) => ({...p, count: p.count * ability.times}))}
-  : {count: event.count, plus: [...event.plus, {token: ability.token, count: 1}]});
-const tokensIn = (event) => event.count + event.plus.reduce((n, p) => n + p.count, 0);
-const endKey = (event) => `${event.count}:${event.plus.map((p) => `${p.token.name}x${p.count}`).sort().join(",")}`;
-/* Every way the event can end, over every order of them (CR 616.1), and the most tokens any order after `first` makes. */
-function tokenEnds(rest, made, event, out = new Map()) {
-  const now = applying(rest, made, event);
-  if (!now.length) { out.set(endKey(event), tokensIn(event)); return out; }
-  for (const c of now) tokenEnds(rest.filter((o) => o !== c), made, tokenChange(c.ability, event), out);
+function tokenChange(ability, event) {
+  if (ability.rule === "more-tokens") return event.map((g) => ({...g, count: g.count * ability.times}));
+  /* Made as its token instead: no longer the effect's own (a copy is not made a copy). */
+  if (ability.rule === "tokens-instead") return event.map((g) => (g.count > 0 && describes(ability.affects, g.token) ? {token: ability.token, count: g.count} : g));
+  if (ability.rule === "tokens-each") return event.flatMap((g) => {
+    const kind = g.count > 0 ? kindOf(ability, g.token) : undefined;
+    return kind ? [g, ...ability.each.filter((k) => k !== kind).map((k) => ({token: k, count: g.count}))] : [g];
+  });
+  return [...event, {token: ability.token, count: 1}];
+}
+const tokensIn = (event) => event.reduce((n, g) => n + g.count, 0);
+const nameOf = (token) => token?.name ?? token?.card ?? null;
+/* What the event makes, by name: "1 Angel, 1 Soldier". */
+function makes(event) {
+  const by = new Map();
+  for (const g of live(event)) by.set(nameOf(g.token) ?? "token", (by.get(nameOf(g.token) ?? "token") ?? 0) + g.count);
+  return [...by].map(([name, n]) => `${n} ${name}`).sort().join(", ");
+}
+/* Every way the event can end, over every order of them (CR 616.1) -- each end what it makes, and how many -- and the most
+   tokens any order after `first` makes. An order already followed from the same point is not followed again. */
+function tokenEnds(rest, event, out = new Map(), seen = new Set()) {
+  const key = `${rest.map(tokenEffectKey).sort().join(" ")}|${makes(event)}`;
+  if (seen.has(key)) return out;
+  seen.add(key);
+  const now = applying(rest, event);
+  if (!now.length) { out.set(makes(event), tokensIn(event)); return out; }
+  for (const c of now) tokenEnds(rest.filter((o) => o !== c), tokenChange(c.ability, event), out, seen);
   return out;
 }
-const mostAfter = (rest, made, first, event) => Math.max(...tokenEnds(rest.filter((o) => o !== first), made, tokenChange(first.ability, event)).values());
+const mostAfter = (rest, first, event) => Math.max(...tokenEnds(rest.filter((o) => o !== first), tokenChange(first.ability, event)).values());
 /** Which effect an answer names: its holder and ability (CR 614.5 is per effect). */
 export const tokenEffectKey = ({holderId, ability}) => `${holderId}:${ability.id}`;
 
@@ -472,34 +518,37 @@ export const tokenEffectKey = ({holderId, ability}) => `${holderId}:${ability.id
  * The choice for CR 616.1 over tokens: which of the effects that would change them applies next, asked of their controller.
  * `awaiting` carries the event (`controller`, `count` and `values` as the effect would make them, the answers so far) and
  * the candidates (`options`, tokenEffectKey). Each option says where it leads -- "Anointed Procession first: 4 tokens" --
- * with `makes`, the most it can end at, for a pilot.
+ * with `makes`, the most it can end at, for a pilot; two that would read alike but end differently (Angels and a Soldier,
+ * or two Angels) say what each makes.
  */
 export function tokenOrderChoice(state, awaiting) {
-  const {instead, made, changers} = tokenChangers(state, awaiting.controller, awaiting.values);
-  let event = {count: awaiting.count, plus: []}, rest = changers;
-  /* The event as the answers so far left it. */
-  for (const key of awaiting.answered ?? []) {
-    const c = rest.find((one) => tokenEffectKey(one) === key);
-    if (!c) break;
-    event = tokenChange(c.ability, event);
-    rest = rest.filter((o) => o !== c);
-  }
+  const {event, rest} = tokenEvent(state, awaiting.controller, awaiting.count, awaiting.values, awaiting.answered ?? [], true);
   const byKey = new Map(rest.map((c) => [tokenEffectKey(c), c]));
   const names = awaiting.options.map((key) => state.objects[byKey.get(key)?.holderId]?.card);
-  const nameOf = (c) => { const card = state.objects[c.holderId].card; return names.filter((n) => n === card).length > 1 ? `${state.players[state.objects[c.holderId].controller].name}'s ${card}` : card; };
+  const nameOfHolder = (c) => { const card = state.objects[c.holderId].card; return names.filter((n) => n === card).length > 1 ? `${state.players[state.objects[c.holderId].controller].name}'s ${card}` : card; };
+  const ends = new Map(), ranges = new Map();
   const options = awaiting.options.map((key, index) => {
     const c = byKey.get(key);
     if (!c) return {index, label: "An effect no longer there", makes: tokensIn(event)};
-    const ends = [...tokenEnds(rest.filter((o) => o !== c), made, tokenChange(c.ability, event)).values()];
-    const lo = Math.min(...ends), hi = Math.max(...ends);
-    return {index, label: `${nameOf(c)} first: ${lo === hi ? lo : `${lo} to ${hi}`} token${hi === 1 ? "" : "s"}`, cardId: c.holderId, makes: hi};
+    const after = tokenEnds(rest.filter((o) => o !== c), tokenChange(c.ability, event));
+    const counts = [...after.values()], lo = Math.min(...counts), hi = Math.max(...counts);
+    ends.set(index, [...after.keys()].sort().join(" or "));
+    ranges.set(index, lo === hi ? `${lo}` : `${lo} to ${hi}`);
+    return {index, label: `${nameOfHolder(c)} first: ${ranges.get(index)} token${hi === 1 ? "" : "s"}`, cardId: c.holderId, makes: hi};
   });
+  /* Two that make as many tokens but different ones say what each makes -- Divine Visitation first, an Angel and a Soldier;
+     the Queen first, two Angels. Two that are the same (two permanents of one name) are numbered, so no two read the same. */
+  const telling = options.filter((o) => ends.has(o.index) && options.some((other) => ends.has(other.index)
+    && ranges.get(other.index) === ranges.get(o.index) && ends.get(other.index) !== ends.get(o.index)));
+  for (const option of telling) option.label = `${option.label} (${ends.get(option.index)})`;
   for (const option of options) {
     const alike = options.filter((o) => o.label === option.label);
     if (alike.length > 1) alike.forEach((o, n) => { o.label = `${o.label} (${n + 1})`; });
   }
+  const kinds = new Set(live(event).map((g) => nameOf(g.token)));
+  const name = kinds.size === 1 && [...kinds][0] ? `${[...kinds][0]} ` : "";
   return {id: `order-tokens:${state.turn}:${awaiting.key}:${(awaiting.answered ?? []).length}`,
-    title: `${tokensIn(event)} ${(instead ?? made).name ?? "token"} token${tokensIn(event) === 1 ? "" : "s"}: which applies first?`, mode: "one", min: 1, max: 1, options};
+    title: `${tokensIn(event)} ${name}token${tokensIn(event) === 1 ? "" : "s"}: which applies first?`, mode: "one", min: 1, max: 1, options};
 }
 
 /**
@@ -572,15 +621,20 @@ export function lifeGained(state, player, amount) {
 
 /**
  * HOW MANY COUNTERS ARE PUT ON (`more-counters`; CR 614.1a, 122.6). Each such static is a replacement effect over the
- * permanents it `affects` -- and, `players: true`, the players -- and the kind it names (`counter`; any, unsaid):
+ * permanents it `affects` -- and, `players`, the players: `true` any ("on a permanent or player", Vorinclex), "you" its
+ * controller ("or on yourself", Lae'zel, Vlaakith's Champion); with `affects: {what: "player"}`, players' alone ("if you
+ * would get one or more counters", Winding Constrictor) -- and the kind it names (`counter`; any, unsaid):
  *   `times`  "twice that many ... instead" (Branching Evolution, Innkeeper's Talent, Vorinclex, Monstrous Raider's for you);
  *            0, "can't have -1/-1 counters put on them" (Darksteel Angel); 2 when it says none of these three;
  *   `plus`   "that many plus one" (Hardened Scales, Yoshimaru, Beloved Companion), -1 "that many minus one";
  *   `half`   "half that many ..., rounded down" (Vorinclex's for its opponents).
  * `putBy` the player who must be putting them: "you" its controller, "opponent" one of its opponents. `by` is that player --
  * an effect's controller, a cost's payer, an infect source's controller, and for a permanent entering with counters its
- * controller (CR 122.6a). A condition is read now: Innkeeper's Talent's while it is level 3 or more (CR 716.2a). A
- * permanent entering with counters is read as it has entered.
+ * controller (CR 122.6a). `byEffect`, "if an effect would put" (Doubling Season): not counters put as a cost -- a loyalty
+ * ability's +1 is not doubled (its ruling; CR 118.1, 602.2b), a planeswalker's loyalty as it enters is (CR 122.6). A
+ * condition is read now: Innkeeper's Talent's while it is level 3 or more (CR 716.2a). A permanent entering with counters is
+ * read as it has entered -- and its own effect over a set of permanents including it does not yet apply to it (CR 614.12;
+ * the rulings of Kami of Whispered Hopes, Ozolith and Winding Constrictor): `entering`.
  *
  * EACH APPLIES ONCE, AND ONLY TO ONE OR MORE (CR 614.5): one that leaves none ends the event, and nothing after it applies --
  * half of one counter is none, and Hardened Scales then has nothing to add one to.
@@ -594,8 +648,9 @@ export function lifeGained(state, player, amount) {
  * order that player chooses on all but rare boards, as damage takes the least where it cannot ask (rules/replacement.mjs).
  */
 const putterFits = (putBy, by, you) => putBy === undefined || (putBy === "you" ? by === you : putBy === "opponent" && by !== null && by !== undefined && by !== you);
-const changesCounters = (state, ability, holder, holderId, kind, by) => ability.kind === "static" && ability.rule === "more-counters"
+const changesCounters = (state, ability, holder, holderId, kind, by, cost) => ability.kind === "static" && ability.rule === "more-counters"
   && (!ability.counter || ability.counter === kind) && putterFits(ability.putBy, by, holder.controller)
+  && !(cost && ability.byEffect === true)
   && conditionHolds(state, ability.condition, {controller: holder.controller, source: holderId});
 /* "Can't have -1/-1 counters put on them" (Darksteel Angel): `times` 0, none at all. */
 const timesOf = (ability) => (Number.isInteger(ability.times) && ability.times >= 0 ? ability.times : 2);
@@ -611,16 +666,19 @@ function counterEnds(candidates, n, out = new Set()) {
   for (const c of candidates) counterEnds(candidates.filter((o) => o !== c), counterChange(c.ability, n), out);
   return out;
 }
-/* The effects that would change counters of this kind put on this permanent (`id`) or player (`player`) by `by`. */
-function counterCandidates(state, {id = null, player = null}, kind, by) {
+/* The effects that would change counters of this kind put on this permanent (`id`) or player (`player`) by `by` -- as a cost
+   (`cost`), or as the permanent enters (`entering`). */
+function counterCandidates(state, {id = null, player = null}, kind, by, {cost = false, entering = false} = {}) {
   const found = [];
   const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
     for (const ability of held(holderId)) {
-      if (!changesCounters(state, ability, holder, holderId, kind, by)) continue;
-      if (player !== null ? ability.players !== true
-        : !matchesSelector({what: "permanent", ...ability.affects}, state, id, {controller: holder.controller, source: holderId})) continue;
+      if (!changesCounters(state, ability, holder, holderId, kind, by, cost)) continue;
+      if (player !== null ? !(ability.players === true || (ability.players === "you" && player === holder.controller))
+        : ability.affects?.what === "player" || !matchesSelector({what: "permanent", ...ability.affects}, state, id, {controller: holder.controller, source: holderId})) continue;
+      /* Entering, it applies to itself only an effect of its own alone ("this creature enters with ..."; CR 614.12). */
+      if (entering && holderId === id && ability.affects?.self !== true) continue;
       found.push({holderId, ability});
     }
   }
@@ -633,13 +691,14 @@ export const counterEffectKey = ({holderId, ability}) => `${holderId}:${ability.
  * How many counters of `kind` are put on a permanent (`id`) or a player (`player`) when `count` would be, by `by`.
  * `orders`: the affected player's answers so far, each the effect they chose to apply next (counterEffectKey); `askable`
  * when the caller can stop to ask, and the next unanswered choice then comes back as `question`, nothing applied past it.
+ * `cost`: put as a cost is paid (rules/actions.mjs); `entering`: put on the permanent as it enters (CR 122.6).
  *
  * @returns {{count: number, question?: {player: number, options: string[], count: number}}}
  */
-export function placeCounters(state, {id = null, player = null}, kind, count, by = null, {orders = [], askable = false} = {}) {
+export function placeCounters(state, {id = null, player = null}, kind, count, by = null, {orders = [], askable = false, cost = false, entering = false} = {}) {
   if (!(count > 0) || (player !== null ? !state.players[player] : !state.objects[id])) return {count};
   const affected = player !== null ? player : controllerOf(state, id);
-  let rest = counterCandidates(state, {id, player}, kind, by), n = count, used = 0;
+  let rest = counterCandidates(state, {id, player}, kind, by, {cost, entering}), n = count, used = 0;
   while (rest.length && n > 0) {
     let next = rest[0];
     if (rest.length > 1 && counterEnds(rest, n).size > 1) {
@@ -659,7 +718,10 @@ export function placeCounters(state, {id = null, player = null}, kind, count, by
   return {count: Math.max(0, n)};
 }
 export const countersPlaced = (state, id, kind, count, by = null, orders = []) => placeCounters(state, {id}, kind, count, by, {orders}).count;
-/** The same for counters put on a player (CR 122.1: poison and the rest): only a static that says `players: true`. */
+/** The counters a permanent enters with (CR 122.6), put on as it enters by `by` -- its controller, unless an effect says
+    (122.6a): not by its own effect over a set of permanents (CR 614.12). */
+export const enteringCountersPlaced = (state, id, kind, count, by = null) => placeCounters(state, {id}, kind, count, by, {entering: true}).count;
+/** The same for counters put on a player (CR 122.1: poison and the rest): only a static that says `players`. */
 export const playerCountersPlaced = (state, player, kind, count, by = null) => placeCounters(state, {player}, kind, count, by).count;
 
 /**

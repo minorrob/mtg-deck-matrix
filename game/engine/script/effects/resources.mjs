@@ -313,6 +313,8 @@ export function addCounters(state, id, kind, count, events, by = null, orders = 
   }
   events.push(event("GameEventCardCounters", state, {
     card: cardRef(state, id), type: kind, oldValue: before, newValue: object.counters[kind],
+    /* Who put them: "whenever you put one or more +1/+1 counters on this creature" (Exemplar of Light; rules/trigger.mjs). */
+    ...(Number.isInteger(by) ? {by} : {}),
   }));
 }
 
