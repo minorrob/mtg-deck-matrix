@@ -52,7 +52,7 @@
 import {compileSelector, selectMatching, creatureTypesOf, shareCreatureType} from "./filter.mjs";
 import {powerOf, toughnessOf, controllerOf} from "../rules/layers.mjs";
 import {namesChosen, withChosen, namesChosenColor, withChosenColor} from "./chosen.mjs";
-import {valueCostOf, shownName} from "../state/index.mjs";
+import {valueCostOf, shownName, xOnStack} from "../state/index.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {amountOf, AMOUNT_PARAMS} from "./amount.mjs";
 import {conditionHolds} from "./condition.mjs";
@@ -355,8 +355,10 @@ export function factsOf(state, targets) {
     return {powerOf: o.zone === "battlefield" ? powerOf(state, t.id) : (o.power ?? 0),
       /* "Its controller gains life equal to its toughness" (Condemn): as it was, before the effect moved it. */
       toughnessOf: o.zone === "battlefield" ? toughnessOf(state, t.id) : (o.toughness ?? 0),
-      /* A transformed permanent's is its front face's (CR 202.3b). */
-      manaValueOf: valueCostOf(o) ? manaValue(parseManaCost(valueCostOf(o))) : 0,
+      /* A transformed permanent's is its front face's (CR 202.3b). A spell's on the stack counts X as the value chosen for it
+         (CR 202.3e): "add an amount of {C} equal to that spell's mana value" (Mana Drain), "lose life equal to that spell's
+         mana value" (Imp's Mischief) -- read as the resolution begins, before the spell is countered or moved. */
+      manaValueOf: valueCostOf(o) ? manaValue(parseManaCost(valueCostOf(o)), {x: xOnStack(state, t.id)}) : 0,
       controllerOf: o.zone === "battlefield" ? controllerOf(state, t.id) : o.controller,
       /* A face-down permanent has no name (CR 708.2; Reflector Mage's ruling): a lock by its name locks nothing. */
       ownerOf: o.owner, nameOf: o.faceDown === true ? null : o.card};
@@ -407,12 +409,23 @@ function playersOf(value, context, state = null) {
   /* "That attacking player draws a card" (Breena, the Demagogue): the player whose attack the trigger is about (rules/trigger.mjs,
      `attacker`), as Combat Calligrapher's token's controller is. */
   if (value === "attacking player") return Number.isInteger(context.about?.attacker) ? [context.about.attacker] : [];
+  /* "The chosen player" of a gift (CR 702.174d-i): the opponent it was promised to as the spell was cast -- the spell's own
+     (rules/stack.mjs), or the permanent's whose gift trigger this is. None promised, nobody -- nor one who has left the game
+     (CR 800.4a). */
+  if (value === "the chosen player") {
+    const gift = context.gift ?? (state && context.source !== null && context.source !== undefined ? state.objects[context.source]?.gift : undefined);
+    return Number.isInteger(gift) && !(state?.players[gift]?.lost) ? [gift] : [];
+  }
   /* "It deals 1 damage to its controller" (Vengeful Ancestor, batch 75): the controller of what the trigger is about -- the
      attacking creature -- now, while it is on the battlefield; gone, the one it last had (CR 608.2h), as it attacked. */
   if (value === "that card's controller") {
     const card = context.about?.card;
     if (state && card !== undefined && card !== null && state.objects[card]?.zone === "battlefield") return [controllerOf(state, card)];
-    return context.about?.controller !== undefined && context.about.controller !== null ? [context.about.controller] : [];
+    if (context.about?.controller !== undefined && context.about.controller !== null) return [context.about.controller];
+    /* "Whenever a creature an opponent controls dies, that player loses 2 life" (Massacre Wurm, wave 4b): a permanent that has
+       left the battlefield, by the controller it had as it last existed there (CR 603.10a, 608.2h). */
+    const was = context.about?.lastKnown?.controller;
+    return Number.isInteger(was) ? [was] : [];
   }
   if (!isRef(value)) return value;
   const chosen = (context.targets ?? [])[value.target];
@@ -491,7 +504,7 @@ export function bindEffect(effect, context, state = null) {
      creature's controller creates a 1/1 Myr" (Genesis Chamber): the controller of what the trigger is about. "Each opponent
      creates a 1/1 white Human creature token" (Slaughter Specialist; CR 111.2), "each opponent may create X ... tokens"
      (Tempt with Vengeance): "that player", the one a repetition is about (effects/index.mjs, repeatFor). */
-  if (isRef(bound.controller) || bound.controller === "that card's controller" || bound.controller === "that player") { const [player] = playersOf(bound.controller, context, state); bound.controller = player ?? -1; }
+  if (isRef(bound.controller) || ["that card's controller", "that player", "the chosen player"].includes(bound.controller)) { const [player] = playersOf(bound.controller, context, state); bound.controller = player ?? -1; }
   /* "That attacking player creates a ... token" (Combat Calligrapher): the player whose attack the trigger is about. */
   if (bound.controller === "attacking player") bound.controller = Number.isInteger(context.about?.attacker) ? context.about.attacker : -1;
   /* "At the beginning of each player's upkeep, that player gains control of Alexios": the player the trigger is about. */
@@ -500,8 +513,9 @@ export function bindEffect(effect, context, state = null) {
     if (player === undefined) delete bound.toPlayer; else bound.toPlayer = player;
   }
   /* Who makes a choice that is not the controller's ("its controller may draw up to two cards"): one player. */
-  if (isRef(bound.chooser) || bound.chooser === "that player") {
-    const [player] = playersOf(bound.chooser, context);
+  /* "Its controller may draw a card" (Selvala, Heart of the Wilds, wave 4b): the controller of what the trigger is about. */
+  if (isRef(bound.chooser) || bound.chooser === "that player" || bound.chooser === "that card's controller") {
+    const [player] = playersOf(bound.chooser, context, state);
     if (player === undefined) delete bound.chooser; else bound.chooser = player;
   }
   /* "The owner of target nonland permanent puts it into their library second from the top or on the bottom" (Temporal

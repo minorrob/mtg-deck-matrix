@@ -10,6 +10,9 @@
 
 export const NONE_CHOSEN = "(none chosen)";
 
+/* A color chosen as a permanent entered ("as this Aura enters, choose a color"), as its mana symbol (CR 105.1). */
+export const CHOSEN_COLOR_LETTER = Object.freeze({White: "W", Blue: "U", Black: "B", Red: "R", Green: "G"});
+
 /* Asked of the same ability many times a step (every derivation, every offer, every trigger check), so the answer is
    kept per object: an ability is not changed in place once it is on a card -- `withChosen` makes a new one. */
 const named = new WeakMap();

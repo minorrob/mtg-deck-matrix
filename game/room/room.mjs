@@ -293,6 +293,8 @@ export function offerDetails(state, seat, actions) {
     if (a.free) parts.push("without paying its mana cost");
     /* An additional cost's mana, beside its other choice ("blight 1 or pay {3}"). */
     if (a.extraMana) parts.push(`paying ${a.extraMana} more`);
+    /* A gift promised (CR 702.174a): to whom, the caster's choice of opponent. */
+    if (a.gift !== undefined) parts.push(`promising ${player(a.gift)} a gift`);
     /* Tapped for as it is cast (the board's one click): the sources, or that the caster picks them. */
     if (a.autoTap) {
       const ways = castTapPlans(state, seat, a, 2);
@@ -300,11 +302,14 @@ export function offerDetails(state, seat, actions) {
     }
     /* Convoke (CR 702.51a): creatures help pay, picked once it is taken. */
     if (a.convoke) parts.push("convoking, tapping creatures you choose");
+    /* Delve (CR 702.66a): cards of the graveyard help pay, picked once it is taken (wave 4c, k2). */
+    if (a.delve) parts.push("delving, exiling cards you choose from your graveyard");
     /* Flashback (CR 702.34a): from the graveyard for its flashback cost, exiled after -- and the creatures it taps, picked
        once it is taken. */
+    /* And the permanents it sacrifices ("Flashback--Sacrifice three creatures", Dread Return), picked once it is taken too. */
     if (a.flashback) {
-      const tap = flashbackCost(state, seat, a.objectId)?.tap;
-      parts.push(tap ? `flashback, tapping ${tappersInWords(tap)}` : "flashback");
+      const back = flashbackCost(state, seat, a.objectId), tap = back?.tap, sacrifice = back?.sacrifice;
+      parts.push(`flashback${tap ? `, tapping ${tappersInWords(tap)}` : ""}${sacrifice ? `, sacrificing ${inWords(sacrifice.count)} you choose` : ""}`);
     }
     /* Escape (CR 702.138a): from the graveyard for its escape cost -- its mana, and the other cards it will take. */
     if (a.escape !== undefined) {
