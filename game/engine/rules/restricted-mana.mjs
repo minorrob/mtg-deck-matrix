@@ -273,6 +273,26 @@ export function spendFor(state, player, use, mana, riders = null) {
   return {uncounterable, triggered: spent.filter((r) => triggersOn(state, player, r, use)), from: spent.filter((r) => r.from).map((r) => r.from)};
 }
 
+/** "That mana becomes colorless instead" of being lost (Omnath, Locus of the Void; CR 614.1a, 106.4; rules/turn.mjs): `player`'s
+ *  pool but what is `kept` (firebending's, not lost now) becomes {C}, and the mana kept beside it with it -- the restricted
+ *  mana, each still paying only for what it did; the riders and withheld mana of what became {C}, each still doing and
+ *  refusing what it did. */
+/* Taken out of the pool as it was, and put back as {C} through addPoolMana, the pool's one way up -- the withheld mana's record
+   written between the two, so nothing it withholds reads as spent. */
+export function colorlessPool(state, player, kept = {}) {
+  const p = state.players[player];
+  settleWithheld(state, player);
+  const lost = Object.fromEntries(MANA_KEYS.map((key) => [key, Math.max(0, (p.manaPool[key] ?? 0) - (kept[key] ?? 0))]));
+  for (const entry of p.restrictedMana ?? []) entry.key = "C";
+  for (const list of [p.manaRiders ?? [], p.withheldMana ?? []]) {
+    const left = {...lost};
+    for (const entry of list) if (left[entry.key] > 0) { left[entry.key] -= 1; entry.key = "C"; }
+  }
+  spend(p.manaPool, lost);
+  if (p.withheldMana?.length) p.withheldSeen = {...p.manaPool};
+  addPoolMana(state, player, {C: MANA_KEYS.reduce((n, key) => n + lost[key], 0)}, null, null);
+}
+
 /** Empty it with the pool (CR 500.4), the riders of the pool's mana too. @returns {number} how much there was */
 export function emptyRestricted(player) {
   const had = player.restrictedMana?.length ?? 0;

@@ -46,7 +46,7 @@ import {answerResolution, answerDeparted, resolutionChoice} from "../script/reso
 import {finishResolving} from "./stack.mjs";
 import {priorityOrder} from "./priority.mjs";
 import {playerRuleChanged, untapsDuringOthers, ruleChanged} from "./statics.mjs";
-import {emptyRestricted} from "./restricted-mana.mjs";
+import {emptyRestricted, colorlessPool} from "./restricted-mana.mjs";
 import {endCopies, phaseIn, endControlChange, nextRecord} from "../script/effects/permanents.mjs";
 import {untapOne} from "../script/effects/resources.mjs";
 import {runEffect} from "../script/effects/index.mjs";
@@ -203,11 +203,19 @@ function emptyManaPools(state, events) {
      spends plain mana before rider mana. */
   const combatGoesOn = state.phase.startsWith("COMBAT_") && state.phase !== "COMBAT_END";
   for (const player of state.players) {
-    /* And the mana that could be spent only on some things (rules/restricted-mana.mjs). */
-    emptyRestricted(player);
     const kept = combatGoesOn ? Object.fromEntries(Object.entries(player.combatMana ?? {}).map(([color, n]) => [color, Math.min(n, player.manaPool[color])]).filter(([, n]) => n > 0)) : {};
     if (Object.keys(kept).length) player.combatMana = kept;
     else delete player.combatMana;
+    /* "IF YOU WOULD LOSE UNSPENT MANA, THAT MANA BECOMES COLORLESS INSTEAD" (Omnath, Locus of the Void; CR 614.1a): none of
+       it is lost -- what would have been becomes {C}, the mana kept beside the pool too, its restrictions and riders with it
+       (rules/restricted-mana.mjs) -- and nothing is emptied, so nothing is said. Mana not lost now (firebending's, kept)
+       stays as it is. */
+    if (playerRuleChanged(state, "mana-becomes-colorless", player.id)) {
+      colorlessPool(state, player.id, kept);
+      continue;
+    }
+    /* And the mana that could be spent only on some things (rules/restricted-mana.mjs). */
+    emptyRestricted(player);
     const had = Object.fromEntries(Object.entries(player.manaPool).map(([color, n]) => [color, n - (kept[color] ?? 0)]));
     const total = Object.values(had).reduce((a, b) => a + b, 0);
     if (total === 0) continue;
@@ -719,6 +727,8 @@ export function advance(state) {
     state.stepQueue = [];
     state.resumeAfter = null;
     state.combatsThisTurn = 0;
+    /* And the nonland permanents that left the battlefield (state/index.mjs, recordDeath; void). */
+    if (state.nonlandLeftThisTurn) state.nonlandLeftThisTurn = 0;
     for (const player of state.players) {
       if (player.lostThisTurn) player.lostThisTurn = 0;
       if (player.drawnThisTurn) player.drawnThisTurn = 0;

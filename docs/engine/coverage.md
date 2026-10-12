@@ -17,8 +17,8 @@ table until a played game or Rob confirms it. They are not counted as defined.
 | Scope | Cards | Defined | Provisional | Every rule | Share |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Rob's seven decks | 477 | 477 | 0 | 477 | 100.0% |
-| the card library | 2365 | 1214 | 7 | 2034 | 86.0% |
-| the most-played 80% of Commander cards | 3238 | 1273 | 27 | 2645 | 81.7% |
+| the card library | 2365 | 1215 | 7 | 2044 | 86.4% |
+| the most-played 80% of Commander cards | 3238 | 1273 | 27 | 2650 | 81.8% |
 
 ## What blocks the rest — Rob's seven decks
 
@@ -32,7 +32,6 @@ table until a played game or Rob confirms it. They are not counted as defined.
 | `RememberObjects` | option | 72 | not built |
 | `RememberChanged` | option | 63 | not built |
 | `MayPlay` | option | 33 | not built |
-| `Sneak` | keyword | 9 | not declared |
 | `SpellCastOrCopy` | trigger | 8 | unmapped |
 | `PresentZone` | option | 7 | not built |
 | `Imprint` | option | 6 | not built |
@@ -49,6 +48,7 @@ table until a played game or Rob confirms it. They are not counted as defined.
 | `FlipCoin` | api | 4 | unmapped |
 | `RingTemptsYou` | api | 4 | unmapped |
 | `Dredge` | keyword | 4 | not declared |
+| `ReplaceToken` | api | 4 | unmapped |
 
 ## What blocks the rest — the most-played 80% of Commander cards
 

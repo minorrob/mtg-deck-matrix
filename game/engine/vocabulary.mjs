@@ -205,7 +205,11 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   /* Compleated (CR 702.150): fewer loyalty counters for Phyrexian mana paid with life (rules/replacement.mjs). */
   "compleated",
   /* Disguise (CR 702.168): cast face down for {3}, turned face up for its cost (rules/actions.mjs). */
-  "disguise"];
+  "disguise",
+  /* Train E: warp (CR 702.185), an alternative cost from the hand, exiled at the next end step and cast again later; and sneak
+     (CR 702.190), one in its caster's declare blockers step, entering tapped and attacking (cards/index.mjs, rules/actions.mjs,
+     rules/stack.mjs). */
+  "warp", "sneak"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

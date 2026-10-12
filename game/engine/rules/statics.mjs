@@ -61,6 +61,10 @@ export const STATIC_RULES = Object.freeze({
   "negative-power-as-positive": "rules/combat.mjs",
   /** CR 402.2's exception: "You have no maximum hand size" (Reliquary Tower, Thought Vessel). turn.mjs, at cleanup. */
   "no-maximum-hand-size": "rules/turn.mjs",
+  /** CR 500.4 replaced (CR 614.1a, 106.4): "If you would lose unspent mana, that mana becomes colorless instead" (Omnath, Locus
+      of the Void): `affects` the players whose pools it keeps (a player selector, "you" its controller). turn.mjs, as each
+      step and phase ends (emptyManaPools). */
+  "mana-becomes-colorless": "rules/turn.mjs",
   /** CR 601.2f: "Artifact spells you cast cost {1} less to cast" (the Medallions, Foundry Inspector). actions.mjs. */
   "spells-cost-less": "rules/actions.mjs",
   /** CR 601.2f: "Noncreature spells cost {1} more to cast" (Thalia), "spells your opponents cast cost {2} more" (God-
@@ -224,6 +228,12 @@ export const STATIC_RULES = Object.freeze({
       blockers it can't be blocked by), "creatures with power less than this creature's power can't block creatures you
       control" (`byPowerBelowSource`). keywords/combat.mjs, as each blocker is checked. */
   "cant-be-blocked-by": "keywords/combat.mjs",
+  /** CR 509.1b: "This token can block only creatures with flying" (Pinnacle Emissary's Drones): `affects` the blockers, and
+      `attackers` the only ones each may block, a selector. keywords/combat.mjs, as each blocker is checked (blocksOnlyOthers). */
+  "can-block-only": "keywords/combat.mjs",
+  /** CR 613.1b: "You control enchanted permanent" (Tractor Beam): an Aura's, `affects` what it is attached to. Made a control
+      change of the Aura's own as the game is checked (rules/sba.mjs; script/effects/permanents.mjs, controlByAuras). */
+  "control-enchanted": "script/effects/permanents.mjs",
   /** "This spell can't be countered" (the spell's own, read while it is on the stack, `affects: {what: "spell", self: true}`)
       and "creature spells you control can't be countered" (a permanent's, over spells): a counter effect does nothing to
       such a spell (CR 101.2: "can't" beats "can"). script/effects/zones.mjs, counterSpell. */
@@ -775,6 +785,24 @@ export function cantBeBlockedBy(state, attackerId, blockerId) {
   for (const effect of state.effects ?? []) {
     if (effect.rule !== "cant-be-blocked-by" || !(effect.affects?.ids ?? []).includes(attackerId)) continue;
     if (matchesSelector({what: "permanent", ...(effect.by ?? {})}, state, blockerId, {controller: effect.sourceController})) return true;
+  }
+  return false;
+}
+
+/**
+ * Whether a static ability says this blocker can block only attackers of a kind, and this attacker is not one (CR 509.1b,
+ * "can-block-only"): "This token can block only creatures with flying" (Pinnacle Emissary's Drones) -- the blocker one the
+ * ability affects, the attacker one its `attackers` does not describe. "You" is the ability's controller.
+ */
+export function blocksOnlyOthers(state, blockerId, attackerId) {
+  const held = staticAbilities(state);
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of held(holderId)) {
+      if (ability.kind !== "static" || ability.rule !== "can-block-only") continue;
+      const context = {controller: holder.controller, source: holderId};
+      if (matchesSelector(ability.affects, state, blockerId, context) && !matchesSelector({what: "permanent", ...(ability.attackers ?? {})}, state, attackerId, context)) return true;
+    }
   }
   return false;
 }

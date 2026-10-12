@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Omnath, Locus of the Void",
+    "oracleId": "579225b5-50e2-4891-8871-0bf6dbc07e33",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental"
+    ],
+    "manaCost": "{7}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Omnath gets +1/+1 for each unspent mana you have.\nIf you would lose unspent mana, that mana becomes colorless instead.\nLandfall — Whenever a land you control enters, add {C}{C}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Omnath gets +1/+1 for each unspent mana you have.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "power": {
+          "manaInPool": "you"
+        },
+        "toughness": {
+          "manaInPool": "you"
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "If you would lose unspent mana, that mana becomes colorless instead.",
+      "rule": "mana-becomes-colorless",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Landfall — Whenever a land you control enters, add {C}{C}.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 2
+          }
+        }
+      ]
+    }
+  ]
+}

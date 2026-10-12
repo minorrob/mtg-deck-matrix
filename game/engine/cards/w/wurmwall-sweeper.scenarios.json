@@ -1,0 +1,233 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Wurmwall Sweeper",
+  "fixtures": {
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{3}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Hawk": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bird"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "keywords": [
+        "Flying"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: surveil 2, the Bear to the graveyard and the Hawk kept on top",
+      "library": [
+        "Bear",
+        "Hawk"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wurmwall Sweeper"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Wurmwall Sweeper"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "settle": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hawk"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Stationed by a 4/4: four charge counters, a 2/2 artifact creature with flying",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wurmwall Sweeper",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Wurmwall Sweeper"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Wurmwall Sweeper",
+            "counter": "charge",
+            "count": 4
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Wurmwall Sweeper",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Wurmwall Sweeper",
+            "has": [
+              "Flying"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Ogre"
+        }
+      ]
+    },
+    {
+      "name": "Stationed by a 2/2: two charge counters, still no creature and no flying",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wurmwall Sweeper",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Wurmwall Sweeper"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_BEGIN"
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Wurmwall Sweeper"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Wurmwall Sweeper",
+            "counter": "charge",
+            "count": 2
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Wurmwall Sweeper",
+            "lacks": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

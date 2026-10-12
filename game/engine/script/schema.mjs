@@ -490,6 +490,11 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
     }
     /* What a chosen target must be for the spell to cost less (CR 601.2f): "if it targets an attacking creature" (Run Behind). */
     if (ability.rule === "this-costs-less" && ability.targeting !== undefined) checkSelector(ability.targeting, `${path}.targeting`, errors);
+    /* "Can block only creatures with flying" (CR 509.1b): which attackers, a selector. */
+    if (ability.rule === "can-block-only") {
+      if (!ability.attackers || typeof ability.attackers !== "object") errors.push({path, message: "\"Can block only\" says which attackers: `attackers`, a selector"});
+      else checkSelector(ability.attackers, `${path}.attackers`, errors, {choice: true});
+    }
     if (ability.rule === "cant-be-blocked-by") {
       if (!ability.by && ability.byPowerBelowSource !== true) errors.push({path, message: "\"Can't be blocked by\" says by what: `by`, or `byPowerBelowSource`"});
       if (ability.by) checkSelector(ability.by, `${path}.by`, errors, {choice: true});

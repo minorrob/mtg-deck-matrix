@@ -22,7 +22,7 @@ import {selectMatching, compileSelector} from "../filter.mjs";
 import {bindEffect, rememberNow, countThisWay} from "../bind.mjs";
 import {amountOf} from "../amount.mjs";
 import {event, cardRef, moveOne} from "./zones.mjs";
-import {typesOf, controllerOf} from "../../rules/layers.mjs";
+import {typesOf, controllerOf, staticAbilities} from "../../rules/layers.mjs";
 import {protectedFrom} from "../../rules/protection.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
 import {countersPlaced, tokensCreated} from "../../rules/statics.mjs";
@@ -795,6 +795,35 @@ export function controlSourceLeft(state, departed, events = []) {
   if (state.effects?.some((e) => e.rule === "control-returns" && e.affects.ids[0] === departed))
     state.effects = state.effects.filter((e) => !(e.rule === "control-returns" && e.affects.ids[0] === departed));
   for (let record; (record = nextRecord(state, (e) => e.until === "this leaves" && e.source === departed));) endControlChange(state, record, events);
+}
+
+/**
+ * "YOU CONTROL ENCHANTED PERMANENT" (Tractor Beam; CR 613.1b, 611.3a): an Aura's static ability, `rule: "control-enchanted"`
+ * (rules/statics.mjs), made the control change gainControl makes -- the permanent's controller itself changes, so every
+ * reader sees it, summoning sickness included (CR 302.6) -- with the Aura's own record (`byAura`), from the first moment it
+ * applies: the Aura on the battlefield with the ability (after layer 6, CR 613.1f), attached to that permanent. Asked whenever
+ * the game is checked (rules/sba.mjs), before anything else is: a player never holds priority before it applies. It lasts while
+ * that holds and its controller is still whom the record gave control to: the Aura gone (controlSourceLeft, `until: "this
+ * leaves"`), attached elsewhere, without the ability, or under another player's control, and it ends (endControlChange) --
+ * the next to apply, applying afresh. A later change of control outlasts it, and gives it back as it ends (CR 613.7).
+ */
+const controlsEnchanted = (state, held, aura) => held(aura).some((a) => a.kind === "static" && a.rule === "control-enchanted");
+export function controlByAuras(state, events = []) {
+  /* Only a card that prints it has it (no effect gives it): none on the battlefield, and nothing to do -- an Aura gone has
+     ended its record as it left (controlSourceLeft). */
+  if (!state.zones.battlefield.some((id) => (state.objects[id].abilities ?? []).some((a) => a.rule === "control-enchanted"))) return;
+  const held = staticAbilities(state);
+  const holds = (record) => state.objects[record.byAura]?.attachedTo === record.affects.ids[0] && controllerOf(state, record.byAura) === record.to
+    && controlsEnchanted(state, held, record.byAura);
+  for (let record; (record = nextRecord(state, (e) => e.byAura !== undefined && !holds(e)));) endControlChange(state, record, events);
+  for (const aura of [...state.zones.battlefield]) {
+    const host = state.objects[aura]?.attachedTo;
+    /* An Aura attached to nothing (put onto the battlefield so, until the game puts it into the graveyard, CR 704.5m). */
+    if (state.objects[host]?.zone !== "battlefield" || !controlsEnchanted(state, held, aura)) continue;
+    if ((state.effects ?? []).some((e) => e.byAura === aura && e.affects.ids[0] === host)) continue;
+    gainControl(state, {targets: [host], until: "this leaves"}, {controller: controllerOf(state, aura), source: aura});
+    state.effects.findLast((e) => e.rule === "control-returns" && e.affects.ids[0] === host).byAura = aura;
+  }
 }
 
 /**

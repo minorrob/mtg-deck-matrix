@@ -53,7 +53,7 @@ import {sacrificeOne, moveOne, returnExiledUntil, leavingRef, destructionReplace
 import {changeLife} from "../script/effects/resources.mjs";
 import {enduringStories, citysBlessings} from "../keywords/designations.mjs";
 import {preparedCopyStays} from "../script/effects/attributes.mjs";
-import {endControlChange, nextRecord, endCounterDurations} from "../script/effects/permanents.mjs";
+import {endControlChange, nextRecord, endCounterDurations, controlByAuras} from "../script/effects/permanents.mjs";
 import {protectedFrom} from "./protection.mjs";
 import {answerForDeparted, goOnWithout} from "./turn.mjs";
 
@@ -220,6 +220,9 @@ export function checkStateBasedActions(state) {
      checked, before the actions, which never add a permanent (keywords/designations.mjs). Ascend (CR 702.131b) the same
      way: ten permanents, and the city's blessing for the rest of the game. Both in one question, every object derived once. */
   const events = deriving(state, () => [...enduringStories(state), ...citysBlessings(state)]);
+  /* "You control enchanted permanent" (Tractor Beam; CR 613.1b): an Aura's control change made or ended as it now applies,
+     before any action reads who controls what (effects/permanents.mjs). */
+  controlByAuras(state, events);
   /* A creature dying can put a player to zero, and that player leaving can empty a zone. Ten passes
      is far more than any real position needs; reaching it would mean two actions were undoing each
      other, which is a bug worth an exception rather than an infinite loop. */

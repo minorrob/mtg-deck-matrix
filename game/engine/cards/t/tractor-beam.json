@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tractor Beam",
+    "oracleId": "ed99a0b8-d82d-4c80-af97-cabd333620df",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{2}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature or Spacecraft\nWhen this Aura enters, tap enchanted permanent.\nYou control enchanted permanent.\nEnchanted permanent doesn't untap during its controller's untap step.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Enchant creature or Spacecraft",
+      "keyword": "enchant",
+      "target": {
+        "anyOf": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          },
+          {
+            "what": "permanent",
+            "subtypes": [
+              "Spacecraft"
+            ]
+          }
+        ]
+      },
+      "hostile": true
+    },
+    {
+      "kind": "triggered",
+      "text": "When this Aura enters, tap enchanted permanent.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "tap",
+          "targets": "enchanted"
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "You control enchanted permanent.",
+      "rule": "control-enchanted",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted permanent doesn't untap during its controller's untap step.",
+      "rule": "doesnt-untap",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      }
+    }
+  ]
+}

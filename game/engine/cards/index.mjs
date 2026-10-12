@@ -939,6 +939,40 @@ export function compileScript(script) {
       keywords.push(word === "surge" ? "Surge" : "Freerunning");
       return;
     }
+    /* WARP [COST] (CR 702.185a; All-Fates Stalker, Pinnacle Emissary): "You may cast this card from your hand by paying [cost]
+       rather than its mana cost" -- an alternative cost offered from the hand alone (`fromHand`; rules/actions.mjs), what it
+       casts marked as cast for it (`paidFor`) and counted as warped this turn (702.185c, the condition `void`) -- and "if
+       this spell's warp cost was paid, exile the permanent this spell becomes at the beginning of the next end step; its owner
+       may cast this card after the current turn has ended for as long as it remains exiled" (rules/stack.mjs makes the delayed
+       trigger; effects/zones.mjs, moveZone's `warped`, the permission). A mana cost; on a permanent card, which becomes a
+       permanent (an instant or sorcery has nothing to exile). */
+    if (word === "warp") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      let parsed = null;
+      try { parsed = cost.length === 1 && cost[0]?.atom === "mana" ? parseManaCost(cost[0].cost ?? "") : null; } catch { /* refused below */ }
+      if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`${ability.text}: a warp cost of mana, once, without X`);
+      if ((identity.types ?? []).some((t) => ["Instant", "Sorcery", "Land"].includes(t))) problems.push(`${ability.text}: warp on a card that never becomes a permanent from the stack`);
+      abilities.push({id, kind: "static", rule: "alternative-cost", paidFor: "warp", fromHand: true, text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
+      keywords.push("Warp");
+      return;
+    }
+    /* SNEAK [COST] (CR 702.190a; Leonardo, Leader in Blue, Splinter, Hamato Yoshi): "any time you could cast an instant during
+       your declare blockers step, you may cast this spell by paying [cost] and returning an unblocked creature you control to
+       its owner's hand rather than paying this spell's mana cost" -- an alternative cost (CR 118.9), its condition `sneak`
+       (script/condition.mjs), offered at an instant's timing then (`sneak`, rules/actions.mjs), the creature returned picked
+       with the cast as any cost's permanent is; and a permanent spell cast for it enters tapped and attacking whom that
+       creature attacked (702.190b; rules/stack.mjs). Marked as cast for it (`paidFor`): "if his sneak cost was paid". */
+    if (word === "sneak") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      let parsed = null;
+      try { parsed = cost.length === 1 && cost[0]?.atom === "mana" ? parseManaCost(cost[0].cost ?? "") : null; } catch { /* refused below */ }
+      if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`${ability.text}: a sneak cost of mana, once, without X`);
+      abilities.push({id, kind: "static", rule: "alternative-cost", paidFor: "sneak", sneak: true, condition: {sneak: true}, text: ability.text,
+        cost: [...structuredClone(cost), {atom: "returnToHand", selector: {what: "permanent", types: ["Creature"], controller: "you", attacking: true, unblocked: true}}],
+        affects: {what: "card", self: true}});
+      keywords.push("Sneak");
+      return;
+    }
     /* TIERED (CR 702.183a; Cloud's Limit Break): "Choose one. As an additional cost to cast this spell, pay the cost associated
        with that mode" -- each mode's cost written on the mode (`cost`, its mana), kept for the spell among its additional
        costs (below; rules/actions.mjs, additionalVariants): each mode its own cast, its cost added. */
