@@ -296,6 +296,20 @@ try {
   await active.page.click("[data-action=board-also]");
   ok(/Tap for mana/.test(await text(active.page, "#cm-board-decision")), "the land played, You can also ▾ offers its mana");
   await active.page.click("[data-action=board-also]");
+  /* UNTAP, ITS MANA UNSPENT (Rob, 2026-10-11: "I clicked it to see what happens. It tapped it ... I should also be able to
+     click the card to untap it again"): a click on the land taps it; the room offers it back (game/room/room.mjs,
+     `untapMana`), so it stays lit, says Untap, and a second click puts it upright, its mana gone from the pool. */
+  const matLand = active.page.locator(".cm-board-lands .cm-bcard", {hasText: land}).first();
+  await matLand.click();
+  await active.page.locator(".cm-board-lands .cm-bcard.is-tapped.is-bright").first().waitFor({timeout: 10000});
+  const tappedView = views(active === rob ? ROB : MAYA).at(-1), untap = tappedView.decision.options.find((o) => o.act === "undo-mana");
+  ok(untap && untap.label === `Untap ${land}` && (tappedView.state.players[activeSeat].mana || []).length === 1 && /Untap/.test(await matLand.getAttribute("aria-label")),
+    `a click on the land taps it for mana, and it stays lit, offered back: "${untap?.label}", its mana in the pool`);
+  await matLand.click();
+  await active.page.waitForFunction(() => !document.querySelector(".cm-board-lands .cm-bcard.is-tapped"), null, {timeout: 10000});
+  const upright = views(active === rob ? ROB : MAYA).at(-1);
+  ok((upright.state.players[activeSeat].mana || []).length === 0 && !upright.decision.options.some((o) => o.act === "undo-mana") && upright.state.phase === "MAIN1",
+    "a second click untaps it: upright, the pool empty, nothing to take back, and still main 1");
   await active.page.click("[data-action=board-pass]");
   /* B5, items 10 and 11: one click, and the steps with nothing to do in them pass by themselves -- combat, with no
      creature to attack with -- landing on main 2, where the creature could still be cast. */
