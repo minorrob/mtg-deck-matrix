@@ -404,7 +404,10 @@ export function resolveCastCost(state, awaiting, indices) {
   if (picked.length !== (indices ?? []).length || !counted || picked.some((i) => !choice.options[i]))
     throw new Error("Invalid selection");
   const ids = picked.map((i) => choice.options[i].cardId);
-  const way = choice.cost === "mana" ? castTapPlans(state, awaiting.player, awaiting.action, TAP_CHOICES)[picked[0]] : null;
+  /* The ways to tap, read as the question read them: as the card is cast (asCast) -- an Adventure as itself (CR 715.3a), so
+     mana in the pool that would pay the creature but not its Adventure (Smaug, the Great Calamity's Spew Flame) is not read
+     as paying it, which would leave no way to tap. */
+  const way = choice.cost === "mana" ? asCast(state, awaiting.action, () => castTapPlans(state, awaiting.player, awaiting.action, TAP_CHOICES))[picked[0]] : null;
   const action = {...structuredClone(awaiting.action), ...(choice.cost === "pool" ? {payWith: choice.options[picked[0]].key, ...(choice.options[picked[0]].riders ? {payRiders: choice.options[picked[0]].riders} : {})} : way ? {tapPlan: way.key} : choice.cost === "tap" ? {flashbackTap: ids}
     : choice.cost === "convoke" ? {convokeTap: ids} : choice.cost === "waterbend" ? {waterbendTap: ids} : choice.cost === "tapAny" ? {tapChosen: ids} : choice.cost === "behold" ? {beheld: ids} : choice.cost === "exileOthers" ? {othersExiled: ids} : choice.cost === "sacrifice" ? {sacrificeSet: ids} : choice.cost === "escalate" ? {escalateTapped: ids}
     : choice.cost === "counters" ? {counterSet: picked.map((i) => ({id: choice.options[i].cardId, counter: choice.options[i].counter}))} : {escapeExile: ids})};
