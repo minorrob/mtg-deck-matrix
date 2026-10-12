@@ -78,12 +78,14 @@ BREAKS = [
      '    if (true) {\n      (state.pendingTriggers ??= []).push({abilityId: "replicate"'),
     ('replicate: a copy for each time', ACTIONS, REPLICATE_TRIGGER, REPLICATE_TRIGGER.replace('count: action.replicated', 'count: 1')),
     ('replicate: new targets', ACTIONS, REPLICATE_TRIGGER, REPLICATE_TRIGGER.replace('newTargets: true', 'newTargets: false')),
-    ('replicate: declared', VOCAB, '  "replicate"];', '  ];'),
+    ('replicate: declared', VOCAB, '  "replicate",\n', ''),
     ('replicate: built', TIMING, 'cast: Object.freeze(["Storm", "Replicate"]),', 'cast: Object.freeze(["Storm"]),'),
 
     # Hapatra: "for each opponent ... up to one target creature that player controls" on a triggered ability (script/schema.mjs).
-    ('forEach: an ability target may say it', SCHEMA, 'const {count, distinctFrom, onlyIf, differentControllers, share, forEach, ...selector} = spec',
-     'const {count, distinctFrom, onlyIf, differentControllers, share, ...selector} = spec'),
+    # Left in the selector, which the selector grammar refuses; still named, so the guard below it runs rather than throws.
+    ('forEach: an ability target may say it', SCHEMA,
+     'const {count, distinctFrom, onlyIf, differentControllers, share, forEach, ownedByControllerOf, ...selector} = spec && typeof spec === "object" ? spec : {};',
+     'const {count, distinctFrom, onlyIf, differentControllers, share, ownedByControllerOf, ...selector} = spec && typeof spec === "object" ? spec : {}, {forEach} = selector;'),
     ('forEach: a triggered ability\'s', SCHEMA, FOR_EACH, FOR_EACH.replace('ability.kind === "triggered" && ', '')),
     ('forEach: for each opponent', SCHEMA, FOR_EACH, FOR_EACH.replace('forEach === "opponent" && ', '')),
     ('forEach: up to', SCHEMA, FOR_EACH, FOR_EACH.replace('(count?.min ?? 0) === 0 && ', '')),

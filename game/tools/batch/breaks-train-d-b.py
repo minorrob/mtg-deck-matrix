@@ -20,17 +20,18 @@ RESOURCES = 'game/engine/script/effects/resources.mjs'
 BREAKS = [
     # ---- Simic Ascendancy: "whenever one or more +1/+1 counters are put on a creature you control" ----
     ('counter added: not on any permanent', INDEX,
-     ': t.who === "any" && t.each === undefined ? {on: "GameEventCardCounters", counterAdded: true, counter: t.counter, who: "any", ...(t.filter ? {filter: t.filter} : {})} : null),',
+     ': t.who === "any" && t.each === undefined ? {on: "GameEventCardCounters", counterAdded: true, counter: t.counter, who: "any", ...(t.filter ? {filter: t.filter} : {}),\n'
+     '      ...(t.putBy ? {putBy: t.putBy} : {})} : null),',
      ': null),'),
     ('counter added: once for each counter beside any', INDEX,
      ': t.who === "any" && t.each === undefined ? {',
      ': t.who === "any" ? {'),
     ('counter added: its filter dropped', INDEX,
-     ', who: "any", ...(t.filter ? {filter: t.filter} : {})} : null),',
-     ', who: "any"} : null),'),
+     ', who: "any", ...(t.filter ? {filter: t.filter} : {}),\n',
+     ', who: "any",\n'),
     ('counter added: no kind of counter', INDEX,
-     '"counter added": (t) => (typeof t.counter !== "string" ? null : (t.who ?? "self") === "self" ?',
-     '"counter added": (t) => ((t.who ?? "self") === "self" ?'),
+     '"counter added": (t) => (typeof t.counter !== "string" || ![undefined, "you"].includes(t.putBy) ? null :',
+     '"counter added": (t) => (![undefined, "you"].includes(t.putBy) ? null :'),
     ('about the creature and that many: not said', TRIGGER,
      '  if (condition.on === "GameEventCardCounters" && condition.counterAdded && condition.who === "any")\n'
      '    return matches(state, event, condition, sourceId, controller) ? [{card: fields.card?.cardId, amount: (fields.newValue ?? 0) - (fields.oldValue ?? 0)}] : [];\n',

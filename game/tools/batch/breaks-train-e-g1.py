@@ -44,13 +44,14 @@ HANDED = '    ...(resolvedBefore !== undefined ? {resolvedBefore} : {})}, rng);'
 CARRIED = '      ...(context.resolvedBefore !== undefined ? {resolvedBefore: context.resolvedBefore} : {})},'
 EFFECT_CONDITION = '      resolvedBefore: resolving.context.resolvedBefore})) {'
 BRANCH_IF = 'lastKnown: resolving.context.lastKnown, resolvedBefore: resolving.context.resolvedBefore});'
-SAME_MODE_SCHEMA = '    if (effect.sameMode !== undefined && !(effect.sameMode === true && effect.chooseUpTo !== undefined))'
+SAME_MODE_SCHEMA = ('    if (effect.sameMode !== undefined && !(effect.sameMode === true && (effect.chooseUpTo !== undefined'
+                    ' || (Number.isInteger(effect.choose) && effect.choose >= 2))))')
 CHOOSE_ZERO_SCHEMA = '    if (effect.choose === 0 && effect.chooseUpTo === undefined)'
-MODAL_ONLY = '    if (effect?.effect !== "modal") continue;\n    if (effect.sameMode'
+MODAL_ONLY = '    if (effect?.effect !== "modal") continue;\n    /* Or exactly so many, two or more'
 OWN_CONDITION = '  if ((ability.condition && typeof ability.condition === "object" && "firstResolution" in ability.condition)'
 NOT_SPELL = '    || (!["triggered", "activated"].includes(ability.kind) && asksFirstResolution(ability.effects)))'
 LEAST = '  const least = exactly ?? (modal.choose === 0 ? 0 : Math.max(1, modal.choose ?? 1));'
-MOST = '  const most = exactly ?? (modal.sameMode ? modal.upTo : Math.min('
+MOST = '  const most = exactly ?? (modal.sameMode ? modal.upTo ?? least : Math.min('
 PICK = '    for (let i = from; i < modal.modes.length; i += 1) pick(modal.sameMode ? i : i + 1, [...chosen, i]);'
 EACH = '  const each = (spec) => (modal.sameMode === true && spec.count === undefined ? {...spec, count: {min: 1, max: 1}} : spec);'
 NO_MODES = '''parts.push(a.modes.length ? a.modes.map((i) => modal?.modes?.[i]?.text ?? `mode ${i + 1}`).join(" + ") : "no modes");'''
@@ -79,7 +80,7 @@ BREAKS = [
 
     # "If this is the first time this ability has resolved this turn" (Nissa, Leyline Tamer): the condition, its count, and
     # where it may be said.
-    ('first resolution: a condition key', CONDITION, '  "firstResolution"];', '  ];'),
+    ('first resolution: a condition key', CONDITION, '  "firstResolution",\n', ''),
     ('first resolution: false once it has resolved', CONDITION, FIRST_HOLDS, ''),
     ('first resolution: false when uncounted', CONDITION, FIRST_HOLDS, FIRST_HOLDS.replace('resolvedBefore !== 0', 'resolvedBefore > 0')),
     ('first resolution: only true', CONDITION, FIRST_PROBLEM, ''),
@@ -100,11 +101,12 @@ BREAKS = [
     # "Choose up to four. You may choose the same mode more than once" (Moment of Reckoning; CR 700.2d).
     ('same mode: compiled', INDEX, '          ...(only.sameMode === true ? {sameMode: true} : {}),\n', ''),
     ('same mode: true only', SCHEMA, SAME_MODE_SCHEMA, SAME_MODE_SCHEMA.replace('effect.sameMode === true && ', '')),
-    ('same mode: beside chooseUpTo only', SCHEMA, SAME_MODE_SCHEMA, SAME_MODE_SCHEMA.replace(' && effect.chooseUpTo !== undefined', '')),
+    ('same mode: beside chooseUpTo only', SCHEMA, SAME_MODE_SCHEMA,
+     SAME_MODE_SCHEMA.replace(' && (effect.chooseUpTo !== undefined || (Number.isInteger(effect.choose) && effect.choose >= 2))', '')),
     ('same mode: a malformed effect refused, not thrown', SCHEMA, MODAL_ONLY, MODAL_ONLY.replace('effect?.effect', 'effect.effect')),
     ('up to: choose 0 only beside chooseUpTo', SCHEMA, CHOOSE_ZERO_SCHEMA, '    if (false)'),
     ('up to: none chosen is offered', ACTIONS, LEAST, '  const least = exactly ?? Math.max(1, modal.choose ?? 1);'),
-    ('same mode: as many as it says', ACTIONS, MOST, '  const most = exactly ?? (false ? modal.upTo : Math.min('),
+    ('same mode: as many as it says', ACTIONS, MOST, MOST.replace('(modal.sameMode ?', '(false ?')),
     ('same mode: a mode again', ACTIONS, PICK, PICK.replace('modal.sameMode ? i : i + 1', 'i + 1')),
     ('same mode: each target its own counted one', BIND, EACH, EACH.replace('modal.sameMode === true && ', 'false && ')),
     ('same mode: a counted target keeps its count', BIND, EACH, EACH.replace(' && spec.count === undefined', '')),

@@ -18,8 +18,7 @@ NAMES = ('  else if ("differentNames" in value) n = new Set(matching(state, valu
 
 BREAKS = [
     # Fungal Colossus: "where X is the number of differently named lands you control" (script/amount.mjs, differentNames).
-    ('differentNames: a kind of amount', AMOUNT, '  "manaInPool",\n  /* Train E: "the number of differently named lands you control" (Fungal Colossus). */\n  "differentNames"]);',
-     '  "manaInPool"]);'),
+    ('differentNames: a kind of amount', AMOUNT, '  "differentNames",\n', ''),
     ('differentNames: counted', AMOUNT, NAMES, ''),
     ('differentNames: each name once', AMOUNT, NAMES,
      NAMES.replace('n = new Set(matching(', 'n = (matching(').replace('&& name)).size;', '&& name)).length;')),

@@ -37,7 +37,7 @@ CHOICE = '''    if (awaiting.questions) {
 '''
 APPLY = '    if (awaiting.questions) return copySpell.apply(state, awaiting, indices);\n'
 
-PLAYERS = '["protection", "life-cant-change", "no-maximum-hand-size"].includes(params.rule)'
+PLAYERS = '["protection", "life-cant-change", "no-maximum-hand-size", "damage-doubled"].includes(params.rule)'
 EFFECTS = '  return (state.effects ?? []).some((effect) => effect.rule === rule && (effect.players ?? []).includes(player));'
 
 BREAKS = [
@@ -64,7 +64,7 @@ BREAKS = [
 
     # Wisdom of Ages: "you have no maximum hand size for the rest of the game" (effects/permanents.mjs, effectUntil's
     # `players`; rules/statics.mjs, playerRuleChanged).
-    ('hand size: the players it is for', PERM, PLAYERS, '["protection", "life-cant-change"].includes(params.rule)'),
+    ('hand size: the players it is for', PERM, PLAYERS, PLAYERS.replace(' "no-maximum-hand-size",', '')),
     ('hand size: an effect read', STATICS, EFFECTS, '  return false;'),
     ('hand size: its own rule', STATICS, EFFECTS, EFFECTS.replace('effect.rule === rule && ', '')),
     ('hand size: the players it names', STATICS, EFFECTS, EFFECTS.replace('(effect.players ?? []).includes(player)', 'true')),
