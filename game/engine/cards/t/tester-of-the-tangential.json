@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tester of the Tangential",
+    "oracleId": "a30a2b96-4a8c-4d18-b276-5005b8aff7ed",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Djinn",
+      "Wizard"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)\nAt the beginning of combat on your turn, you may pay {X}. When you do, move X +1/+1 counters from this creature onto another target creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)",
+      "keyword": "increment"
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of combat on your turn, you may pay {X}. When you do, move X +1/+1 counters from this creature onto another target creature.",
+      "trigger": {
+        "on": "step",
+        "step": "COMBAT_BEGIN",
+        "yours": true
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "amountX": true,
+          "ifPaid": true,
+          "effects": [
+            {
+              "effect": "immediateTrigger",
+              "text": "When you do, move X +1/+1 counters from this creature onto another target creature.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ],
+                  "another": true
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "moveCounters",
+                  "from": "self",
+                  "targets": {
+                    "target": 0
+                  },
+                  "counter": "+1/+1",
+                  "count": "X"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,413 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Stingerquill Charm",
+  "fixtures": {
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{3}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 7,
+      "toughness": 7
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Three damage to Maya's Ogre: it dies",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Stingerquill Charm"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Stingerquill Charm"
+              },
+              "count": 5
+            }
+          ]
+        },
+        {
+          "cast": "Stingerquill Charm",
+          "modes": [
+            0
+          ],
+          "targets": [
+            {
+              "card": "Ogre"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Stingerquill Charm"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Any target: three damage to Maya herself",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Stingerquill Charm"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Stingerquill Charm",
+          "modes": [
+            0
+          ],
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 37
+        }
+      ]
+    },
+    {
+      "name": "First strike and deathtouch: Rob's Bear, blocked by Maya's 7/7 Giant, kills it first and takes nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Swamp",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Stingerquill Charm"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Giant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Giant",
+              "Bear"
+            ]
+          ]
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Stingerquill Charm",
+          "modes": [
+            1
+          ],
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Bear",
+                "has": [
+                  "First Strike",
+                  "Deathtouch"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Giant"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Bear",
+            "Swamp",
+            "Mountain"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A Cadet: a 2/2 colorless Wizard Soldier token with haste, attacking at once for 2; on Rob's next turn it has no haste",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Stingerquill Charm"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Stingerquill Charm",
+          "modes": [
+            2
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Cadet",
+                "has": [
+                  "Haste"
+                ]
+              }
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Cadet",
+                "power": 2,
+                "toughness": 2
+              }
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Cadet"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 38
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Cadet",
+            "lacks": [
+              "Haste"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Cadet",
+            "Swamp",
+            "Mountain"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "No creature anywhere: the first-strike mode cannot be chosen; three damage to a player and the Cadet can",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Stingerquill Charm"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Mountain"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Stingerquill Charm"
+          },
+          "count": 3
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Squire's Lightblade",
+    "oracleId": "0ea2a099-7c81-4012-8148-4d377f2d64e1",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Flash\nWhen this Equipment enters, attach it to target creature you control. That creature gains first strike until end of turn.\nEquipped creature gets +1/+0.\nEquip {3}",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this Equipment enters, attach it to target creature you control. That creature gains first strike until end of turn.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "First Strike"
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +1/+0.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 0
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Equip {3}",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}"
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

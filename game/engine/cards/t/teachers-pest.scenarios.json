@@ -1,0 +1,274 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Teacher's Pest",
+  "fixtures": {
+    "Smite": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It attacks: Rob gains 1 life, and Maya takes 1",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Teacher's Pest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Teacher's Pest"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 41
+        },
+        {
+          "seat": 1,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Teacher's Pest",
+            "has": [
+              "Menace"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "{B}{G} from the graveyard: back onto the battlefield, tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Teacher's Pest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "activate": "Teacher's Pest"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Teacher's Pest",
+            "Swamp",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Teacher's Pest"
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "At instant speed: destroyed by Maya's Smite on her turn, it is back before her turn ends",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Teacher's Pest",
+            "Swamp",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Smite"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Plains",
+          "seat": 1
+        },
+        {
+          "cast": "Smite",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Teacher's Pest"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Teacher's Pest"
+              ]
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 0
+        },
+        {
+          "tap": "Forest",
+          "seat": 0
+        },
+        {
+          "activate": "Teacher's Pest",
+          "seat": 0
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Teacher's Pest",
+            "Swamp",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Teacher's Pest"
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Smite"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "On the battlefield, the graveyard ability is not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Teacher's Pest",
+            "Swamp",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Forest"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Teacher's Pest"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

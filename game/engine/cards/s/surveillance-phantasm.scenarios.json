@@ -1,0 +1,240 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Surveillance Phantasm",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Peek": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Scry 1.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "scry",
+            "count": 1
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{3}{U}: surveil 1, the Bear on top into the graveyard -- then it attacks for 2 in the air, and stays untapped",
+      "library": [
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Surveillance Phantasm",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Surveillance Phantasm"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Bear"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "attack": [
+            "Surveillance Phantasm"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Surveillance Phantasm",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "Surveilled with the card kept on top: Rob still surveilled, and it attacks",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Surveillance Phantasm",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Surveillance Phantasm"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        },
+        {
+          "attack": [
+            "Surveillance Phantasm"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "A scry counts too: Rob casts Peek, scries 1, and the Phantasm attacks",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Surveillance Phantasm",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Peek"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Peek"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        },
+        {
+          "attack": [
+            "Surveillance Phantasm"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Teacher's Pest",
+    "oracleId": "12397dbf-99a9-40c3-aa7c-76d09baad008",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Skeleton",
+      "Pest"
+    ],
+    "manaCost": "{B}{G}",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Menace (This creature can't be blocked except by two or more creatures.)\nWhenever this creature attacks, you gain 1 life.\n{B}{G}: Return this card from your graveyard to the battlefield tapped.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Menace",
+      "keyword": "menace"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks, you gain 1 life.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{B}{G}: Return this card from your graveyard to the battlefield tapped.",
+      "zone": "graveyard",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{B}{G}"
+        }
+      ],
+      "targets": [],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "battlefield",
+          "tapped": true
+        }
+      ]
+    }
+  ]
+}

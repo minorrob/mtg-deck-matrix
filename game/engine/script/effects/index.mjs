@@ -37,7 +37,7 @@ import {
 } from "./resources.mjs";
 import {
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
-  becomeCopy, earthbend, goad, immediateTrigger, investigate, phaseOut, setState, exchangeControl,
+  becomeCopy, earthbend, goad, immediateTrigger, investigate, phaseOut, setState, exchangeControl, incubate,
 } from "./permanents.mjs";
 import {alterAttribute} from "./attributes.mjs";
 import {addTurn} from "./turns.mjs";
@@ -184,6 +184,8 @@ export const EFFECTS = Object.freeze({
   moveCounters, addTurn,
   /* "Loses all abilities" (Train D): control of two permanents exchanged (CR 701.12b; Oko, Thief of Crowns). */
   exchangeControl,
+  /* Train E: incubate (CR 701.53a; Sunfall), an Incubator token entering with +1/+1 counters. */
+  incubate,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */

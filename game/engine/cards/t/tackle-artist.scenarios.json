@@ -1,0 +1,404 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Tackle Artist",
+  "fixtures": {
+    "Spark": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Spark deals 1 damage to target player.",
+        "targets": [
+          {
+            "what": "player"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 1,
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Blaze": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{4}{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Blaze deals 3 damage to target player.",
+        "targets": [
+          {
+            "what": "player"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 3,
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Spark, one mana: one +1/+1 counter, a 5/4",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tackle Artist",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Spark"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Spark",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Tackle Artist",
+                "counter": "+1/+1",
+                "count": 1
+              }
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Tackle Artist",
+            "power": 5,
+            "toughness": 4
+          }
+        },
+        {
+          "seat": 1,
+          "life": 39
+        }
+      ]
+    },
+    {
+      "name": "Blaze, five mana: two +1/+1 counters instead, a 6/5",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tackle Artist",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blaze"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Blaze",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Tackle Artist",
+            "counter": "+1/+1",
+            "count": 2
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Tackle Artist",
+            "power": 6,
+            "toughness": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "X counts: Subterranean Tremors for X of 4 is five mana -- two counters, and the 6/5 survives the 4 damage",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tackle Artist",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Subterranean Tremors"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Subterranean Tremors",
+          "x": 4
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Tackle Artist",
+                "counter": "+1/+1",
+                "count": 2
+              }
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Tackle Artist",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Tackle Artist",
+            "power": 6,
+            "toughness": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "A creature spell of Rob's, and Maya's instant: no counters",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tackle Artist",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Spark"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bear"
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Spark",
+          "seat": 1,
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Tackle Artist",
+            "counter": "+1/+1",
+            "count": 0
+          }
+        },
+        {
+          "seat": 0,
+          "life": 39
+        }
+      ]
+    }
+  ]
+}

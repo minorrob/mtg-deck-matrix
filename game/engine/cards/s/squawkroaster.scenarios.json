@@ -1,0 +1,392 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Squawkroaster",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Spirit": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Spirit"
+      ],
+      "manaCost": "{W}{U}",
+      "colors": [
+        "W",
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Goblin": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Smite": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Alone, red is the one color among Rob's permanents: a 1/4, and double strike deals Maya 2",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Squawkroaster"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Squawkroaster",
+                "power": 1,
+                "toughness": 4
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Squawkroaster",
+                "has": [
+                  "Double Strike"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Squawkroaster"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        }
+      ]
+    },
+    {
+      "name": "A green Bear and a white and blue Spirit beside it: four colors, a 4/4 that deals Maya 8",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Squawkroaster",
+            "Bear",
+            "Spirit"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Squawkroaster",
+                "power": 4,
+                "toughness": 4
+              }
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Squawkroaster"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 32
+        }
+      ]
+    },
+    {
+      "name": "A colorless Relic and a land add nothing, a second red permanent is red again, and Maya's green Bear is hers: still a 1/4",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Squawkroaster",
+            "Relic",
+            "Mountain",
+            "Goblin"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Squawkroaster",
+            "power": 1,
+            "toughness": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "Counted all the time (CR 604.3): Rob casts a Bear and it is a 2/4 at once; Maya's Smite destroys the Bear on her turn and it is a 1/4 again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Squawkroaster",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Smite"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bear"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Squawkroaster",
+                "power": 2,
+                "toughness": 4
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Plains",
+          "seat": 1
+        },
+        {
+          "cast": "Smite",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Squawkroaster",
+            "power": 1,
+            "toughness": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "Two colors, a 2/4 double striker, blocked by Maya's 3/3 Ogre: 2 first-strike and 2 regular damage kill it, and its 3 leave the Squawkroaster standing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Squawkroaster",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Squawkroaster"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Ogre",
+              "Squawkroaster"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Squawkroaster",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

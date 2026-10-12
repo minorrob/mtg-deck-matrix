@@ -649,7 +649,9 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
   control, made first if you control none; the live-game plan of 2026-10-04).
 - Permanents: `createToken`, `copyPermanent`, `becomeCopy`, `earthbend` (added in M4 phase 3, batch 65), `animate`, `animateAll`, `attach`, `gainControl`, `setState` (transform,
   flip), `phaseOut`, `exchangeControl` (control of two permanents exchanged, CR 701.12b: both still there and controlled by
-  different players, or nothing happens; Train D, 2026-10-12).
+  different players, or nothing happens; Train D, 2026-10-12), `incubate` (an Incubator token, a double-faced token that
+  transforms for {2} into a 0/0 Phyrexian artifact creature, entering with N +1/+1 counters, CR 701.53, 111.10i; Train E,
+  2026-10-12).
 - Modifiers: `pump`, `pumpAll`, `alterAttribute`, `effectUntil` (a temporary static), `grantKeyword`, `regenerate` (a regeneration shield, CR 701.19a; added in M4 phase 3, batch 28).
 - Flow: `modal` (Charm), `sequence`, `repeatFor` (RepeatEach), `branch`, `delayedTrigger`, `immediateTrigger`,
   `counterSpell`, `copySpell`, `addTurn`, `chooseCard`, `chooseType`, `chooseColor` (a color chosen as it resolves, CR

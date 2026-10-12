@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Summoned Dromedary",
+    "oracleId": "697b14c6-fe6a-4880-9cf2-b6602a52ca0b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit",
+      "Camel"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "Vigilance\n{1}{W}: Return this card from your graveyard to your hand. Activate only as a sorcery.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "activated",
+      "text": "{1}{W}: Return this card from your graveyard to your hand. Activate only as a sorcery.",
+      "zone": "graveyard",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{W}"
+        }
+      ],
+      "targets": [],
+      "timing": "sorcery",
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "hand"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,647 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sunfall",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Angel": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Angel"
+      ],
+      "manaCost": "{3}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 4,
+      "toughness": 4,
+      "keywords": [
+        "Indestructible"
+      ]
+    },
+    "Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Muster": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Create a 1/1 white Soldier creature token.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 1,
+            "token": {
+              "name": "Soldier",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Soldier"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": 1,
+              "toughness": 1
+            }
+          }
+        ]
+      }
+    },
+    "Abundance": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{2}{G}",
+      "colors": [
+        "G"
+      ],
+      "abilities": [
+        {
+          "id": "f0",
+          "kind": "static",
+          "text": "If one or more counters would be put on a permanent you control, that many plus one are put on it instead.",
+          "rule": "more-counters",
+          "affects": {
+            "controller": "you"
+          },
+          "plus": 1
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Three creatures exiled -- Rob's Bear, Maya's Ogre and her indestructible Angel: an Incubator with three +1/+1 counters, an artifact and no creature; her Relic stays",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sunfall"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre",
+            "Angel",
+            "Relic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Sunfall"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Ogre",
+            "Angel"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Incubator"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Incubator",
+            "counter": "+1/+1",
+            "count": 3
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Incubator",
+            "power": null,
+            "toughness": null
+          }
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Relic"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Sunfall"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "{2}: the Incubator transforms into a Phyrexian Token, a 0/0 Phyrexian artifact creature with its three counters -- a 3/3, which attacks on Rob's next turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sunfall"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre",
+            "Angel"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Sunfall"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Incubator"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "activate": "Incubator"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Plains",
+                "Plains",
+                "Wastes",
+                "Wastes",
+                "Wastes",
+                "Wastes",
+                "Wastes",
+                "Phyrexian Token"
+              ]
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Phyrexian Token",
+                "power": 3,
+                "toughness": 3
+              }
+            },
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Phyrexian Token",
+                "counter": "+1/+1",
+                "count": 3
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Phyrexian Token"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 37
+        }
+      ]
+    },
+    {
+      "name": "Tokens are exiled too, and counted: a Soldier token and the Bear make an Incubator with two counters",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Plains",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sunfall",
+            "Muster"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Muster"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Sunfall"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Incubator",
+            "counter": "+1/+1",
+            "count": 2
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Plains",
+            "Incubator"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The counters are put on as it enters (CR 122.6): the Abundance enchantment's one more makes two into three -- and Hardened Scales, for creatures only, adds none to the artifact",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Abundance",
+            "Hardened Scales"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sunfall"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre",
+            "Angel"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Sunfall"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Incubator",
+            "counter": "+1/+1",
+            "count": 3
+          }
+        },
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Ogre",
+            "Angel"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Abundance",
+            "Hardened Scales",
+            "Incubator"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "No creature at all: an Incubator with no counters, which transforms into a 0/0 and is put into the graveyard -- a token, it ceases to exist",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sunfall"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Sunfall"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Plains",
+                "Plains",
+                "Wastes",
+                "Wastes",
+                "Wastes",
+                "Wastes",
+                "Wastes",
+                "Incubator"
+              ]
+            },
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Incubator",
+                "counter": "+1/+1",
+                "count": 0
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Incubator"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Sunfall"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}
