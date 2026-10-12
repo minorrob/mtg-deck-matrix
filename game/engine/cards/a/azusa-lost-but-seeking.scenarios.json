@@ -1,0 +1,155 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Azusa, Lost but Seeking",
+  "scenarios": [
+    {
+      "name": "Three lands this turn, and a fourth is not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Azusa, Lost but Seeking"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest",
+            "Island",
+            "Swamp",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Forest"
+        },
+        {
+          "play": "Island"
+        },
+        {
+          "play": "Swamp"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "play-land",
+            "card": "Mountain"
+          },
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Azusa, Lost but Seeking",
+            "Forest",
+            "Island",
+            "Swamp"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "With Explore, one more: four lands",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Azusa, Lost but Seeking",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Explore",
+            "Forest",
+            "Island",
+            "Swamp",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Explore"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "play": "Forest"
+        },
+        {
+          "play": "Island"
+        },
+        {
+          "play": "Swamp"
+        },
+        {
+          "play": "Mountain"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "count": 7
+        }
+      ]
+    },
+    {
+      "name": "Only on Rob's own turns: on Maya's, no land at all",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Azusa, Lost but Seeking"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "play-land",
+            "card": "Forest",
+            "seat": 0
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

@@ -409,6 +409,13 @@ function playersOf(value, context, state = null) {
   /* "That attacking player draws a card" (Breena, the Demagogue): the player whose attack the trigger is about (rules/trigger.mjs,
      `attacker`), as Combat Calligrapher's token's controller is. */
   if (value === "attacking player") return Number.isInteger(context.about?.attacker) ? [context.about.attacker] : [];
+  /* "The chosen player" of a gift (CR 702.174d-i): the opponent it was promised to as the spell was cast -- the spell's own
+     (rules/stack.mjs), or the permanent's whose gift trigger this is. None promised, nobody -- nor one who has left the game
+     (CR 800.4a). */
+  if (value === "the chosen player") {
+    const gift = context.gift ?? (state && context.source !== null && context.source !== undefined ? state.objects[context.source]?.gift : undefined);
+    return Number.isInteger(gift) && !(state?.players[gift]?.lost) ? [gift] : [];
+  }
   /* "It deals 1 damage to its controller" (Vengeful Ancestor, batch 75): the controller of what the trigger is about -- the
      attacking creature -- now, while it is on the battlefield; gone, the one it last had (CR 608.2h), as it attacked. */
   if (value === "that card's controller") {
@@ -493,7 +500,7 @@ export function bindEffect(effect, context, state = null) {
      creature's controller creates a 1/1 Myr" (Genesis Chamber): the controller of what the trigger is about. "Each opponent
      creates a 1/1 white Human creature token" (Slaughter Specialist; CR 111.2), "each opponent may create X ... tokens"
      (Tempt with Vengeance): "that player", the one a repetition is about (effects/index.mjs, repeatFor). */
-  if (isRef(bound.controller) || bound.controller === "that card's controller" || bound.controller === "that player") { const [player] = playersOf(bound.controller, context, state); bound.controller = player ?? -1; }
+  if (isRef(bound.controller) || ["that card's controller", "that player", "the chosen player"].includes(bound.controller)) { const [player] = playersOf(bound.controller, context, state); bound.controller = player ?? -1; }
   /* "That attacking player creates a ... token" (Combat Calligrapher): the player whose attack the trigger is about. */
   if (bound.controller === "attacking player") bound.controller = Number.isInteger(context.about?.attacker) ? context.about.attacker : -1;
   /* "At the beginning of each player's upkeep, that player gains control of Alexios": the player the trigger is about. */

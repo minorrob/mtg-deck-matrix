@@ -1774,7 +1774,12 @@ function stepCards(state, awaiting) {
 }
 export const chooseCard = {
   open(state, params, context, rng = null) {
-    const zone = params.zone ?? "library";
+    /* "SEARCH YOUR LIBRARY AND GRAVEYARD" (Finale of Devastation's "and/or", both chosen; CR 701.23): `zones`, each the
+       searcher's own, searched as one -- every one's cards in the one question, each found where it is, its zone said beside
+       it; the library among them hidden, so a search for a card with a quality may find nothing (701.23b), and searched
+       ("if you search your library this way", `searched`). */
+    const zones = Array.isArray(params.zones) && params.zones.length > 1 ? params.zones : null;
+    const zone = zones ? (zones.includes("library") ? "library" : zones[0]) : params.zone ?? "library";
     const [player] = playersFor(state, params.who, context.controller);
     if (player === undefined) return false;
     /* A description, or a choice of them (`anyOf`): "a Plains, Island, Swamp, or Mountain card". */
@@ -1804,12 +1809,13 @@ export const chooseCard = {
        beside `among`, each wherever it went -- a public zone, the one a leaving trigger can find it in (CR 400.7e) -- and read
        as it is there (CR 608.2h). */
     const anywhere = zone === "any";
-    const pool = (among ? amongIds.filter((id) => (anywhere ? state.objects[id] !== undefined : state.objects[id]?.zone === zone)) : onField ? [...state.zones.battlefield] : cardsIn(state, zone, zone === "exile" ? null : player))
+    const pool = (zones ? zones.flatMap((z) => cardsIn(state, z, player)) : among ? amongIds.filter((id) => (anywhere ? state.objects[id] !== undefined : state.objects[id]?.zone === zone)) : onField ? [...state.zones.battlefield] : cardsIn(state, zone, zone === "exile" ? null : player))
       .filter((id) => !except?.has(id));
     /* "For each player, choose a creature that player controls" (The Eternal Wanderer): the player a repetition is about,
        for a selector's "that player" (script/resolution.mjs, repeatFor). */
-    const fits = (id) => (anywhere ? alternatives.map((one) => compileSelector({...one, what: "card", zone: state.objects[id].zone})) : matchers)
-      .some((m) => m(state, id, {controller: player, source: context.source, ...(context.about ? {about: context.about} : {})}));
+    const fits = (id) => (anywhere || zones ? alternatives.map((one) => compileSelector({...one, what: "card", zone: state.objects[id].zone})) : matchers)
+      /* And the X its spell was cast with: "a creature card with mana value X or less" (Finale of Devastation; script/filter.mjs). */
+      .some((m) => m(state, id, {controller: player, source: context.source, ...(context.about ? {about: context.about} : {}), ...(context.x !== undefined ? {x: context.x} : {})}));
     const fitting = greatestOf(state, params.greatest, pool.filter(fits));
     /* "Up to four cards with different names" (Gifts Ungiven): one of each name offered -- which of two identical cards in a
        library is found changes nothing, and no answer can then name two of a name. */
@@ -1827,7 +1833,7 @@ export const chooseCard = {
     const count = params.count ?? 1;
     const min = params.upTo || (!faceUp && hasQuality(params.selector)) ? 0 : Math.min(count, cards.length);
     const awaiting = {
-      kind: "effect-choice", effect: "chooseCard", player, zone, cards, min, max: Math.min(count, cards.length),
+      kind: "effect-choice", effect: "chooseCard", player, zone, ...(zones ? {zones: [...zones]} : {}), cards, min, max: Math.min(count, cards.length),
       destinations: params.destinations ?? [{to: params.to ?? "hand", ...(params.tapped ? {tapped: true} : {})}],
       shuffle: params.shuffle === true, reveal: params.reveal === true, controller: params.controller === "you" ? context.controller : params.controller ?? null,
       ...(attaching !== undefined ? {attaching} : {}),
@@ -1874,6 +1880,8 @@ export const chooseCard = {
         : awaiting.zone === "exile" ? (awaiting.max > 1 ? "Choose cards in exile" : "Choose a card in exile")
         /* Among cards wherever they went (Spirit of Resilience): chosen, not searched for. */
         : awaiting.zone === "any" ? (awaiting.max > 1 ? "Choose cards from among them" : "Choose a card from among them")
+        /* Two zones searched as one (Finale of Devastation): both named. */
+        : awaiting.zones ? `Search your ${awaiting.zones.map((z) => ZONE_WORD[z]).join(" and ")}`
         : awaiting.max === 0 ? `Search your ${ZONE_WORD[awaiting.zone]}: nothing to find` : `Search your ${ZONE_WORD[awaiting.zone]}`,
       mode: awaiting.max <= 1 ? (awaiting.min === 0 ? "many" : "one") : "many",
       min: awaiting.min,
@@ -1882,6 +1890,8 @@ export const chooseCard = {
          down that its chooser may look at (CR 406.3; projection.mjs, `lookers`) is named to them by the card it is. */
       options: cardOptions(state, awaiting.cards).map((option) => {
         const object = state.objects[option.cardId];
+        /* Searched in two zones at once: where each card is, said beside it ("Bear, in your graveyard"). */
+        if (awaiting.zones) return {...option, label: `${option.label}, in your ${ZONE_WORD[object?.zone] ?? object?.zone}`};
         return object?.faceDown === true && (object.lookers ?? []).includes(awaiting.player) ? {...option, label: object.faceDownCard?.card ?? option.label} : option;
       }),
     };

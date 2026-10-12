@@ -599,11 +599,14 @@ function lostEffect(state, effect, begun, losers) {
 }
 
 /* A BASIC LAND TYPE AN EFFECT GAVE (CR 305.7): "lands you control are every basic land type in addition to their other types"
-   (Dryad of the Ilysian Grove), "each land is a Swamp in addition to its other land types" (Urborg, Tomb of Yawgmoth) -- each one the object does not print brings that type's intrinsic mana ability, "{T}: Add
+   (Dryad of the Ilysian Grove), "each land is a Swamp in addition to its other land types" (Urborg, Tomb of Yawgmoth; and
+   Yavimaya, Cradle of Growth's Forests) -- each one the object does not print brings that type's intrinsic mana ability, "{T}: Add
    [its mana]" (CR 305.6), given with the type in layer 4, so an effect that takes abilities away in layer 6 takes it too
    (CR 613.1f). A type it prints has its ability among its own already: a basic land's, a dual land's written out. Once a
    type, however many effects give it: a subtype is had once (applyEffect). */
 function intrinsicMana(state, id, current) {
+  /* An object with the land card type and a basic land type has it (CR 305.6): a nonland given one has none. */
+  if (!current.types.includes("Land")) return;
   const own = state.objects[id].subtypes ?? [];
   for (const type of current.subtypes) {
     const color = BASIC_LAND_MANA[type];
@@ -647,6 +650,9 @@ function derive(state, id, counts = true, through = 7) {
     /* CR 613.4: layer 7 runs sublayer by sublayer, and counters are 7d — after anything that sets
        power and toughness, and after anything that modifies them. */
     for (const sublayer of SUBLAYERS) {
+      /* ITS BASE POWER AND TOUGHNESS (CR 208.4b): what characteristic-defining abilities and setting effects made them, before
+         anything that modifies them -- "each with power greater than its base power" (Kutzil, Malamet Exemplar). */
+      if (sublayer === "c") { current.basePower = current.power; current.baseToughness = current.toughness; }
       if (sublayer === "d") {
         /* +1/+1 and -1/-1, and every other "+X/+Y" counter (CR 122.1a): the -0/-1 counters on Wall of Roots. */
         for (const [kind, n] of Object.entries(current.counters ?? {})) {

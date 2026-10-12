@@ -1,0 +1,102 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sink into Stupor // Soporific Springs",
+    "oracleId": "bcc6eece-75ea-494c-b33a-d4477d504e0b",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Return target spell or nonland permanent an opponent controls to its owner's hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Return target spell or nonland permanent an opponent controls to its owner's hand.",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "spell",
+              "controller": "opponent"
+            },
+            {
+              "what": "permanent",
+              "nonTypes": [
+                "Land"
+              ],
+              "controller": "opponent"
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        }
+      ]
+    }
+  ],
+  "back": {
+    "identity": {
+      "name": "Soporific Springs",
+      "types": [
+        "Land"
+      ],
+      "subtypes": [],
+      "manaCost": null,
+      "colors": [],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "As this land enters, you may pay 3 life. If you don't, it enters tapped.\n{T}: Add {U}.",
+    "abilities": [
+      {
+        "kind": "replacement",
+        "text": "As this land enters, you may pay 3 life. If you don't, it enters tapped.",
+        "watches": {
+          "event": "enters",
+          "who": "self"
+        },
+        "change": {
+          "entersTapped": true,
+          "unlessPay": {
+            "life": 3
+          }
+        }
+      },
+      {
+        "kind": "activated",
+        "text": "{T}: Add {U}.",
+        "mana": true,
+        "cost": [
+          {
+            "atom": "{T}"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "addMana",
+            "mana": {
+              "U": 1
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

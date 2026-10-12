@@ -1,0 +1,93 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "The Great Henge",
+    "oracleId": "78427103-9543-41fb-b6d4-72963fe87275",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{7}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This spell costs {X} less to cast, where X is the greatest power among creatures you control.\n{T}: Add {G}{G}. You gain 2 life.\nWhenever a nontoken creature you control enters, put a +1/+1 counter on it and draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell costs {X} less to cast, where X is the greatest power among creatures you control.",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": {
+        "greatestPower": {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {G}{G}. You gain 2 life.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": 2
+          }
+        },
+        {
+          "effect": "gainLife",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a nontoken creature you control enters, put a +1/+1 counter on it and draw a card.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "token": false
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "that card",
+          "counter": "+1/+1",
+          "count": 1
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

@@ -587,6 +587,10 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
       /* "If an effect would put" (Doubling Season): not counters put as a cost. */
       if (ability.byEffect !== undefined && ability.byEffect !== true) errors.push({path: `${path}.byEffect`, message: "byEffect is true: counters an effect puts, not a cost"});
     }
+    /* "You may play two additional lands on each of your turns" (Azusa, Lost but Seeking; rules/actions.mjs, landDropsLeft):
+       how many more, 1 or more -- one when unsaid. */
+    if (ability.rule === "extra-land-drop" && ability.count !== undefined && !(Number.isInteger(ability.count) && ability.count >= 1))
+      errors.push({path: `${path}.count`, message: "An additional land drop says how many: a whole number, 1 or more"});
     /* "Twice that many of those tokens instead" (rules/statics.mjs, tokensCreated): how many times, 2 or more. */
     if (ability.rule === "more-tokens" && !(Number.isInteger(ability.times) && ability.times >= 2))
       errors.push({path: `${path}.times`, message: "More tokens instead says how many times as many: a whole number, 2 or more"});

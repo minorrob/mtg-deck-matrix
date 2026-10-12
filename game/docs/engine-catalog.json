@@ -9,17 +9,17 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1404,
-  "provisional": 27,
-  "everyRule": 2757
+  "defined": 1434,
+  "provisional": 25,
+  "everyRule": 2773
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 69,
+    "built": 73,
     "partial": 0,
     "named": 5,
-    "missing": 120
+    "missing": 116
    },
    "entries": [
     {
@@ -434,13 +434,13 @@
      "kind": "keyword ability",
      "rule": "702.174",
      "name": "Gift",
-     "engine": null,
-     "status": "missing",
+     "engine": "Gift",
+     "status": "built",
      "forge": "Gift",
      "top": 6,
      "all": 27,
-     "blocks": 6,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -806,13 +806,13 @@
      "kind": "keyword ability",
      "rule": "702.83",
      "name": "Exalted",
-     "engine": null,
-     "status": "missing",
+     "engine": "Exalted",
+     "status": "built",
      "forge": "Exalted",
      "top": 2,
      "all": 35,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -890,13 +890,13 @@
      "kind": "keyword ability",
      "rule": "702.101",
      "name": "Extort",
-     "engine": null,
-     "status": "missing",
+     "engine": "Extort",
+     "status": "built",
      "forge": "Extort",
      "top": 2,
      "all": 18,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -926,13 +926,13 @@
      "kind": "keyword ability",
      "rule": "702.129",
      "name": "Eternalize",
-     "engine": null,
-     "status": "missing",
+     "engine": "Eternalize",
+     "status": "built",
      "forge": "Eternalize",
      "top": 2,
      "all": 12,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -9316,10 +9316,10 @@
   },
   "Amounts the game counts": {
    "tally": {
-    "built": 26,
+    "built": 27,
     "partial": 2,
     "named": 0,
-    "missing": 160
+    "missing": 159
    },
    "entries": [
     {
@@ -9710,12 +9710,12 @@
      "kind": "count",
      "rule": null,
      "name": "A gift promised",
-     "engine": null,
-     "status": "missing",
+     "engine": "condition {giftPromised} (script/condition.mjs): the spell's gift, a copy's, or the permanent's it became (rules/stack.mjs)",
+     "status": "built",
      "forge": "PromisedGift",
      "top": 3,
      "all": 11,
-     "blocks": 3,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -11772,10 +11772,10 @@
   },
   "Other keyword constructs": {
    "tally": {
-    "built": 10,
+    "built": 11,
     "partial": 0,
     "named": 1,
-    "missing": 5
+    "missing": 4
    },
    "entries": [
     {
@@ -11842,13 +11842,13 @@
      "kind": "keyword construct",
      "rule": null,
      "name": "MayEffectFromOpeningHand",
-     "engine": null,
-     "status": "missing",
+     "engine": "MayEffectFromOpeningHand",
+     "status": "built",
      "forge": "MayEffectFromOpeningHand",
      "top": 5,
      "all": 30,
-     "blocks": 5,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword construct",

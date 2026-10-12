@@ -257,6 +257,10 @@ export function smokeScenario(script) {
   const graveTargets = (script.abilities ?? []).some((a) => aims(a).some((t) => JSON.stringify(t).includes('"zone":"graveyard"'))
     /* An Aura's target is its Enchant's: "Enchant creature card in a graveyard" (Animate Dead). */
     || (a?.kind === "keyword" && String(a.keyword).toLowerCase() === "enchant" && JSON.stringify(a.target ?? {}).includes('"zone":"graveyard"')));
+  /* As many creature cards as its counted graveyard target takes at least ("choose two target creature cards in your
+     graveyard", Victimize, wave 4b). */
+  const graveCreatures = Math.max(1, ...(script.abilities ?? []).flatMap((a) => aims(a)).filter((t) => JSON.stringify(t).includes('"zone":"graveyard"'))
+    .map((t) => (Number.isInteger(t?.count?.min) ? t.count.min : 1)));
   const steps = [];
   /* A land that asks as it enters, or triggers (a scry land), is answered and resolved before the game moves on. */
   /* A double-faced card is played, as it is cast, by its front face's name (Brightclimb Pathway // Grimclimb Pathway). */
@@ -281,7 +285,7 @@ export function smokeScenario(script) {
       setup: [
         {seat: 0, zone: "command", cards: ["Smoke Commander"]},
         {seat: 0, zone: "battlefield", cards: [...lands, ...fodderField]},
-        ...(graveTargets ? [{seat: 0, zone: "graveyard", cards: ["Smoke Bear", "Smoke Sorcery"]}] : []),
+        ...(graveTargets ? [{seat: 0, zone: "graveyard", cards: [...Array.from({length: graveCreatures}, () => "Smoke Bear"), "Smoke Sorcery"]}] : []),
         ...(isLand || script.identity.manaCost ? [{seat: 0, zone: "hand", cards: [name, ...fodderHand, ...(ownSpell ? ["Smoke Whelp"] : [])]}] : [{seat: 0, zone: "battlefield", cards: [name]}]),
         {seat: 1, zone: "battlefield", cards: ["Smoke Bear", "Smoke Giant", "Smoke Relic", "Smoke Charm", "Wastes"]},
         {seat: 1, zone: "hand", cards: [answered]},

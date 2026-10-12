@@ -1,0 +1,173 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Simic Growth Chamber",
+  "scenarios": [
+    {
+      "name": "Played: tapped, and Rob returns the Island, his choice over the Chamber itself",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Simic Growth Chamber"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Simic Growth Chamber"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Island",
+                  "Simic Growth Chamber"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Island"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Simic Growth Chamber"
+        }
+      ]
+    },
+    {
+      "name": "With no other land, it returns itself",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Simic Growth Chamber"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Simic Growth Chamber"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Simic Growth Chamber"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Simic Growth Chamber"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": []
+        }
+      ]
+    },
+    {
+      "name": "Maya's land is never returned: only Rob's are offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Simic Growth Chamber"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Simic Growth Chamber"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "asks": {
+            "seat": 0,
+            "options": [
+              "Island",
+              "Simic Growth Chamber"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "{T}: {G}{U}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Simic Growth Chamber"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Simic Growth Chamber"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1,
+            "U": 1
+          }
+        }
+      ]
+    }
+  ]
+}

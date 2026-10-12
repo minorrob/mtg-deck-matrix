@@ -50,6 +50,9 @@ export function beginResolution(state, effects, context = {}, rng = null) {
       ...(context.chosen !== undefined ? {chosen: context.chosen} : {}),
       /* How a spell was cast, for "if this spell was cast from a graveyard" (script/condition.mjs, `cast`). */
       ...(context.cast ? {cast: context.cast} : {}),
+      /* The opponent a spell's gift was promised to (CR 702.174k): "the chosen player" (script/bind.mjs), "if the gift was
+         promised" (script/condition.mjs, `giftPromised`). */
+      ...(context.gift !== undefined ? {gift: context.gift} : {}),
       /* How many times its source had transformed as the ability went on the stack (CR 701.27f; rules/stack.mjs). */
       ...(context.sourceTransforms !== undefined ? {sourceTransforms: context.sourceTransforms} : {}),
       /* What the cost sacrificed, as it last existed ("the sacrificed creature's power"; script/amount.mjs). */
@@ -96,7 +99,7 @@ export function runResolution(state, rng = null) {
          last was (CR 113.7a): what this resolution remembers of what its effects did. */
       movedWas: resolving.context.movedWas, searched: resolving.context.searched, lastKnown: resolving.context.lastKnown,
       /* "If this is the first time this ability has resolved this turn" (rules/stack.mjs counts them). */
-      resolvedBefore: resolving.context.resolvedBefore})) {
+      resolvedBefore: resolving.context.resolvedBefore, gift: resolving.context.gift})) {
       resolving.queue.shift();
       continue;
     }
@@ -106,7 +109,8 @@ export function runResolution(state, rng = null) {
     if (effect?.effect === "branch") {
       const holds = conditionHolds(state, effect.if, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about,
         remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast,
-        movedWas: resolving.context.movedWas, searched: resolving.context.searched, lastKnown: resolving.context.lastKnown, resolvedBefore: resolving.context.resolvedBefore});
+        movedWas: resolving.context.movedWas, searched: resolving.context.searched, lastKnown: resolving.context.lastKnown, resolvedBefore: resolving.context.resolvedBefore,
+        gift: resolving.context.gift});
       resolving.queue.shift();
       resolving.queue.unshift(...structuredClone((holds ? effect.then : effect.otherwise) ?? []));
       continue;

@@ -1,0 +1,396 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Unnatural Growth",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Wall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 4
+    },
+    "Their Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Spiky Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "abilities": [
+        {
+          "id": "r",
+          "kind": "replacement",
+          "text": "This creature enters with a +1/+1 counter on it.",
+          "watches": {
+            "event": "enters",
+            "who": "self"
+          },
+          "change": {
+            "entersWithCounters": {
+              "counter": "+1/+1",
+              "count": 1
+            }
+          }
+        }
+      ]
+    },
+    "Weakling": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Imp"
+      ],
+      "manaCost": "{1}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 1,
+      "toughness": 3,
+      "abilities": [
+        {
+          "id": "w",
+          "kind": "static",
+          "text": "This creature gets -3/-0.",
+          "layer": 7,
+          "sublayer": "c",
+          "affects": {
+            "self": true
+          },
+          "apply": {
+            "power": -3,
+            "toughness": 0
+          }
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Power -2 doubled is -4 (CR 701.10c): -2/+3, a -4/6",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Unnatural Growth",
+            "Weakling"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Weakling",
+                "power": -2,
+                "toughness": 3
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_BEGIN"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Weakling",
+            "power": -4,
+            "toughness": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rob's combat: his Bear 4/4 and his 0/4 Wall 0/8; Maya's Bear untouched; over at end of turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Unnatural Growth",
+            "Bear",
+            "Wall"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_BEGIN"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Bear",
+                "power": 4,
+                "toughness": 4
+              }
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Wall",
+                "power": 0,
+                "toughness": 8
+              }
+            },
+            {
+              "seat": 1,
+              "stats": {
+                "card": "Their Bear",
+                "power": 2,
+                "toughness": 2
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "UPKEEP"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Each combat: on Maya's turn too, Rob's creatures are doubled",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Unnatural Growth",
+            "Bear"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "COMBAT_BEGIN"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 4,
+            "toughness": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "Two of them: each doubles what the other left -- 2/2, 4/4, 8/8 (its ruling)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Unnatural Growth",
+            "Unnatural Growth",
+            "Bear"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_BEGIN"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Bear",
+                "power": 4,
+                "toughness": 4
+              }
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 8,
+            "toughness": 8
+          }
+        }
+      ]
+    },
+    {
+      "name": "A +1/+1 counter counts: a 3/3 is doubled to 6/6",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Unnatural Growth"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Spiky Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Spiky Bear"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_BEGIN"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Spiky Bear",
+            "power": 6,
+            "toughness": 6
+          }
+        }
+      ]
+    }
+  ]
+}

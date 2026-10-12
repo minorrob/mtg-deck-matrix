@@ -57,7 +57,7 @@ import {mayLookAt} from "../projection.mjs";
 import {pushSpell, pushAbility, becameTarget, crimeCommitted} from "./stack.mjs";
 import {spend, parseManaCost, automaticPayment, canPay, chosenPayment, paymentOptions, paymentKey, paymentWords, PAY_CHOICES, manaValue, poolSize, tapPlans, convokeCanPay, convokePayments} from "./mana.mjs";
 import {commanderTax, recordCommanderCast, commanderIdentity} from "./commander.mjs";
-import {COLORS, MANA_KEYS} from "./mana.mjs";
+import {COLORS, MANA_KEYS, manaAbilityNow} from "./mana.mjs";
 import {sickForAbilities, hasFlash, splitSecondOnStack} from "../keywords/timing.mjs";
 import {targetChoices, targetName, isHostile, modalScript, isChoosing, countOf, targetCandidates, countedChoice, inWords, differentControllersProblem, shareProblem} from "../script/bind.mjs";
 import {moveOne, sacrificeOne, mill} from "../script/effects/zones.mjs";
@@ -556,6 +556,12 @@ function additionalVariants(costs) {
       variants = variants.flatMap((v) => Array.from({length: MULTIKICK_MOST + 1}, (_, k) => ({...v, mana: v.mana + (atom.cost ?? "").repeat(k), replicated: k})));
       continue;
     }
+    /* GIFT (CR 702.174a; Dawn's Truce, wave 4b): "as an additional cost to cast this spell, you may choose an opponent" -- the
+       spell cast without the gift, and with it, the opponent its caster chooses another offer each (castOffers, `gift`). */
+    if (atom?.atom === "gift") {
+      variants = variants.flatMap((v) => [v, {...v, gift: true}]);
+      continue;
+    }
     /* TIERED (CR 702.183a): one mode, and its cost -- each mode its own variant, that mode alone (withModes), its cost added. */
     if (atom?.atom === "tiered") {
       variants = variants.flatMap((v) => (atom.costs ?? []).map((cost, tier) => ({...v, mana: v.mana + cost, tier})));
@@ -994,7 +1000,8 @@ const CHOSEN_COLOR = Object.freeze({White: "W", Blue: "U", Black: "B", Red: "R",
 export function manaAlternatives(state, player, given, source = null) {
   /* "An amount of mana of that color equal to the number of creatures you control of the chosen type" (Three Tree City):
      its own choice. */
-  const ability = chosenFor(given, state.objects[source]);
+  /* "Instead add one mana of any color" while its permanent has a luck counter (Gemstone Caverns; rules/mana.mjs). */
+  const ability = chosenFor(manaAbilityNow(state, source, given), state.objects[source]);
   const context = {controller: player, source};
   const count = amountOf(state, ability.count ?? 1, context);
   if (Array.isArray(ability.produces)) return ability.produces.map((m) => countMana(state, {...m}, context));
@@ -1066,8 +1073,10 @@ function abilityXValues(state, player, ability, id) {
 /** How many lands this player may still play this turn. CR 305.2; effects raise the allowance. */
 /* "You may play an additional land this turn" (Hearthhull): an effect for the turn (effects/permanents.mjs, effectUntil). */
 /* "3+ | You may play an additional land on each of your turns" (Exploration Broodship): one whose condition holds. */
+/* "You may play two additional lands on each of your turns" (Azusa, Lost but Seeking; CR 305.2): `count`, that many. */
 const landDropsLeft = (state, player) => (state.players[player].landAllowance ?? 1)
-  + playerStatics(state, "extra-land-drop", player).filter(({ability, source}) => conditionHolds(state, ability.condition, {controller: player, source})).length
+  + playerStatics(state, "extra-land-drop", player).filter(({ability, source}) => conditionHolds(state, ability.condition, {controller: player, source}))
+    .reduce((n, {ability}) => n + (ability.count ?? 1), 0)
   + (state.effects ?? []).filter((e) => e.rule === "extra-land-drop" && e.sourceController === player).length - state.players[player].landsPlayed;
 
 /* WHAT A PLAYER MAY PLAY FROM ANOTHER ZONE (CR 601.2a, 305.1), by their permanents' static abilities: lands from the
@@ -1501,12 +1510,14 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
     /* Mana that does something when spent on this spell (Path of Ancestry): each way to pay with it or without it its own
        offer (`riders`, rules/restricted-mana.mjs). */
     for (const riders of (convoke || autoTap || payWays ? null : riderChoices(state, player, {spell: id}, payment?.mana ?? {})) ?? [undefined])
+    /* The gift promised (CR 702.174a, 702.174k): to which opponent still in the game, its caster's choice -- one offer each. */
+    for (const gift of variant.gift ? state.players.filter((p) => p.id !== player && !p.lost).map((p) => p.id) : [undefined])
     for (const costChoice of paysFor) {
       /* Face down, it has no name (CR 708.2a): the offer, its caster's alone, names the card they cast so. */
       const base = {kind: "cast", objectId: id, label: way?.disguise ? object.faceDownCard.card : object.card, payment: convoke || payWays ? null : payment, from, tax, ...(X !== null ? {x: X} : {}), ...(autoTap && !convoke ? {autoTap: true} : {}),
         ...(payWays && !convoke ? {payWays: true} : {}),
         ...(convoke ? {convoke: true} : {}), ...(variant.mana ? {extraMana: variant.mana} : {}), ...(variant.kicked ? {kicked: variant.kicked} : {}),
-        ...(variant.replicated ? {replicated: variant.replicated} : {}),
+        ...(variant.replicated ? {replicated: variant.replicated} : {}), ...(gift !== undefined ? {gift} : {}),
         ...(tapsAny ? {tapAny: true} : {}), ...(beholds ? {behold: beholds.count ?? 1} : {}),
         /* Escalated (CR 702.120a): how many modes beyond the first, and how many creatures that taps. */
         ...(variant.escalate ? {escalate: variant.escalate} : {}), ...(variant.escalateTap ? {escalateTap: variant.escalateTap.count} : {}),
@@ -1906,6 +1917,8 @@ const sameAction = (a, b) => a.kind === b.kind
   && (a.extraMana ?? null) === (b.extraMana ?? null)
   /* And replicated that many times (CR 702.56a): another cost, and that many copies. */
   && (a.replicated ?? 0) === (b.replicated ?? 0)
+  /* And a gift promised, to that opponent (CR 702.174a): another cost, and another player given it. */
+  && (a.gift ?? null) === (b.gift ?? null)
   /* And escalated for that many modes beyond the first, tapping that many creatures (CR 702.120a): another cost. Which
      creatures is picked after the offer is taken, so they are not part of it (and are held to the cost as it is paid). */
   && (a.escalate ?? 0) === (b.escalate ?? 0) && (a.escalateTap ?? 0) === (b.escalateTap ?? 0)
@@ -2364,6 +2377,9 @@ function performOffered(state, player, action, during) {
       ...(payment.life > 0 ? {phyrexianLife: payment.life / 2} : {})};
     /* Kicked that many times (multikicker, CR 702.33c): the permanent it becomes knows it as it enters (rules/stack.mjs). */
     if (action.kicked) entry.kicked = action.kicked;
+    /* Its gift promised (CR 702.174k), to the opponent chosen as it was cast: the spell's, a copy's (CR 707.10), and the
+       permanent it becomes (rules/stack.mjs). */
+    if (action.gift !== undefined) entry.gift = action.gift;
     /* Cast as an Adventure (CR 715.3): exiled as it resolves, and castable as itself from there (rules/stack.mjs, 715.3d). */
     if (action.adventure === true && object.face === "adventure") entry.adventure = true;
     /* Cast with flashback: exiled, whatever would move it, as it leaves the stack (rules/stack.mjs, effects/zones.mjs). */

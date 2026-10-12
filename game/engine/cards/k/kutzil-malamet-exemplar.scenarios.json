@@ -1,0 +1,330 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Kutzil, Malamet Exemplar",
+  "fixtures": {
+    "Proud Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "abilities": [
+        {
+          "id": "p",
+          "kind": "static",
+          "text": "This creature gets +1/+0.",
+          "layer": 7,
+          "sublayer": "c",
+          "affects": {
+            "self": true
+          },
+          "apply": {
+            "power": 1,
+            "toughness": 0
+          }
+        }
+      ]
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Trinket": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Draw a card.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Big Elemental": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elemental"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "s",
+          "kind": "static",
+          "text": "This creature's base power and toughness are 5/5.",
+          "layer": 7,
+          "sublayer": "b",
+          "affects": {
+            "self": true
+          },
+          "apply": {
+            "setPower": 5,
+            "setToughness": 5
+          }
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A 3/2 whose base is 2/2 connects: a card; Kutzil, a 3/3 at its base, beside it adds none -- one card for one or more",
+      "library": [
+        "Island",
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Kutzil, Malamet Exemplar",
+            "Proud Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Kutzil, Malamet Exemplar",
+            "Proud Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 34
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Only creatures at their base power connect: no card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Kutzil, Malamet Exemplar",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Kutzil, Malamet Exemplar",
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_END"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 35
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "A base set to 5/5 is its base (CR 208.4b): a 5/5 is no greater, no card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Kutzil, Malamet Exemplar",
+            "Big Elemental"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Big Elemental"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_END"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 35
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "On Rob's turn Maya can't cast spells; on her own turn she can",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Kutzil, Malamet Exemplar"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Trinket"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Trinket",
+                "seat": 1
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Trinket",
+            "seat": 1
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "Rob himself may cast spells on his turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Kutzil, Malamet Exemplar",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Trinket"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Trinket"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

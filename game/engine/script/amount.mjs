@@ -33,7 +33,9 @@
  *   {cardTypesAmong: "remembered"}       how many card types there are among what the effect before it remembered -- "a
  *                                        Spirit for each card type among cards discarded this way" (Occult Epiphany)
  *   {rememberedCount: true}              how many things the effect before it remembered -- "each player shuffles the cards
- *                                        from their hand into their library, then draws that many cards" (batch 80)
+ *                                        from their hand into their library, then draws that many cards" (batch 80); with
+ *                                        `controlledBy: "most"`, the most any one player had among them -- "the greatest
+ *                                        number of cards a player discarded this way" (Windfall)
  *   {movedCount: filter}                 how many of what the effect before it moved from the battlefield were, as each
  *                                        last existed there, what the filter says -- "for each nontoken creature you
  *                                        controlled that was destroyed this way" (Ceaseless Conflict)
@@ -75,7 +77,9 @@
  * and any of them may say `atMost` ("{1} less IF you control a creature with flying": the count, at most 1), `times` and
  * `plus`: "twice X", "1 plus the number of ...", `times: "X"` for "X ... for each" (X tokens for each opponent who does),
  * and `times: -1` for "-X/-X" and
- * "-1/-1 for each Swamp you control" -- the only way an amount comes out below nothing; every other is at least 0.
+ * "-1/-1 for each Swamp you control" -- one way an amount comes out below nothing; `signed: true` beside powerOf or
+ * toughnessOf, the number as it is ("double its power" of a creature with power -2, CR 701.10c), the other; every other is
+ * at least 0.
  * Before them, `half` ("half the cards in their hand", Pox Plague) and `per` ("+2/+0 for every seven cards in your
  * graveyard", Dark Matter Manipulator: per 7, times 2) divide the count, rounded down as those cards print it (CR 107.1a).
  * A counted selector's `controller` may be a target player, `{target: n}` ("the number of cards in target opponent's hand",
@@ -119,7 +123,7 @@ export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf"
   "differentNames",
   /* Train E, wave 2: "the greatest mana value among cards in your graveyard" (Hapatra, the Desert Fang). */
   "greatestManaValue"]);
-const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named", "another"];
+const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named", "another", "signed"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
 /** Whether an amount is undefined for its player (CR 903.4f): one of the colors in their commanders' color identity, for a
@@ -180,7 +184,9 @@ export function amountProblems(value) {
   if ("tappedThisWay" in value && value.tappedThisWay !== true) problems.push("tappedThisWay is true");
   if ("commanderColors" in value && value.commanderColors !== "you") problems.push('commanderColors is "you"');
   if ("graveyardsWithAtLeast" in value && !(Number.isInteger(value.graveyardsWithAtLeast) && value.graveyardsWithAtLeast >= 1)) problems.push("graveyardsWithAtLeast is a whole number of cards, 1 or more");
-  if ("controlledBy" in value && !("rememberedCount" in value && value.controlledBy === "that player")) problems.push('controlledBy is "that player", of a rememberedCount');
+  if ("controlledBy" in value && !("rememberedCount" in value && ["that player", "most"].includes(value.controlledBy))) problems.push('controlledBy is "that player" or "most", of a rememberedCount');
+  /* A power or toughness as it is, below zero too (CR 701.10c). */
+  if ("signed" in value && !(value.signed === true && ("powerOf" in value || "toughnessOf" in value))) problems.push("signed is true, beside powerOf or toughnessOf: the number as it is, below zero too");
   if ("lesserOf" in value && !(Array.isArray(value.lesserOf) && value.lesserOf.length >= 2)) problems.push("lesserOf is two or more amounts");
   else if ("lesserOf" in value) for (const one of value.lesserOf) problems.push(...amountProblems(one).map((p) => `lesserOf: ${p}`));
   if ("devotion" in value && !(Array.isArray(value.devotion) && value.devotion.length && value.devotion.every((c) => COLORS.includes(c)))) problems.push("Devotion is to one or more colors: {devotion: [\"B\"]}");
@@ -377,7 +383,12 @@ export function amountOf(state, value, context = {}) {
      Order Returned): `filter`, those the selector describes where each now is (fitsNow). */
   else if ("rememberedCount" in value) {
     const remembered = (context.remembered ?? []).filter((id) => value.filter === undefined || fitsNow(state, value.filter, id, who));
-    n = value.controlledBy === "that player" ? remembered.filter((id) => (context.rememberedControllers ?? {})[id] === context.about?.player).length : remembered.length;
+    const whose = (id) => (context.rememberedControllers ?? {})[id];
+    /* "The greatest number of cards a player discarded this way" (Windfall): `controlledBy` "most", the most of them any one
+       player had -- the discarder, as discard's `remember` keeps it (effects/asking.mjs). */
+    n = value.controlledBy === "that player" ? remembered.filter((id) => whose(id) === context.about?.player).length
+      : value.controlledBy === "most" ? Math.max(0, ...state.players.map((p) => remembered.filter((id) => whose(id) === p.id).length))
+      : remembered.length;
   }
   /* "For each nontoken creature you controlled that was destroyed this way" (Ceaseless Conflict): of what the effect before
      it moved from the battlefield (`movedWas`: effects/zones.mjs, destroyAll's and moveZone's `remember`), those that were,
@@ -582,7 +593,9 @@ export function amountOf(state, value, context = {}) {
   /* `times: "X"`: X for each ("X ... tokens for each opponent who does"), X chosen as it was cast (CR 107.3a). */
   const times = value.times === "X" ? Math.max(0, context.x ?? 0) : value.times ?? 1;
   const total = Math.min(value.atMost ?? Infinity, n) * times + (value.plus ?? 0);
-  return times < 0 ? total : Math.max(0, total);
+  /* `signed`: a power or toughness as it is, below zero too -- "double the power" of a creature with power -2 gives it -2/-0
+     (CR 701.10c; Unnatural Growth). */
+  return times < 0 || value.signed === true ? total : Math.max(0, total);
 }
 
 /** The parameters of an effect that take a number, and so may take a count -- "the top X cards" (`fromTop`, Villainous

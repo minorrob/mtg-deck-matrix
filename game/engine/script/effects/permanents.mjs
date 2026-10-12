@@ -777,8 +777,9 @@ export function effectUntil(state, params, context) {
        (Gwenom, Remorseless; CR 401.2): read as the library is shown (projection.mjs, topSeenBy). */
     /* "Creatures you control gain ... protection from each color until end of turn" (Akroma's Will; CR 702.16, 611.2c) is a
        protection over the permanents it names, fixed as it resolves (`selector`, `targets`), and no player's
-       (rules/protection.mjs, protectedFrom). */
-    ...(params.until === "their-next-turn" || (["protection", "life-cant-change", "no-maximum-hand-size", "damage-doubled", "look-at-top"].includes(params.rule)
+       (rules/protection.mjs, protectedFrom). And "you gain hexproof until end of turn" (Dawn's Truce; CR 702.11c): its
+       players, read where a target is chosen (script/filter.mjs, playerHasHexproof). */
+    ...(params.until === "their-next-turn" || (["protection", "life-cant-change", "no-maximum-hand-size", "damage-doubled", "look-at-top", "player-hexproof"].includes(params.rule)
       && !(params.rule === "protection" && (params.targets || params.selector))) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
     /* "If a source would deal damage to that player or a permanent that player controls, it deals double that damage
        instead" (Lightning, Army of One; rules/replacement.mjs, rememberedReplacement): `who` the players it remembers, its

@@ -1,0 +1,248 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Witch Enchanter // Witch-Blessed Meadow",
+  "fixtures": {
+    "Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    },
+    "Charm": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: Maya's Charm destroyed -- her Relic the other choice, never Rob's own",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Relic"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Witch Enchanter // Witch-Blessed Meadow"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Relic",
+            "Charm"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Witch Enchanter"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Relic",
+                  "Charm"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Charm"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Charm"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Relic"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Relic",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Witch Enchanter"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "No artifact or enchantment of an opponent: the trigger has no target and does nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Relic"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Witch Enchanter // Witch-Blessed Meadow"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Witch Enchanter"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Relic",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Witch Enchanter"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Played as Witch-Blessed Meadow, paying 3 life: untapped, {W}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Witch Enchanter // Witch-Blessed Meadow"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Witch-Blessed Meadow"
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "tap": "Witch-Blessed Meadow"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 37
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Played as Witch-Blessed Meadow without paying: tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Witch Enchanter // Witch-Blessed Meadow"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Witch-Blessed Meadow"
+        },
+        {
+          "answer": [
+            1
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "tapped": "Witch-Blessed Meadow"
+        }
+      ]
+    }
+  ]
+}
