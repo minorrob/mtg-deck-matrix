@@ -903,7 +903,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 490 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 491 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1396,6 +1396,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-ability-loss` - `tests/engine-ability-loss.mjs`: "loses all abilities" switching off a permanent's own static abilities and replacement effects (Song of the Dryads, Infinite Coursework, Oko, Thief of Crowns, Retro-Mutation; CR 613.1f, 613.6, 613.8a) -- an anthem and a grant gone from layers 6 and 7 whatever the timestamps, an effect begun in layer 4 carried on in 7b, Humility made a creature keeping its own one ability; every rule a static changes and every replacement effect, each reader before and after its permanent loses its abilities; a board's rules read with nothing derived when nothing takes abilities away; a layer-4 change of creature types only (CR 205.1a); control of two permanents exchanged, both or nothing (CR 701.12a-b)
 - `engine-explore` - `tests/engine-explore.mjs`: explore (CR 701.44) and the Map token (CR 111.10s; Restless Anchorage) -- a land to its hand, a nonland's +1/+1 counter and the graveyard asked, an empty library, the exploring permanent's controller's library, one gone told by its last known information (701.44c), the revealed card in every seat's view while it is asked, a player who left
 - `engine-different-opponents` - `tests/engine-different-opponents.mjs`: a different opponent for each permanent given away (Dack Fayden, Helping Hand) -- its controller asked permanent by permanent, the last forced, the rest kept when no opponent is left, the gone and the repeated left out, each for good, refused run directly; a goad for the rest of the game (CR 701.15a); the greatest power or mana value among what a player chooses, a tie theirs (End of the Hunt; CR 608.2d); and where the schema lets each be said
+- `engine-train-e-f1` - `tests/engine-train-e-f1.mjs`: morph (Akroma, Angel of Fury; CR 702.37) cast face down for {3} as a 2/2 with no text and no ward, turned face up for its morph cost alone, a manifested card with morph either way, and the table's words for each; "behold a Goblin and exile it" (Champion of the Weird; CR 701.4a, 607.2q), the card exiled with the cost and linked to the permanent the spell becomes, only in a spell's own additional cost; "another instant or sorcery spell" cast this turn (Burrog Barrage), a copy's count; "that creature's power" with the creature gone (Arni, Renowned Champion; CR 608.2h); a target's power as it now is; and April O'Neil's blockers
 
 ## Design and execution record
 

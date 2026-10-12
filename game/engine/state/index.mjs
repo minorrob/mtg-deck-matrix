@@ -215,6 +215,10 @@ const FACE_DOWN = Object.freeze({card: null, types: ["Creature"], subtypes: [], 
    it is face down. Its ward is the triggered ability a printed "Ward {2}" compiles to (cards/index.mjs). */
 const FACE_DOWN_DISGUISED = Object.freeze({...FACE_DOWN, keywords: ["Ward"], abilities: [{id: "disguise-ward", kind: "triggered", text: "Ward {2}",
   trigger: {on: "GameEventBecomesTarget", who: "self", by: "opponent"}, effects: [{effect: "unlessPays", who: "that player", amount: 2, effects: [{effect: "counterSpell", stack: "that"}]}]}]});
+/* CAST WITH MORPH (CR 702.37a, 702.37c): a 2/2 face-down creature with no text -- the plain characteristics, no ward. Which
+   a card cast face down by its own keyword has is its keyword's (cards/index.mjs keeps morph and disguise as statics); the
+   `disguised` mark below is either's, "cast face down by its keyword", turned face up for that keyword's cost alone. */
+const castFaceDownAs = (card) => ((card?.abilities ?? []).some((a) => a?.kind === "static" && a.rule === "morph") ? FACE_DOWN : FACE_DOWN_DISGUISED);
 /* A CARD EXILED FACE DOWN (CR 406.3a): no characteristics at all -- no name, no types, no cost, nothing. */
 const FACE_DOWN_EXILED = Object.freeze({card: null, types: [], subtypes: [], supertypes: [], manaCost: null, colors: [], power: null, toughness: null, keywords: [], abilities: []});
 /* What the card is, kept beside a face-down permanent's own (`faceDownCard`): seen by its controller (CR 708.5,
@@ -268,7 +272,7 @@ const adventureSide = (adventurer, shown) => Object.fromEntries(FACE_KEYS.map((k
 export function shownFaceDown(object) {
   const faceDownCard = Object.fromEntries(CARD_KEYS.filter((key) => object[key] !== undefined).map((key) => [key, object[key]]));
   const rest = Object.fromEntries(Object.entries(object).filter(([key]) => !CARD_KEYS.includes(key)));
-  return {...rest, ...structuredClone(FACE_DOWN_DISGUISED), faceDown: true, disguised: true, faceDownCard};
+  return {...rest, ...structuredClone(castFaceDownAs(object)), faceDown: true, disguised: true, faceDownCard};
 }
 
 /** A card exiled face down, as it is turned face up to be played (CR 406.3a: "the card is turned face up just before the
@@ -497,12 +501,12 @@ export function moveObject(state, id, zone, player = null, {faceDown = false, tr
      from: a double-faced card's front face (712.8a, 712.15). */
   if (faceDown && zone === "battlefield") {
     const faceDownCard = Object.fromEntries(CARD_KEYS.filter((key) => from[key] !== undefined).map((key) => [key, from[key]]));
-    return addObject(state, {...(disguised ? FACE_DOWN_DISGUISED : FACE_DOWN), ...kept, faceDown: true, ...(disguised ? {disguised: true} : {}), faceDownCard}, zone, player);
+    return addObject(state, {...(disguised ? castFaceDownAs(from) : FACE_DOWN), ...kept, faceDown: true, ...(disguised ? {disguised: true} : {}), faceDownCard}, zone, player);
   }
   /* CAST FACE DOWN (disguise, CR 702.168b): a face-down spell, with the characteristics it was cast with. */
   if (disguised && zone === "stack") {
     const faceDownCard = Object.fromEntries(CARD_KEYS.filter((key) => from[key] !== undefined).map((key) => [key, from[key]]));
-    return addObject(state, {...FACE_DOWN_DISGUISED, ...kept, faceDown: true, disguised: true, faceDownCard}, zone, player);
+    return addObject(state, {...castFaceDownAs(from), ...kept, faceDown: true, disguised: true, faceDownCard}, zone, player);
   }
   /* EXILED FACE DOWN (hideaway, CR 702.75a): a card with no characteristics there (406.3a) -- not even a face-down
      permanent's 2/2 -- what it is kept beside it, as onto the battlefield; as it leaves exile it moves as the card it is

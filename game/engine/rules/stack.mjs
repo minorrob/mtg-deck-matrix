@@ -401,6 +401,14 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     /* A face-down spell becomes a face-down permanent, the same characteristics (CR 702.168b). */
     const down = object.disguised === true ? {faceDown: true, disguised: true} : {};
     const arrived = moveObject(state, entry.objectId, to, ["graveyard", "library"].includes(to) ? owner : null, down);
+    /* WHAT ITS COST EXILED (CR 607.2q; rules/actions.mjs, "behold a Goblin and exile it"): the permanent it becomes has it, for
+       its ability that names the exiled card. Such a spell always becomes one as it resolves: a permanent card's spell ability
+       has no targets to fail (cards/index.mjs), and an Aura has no additional cost. One countered leaves the cards exiled under
+       its id, which no object is again (CR 400.7). */
+    if (state.links?.[entry.objectId]) {
+      state.links[arrived] = state.links[entry.objectId];
+      delete state.links[entry.objectId];
+    }
     /* A SHIELD THIS SPELL MADE deals its damage as the card it became ("Deflecting Palm deals that much damage", a
        prevention effect's `dealer`; effects/permanents.mjs) -- and one whose chosen source is this spell, a permanent spell,
        applies to the permanent it becomes (CR 609.7a). */

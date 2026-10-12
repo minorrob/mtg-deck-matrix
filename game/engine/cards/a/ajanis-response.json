@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ajani's Response",
+    "oracleId": "bf7ec320-64bb-46ca-aac0-ca3d4224b69e",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This spell costs {3} less to cast if it targets a tapped creature.\nDestroy target creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell costs {3} less to cast if it targets a tapped creature.",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": 3,
+      "targeting": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "tapped": true
+      }
+    },
+    {
+      "kind": "spell",
+      "text": "Destroy target creature.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

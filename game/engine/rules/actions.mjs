@@ -1285,7 +1285,9 @@ function withAdventure(state, id, fn) {
    from. The card is weighed as that face-down spell for the length of `fn` (state/index.mjs, shownFaceDown): its cost, its
    timing, and every rule that reads a spell, the face-down spell's (702.168b), with its derivations made afresh -- and as
    itself again after, unless `fn` cast it: it is then a new object, a face-down spell on the stack (rules/stack.mjs). */
-const disguiseOf = (card) => (card?.abilities ?? []).find((a) => a.kind === "static" && a.rule === "disguise") ?? null;
+/* MORPH (CR 702.37a, 702.37c) is cast face down the same way, for {3} -- a 2/2 with no text (state/index.mjs) -- and turned
+   face up for its morph cost (702.37e): the card's own face-down keyword, either. */
+const disguiseOf = (card) => (card?.abilities ?? []).find((a) => a.kind === "static" && (a.rule === "disguise" || a.rule === "morph")) ?? null;
 const DISGUISE_WAY = Object.freeze({mana: "{3}", life: 0, extra: [], evoke: false, disguise: true});
 function withFaceDown(state, id, fn) {
   const card = state.objects[id];
@@ -2339,6 +2341,15 @@ function performOffered(state, player, action, during) {
     }
     /* What it beheld from the hand, revealed to every player as the cost is paid (CR 701.4a, 701.20a); it stays in the hand. */
     for (const id of beholding) if (state.objects[id]?.zone === "hand") events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: player}}));
+    /* "Behold a Goblin and exile it" (Champion of the Weird; CR 701.4a, 601.2h): what was beheld -- revealed from the hand, or a
+       permanent chosen -- exiled as the cost is paid, and kept against the spell for the permanent it becomes, whose ability
+       names "the exiled card" (CR 607.2q; rules/stack.mjs carries it there). */
+    if (beholding.length && additionalAtom(object.spell?.additionalCost, "behold")?.exile === true) {
+      const exiled = beholding.filter((id) => state.objects[id]).map((id) => moveOne(state, id, "exile", events, {owner: state.objects[id].owner}))
+        .filter((id) => id !== null && state.objects[id]?.zone === "exile");
+      for (const id of exiled) state.objects[id].exiledTurn = state.turn;
+      if (exiled.length) (state.links ??= {})[entry.objectId] = [...(state.links[entry.objectId] ?? []), ...exiled];
+    }
     /* Escape's other cards, and a graveyard alternative cost's, exiled as the rest of the cost is paid (CR 601.2h). */
     for (const id of [...exiling, ...othersExiling]) if (state.objects[id]) moveOne(state, id, "exile", events, {owner: state.objects[id].owner});
     /* And a flashback cost's creatures, tapped; and a convoke's (CR 702.51c: they convoked it), for no mana; and the creatures

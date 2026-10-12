@@ -65,12 +65,13 @@ export const KEYWORD_FAMILIES = Object.freeze({
   /** Tiered (CR 702.183a): one mode chosen as it is cast, and that mode's cost paid besides (cards/index.mjs puts the costs
       among the spell's additional costs; rules/actions.mjs makes each mode its own cast). */
   /** Disguise (CR 702.168a): cast face down for {3}, a 2/2 with ward {2}, and turned face up for its disguise cost
-      (rules/actions.mjs, state/index.mjs). */
+      (rules/actions.mjs, state/index.mjs). Morph (CR 702.37a), the same as a 2/2 with no text (702.37c), turned face up for
+      its morph cost (702.37e). */
   /** Warp (CR 702.185a): an alternative cost from the hand alone; the permanent exiled at the next end step, and its owner may
       cast it from exile on a later turn (rules/stack.mjs, effects/zones.mjs; rules/actions.mjs, the permission's turn). Sneak
       (CR 702.190a): an alternative cost in its caster's declare blockers step, at an instant's timing, an unblocked creature
       returned with it; the permanent enters tapped and attacking whom that one attacked (rules/actions.mjs, rules/stack.mjs). */
-  pay: Object.freeze(["Convoke", "Evoke", "Prowl", "Escalate", "Overload", "Spectacle", "Surge", "Freerunning", "Tiered", "Disguise", "Warp", "Sneak"]),
+  pay: Object.freeze(["Convoke", "Evoke", "Prowl", "Escalate", "Overload", "Spectacle", "Surge", "Freerunning", "Tiered", "Disguise", "Morph", "Warp", "Sneak"]),
   /** How a permanent enters: Riot (CR 702.136a), with a +1/+1 counter or with haste, its controller's choice as it arrives --
       a replacement on its own entering (cards/index.mjs, rules/replacement.mjs), asked once it is there (rules/entering.mjs).
       Compleated (CR 702.150a): two fewer loyalty counters for each Phyrexian symbol of its cost its caster paid with life

@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,273 defined and playable today; 2,650 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,273 defined and playable today; 2,651 with every
 mechanic built, so only their definitions are left to write; 27 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 66 | 0 | 5 | 123 |
+| Keyword abilities (CR 702) | 194 | 67 | 0 | 5 | 122 |
 | Keyword actions (CR 701) | 70 | 22 | 5 | 1 | 42 |
 | Effects | 192 | 73 | 1 | 2 | 116 |
 | Triggers | 138 | 24 | 4 | 2 | 108 |
@@ -117,7 +117,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.181 | Mobilize | — | missing | 3 | 15 | 3 | 3 |
 | 702.89 | Umbra Armor | Umbra Armor | built | 3 | 15 | 0 | 0 |
 | 702.52 | Dredge | — | missing | 3 | 14 | 3 | 3 |
-| 702.37 | Morph | — | missing | 2 | 153 | 2 | 1 |
+| 702.37 | Morph | Morph | built | 2 | 153 | 0 | 0 |
 | 702.30 | Echo | Echo | built | 2 | 52 | 0 | 0 |
 | 702.103 | Bestow | — | missing | 2 | 43 | 2 | 2 |
 | 702.28 | Shadow | — | missing | 2 | 39 | 2 | 1 |
@@ -765,7 +765,7 @@ The things that alone hold back the most of the most-played cards.
 | BeginPhase | — | missing | 1 | 21 | 1 | 0 |
 | GameLoss | — | missing | 1 | 18 | 1 | 0 |
 | LifeReduced | — | missing | 1 | 8 | 1 | 0 |
-| TurnFaceUp | — | missing | 1 | 8 | 1 | 0 |
+| TurnFaceUp | — | missing | 1 | 8 | 1 | 1 |
 | BeginTurn | — | missing | 1 | 5 | 1 | 1 |
 | GameWin | — | missing | 1 | 5 | 1 | 0 |
 | LoseMana | — | missing | 1 | 4 | 1 | 0 |

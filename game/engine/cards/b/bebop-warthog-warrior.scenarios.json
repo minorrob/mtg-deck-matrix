@@ -1,0 +1,421 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Bebop, Warthog Warrior",
+  "fixtures": {
+    "Rhino": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Rhino"
+      ],
+      "manaCost": "{3}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Smite": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Bebop has menace, and so does Rob's Rhino; Maya's Rhino and Rob's Bear do not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bebop, Warthog Warrior",
+            "Rhino",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Rhino"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bebop, Warthog Warrior",
+            "has": [
+              "Menace"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Rhino",
+            "has": [
+              "Menace"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bear",
+            "lacks": [
+              "Menace"
+            ]
+          }
+        },
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Rhino",
+            "lacks": [
+              "Menace"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Menace: two of Maya's creatures may block Bebop together; all 5 of his damage to the Bear, and the Rhino's 4 and the Bear's 2 kill him",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bebop, Warthog Warrior"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Rhino"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bebop, Warthog Warrior"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Bear",
+              "Bebop, Warthog Warrior"
+            ],
+            [
+              "Rhino",
+              "Bebop, Warthog Warrior"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Bear",
+                  "Rhino"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "settle": true
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bebop, Warthog Warrior"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Rhino"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Bebop gone: the Rhino has no menace",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bebop, Warthog Warrior",
+            "Rhino"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Smite"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Plains",
+          "seat": 1
+        },
+        {
+          "cast": "Smite",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Bebop, Warthog Warrior"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Rhino",
+            "lacks": [
+              "Menace"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Swampcycling {2}: Bebop discarded, a Swamp found, revealed and put in hand",
+      "library": [
+        "Wastes",
+        "Wastes",
+        "Swamp"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bebop, Warthog Warrior"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Bebop, Warthog Warrior"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Swamp"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Swamp"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bebop, Warthog Warrior"
+          ]
+        },
+        {
+          "event": "GameEventCardRevealed"
+        }
+      ]
+    },
+    {
+      "name": "No Swamp in the library: nothing found, and Bebop is still discarded; and on the battlefield it cycles not at all",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bebop, Warthog Warrior"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bebop, Warthog Warrior"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Bebop, Warthog Warrior"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "activate": "Bebop, Warthog Warrior"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bebop, Warthog Warrior"
+          ]
+        }
+      ]
+    }
+  ]
+}

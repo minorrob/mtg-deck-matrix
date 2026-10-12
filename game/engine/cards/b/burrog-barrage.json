@@ -1,0 +1,95 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Burrog Barrage",
+    "oracleId": "c47caa45-e7fc-414a-8a5d-59b58f1751f3",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature you control gets +1/+0 until end of turn if you've cast another instant or sorcery spell this turn. Then it deals damage equal to its power to up to one target creature an opponent controls.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Target creature you control gets +1/+0 until end of turn if you've cast another instant or sorcery spell this turn. Then it deals damage equal to its power to up to one target creature an opponent controls.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        },
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "opponent",
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 1,
+          "toughness": 0,
+          "condition": {
+            "compare": {
+              "count": {
+                "spellsCastThisTurn": "you",
+                "filter": {
+                  "anyOf": [
+                    {
+                      "types": [
+                        "Instant"
+                      ]
+                    },
+                    {
+                      "types": [
+                        "Sorcery"
+                      ]
+                    }
+                  ]
+                },
+                "another": true
+              },
+              "atLeast": 1
+            }
+          }
+        },
+        {
+          "effect": "dealDamage",
+          "from": {
+            "target": 0
+          },
+          "targets": {
+            "target": 1
+          },
+          "amount": {
+            "powerOf": {
+              "target": 0
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
