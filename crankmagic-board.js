@@ -765,7 +765,14 @@ globalThis.CrankBoard = Object.freeze({
       const last = rows[rows.length - 1];
       if (last && s.name && last.s.name === s.name && last.s.playerId === s.playerId && last.s.kind === s.kind) last.n += 1; else rows.push({s, n: 1});
     }
-    return `<section class="cm-board-stack" aria-label="The stack"><h3>On the stack · ${items.length}</h3><ol>${rows.map(({s, n}) => `<li>${e(s.name || "A face-down spell")}${n > 1 ? ` <b>×${n.toLocaleString("en-US")}</b>` : ""} <span class="cm-muted">${e(nameOf(s.playerId))}</span></li>`).join("")}</ol></section>`;
+    /* THE SPELL IS SEEN WHILE IT RESOLVES (Rob, 2026-10-11: "I can't even see the card now ... they should appear on the
+       battlefield while being resolved"): the top of the stack drawn as its card, above the list; a face-down spell is a
+       back (CR 708.5). And each entry with a name shows its card at the hover's size beside the box, under the pointer,
+       on a focus or a tap (Rob: "hover over the card name in the On the Stack screen to see the pop-up size image"). */
+    const top = items[items.length - 1];
+    const topCard = top.name ? `<div class="cm-stack-top"><span class="cm-bcard cm-stack-card" role="img" aria-label="${e(top.name)}, on the stack"><span class="cm-bcard-name">${e(top.name)}</span><img src="${e(pictureOf(top.name))}" alt="" loading="lazy" referrerpolicy="no-referrer"></span></div>`
+      : `<div class="cm-stack-top"><span class="cm-bcard is-back cm-stack-card" role="img" aria-label="A face-down spell, on the stack"></span></div>`;
+    return `<section class="cm-board-stack" aria-label="The stack"><h3>On the stack · ${items.length}</h3>${topCard}<ol>${rows.map(({s, n}) => `<li${s.name ? ` class="cm-stack-entry" tabindex="0" data-stack-name="${e(s.name)}" aria-label="${e(s.name)}${n > 1 ? `, ${n} of them` : ""}, ${e(nameOf(s.playerId))}'s: show the card"` : ""}>${e(s.name || "A face-down spell")}${n > 1 ? ` <b>×${n.toLocaleString("en-US")}</b>` : ""} <span class="cm-muted">${e(nameOf(s.playerId))}</span></li>`).join("")}</ol></section>`;
   }
   /* PANEL ▸: the right panel of the handoff (Card · Tracker · History · Combat), sliding over the surface. */
   function panel() {
@@ -954,6 +961,25 @@ globalThis.CrankBoard = Object.freeze({
       if (!old) document.getElementById("cm-board").append(div);
       say(`Showing ${c.name}`);
     }, 350);
+  }
+  /* A STACK ENTRY'S CARD, beside the On the stack box at the hover's size: to its left where the window has the room,
+     else below it; within the window either way. One at a time, gone on leaving, on a second tap, or on Escape. */
+  let stackShown = null;
+  function stackPeek(li) {
+    const old = document.getElementById("cm-stack-peek");
+    if (!li || !li.isConnected) {stackShown = null; if (old) old.remove(); return;}
+    const name = li.dataset.stackName, box = li.closest(".cm-board-stack").getBoundingClientRect();
+    stackShown = name;
+    const div = old || Object.assign(document.createElement("div"), {id: "cm-stack-peek", className: "cm-board-peek cm-stack-peek"});
+    div.setAttribute("aria-hidden", "true");
+    div.innerHTML = `<span class="cm-bcard"><span class="cm-bcard-name">${e(name)}</span><img src="${e(pictureOf(name))}" alt="" referrerpolicy="no-referrer"></span>`;
+    if (!old) document.getElementById("cm-board").append(div);
+    const shown = div.firstElementChild.getBoundingClientRect(), w = shown.width, h = shown.height, gap = 12;
+    const left = box.left - w - gap >= 8 ? box.left - w - gap : Math.min(Math.max(8, box.left), innerWidth - w - 8);
+    const top = box.left - w - gap >= 8 ? Math.min(Math.max(8, box.top), innerHeight - h - 8) : Math.min(box.bottom + gap, innerHeight - h - 8);
+    div.style.left = `${Math.round(left)}px`; div.style.top = `${Math.round(top)}px`;
+    div.dataset.side = box.left - w - gap >= 8 ? "left" : "below";
+    say(`Showing ${name}`);
   }
   function stillUnder(id) {
     const under = pointerAt && document.elementFromPoint(pointerAt.x, pointerAt.y);
@@ -1299,15 +1325,25 @@ globalThis.CrankBoard = Object.freeze({
     el.style.setProperty("--dock-w", `${Math.round(s.width)}px`);
     el.style.setProperty("--dock-h", `${Math.max(120, Math.round(h.bottom - 8 - top))}px`);
   }
+  /* A ROW TOO FULL FOR ITS CARDS OVERLAPS THEM, each over the one before -- by their layout widths, a tapped card's turn
+     and the margins that make room for it included (Rob, 2026-10-11: five lands, "cards cutting off on the right side").
+     No card is covered past a readable strip of it (READABLE of its width); past that the row scrolls, with a bar to
+     scroll it by, rather than cutting its last cards off. */
+  const READABLE = .3;
   function overlap(host) {
     for (const row of host.querySelectorAll(".cm-board-cards")) {
       row.style.removeProperty("--lap");
+      row.classList.remove("is-scrolling");
       const kids = [...row.children];
       if (kids.length < 2) continue;
-      const room = row.clientWidth, need = kids.reduce((n, k) => n + k.getBoundingClientRect().width, 0) + 6 * (kids.length - 1);
+      const footprint = (k) => {const cs = getComputedStyle(k); return k.offsetWidth + (parseFloat(cs.marginLeft) || 0) + (parseFloat(cs.marginRight) || 0);};
+      const room = row.clientWidth, need = kids.reduce((n, k) => n + footprint(k), 0) + 6 * (kids.length - 1);
       if (need <= room) continue;
-      const lap = (need - room) / (kids.length - 1) + 6;
-      row.style.setProperty("--lap", `${-Math.ceil(lap)}px`);
+      /* The hand keeps its own overlap: its tray is sized to it (the hand tray, item 14). */
+      const mat = !row.closest(".cm-board-hand"), lap = (need - room) / (kids.length - 1) + 6;
+      const most = mat ? Math.min(...kids.map((k) => k.offsetWidth)) * (1 - READABLE) + 6 : Infinity;
+      row.style.setProperty("--lap", `${-Math.ceil(Math.min(lap, most))}px`);
+      if (lap > most) row.classList.add("is-scrolling");
     }
   }
   /* The mat under the Table view (the handoff: the living sea, ~45%; still for now, item 3). Every view that arrives
@@ -1570,7 +1606,18 @@ globalThis.CrankBoard = Object.freeze({
   document.addEventListener("dblclick", (event) => {if (showing === "held" && event.target.closest && event.target.closest(".cm-hand-held")) actions["board-hand-back"]();});
   document.addEventListener("pointermove", (event) => {pointerAt = {x: event.clientX, y: event.clientY};}, {passive: true, capture: true});
   document.addEventListener("pointerdown", () => {if (peekId !== null) peek(null);}, {capture: true});
+  /* A tap on an entry shows its card, a second tap or a tap elsewhere puts it away; the keyboard's focus does the same. */
+  document.addEventListener("click", (event) => {
+    const entry = event.target.closest && event.target.closest(".cm-board-stack .cm-stack-entry");
+    if (entry) stackPeek(stackShown === entry.dataset.stackName && document.getElementById("cm-stack-peek") ? null : entry);
+    else if (stackShown !== null) stackPeek(null);
+  });
+  document.addEventListener("focusin", (event) => {const entry = event.target.closest && event.target.closest(".cm-board-stack .cm-stack-entry"); if (entry) stackPeek(entry);});
+  document.addEventListener("focusout", (event) => {if (event.target.closest && event.target.closest(".cm-board-stack .cm-stack-entry")) stackPeek(null);});
   document.addEventListener("pointerover", (event) => {
+    const entry = event.target.closest && event.target.closest(".cm-board-stack .cm-stack-entry");
+    if (entry && event.pointerType === "mouse") stackPeek(entry);
+    else if (stackShown !== null && event.pointerType === "mouse" && !(event.target.closest && event.target.closest("#cm-stack-peek"))) stackPeek(null);
     pointerAt = {x: event.clientX, y: event.clientY};
     if (event.pointerType !== "mouse" || !document.getElementById("cm-board") || !view) return;
     const el = event.target.closest && event.target.closest(".cm-board .cm-bcard[data-card]");
@@ -1625,6 +1672,7 @@ globalThis.CrankBoard = Object.freeze({
      (back a step: held, fanned, a menu, the panel, full screen), ⌘/Ctrl + and − (card size). */
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && peekId !== null) peek(null);
+    if (event.key === "Escape" && stackShown !== null) stackPeek(null);
     if (!document.getElementById("cm-board") || !view || document.querySelector("#cm-dialog[open]")) return;
     const tag = (document.activeElement && document.activeElement.tagName) || "";
     const typing = /^(INPUT|SELECT|TEXTAREA)$/.test(tag);

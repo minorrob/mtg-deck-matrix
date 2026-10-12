@@ -926,6 +926,30 @@ try {
   ok(!views(secondEmail).slice(casterSeen).some((v) => v.decision && v.decision.kind === "priority" && v.state.stack.length),
     `cast, ${castName} goes on the stack and the caster is not asked again with it there: the cast passed for them`);
   eq((await text(firstBoard.page, ".cm-board-waiting")).trim(), `${secondName}'s first main phase · you may respond`, `on the other board the button reads Resolve ${castName}, and the strip says whose step it is and that they may respond`);
+  /* THE SPELL IS SEEN WHILE IT RESOLVES (Rob, 2026-10-11): the top of the stack drawn as its card in the On the stack box;
+     and its entry, under the pointer, on a focus, or tapped, shows the card at the hover's size beside the box -- to its
+     left, or below it -- inside the window; leaving it, Escape or a second tap puts it away. */
+  const stackCard = firstBoard.page.locator(".cm-board-stack .cm-stack-top .cm-stack-card");
+  /* (Its picture is the card's; here, with no pictures served, the card shows its name, as any card does.) */
+  ok(await stackCard.count() === 1 && (await stackCard.getAttribute("aria-label")) === `${castName}, on the stack` && (await stackCard.locator(".cm-bcard-name").innerText()).trim() === castName,
+    `the On the stack box shows ${castName} as its card while it is there`);
+  const beside = () => firstBoard.page.evaluate(() => {
+    const peekCard = document.querySelector("#cm-stack-peek .cm-bcard"), box = document.querySelector(".cm-board-stack").getBoundingClientRect();
+    if (!peekCard) return null;
+    const r = peekCard.getBoundingClientRect();
+    return {name: peekCard.querySelector(".cm-bcard-name").textContent, side: document.getElementById("cm-stack-peek").dataset.side, w: Math.round(r.width),
+      left: r.right <= box.left + 1, below: r.top >= box.bottom - 1, inside: r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight};
+  });
+  await firstBoard.page.hover(".cm-board-stack .cm-stack-entry");
+  const stackShown = await beside();
+  ok(stackShown && stackShown.name === castName && stackShown.w >= 150 && stackShown.inside && (stackShown.side === "left" ? stackShown.left : stackShown.below),
+    `hovering its entry shows ${castName} at the hover's size, ${stackShown?.side === "left" ? "to the left of" : "below"} the box, inside the window (${JSON.stringify(stackShown)})`);
+  await firstBoard.page.mouse.move(5, 5);
+  ok(await beside() === null, "and leaving it puts it away");
+  await firstBoard.page.focus(".cm-board-stack .cm-stack-entry");
+  ok((await beside())?.name === castName, "a focus by the keyboard shows it too");
+  await firstBoard.page.keyboard.press("Escape");
+  ok(await beside() === null, "and Escape puts it away");
   /* The caster's own view comes on the caster's socket, and may come after the other board's: until it does, the strip
      says "Sent…". So it is waited for. */
   await waitText(second.page, ".cm-board-waiting", new RegExp(`Waiting on ${firstName_}`), 10000);
@@ -1046,6 +1070,38 @@ try {
   await serial(async () => object.broadcast());
   await rob.page.waitForTimeout(300);
   eq([prefersSent().slice(prefers0).map((f) => f.stepByStep), views(ROB).at(-1).stepByStep ?? false], [[true, true, false], false], "turned off, the same: told once, and the view says it is off");
+
+  /* A FULL ROW OF LANDS (Rob, 2026-10-11: five lands, "cards cutting off on the right side ... I have no scroll bar"):
+     tapped lands overlap like any card, by the room their turn takes, and none is cut off; past a readable strip of each
+     the row scrolls, a bar to scroll it by, its last land reached. Copies of a land of Rob's are put in his own row and
+     the board laid out again (a resize); the next view puts it back as it was. */
+  const landRow = async (n) => {
+    await rob.page.click(".cm-board-tile[data-seat='0'] [data-action=board-focus]");
+    await rob.page.evaluate((n) => {
+      const row = document.querySelector(".cm-board-mat .cm-board-lands .cm-board-cards"), first = row.querySelector(".cm-bcard");
+      for (const k of [...row.querySelectorAll(".is-copy")]) k.remove();
+      for (let i = 0; i < n; i += 1) {const c = first.cloneNode(true); c.classList.add("is-copy"); if (i % 2 === 0) c.classList.add("is-tapped"); row.append(c);}
+    }, n);
+    const size = rob.page.viewportSize();
+    await rob.page.setViewportSize({width: size.width - 1, height: size.height});
+    await rob.page.setViewportSize(size);
+    await rob.page.waitForTimeout(400);
+    return rob.page.evaluate(() => {
+      const row = document.querySelector(".cm-board-mat .cm-board-lands .cm-board-cards"), r = row.getBoundingClientRect(), kids = [...row.children];
+      const last = kids.at(-1), lr = () => last.getBoundingClientRect();
+      const out = {n: kids.length, scrolling: row.classList.contains("is-scrolling"), overflow: getComputedStyle(row).overflowX, scrolls: row.scrollWidth > row.clientWidth + 1,
+        cut: kids.filter((k) => k.getBoundingClientRect().right > r.right + 1).length};
+      row.scrollLeft = row.scrollWidth;
+      out.lastSeen = lr().right <= row.getBoundingClientRect().right + 1 && lr().left >= row.getBoundingClientRect().left - 1;
+      return out;
+    });
+  };
+  const eight = await landRow(7);
+  ok(!eight.scrolling && eight.cut === 0, `eight lands, half of them tapped: overlapped to fit, none cut off (${JSON.stringify(eight)})`);
+  const thirty = await landRow(29);
+  ok(thirty.scrolling && thirty.overflow === "auto" && thirty.scrolls && thirty.lastSeen, `thirty: the row scrolls, with its bar, and the last land is reached (${JSON.stringify(thirty)})`);
+  await serial(async () => object.broadcast());
+  await rob.page.waitForFunction(() => !document.querySelector(".cm-board-lands .is-copy"), null, {timeout: 10000});
 
   /* SHAPE, at both widths. */
   for (const [who, width] of [[rob, 1400], [maya, 1280]]) {
