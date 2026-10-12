@@ -53,26 +53,6 @@
           }
         ]
       }
-    },
-    "Ponder": {
-      "types": [
-        "Sorcery"
-      ],
-      "manaCost": "{U}",
-      "colors": [
-        "U"
-      ],
-      "spell": {
-        "id": "s",
-        "text": "Draw a card.",
-        "targets": [],
-        "effects": [
-          {
-            "effect": "draw",
-            "count": 1
-          }
-        ]
-      }
     }
   },
   "scenarios": [

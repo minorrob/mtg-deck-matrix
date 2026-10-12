@@ -639,7 +639,8 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
   (from the top until a card fits; added in M4 phase 3, batch 62), `manifest` (the top card of a library onto the
   battlefield face down, a nameless 2/2, CR 701.40; claude/cards-faces-class, 2026-10-06), `explore` (the top card
   revealed: a land to its hand, else a +1/+1 counter and the card may go to the graveyard, CR 701.44; a Map token's;
-  Train E, 2026-10-12).
+  Train E, 2026-10-12), `rearrangeTop` (the top N cards of a library looked at and put back in any order, the looker's
+  choice; Ponder, Sensei's Divining Top; wave 4b, 2026-10-12).
 - Mana and cost: `addMana`, `addManaReflected`, `tap`, `untap`, `untapAll`, `costReduction`, `alternativeCost`.
 - Life and damage: `gainLife`, `loseLife`, `dealDamage`, `damageEach`, `damageAll`, `exchangeLife`, `fight`.
 - Counters: `putCounter`, `putCounterAll`, `removeCounter`, `proliferate`, `multiplyCounters`, `moveCounters`,
@@ -660,7 +661,7 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
   105.1; Train C phase 2), `genericChoice`, `twoPiles`, `connive`,
   `investigate`, `cleanup` (end-of-effect bookkeeping, not a card-visible primitive), `addPhase` (an additional
   combat, main or beginning phase, CR 500.8; added in M4 phase 3, batch 33), `changeTargets` (a spell's single target
-  changed, CR 115.7; batch 65), `chooseSource` ("a source of your choice", CR 609.7a: a permanent, a spell, an object
+  changed, CR 115.7; batch 65; new targets chosen, and a target changed to this creature, wave 4b), `chooseSource` ("a source of your choice", CR 609.7a: a permanent, a spell, an object
   one on the stack refers to; Train C phase 2, 2026-10-11), `vote` (each player in turn order from you votes for one of
   the choices, counted by choice, CR 701.38; Train C phase 2, 2026-10-11).
 - Triggers: zone change (enters, dies, leaves, exiled), phase and step, attacks, attackers declared, blocks, spell

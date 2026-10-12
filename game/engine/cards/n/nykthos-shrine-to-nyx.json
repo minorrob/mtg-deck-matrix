@@ -1,0 +1,97 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Nykthos, Shrine to Nyx",
+    "oracleId": "84dc18f0-8225-4b40-a165-b10321e41769",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {C}.\n{2}, {T}: Choose a color. Add an amount of mana of that color equal to your devotion to that color. (Your devotion to a color is the number of mana symbols of that color in the mana costs of permanents you control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{2}, {T}: Choose a color. Add an amount of mana of that color equal to your devotion to that color.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "W": {
+                "devotion": [
+                  "W"
+                ]
+              }
+            },
+            {
+              "U": {
+                "devotion": [
+                  "U"
+                ]
+              }
+            },
+            {
+              "B": {
+                "devotion": [
+                  "B"
+                ]
+              }
+            },
+            {
+              "R": {
+                "devotion": [
+                  "R"
+                ]
+              }
+            },
+            {
+              "G": {
+                "devotion": [
+                  "G"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

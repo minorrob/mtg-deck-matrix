@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Badlands",
+  "scenarios": [
+    {
+      "name": "Untapped as it enters; {T}: {B} or {R}, either",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Badlands"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Badlands"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Badlands",
+              "is": false
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Badlands"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "B": 1
+                },
+                {
+                  "R": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Badlands",
+          "mana": {
+            "R": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1,
+            "B": 0
+          }
+        }
+      ]
+    }
+  ]
+}

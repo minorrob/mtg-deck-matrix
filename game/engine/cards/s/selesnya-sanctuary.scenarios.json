@@ -1,0 +1,137 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Selesnya Sanctuary",
+  "scenarios": [
+    {
+      "name": "Played: tapped, and Rob chooses which land to return -- the Forest, not the Swamp",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Selesnya Sanctuary"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Selesnya Sanctuary"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Forest",
+                  "Swamp",
+                  "Selesnya Sanctuary"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Selesnya Sanctuary"
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Swamp",
+            "Selesnya Sanctuary"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "His only land: it returns itself",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Selesnya Sanctuary"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Selesnya Sanctuary"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Selesnya Sanctuary"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Selesnya Sanctuary"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": []
+        }
+      ]
+    },
+    {
+      "name": "{T}: {G}{W}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Selesnya Sanctuary"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Selesnya Sanctuary"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1,
+            "W": 1
+          }
+        }
+      ]
+    }
+  ]
+}

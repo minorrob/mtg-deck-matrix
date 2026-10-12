@@ -1,0 +1,124 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Cascade Bluffs",
+  "scenarios": [
+    {
+      "name": "{U} from an Island filtered into {R}{R}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cascade Bluffs",
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Cascade Bluffs",
+          "mana": {
+            "R": 2
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "{R} from a Mountain into {U}{R}; three ways to filter, and {C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cascade Bluffs",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Cascade Bluffs"
+              },
+              "count": 4
+            }
+          ]
+        },
+        {
+          "tap": "Cascade Bluffs",
+          "mana": {
+            "U": 1,
+            "R": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1,
+            "R": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "With no {U/R} to pay, it adds {C} alone",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cascade Bluffs",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Cascade Bluffs"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "tap": "Cascade Bluffs"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1,
+            "C": 1
+          }
+        }
+      ]
+    }
+  ]
+}

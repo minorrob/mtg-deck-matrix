@@ -69,9 +69,9 @@ export const STATIC_RULES = Object.freeze({
   "spells-cost-less": "rules/actions.mjs",
   /** CR 601.2f: "Noncreature spells cost {1} more to cast" (Thalia), "spells your opponents cast cost {2} more" (God-
       Pharaoh's Statue): `caster` any (the default), you or opponent; `affects` the spell; `amount`. actions.mjs, castCost.
-      "Spells that target this creature cost more" is not built: a spell's own reduction reads its chosen targets
-      (costReduction's `targets`), and costIncrease reads none yet. "During your turn, spells
-      your opponents cast cost {1} more" (Tithe Taker): its `condition`, asked at each cast. */
+      "Spells your opponents cast that target this creature cost an additional 3 life to cast" (Terror of the Peaks, wave
+      4b): `targeting`, a selector one of the spell's chosen targets must fit, and `life` in place of mana (lifeIncrease).
+      "During your turn, spells your opponents cast cost {1} more" (Tithe Taker): its `condition`, asked at each cast. */
   "spells-cost-more": "rules/actions.mjs",
   /** CR 602.2b, 601.2f: "During your turn, ... abilities your opponents activate cost {1} more to activate unless they're
       mana abilities" (Tithe Taker): `affects` the players whose activations cost more (a player selector, "you" its
@@ -159,8 +159,11 @@ export const STATIC_RULES = Object.freeze({
       (effectUntil): "can't cast spells with the same name as that creature until your next turn" (Reflector Mage). */
   "cant-cast": "rules/actions.mjs",
   /** CR 602.5: "During combat, players can't ... activate abilities that aren't mana abilities" (Yuriko, Blade of the
-      Mighty): `affects` the players it binds (a player selector), `duringCombat` -- the only form built -- and never a mana
-      ability (CR 605). activationForbidden, read where an activation is offered. rules/actions.mjs. */
+      Mighty): `affects` the players it binds (a player selector), `duringCombat`, and never a mana ability (CR 605).
+      activationForbidden, read where an activation is offered. rules/actions.mjs. Or of some permanents' abilities, their
+      mana abilities too: "during your turn, your opponents can't ... activate abilities of artifacts, creatures, or
+      enchantments" (Grand Abolisher, wave 4b) -- `of` a selector of the permanents, `duringYourTurn` or always.
+      permanentActivationForbidden, read wherever a permanent's ability is offered or tapped to pay. */
   "cant-activate": "rules/actions.mjs",
   /** "Creatures can't attack you unless their controller pays {2} for each" (CantAttackUnless): attackTax, paid as attackers
       are declared. rules/combat.mjs. */
@@ -374,6 +377,32 @@ export function activationForbidden(state, player) {
       if (!compileSelector({what: "player", ...(ability.affects ?? {})})(state, player, context)) continue;
       if (!conditionHolds(state, ability.condition, context)) continue;
       if (ability.duringCombat && duringCombat(state)) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * "DURING YOUR TURN, YOUR OPPONENTS CAN'T ... ACTIVATE ABILITIES OF ARTIFACTS, CREATURES, OR ENCHANTMENTS" (Grand Abolisher,
+ * wave 4b; CR 602.5): whether a static ability forbids this permanent's controller activating its abilities now -- a
+ * `cant-activate` static with `of`, a selector of the permanents whose abilities it is about (read from the static's
+ * controller's side), its `affects` the players it binds, `duringYourTurn` its controller's turn, and its `condition`. Its
+ * mana abilities too (CR 605.1a: a mana ability is an activated ability; the card says nothing to spare them). On the
+ * battlefield only: a card's abilities in a hand or a graveyard (cycling) are no permanent's (the card's ruling), so it is
+ * read wherever a permanent's activated or mana ability is offered, or tapped to pay (rules/actions.mjs, rules/mana.mjs).
+ */
+export function permanentActivationForbidden(state, id) {
+  const player = controllerOf(state, id);
+  const held = staticAbilities(state);
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of held(holderId)) {
+      if (ability.kind !== "static" || ability.rule !== "cant-activate" || ability.of === undefined) continue;
+      const context = {controller: holder.controller, source: holderId};
+      if (ability.duringYourTurn && state.activePlayer !== holder.controller) continue;
+      if (!compileSelector({what: "player", ...(ability.affects ?? {})})(state, player, context)) continue;
+      if (!conditionHolds(state, ability.condition, context)) continue;
+      if (compileSelector({...ability.of, what: "permanent"})(state, id, context)) return true;
     }
   }
   return false;
@@ -870,6 +899,12 @@ export function attacksEachCombat(state, id) {
      creature, for the one combat phase it names -- its source named, as a static's holder is, gone or not. */
   for (const effect of state.effects ?? [])
     if (effect.rule === "attacks-each-combat" && effect.combat === (state.combatsThisTurn ?? 0) && effect.affects.ids.includes(id)) sources.push(effect.sourceId);
+  /* And "creatures your opponents control attack this turn if able" (Bident of Thassa; effectUntil's `rule:
+     "attacks-each-combat"` with `affects`): a rule changed for every combat of the turn, not a characteristic, so it takes in
+     each creature as it now is -- one that entered or changed control after it resolved too (CR 611.2c) -- the opponents of
+     its controller as it resolved. */
+  for (const effect of state.effects ?? [])
+    if (effect.rule === "attacks-each-combat" && effect.combat === undefined && staticAffects(state, effect, id, effect.sourceController)) sources.push(effect.sourceId);
   return sources;
 }
 
@@ -1071,12 +1106,14 @@ export function equipCostReduction(state, player, targets) {
   return total;
 }
 
-/** HOW MUCH MORE A SPELL COSTS (CR 601.2f): every `spells-cost-more` static on the battlefield whose spell selector fits
- *  this card, cast by whom it says -- anyone, unless it says you or an opponent. Generic mana, summed. */
-export function costIncrease(state, player, cardId) {
+/* Every `spells-cost-more` static on the battlefield that makes this card cost more as this player casts it: its caster
+   (anyone, unless it says you or an opponent), its spell selector, its condition -- and, for "spells your opponents cast that
+   target this creature" (Terror of the Peaks, wave 4b; CR 601.2c, then 601.2f), `targeting`, a selector one of the spell's
+   chosen targets must fit, read from the static's side (a counted target's choices among them). With no targets known yet,
+   none fits it. */
+function increasesOn(state, player, cardId, targets) {
   const object = state.objects[cardId];
-  if (!object) return 0;
-  let total = 0;
+  const found = [];
   const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
@@ -1086,11 +1123,42 @@ export function costIncrease(state, player, cardId) {
       const caster = ability.caster ?? "any";
       if (caster === "you" && player !== holder.controller) continue;
       if (caster === "opponent" && player === holder.controller) continue;
-      if (!matchesSelector({...(ability.affects ?? {}), what: "card", zone: object.zone}, state, cardId, {controller: holder.controller, source: holderId})) continue;
+      const context = {controller: holder.controller, source: holderId};
+      if (!matchesSelector({...(ability.affects ?? {}), what: "card", zone: object.zone}, state, cardId, context)) continue;
       /* "During your turn" (Tithe Taker): only while its condition holds, asked at each cast. */
-      if (!conditionHolds(state, ability.condition, {controller: holder.controller, source: holderId})) continue;
-      total += amountOf(state, ability.amount ?? 1, {controller: holder.controller, source: holderId});
+      if (!conditionHolds(state, ability.condition, context)) continue;
+      if (ability.targeting !== undefined && !targetsFit(state, ability.targeting, (targets ?? []).flat(), context)) continue;
+      found.push({ability, holderId, holder});
     }
+  }
+  return found;
+}
+
+/** Whether a cost a static on the battlefield adds reads the spell's chosen targets (`targeting`): the caster's ways to
+ *  choose them are then each costed (rules/actions.mjs, aimsFor). */
+export const costsReadTargets = (state) => {
+  const held = staticAbilities(state);
+  return state.zones.battlefield.some((holderId) => held(holderId).some((a) => a.kind === "static" && a.rule === "spells-cost-more" && a.targeting !== undefined));
+};
+
+/** HOW MUCH LIFE MORE A SPELL COSTS (CR 601.2f, 119.4): "spells your opponents cast that target this creature cost an
+ *  additional 3 life to cast" (Terror of the Peaks, wave 4b) -- each `spells-cost-more` static with `life` that applies
+ *  (increasesOn), summed. A cast without paying its mana cost still pays it (CR 118.9d). */
+export function lifeIncrease(state, player, cardId, targets = null) {
+  /* One in mana adds no life (`life` absent). */
+  return increasesOn(state, player, cardId, targets).reduce((n, {ability, holderId, holder}) => n + amountOf(state, ability.life ?? 0, {controller: holder.controller, source: holderId}), 0);
+}
+
+/** HOW MUCH MORE A SPELL COSTS (CR 601.2f): every `spells-cost-more` static on the battlefield whose spell selector fits
+ *  this card, cast by whom it says -- anyone, unless it says you or an opponent (increasesOn). Generic mana, summed. */
+export function costIncrease(state, player, cardId, targets = null) {
+  const object = state.objects[cardId];
+  if (!object) return 0;
+  let total = 0;
+  for (const {ability, holderId, holder} of increasesOn(state, player, cardId, targets)) {
+    /* One in life is paid in life (lifeIncrease, below), not in mana. */
+    if (ability.life !== undefined) continue;
+    total += amountOf(state, ability.amount ?? 1, {controller: holder.controller, source: holderId});
   }
   /* And for a while (effects/permanents.mjs, effectUntil): "noncreature spells your opponents cast cost {2} more to cast
      until your next turn" (Elspeth Conquers Death, batch 79) -- the caster and the amount in what it applies, whose

@@ -202,6 +202,8 @@ export function pushCopy(state, original, {controller, nonLegendary = false} = {
   if (original.x !== undefined) entry.x = original.x;
   /* And its modes (CR 707.10): a copy of a modal spell has the modes the original has. */
   if (Array.isArray(original.modes)) entry.modes = [...original.modes];
+  /* And its gift, promised to the same opponent (CR 707.10, 702.174k; its ruling): the copy gives it too. */
+  if (original.gift !== undefined) entry.gift = original.gift;
   state.stack.push(entry);
   return entry;
 }
@@ -278,6 +280,8 @@ export function resolveTop(state, effect = null, rng = null) {
   const context = {controller: entry.playerId, source, x, ...(entry.about ? {about: entry.about} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {}), ...(attached !== null ? {attached} : {}),
     /* How the spell was cast, for its own conditions ("if this spell was cast from a graveyard"; rules/actions.mjs). */
     ...(entry.cast ? {cast: entry.cast} : {}),
+    /* The opponent its gift was promised to (CR 702.174k): "the chosen player", and "if the gift was promised". */
+    ...(entry.gift !== undefined ? {gift: entry.gift} : {}),
     ...(entry.sourceTransforms !== undefined ? {sourceTransforms: entry.sourceTransforms} : {}),
     /* What its cost sacrificed, as each last existed: "the sacrificed creature's toughness" (rules/actions.mjs). */
     ...(entry.sacrificed ? {sacrificed: entry.sacrificed} : {}),
@@ -475,6 +479,10 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     if (to === "battlefield" && entry.evoked) state.objects[arrived].evoked = true;
     /* And for its prowl cost (CR 702.76a): "if its prowl cost was paid" (script/condition.mjs, `prowled`). */
     if (to === "battlefield" && entry.prowled) state.objects[arrived].prowled = true;
+    /* And its gift promised (CR 702.174b): "when this permanent enters, if its gift cost was paid" asks the permanent, and the
+       chosen player is the one promised it (script/condition.mjs `giftPromised`, script/bind.mjs). A copy entering of a
+       permanent already there was promised nothing (its ruling), and a new object after it moves again (CR 400.7) neither. */
+    if (to === "battlefield" && entry.gift !== undefined) state.objects[arrived].gift = entry.gift;
     /* And for its surge cost (CR 702.117a), or another that says so (rules/actions.mjs): "if its surge cost was paid"
        (script/condition.mjs, `paidFor`). A new object after it moves again (CR 400.7) was cast for nothing. */
     if (to === "battlefield" && entry.cast?.paidFor) state.objects[arrived].paidFor = entry.cast.paidFor;

@@ -1,0 +1,113 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Seat of the Synod",
+  "scenarios": [
+    {
+      "name": "{T}: {U}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Seat of the Synod"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Seat of the Synod"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Seat of the Synod"
+        }
+      ]
+    },
+    {
+      "name": "Played as Rob's land for the turn -- and an artifact: Maya's Disenchant may destroy it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Seat of the Synod"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Disenchant"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Seat of the Synod"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Seat of the Synod"
+              ]
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Plains",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Disenchant",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Seat of the Synod"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Seat of the Synod"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": []
+        }
+      ]
+    }
+  ]
+}

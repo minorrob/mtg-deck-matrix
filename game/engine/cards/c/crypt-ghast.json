@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Crypt Ghast",
+    "oracleId": "a3c8d817-7949-4dae-b9f5-f9d952479270",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit"
+    ],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Extort (Whenever you cast a spell, you may pay {W/B}. If you do, each opponent loses 1 life and you gain that much life.)\nWhenever you tap a Swamp for mana, add an additional {B}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Extort (Whenever you cast a spell, you may pay {W/B}. If you do, each opponent loses 1 life and you gain that much life.)",
+      "keyword": "extort"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you tap a Swamp for mana, add an additional {B}.",
+      "trigger": {
+        "on": "tapped for mana",
+        "filter": {
+          "subtypes": [
+            "Swamp"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "B": 1
+          }
+        }
+      ]
+    }
+  ]
+}

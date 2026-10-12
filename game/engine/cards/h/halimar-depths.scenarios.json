@@ -1,0 +1,159 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Halimar Depths",
+  "fixtures": {
+    "Alpha": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Horror"
+      ],
+      "manaCost": "{5}",
+      "colors": [
+        "B"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Bravo": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Horror"
+      ],
+      "manaCost": "{5}",
+      "colors": [
+        "B"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Charlie": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Horror"
+      ],
+      "manaCost": "{5}",
+      "colors": [
+        "B"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Delta": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Horror"
+      ],
+      "manaCost": "{5}",
+      "colors": [
+        "B"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Played: tapped, and the top three put back Charlie, Bravo, Alpha -- Charlie drawn next turn",
+      "library": [
+        "Alpha",
+        "Bravo",
+        "Charlie",
+        "Delta"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Halimar Depths"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Halimar Depths"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Halimar Depths"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Alpha",
+                  "Bravo",
+                  "Charlie"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            2,
+            1,
+            0
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Charlie"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "{T}: {U}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Halimar Depths"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Halimar Depths"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1
+          }
+        }
+      ]
+    }
+  ]
+}

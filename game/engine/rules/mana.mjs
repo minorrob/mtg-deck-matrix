@@ -30,6 +30,7 @@
 
 export const COLORS = Object.freeze(["W", "U", "B", "R", "G"]);
 import {eventCard, activationsForbidden} from "../state/index.mjs";
+import {permanentActivationForbidden} from "./statics.mjs";
 import {sickForAbilities} from "../keywords/timing.mjs";
 import {abilitiesOf} from "./layers.mjs";
 
@@ -419,13 +420,21 @@ export function convokePayments(pool, cost, creatures, options = {}, limit = PAY
  * that has been theirs since their turn began -- each adding its first kind of mana. Generic mana only.
  */
 const PAY_ORDER = ["C", "W", "U", "B", "R", "G"];
+/* A MANA ABILITY WHOSE MANA IS ANOTHER WHILE ITS PERMANENT HAS A COUNTER (`instead`): "{T}: Add {C}. If Gemstone Caverns has a
+   luck counter on it, instead add one mana of any color" -- the ability as it adds mana now, read as each counter is now. */
+export function manaAbilityNow(state, id, ability) {
+  if (!ability?.instead || !((state.objects[id]?.counters?.[ability.instead.counter] ?? 0) > 0)) return ability;
+  const {counter: _counter, ...adds} = ability.instead;
+  return {...Object.fromEntries(Object.entries(ability).filter(([key]) => !["produces", "instead"].includes(key))), ...adds};
+}
 function plainSources(state, player) {
   const out = [];
   for (const id of state.zones.battlefield) {
     const object = state.objects[id];
     if (object.controller !== player || object.tapped) continue;
-    /* Its mana abilities can't be activated (Koma, Cosmos Serpent; CR 602.5, 605.1a): it pays for nothing. */
-    if (activationsForbidden(state, id)) continue;
+    /* Its mana abilities can't be activated (Koma, Cosmos Serpent; Grand Abolisher's opponents, during its controller's turn;
+       CR 602.5, 605.1a): it pays for nothing. */
+    if (activationsForbidden(state, id) || permanentActivationForbidden(state, id)) continue;
     /* CR 302.6: a creature's {T} waits until it has been theirs since their turn began (or "as though it had haste",
        CR 702.10c: keywords/timing.mjs). */
     if (sickForAbilities(state, id)) continue;
@@ -433,7 +442,7 @@ function plainSources(state, player) {
        creature, or which card, is the payer's to choose (rules/actions.mjs). */
     const ability = abilitiesOf(state, id).find((a) => a.kind === "mana" && a.tapSelf && !a.cost && !a.payLife && !a.sacrifice && !a.sacrificeSelf && !a.condition && !a.spendOnly
       && !a.tapCreature && !a.exileFromGraveyard && (a.produces || a.anyColor === true));
-    if (ability) out.push({id, ability});
+    if (ability) out.push({id, ability: manaAbilityNow(state, id, ability)});
   }
   return out;
 }

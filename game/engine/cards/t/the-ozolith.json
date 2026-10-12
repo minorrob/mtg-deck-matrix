@@ -1,0 +1,89 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "The Ozolith",
+    "oracleId": "1946ded1-5f53-409f-b0a6-5433bb0357d2",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever a creature you control leaves the battlefield, if it had counters on it, put those counters on The Ozolith.\nAt the beginning of combat on your turn, if The Ozolith has counters on it, you may move all counters from The Ozolith onto target creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature you control leaves the battlefield, if it had counters on it, put those counters on The Ozolith.",
+      "trigger": {
+        "on": "leaves",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "countersOf": "that card"
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "countersOn": "that card",
+            "counter": "any"
+          },
+          "atLeast": 1
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of combat on your turn, if The Ozolith has counters on it, you may move all counters from The Ozolith onto target creature.",
+      "trigger": {
+        "on": "step",
+        "step": "COMBAT_BEGIN"
+      },
+      "effects": [
+        {
+          "effect": "moveCounters",
+          "from": "self",
+          "targets": {
+            "target": 0
+          },
+          "counter": "all"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "optional": true,
+      "condition": {
+        "compare": {
+          "count": {
+            "countersOn": "self",
+            "counter": "any"
+          },
+          "atLeast": 1
+        }
+      }
+    }
+  ]
+}

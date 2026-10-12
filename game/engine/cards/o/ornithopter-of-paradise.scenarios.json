@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ornithopter of Paradise",
+  "scenarios": [
+    {
+      "name": "Any color: {B}, one of five ways",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ornithopter of Paradise"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Ornithopter of Paradise"
+              },
+              "count": 5
+            }
+          ]
+        },
+        {
+          "tap": "Ornithopter of Paradise",
+          "mana": {
+            "B": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Ornithopter of Paradise",
+            "has": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Summoning sick, an artifact creature does not tap for mana (CR 302.6)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ornithopter of Paradise"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Ornithopter of Paradise"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

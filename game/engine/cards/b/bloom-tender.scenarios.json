@@ -1,0 +1,110 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Bloom Tender",
+  "fixtures": {
+    "Blue Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ]
+    },
+    "Red Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Alone, it is the only color: {G}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bloom Tender"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Bloom Tender"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1,
+            "U": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "With a blue artifact: {G}{U}; Maya's red one is not his",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bloom Tender",
+            "Blue Relic"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Red Relic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Bloom Tender"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1,
+            "U": 1,
+            "R": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Summoning sick, its {T} ability waits (CR 302.6)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bloom Tender"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Bloom Tender"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,137 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Rakdos Carnarium",
+  "scenarios": [
+    {
+      "name": "Played: tapped, and Rob chooses which land to return -- the Forest, not the Swamp",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rakdos Carnarium"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Rakdos Carnarium"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Forest",
+                  "Swamp",
+                  "Rakdos Carnarium"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Rakdos Carnarium"
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Swamp",
+            "Rakdos Carnarium"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "His only land: it returns itself",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rakdos Carnarium"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Rakdos Carnarium"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Rakdos Carnarium"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rakdos Carnarium"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": []
+        }
+      ]
+    },
+    {
+      "name": "{T}: {B}{R}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Rakdos Carnarium"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Rakdos Carnarium"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1,
+            "R": 1
+          }
+        }
+      ]
+    }
+  ]
+}

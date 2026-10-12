@@ -1,0 +1,103 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mox Opal",
+  "fixtures": {
+    "Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Itself, a Relic and Ancient Den -- an artifact land -- are three: any color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mox Opal",
+            "Relic",
+            "Ancient Den"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mox Opal",
+          "mana": {
+            "R": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Two artifacts, Maya's Relic not counted: not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mox Opal",
+            "Relic"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Relic"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Mox Opal"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Cast for {0}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mox Opal"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Mox Opal"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Mox Opal"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -78,9 +78,15 @@
  *   {castFromYourHand: true|false}     the permanent the trigger is about was cast by its controller from their hand, or
  *                                      was not (Chainer, Nightmare Adept: "if you didn't cast it from your hand") -- read on
  *                                      the permanent (rules/stack.mjs); one gone gains nothing either way
+ *   {castByYou: true|false}            the permanent the trigger is about was cast by its controller, from anywhere (The One
+ *                                      Ring: "when The One Ring enters, if you cast it") -- read on the permanent as
+ *                                      castFromYourHand is (rules/stack.mjs); one put onto the battlefield was not cast
  *   {firstResolution: true}            "if this is the first time this ability has resolved this turn" (Nissa, Leyline
  *                                      Tamer): an effect's own, of a triggered or activated ability -- its ability resolved
  *                                      no time before this one this turn (rules/stack.mjs counts them)
+ *   {giftPromised: true|false}         its spell's gift was promised, or its permanent's (CR 702.174b, 702.174k; Dawn's Truce:
+ *                                      "if the gift was promised") -- the spell resolving, a copy of it too (CR 707.10), or the
+ *                                      permanent the spell became (rules/stack.mjs)
  *
  * The keys are closed, like every other grammar here: an unknown one is refused at the schema rather than read as true.
  */
@@ -115,10 +121,14 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   "targetsLegal",
   /* Summon: Fenrir's "if you control the creature with the greatest power or tied for the greatest power" (CR 208.1). */
   "greatestPower",
-  /* Chainer, Nightmare Adept's "if you didn't cast it from your hand" (CR 601.2a). */
-  "castFromYourHand",
+  /* Selvala, Heart of the Wilds' "if its power is greater than each other creature's power" (CR 208.1). */
+  "powerAboveOthers",
+  /* Chainer, Nightmare Adept's "if you didn't cast it from your hand" (CR 601.2a). The One Ring's "if you cast it". */
+  "castFromYourHand", "castByYou",
   /* A Case's solved designation (CR 719.3b), and Evendo Brushrazer's "as long as you've sacrificed a nontoken permanent this turn". */
-  "solved", "sacrificedNontokenThisTurn"];
+  "solved", "sacrificedNontokenThisTurn",
+  /* Gift's "if the gift was promised" (CR 702.174b). */
+  "giftPromised"];
 /** Whether these effects, nested ones included, ask `firstResolution` -- so their ability's resolutions are counted
     (rules/stack.mjs). */
 export const asksFirstResolution = (effects) => JSON.stringify(effects ?? []).includes('"firstResolution"');
@@ -208,7 +218,7 @@ function castHolds(rule, cast) {
 
 /** Whether a condition holds now, for an ability controlled by `controller` on object `source`. No condition holds. */
 export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined, excessDamage = undefined, rememberedControllers = undefined,
-  movedWas = undefined, searched = undefined, lastKnown = undefined, paidFor = undefined, resolvedBefore = undefined} = {}) {
+  movedWas = undefined, searched = undefined, lastKnown = undefined, paidFor = undefined, resolvedBefore = undefined, gift = undefined} = {}) {
   if (!condition) return true;
   /* "IF BOTH TARGETS ARE STILL LEGAL AS THIS ABILITY RESOLVES" (Goblin Welder; CR 608.2b): every target its ability chose is
      legal still, as the resolution rechecked them (rules/stack.mjs, script/bind.mjs recheckTargets: an illegal one is null) --
@@ -266,6 +276,13 @@ export function conditionHolds(state, condition, {controller, source = null, abo
     const id = about?.card ?? source;
     const cast = id !== null && id !== undefined ? state.objects[id]?.castFrom : undefined;
     if ((cast?.zone === "hand" && cast.by === controller) !== condition.castFromYourHand) return false;
+  }
+  /* "If you cast it" (The One Ring; CR 601.2): cast at all, from any zone, by its controller (CR 603.4: asked as it triggers and
+     again as it resolves) -- a permanent put onto the battlefield without being cast, or a new object since (CR 400.7), was not. */
+  if (condition.castByYou !== undefined) {
+    const id = about?.card ?? source;
+    const cast = id !== null && id !== undefined ? state.objects[id]?.castFrom : undefined;
+    if ((cast !== undefined && cast.by === controller) !== condition.castByYou) return false;
   }
   /* Echo's "if this permanent came under your control since the beginning of your last upkeep" (CR 702.30a): the turn it
      came under its controller's control (state/index.mjs, controlledSinceTurn -- entering, or a change of control) is that
@@ -355,6 +372,10 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   /* SNEAK'S TIMING (CR 702.190a): "any time you could cast an instant during your declare blockers step" -- its controller's
      own turn, in that step (rules/actions.mjs offers the cast at an instant's timing then). */
   if (condition.sneak === true && !(state.activePlayer === controller && state.phase === "COMBAT_DECLARE_BLOCKERS")) return false;
+  /* "IF THE GIFT WAS PROMISED" (CR 702.174b, 702.174k): the spell resolving was cast with its gift promised -- the opponent it
+     was promised to, whether or not they are still in the game -- or the permanent the trigger is its own was. */
+  if (condition.giftPromised !== undefined
+    && Number.isInteger(gift ?? (source !== null && source !== undefined ? state.objects[source]?.gift : undefined)) !== condition.giftPromised) return false;
   /* "If you're the monarch" (CR 725.1, 725.3): its controller holds the game's designation now. */
   if (condition.monarch === "you" && state.monarch !== controller) return false;
   /* "IF YOU CONTROL THE CREATURE WITH THE GREATEST POWER OR TIED FOR THE GREATEST POWER" (Summon: Fenrir; CR 208.1): a creature of
@@ -364,6 +385,16 @@ export function conditionHolds(state, condition, {controller, source = null, abo
     const creatures = state.zones.battlefield.filter((id) => typesOf(state, id).includes("Creature"));
     const powers = creatures.map((id) => characteristicsOf(state, id).power ?? 0), most = Math.max(...powers);
     if (!creatures.some((id, at) => controllerOf(state, id) === controller && powers[at] === most)) return false;
+  }
+  /* "If its power is greater than each other creature's power" (Selvala, Heart of the Wilds, wave 4b; CR 208.1): the creature
+     the trigger is about against every other creature on the battlefield, through the layers, as this is asked -- it gone, its
+     power as it last existed there (CR 608.2h; the card's ruling). A tie is not greater; with no other creature, it is. */
+  if (condition.powerAboveOthers === "that card") {
+    const id = about?.card;
+    const here = id !== undefined && id !== null && state.objects[id]?.zone === "battlefield";
+    const power = here ? characteristicsOf(state, id).power : about?.lastKnown?.power;
+    if (power === null || power === undefined) return false;
+    if (state.zones.battlefield.some((other) => other !== id && typesOf(state, other).includes("Creature") && (characteristicsOf(state, other).power ?? 0) >= power)) return false;
   }
   /* Surge (CR 702.117a): its controller has cast another spell this turn -- asked as this one's cast is offered, before it
      is counted among them (rules/actions.mjs). */
@@ -446,6 +477,7 @@ export function conditionProblems(condition) {
   if ("sneak" in condition && condition.sneak !== true) problems.push("sneak is true");
   if ("monarch" in condition && condition.monarch !== "you") problems.push("monarch is \"you\": its controller is the monarch");
   if ("greatestPower" in condition && condition.greatestPower !== "you") problems.push("greatestPower is \"you\": its controller controls the creature with the greatest power, or one tied for it");
+  if ("powerAboveOthers" in condition && condition.powerAboveOthers !== "that card") problems.push("powerAboveOthers is \"that card\": the creature a trigger is about has more power than each other creature");
   if ("firstResolution" in condition && condition.firstResolution !== true) problems.push("firstResolution is true: the first time this ability has resolved this turn");
   if ("freerunning" in condition && condition.freerunning !== true) problems.push("freerunning is true");
   if ("paidFor" in condition && !PAID_FOR.includes(condition.paidFor)) problems.push(`paidFor is the alternative cost a spell was cast for: ${PAID_FOR.join(", ")}`);
@@ -459,7 +491,9 @@ export function conditionProblems(condition) {
   if ("cameFrom" in condition && !CAME_FROM.includes(condition.cameFrom)) problems.push(`cameFrom is the zone the permanent came from: ${CAME_FROM.join(", ")}`);
   if ("sinceYourLastUpkeep" in condition && condition.sinceYourLastUpkeep !== true) problems.push("sinceYourLastUpkeep is true");
   if ("castFromYourHand" in condition && typeof condition.castFromYourHand !== "boolean") problems.push("castFromYourHand is true or false");
+  if ("castByYou" in condition && typeof condition.castByYou !== "boolean") problems.push("castByYou is true or false");
   if ("solved" in condition && typeof condition.solved !== "boolean") problems.push("solved is true or false");
+  if ("giftPromised" in condition && typeof condition.giftPromised !== "boolean") problems.push("giftPromised is true or false: whether the gift was promised");
   if ("sacrificedNontokenThisTurn" in condition && condition.sacrificedNontokenThisTurn !== true) problems.push("sacrificedNontokenThisTurn is true");
   if ("uniqueCreatureName" in condition && condition.uniqueCreatureName !== true) problems.push("uniqueCreatureName is true");
   if ("searched" in condition && condition.searched !== true) problems.push("searched is true: a library was searched earlier in this resolution");

@@ -277,10 +277,18 @@ function checkEffect(effect, path, errors) {
   if (name === "moveZone" && effect.only !== undefined) checkSelector(effect.only, `${path}.only`, errors);
   if (name === "moveZone" && effect.returnTapped !== undefined && !(effect.returnTapped === true && effect.andReturn !== undefined))
     errors.push({path: `${path}.returnTapped`, message: "A flicker's return tapped is `returnTapped: true`, beside `andReturn`"});
+  /* "Onto the battlefield under your control" (Rise of the Dark Realms, wave 4b j1; effects/zones.mjs moveZoneAll). */
+  if (name === "moveZoneAll" && effect.controller !== undefined && !(effect.controller === "you" && effect.to === "battlefield"))
+    errors.push({path: `${path}.controller`, message: "What a move of all puts onto the battlefield under its controller's control is `controller: \"you\"` with `to: \"battlefield\"`"});
   if (name === "moveZoneAll" && effect.link !== undefined && !(effect.link === true && effect.to === "exile"))
     errors.push({path: `${path}.link`, message: "What a move of all exiles, kept for its source's linked ability, is `link: true` with `to: \"exile\"`"});
   if (name === "chooseCard" && effect.attach !== undefined && !(effect.attach === "remembered" && effect.to === "stay" && effect.zone === "battlefield"))
     errors.push({path: `${path}.attach`, message: "Attaching what the effect before it put onto the battlefield to a permanent chosen is `attach: \"remembered\"`, with `zone: \"battlefield\"` and `to: \"stay\"`"});
+  /* "It loses 'enchant creature card in a graveyard' and gains 'enchant creature put onto the battlefield with this Aura.' ...
+     attach this Aura to it" (Animate Dead, wave 4b j1; effects/permanents.mjs attach): `enchants: true`, an Aura attaching
+     itself, its Enchant from then on that creature alone. */
+  if (effect.enchants !== undefined && !(name === "attach" && effect.enchants === true && effect.source === undefined))
+    errors.push({path: `${path}.enchants`, message: "An Aura that enchants only what it attaches itself to is attach's `enchants: true`, with no other `source`"});
   if (name === "dig" && effect.all !== undefined && !(effect.all === true && effect.selector !== undefined && effect.upTo === undefined && effect.take === undefined))
     errors.push({path: `${path}.all`, message: "Every card a selector fits, taken with nobody asked, is `all: true` beside a `selector`, with no `take` or `upTo`"});
   /* Counters moved (moveCounters, CR 122.5; script/effects/resources.mjs): from one object onto another, of a kind named --
@@ -289,6 +297,9 @@ function checkEffect(effect, path, errors) {
     if (effect.from === undefined) errors.push({path: `${path}.from`, message: "moveCounters says what it moves counters from: `from`, an object"});
     if ((effect.targets === undefined) === (effect.onto === undefined)) errors.push({path: `${path}.targets`, message: "moveCounters says what it moves them onto: `targets`, an object, or `onto`, what its controller may choose among"});
     if (typeof effect.counter !== "string") errors.push({path: `${path}.counter`, message: "moveCounters names the kind of counter it moves, or \"chosen\" for its controller's choice"});
+    /* "Move all counters" (The Ozolith, wave 4b): every kind, all of them, onto one object -- no count of its own. */
+    if (effect.counter === "all" && (effect.count !== undefined || effect.onto !== undefined))
+      errors.push({path: `${path}.counter`, message: "\"All counters\" moves every one of every kind onto its `targets`: no count, and no `onto`"});
     /* "Move any number of +1/+1 counters from this creature onto other creatures" (Forgotten Ancient): `onto`, a selector of
        the permanents, with `anyNumber` and a kind named (effects/asking.mjs, countersOnto). */
     if (effect.onto !== undefined) {
@@ -437,10 +448,14 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
 
   /* "Choose one or both" (`chooseUpTo`, Perfect Intimidation): built for a spell whose one effect is the modal, its modes
      chosen as it is cast (cards/index.mjs, rules/actions.mjs). Anywhere else the modal is asked as it resolves, as one. */
+  /* And for a triggered ability whose one effect is the modal, its modes chosen as it is put on the stack (CR 603.3c, 700.2b;
+     rules/trigger.mjs, modalWays): "at the beginning of your first main phase, choose one or more" (Black Market Connections,
+     wave 4b) -- one or more, never none (`choose: 0`) and never one mode twice (`sameMode`) there. */
   for (const [index, effect] of (ability.effects ?? []).entries()) {
     if (effect?.effect !== "modal" || effect.chooseUpTo === undefined) continue;
-    if (ability.kind !== "spell" || (ability.effects ?? []).length !== 1)
-      errors.push({path: `${path}.effects[${index}].chooseUpTo`, message: "\"Choose one or both\" is built for a spell whose one effect is the modal"});
+    const triggeredOne = ability.kind === "triggered" && effect.choose !== 0 && effect.sameMode === undefined;
+    if (!(ability.kind === "spell" || triggeredOne) || (ability.effects ?? []).length !== 1)
+      errors.push({path: `${path}.effects[${index}].chooseUpTo`, message: "\"Choose one or both\" is built for a spell whose one effect is the modal, or a triggered ability's choosing one or more"});
     if (!Number.isInteger(effect.chooseUpTo) || effect.chooseUpTo <= (effect.choose ?? 1))
       errors.push({path: `${path}.effects[${index}].chooseUpTo`, message: "chooseUpTo is how many modes at most: a whole number more than choose"});
   }
@@ -560,8 +575,16 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
        its one built form (rules/statics.mjs, activationForbidden). */
     if (ability.duringCombat !== undefined && (ability.duringCombat !== true || !["cant-cast", "cant-activate"].includes(ability.rule)))
       errors.push({path: `${path}.duringCombat`, message: "\"During combat\" is duringCombat: true, on a cant-cast or cant-activate static"});
-    if (ability.rule === "cant-activate" && ability.duringCombat !== true)
-      errors.push({path, message: "An activation forbidden is forbidden during combat (duringCombat: true), its one form built"});
+    /* Or of some permanents' abilities, mana abilities among them: "during your turn, your opponents can't ... activate
+       abilities of artifacts, creatures, or enchantments" (Grand Abolisher, wave 4b; rules/statics.mjs,
+       permanentActivationForbidden) -- `of` a selector of those permanents, during its controller's turn (`duringYourTurn:
+       true`) or always ("activated abilities of artifacts can't be activated"). */
+    const ofPermanents = ability.rule === "cant-activate" && ability.of !== undefined;
+    if (ability.rule === "cant-activate" && !(ofPermanents ? [undefined, true].includes(ability.duringYourTurn) && ability.duringCombat === undefined
+      : ability.duringCombat === true && ability.duringYourTurn === undefined))
+      errors.push({path, message: "An activation forbidden is forbidden during combat (duringCombat: true), or of some permanents (`of`), always or during your turn (duringYourTurn: true): its two forms built"});
+    if (ability.of !== undefined && ability.rule !== "cant-activate") errors.push({path: `${path}.of`, message: "`of`, the permanents whose abilities can't be activated, is a cant-activate static's"});
+    if (ofPermanents) checkSelector(ability.of, `${path}.of`, errors, {choice: true});
     /* How many counters instead (CR 614.1a; rules/statics.mjs, placeCounters): "twice that many" `times`, "that many plus
        one" `plus`, "half that many, rounded down" `half` -- one of them -- and who must be putting them. */
     if (ability.rule === "more-counters") {
@@ -579,6 +602,10 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
       /* "If an effect would put" (Doubling Season): not counters put as a cost. */
       if (ability.byEffect !== undefined && ability.byEffect !== true) errors.push({path: `${path}.byEffect`, message: "byEffect is true: counters an effect puts, not a cost"});
     }
+    /* "You may play two additional lands on each of your turns" (Azusa, Lost but Seeking; rules/actions.mjs, landDropsLeft):
+       how many more, 1 or more -- one when unsaid. */
+    if (ability.rule === "extra-land-drop" && ability.count !== undefined && !(Number.isInteger(ability.count) && ability.count >= 1))
+      errors.push({path: `${path}.count`, message: "An additional land drop says how many: a whole number, 1 or more"});
     /* "Twice that many of those tokens instead" (rules/statics.mjs, tokensCreated): how many times, 2 or more. */
     if (ability.rule === "more-tokens" && !(Number.isInteger(ability.times) && ability.times >= 2))
       errors.push({path: `${path}.times`, message: "More tokens instead says how many times as many: a whole number, 2 or more"});
@@ -613,6 +640,12 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
     }
     /* What a chosen target must be for the spell to cost less (CR 601.2f): "if it targets an attacking creature" (Run Behind). */
     if (ability.rule === "this-costs-less" && ability.targeting !== undefined) checkSelector(ability.targeting, `${path}.targeting`, errors);
+    /* "Spells your opponents cast that target this creature cost an additional 3 life to cast" (Terror of the Peaks, wave 4b;
+       rules/statics.mjs, increasesOn): what one of a spell's chosen targets must be, and the increase in life (`life`, a whole
+       number, 1 or more) in place of mana -- never beside an amount of mana. */
+    if (ability.rule === "spells-cost-more" && ability.targeting !== undefined) checkSelector(ability.targeting, `${path}.targeting`, errors);
+    if (ability.life !== undefined && !(ability.rule === "spells-cost-more" && ability.amount === undefined && Number.isInteger(ability.life) && ability.life >= 1))
+      errors.push({path: `${path}.life`, message: "An increase in life (`life`, a whole number, 1 or more) is a spells-cost-more static's, in place of its mana `amount`"});
     /* "Can block only creatures with flying" (CR 509.1b): which attackers, a selector. */
     if (ability.rule === "can-block-only") {
       if (!ability.attackers || typeof ability.attackers !== "object") errors.push({path, message: "\"Can block only\" says which attackers: `attackers`, a selector"});

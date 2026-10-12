@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ponder",
+    "oracleId": "02090581-61aa-4348-ad57-451be8ee91c2",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Look at the top three cards of your library, then put them back in any order. You may shuffle.\nDraw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Look at the top three cards of your library, then put them back in any order. You may shuffle.\nDraw a card.",
+      "effects": [
+        {
+          "effect": "rearrangeTop",
+          "count": 3
+        },
+        {
+          "effect": "modal",
+          "title": "You may shuffle.",
+          "modes": [
+            {
+              "text": "Shuffle your library",
+              "effects": [
+                {
+                  "effect": "shuffle"
+                }
+              ]
+            },
+            {
+              "text": "Don't shuffle",
+              "effects": []
+            }
+          ]
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

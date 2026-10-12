@@ -1,0 +1,255 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Command Beacon",
+  "fixtures": {
+    "General": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human"
+      ],
+      "manaCost": "{2}{W}{U}",
+      "colors": [
+        "W",
+        "U"
+      ],
+      "power": 3,
+      "toughness": 3,
+      "supertypes": [
+        "Legendary"
+      ]
+    },
+    "Partner": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{1}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 2,
+      "toughness": 1,
+      "supertypes": [
+        "Legendary"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Sacrificed: Rob's commander comes from the command zone to his hand",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Command Beacon"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "General"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Command Beacon"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "General"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "General"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Put it into the command zone",
+                  "Let it go to your hand"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Let it go to your hand"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "General"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "command",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Command Beacon"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Two commanders: Rob chooses which one",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Command Beacon"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "General",
+            "Partner"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Command Beacon"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "General",
+                  "Partner"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Partner"
+          ]
+        },
+        {
+          "choose": [
+            "Let it go to your hand"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Partner"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "General"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Its commander on the battlefield, not in the command zone: nothing to put into a hand",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Command Beacon",
+            "General"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Command Beacon"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "General"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "It taps for {C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Command Beacon"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Command Beacon"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        }
+      ]
+    }
+  ]
+}

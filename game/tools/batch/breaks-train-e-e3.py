@@ -154,6 +154,6 @@ BREAKS = [
     ('explore: shown no longer once its player left', ASKING,
      '  left(state, awaiting) {\n    unshowRevealed(state, awaiting.player);\n    return [];\n  },', '  left(state, awaiting) {\n    return [];\n  },'),
     ('explore: registered', ASKING, 'orderDraws, explore,', 'orderDraws,'),
-    ('explore: one that asks', INDEX, '  "connive",\n  /* Explore (CR 701.44): whether the revealed nonland card goes to the graveyard. */\n  "explore"]);', '  "connive"]);'),
+    ('explore: one that asks', INDEX, '  /* Explore (CR 701.44): whether the revealed nonland card goes to the graveyard. */\n  "explore",\n', ''),
     ('explore: declared', VOCAB, '"digUntil", "manifest", "explore",', '"digUntil", "manifest",'),
 ]

@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ripples of Undeath",
+    "oracleId": "2acf8e34-9215-4a72-a24f-09d3bdd0083a",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "At the beginning of your first main phase, mill three cards. Then you may pay {1} and 3 life. If you do, put a card from among those cards into your hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your first main phase, mill three cards. Then you may pay {1} and 3 life. If you do, put a card from among those cards into your hand.",
+      "trigger": {
+        "on": "step",
+        "step": "MAIN1",
+        "yours": true
+      },
+      "effects": [
+        {
+          "effect": "mill",
+          "count": 3,
+          "remember": true
+        },
+        {
+          "effect": "unlessPays",
+          "who": "you",
+          "amount": 1,
+          "life": 3,
+          "ifPaid": true,
+          "effects": [
+            {
+              "effect": "chooseCard",
+              "zone": "graveyard",
+              "among": "remembered",
+              "selector": {},
+              "to": "hand"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -402,6 +402,11 @@ function declareAttacks(state, player, picked, events) {
      (rules/turn.mjs). */
   const attackedPlayers = (state.players[player].attackedPlayers ??= []);
   for (const attack of state.combat.attacks) if (attack.planeswalker === undefined && !attackedPlayers.includes(attack.defender)) attackedPlayers.push(attack.defender);
+  /* And with what: "if you attacked with two or more creatures this turn" (Minas Tirith, wave 4b; script/amount.mjs,
+     creaturesAttackedWithThisTurn) -- each creature declared as an attacker this turn (CR 508.1), once however many combats it
+     attacked in, kept against the turn it was declared in. */
+  const attackedWith = state.players[player].attackedWith?.turn === state.turn ? state.players[player].attackedWith : (state.players[player].attackedWith = {turn: state.turn, ids: []});
+  for (const attack of state.combat.attacks) if (!attackedWith.ids.includes(attack.attacker)) attackedWith.ids.push(attack.attacker);
   /* And whom it attacked: "a player it has already attacked this turn" (Port Razer; rules/statics.mjs, cantAttack). */
   for (const attack of state.combat.attacks) if (attack.planeswalker === undefined) recordUse(state, attack.attacker, `attacked:${attack.defender}`);
 
