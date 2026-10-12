@@ -158,6 +158,11 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
       state.objects[moved].counters[counter] = (state.objects[moved].counters[counter] ?? 0) + enteringCountersPlaced(state, moved, counter, count, state.objects[moved].controller);
     }
   }
+  /* "Exile it from their graveyard with a stash counter on it" (Tinybones, Bauble Burglar; CR 122.1): a card in exile may have
+     counters, as a suspended card's time counters are -- given it as it arrives there. Not put on a permanent, so nothing
+     that changes how many are put on one reads them (CR 122.6). */
+  if (destination === "exile" && counters && state.objects[moved])
+    for (const [counter, count] of Object.entries(counters)) state.objects[moved].counters[counter] = (state.objects[moved].counters[counter] ?? 0) + count;
   events.push(event("GameEventCardChangeZone", state, {
     card,
     ...(leftBehind ? {leftBehind} : {}),
@@ -300,6 +305,10 @@ export function sacrificeOne(state, id, events) {
   const before = events.length;
   const moved = moveOne(state, id, "graveyard", events, {owner: object.owner});
   if (moved !== null && events.length > before) Object.assign(events[events.length - 1].data.fields, {sacrificed: true, sacrificer});
+  /* "As long as you've sacrificed a nontoken permanent this turn" (Evendo Brushrazer; script/condition.mjs): counted for its
+     sacrificer, whatever replaced where it went -- it was sacrificed all the same (CR 701.21a) -- and cleared as a turn begins
+     (rules/turn.mjs). */
+  if (object.token !== true && state.players[sacrificer]) state.players[sacrificer].sacrificedNontokenThisTurn = (state.players[sacrificer].sacrificedNontokenThisTurn ?? 0) + 1;
   return moved;
 }
 
@@ -533,7 +542,23 @@ export function manifest(state, params, context) {
  * permissionOpen), not once now, which an effect's own `condition` would be. A card exiled face down is played as the card it
  * is (CR 406.3a; rules/actions.mjs, withFaceUp).
  */
+/* `from`, a zone's cards rather than named ones: "you may cast a creature spell from your graveyard this turn" (Chainer,
+   Nightmare Adept: "graveyard", `spellsOnly`, `spells` the selector, `count` 1 -- spent by the one card it lets be played),
+   "until end of turn, ... you may play cards from the top of your library. If you cast a spell this way, pay life equal to
+   its mana value rather than pay its mana cost" (Gwenom, Remorseless: "library-top", `payLife: "manaValue"`). A permission of
+   its controller's, read as a permanent's play-from is (rules/actions.mjs), whatever becomes of the source (CR 611.2a). */
 export function mayPlay(state, params, context) {
+  if (params.from !== undefined) {
+    const player = context.controller;
+    const effects = (state.effects ??= []);
+    let serial = effects.length, id;
+    do { id = `may-play:${params.from}:${serial++}`; } while (effects.some(e => e.id === id));
+    effects.push({id, rule: "may-play", affects: {ids: []}, player, name: state.objects[context.source]?.card ?? context.lastKnown?.name ?? "Effect",
+      from: params.from, spells: structuredClone(params.spells ?? true), ...(params.spellsOnly === true ? {spellsOnly: true} : {}),
+      ...(params.payLife ? {payLife: params.payLife} : {}), ...(Number.isInteger(params.count) ? {count: params.count} : {}),
+      until: params.until ?? "end-of-turn", madeOnTurn: state.turn, sourceController: player});
+    return [];
+  }
   /* "For as long as it remains exiled" (Thranduil's Decree, `zone: "exile"`): only a card there now -- one put elsewhere never
      starts the duration, and the effect does nothing to it (CR 611.2b). */
   const ids = (params.targets ?? []).filter((id) => state.objects[id] && (params.zone === undefined || state.objects[id].zone === params.zone));

@@ -759,6 +759,8 @@ export function advance(state) {
       if (player.diedThisTurn) player.diedThisTurn = 0;
       if (player.noncombatDamagedThisTurn) player.noncombatDamagedThisTurn = false;
       if (player.scriedThisTurn) player.scriedThisTurn = 0;
+      /* And the nontoken permanents each sacrificed (script/effects/zones.mjs, sacrificeOne; Evendo Brushrazer). */
+      if (player.sacrificedNontokenThisTurn) player.sacrificedNontokenThisTurn = 0;
     }
     next = 0;
   }

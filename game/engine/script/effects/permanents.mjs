@@ -716,9 +716,12 @@ export function effectUntil(state, params, context) {
      the spells it forbids by `named`, that creature's name as it resolves ({nameOf: {target: 0}}; CR 201.2a). Read where a
      cast is offered (rules/statics.mjs, castForbidden). Lands are played, not cast, and stay playable (the card's ruling). A
      name that could not be read (the creature gone) forbids nothing. */
+  /* "If you do, you can't cast additional spells this turn" (Conduit of Worlds): every spell (`allSpells`), its controller's
+     ("you"). */
   if (params.rule === "cant-cast") {
-    if (typeof params.named !== "string" || !Array.isArray(params.who) || !params.who.length) return [];
-    pushEffect(state, {id: params.id ?? `effect:${context.source ?? "effect"}`, rule: "cant-cast", players: [...params.who], spells: {named: params.named},
+    const who = params.who === "you" ? [context.controller] : params.who;
+    if (!(typeof params.named === "string" || params.allSpells === true) || !Array.isArray(who) || !who.length) return [];
+    pushEffect(state, {id: params.id ?? `effect:${context.source ?? "effect"}`, rule: "cant-cast", players: [...who], spells: params.allSpells === true ? {} : {named: params.named},
       affects: {what: "player"}, apply: {}, until: params.until ?? "end-of-turn", sourceController: context.controller});
     return [];
   }
@@ -752,8 +755,9 @@ export function effectUntil(state, params, context) {
     /* "Until that player's next turn" (Teferi's Reproach): `their-next-turn`, the player `who` names (rules/turn.mjs). And a
        rule changed for players (`players`): their protection, their life total that can't change. */
     /* And "you have no maximum hand size for the rest of the game" (Wisdom of Ages; CR 402.2, 611.2a): read at cleanup
-       (rules/statics.mjs, playerRuleChanged). */
-    ...(params.until === "their-next-turn" || ["protection", "life-cant-change", "no-maximum-hand-size", "damage-doubled"].includes(params.rule) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
+       (rules/statics.mjs, playerRuleChanged). And "until end of turn, you may look at the top card of your library any time"
+       (Gwenom, Remorseless; CR 401.2): read as the library is shown (projection.mjs, topSeenBy). */
+    ...(params.until === "their-next-turn" || ["protection", "life-cant-change", "no-maximum-hand-size", "damage-doubled", "look-at-top"].includes(params.rule) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
     /* "If a source would deal damage to that player or a permanent that player controls, it deals double that damage
        instead" (Lightning, Army of One; rules/replacement.mjs, rememberedReplacement): `who` the players it remembers, its
        name for the order's question (CR 616.1). "That creature enters with an additional +1/+1 counter on it" (Summon:

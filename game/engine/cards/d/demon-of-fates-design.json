@@ -1,0 +1,81 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Demon of Fate's Design",
+    "oracleId": "53716e0b-4d4e-40b0-8370-38e11f73d195",
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "Demon"
+    ],
+    "manaCost": "{4}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Flying, trample\nOnce during each of your turns, you may cast an enchantment spell by paying life equal to its mana value rather than paying its mana cost.\n{2}{B}, Sacrifice another enchantment: This creature gets +X/+0 until end of turn, where X is the sacrificed enchantment's mana value.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "static",
+      "text": "Once during each of your turns, you may cast an enchantment spell by paying life equal to its mana value rather than paying its mana cost.",
+      "rule": "cast-without-paying",
+      "affects": {
+        "types": [
+          "Enchantment"
+        ]
+      },
+      "limit": 1,
+      "condition": {
+        "yourTurn": true
+      },
+      "payLife": "manaValue"
+    },
+    {
+      "kind": "activated",
+      "text": "{2}{B}, Sacrifice another enchantment: This creature gets +X/+0 until end of turn, where X is the sacrificed enchantment's mana value.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{B}"
+        },
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Enchantment"
+            ],
+            "another": true
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": {
+            "manaValueOf": "sacrificed"
+          },
+          "toughness": 0
+        }
+      ]
+    }
+  ]
+}

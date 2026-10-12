@@ -300,7 +300,9 @@ export function freeCast(state, player, cardId) {
         if (manaValue(parseManaCost(object.manaCost ?? "")) > cap) continue;
       }
       if (ability.limit && usesThisTurn(state, holderId, `free:${ability.id}`) >= ability.limit) continue;
-      return {source: holderId, abilityId: ability.id, limited: Boolean(ability.limit)};
+      /* "By paying life equal to its mana value rather than paying its mana cost" (Demon of Fate's Design; CR 118.9): the
+         alternative cost is that life, not nothing (`payLife`, rules/actions.mjs). */
+      return {source: holderId, abilityId: ability.id, limited: Boolean(ability.limit), ...(ability.payLife ? {payLife: ability.payLife} : {})};
     }
   }
   return null;

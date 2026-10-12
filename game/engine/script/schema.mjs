@@ -173,8 +173,10 @@ function checkEffect(effect, path, errors) {
   if (name === "exileUntil" && effect.sameName !== undefined) checkSelector(effect.sameName, `${path}.sameName`, errors);
   /* "Can't cast spells with the same name as that creature" (Reflector Mage): which name, and whose -- both, or it forbids
      nothing it could say. */
-  if (name === "effectUntil" && effect.rule === "cant-cast" && (effect.named === undefined || effect.who === undefined))
-    errors.push({path, message: "A cast forbidden for a while names the spells (`named`) and the players (`who`)"});
+  /* Or every spell (`allSpells`, Conduit of Worlds's "you can't cast additional spells this turn"), never beside a name. */
+  if (name === "effectUntil" && effect.rule === "cant-cast" && ((effect.named === undefined) === (effect.allSpells !== true) || effect.who === undefined
+    || (effect.allSpells !== undefined && effect.allSpells !== true)))
+    errors.push({path, message: "A cast forbidden for a while names the spells (`named`) or forbids every one (`allSpells: true`), and the players (`who`)"});
   /* "If that creature would die this turn, exile it instead" (rules/replacement.mjs): about what it names, fixed as it
      resolves -- `targets`, and for this turn. */
   if (name === "effectUntil" && effect.rule === "exile-if-dies" && (effect.targets === undefined || (effect.until ?? "end-of-turn") !== "end-of-turn"))
@@ -232,6 +234,19 @@ function checkEffect(effect, path, errors) {
   /* "If you control a Wizard" (Flameshape): a permission's condition, closed as an effect's own is -- an unknown key refused
      here rather than read as true. */
   if (name === "mayPlay") for (const message of conditionProblems(effect.onlyIf)) errors.push({path: `${path}.onlyIf`, message});
+  /* A zone's cards for a while (Chainer, Nightmare Adept; Gwenom, Remorseless): its graveyard or the top of its library, in
+     place of named cards -- what may be played (`spells`, a selector), "pay life equal to its mana value" (`payLife`), and
+     how many cards before it is spent (`count`). */
+  if (name === "mayPlay" && effect.from !== undefined) {
+    if (!["graveyard", "library-top"].includes(effect.from)) errors.push({path: `${path}.from`, message: "mayPlay's `from` is \"graveyard\" or \"library-top\""});
+    if (effect.targets !== undefined || effect.zone !== undefined || effect.onlyIf !== undefined)
+      errors.push({path: `${path}.from`, message: "mayPlay from a zone names no cards: no `targets`, `zone` or `onlyIf` beside `from`"});
+    if (effect.spells !== undefined && effect.spells !== true) checkSelector(effect.spells, `${path}.spells`, errors, {choice: true});
+    if (effect.payLife !== undefined && effect.payLife !== "manaValue") errors.push({path: `${path}.payLife`, message: "payLife is \"manaValue\""});
+    if (effect.count !== undefined && !(Number.isInteger(effect.count) && effect.count >= 1)) errors.push({path: `${path}.count`, message: "count is how many cards it lets be played, 1 or more"});
+  }
+  if (name === "mayPlay" && effect.from === undefined && ["spells", "payLife", "count"].some((key) => effect[key] !== undefined))
+    errors.push({path, message: "spells, payLife and count are a mayPlay's from a zone (`from`)"});
   /* Amass (CR 701.47a): the creature type its Army is, "Goblin" for "amass Goblins 2"; the Army chosen remembered or not. */
   if (name === "amass") {
     if (!isText(effect.subtype) || !isCreatureType(effect.subtype))
@@ -284,8 +299,11 @@ function checkEffect(effect, path, errors) {
     if (effect.anyNumber !== undefined && effect.onto === undefined) errors.push({path: `${path}.anyNumber`, message: "anyNumber goes with `onto`"});
   }
   /* A designation (alterAttribute, script/effects/attributes.mjs): monstrous or prepared. */
-  if (name === "alterAttribute" && !["monstrous", "prepared"].includes(effect.attribute))
-    errors.push({path: `${path}.attribute`, message: "alterAttribute gives or takes a designation: \"monstrous\" or \"prepared\""});
+  if (name === "alterAttribute" && !["monstrous", "prepared", "solved"].includes(effect.attribute))
+    errors.push({path: `${path}.attribute`, message: "alterAttribute gives or takes a designation: \"monstrous\", \"prepared\" or \"solved\""});
+  /* Solved stays until the Case leaves the battlefield (CR 719.3b): given, never taken. */
+  if (name === "alterAttribute" && effect.attribute === "solved" && effect.value !== undefined)
+    errors.push({path: `${path}.value`, message: "A Case once solved stays solved (CR 719.3b): solved is given, never taken"});
   /* "Each opponent may sacrifice ... For each opponent who doesn't, ..." (Braids, Arisen Nightmare; effects/asking.mjs): a
      sacrifice that may be declined (`optional`), and what follows for each player who sacrifices nothing (`ifNot`), held to
      the effect grammar -- only beside `optional`. */
@@ -503,11 +521,26 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
     /* A rule is read through the whole selector grammar (rules/statics.mjs), a choice of selectors included: "creatures you
        control with power or toughness 1 or less". A layer's `affects` is the layers' narrower matcher, and is not. */
     else checkSelector(ability.affects, `${path}.affects`, errors, {choice: ability.rule !== undefined});
+    /* "By paying life equal to its mana value rather than paying its mana cost" (Demon of Fate's Design): a free cast's cost of
+       life, its mana value. */
+    if (ability.rule === "cast-without-paying" && ability.payLife !== undefined && ability.payLife !== "manaValue")
+      errors.push({path: `${path}.payLife`, message: "payLife is \"manaValue\""});
     if (ability.rule === "play-from") {
       if (!["graveyard", "library-top", "exile"].includes(ability.zone)) errors.push({path: `${path}.zone`, message: "play-from zone is graveyard, library-top or exile"});
-      for (const key of ["free", "graveyardToLibraryBottom"]) if (ability[key] !== undefined && ability[key] !== true)
+      /* `perType`: a land and a spell of each permanent type (Muldrotha); `anyMana`: "mana of any type can be spent to cast
+         those spells" (Tinybones, CR 118.14). */
+      for (const key of ["free", "graveyardToLibraryBottom", "perType", "anyMana"]) if (ability[key] !== undefined && ability[key] !== true)
         errors.push({path: `${path}.${key}`, message: `${key} is true`});
+      if (ability.perType === true && ability.limit !== undefined) errors.push({path: `${path}.perType`, message: "A permission kept by type has no other limit"});
       if (ability.spells && typeof ability.spells === "object") checkSelector(ability.spells, `${path}.spells`, errors, {choice: true});
+      /* "By sacrificing a land in addition to paying its other costs" (Exploration Broodship; CR 601.2b): an additional cost of
+         the spells cast through it -- a sacrifice of a permanent the selector describes, the one form built. */
+      if (ability.additionalCost !== undefined) {
+        if (!(Array.isArray(ability.additionalCost) && ability.additionalCost.length && ability.additionalCost.every((a) => a?.atom === "sacrifice" && a.count === undefined)))
+          errors.push({path: `${path}.additionalCost`, message: "A permission's additional cost is a list of sacrifices of one permanent each ({atom: \"sacrifice\", selector})"});
+        else ability.additionalCost.forEach((a, i) => { if (a.selector !== undefined) checkSelector(a.selector, `${path}.additionalCost[${i}].selector`, errors, {choice: true}); });
+        if (ability.lands) errors.push({path: `${path}.additionalCost`, message: "An additional cost is a spell's (CR 601.2b): a permission with one lets spells be cast, not lands be played"});
+      }
     }
     /* What causes a trigger to trigger again: an arrival, a death, an attack, or an arrival or a departure (rules/trigger.mjs). */
     if (ability.rule === "triggers-again" && ability.cause !== undefined && !["enters", "dies", "attacks", "enters or leaves"].includes(ability.cause?.event))

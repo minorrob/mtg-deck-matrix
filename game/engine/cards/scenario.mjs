@@ -207,6 +207,8 @@ export function runScenario(scenario, cards, fixtures = {}) {
     if (step.riders !== undefined) found = found.filter((a) => ((a.riders ?? []).length > 0) === step.riders);
     /* Through which permanent's permission ("via": its name), when two would let it be played and do different things. */
     if (step.via !== undefined) found = found.filter((a) => (a.viaName ?? null) === step.via);
+    /* As which of its permanent types, through a permission kept by type (Muldrotha, the Gravetide): `asType`, "Artifact". */
+    if (step.asType !== undefined) found = found.filter((a) => (a.asType ?? null) === step.asType);
     if (!found.length && step.optional) return;
     if (!found.length) fail(`${names[seat]} is not offered ${kind} ${card}${step.targets ? ` at ${JSON.stringify(step.targets)}` : ""}`);
     record(applyAction(state, seat, found[0]));
@@ -382,6 +384,13 @@ export function runScenario(scenario, cards, fixtures = {}) {
       for (let n = 0; n < STEP_LIMIT && state.awaiting?.kind !== "declare-blockers"; n += 1) stepOnce();
       if (state.awaiting?.kind !== "declare-blockers") fail("the game never asked who blocks");
       const choice = awaitingChoice(state), picked = [];
+      /* `blockers`: the creatures that may block, by name, as the question offers them -- "this creature can't block" is one
+         that is not among them (Gravecrawler). */
+      if (step.blockers !== undefined) {
+        const got = [...new Set(choice.options.map((o) => o.label.split(" blocks ")[0]))].sort();
+        if (JSON.stringify(got) !== JSON.stringify([...step.blockers].sort())) fail(`the creatures that may block are ${JSON.stringify(got)}, not ${JSON.stringify(step.blockers)}`);
+        passed.push(`may block: ${step.blockers.join(", ") || "nothing"}`);
+      }
       for (const [blocker, attacker] of step.block) {
         const option = choice.options.find((o) => o.label === `${blocker} blocks ${attacker}` && !picked.includes(o.index));
         if (!option) fail(`${blocker} cannot block ${attacker}: ${choice.options.map((o) => o.label).join(", ") || "nothing can"}`);

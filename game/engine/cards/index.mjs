@@ -76,7 +76,18 @@ const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "trig
   "cant-activate",
   /* "As long as there is a Lesson card in your graveyard, this creature can attack as though it didn't have defender"
      (Platypus-Bear; CR 702.3b): rules/statics.mjs defenderLifted asks it as attackers are offered. */
-  "attacks-despite-defender"];
+  "attacks-despite-defender",
+  /* "Coven -- As long as you control three or more creatures with different powers, you may cast creature spells from the
+     top of your library" (Augur of Autumn), "you may cast this card from your graveyard as long as you control a Zombie"
+     (Gravecrawler): asked whenever a card would be played through it (rules/actions.mjs, permissionOpen and
+     playableElsewhere). */
+  "play-from", "cast-self-from",
+  /* "3+ | You may play an additional land on each of your turns" (Exploration Broodship's station; CR 305.2): asked as the
+     land drops are counted (rules/actions.mjs, landDropsLeft). */
+  "extra-land-drop",
+  /* "Solved -- You may look at the top card of your library any time" (Case of the Locked Hothouse; CR 719.3c): asked as the
+     library is shown (projection.mjs, topSeenBy). */
+  "look-at-top"];
 
 /* A target picked after the offer is taken ("up to two target creatures", script/bind.mjs): not chosen with it. */
 const countedTarget = (spec) => Boolean(spec) && typeof spec === "object" && spec.count !== undefined;
@@ -1248,9 +1259,10 @@ export function compileScript(script) {
         problems.push("moveZone: look is true, beside faceDown: the cards looked at, then exiled face down");
       /* "Return ... to the battlefield with a finality counter on it" (Excava, the Risen Past): onto the battlefield only, each
          kind of counter a whole number, 1 or more (effects/zones.mjs, moveOne's `counters`). */
-      if (effect.effect === "moveZone" && effect.withCounters !== undefined && !(effect.to === "battlefield" && effect.withCounters && typeof effect.withCounters === "object"
+      /* Or that it is exiled with ("exile it ... with a stash counter on it", Tinybones, Bauble Burglar; effects/zones.mjs). */
+      if (effect.effect === "moveZone" && effect.withCounters !== undefined && !(["battlefield", "exile"].includes(effect.to) && effect.withCounters && typeof effect.withCounters === "object"
         && Object.keys(effect.withCounters).length && Object.values(effect.withCounters).every((n) => Number.isInteger(n) && n >= 1)))
-        problems.push("moveZone: withCounters is the counters it enters the battlefield with, {kind: 1 or more}");
+        problems.push("moveZone: withCounters is the counters it enters the battlefield with, or is exiled with: {kind: 1 or more}");
       /* "Put this creature's counters on that token" (Ambitious Augmenter): `countersOf: "self"`, every kind its source had as
          it last existed, as many -- with no kind or count of its own (effects/resources.mjs, putCounter). */
       if (effect.effect === "putCounter" && effect.countersOf !== undefined && !(effect.countersOf === "self" && effect.counter === undefined && effect.count === undefined))

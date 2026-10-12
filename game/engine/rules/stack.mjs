@@ -433,6 +433,11 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     for (const effect of state.effects ?? []) {
       if (effect.dealer === entry.objectId) effect.dealer = arrived;
       if (to === "battlefield" && Array.isArray(effect.sources) && effect.sources.includes(entry.objectId)) effect.sources = effect.sources.map((id) => (id === entry.objectId ? arrived : id));
+      /* AN EFFECT THAT CHANGED THE SPELL (CR 400.7a): one of a spell's or an ability's that changed this permanent spell's
+         characteristics on the stack goes on applying to the permanent it becomes -- "whenever you cast a Dragon creature
+         spell from your graveyard, it gains 'When this creature dies, exile it'" (Rivaz of the Claw). */
+      if (to === "battlefield" && effect.layer !== undefined && Array.isArray(effect.affects?.ids) && effect.affects.ids.includes(entry.objectId))
+        effect.affects = {...effect.affects, ids: effect.affects.ids.map((id) => (id === entry.objectId ? arrived : id))};
     }
     /* Rebound's delayed trigger (CR 702.88a, 603.7d: its controller the spell's): at the beginning of THEIR next upkeep, the
        card in exile -- the object it now is, so one that leaves exile meanwhile is not cast (CR 400.7) -- may be cast
@@ -442,6 +447,10 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
         effects: [{effect: "play", from: "targets", targets: [arrived], free: true}]}, {controller: entry.playerId, source: arrived});
     /* "Or was cast from your library" (Fblthp, the Lost; script/condition.mjs, `cameFrom`): a permanent spell cast from a library. */
     if (to === "battlefield" && entry.cast?.from === "library") state.objects[arrived].cameFrom = {zone: "library", owner, cast: true};
+    /* And where it was cast from, and by whom (CR 601.2a): "if you didn't cast it from your hand" (Chainer, Nightmare Adept;
+       script/condition.mjs, `castFromYourHand`). A copy was not cast (CR 707.10), and a new object after it moves again
+       (CR 400.7) was cast from nowhere. */
+    if (to === "battlefield" && entry.cast?.from !== undefined) state.objects[arrived].castFrom = {zone: entry.cast.from, by: entry.playerId};
     /* The delayed trigger's source is the card, now in exile (CR 603.7d: the source of the ability that made it). */
     if (paradigm?.delayed) paradigm.delayed.source = arrived;
     /* CR 608.3a: it enters under its caster's control -- not its owner's, when a card was cast by another player (Tinybones,

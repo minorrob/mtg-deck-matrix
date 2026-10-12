@@ -125,7 +125,7 @@ const keyOf = (s, id) => `play-from:${s.objects[id].abilities.find((a) => a.rule
 }
 {
   eq(missingFor({options: ["MayPlay"]}), [{kind: "option", name: "MayPlay", why: "not built"}],
-    "MayPlay stays unbuilt in the catalog: a free cast, life for mana and a permanent type at a time are not built");
+    "MayPlay stays unbuilt in the catalog: a replacement's exile kept against its source from anywhere (Valgavoth), a permission's additional cost other than a sacrifice (Quilled Greatwurm) and a card castable from one zone only (Haakon) are not built (tests/engine-play-from-zones.mjs)");
 }
 
 console.log(`engine-play-from: ${checks} checks passed — once during each of your turns, per source, an unlimited permission first; exiled if it would go to a graveyard; "you may pay ... if you do".`);

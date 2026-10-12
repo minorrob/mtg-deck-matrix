@@ -537,6 +537,9 @@ export function amountOf(state, value, context = {}) {
      the players still in the game, whose cards are still in it (CR 800.4a) -- holding that many or more. */
   else if ("graveyardsWithAtLeast" in value) n = state.players.filter((p) => !p.lost && state.zones.graveyard[p.id].length >= value.graveyardsWithAtLeast).length;
   /* "Where X is the mana value of that spell" (Ovika): its printed cost, X counted as 0 (CR 202.3). */
+  /* "Where X is the sacrificed enchantment's mana value" (Demon of Fate's Design): what the ability's cost sacrificed, as it last
+     existed (CR 608.2h; rules/actions.mjs keeps it). */
+  else if (value.manaValueOf === "sacrificed") n = (context.sacrificed ?? [])[0]?.manaValue ?? 0;
   else if ("manaValueOf" in value) {
     const id = objectOf(value.manaValueOf, context);
     /* A transformed permanent's is its front face's (CR 202.3b). */
