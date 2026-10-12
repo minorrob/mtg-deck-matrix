@@ -27,8 +27,7 @@ ROOM = 'game/room/room.mjs'
 FORBIDDEN_COUNT = '  if ((state.players[player]?.drawnThisTurn ?? 0) + count <= 1) return false;'
 FORBIDDEN_RULE = '  return playerRuleChanged(state, "cant-draw-more-than-one", player);'
 DRAW_ONE = '''  if (drawForbidden(state, player)) return;
-  const library = cardsIn(state, "library", player);
-  if (library.length === 0) { state.players[player].drewFromEmpty = true; return; }'''
+  const library = cardsIn(state, "library", player);'''
 REFUSED_WHEN = '  if (first?.effect !== "draw" || first.who !== undefined || chooser !== context.controller) return false;'
 REFUSED_COUNT = '  return drawForbidden(state, chooser, typeof count === "number" ? count : amountOf(state, count, context));'
 MODES_FILTER = '    const modes = (params.modes ?? []).filter((mode) => !(done && mode.once === true) && !drawRefused(state, mode, chooser, context));'

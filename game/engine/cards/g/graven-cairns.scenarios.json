@@ -1,0 +1,147 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Graven Cairns",
+  "scenarios": [
+    {
+      "name": "Alone it adds {C} only; with the Mountain's {R} in the pool, {C} or {B}{B}, {B}{R} or {R}{R} -- {B}{B} taken",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Graven Cairns",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Graven Cairns"
+              },
+              "count": 1,
+              "mana": [
+                {
+                  "C": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Graven Cairns"
+              },
+              "count": 4,
+              "mana": [
+                {
+                  "C": 1
+                },
+                {
+                  "B": 2
+                },
+                {
+                  "B": 1,
+                  "R": 1
+                },
+                {
+                  "R": 2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Graven Cairns",
+          "mana": {
+            "B": 2
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 2,
+            "R": 0
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Graven Cairns"
+        }
+      ]
+    },
+    {
+      "name": "A Swamp's {B} filtered into {B}{R}; or the Cairns tapped alone for {C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Graven Cairns",
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Graven Cairns",
+          "mana": {
+            "B": 1,
+            "R": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1,
+            "R": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "{C} from it alone",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Graven Cairns"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Graven Cairns",
+          "mana": {
+            "C": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -26,7 +26,8 @@ import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf, controllerOf, abilitiesOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector, matchesSelector, shareCreatureType} from "../filter.mjs";
 import {applyReplacements, enteringModifications, regenerated} from "../../rules/replacement.mjs";
-import {cantBeCountered, entersUntapped, enteringCountersPlaced, drawsInstead, cantBeSacrificed, drawForbidden} from "../../rules/statics.mjs";
+import {cantBeCountered, entersUntapped, enteringCountersPlaced, drawsInstead, cantBeSacrificed, drawForbidden, emptyDrawWins, drawsMore} from "../../rules/statics.mjs";
+import {winGame} from "./resources.mjs";
 import {amountOf} from "../amount.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
 
@@ -346,6 +347,9 @@ export function sacrificeAll(state, params, context) {
  * names a looked-at card to nobody.
  */
 export function peekAndReveal(state, params, context) {
+  /* A hand looked at is asked of its looker as the resolution reaches it (script/resolution.mjs; effects/asking.mjs,
+     handLook): run here, nobody would see it -- refused, never read as the library's top. */
+  if (params.zone === "hand") throw new Error("A look at a hand is shown to its looker as a resolution reaches it; it is not run on its own");
   const events = [], seen = [];
   const count = params.count ?? 1;
   for (const player of playersFor(state, params.who, context.controller)) {
@@ -639,11 +643,21 @@ export function draw(state, params, context) {
   return events;
 }
 /* One card off the top of a player's library into their hand, said to be drawn; from an empty library, the mark that loses (CR 704.5b). */
-function drawOne(state, player, events) {
+function drawOne(state, player, events, replaced = []) {
   /* A card the player can't draw (Narset, Parter of Veils; rules/statics.mjs, drawForbidden) is not drawn, nor tried for: no
      draw from an empty library either (CR 101.2, 121.2b). */
   if (drawForbidden(state, player)) return;
   const library = cardsIn(state, "library", player);
+  /* "IF YOU WOULD DRAW A CARD WHILE YOUR LIBRARY HAS NO CARDS IN IT, YOU WIN THE GAME INSTEAD" (Laboratory Maniac; CR 614.11,
+     121.6a): replaced even with no card to draw, so it is no draw from an empty library -- and an opponent's "you can't win
+     the game" (effects/resources.mjs, winGame) leaves the player neither winning nor losing for it (its ruling). Before "draw
+     two instead": either order ends with the same win, so nobody is asked (CR 616.1). */
+  if (library.length === 0 && emptyDrawWins(state, player)) { winGame(state, {who: [player]}, {controller: player}); return; }
+  /* "DRAW TWO CARDS INSTEAD" (Teferi's Ageless Insight; CR 614.11a, 614.5): each `draws-more` not yet applied to this draw
+     replaces it with that many draws, each one the others may still replace -- all of them made before the rest of the draw
+     goes on. */
+  const more = drawsMore(state, player).find((m) => !replaced.includes(m.key));
+  if (more) { for (let i = 0; i < more.count; i += 1) drawOne(state, player, events, [...replaced, more.key]); return; }
   if (library.length === 0) { state.players[player].drewFromEmpty = true; return; }
   const moved = moveOne(state, library[0], "hand", events, {owner: player});
   if (moved !== null && state.objects[moved]?.zone === "hand") {
@@ -654,6 +668,57 @@ function drawOne(state, player, events) {
     const inStep = recordDrawStepDraw(state, player);
     if (inStep !== null) fields.drawStepNumber = inStep;
   }
+}
+
+/* ---- DREDGE N (CR 702.52a; Life from the Loam; wave 4c, k2) ----
+
+   "If you would draw a card, you may mill N cards instead. If you do, return this card from your graveyard to your hand": a
+   replacement of one draw (CR 614.1a, 121.6), had by the card in its owner's graveyard and only there (CR 113.6) -- the
+   static `dredge` its keyword compiles to (cards/index.mjs). Usable only with N or more cards in that player's library
+   (702.52b), and never for a draw the player can't make (Narset, Parter of Veils; drawForbidden): there is no draw to
+   replace. Each card drawn is its own draw (CR 121.2), so one draw is replaced by one dredge at most, and a dredge card a
+   dredge milled may replace the next draw (the card's rulings). Whether, and with which, is the drawing player's choice
+   (CR 616.1): in the draw step (rules/turn.mjs, "dredge-draw") and as an effect resolves (script/resolution.mjs; effects/
+   asking.mjs, dredgeDraw). */
+/** The dredge cards of a player's graveyard that could replace their next draw now, each `{id, amount}`. */
+export function dredgers(state, player) {
+  if (!state.players[player] || state.players[player].lost || drawForbidden(state, player)) return [];
+  const library = cardsIn(state, "library", player).length;
+  return cardsIn(state, "graveyard", player).flatMap((id) => {
+    const rule = (state.objects[id].abilities ?? []).find((a) => a.kind === "static" && a.rule === "dredge");
+    return rule && Number.isInteger(rule.amount) && rule.amount >= 1 && rule.amount <= library ? [{id, amount: rule.amount}] : [];
+  });
+}
+/** One dredge in words, for the drawing player's question: "Dredge 3: mill three cards and return Life from the Loam to your hand". */
+const DREDGE_WORDS = ["no", "a", "two", "three", "four", "five", "six"];
+export const dredgeWords = (state, {id, amount}) =>
+  `Dredge ${amount}: mill ${DREDGE_WORDS[amount] ?? amount} card${amount === 1 ? "" : "s"} and return ${state.objects[id]?.card ?? "it"} to your hand`;
+/** A draw replaced by this card's dredge (dredgers): its N cards milled, then the card returned from its owner's graveyard to
+    their hand -- the object it was there (CR 400.7). No card is drawn, so nothing that watches draws sees it. False when it
+    cannot dredge now. */
+export function dredgeInstead(state, player, cardId, events) {
+  const could = dredgers(state, player).find((d) => d.id === cardId);
+  if (!could) return false;
+  events.push(...mill(state, {who: [player], count: could.amount}, {controller: player, source: cardId}));
+  if (state.objects[cardId]?.zone === "graveyard") moveOne(state, cardId, "hand", events, {owner: player});
+  return true;
+}
+/** A draw effect as the single draws it makes, a player for each card, in the order `draw` makes them -- Alms Collector's
+    "instead you and that player each draw a card" among them (drawsInstead, the one its drawing player chose, `drawOrders`)
+    -- for a dredge to replace any one of them (script/resolution.mjs). */
+export function singleDraws(state, params, context) {
+  const count = params.count ?? 1, draws = [];
+  for (const player of playersFor(state, params.who, context.controller)) {
+    const instead = drawsInstead(state, player, count);
+    if (instead.length) {
+      const you = instead.includes(params.drawOrders?.[player]) ? params.drawOrders[player] : instead[0];
+      const seats = state.players.length, rank = (p) => (p - state.activePlayer + seats) % seats;
+      draws.push(...[you, player].sort((a, b) => rank(a) - rank(b)));
+      continue;
+    }
+    for (let i = 0; i < count; i += 1) draws.push(player);
+  }
+  return draws;
 }
 
 /* ---- CR 616.1, before cards are drawn ----

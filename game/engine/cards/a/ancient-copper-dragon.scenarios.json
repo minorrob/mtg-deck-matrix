@@ -1,0 +1,199 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ancient Copper Dragon",
+  "fixtures": {
+    "Drake": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Drake"
+      ],
+      "manaCost": "{1}{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "keywords": [
+        "Flying"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Combat damage to Maya: Rob rolls a d20 -- a 13 -- and creates thirteen Treasures",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ancient Copper Dragon"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Ancient Copper Dragon"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 34
+        },
+        {
+          "event": "GameEventDieRolled",
+          "where": {
+            "sides": 20,
+            "result": 13
+          }
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Ancient Copper Dragon",
+            "Treasure",
+            "Treasure",
+            "Treasure",
+            "Treasure",
+            "Treasure",
+            "Treasure",
+            "Treasure",
+            "Treasure",
+            "Treasure",
+            "Treasure",
+            "Treasure",
+            "Treasure",
+            "Treasure"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "It deals 6 combat damage to Maya: a d20 rolled, a 2, and two Treasures",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ancient Copper Dragon"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Ancient Copper Dragon"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "event": "GameEventDieRolled",
+          "where": {
+            "sides": 20,
+            "result": 2
+          }
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Ancient Copper Dragon",
+            "Treasure",
+            "Treasure"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Blocked by Maya's Drake: no damage to a player, no roll",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ancient Copper Dragon"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Drake"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Ancient Copper Dragon"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Drake",
+              "Ancient Copper Dragon"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_END"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Ancient Copper Dragon"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Drake"
+          ]
+        }
+      ]
+    }
+  ]
+}

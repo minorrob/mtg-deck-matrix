@@ -90,7 +90,7 @@ BREAKS = [
     ('gift: its variant', ACTIONS, '      variants = variants.flatMap((v) => [v, {...v, gift: true}]);\n', '      variants = variants.flatMap((v) => [v]);\n'),
     ('gift: to an opponent', ACTIONS, 'state.players.filter((p) => p.id !== player && !p.lost).map((p) => p.id)', 'state.players.filter((p) => !p.lost).map((p) => p.id)'),
     ('gift: one in the game', ACTIONS, 'state.players.filter((p) => p.id !== player && !p.lost).map((p) => p.id)', 'state.players.filter((p) => p.id !== player).map((p) => p.id)'),
-    ('gift: on the offer', ACTIONS, ' ...(gift !== undefined ? {gift} : {}),\n', '\n'),
+    ('gift: on the offer', ACTIONS, ' ...(gift !== undefined ? {gift} : {}), ...(variant.offspring', ' ...(variant.offspring'),
     ('gift: another action', ACTIONS, '  && (a.gift ?? null) === (b.gift ?? null)\n', ''),
     ('gift: on the stack entry', ACTIONS, '    if (action.gift !== undefined) entry.gift = action.gift;\n', ''),
     ('gift: a copy\'s', STACK, '  if (original.gift !== undefined) entry.gift = original.gift;\n', ''),
@@ -103,7 +103,7 @@ BREAKS = [
     ('gift: promised', CONDITION, '''    && Number.isInteger(gift ?? (source !== null && source !== undefined ? state.objects[source]?.gift : undefined)) !== condition.giftPromised) return false;''',
      '''    && false) return false;'''),
     ('gift: a permanent promised', CONDITION, '''Number.isInteger(gift ?? (source !== null && source !== undefined ? state.objects[source]?.gift : undefined))''', '''Number.isInteger(gift)'''),
-    ('gift: the condition\'s key', CONDITION, '''  "giftPromised"];''', '''  ];'''),
+    ('gift: the condition\'s key', CONDITION, '''  "giftPromised",\n  /* Offspring''', '''  /* Offspring'''),
     ('gift: the condition\'s value', CONDITION, '''  if ("giftPromised" in condition && typeof condition.giftPromised !== "boolean") problems.push("giftPromised is true or false: whether the gift was promised");\n''', ''),
     ('gift: the chosen player', BIND, '''    return Number.isInteger(gift) && !(state?.players[gift]?.lost) ? [gift] : [];''', '''    return [];'''),
     ('gift: a permanent\'s chosen player', BIND, '''    const gift = context.gift ?? (state && context.source !== null && context.source !== undefined ? state.objects[context.source]?.gift : undefined);''',
@@ -178,7 +178,7 @@ BREAKS = [
     # The smoke game's graveyard: as many creature cards as a counted target takes (Victimize).
     ('smoke: two creature cards', COMPILE, '.map((t) => (Number.isInteger(t?.count?.min) ? t.count.min : 1)));', '.map(() => 1));'),
     # The words a script may say, and the coverage tool's credits.
-    ('vocabulary: the four keywords', VOCAB, '  "exalted", "extort", "eternalize", "gift"];', '  ];'),
+    ('vocabulary: the four keywords', VOCAB, '  "exalted", "extort", "eternalize", "gift",\n', ''),
     ('credit: Eternalize', CONSTRUCTS, '  Eternalize: "copyPermanent",\n', ''),
     ('credit: Exalted', CONSTRUCTS, '  Exalted: "pump",\n', ''),
     ('credit: Extort', CONSTRUCTS, '  Extort: "unlessPays",\n', ''),

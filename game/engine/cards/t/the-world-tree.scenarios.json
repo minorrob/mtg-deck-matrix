@@ -1,0 +1,583 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "The World Tree",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Sun God": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "God"
+      ],
+      "manaCost": "{3}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 4,
+      "toughness": 4,
+      "supertypes": [
+        "Legendary"
+      ]
+    },
+    "Sea God": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "God"
+      ],
+      "manaCost": "{3}{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 4,
+      "toughness": 4,
+      "supertypes": [
+        "Legendary"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters tapped; with five lands in all, a Plains taps for {W} alone",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Island",
+            "Swamp",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "The World Tree"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "The World Tree"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "The World Tree"
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Plains"
+          },
+          "count": 1,
+          "mana": [
+            {
+              "W": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Six lands: each of Rob's, the Tree too, has \"{T}: Add one mana of any color\"; Maya's Wastes does not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "The World Tree",
+            "Plains",
+            "Island",
+            "Swamp",
+            "Mountain",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Wastes"
+              },
+              "count": 6,
+              "mana": [
+                {
+                  "C": 1
+                },
+                {
+                  "W": 1
+                },
+                {
+                  "U": 1
+                },
+                {
+                  "B": 1
+                },
+                {
+                  "R": 1
+                },
+                {
+                  "G": 1
+                }
+              ]
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "The World Tree"
+              },
+              "count": 6
+            }
+          ]
+        },
+        {
+          "tap": "Wastes",
+          "mana": {
+            "R": 1
+          }
+        },
+        {
+          "pass": 1
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1,
+            "C": 0
+          }
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Wastes",
+            "seat": 1
+          },
+          "count": 1,
+          "mana": [
+            {
+              "C": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "As long as: the sixth land sacrificed (Marsh Flats), Rob's Wastes is a Wastes again",
+      "library": [
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "The World Tree",
+            "Plains",
+            "Island",
+            "Swamp",
+            "Wastes",
+            "Marsh Flats"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Wastes"
+              },
+              "count": 6
+            }
+          ]
+        },
+        {
+          "activate": "Marsh Flats"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Wastes"
+          },
+          "count": 1,
+          "mana": [
+            {
+              "C": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "{W}{W}{U}{U}{B}{B}{R}{R}{G}{G}, {T}, sacrificed: Rob puts both God cards onto the battlefield, the Bears stay, then a shuffle",
+      "library": [
+        "Sun God",
+        "Bear",
+        "Sea God",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "The World Tree",
+            "Plains",
+            "Plains",
+            "Island",
+            "Island",
+            "Swamp",
+            "Swamp",
+            "Mountain",
+            "Mountain",
+            "Forest",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains",
+          "mana": {
+            "W": 1
+          }
+        },
+        {
+          "tap": "Plains",
+          "mana": {
+            "W": 1
+          }
+        },
+        {
+          "tap": "Island",
+          "mana": {
+            "U": 1
+          }
+        },
+        {
+          "tap": "Island",
+          "mana": {
+            "U": 1
+          }
+        },
+        {
+          "tap": "Swamp",
+          "mana": {
+            "B": 1
+          }
+        },
+        {
+          "tap": "Swamp",
+          "mana": {
+            "B": 1
+          }
+        },
+        {
+          "tap": "Mountain",
+          "mana": {
+            "R": 1
+          }
+        },
+        {
+          "tap": "Mountain",
+          "mana": {
+            "R": 1
+          }
+        },
+        {
+          "tap": "Forest",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "tap": "Forest",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "activate": "The World Tree"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "The World Tree"
+              ]
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Sun God",
+                  "Sea God"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Sun God",
+            "Sea God"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Plains",
+            "Island",
+            "Island",
+            "Swamp",
+            "Swamp",
+            "Mountain",
+            "Mountain",
+            "Forest",
+            "Forest",
+            "Sun God",
+            "Sea God"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 18
+        },
+        {
+          "event": "GameEventShuffle",
+          "where": {}
+        }
+      ]
+    },
+    {
+      "name": "Any number may be none: Rob takes no God, and the library is shuffled",
+      "library": [
+        "Sun God",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "The World Tree",
+            "Plains",
+            "Plains",
+            "Island",
+            "Island",
+            "Swamp",
+            "Swamp",
+            "Mountain",
+            "Mountain",
+            "Forest",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains",
+          "mana": {
+            "W": 1
+          }
+        },
+        {
+          "tap": "Plains",
+          "mana": {
+            "W": 1
+          }
+        },
+        {
+          "tap": "Island",
+          "mana": {
+            "U": 1
+          }
+        },
+        {
+          "tap": "Island",
+          "mana": {
+            "U": 1
+          }
+        },
+        {
+          "tap": "Swamp",
+          "mana": {
+            "B": 1
+          }
+        },
+        {
+          "tap": "Swamp",
+          "mana": {
+            "B": 1
+          }
+        },
+        {
+          "tap": "Mountain",
+          "mana": {
+            "R": 1
+          }
+        },
+        {
+          "tap": "Mountain",
+          "mana": {
+            "R": 1
+          }
+        },
+        {
+          "tap": "Forest",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "tap": "Forest",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "activate": "The World Tree"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Plains",
+            "Island",
+            "Island",
+            "Swamp",
+            "Swamp",
+            "Mountain",
+            "Mountain",
+            "Forest",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 20
+        },
+        {
+          "event": "GameEventShuffle",
+          "where": {}
+        }
+      ]
+    }
+  ]
+}

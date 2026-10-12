@@ -1,0 +1,124 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wizard Class",
+    "oracleId": "36f68aa3-9955-46f1-bc87-497f16ef5222",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Class"
+    ],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "(Gain the next level as a sorcery to add its ability.)\nYou have no maximum hand size.\n{2}{U}: Level 2\nWhen this Class becomes level 2, draw two cards.\n{4}{U}: Level 3\nWhenever you draw a card, put a +1/+1 counter on target creature you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You have no maximum hand size.",
+      "rule": "no-maximum-hand-size",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{2}{U}: Level 2",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{U}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "setState",
+          "targets": "self",
+          "level": 2
+        }
+      ],
+      "timing": "sorcery",
+      "condition": {
+        "level": {
+          "exactly": 1
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "When this Class becomes level 2, draw two cards.",
+      "trigger": {
+        "on": "becomes level",
+        "level": 2
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2
+        }
+      ],
+      "level": 2
+    },
+    {
+      "kind": "activated",
+      "text": "{4}{U}: Level 3",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}{U}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "setState",
+          "targets": "self",
+          "level": 3
+        }
+      ],
+      "timing": "sorcery",
+      "condition": {
+        "level": {
+          "exactly": 2
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you draw a card, put a +1/+1 counter on target creature you control.",
+      "trigger": {
+        "on": "drawn",
+        "drawer": "you"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "level": 3
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Laboratory Maniac",
+    "oracleId": "aa286dd5-aa19-446d-9003-684d81eb57ca",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "If you would draw a card while your library has no cards in it, you win the game instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If you would draw a card while your library has no cards in it, you win the game instead.",
+      "rule": "empty-draw-wins",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      }
+    }
+  ]
+}

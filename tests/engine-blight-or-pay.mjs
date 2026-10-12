@@ -67,7 +67,8 @@ const compile = (additionalCost) => compileScript({schema: "CrankCardScript@1", 
 eq(compile([{atom: "oneOf", options: [[{atom: "blight", count: 1}], [{atom: "mana", cost: "{3}"}]]}]), [], "blight 1 or pay {3}");
 ok(compile([{atom: "oneOf", options: [[{atom: "blight", count: 1}]]}]).some((p) => p.includes("two or more")), "a choice of one is no choice");
 ok(compile([{atom: "oneOf", options: [[{atom: "blight", count: 1}], [{atom: "mana", cost: "{X}"}]]}]).some((p) => p.includes("is no mana to pay")), "and its mana is a cost to pay, not an X");
-ok(compile([{atom: "oneOf", options: [[{atom: "blight", count: 1}], [{atom: "payLife", amount: 3}]]}]).some((p) => p.includes("payLife: an additional cost nothing pays yet")), "and each choice is something paid");
+/* A fixed life payment is one now ("pay 5 life or pay {2}", Redirect Lightning; wave 4c, tests/engine-spells-draws-4c.mjs). */
+ok(compile([{atom: "oneOf", options: [[{atom: "blight", count: 1}], [{atom: "mill", count: 3}]]}]).some((p) => p.includes("mill: an additional cost nothing pays yet")), "and each choice is something paid");
 
 /* ---- becomes that color ---- */
 {

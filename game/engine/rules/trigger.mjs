@@ -145,6 +145,9 @@ function subjects(state, event, condition, sourceId, controller) {
   }
   /* "Whenever this creature transforms into Ashling, Rimebound" (CR 701.27e): this permanent, the face it has just after. */
   if (condition.on === "GameEventCardTransformed") return fields.card?.cardId === sourceId && fields.to === condition.into ? [{card: sourceId}] : [];
+  /* "When this Class becomes level 2" (CR 716.2a; wave 4c): this permanent's level made that level from a lower one (a Class
+     with no level is level 1, 716.2d). */
+  if (condition.on === "GameEventCardLevel") return fields.card?.cardId === sourceId && fields.newValue === condition.level && (fields.oldValue ?? 1) < condition.level ? [{card: sourceId}] : [];
   /* "Whenever you commit a crime" (CR 700.13): who did. */
   if (condition.on === "GameEventCrimeCommitted") {
     const criminal = fields.player?.playerId;
@@ -545,6 +548,17 @@ function causedBy(state, event, cause, context) {
   if (cause.event === "dies") return event.kind === "GameEventCardChangeZone" && fields.from?.zoneType === "Battlefield" && fields.to?.zoneType === "Graveyard"
     && Boolean(fields.leftBehind) && matchesLastKnown(cause.filter ?? {}, fields.leftBehind, context);
   if (cause.event === "attacks") return event.kind === "GameEventAttackersDeclared" && (fields.attackers ?? []).length > 0;
+  /* "If you casting or copying an instant or sorcery spell causes a triggered ability of a permanent you control to trigger"
+     (Veyran, Voice of Duality; CR 603.2d, 601.2i, 707.10): a spell this static's controller cast, or a copy of one they put on
+     the stack (the copy's controller, the magecraft rulings), the spell as it is there that `filter` describes. An ability
+     activated is no spell there, and no spell the selector finds. */
+  if (cause.event === "cast or copy") {
+    const cast = event.kind === "GameEventSpellAbilityCast";
+    if (!cast && event.kind !== "GameEventSpellCopied") return false;
+    if ((cast ? fields.si?.actor?.playerId : fields.playerId) !== context.controller) return false;
+    const spell = cast ? state.stack.find((e) => e.stackId === fields.sa?.stackId)?.objectId ?? fields.card?.cardId : fields.card?.cardId;
+    return Boolean(state.objects[spell]) && matchesSelector({...(cause.filter ?? {}), what: "spell"}, state, spell, context);
+  }
   return false;
 }
 
@@ -730,6 +744,10 @@ export function collectTriggers(state, events) {
             ...(object.spent ? {spent: {...object.spent}} : {}),
             /* And the alternative cost it was cast for (rules/stack.mjs, `paidFor`), as it triggers, for the same reason. */
             ...(typeof object.paidFor === "string" ? {paidFor: object.paidFor} : {}),
+            /* And whether its offspring cost was paid (CR 702.175a; rules/stack.mjs), as it triggers: "if its offspring cost was
+               paid" is asked again as it resolves (CR 603.4), its creature perhaps gone -- a token copy is made all the same
+               (Coruscation Mage's ruling). */
+            ...(object.offspring === true ? {offspring: true} : {}),
             /* "Choose one that hasn't been chosen" (Gollum, Riddle Master): the modes its permanent had chosen as it triggered,
                for its modes to be chosen by should the permanent be gone by then (CR 113.7a; modesTaken). */
             ...(ability.modal?.unchosen ? {modesChosen: [...(object.modesChosen?.[ability.id] ?? [])]} : {}),
@@ -1128,6 +1146,7 @@ function putOnStack(state, triggers) {
       lastKnown: trigger.cause && trigger.cause.cardId === trigger.source?.cardId && !state.objects[trigger.source.cardId] ? trigger.cause : null,
       spent: trigger.spent ?? null,
       paidFor: trigger.paidFor ?? null,
+      offspring: trigger.offspring === true,
       x: trigger.x ?? null,
       /* A delayed trigger's source, as it was when the trigger was made (CR 701.27f). */
       sourceTransforms: trigger.sourceTransforms,

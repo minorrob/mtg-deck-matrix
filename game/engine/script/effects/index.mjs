@@ -33,7 +33,7 @@ import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sa
 import {
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
   putCounter, putCounterAll, removeCounter, proliferate, damageAll, fight, poison, winGame, loseGame, multiplyCounters,
-  exchangeLife, damageEach, moveCounters, becomeMonarch,
+  exchangeLife, damageEach, moveCounters, becomeMonarch, rollDie,
 } from "./resources.mjs";
 import {
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
@@ -190,6 +190,8 @@ export const EFFECTS = Object.freeze({
   incubate,
   /* Train E: "you become the monarch" (CR 725; Ginger, Queen of Sweets), and the monarch's own trigger (rules/trigger.mjs). */
   becomeMonarch,
+  /* Wave 4c: "roll a d20" (CR 706; Ancient Copper Dragon), its result for what follows. */
+  rollDie,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */

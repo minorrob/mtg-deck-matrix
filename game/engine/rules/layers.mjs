@@ -41,7 +41,7 @@
 import {conditionHolds} from "../script/condition.mjs";
 import {isCounted, amountOf} from "../script/amount.mjs";
 import {chosenFor} from "../script/chosen.mjs";
-import {hasSubtype, everyCreatureType, isLandType, isCreatureType, BASIC_LAND_MANA} from "../keywords/types.mjs";
+import {hasSubtype, everyCreatureType, isLandType, isCreatureType, isPlaneswalkerType, isEnchantmentType, BASIC_LAND_MANA} from "../keywords/types.mjs";
 
 /** The seven layers of CR 613.1, in order. */
 export const LAYERS = Object.freeze([1, 2, 3, 4, 5, 6, 7]);
@@ -168,6 +168,16 @@ function applyEffect(current, effect) {
   /* And subtypes "in addition to its other types" (CR 205.1b; effects/permanents.mjs, animate's `subtypes`). */
   if (change.addSubtypes) for (const subtype of change.addSubtypes) if (!current.subtypes.includes(subtype)) current.subtypes.push(subtype);
   if (change.setTypes) current.types = [...change.setTypes];
+  /* "It loses all other ... card types" (Darksteel Mutation; wave 4c, k2): an object has only the subtypes of the card types it
+     has (CR 205.3d) -- a land's, a planeswalker's or an enchantment's subtypes go with that type (a Dryad Arbor's Forest, an
+     animated Gideon's Gideon), a creature's go once it is no creature (and no kindred); any other kept, an Equipment's among
+     them (the card's ruling). `correspondingSubtypes`, after the types are set. */
+  if (change.correspondingSubtypes === true) {
+    const has = (type) => current.types.includes(type);
+    current.subtypes = current.subtypes.filter((subtype) => !((isLandType(subtype) && !has("Land")) || (isPlaneswalkerType(subtype) && !has("Planeswalker"))
+      || (isEnchantmentType(subtype) && !has("Enchantment")) || (isCreatureType(subtype) && !has("Creature") && !has("Kindred"))));
+    if (!has("Creature") && !has("Kindred")) current.everyCreatureType = false;
+  }
   /* "Enchanted permanent is a colorless Forest land" (Song of the Dryads): its subtypes set, every other one lost (CR 205.1b). */
   if (change.setSubtypes) { current.subtypes = [...change.setSubtypes]; current.everyCreatureType = false; }
   /* "Becomes a green Elk creature" (Oko, Thief of Crowns), "is a Turtle" (Retro-Mutation): its creature types set, and only

@@ -1,20 +1,6 @@
 {
   "schema": "CrankCardScenarios@1",
   "card": "Myriad Landscape",
-  "fixtures": {
-    "Savannah": {
-      "types": [
-        "Land"
-      ],
-      "subtypes": [
-        "Forest",
-        "Plains"
-      ],
-      "manaCost": null,
-      "colors": [],
-      "abilities": []
-    }
-  },
   "scenarios": [
     {
       "name": "Two basic Forests share a land type: the second is offered only Forests",

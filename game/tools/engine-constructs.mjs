@@ -32,6 +32,10 @@ export const FORGE_API = {
      (Spellskite, Hydroelectric Specimen; `to: "self"`). Named, not built: a new target chosen at random (Grip of Chaos). */
   ChangeTargets: "changeTargets",
   PeekAndReveal: "peekAndReveal", Sacrifice: "sacrifice", SacrificeAll: "sacrificeAll",
+  /* RevealHand ("look at target player's hand", Gitaxian Probe; wave 4c): peekAndReveal's `zone: "hand"`, the hand shown to its
+     looker alone while they look (CR 701.20e; effects/asking.mjs, handLook). The pool's two cards are both looks. Named, not
+     built: a hand revealed to every player on its own, with no card chosen from it (CR 701.20a). */
+  RevealHand: "peekAndReveal",
   Destroy: "destroy", DestroyAll: "destroyAll", Regenerate: "regenerate", ExileUntil: "exileUntil", ReturnToHand: "returnToHand",
   Play: "play", Discover: "discover",
   /* DigUntil ("reveal cards until you reveal a land card", batch 62). */
@@ -74,6 +78,11 @@ export const FORGE_API = {
   AddTurn: "addTurn", AddPhase: "addPhase", ChooseCard: "chooseCard", ChooseType: "chooseType",
   /* ChooseColor ("choose a color", as it resolves; Skrelv, Defector Mite, Train C phase 2): CR 105.1. */
   ChooseColor: "chooseColor",
+  /* Protection ("target creature you control gains protection from the color of your choice until end of turn", Mother of
+     Runes; wave 4c k2): effectUntil's `rule: "protection"` over the permanents named (rules/protection.mjs, built with
+     Akroma's Will in wave 4b), from colors -- named, or the one a chooseColor chose ("$chosenColor") -- card types or
+     everything. No new code: Mother of Runes is the first card read through it. */
+  Protection: "effectUntil",
   /* GenericChoice ("create a Food token or a Treasure token", "target opponent may have you draw three cards"): the modal
      question at resolution, its chooser any player (batch 52). */
   GenericChoice: "modal", TwoPiles: "twoPiles", Connive: "connive",
@@ -198,7 +207,8 @@ export const DECK_RULE_KEYWORDS = {Partner: "room/table.mjs", "Choose a Backgrou
      Answers), "sacrifice an artifact or creature or pay {4}" (Stir Up Trouble): one additional cost of a choice of them
      (CR 601.2b, 601.2h), each choice its own offer -- a sacrifice, a discard, a blight or mana (rules/actions.mjs,
      additionalVariants, `{atom: "oneOf"}`). Built before it was credited (Bogslither's Embrace, Silence the Echo); no new
-     code. Named, not built: an exile or a life payment as one of the choices.
+     code. Wave 4c: a fixed life payment as one of the choices ("pay 5 life or pay {2}", Redirect Lightning; CR 119.4), paid
+     with the rest of the cost. Named, not built: an exile as one of the choices.
    ETBReplacement -- "[this permanent] enters ..." and "as [this permanent] enters ..." (CR 614.1c, 614.12): tapped, with
      counters, as a copy, with a choice made, unless a cost is paid or a card revealed, and -- new here -- prepared
      (Goblin Glasswright, CR 722.3a; rules/replacement.mjs, script/effects/attributes.mjs). Named, not built: one that
@@ -215,7 +225,11 @@ export const DECK_RULE_KEYWORDS = {Partner: "room/table.mjs", "Choose a Backgrou
      revealing a card for a delayed trigger (103.6b, Chancellor of the Forge), or beginning the game with it on the battlefield,
      its counters on it (103.6a), not the starting player's to take when it says so, and then a card exiled from the hand
      (rules/mulligan.mjs). */
+/* Affinity (CR 702.41a; Thought Monitor, wave 4c) -- "this spell costs {1} less to cast for each [text] you control": the
+     spell's own `this-costs-less` (cards/index.mjs), read as it is cast (rules/statics.mjs, costReduction) -- for artifacts,
+     tokens, or anything a selector says. */
 export const CAST_RULE_KEYWORDS = {AlternateAdditionalCost: "rules/actions.mjs", ETBReplacement: "rules/replacement.mjs", Overload: "rules/actions.mjs",
+  Affinity: "rules/statics.mjs",
   Gift: "rules/actions.mjs", MayEffectFromOpeningHand: "rules/mulligan.mjs"};
 
 export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: "chooseCard", Enchant: "attach",
@@ -261,6 +275,9 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   /* Eternalize (CR 702.129a; Fanatic of Rhonas, wave 4b): embalm's graveyard ability, the token copy black, 4/4, a Zombie
      besides its other types, with no mana cost (cards/index.mjs). */
   Eternalize: "copyPermanent",
+  /* Fabricate (CR 702.123a; Marionette Apprentice, wave 4c k2): the enters trigger, N +1/+1 counters on it or N 1/1 Servo
+     artifact creature tokens, its controller's choice as it resolves -- the Servos alone once it has left (cards/index.mjs). */
+  Fabricate: "createToken",
   /* Exalted (CR 702.83a; Ignoble Hierarch, wave 4b): the trigger as a creature its controller controls attacks alone, +1/+1
      until end of turn (cards/index.mjs; rules/trigger.mjs's `alone`). */
   Exalted: "pump",
@@ -381,7 +398,9 @@ export const FORGE_COUNTS = Object.freeze({
   CardPower: {name: "This card's power", status: "built", engine: "{powerOf: \"self\"}"},
   ValidHand: {name: "Cards in a hand", status: "built", engine: "{count: {what: \"card\", zone: \"hand\"}}"},
   ValidGraveyard: {name: "Cards in a graveyard", status: "built", engine: "{count: {what: \"card\", zone: \"graveyard\"}}"},
-  ValidLibrary: {name: "Cards in a library", status: "missing"},
+  /* Wave 4c, k2 (Thassa's Oracle): "the number of cards in your library" -- a count of a zone's cards, as a hand's and a
+     graveyard's are (script/filter.mjs, selectMatching, every player's library). No new code: credited as built. */
+  ValidLibrary: {name: "Cards in a library", status: "built", engine: "{count: {what: \"card\", zone: \"library\"}}"},
   ValidExile: {name: "Cards in exile", status: "missing"},
   LifeAmount: {name: "That much life (\"loses that much life\", the life gained)", status: "built", engine: "{lifeGained: true}: the life the trigger is about (batch 68)"},
   Devotion: {name: "Devotion to a color (CR 700.5)", status: "built", engine: "{devotion: [color]}"},
@@ -431,7 +450,9 @@ export const FORGE_COUNTS = Object.freeze({
   Adamant: {name: "Mana of a color spent to cast it (adamant; \"if {G}{G} was spent to cast it\")", status: "built", engine: "condition {spent: {color: n}} (script/condition.mjs)"},
   /* Fblthp, the Lost (AI 1's deck): "if it entered from your library or was cast from your library". */
   wasCastFromYourLibrary: {name: "It entered from, or was cast from, your library", status: "built", engine: "condition {cameFrom: \"library\"} (script/condition.mjs)"},
-  Threshold: {name: "Threshold (seven cards in your graveyard)", status: "missing"},
+  /* Wave 4c, k2 (Cabal Ritual): "if there are seven or more cards in your graveyard" -- a count of the graveyard compared, an
+     ability's or an effect's condition (Loot, the Anomaly; Theorix Metamage). No new code: credited as built. */
+  Threshold: {name: "Threshold (seven cards in your graveyard)", status: "built", engine: "condition {compare: {count: {count: {what: \"card\", zone: \"graveyard\", controller: \"you\"}}, atLeast: 7}}"},
   /* Train B (X11; Wayward Swordtooth): "unless you have the city's blessing" -- ascend's designation (CR 702.131;
      keywords/designations.mjs). */
   Blessing: {name: "The city's blessing (ascend)", status: "built", engine: "condition {citysBlessing} (script/condition.mjs)"},

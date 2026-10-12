@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Stitcher's Supplier",
+    "oracleId": "7fd61a18-6e4f-40c5-aa00-3d101ec1ec82",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie"
+    ],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters or dies, mill three cards. (Put the top three cards of your library into your graveyard.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters or dies, mill three cards. (Put the top three cards of your library into your graveyard.)",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "mill",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters or dies, mill three cards. (Put the top three cards of your library into your graveyard.)",
+      "trigger": {
+        "on": "dies"
+      },
+      "effects": [
+        {
+          "effect": "mill",
+          "count": 3
+        }
+      ]
+    }
+  ]
+}
