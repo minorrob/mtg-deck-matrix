@@ -491,8 +491,14 @@ export function alternativeCosts(state, player, id) {
     const cost = ability.cost ?? [];
     const others = cost.filter((a) => a.atom === "exileFromGraveyard").reduce((n, a) => n + (a.count ?? 1), 0);
     if (ability.zone === "graveyard" && cardsIn(state, "graveyard", player).filter((c) => c !== id).length < others) return [];
+    /* Sneak's "returning an unblocked creature you control to its owner's hand" (CR 702.190a): picked with the cast, as a
+       sacrifice is (additionalChoices). */
     return [{index, mana: cost.find((a) => a.atom === "mana")?.cost ?? "", life: cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0),
-      extra: cost.filter((a) => a.atom === "exileFromHand" || a.atom === "sacrifice"), evoke: ability.evoke === true,
+      extra: cost.filter((a) => a.atom === "exileFromHand" || a.atom === "sacrifice" || a.atom === "returnToHand"), evoke: ability.evoke === true,
+      /* Warp (CR 702.185a): "from your hand", and from nowhere else (castOffers). */
+      ...(ability.fromHand === true ? {fromHand: true} : {}),
+      /* Sneak (CR 702.190a): cast at an instant's timing, its condition saying when (castOffers). */
+      ...(ability.sneak === true ? {sneak: true} : {}),
       /* Impending (CR 702.176a): how many time counters it enters with. */
       ...(Number.isInteger(ability.impending) ? {impending: ability.impending} : {}),
       /* Overload (CR 702.96b): what the spell does cast this way, "each" in place of "target". */
@@ -589,6 +595,11 @@ function additionalChoices(state, player, spellId, costs) {
       const alternatives = Array.isArray(atom.selector?.anyOf) ? atom.selector.anyOf : [atom.selector ?? {}];
       const matchers = alternatives.map((one) => compileSelector({...one, what: "permanent", controller: "you"}));
       options = state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player})) && !cantBeSacrificed(state, id)).map((id) => ({sacrifice: id}));
+    }
+    /* "Returning an unblocked creature you control to its owner's hand" (sneak, CR 702.190a): each such creature its own offer. */
+    if (atom.atom === "returnToHand") {
+      const matches = compileSelector({...(atom.selector ?? {}), what: "permanent", controller: "you"});
+      options = state.zones.battlefield.filter((id) => matches(state, id, {controller: player})).map((id) => ({returnToHand: id}));
     }
     /* "Blight 1" (Cinder Strike): a creature of the caster's for the counters, one offer each -- and "you may" (`optional`),
        the offer that pays nothing too, first. */
@@ -739,9 +750,13 @@ const tapChoices = (state, player, sourceId, selector) => state.zones.battlefiel
   && !state.objects[id].tapped && compileSelector({...selector, what: "permanent"})(state, id, {controller: player, source: sourceId}));
 /* "Tap three untapped creatures you control" (Kithkeeper): each set of `count` of them, ids ascending, no more than
    CREW_OFFERS_MAX (as crew). Its own source may be among them, since the cost says no "other" (a selector's `another` says
-   so when one does), and a summoning-sick one too: none of it is the creature's own {T} (CR 302.6). Too few, and none. */
-function tapSets(state, player, sourceId, selector, count) {
+   so when one does), and a summoning-sick one too: none of it is the creature's own {T} (CR 302.6). Too few, and none.
+   Unless the cost is also its own {T} (`ownTap`; "{T}, Tap two untapped creatures you control", Harmonized Trio //
+   Brainstorm): the {T} taps it, so it is no untapped creature for the rest of the cost to tap (CR 602.2b, 601.2h) -- as a
+   mana ability's (manaTappers). */
+function tapSets(state, player, sourceId, selector, count, ownTap = false) {
   const able = state.zones.battlefield.filter((id) => !state.objects[id].tapped && characteristicsOf(state, id).controller === player
+    && !(ownTap && id === sourceId)
     && compileSelector({...selector, what: "permanent"})(state, id, {controller: player, source: sourceId})).sort((a, b) => a - b);
   const sets = [];
   const walk = (from, chosen) => {
@@ -1040,7 +1055,9 @@ const playKey = (ability) => `play-from:${ability.id}`;
 /* "You may play them IF YOU CONTROL A WIZARD" (Flameshape): a permission's `condition`, asked whenever the card would be
    played -- never once as the permission was made -- so it is open while the condition holds and closed again once it does
    not (a Wizard gone). */
+/* "After the current turn has ended" (warp, CR 702.185a): a permission that says `afterTurn` opens only on a later turn. */
 const permissionOpen = (state, player, ability, source) => (!ability.yourTurn || state.activePlayer === player)
+  && (ability.afterTurn === undefined || state.turn > ability.afterTurn)
   && (ability.limit === undefined || usesThisTurn(state, source, playKey(ability)) < ability.limit)
   && conditionHolds(state, ability.condition, {controller: player, source});
 /* A card exiled face down (CR 406.3a-b) -- the one face-down card a permission can name: none names a permanent or a spell --
@@ -1077,7 +1094,8 @@ const allPlayPermissions = (state, player) => onceAQuestion(state, `play-permiss
   }
   return [...statics, ...(state.effects ?? []).filter(e => e.rule === "may-play" && e.player === player).map(e => ({source: e.id,
     ability: {id: e.id, ids: e.affects.ids, spells: true, lands: !e.spellsOnly, free: e.free === true, notAdventure: e.notAdventure === true,
-      ...(e.graveyardToLibraryBottom ? {graveyardToLibraryBottom: true} : {}), ...(e.onlyIf !== undefined ? {condition: e.onlyIf} : {})}}))];
+      ...(e.graveyardToLibraryBottom ? {graveyardToLibraryBottom: true} : {}), ...(e.onlyIf !== undefined ? {condition: e.onlyIf} : {}),
+      ...(Number.isInteger(e.afterTurn) ? {afterTurn: e.afterTurn} : {})}}))];
 });
 /* The life a cast through this permission costs instead of its mana cost -- "pay life equal to its mana value" (Bolas's
    Citadel; CR 118.9) -- or null when it is paid for as usual. X is 0 (CR 107.3b): no alternative cost of the Citadel's
@@ -1326,8 +1344,11 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
   if (lifeCost !== null && lifeCost > state.players[player].life) return actions;
   /* "Can't cast" (castForbidden): from a graveyard, during its controller's turn, more than one each turn. */
   if (castForbidden(state, player, id)) return actions;
-  if (sorcerySpeed(object) && !hasFlash(state, id) && !flashGranted(state, player, id) && !(player === state.activePlayer && MAIN_PHASES.includes(state.phase) && state.stack.length === 0))
-    return actions;
+  const timely = !sorcerySpeed(object) || hasFlash(state, id) || flashGranted(state, player, id) || (player === state.activePlayer && MAIN_PHASES.includes(state.phase) && state.stack.length === 0);
+  /* SNEAK (CR 702.190a): "any time you could cast an instant during your declare blockers step" -- a card that could not be
+     cast now otherwise is offered for its sneak cost alone (`sneaking`), its condition saying when (alternativeCosts). */
+  const sneaking = !timely && (object.abilities ?? []).some((a) => a.kind === "static" && a.rule === "alternative-cost" && a.sneak === true);
+  if (!timely && !sneaking) return actions;
   const tax = from === "command" ? commanderTax(state, player, id) : 0;
   /* Derive free-cast grants only after timing rejects spells that cannot be cast now. */
   const free = flashback || escape || lifeCost !== null ? null : permit?.ability.free ? {source: permit.source, limited: false} : freeCast(state, player, id);
@@ -1335,7 +1356,9 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
      each turn", so the player decides which spell spends it. */
   /* Its own alternative costs (CR 118.9), each an offer of its own -- never with flashback, escape, a free cast or the
      Citadel's life, each an alternative cost too (118.9a). */
-  const alternatives = disguise ? [DISGUISE_WAY] : flashback || escape || lifeCost !== null || permit?.ability.free ? [] : alternativeCosts(state, player, id);
+  /* Warp's "from your hand" (CR 702.185a): from there alone. */
+  const alternatives = disguise ? [DISGUISE_WAY] : flashback || escape || lifeCost !== null || permit?.ability.free ? []
+    : alternativeCosts(state, player, id).filter((w) => !w.fromHand || from === "hand");
   /* The flashback cost instead of the mana cost, and its life: a player can pay life only if their total is at least
      that much (CR 119.4). */
   const back = flashback ? flashbackCost(state, player, id) : null;
@@ -1347,6 +1370,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
   /* Cast from the graveyard by its own alternative cost, that cost alone; otherwise the mana cost and every other one. */
   for (const way of graveyardCost ? alternatives.filter((w) => w.fromGraveyard) : disguise ? alternatives : [null, ...alternatives.filter((w) => !w.fromGraveyard)]) {
   if (way && way.life > state.players[player].life) continue;
+  if (sneaking && !way?.sneak) continue;
   /* The flashback cost's discard (Twinned Vision) is chosen with the cast, as an alternative cost's card exiled from the hand is. */
   for (const variant of additionalVariants([...(object.spell?.additionalCost ?? []), ...(way?.extra ?? []), ...(back?.extra ?? [])])) {
   /* Creatures tapped as an additional cost (tapAnyAtom): asked once the cast is taken, and paid from the pool -- never tapped
@@ -1635,7 +1659,7 @@ function abilityOffers(state, player, id, ability) {
       : toss ? discardSets(cardsIn(state, "hand", player).filter((c) => c !== id && (!toss.selector || compileSelector({...toss.selector, what: "card", zone: "hand"})(state, c, {controller: player, source: id}))),
         toss.count ?? 1).map((d) => ({discard: d}))
       : crew ? crewChoices(state, player, id, crew.power).map((set) => ({crew: set}))
-      : tapper ? ((tapper.count ?? 1) > 1 ? tapSets(state, player, id, tapper.selector, tapper.count).map((set) => ({tapAll: set}))
+      : tapper ? ((tapper.count ?? 1) > 1 ? tapSets(state, player, id, tapper.selector, tapper.count, (ability.cost ?? []).some((a) => a?.atom === "{T}")).map((set) => ({tapAll: set}))
         : tapChoices(state, player, id, tapper.selector).map((t) => ({tap: t})))
       : untapper ? untapChoices(state, player, untapper.count).map((set) => ({untap: set}))
       : blighter ? blightChoices(state, player).map((c) => ({blight: c}))
@@ -1739,6 +1763,12 @@ function idle(state, player, actions) {
   if (fromGraveyard) return false;
   const castableNow = (id) => {
     const object = state.objects[id];
+    /* Or for its warp cost from the hand, at its speed (CR 702.185a), or its sneak cost in its caster's declare blockers step
+       (CR 702.190a; the way's condition says when): a cost the mana could pay is something to do -- a creature that could
+       be cast only by sneaking, then, is never passed for. */
+    const timelyHere = !sorcerySpeed(object) || hasFlash(state, id) || flashGranted(state, player, id) || mainNow;
+    if (alternativeCosts(state, player, id).some((way) => ((way.paidFor === "warp" && object.zone === "hand" && timelyHere) || way.sneak === true)
+      && manaValue(parseManaCost(way.mana)) <= mana)) return true;
     if (!object.manaCost || (sorcerySpeed(object) && !hasFlash(state, id) && !flashGranted(state, player, id) && !mainNow)) return false;
     const tax = object.zone === "command" ? commanderTax(state, player, id) : 0;
     /* What it costs now, reductions included: a spell made castable by a Medallion is something to do. */
@@ -2205,7 +2235,8 @@ function performOffered(state, player, action, during) {
       extraPaid.push([kind, id]);
     }
     /* What this player has cast this turn, for "whenever an opponent casts their first noncreature spell each turn". */
-    (state.players[player].castThisTurn ??= []).push({types: [...(object.types ?? [])], colors: [...(object.colors ?? [])]});
+    /* And whether it was cast for its warp cost: "if ... a spell was warped this turn" (CR 702.185c; void, script/condition.mjs). */
+    (state.players[player].castThisTurn ??= []).push({types: [...(object.types ?? [])], colors: [...(object.colors ?? [])], ...(way?.paidFor === "warp" ? {warped: true} : {})});
     /* And this game, by name (CR 201.2): "if ... you've cast another spell named Approach of the Second Sun this game"
        (script/amount.mjs, spellsCastThisGame) -- the name it was cast with, an Adventure's or a face's (CR 715.3, 712.8).
        Never cleared. */
@@ -2222,7 +2253,8 @@ function performOffered(state, player, action, during) {
     entry.cast = {from: castFrom, mainPhase: player === state.activePlayer && MAIN_PHASES.includes(state.phase),
       /* "If this spell's additional cost was paid" (Cinder Strike): an optional one, paid -- its mana too. */
       /* Escalate's cost too, paid for a mode beyond the first (CR 702.120a: an additional cost). */
-      ...(extraPaid.length || action.extraMana || action.escalate > 0 || (beholding.length && additionalAtom(object.spell?.additionalCost, "behold")) ? {additionalPaid: true} : {}),
+      /* Not sneak's returned creature: part of an alternative cost (CR 702.190a, 118.9), no additional cost. */
+      ...(extraPaid.some(([kind]) => kind !== "returnToHand") || action.extraMana || action.escalate > 0 || (beholding.length && additionalAtom(object.spell?.additionalCost, "behold")) ? {additionalPaid: true} : {}),
       /* The creatures tapped to convoke it (CR 702.51c: they "convoked" it): "each creature that convoked this spell
          connives" (Lethal Scheme; script/bind.mjs, "convoked"). */
       ...((convoke?.ids ?? []).length ? {convoked: [...convoke.ids]} : {}),
@@ -2286,6 +2318,15 @@ function performOffered(state, player, action, during) {
        cast it" (Smaug, Wicked Worm; script/condition.mjs, `spentFrom`). */
     if (paid.from.length && state.objects[entry.objectId]) state.objects[entry.objectId].spentFrom = paid.from;
     for (const [kind, id] of extraPaid) {
+      /* SNEAK'S UNBLOCKED CREATURE (CR 702.190a), returned to its owner's hand -- and whom it was attacking, read before it
+         leaves combat, for the permanent this spell becomes: tapped and attacking the same player or planeswalker (702.190b;
+         rules/stack.mjs). */
+      if (kind === "returnToHand") {
+        const attack = (state.combat?.attacks ?? []).find((a) => a.attacker === id);
+        if (way?.sneak && attack) entry.sneak = {player: attack.defender, ...(attack.planeswalker !== undefined ? {planeswalker: attack.planeswalker} : {})};
+        moveOne(state, id, "hand", events);
+        continue;
+      }
       /* "Blight 1": its counters on the creature chosen, put as any counters are (CR 701.68a). */
       if (kind === "blight") {
         const count = additionalAtom(object.spell?.additionalCost, "blight")?.count ?? 1;

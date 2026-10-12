@@ -41,7 +41,7 @@ import {moveObject, addObject, removeObject, eventCard} from "../state/index.mjs
 import {enteringModifications} from "./replacement.mjs";
 import {countersPlaced} from "./statics.mjs";
 import {beginResolution, resolutionPending} from "../script/resolution.mjs";
-import {delayedTrigger} from "../script/effects/permanents.mjs";
+import {delayedTrigger, enterAttacking} from "../script/effects/permanents.mjs";
 import {prepare} from "../script/effects/attributes.mjs";
 import {recheckTargets, factsOf, modalScript} from "../script/bind.mjs";
 import {characteristicsOf} from "./layers.mjs";
@@ -443,6 +443,13 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     /* And for its surge cost (CR 702.117a), or another that says so (rules/actions.mjs): "if its surge cost was paid"
        (script/condition.mjs, `paidFor`). A new object after it moves again (CR 400.7) was cast for nothing. */
     if (to === "battlefield" && entry.cast?.paidFor) state.objects[arrived].paidFor = entry.cast.paidFor;
+    /* WARP'S DELAYED TRIGGER (CR 702.185a, 603.7d: its controller the spell's): "exile the permanent this spell becomes at the
+       beginning of the next end step" -- that permanent, so one that has left the battlefield meanwhile is a new object and
+       stays where it is (CR 400.7) -- and its owner may cast it after this turn has ended for as long as it remains exiled
+       (effects/zones.mjs, moveZone's `warped`: the turn it was cast on). */
+    if (to === "battlefield" && entry.cast?.paidFor === "warp" && state.objects[arrived])
+      delayedTrigger(state, {at: "end step", text: `Warp: exile ${card.name} at the beginning of the next end step.`,
+        effects: [{effect: "moveZone", targets: [arrived], to: "exile", warped: state.turn}]}, {controller: entry.playerId, source: arrived});
     /* Cast from suspend: haste, while it is this permanent (CR 702.62a). */
     if (to === "battlefield" && entry.fromSuspend && (state.objects[arrived].types ?? []).includes("Creature"))
       (state.effects ??= []).push({id: `suspend-haste:${arrived}`, layer: 6, affects: {ids: [arrived]}, apply: {addKeywords: ["Haste"]}, until: null, sourceController: entry.playerId});
@@ -467,6 +474,13 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
       for (const [counter, count] of Object.entries(entering.counters)) {
         state.objects[arrived].counters[counter] = (state.objects[arrived].counters[counter] ?? 0) + countersPlaced(state, arrived, counter, count, entry.playerId);
       }
+    }
+    /* SNEAK (CR 702.190b): a permanent spell whose sneak cost was paid enters tapped and attacking the player or planeswalker
+       the creature returned to pay it was attacking (rules/actions.mjs, `sneak`) -- never declared as an attacker (CR 508.4),
+       and attacking nothing if that planeswalker or player is gone (506.3c, 508.4a; effects/permanents.mjs, enterAttacking). */
+    if (to === "battlefield" && entry.sneak && state.objects[arrived]) {
+      state.objects[arrived].tapped = true;
+      enterAttacking(state, [arrived], "that player", {controller: entry.playerId, about: entry.sneak}, entry.playerId);
     }
     events.push(event("GameEventCardChangeZone", state, {
       card,

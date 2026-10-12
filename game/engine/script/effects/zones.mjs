@@ -405,6 +405,16 @@ export function moveZone(state, params, context, rng = null) {
     if (moved !== null && params.to === "battlefield" && params.controller !== undefined && state.objects[moved])
       state.objects[moved].controller = params.controller === "you" ? context.controller : params.controller;
     if (moved !== null && state.objects[moved]?.zone === "battlefield") arrived.push(moved);
+    /* WARPED (CR 702.185a-b; rules/stack.mjs makes the delayed trigger): exiled by warp's delayed trigger, a warped card in
+       exile, which "its owner may cast ... after the current turn has ended for as long as it remains exiled" -- a permission
+       of its owner's (rules/actions.mjs, may-play), open on a turn after `warped`, the one the spell was cast on. Sent
+       elsewhere instead, it was never exiled, and is no warped card. */
+    if (params.warped !== undefined && moved !== null && state.objects[moved]?.zone === "exile") {
+      const owner = state.objects[moved].owner;
+      state.objects[moved].warped = true;
+      (state.effects ??= []).push({id: `warp:${moved}`, rule: "may-play", affects: {ids: [moved]}, player: owner, name: state.objects[moved].card,
+        spellsOnly: true, until: "ever", afterTurn: params.warped, madeOnTurn: state.turn, sourceController: owner});
+    }
     /* "Exile it, then return that card to the battlefield" (a flicker): the card in exile is a new object (CR 400.7),
        found by what the move returned, and comes back now or at the beginning of the next end step -- under its
        owner's control unless the card says yours, with a +1/+1 counter if the card says so and it is a creature. */
