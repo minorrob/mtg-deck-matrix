@@ -29,12 +29,13 @@ PROTECTION_OVER = '''  if (card !== null && card !== undefined
 
 BREAKS = [
     # Urborg, Tomb of Yawgmoth: a land given a basic land type has that type's mana ability (CR 305.6).
-    ('urborg: the mana ability given with the type', LAYERS, '    if (BASIC_MANA[subtype]) current.granted.push(intrinsicMana(subtype));\n', ''),
-    ('urborg: its own color', LAYERS, 'produces: {[BASIC_MANA[subtype]]: 1},', 'produces: {C: 1},'),
+    ('urborg: the mana ability given with the type', LAYERS,
+     '    current.granted.push({id: `intrinsic:${type}`, kind: "mana", tapSelf: true, produces: {[color]: 1}, text: `{T}: Add {${color}}.`});\n', ''),
+    ('urborg: its own color', LAYERS, 'produces: {[color]: 1}', 'produces: {C: 1}'),
     ('urborg: no second ability for a type it has', LAYERS,
-     'if (change.addSubtypes) for (const subtype of change.addSubtypes) if (!current.subtypes.includes(subtype)) {',
-     'if (change.addSubtypes) for (const subtype of change.addSubtypes) {'),
-    ('urborg: abilities read as changed', LAYERS, ' || apply.graveyardAbilities || givesBasicType(apply)));', ' || apply.graveyardAbilities));'),
+     'if (change.addSubtypes) for (const subtype of change.addSubtypes) if (!current.subtypes.includes(subtype)) current.subtypes.push(subtype);',
+     'if (change.addSubtypes) for (const subtype of change.addSubtypes) current.subtypes.push(subtype);'),
+    ('urborg: abilities read as changed', LAYERS, '.some((type) => BASIC_LAND_MANA[type])));', '.some(() => false)));'),
     # Akroma's Will: protection over the permanents a spell named, and no player's (CR 702.16, 611.2c).
     ('akroma: protection over permanents', PROTECTION, PROTECTION_OVER, ''),
     ('akroma: only the permanents named', PROTECTION, '(e.affects?.ids ?? []).includes(card) && hasQuality(state, e.from, sourceId)', 'hasQuality(state, e.from, sourceId)'),

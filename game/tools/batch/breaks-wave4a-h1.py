@@ -185,7 +185,7 @@ BREAKS = [
     ('condition read: cast-self-from', INDEX, READS, '  "play-from",\n'),
     ('condition read: extra-land-drop', INDEX, '  "extra-land-drop",\n', ''),
     ('condition read: look-at-top', INDEX, '  "look-at-top"];', '  ];'),
-    ('condition keys: castFromYourHand', CONDITION, '  "castFromYourHand",\n', ''),
+    ('condition keys: castFromYourHand', CONDITION, '  "castFromYourHand", "castByYou",', '  "castByYou",'),
     ('condition keys: solved', CONDITION, '  "solved", "sacrificedNontokenThisTurn"];', '  "sacrificedNontokenThisTurn"];'),
     ('condition keys: sacrificedNontokenThisTurn', CONDITION, '  "solved", "sacrificedNontokenThisTurn"];', '  "solved"];'),
     ('condition problem: castFromYourHand', CONDITION, '  if ("castFromYourHand" in condition && typeof condition.castFromYourHand !== "boolean") problems.push("castFromYourHand is true or false");\n', ''),

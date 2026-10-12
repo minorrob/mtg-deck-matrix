@@ -107,6 +107,14 @@ const animated = () => play([at(0, "hand", "Animate Dead"), at(0, "battlefield",
   happen(s, {effect: "effectUntil", targets: [forest], layer: 6, apply: {removeAllAbilities: true}, until: "end-of-turn"}, {controller: 1, source: null});
   eq(mana(s, forest).length, 0, "the Forest losing all abilities loses the {B} too");
 }
+{
+  /* Two effects giving the same type give it once (CR 205.1b), and its ability once: Urborg and an effect that makes the
+     Forest a Swamp until end of turn, one {B}. (Not two Urborgs: it is legendary, CR 704.5j.) */
+  const s = play([at(0, "battlefield", "Urborg, Tomb of Yawgmoth", "Forest")], [], {}, FIX);
+  const forest = idOf(s, "Forest");
+  happen(s, {effect: "effectUntil", targets: [forest], layer: 4, apply: {addSubtypes: ["Swamp"]}, until: "end-of-turn"}, {controller: 0, source: null});
+  eq(mana(s, forest).map((a) => a.produces), [{G: 1}, {B: 1}], "made a Swamp twice, the Forest has the Swamp's {B} once");
+}
 
 /* ---- Akroma's Will: protection from each color over the creatures it named, no player's ---- */
 {
