@@ -149,11 +149,11 @@ it; the table's object checks again as it seats one, and refuses otherwise).
   - **When the model cannot answer** (the cap reached, a failure, an index the decision does not have, an answer the
     rules refuse), the seat's own pilot answers (`room.houseAnswer`). Either answer goes through `act`, onto the tape,
     so a replay never asks the model.
-- **Not on staging yet:** `tools/release-pages.mjs` sets `AI_PILOT` (with the game's cap) only for a profile whose
-  `ai.pilot` is true. It refuses a release that does so where `privacy.html` does not say what the seat sends, or
-  without the game's cap. The wording below waits on Rob.
+- **On staging since 2026-10-12:** `tools/release-pages.mjs` sets `AI_PILOT` (with the game's cap) only for a profile
+  whose `ai.pilot` is true, and staging's is. It refuses a release that does so where `privacy.html` does not say what
+  the seat sends, or without the game's cap. Rob approved the wording below on 2026-10-12, and it is on `privacy.html`.
 
-### The privacy wording for an AI on Claude (for Rob to approve)
+### The privacy wording for an AI on Claude (Rob approved it, 2026-10-12)
 
 > **AI players on Claude.** At a table, its host may seat an AI that plays on Claude, Anthropic's AI model, if they are
 > invited to AI features. At some of that AI's decisions, CrankMagic sends Anthropic the AI seat's own view of the game:
@@ -183,12 +183,13 @@ says whether to offer it).
   candidate; the rest are dropped and counted, and an answer with none left is not shown.
 - **The answer is a review, never a change.** Each swap is a row to tick; a ticked swap is saved as the deck's linked
   upgrade (the card in, for the card out's slot), and the person applies it from the Upgrades tab when they choose.
-- **Not on staging yet:** `tools/release-pages.mjs` sets `AI_ADVISE` only for a profile whose `ai.advise` is true, and
-  refuses a release that does so where `privacy.html` does not say what the advisor sends. The wording below waits on Rob.
+- **On staging since 2026-10-12:** `tools/release-pages.mjs` sets `AI_ADVISE` only for a profile whose `ai.advise` is
+  true, and staging's is. It refuses a release that does so where `privacy.html` does not say what the advisor sends.
+  Rob approved the wording below on 2026-10-12, and it is on `privacy.html`.
 - **Rob's, as well:** the eval (`node tests/ai-advise-eval/run.mjs --yes`, with his key) and the swaps he would refuse,
   in `tests/ai-advise-eval/rubric.json` (*"the rubric is an afternoon of his, before AI-4 is judged"*).
 
-### The privacy wording for the deck advisor (for Rob to approve)
+### The privacy wording for the deck advisor (Rob approved it, 2026-10-12)
 
 > **The deck advisor.** On a deck's page, if you are invited to AI features, you may ask Claude, Anthropic's AI model, to
 > suggest swaps. CrankMagic sends Anthropic that deck's list, each card with its roles, whether you own it, its market
