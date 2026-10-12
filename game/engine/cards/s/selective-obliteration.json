@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Selective Obliteration",
+    "oracleId": "9f95027a-5f04-48b4-99a0-8913be3a520a",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{C}{C}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each player chooses a color. Then exile each permanent unless it's colorless or it's only the color its controller chose.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each player chooses a color. Then exile each permanent unless it's colorless or it's only the color its controller chose.",
+      "effects": [
+        {
+          "effect": "repeatFor",
+          "each": "player",
+          "effects": [
+            {
+              "effect": "chooseColor",
+              "chooser": "that player"
+            }
+          ]
+        },
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "permanent",
+            "colorless": false,
+            "onlyChosenColor": false
+          },
+          "to": "exile"
+        }
+      ]
+    }
+  ]
+}

@@ -764,7 +764,11 @@ export function collectTriggers(state, events) {
     for (const d of [...(state.delayedTriggers ?? [])]) {
       /* A delayed triggered mana ability happened with the mana ability that triggered it (manaTriggered). */
       if (!d.on || d.fresh || d.on.manaAbility) continue;
-      if (d.watch !== undefined && (d.watch === null || event.data?.fields?.card?.cardId !== d.watch)) continue;
+      /* What it waits on is what the event is about -- the creature that dies -- or, for damage dealt to a player (or a
+         planeswalker, `planeswalkers`), the source that dealt it: "whenever that creature deals combat damage to a player or
+         planeswalker this turn" (Hunter's Insight; CR 603.7c). */
+      const watched = d.on.on === "GameEventPlayerDamaged" ? event.data?.fields?.source?.cardId : event.data?.fields?.card?.cardId;
+      if (d.watch !== undefined && (d.watch === null || watched !== d.watch)) continue;
       for (const about of subjects(state, event, d.on, d.source, d.controller)) {
         state.pendingTriggers.push({
           abilityId: "delayed", text: d.text ?? "A delayed trigger", controller: d.controller,

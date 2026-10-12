@@ -337,9 +337,14 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
   /* A target is a selector, or `{anyOf: [...]}` for "any target" (script/bind.mjs) -- either with a `count`, `{min, max}`, for
      "up to N", "any number of", "one or two" (CR 115.1, 601.2c). */
   for (const [index, spec] of (ability.targets ?? []).entries()) {
-    const {count, distinctFrom, onlyIf, differentControllers, share, forEach, ...selector} = spec && typeof spec === "object" ? spec : {};
+    const {count, distinctFrom, onlyIf, differentControllers, share, forEach, ownedByControllerOf, ...selector} = spec && typeof spec === "object" ? spec : {};
     if (count !== undefined && !countValid(count))
       errors.push({path: `${path}.targets[${index}].count`, message: "A target's count is `{min, max}`: whole numbers, max at least 1 and at least min, or no max for \"any number\""});
+    /* "Target artifact a player controls and target artifact card in that player's graveyard" (Goblin Welder; script/bind.mjs,
+       `ownedByControllerOf`): an earlier, single target of the same ability, a permanent -- this one a card, uncounted. */
+    if (ownedByControllerOf !== undefined && !(Number.isInteger(ownedByControllerOf) && ownedByControllerOf >= 0 && ownedByControllerOf < index && count === undefined
+      && (selector.what ?? "permanent") === "card" && ((ability.targets ?? [])[ownedByControllerOf]?.what ?? "permanent") === "permanent" && (ability.targets ?? [])[ownedByControllerOf]?.count === undefined))
+      errors.push({path: `${path}.targets[${index}].ownedByControllerOf`, message: "ownedByControllerOf names an earlier, single permanent target of the same ability, by number, on a single card target: \"in that player's graveyard\""});
     /* "For each opponent, put X -1/-1 counters on up to one target creature that player controls" (Hapatra, the Desert Fang,
        Train E; script/bind.mjs, `forEach`): a triggered ability's, as a reflexive trigger's is (above) -- the one form built. */
     if (forEach !== undefined && !(ability.kind === "triggered" && forEach === "opponent" && (count?.min ?? 0) === 0 && count?.max === 1

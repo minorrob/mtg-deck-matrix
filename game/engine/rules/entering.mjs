@@ -145,8 +145,22 @@ export function resolveEnteringChoice(state, awaiting, indices) {
       /* "Enter tapped as a copy" (Vesuva); and what the copied card says of its own entering. */
       const own = ownEntering(state, {objectId: awaiting.objectId, player: object.controller, types: object.types, abilities: object.abilities});
       if (awaiting.copy?.tapped || own.tapped) object.tapped = true;
-      /* Put on it as it enters (CR 122.6), by its controller (122.6a): "twice that many instead" sees them. */
-      for (const [counter, count] of Object.entries(own.counters)) object.counters[counter] = (object.counters[counter] ?? 0) + countersPlaced(state, awaiting.objectId, counter, count, object.controller);
+      /* "Except it enters with an additional +1/+1 counter on it if it's a creature, it enters with an additional loyalty
+         counter on it if it's a planeswalker" (Spark Double; CR 707.9a, 614.1c): `except.entersWithCounters`, each `if` a
+         description of what it entered as -- the copy, read now -- and the counters it adds to what the copied card's own
+         entering gives it. Never on one that entered as itself: the exception is part of the copy. */
+      const counters = {...own.counters};
+      for (const extra of awaiting.copy?.except?.entersWithCounters ?? [])
+        if (matchesSelector({...(extra.if ?? {}), what: "permanent"}, state, awaiting.objectId, {controller: object.controller, source: awaiting.objectId}))
+          counters[extra.counter] = (counters[extra.counter] ?? 0) + extra.count;
+      /* Put on it as it enters (CR 122.6), by its controller (122.6a): "twice that many instead" sees them -- and said, as an
+         entering counter is (enteredWith): "whenever a +1/+1 counter is put on" sees them too. */
+      for (const [counter, count] of Object.entries(counters)) {
+        const was = object.counters[counter] ?? 0;
+        object.counters[counter] = was + countersPlaced(state, awaiting.objectId, counter, count, object.controller);
+        if (object.counters[counter] > was) events.push({kind: "GameEventCardCounters", data: {turn: state.turn, phase: state.phase,
+          fields: {card: eventCard(state, awaiting.objectId), type: counter, oldValue: was, newValue: object.counters[counter]}}});
+      }
       for (const ask of own.asks) queueEnteringQuestion(state, awaiting.objectId, ask);
       if (object.tapped && asked?.arrival) asked.arrival.data.fields.enteredTapped = true;
     }

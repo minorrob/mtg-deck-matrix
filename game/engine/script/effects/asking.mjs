@@ -1320,8 +1320,11 @@ export const chooseType = {
    script/bind.mjs, chosen.mjs). ---- */
 const COLOR_NAMES = Object.freeze([["W", "White"], ["U", "Blue"], ["B", "Black"], ["R", "Red"], ["G", "Green"]]);
 export const chooseColor = {
+  /* "Each player chooses a color" (Selective Obliteration): repeated for each player, the one a repetition is about choosing
+     (`chooser: "that player"`, bound to them, script/bind.mjs) -- each one's color kept by whose it is (`colorChooser`;
+     script/resolution.mjs, the context's `chosenColors`), for a selector's `onlyChosenColor` (script/filter.mjs). */
   open(state, params, context) {
-    state.awaiting = {kind: "effect-choice", effect: "chooseColor", player: context.controller, source: context.source ?? null};
+    state.awaiting = {kind: "effect-choice", effect: "chooseColor", player: Number.isInteger(params.chooser) ? params.chooser : context.controller, source: context.source ?? null};
     return true;
   },
   choice(state, awaiting) {
@@ -1332,7 +1335,7 @@ export const chooseColor = {
   apply(state, awaiting, indices) {
     const picked = (indices ?? []).length === 1 ? COLOR_NAMES[indices[0]] : undefined;
     if (!picked) throw new Error("Choose one color");
-    return {events: [], chosenColor: picked[0]};
+    return {events: [], chosenColor: picked[0], colorChooser: awaiting.player};
   },
 };
 

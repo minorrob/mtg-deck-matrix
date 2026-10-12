@@ -103,7 +103,11 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   /* "If you're the monarch" (CR 725). */
   "monarch",
   /* Nissa, Leyline Tamer's "if this is the first time this ability has resolved this turn". */
-  "firstResolution"];
+  "firstResolution",
+  /* Goblin Welder's "if both targets are still legal as this ability resolves" (CR 608.2b). */
+  "targetsLegal",
+  /* Summon: Fenrir's "if you control the creature with the greatest power or tied for the greatest power" (CR 208.1). */
+  "greatestPower"];
 /** Whether these effects, nested ones included, ask `firstResolution` -- so their ability's resolutions are counted
     (rules/stack.mjs). */
 export const asksFirstResolution = (effects) => JSON.stringify(effects ?? []).includes('"firstResolution"');
@@ -195,6 +199,10 @@ function castHolds(rule, cast) {
 export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined, excessDamage = undefined, rememberedControllers = undefined,
   movedWas = undefined, searched = undefined, lastKnown = undefined, paidFor = undefined, resolvedBefore = undefined} = {}) {
   if (!condition) return true;
+  /* "IF BOTH TARGETS ARE STILL LEGAL AS THIS ABILITY RESOLVES" (Goblin Welder; CR 608.2b): every target its ability chose is
+     legal still, as the resolution rechecked them (rules/stack.mjs, script/bind.mjs recheckTargets: an illegal one is null) --
+     one illegal, and what it says is not done at all, to the other either. */
+  if (condition.targetsLegal === true && !(Array.isArray(targets) && targets.length > 0 && targets.every((t) => t !== null && t !== undefined))) return false;
   /* "IF THIS IS THE FIRST TIME THIS ABILITY HAS RESOLVED THIS TURN" (Nissa, Leyline Tamer): asked as one of its effects is
      reached, of the times its ability resolved before this one this turn (rules/stack.mjs counts them) -- none. */
   if (condition.firstResolution === true && resolvedBefore !== 0) return false;
@@ -325,6 +333,14 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   if (condition.sneak === true && !(state.activePlayer === controller && state.phase === "COMBAT_DECLARE_BLOCKERS")) return false;
   /* "If you're the monarch" (CR 725.1, 725.3): its controller holds the game's designation now. */
   if (condition.monarch === "you" && state.monarch !== controller) return false;
+  /* "IF YOU CONTROL THE CREATURE WITH THE GREATEST POWER OR TIED FOR THE GREATEST POWER" (Summon: Fenrir; CR 208.1): a creature of
+     its controller's whose power, through the layers, no creature on the battlefield exceeds -- a power below zero as it is,
+     not as none. With no creature of theirs, they control none. */
+  if (condition.greatestPower === "you") {
+    const creatures = state.zones.battlefield.filter((id) => typesOf(state, id).includes("Creature"));
+    const powers = creatures.map((id) => characteristicsOf(state, id).power ?? 0), most = Math.max(...powers);
+    if (!creatures.some((id, at) => controllerOf(state, id) === controller && powers[at] === most)) return false;
+  }
   /* Surge (CR 702.117a): its controller has cast another spell this turn -- asked as this one's cast is offered, before it
      is counted among them (rules/actions.mjs). */
   if (condition.surge === true && !((state.players[controller]?.castThisTurn ?? []).length > 0)) return false;
@@ -396,6 +412,7 @@ export function conditionProblems(condition) {
     try { matchesLastKnown(condition.spentFrom ?? {}, {}, {}); } catch (error) { problems.push(`What spentFrom asks of the mana's source: ${error.message}`); }
   }
   if ("notYourTurn" in condition && condition.notYourTurn !== true) problems.push("notYourTurn is true");
+  if ("targetsLegal" in condition && condition.targetsLegal !== true) problems.push("targetsLegal is true: every target still legal as it resolves");
   if ("loyaltyThisTurn" in condition && condition.loyaltyThisTurn !== true) problems.push("loyaltyThisTurn is true");
   if ("evolves" in condition && condition.evolves !== true) problems.push("evolves is true");
   if ("prowl" in condition && condition.prowl !== true) problems.push("prowl is true");
@@ -404,6 +421,7 @@ export function conditionProblems(condition) {
   if ("void" in condition && condition.void !== true) problems.push("void is true");
   if ("sneak" in condition && condition.sneak !== true) problems.push("sneak is true");
   if ("monarch" in condition && condition.monarch !== "you") problems.push("monarch is \"you\": its controller is the monarch");
+  if ("greatestPower" in condition && condition.greatestPower !== "you") problems.push("greatestPower is \"you\": its controller controls the creature with the greatest power, or one tied for it");
   if ("firstResolution" in condition && condition.firstResolution !== true) problems.push("firstResolution is true: the first time this ability has resolved this turn");
   if ("freerunning" in condition && condition.freerunning !== true) problems.push("freerunning is true");
   if ("paidFor" in condition && !PAID_FOR.includes(condition.paidFor)) problems.push(`paidFor is the alternative cost a spell was cast for: ${PAID_FOR.join(", ")}`);

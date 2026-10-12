@@ -167,6 +167,9 @@ function copiable(object, except = {}) {
        the original's, part of its copiable values -- compiled with the card (cards/index.mjs), bound as it is made. */
     abilities: [...structuredClone(object.abilities ?? []), ...structuredClone(except.addAbilities ?? [])],
     power: except.setPower ?? object.power ?? null, toughness: except.setToughness ?? object.toughness ?? null,
+    /* Its printed loyalty (CR 707.2): a planeswalker copied as it enters has that many loyalty counters (CR 306.5b; Spark
+       Double, rules/replacement.mjs ownEntering). */
+    ...(Number.isInteger(object.loyalty) ? {loyalty: object.loyalty} : {}),
     ...(object.spell ? {spell: structuredClone(object.spell)} : {}),
     ...(object.enchant ? {enchant: structuredClone(object.enchant)} : {}),
   };
@@ -757,7 +760,13 @@ export function effectUntil(state, params, context) {
        rule changed for players (`players`): their protection, their life total that can't change. */
     /* And "you have no maximum hand size for the rest of the game" (Wisdom of Ages; CR 402.2, 611.2a): read at cleanup
        (rules/statics.mjs, playerRuleChanged). */
-    ...(params.until === "their-next-turn" || ["protection", "life-cant-change", "no-maximum-hand-size"].includes(params.rule) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
+    ...(params.until === "their-next-turn" || ["protection", "life-cant-change", "no-maximum-hand-size", "damage-doubled"].includes(params.rule) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
+    /* "If a source would deal damage to that player or a permanent that player controls, it deals double that damage
+       instead" (Lightning, Army of One; rules/replacement.mjs, rememberedReplacement): `who` the players it remembers, its
+       name for the order's question (CR 616.1). "That creature enters with an additional +1/+1 counter on it" (Summon:
+       Fenrir): `counter` and `count`, about the spell `targets` names. */
+    ...(params.rule === "damage-doubled" ? {name: state.objects[context.source]?.card ?? context.lastKnown?.name ?? "An effect"} : {}),
+    ...(params.rule === "enters-with-counters" ? {counters: {counter: params.counter, count: params.count ?? 1}} : {}),
     ...(params.rule === "protection" ? {from: params.from ?? "everything"} : {}),
     /* A PREVENTION SHIELD OF A PLAYER'S (CR 615; rules/replacement.mjs, preventionsFor): "prevent all combat damage that would
        be dealt to you this turn" (Inkshield) -- `who`, the players it shields -- "the next time a source of your choice
@@ -1071,7 +1080,11 @@ export function addPhase(state, params, context) {
  */
 export function immediateTrigger(state, params, context) {
   const source = context.source ?? null;
-  const about = params.about === "remembered" && context.remembered?.[0] !== undefined ? {...(context.about ?? {}), card: context.remembered[0]} : context.about;
+  /* What it remembered moved off the battlefield ("you may sacrifice another creature. When you do, Ziatora deals damage
+     equal to that creature's power", Ziatora, the Incinerator): "that creature" as it last existed there (CR 608.2h) -- the
+     effect before it kept each as it left (`movedWas`, effects/asking.mjs and effects/zones.mjs), one for each it moved. */
+  const was = params.about === "remembered" && (context.movedWas ?? []).length === (context.remembered ?? []).length ? context.movedWas?.[0] : undefined;
+  const about = params.about === "remembered" && context.remembered?.[0] !== undefined ? {...(context.about ?? {}), card: context.remembered[0], ...(was ? {lastKnown: structuredClone(was)} : {})} : context.about;
   (state.pendingTriggers ??= []).push({abilityId: "reflexive", text: params.text ?? "When you do", controller: context.controller,
     source: {cardId: source, name: source !== null ? state.objects[source]?.card ?? null : null}, cause: null, optional: false,
     ...(about ? {about: structuredClone(about)} : {}),

@@ -9,17 +9,17 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1275,
+  "defined": 1294,
   "provisional": 27,
-  "everyRule": 2661
+  "everyRule": 2681
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 68,
+    "built": 69,
     "partial": 0,
     "named": 5,
-    "missing": 121
+    "missing": 120
    },
    "entries": [
     {
@@ -794,13 +794,13 @@
      "kind": "keyword ability",
      "rule": "702.28",
      "name": "Shadow",
-     "engine": null,
-     "status": "missing",
+     "engine": "Shadow",
+     "status": "built",
      "forge": "Shadow",
      "top": 2,
      "all": 39,
-     "blocks": 2,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -8949,8 +8949,8 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 86,
-     "alone": 27
+     "blocks": 67,
+     "alone": 8
     },
     {
      "kind": "option",

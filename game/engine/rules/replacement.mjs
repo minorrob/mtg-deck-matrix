@@ -87,6 +87,27 @@ const FINALITY = Object.freeze({id: "finality-counter", kind: "replacement", wat
 const EXILE_IF_DIES = Object.freeze({id: "exile-if-dies", kind: "replacement", text: "If it would die this turn, exile it instead",
   watches: {event: "zone-change", from: "battlefield", to: "graveyard"}, change: {to: "exile"}});
 
+/* A REPLACEMENT EFFECT A RESOLUTION MADE ABOUT WHAT IT NAMED (CR 614.1, 611.2a): effectUntil's lasting effects, each read as
+   the replacement it is for the event about to happen, or null:
+   - `enters-with-counters` -- "when you next cast a creature spell this turn, that creature enters with an additional +1/+1
+     counter on it" (Summon: Fenrir's chapter II; CR 614.1c): the spell it was made about (`affects.ids`), entering as the
+     permanent it becomes (rules/stack.mjs asks about the spell's object), with `counters`;
+   - `damage-doubled` -- "until your next turn, if a source would deal damage to that player or a permanent that player
+     controls, it deals double that damage instead" (Lightning, Army of One's Stagger; CR 614.1a): the players it remembers
+     (`players`), and what each controls as the damage is dealt.
+   Each its own effect, by its timestamp: two of them double twice (CR 614.5). */
+function rememberedReplacement(state, effect, proposal) {
+  if (effect.rule === "enters-with-counters" && proposal.event === "enters" && (effect.affects?.ids ?? []).includes(proposal.objectId))
+    return {id: `enters-with-counters:${effect.timestamp}`, kind: "replacement", watches: {event: "enters"}, change: {entersWithCounters: {...effect.counters}}};
+  if (effect.rule === "damage-doubled" && proposal.event === "damage") {
+    const toPlayer = proposal.toPlayer !== undefined && proposal.toPlayer !== null ? proposal.toPlayer : null;
+    const whose = toPlayer !== null ? toPlayer : state.objects[proposal.toCard] ? controllerOf(state, proposal.toCard) : null;
+    if (whose !== null && (effect.players ?? []).includes(whose))
+      return {id: `damage-doubled:${effect.timestamp}`, kind: "replacement", name: effect.name, watches: {event: "damage"}, change: {multiply: 2}};
+  }
+  return null;
+}
+
 /** Where an effect has to be for it to act on the battlefield (CR 113.6). */
 const ACTING_ZONES = ["battlefield"];
 
@@ -222,6 +243,12 @@ function applicable(state, proposal) {
   /* And "if it would die this turn, exile it instead" about it (EXILE_IF_DIES). */
   if ((state.effects ?? []).some((effect) => effect.rule === "exile-if-dies" && effect.affects.ids.includes(proposal.objectId))
     && applies(state, EXILE_IF_DIES, moving, proposal)) found.push({holderId: proposal.objectId, ability: EXILE_IF_DIES});
+  /* Replacement effects a resolving spell or ability made, each about what it named then -- remembered by the effect, not
+     held by any permanent -- each its own candidate (CR 614.5), ordered with the others as any is (CR 616.1). */
+  for (const effect of state.effects ?? []) {
+    const ability = rememberedReplacement(state, effect, proposal);
+    if (ability && !(proposal.appliedBy ?? []).includes(appliedKey(null, ability))) found.push({holderId: null, ability});
+  }
   /* A permanent's replacement effects come from its abilities as they are after layer 6 (CR 613.1f, 614.12): one that has
      lost all its abilities -- Infinite Coursework on a damage doubler, Day of Black Sun's creatures as they die -- has none. */
   const held = staticAbilities(state);
@@ -507,7 +534,11 @@ export function enteringModifications(state, {objectId, player, types, abilities
 export function ownEntering(state, {objectId, player, types, abilities}) {
   const own = (abilities ?? []).filter((ability) => !ability.change?.copyOf);
   const {proposal} = applyReplacements(state, {event: "enters", objectId, player, types: types ?? [], x: 0, entering: {abilities: own}, tapped: false, counters: {}, ownOnly: true});
-  return {tapped: proposal.tapped === true, counters: proposal.counters ?? {}, asks: proposal.asks ?? []};
+  /* A planeswalker copied as it enters (Spark Double, Clever Impersonator) has that planeswalker's printed loyalty, a copiable
+     value (CR 707.2), and enters with that many loyalty counters (CR 306.5b), as enteringModifications gives any other. */
+  const counters = {...(proposal.counters ?? {})}, loyalty = state.objects[objectId]?.loyalty;
+  if ((types ?? []).includes("Planeswalker") && Number.isInteger(loyalty)) counters.loyalty = (counters.loyalty ?? 0) + loyalty;
+  return {tapped: proposal.tapped === true, counters, asks: proposal.asks ?? []};
 }
 
 /* How an event ends under every order of the effects that apply to it (CR 616.1f: each applied, then what still applies),
@@ -528,6 +559,8 @@ export function damageChoicesPossible(state) {
   /* A shield among the prevention effects (Inkshield) is ordered with the rest (applicable, above). */
   const lasting = (state.effects ?? []).filter((e) => e.rule === "prevent-damage");
   let n = lasting.some(isShield) ? lasting.length : 0;
+  /* And a doubler a resolution made (Lightning, Army of One's Stagger; rememberedReplacement). */
+  n += (state.effects ?? []).filter((e) => e.rule === "damage-doubled").length;
   if (n >= 2) return true;
   const held = staticAbilities(state);
   for (const id of state.zones.battlefield)

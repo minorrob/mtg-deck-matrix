@@ -52,7 +52,7 @@
  * `sacrifice` of the source itself; a card with any other is refused at prepare (cards/index.mjs).
  */
 
-import {cardsIn, moveObject, usesThisTurn, recordUse, showFace, showAdventure, shownFaceDown, shownFaceUp, turnFaceUp, eventCard, commanderKeyOf, recordDiscard} from "../state/index.mjs";
+import {cardsIn, moveObject, usesThisTurn, recordUse, showFace, showAdventure, shownFaceDown, shownFaceUp, turnFaceUp, eventCard, commanderKeyOf, recordDiscard, activationsForbidden} from "../state/index.mjs";
 import {mayLookAt} from "../projection.mjs";
 import {pushSpell, pushAbility, becameTarget, crimeCommitted} from "./stack.mjs";
 import {spend, parseManaCost, automaticPayment, canPay, chosenPayment, paymentOptions, paymentKey, paymentWords, PAY_CHOICES, manaValue, poolSize, tapPlans, convokeCanPay, convokePayments} from "./mana.mjs";
@@ -1194,6 +1194,8 @@ function manaOffers(state, player) {
   for (const id of state.zones.battlefield) {
     const object = state.objects[id];
     if (object.controller !== player) continue;
+    /* A mana ability is an activated ability (CR 605.1a): "its activated abilities can't be activated" (Koma) stops it too. */
+    if (activationsForbidden(state, id)) continue;
     /* Its abilities now: its own and any given it (layers.mjs). */
     for (const ability of abilitiesOf(state, id)) {
       if (ability.kind !== "mana") continue;
@@ -1594,6 +1596,8 @@ function offers(state, player) {
   for (const id of state.zones.battlefield) {
     const object = state.objects[id];
     if (object.controller !== player) continue;
+    /* "Its activated abilities can't be activated this turn" (Koma, Cosmos Serpent; CR 602.5; state/index.mjs). */
+    if (activationsForbidden(state, id)) continue;
     /* "Return target card of the chosen type" (Dawn-Blessed Pennant): each ability read with its permanent's own choice. */
     for (const ability of abilitiesOf(state, id).map((own) => (object.chosen !== undefined ? chosenFor(own, object) : own))) {
       /* An ability of the card in its owner's hand (cycling, ninjutsu) or graveyard (encore) is not the permanent's (CR 602.2,
