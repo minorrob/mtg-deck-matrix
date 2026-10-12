@@ -35,7 +35,10 @@
     "AI_CAP_PERSON_CENTS": "300",
     "AI_MODEL": "claude-haiku-5-5",
     "AI_COACH": "on",
-    "AI_CAP_COACH_CENTS": "150"
+    "AI_CAP_COACH_CENTS": "150",
+    "AI_PILOT": "on",
+    "AI_CAP_PILOT_GAME_CENTS": "25",
+    "AI_ADVISE": "on"
   },
   "ratelimits": [
     {

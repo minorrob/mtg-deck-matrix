@@ -66,7 +66,7 @@ import {runEffects} from "../script/effects/index.mjs";
 import {changeLife} from "../script/effects/resources.mjs";
 import {unprepare, preparedCopyStays} from "../script/effects/attributes.mjs";
 import {checkStateBasedActions, gameOver} from "./sba.mjs";
-import {costReduction, costIncrease, abilityCostIncrease, equipCostReduction, playerStatics, freeCast, flashGranted, castForbidden, countersPlaced, activationForbidden, cantBeSacrificed} from "./statics.mjs";
+import {costReduction, costIncrease, abilityCostIncrease, equipCostReduction, playerStatics, freeCast, flashGranted, castForbidden, countersPlaced, activationForbidden, cantBeSacrificed, ruleChanged} from "./statics.mjs";
 import {countMana, amountOf, countEffect, isCounted, amountProblems, commanderless} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
@@ -1553,7 +1553,9 @@ function offers(state, player) {
       /* An ability of the card in its owner's hand (cycling, ninjutsu) or graveyard (encore) is not the permanent's (CR 602.2,
          702.29a, 702.141a). */
       if (ability.kind !== "activated" || ability.zone === "hand" || ability.zone === "graveyard") continue;
-      if (ability.timing === "sorcery" && !sorceryTime) continue;
+      /* A loyalty ability any time its controller could cast an instant, on any player's turn, while an effect says so of its
+         permanent (Jace's Machinations; CR 606.3's timing, rules/statics.mjs `loyalty-at-instant-speed`). */
+      if (ability.timing === "sorcery" && !sorceryTime && !(ability.loyalty !== undefined && ruleChanged(state, "loyalty-at-instant-speed", id))) continue;
       if (!conditionHolds(state, ability.condition, {controller: player, source: id})) continue;
       if (!withinLimit(state, id, ability)) continue;
       /* A loyalty ability: only if none of this permanent's has been activated this turn (CR 606.3). */

@@ -91,8 +91,10 @@ export const exiledWithSource = (state, source) => (source === null || source ==
    last was, whatever it then was (`anyOf: [{self: true}, {subtypes, controller}]`). */
 /* `keywords` (Rampart Architect: "whenever a creature you control with defender dies") and `counters` (Shadow Urchin: "with
    one or more counters on it", "any" or a kind): what it had as it last existed, through the layers (rules/layers.mjs). */
+/* `colors` (Ricochet Trap: "if an opponent cast a blue spell this turn"): its colors as it was -- a spell as it was cast
+   (rules/actions.mjs keeps them, CR 105.2), a permanent as it last existed or entered (rules/layers.mjs, rules/trigger.mjs). */
 const LAST_KNOWN_KEYS = ["what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "controller", "token", "another", "attachedBy", "anyOf", "self",
-  "keywords", "counters"];
+  "keywords", "counters", "colors"];
 export function matchesLastKnown(selector, lki, context = {}) {
   if (!lki) return false;
   const s = selector ?? {};
@@ -115,6 +117,7 @@ export function matchesLastKnown(selector, lki, context = {}) {
   /* "Equipped creature dies": the Equipment was attached to it as it died. */
   if (s.attachedBy === "self" && !(lki.attachments ?? []).includes(context.source)) return false;
   if (s.keywords && !s.keywords.every((word) => (lki.keywords ?? []).includes(word))) return false;
+  if (s.colors && !s.colors.every((color) => (lki.colors ?? []).includes(color))) return false;
   if (s.counters !== undefined && !(s.counters === "any" ? Object.values(lki.counters ?? {}).some((n) => n > 0) : (lki.counters?.[s.counters] ?? 0) > 0)) return false;
   return true;
 }
