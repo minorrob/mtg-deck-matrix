@@ -305,7 +305,9 @@ export class GameTable extends GameRoom {
     const key = `pilot-spent/${room.matchId}`, spent = Number(await this.ctx.storage.get(key)) || 0;
     const cap = (Number(this.env.AI_CAP_PILOT_GAME_CENTS) > 0 ? Number(this.env.AI_CAP_PILOT_GAME_CENTS) : PILOT_GAME_CENTS) * 10000;
     if (spent + pilotWorst(brief, config.model) > cap) return null;
-    const ai = createAi(this.env.DB);
+    /* The call log on the table's clock, as the countdown and the away clocks are: a suite's fixed clock logs its calls,
+       and reads the day's caps, in its own day. */
+    const ai = createAi(this.env.DB, {now: () => new Date(this.now()).toISOString()});
     let asked;
     try {asked = await pilot({ai, who: {email: host}, brief, config, fetchImpl: this.fetchImpl ?? fetch});}
     catch (error) {if (error instanceof Closed) return null; throw error;}

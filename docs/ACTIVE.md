@@ -16,6 +16,21 @@ other lane answers in the last column.
 | --- | --- | --- | --- | --- |
 | 1 | Engine | The board to show the monarch (CR 725): the view's `state.players[i]` now carries `monarch: true` for the monarch, public to every seat, and no key for anyone else; the history says "Maya became the monarch" | Ginger, Queen of Sweets and Tamiyo, Upriser Crowned make their controller the monarch; the monarch draws a card at their end step, and a creature's combat damage to them makes its controller the monarch -- a player should see who holds it | The engine lane built it (Train E, the `monarch` branch); `docs/ui-lane/gameplay-anchor.md` lists the field. For the UI lane to show |
 
+## 2026-10-12: the AI call log on the clock it is handed (`claude/advisor-meter-clock`)
+
+Claude Code on Personal-HP, at Rob's request, for one small fix in the engine lane's files. `advisor` failed on main
+494bf0f4 once the real date passed 2026-10-12T12:00Z: the settings' meter read the last 24 hours on the machine's clock.
+The engine lane fixed the meter in c629f8c1 (#723). This branch fixes the one other call log on the machine's clock:
+- **The LLM seat** (`agentChoice`, `cloud/game-room.mjs`) logged its calls and read the day's caps on the machine's
+  clock. It now uses the table's clock (`this.now`), as the countdown and the away clocks do. Production is unchanged.
+- `tests/agent-seat-table.mjs`, 18 checks (from 16): calls are logged at the table's clock, and a spend logged a minute
+  before it counts against the host's day.
+- `tools/ai-clock-breaks.py`: 6 breaks, each caught by the check it targets.
+- **The suites no longer depend on the real date:** advisor, ai-door, coach, cloud-worker and agent-seat-table pass with
+  the machine's clock moved 30 days back, 2 back, 30 on and 400 on (a preload that moves `Date.now()` and a bare
+  `new Date()`; the PR has it). With the meter's old code, advisor passes 2 days back and fails 30 days on.
+- Waiting: the PR's one green Actions run, then a merge. Nothing else is open.
+
 ## 2026-10-12, later: Train E, Rob's library, in waves; the plan to 90%
 
 This session (Claude, a cloud container), with session workers only. No API usage (Rob: "I don't want to use API
