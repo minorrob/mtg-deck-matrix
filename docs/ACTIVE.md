@@ -67,7 +67,7 @@ usage for this").
   - Token and counter replacements: 19 cards. The Earth Crystal waits on counters divided at activation.
 
   None of the four constructs is credited in full. Each lane names the forms still missing.
-- **Every break anchors once again.** Later merges had moved the anchors of 35 breaks across 13 files, so those breaks
+- **Every break anchors once again.** Later merges had moved the anchors of 37 breaks across 15 files, so those breaks
   no longer broke anything. Each was re-anchored on the code it was written for and proved caught; 1,098 breaks
   checked.
 - **The plan, reordered** (`docs/engine/plan-coverage-90.md`):
