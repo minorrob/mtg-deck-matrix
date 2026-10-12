@@ -57,8 +57,27 @@ This session (Claude, a cloud container):
 
     No card in the library depends on any of these.
   - Next, the library's other ~175 cards.
-- **G-F, production:** Rob's go, 2026-10-12. Waiting on one check of his: `crankmagic`'s Workers Builds branch is
-  `release/pages`. Production's D1 has both migrations, as staging's does.
+- **G-F: production is released, with Play open** (Rob: "Workers Builds branch is release/pages, go ahead with
+  production", 2026-10-12). Both releases were built from main fa1a7d3b, the same commit staging serves (its worker
+  byte-identical to its dry run, 40d0018f1647). Each went out by `tools/release-production.sh`, and Workers Builds
+  deployed each push of `release/pages`.
+  1. **The standby** (Play closed, the table class registered):
+     - `release/pages` 6799f713;
+     - local walks: `release-acceptance` 23 and `production-play-e2e` 27;
+     - deployed as version **a2c6fbb4**, the recovery target;
+     - the live walk at `https://crankmagic.com`: 23 checks.
+  2. **Play** (`cloud-production`):
+     - `release/pages` 04b415de;
+     - local walks: 22 and 27;
+     - deployed as version **8997e158**; `version.json` reads `fa1a7d3b`, profile `cloud-production`;
+     - the live walk: 22 checks.
+
+  Production's AI door stays shut: the version has no `AI_*` binding, and opening it is a later go of Rob's. `/api/*` is
+  behind Access.
+- **Before Part 7's second sentence:**
+  - G-D: Grok Bot's 50 games wait on the four agents' tokens.
+  - G-E: Rob's invites.
+  - Rob's v43 restore on production, which serves the current app now.
 - **Rob's choice, 2026-10-12:** a second system takes the UI lane (the board, its CSS, Settings' Play card) while this
   session keeps the engine, the room and the card loads (the lanes above; AGENTS.md, *Lanes*). Notes 9 and 10 move to
   that lane.
