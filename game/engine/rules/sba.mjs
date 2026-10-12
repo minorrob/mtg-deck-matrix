@@ -269,19 +269,6 @@ export function checkStateBasedActions(state) {
       }
     }
 
-    /* CR 704.5q: a permanent with both +1/+1 and -1/-1 counters loses N of each, N the smaller. */
-    for (const id of state.zones.battlefield) {
-      const counters = state.objects[id].counters ?? {};
-      const n = Math.min(counters["+1/+1"] ?? 0, counters["-1/-1"] ?? 0);
-      if (n <= 0) continue;
-      for (const kind of ["+1/+1", "-1/-1"]) {
-        const before = counters[kind];
-        counters[kind] = before - n;
-        events.push(event("GameEventCardCounters", state, {card: cardRef(state, id), type: kind, oldValue: before, newValue: counters[kind]}));
-      }
-      acted = true;
-    }
-
     /* CR 704.5m: an Aura attached to nothing, or to a permanent its Enchant could not enchant, is put into its owner's
        graveyard -- through the replacements and with its last known information, so "when this Aura is put into a
        graveyard" still sees it. Unlike an Equipment, it does not stay. */
@@ -438,6 +425,22 @@ export function checkStateBasedActions(state) {
         to: {zoneType: ZONE_LABEL[proposal.to] ?? proposal.to, player: {playerId: object.owner}},
       }));
       returnExiledUntil(state, id, events, leftBehind);
+      acted = true;
+    }
+
+    /* CR 704.5q: a permanent with both +1/+1 and -1/-1 counters loses N of each, N the smaller -- after the checks above in
+       the same pass, so that it happens at once with them (CR 704.3): a creature those counters bring to 0 toughness dies
+       with both kinds on it, and "the number of +1/+1 counters on this creature" is the number it had (Chasm Skulker's
+       ruling). Removing them in pairs changes no power or toughness, so nothing the checks above read is changed by it. */
+    for (const id of state.zones.battlefield) {
+      const counters = state.objects[id].counters ?? {};
+      const n = Math.min(counters["+1/+1"] ?? 0, counters["-1/-1"] ?? 0);
+      if (n <= 0) continue;
+      for (const kind of ["+1/+1", "-1/-1"]) {
+        const before = counters[kind];
+        counters[kind] = before - n;
+        events.push(event("GameEventCardCounters", state, {card: cardRef(state, id), type: kind, oldValue: before, newValue: counters[kind]}));
+      }
       acted = true;
     }
 

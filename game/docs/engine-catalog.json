@@ -9,17 +9,17 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1483,
+  "defined": 1501,
   "provisional": 25,
-  "everyRule": 2782
+  "everyRule": 2786
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
     "built": 73,
     "partial": 0,
-    "named": 5,
-    "missing": 116
+    "named": 6,
+    "missing": 115
    },
    "entries": [
     {
@@ -591,12 +591,12 @@
      "rule": "702.175",
      "name": "Offspring",
      "engine": null,
-     "status": "missing",
+     "status": "named",
      "forge": "Offspring",
      "top": 4,
      "all": 21,
-     "blocks": 4,
-     "alone": 4
+     "blocks": 3,
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -4051,8 +4051,8 @@
      "forge": "RollDice",
      "top": 7,
      "all": 131,
-     "blocks": 7,
-     "alone": 3
+     "blocks": 6,
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -8925,7 +8925,7 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 62,
+     "blocks": 61,
      "alone": 4
     },
     {
@@ -8949,7 +8949,7 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 66,
+     "blocks": 65,
      "alone": 8
     },
     {
@@ -9009,7 +9009,7 @@
      "forge": "MayPlay",
      "top": 99,
      "all": 625,
-     "blocks": 45,
+     "blocks": 44,
      "alone": 1
     },
     {
@@ -9523,8 +9523,8 @@
      "forge": "Amount",
      "top": 10,
      "all": 43,
-     "blocks": 9,
-     "alone": 5
+     "blocks": 8,
+     "alone": 4
     },
     {
      "kind": "count",

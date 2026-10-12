@@ -1,0 +1,140 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Urza, Lord High Artificer",
+    "oracleId": "e87906d2-db1a-4e19-b910-adb4eb339945",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Artificer"
+    ],
+    "manaCost": "{2}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 4
+  },
+  "oracleText": "When Urza enters, create a 0/0 colorless Construct artifact creature token with \"This token gets +1/+1 for each artifact you control.\"\nTap an untapped artifact you control: Add {U}.\n{5}: Shuffle your library, then exile the top card. Until end of turn, you may play that card without paying its mana cost.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Urza enters, create a 0/0 colorless Construct artifact creature token with \"This token gets +1/+1 for each artifact you control.\"",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Construct",
+            "types": [
+              "Artifact",
+              "Creature"
+            ],
+            "subtypes": [
+              "Construct"
+            ],
+            "colors": [],
+            "power": 0,
+            "toughness": 0,
+            "abilities": [
+              {
+                "id": "c",
+                "kind": "static",
+                "text": "This token gets +1/+1 for each artifact you control.",
+                "layer": 7,
+                "sublayer": "c",
+                "affects": {
+                  "what": "permanent",
+                  "self": true
+                },
+                "apply": {
+                  "power": {
+                    "count": {
+                      "what": "permanent",
+                      "types": [
+                        "Artifact"
+                      ],
+                      "controller": "you"
+                    }
+                  },
+                  "toughness": {
+                    "count": {
+                      "what": "permanent",
+                      "types": [
+                        "Artifact"
+                      ],
+                      "controller": "you"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Tap an untapped artifact you control: Add {U}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "tapCreature",
+          "selector": {
+            "types": [
+              "Artifact"
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "U": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{5}: Shuffle your library, then exile the top card. Until end of turn, you may play that card without paying its mana cost.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{5}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "shuffle"
+        },
+        {
+          "effect": "moveZone",
+          "fromTop": 1,
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "mayPlay",
+          "targets": "remembered",
+          "free": true,
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

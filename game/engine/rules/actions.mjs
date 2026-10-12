@@ -568,6 +568,13 @@ function additionalVariants(costs) {
       variants = variants.flatMap((v) => [v, {...v, gift: true}]);
       continue;
     }
+    /* OFFSPRING [cost] (CR 702.175a; Coruscation Mage, wave 4c): "you may pay an additional [cost] as you cast this spell" --
+       once at most (its ruling), so two variants: without it, and with its mana added (`offspring`, rules/stack.mjs marks the
+       permanent it becomes, for its trigger's "if its offspring cost was paid"). */
+    if (atom?.atom === "offspring") {
+      variants = variants.flatMap((v) => [v, {...v, mana: v.mana + (atom.cost ?? ""), offspring: true}]);
+      continue;
+    }
     /* TIERED (CR 702.183a): one mode, and its cost -- each mode its own variant, that mode alone (withModes), its cost added. */
     if (atom?.atom === "tiered") {
       variants = variants.flatMap((v) => (atom.costs ?? []).map((cost, tier) => ({...v, mana: v.mana + cost, tier})));
@@ -1296,7 +1303,7 @@ function manaOffers(state, player) {
       const alternatives = manaAlternatives(state, player, ability, id);
       const fodder = ability.sacrifice ? sacrificeChoices(state, player, id, ability.sacrifice).map((x) => ({sacrifice: x}))
         /* "Tap an untapped creature you control" (Jaspera Sentinel): one offer per creature it may tap, none and none. */
-        : ability.tapCreature ? manaTappers(state, player, id, ability.tapCreature).map((x) => ({tap: x}))
+        : ability.tapCreature ? manaTappers(state, player, id, ability.tapCreature, ability.tapSelf === true).map((x) => ({tap: x}))
         /* "Exile a card from your graveyard" (Rubble Rouser): one offer per card it may exile, as an activated ability's. */
         : ability.exileFromGraveyard ? graveyardChoices(state, player, id, ability.exileFromGraveyard).map((x) => ({exile: x})) : [null];
       for (const costChoice of fodder) alternatives.forEach((mana, produce) => actions.push({
@@ -1314,8 +1321,9 @@ function manaOffers(state, player) {
    Sentinel, Saruli Caretaker; CR 605.1a, 602.2b). Which creature is its player's to choose, so each one it may tap is an offer
    of its own, as a mana ability's sacrifice is, and nothing that pays for them (tapUnits, rules/mana.mjs's plainSources)
    ever activates it. Never the source, which its own {T} taps (CR 118.3); a creature that came under its player's control
-   this turn may be tapped, the cost not being its own {T} (CR 302.6). */
-const manaTappers = (state, player, sourceId, selector) => state.zones.battlefield.filter((id) => id !== sourceId && !state.objects[id].tapped
+   this turn may be tapped, the cost not being its own {T} (CR 302.6). One with no {T} of its own ("Tap an untapped artifact
+   you control: Add {U}", Urza, Lord High Artificer; `tapsSelf` false) may tap its source, if the selector describes it. */
+const manaTappers = (state, player, sourceId, selector, tapsSelf = true) => state.zones.battlefield.filter((id) => (!tapsSelf || id !== sourceId) && !state.objects[id].tapped
   && characteristicsOf(state, id).controller === player && compileSelector({...selector, what: "permanent"})(state, id, {controller: player, source: sourceId}));
 
 /**
@@ -1546,7 +1554,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
         ...(lifeX ? {payLifeX: true} : {}), ...(autoTap && !convoke ? {autoTap: true} : {}),
         ...(payWays && !convoke ? {payWays: true} : {}),
         ...(convoke ? {convoke: true} : {}), ...(variant.mana ? {extraMana: variant.mana} : {}), ...(variant.kicked ? {kicked: variant.kicked} : {}),
-        ...(variant.replicated ? {replicated: variant.replicated} : {}), ...(gift !== undefined ? {gift} : {}),
+        ...(variant.replicated ? {replicated: variant.replicated} : {}), ...(gift !== undefined ? {gift} : {}), ...(variant.offspring ? {offspring: true} : {}),
         ...(tapsAny ? {tapAny: true} : {}), ...(beholds ? {behold: beholds.count ?? 1} : {}),
         /* Escalated (CR 702.120a): how many modes beyond the first, and how many creatures that taps. */
         ...(variant.escalate ? {escalate: variant.escalate} : {}), ...(variant.escalateTap ? {escalateTap: variant.escalateTap.count} : {}),
@@ -1967,6 +1975,8 @@ const sameAction = (a, b) => a.kind === b.kind
   && (a.replicated ?? 0) === (b.replicated ?? 0)
   /* And a gift promised, to that opponent (CR 702.174a): another cost, and another player given it. */
   && (a.gift ?? null) === (b.gift ?? null)
+  /* And its offspring cost paid (CR 702.175a): another cost, and a token copy as it enters. */
+  && (a.offspring === true) === (b.offspring === true)
   /* And escalated for that many modes beyond the first, tapping that many creatures (CR 702.120a): another cost. Which
      creatures is picked after the offer is taken, so they are not part of it (and are held to the cost as it is paid). */
   && (a.escalate ?? 0) === (b.escalate ?? 0) && (a.escalateTap ?? 0) === (b.escalateTap ?? 0)
@@ -2435,6 +2445,8 @@ function performOffered(state, player, action, during) {
     /* Its gift promised (CR 702.174k), to the opponent chosen as it was cast: the spell's, a copy's (CR 707.10), and the
        permanent it becomes (rules/stack.mjs). */
     if (action.gift !== undefined) entry.gift = action.gift;
+    /* Its offspring cost paid (CR 702.175a): the permanent it becomes knows it as it enters (rules/stack.mjs). */
+    if (action.offspring === true) entry.offspring = true;
     /* Cast as an Adventure (CR 715.3): exiled as it resolves, and castable as itself from there (rules/stack.mjs, 715.3d). */
     if (action.adventure === true && object.face === "adventure") entry.adventure = true;
     /* Cast with flashback: exiled, whatever would move it, as it leaves the stack (rules/stack.mjs, effects/zones.mjs). */

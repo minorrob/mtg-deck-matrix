@@ -133,6 +133,16 @@ function checkEffect(effect, path, errors) {
   /* "Each player with exactly 13 life loses the game" (Triskaidekaphobia; effects/resources.mjs): a life total, a whole number. */
   if (effect.withLife !== undefined && (name !== "loseGame" || !Number.isInteger(effect.withLife)))
     errors.push({path: `${path}.withLife`, message: "\"With exactly N life\" is withLife: a whole number, on loseGame"});
+  /* "Its controller creates two tokens that are copies of that creature, except their power is half that creature's power"
+     (Saw in Half; effects/permanents.mjs, movedCopies): copies of what the effect before it moved (`of: "moved"`), their power
+     and toughness halved, rounded up (`halfStats`) -- on a copyPermanent, and halving only those. */
+  if (effect.of !== undefined && !(name === "copyPermanent" && effect.of === "moved" && effect.targets === undefined && effect.selector === undefined))
+    errors.push({path: `${path}.of`, message: "Copies of what the effect before it moved are copyPermanent's of: \"moved\", with no targets or selector of their own"});
+  if (effect.halfStats !== undefined && !(effect.halfStats === true && effect.of === "moved"))
+    errors.push({path: `${path}.halfStats`, message: "halfStats is true, on copies of what the effect before it moved (of: \"moved\")"});
+  /* "Roll a d20" (CR 706.1; effects/resources.mjs): a die of `sides` sides, a whole number 2 or more. */
+  if (name === "rollDie" && !(Number.isInteger(effect.sides) && effect.sides >= 2))
+    errors.push({path: `${path}.sides`, message: "A die rolled says how many sides it has: sides, a whole number 2 or more (a d20 is 20)"});
   /* "You become the monarch", "its controller becomes the monarch" (CR 725.3; effects/resources.mjs): one player -- its
      controller ("you", or unsaid), a target player, or the controller of what the trigger is about. */
   if (name === "becomeMonarch" && effect.who !== undefined && !["you", "that card's controller"].includes(effect.who) && !Number.isInteger(effect.who?.target))

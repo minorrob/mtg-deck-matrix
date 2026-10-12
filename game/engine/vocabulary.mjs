@@ -75,6 +75,8 @@ export const PRIMITIVES = Object.freeze({
   counters: Object.freeze([
     "putCounter", "putCounterAll", "removeCounter", "proliferate", "multiplyCounters",
     "moveCounters", "replaceCounters", "amass", "poison", "winGame", "loseGame", "goad", "empowerJace", "becomeMonarch",
+    /* Wave 4c: "roll a d20" (CR 706; Forge's RollDice; Ancient Copper Dragon), its result counted by what follows. */
+    "rollDie",
   ]),
   permanents: Object.freeze([
     "createToken", "copyPermanent", "becomeCopy", "earthbend", "populate", "unlessPays", "animate", "animateAll", "attach", "gainControl", "setState",
@@ -121,6 +123,8 @@ export const TRIGGER_EVENTS = Object.freeze([
   "state",
   /* "Whenever this creature transforms into Ashling, Rimebound" (CR 701.27e; Train C, w2c-hands-triggers). */
   "transformed",
+  /* "When this Class becomes level 2" (CR 716.2a; Caretaker's Talent, Wizard Class; wave 4c). */
+  "becomes level",
 ]);
 
 /** The cost atoms of §12.2. The two symbolic ones are named; the rest are structural. */
@@ -221,7 +225,10 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   "shadow",
   /* Wave 4b: exalted (CR 702.83) and extort (CR 702.101), triggered abilities; eternalize (CR 702.129), embalm's 4/4 black
      copy; gift (CR 702.174), an optional additional cost choosing an opponent (cards/index.mjs, rules/actions.mjs). */
-  "exalted", "extort", "eternalize", "gift"];
+  "exalted", "extort", "eternalize", "gift",
+  /* Wave 4c: offspring (CR 702.175), an optional additional cost and a 1/1 token copy as it enters (cards/index.mjs,
+     rules/actions.mjs). */
+  "offspring"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

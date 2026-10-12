@@ -42,6 +42,8 @@
  *   {excessDamage: true}                 the excess damage the damage before it in this resolution dealt (CR 120.4a)
  *   {countersRemovedThisWay: true}       how many counters the removeCounter before it in this resolution removed ("add one
  *                                        mana of any color for each charge counter removed this way", Coalition Relic)
+ *   {dieRolled: true}                    the result of the die the rollDie before it in this resolution rolled -- "a number
+ *                                        of Treasure tokens equal to the result" (Ancient Copper Dragon; CR 706.2)
  *   {lesserOf: [amount, amount]}         the least of them: "greater than this creature's power or toughness" (increment)
  *   {tappedThisWay: true}                how many creatures this spell's additional cost tapped as it was cast -- "three times
  *                                        the number of creatures tapped this way" (Burn at the Stake; rules/actions.mjs)
@@ -125,7 +127,9 @@ export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf"
   /* Train E, wave 2: "the greatest mana value among cards in your graveyard" (Hapatra, the Desert Fang). */
   "greatestManaValue",
   /* Wave 4b: "if you attacked with two or more creatures this turn" (Minas Tirith). */
-  "creaturesAttackedWithThisTurn"]);
+  "creaturesAttackedWithThisTurn",
+  /* Wave 4c: "equal to the result" of a die rolled (CR 706.2; Ancient Copper Dragon). */
+  "dieRolled"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named", "another", "signed"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -178,6 +182,7 @@ export function amountProblems(value) {
   if ("half" in value && value.half !== true) problems.push("An amount's half is true: halved, rounded down");
   if ("per" in value && !(Number.isInteger(value.per) && value.per > 1)) problems.push("An amount's per is a whole number above 1: \"for every seven\" is per 7");
   if ("countersRemovedThisWay" in value && value.countersRemovedThisWay !== true) problems.push("countersRemovedThisWay is true");
+  if ("dieRolled" in value && value.dieRolled !== true) problems.push("dieRolled is true: the result of the die rolled before it");
   if ("countersPut" in value && value.countersPut !== true) problems.push("countersPut is true");
   if ("manaInPool" in value && value.manaInPool !== "you") problems.push('manaInPool is "you": the mana in your pool');
   /* A player's own counters are "you" ("the number of experience counters you have", Ezuri, Claw of Progress) or a target
@@ -403,6 +408,8 @@ export function amountOf(state, value, context = {}) {
   /* "For each charge counter removed this way" (Coalition Relic): what the removeCounter before it removed
      (effects/resources.mjs) -- none removed, or none removed yet, is 0. */
   else if ("countersRemovedThisWay" in value) n = context.countersRemoved ?? 0;
+  /* "Equal to the result" (Ancient Copper Dragon): what the rollDie before it rolled (effects/resources.mjs) -- none rolled, 0. */
+  else if ("dieRolled" in value) n = context.rolled ?? 0;
   /* "For each card type among cards discarded this way" (Occult Epiphany): the card types (CR 205.2a) the remembered
      cards have between them, as they are now -- an artifact creature is two. */
   else if ("cardTypesAmong" in value) n = new Set((context.remembered ?? []).flatMap((id) => state.objects[id]?.types ?? [])).size;

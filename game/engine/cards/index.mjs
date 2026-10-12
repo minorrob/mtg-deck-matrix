@@ -353,6 +353,10 @@ const TRIGGERS = {
   /* "When this creature becomes monstrous" (Protector of the Wastes; CR 701.37b): this permanent given the designation
      (effects/attributes.mjs) -- once, since it stays monstrous until it leaves the battlefield. */
   "becomes monstrous": (t) => ((t.who ?? "self") === "self" ? {on: "GameEventCardAttribute", attribute: "monstrous", who: "self"} : null),
+  /* "When this Class becomes level 2" (Caretaker's Talent, Wizard Class; wave 4c): this permanent's level set to `level` from
+     below it, by its level ability (CR 716.2a; effects/permanents.mjs, setState) -- an ability of that level itself, had
+     once the Class is that level (`level` on the ability, classLevel below), so it sees its own level arrive (CR 603.2). */
+  "becomes level": (t) => ((t.who ?? "self") === "self" && Number.isInteger(t.level) && t.level >= 2 ? {on: "GameEventCardLevel", who: "self", level: t.level} : null),
   /* "Whenever this creature becomes the target of a spell" (Goldspan Dragon), "whenever a Dragon you control becomes the
      target of a spell or ability an opponent controls" (Thunderbreak Regent): `who` and `filter` what was targeted, `by`
      whose spell or ability (any, or opponent), `spell` a spell's only (CR 115.1, batch 76). About what was targeted and
@@ -454,8 +458,9 @@ function manaAbility(ability, id) {
     /* "{T}, Mill a card: Add {C}" (Millikin): its controller's top N cards, milled as the cost is paid (CR 701.17). */
     || (a?.atom === "mill" && Number.isInteger(a.count ?? 1) && (a.count ?? 1) >= 1)
     /* "{T}, Tap an untapped creature you control: Add one mana of any color" (Jaspera Sentinel): one creature the selector
-       describes, beside the source's own {T} (rules/actions.mjs, manaTappers). */
-    || (a?.atom === "tapCreature" && (a.count ?? 1) === 1 && Boolean(a.selector) && typeof a.selector === "object" && cost.some((t) => t?.atom === "{T}"))
+       describes, beside the source's own {T} (rules/actions.mjs, manaTappers) -- or alone: "Tap an untapped artifact you
+       control: Add {U}" (Urza, Lord High Artificer; wave 4c), the source among what it may tap if it is one. */
+    || (a?.atom === "tapCreature" && (a.count ?? 1) === 1 && Boolean(a.selector) && typeof a.selector === "object")
     /* "{T}, Exile a card from your graveyard: Add {R}" (Rubble Rouser): one card of its controller's graveyard the selector
        describes (rules/actions.mjs, graveyardChoices). */
     || (a?.atom === "exileFromGraveyard" && a.self !== true && (a.count ?? 1) === 1 && Boolean(a.selector) && typeof a.selector === "object"))) return "unbuilt";
@@ -655,6 +660,8 @@ export function compileScript(script) {
   const keywords = [];
   let spell = null;
   let multikicker = null;
+  /* Offspring (CR 702.175a): its cost, and its trigger, put on the spell once it is known (below). */
+  let offspring = null;
   /* Replicate's cost (CR 702.56a), put on the spell once it is known (below). */
   let replicate = null;
   /* Escalate's cost (CR 702.120a), put on the spell once its modes are known (below). */
@@ -1232,6 +1239,20 @@ export function compileScript(script) {
       if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`${ability.text}: multikicker is a mana cost`);
       multikicker = String(ability.cost ?? "");
       keywords.push("Multikicker");
+      return;
+    }
+    /* OFFSPRING [cost] (CR 702.175a; Coruscation Mage, wave 4c): two abilities. "You may pay an additional [cost] as you cast
+       this spell" -- an additional cost of the spell's, paid once at most (rules/actions.mjs, additionalVariants) -- and "when
+       this permanent enters, if its offspring cost was paid, create a token that's a copy of it, except it's 1/1", a triggered
+       ability of the permanent's (below). Only a creature card has it here; one instance of it. */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "offspring") {
+      let parsed = null;
+      try { parsed = parseManaCost(ability.cost ?? ""); } catch { /* refused below */ }
+      if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`${ability.text}: offspring is a mana cost`);
+      if (!(identity.types ?? []).includes("Creature")) problems.push(`${ability.text}: offspring on a card that is not a creature`);
+      if (offspring !== null) problems.push(`${ability.text}: a second offspring is not built`);
+      offspring = {id, text: ability.text, cost: String(ability.cost ?? "")};
+      keywords.push("Offspring");
       return;
     }
     /* REPLICATE [cost] (CR 702.56a; Lose Focus, Train E): two abilities. "As an additional cost to cast this spell, you may
@@ -1815,6 +1836,15 @@ export function compileScript(script) {
   if (!tiered && modeCosts.some((cost) => cost !== undefined)) problems.push("a mode's own cost is tiered's: the spell says Tiered (CR 702.183a)");
   /* Multikicker's additional cost, on the spell -- a permanent's too, whose spell does nothing else (CR 608.3). */
   if (multikicker !== null) spell = {...(spell ?? {id: "multikicker", text: "Multikicker", targets: [], effects: []}), additionalCost: [...(spell?.additionalCost ?? []), {atom: "multikicker", cost: multikicker}]};
+  /* Offspring's additional cost, on the spell -- a creature's, whose spell does nothing else (CR 608.3) -- and its trigger as
+     the permanent enters, its "if" an intervening one (CR 603.4; script/condition.mjs, `offspringPaid`): a token copy of it,
+     its copiable values with a base power and toughness of 1/1 (CR 707.9b), and of it as it last existed should it be gone
+     by then (CR 608.2h; the card's rulings; effects/permanents.mjs, copyPermanent's `lastKnown`). */
+  if (offspring !== null) {
+    spell = {...(spell ?? {id: "offspring", text: offspring.text, targets: [], effects: []}), additionalCost: [...(spell?.additionalCost ?? []), {atom: "offspring", cost: offspring.cost}]};
+    abilities.push({id: offspring.id, kind: "triggered", text: offspring.text, trigger: TRIGGERS.enters({who: "self"}), condition: {offspringPaid: true},
+      effects: [{effect: "copyPermanent", targets: "self", lastKnown: true, except: {setPower: 1, setToughness: 1}}]});
+  }
   /* Replicate's additional cost, on the spell (an instant or sorcery's, which has one). */
   if (replicate !== null && !spell) problems.push("Replicate is on a spell with something to copy: its spell ability");
   else if (replicate !== null) spell = {...spell, additionalCost: [...(spell.additionalCost ?? []), {atom: "replicate", cost: replicate}]};

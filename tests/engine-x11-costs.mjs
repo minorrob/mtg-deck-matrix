@@ -168,8 +168,12 @@ const manaCard = (cost) => compileScript({schema: "CrankCardScript@1",
 {
   const fine = manaCard([{atom: "{T}"}, {atom: "tapCreature", selector: {types: ["Creature"]}}]);
   eq([fine.problems, fine.definition.abilities[0].kind, fine.definition.abilities[0].tapCreature], [[], "mana", {types: ["Creature"]}], "{T} and another creature: a mana ability");
-  for (const bad of [[{atom: "tapCreature", selector: {types: ["Creature"]}}], [{atom: "{T}"}, {atom: "tapCreature", count: 2, selector: {types: ["Creature"]}}], [{atom: "{T}"}, {atom: "tapCreature"}]])
-    ok(manaCard(bad).problems.length > 0, `refused: ${JSON.stringify(bad)} (no {T} of its own, two creatures, no selector)`);
+  /* With no {T} of its own ("Tap an untapped artifact you control: Add {U}", Urza, Lord High Artificer; wave 4c): a mana ability
+     too, its source among what it may tap (rules/actions.mjs, manaTappers). */
+  const alone = manaCard([{atom: "tapCreature", selector: {types: ["Creature"]}}]);
+  eq([alone.problems, alone.definition.abilities[0].kind, alone.definition.abilities[0].tapSelf], [[], "mana", false], "another creature alone, no {T}: a mana ability");
+  for (const bad of [[{atom: "{T}"}, {atom: "tapCreature", count: 2, selector: {types: ["Creature"]}}], [{atom: "{T}"}, {atom: "tapCreature"}]])
+    ok(manaCard(bad).problems.length > 0, `refused: ${JSON.stringify(bad)} (two creatures, no selector)`);
 }
 
 /* ---- Lorehold Excavation, Rubble Rouser: a card of the graveyard as a cost ---- */

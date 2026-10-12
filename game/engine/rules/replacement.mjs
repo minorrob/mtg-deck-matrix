@@ -47,7 +47,7 @@
 
 import {compileSelector, matchesSelector} from "../script/filter.mjs";
 import {amountOf, isCounted} from "../script/amount.mjs";
-import {chosenFor} from "../script/chosen.mjs";
+import {chosenFor, namesChosen} from "../script/chosen.mjs";
 import {protectedFrom} from "./protection.mjs";
 import {controllerOf, staticAbilities} from "./layers.mjs";
 
@@ -371,7 +371,13 @@ function applyOne(state, {holderId, ability, effect = null}, proposal, dry = fal
   /* "This creature enters prepared" (Goblin Glasswright; CR 614.1c, 722.3a): a designation it enters with, given as it
      arrives (effects/attributes.mjs, prepare) -- and with it the copy of its prepare spell in exile (722.3c). */
   if (ability.change?.entersPrepared === true) next.designations = [...new Set([...(next.designations ?? []), "prepared"])];
-  if (ability.change?.entersWithCounters) {
+  /* "As this artifact enters, choose a creature type. This artifact enters with a fellowship counter on it for each creature
+     you control of the chosen type" (Banner of Kinship; wave 4c): a count that reads the choice made as it enters, which
+     the engine asks once it is there (rules/entering.mjs) -- so counted with the answer and put on then, as it entered
+     with them (CR 614.12, 122.6), kept here beside the choice (`chosenCounters`, withChoiceCounters below). */
+  if (ability.change?.entersWithCounters && namesChosen(ability.change.entersWithCounters.count)) {
+    next.chosenCounters = [...(next.chosenCounters ?? []), structuredClone(ability.change.entersWithCounters)];
+  } else if (ability.change?.entersWithCounters) {
     const {counter, count} = ability.change.entersWithCounters;
     /* "With X +1/+1 counters on it" (CR 107.3m: the X paid to cast it), "a +1/+1 counter for each Zombie card in your
        graveyard", "X, where X is the greatest power among other creatures you control": counted as it is about to enter,
@@ -525,7 +531,18 @@ export function enteringModifications(state, {objectId, player, types, abilities
      rules/actions.mjs), if it would enter with any. */
   if (phyrexianLife > 0 && counters.loyalty > 0 && (state.objects[objectId]?.keywords ?? []).includes("Compleated"))
     counters.loyalty = Math.max(0, counters.loyalty - 2 * phyrexianLife);
-  return {tapped: proposal.tapped === true, counters, asks: proposal.asks ?? [], designations: proposal.designations ?? []};
+  return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal), designations: proposal.designations ?? []};
+}
+
+/* THE COUNTERS A CHOICE COUNTS (Banner of Kinship; `chosenCounters`, applyOne above): carried on the entering's "choose"
+   question, counted and put on once it is answered (rules/entering.mjs) -- in whichever order the two replacements applied,
+   so their order is no question of anyone's (CR 616.1: the same either way). With no choice to make, nothing is of the
+   chosen type (script/chosen.mjs, NONE_CHOSEN), and there are none. */
+function withChoiceCounters(proposal) {
+  const asks = proposal.asks ?? [];
+  if (!(proposal.chosenCounters ?? []).length) return asks;
+  const at = asks.findIndex((ask) => ask.choose !== undefined);
+  return at < 0 ? asks : asks.map((ask, i) => (i === at ? {...ask, chosenCounters: proposal.chosenCounters} : ask));
 }
 
 /**
@@ -542,7 +559,7 @@ export function ownEntering(state, {objectId, player, types, abilities}) {
      value (CR 707.2), and enters with that many loyalty counters (CR 306.5b), as enteringModifications gives any other. */
   const counters = {...(proposal.counters ?? {})}, loyalty = state.objects[objectId]?.loyalty;
   if ((types ?? []).includes("Planeswalker") && Number.isInteger(loyalty)) counters.loyalty = (counters.loyalty ?? 0) + loyalty;
-  return {tapped: proposal.tapped === true, counters, asks: proposal.asks ?? []};
+  return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal)};
 }
 
 /* How an event ends under every order of the effects that apply to it (CR 616.1f: each applied, then what still applies),

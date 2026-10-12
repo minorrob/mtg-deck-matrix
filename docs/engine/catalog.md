@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,483 defined and playable today; 2,782 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,501 defined and playable today; 2,786 with every
 mechanic built, so only their definitions are left to write; 25 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 73 | 0 | 5 | 116 |
+| Keyword abilities (CR 702) | 194 | 73 | 0 | 6 | 115 |
 | Keyword actions (CR 701) | 70 | 22 | 5 | 1 | 42 |
 | Effects | 192 | 76 | 2 | 1 | 113 |
 | Triggers | 138 | 26 | 4 | 1 | 107 |
@@ -37,12 +37,11 @@ The things that alone hold back the most of the most-played cards.
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
 | count | What entered or died this turn | — | missing | 9 | 9 |
-| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 8 | 66 |
+| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 8 | 65 |
 | effect | RingTemptsYou | — | missing | 8 | 11 |
 | count | Cards in a library | — | missing | 7 | 11 |
 | effect | ChoosePlayer | — | missing | 6 | 8 |
 | effect | Discover | discover | named | 6 | 6 |
-| count | Amount | — | missing | 5 | 9 |
 | count | How many things an effect remembered | — | missing | 5 | 8 |
 | option | Imprint (a card exiled with this) | — | missing | 5 | 7 |
 | count | Times this resolved this turn | — | missing | 5 | 7 |
@@ -50,7 +49,8 @@ The things that alone hold back the most of the most-played cards.
 | effect | Protection | — | missing | 5 | 5 |
 | keyword ability | Cascade | — | missing | 5 | 5 |
 | trigger | AbilityCast | — | missing | 5 | 5 |
-| option | Remembering what an effect moved | — | missing | 4 | 62 |
+| option | Remembering what an effect moved | — | missing | 4 | 61 |
+| count | Your life total | — | missing | 4 | 10 |
 
 ## Keyword abilities (CR 702)
 
@@ -103,7 +103,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.79 | Persist | — | missing | 4 | 24 | 4 | 3 |
 | 702.100 | Evolve | Evolve | built | 4 | 23 | 0 | 0 |
 | 702.61 | Split Second | Split Second | built | 4 | 22 | 0 | 0 |
-| 702.175 | Offspring | — | missing | 4 | 21 | 4 | 4 |
+| 702.175 | Offspring | — | named | 4 | 21 | 3 | 3 |
 | 702.75 | Hideaway | Hideaway | built | 4 | 15 | 0 | 0 |
 | 702.62 | Suspend | Suspend | built | 3 | 72 | 0 | 0 |
 | 702.35 | Madness | — | missing | 3 | 62 | 3 | 2 |
@@ -399,7 +399,7 @@ The things that alone hold back the most of the most-played cards.
 | RemoveCounter | removeCounter | built | 8 | 198 | 0 | 0 |
 | ChoosePlayer | — | missing | 8 | 120 | 8 | 6 |
 | Repeat | — | missing | 8 | 58 | 8 | 1 |
-| RollDice | — | missing | 7 | 131 | 7 | 3 |
+| RollDice | — | missing | 7 | 131 | 6 | 2 |
 | Amass | amass | built | 7 | 72 | 0 | 0 |
 | StoreSVar | — | missing | 6 | 68 | 5 | 1 |
 | Shuffle | shuffle | built | 6 | 66 | 0 | 0 |
@@ -826,14 +826,14 @@ The things that alone hold back the most of the most-played cards.
 | You may, decided by a named player | modal (Yes / No) | partial | 176 | 1499 | 0 | 0 |
 | An effect's condition: if a permanent is present | an effect's condition {present ...} | built | 142 | 1292 | 0 | 0 |
 | Fewer targets than the most ("up to", "any number of") | a target's count {min, max} (script/bind.mjs), picked as a pick-several | built | 126 | 1672 | 0 | 0 |
-| Remembering what an effect moved | — | missing | 124 | 1168 | 62 | 4 |
+| Remembering what an effect moved | — | missing | 124 | 1168 | 61 | 4 |
 | More than one target of a kind ("up to N") | a target's count {min, max} (script/bind.mjs); a count that is X is not built | partial | 123 | 1664 | 0 | 0 |
-| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 66 | 8 |
+| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 65 | 8 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost} | built | 104 | 684 | 0 | 0 |
 | You may (an optional effect, CR 603.5) | modal (Yes / No) | built | 101 | 1094 | 0 | 0 |
-| You may play or cast a card from another zone | — | missing | 99 | 625 | 45 | 1 |
+| You may play or cast a card from another zone | — | missing | 99 | 625 | 44 | 1 |
 | An intervening "if" or "activate only if": a counted value | condition {compare} | built | 79 | 974 | 0 | 0 |
 | An effect's condition: a counted value | condition {compare: {count, atLeast / atMost / moreThan / fewerThan}} | built | 75 | 603 | 0 | 0 |
 | Unless a player pays | unlessPays, by kind | partial | 66 | 677 | 0 | 0 |
@@ -880,7 +880,7 @@ The things that alone hold back the most of the most-played cards.
 | 700.5 | Devotion to a color (CR 700.5) | {devotion: [color]} | built | 11 | 49 | 0 | 0 |
 | — | That much life ("loses that much life", the life gained) | {lifeGained: true}: the life the trigger is about (batch 68) | built | 11 | 38 | 0 | 0 |
 | — | Your life total | — | missing | 10 | 92 | 10 | 4 |
-| — | Amount | — | missing | 10 | 43 | 9 | 5 |
+| — | Amount | — | missing | 10 | 43 | 8 | 4 |
 | — | How many things an effect remembered | — | missing | 8 | 71 | 8 | 5 |
 | — | Times this resolved this turn | — | missing | 7 | 31 | 7 | 5 |
 | — | The monarch | condition {monarch: "you"} (script/condition.mjs); "while you're the monarch", a damage trigger's monarch: "you" | built | 7 | 15 | 0 | 0 |

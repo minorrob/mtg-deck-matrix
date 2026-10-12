@@ -26,6 +26,8 @@ import {copyOnto} from "../script/effects/permanents.mjs";
 import {ownEntering} from "./replacement.mjs";
 import {collectTriggers} from "./trigger.mjs";
 import {enteringCountersPlaced} from "./statics.mjs";
+import {amountOf} from "../script/amount.mjs";
+import {withChosen} from "../script/chosen.mjs";
 
 /* The cards in the controller's hand a reveal could show ("an Island or Swamp card"). */
 const revealable = (state, player, selector) => cardsIn(state, "hand", player).filter((id) => matchesSelector({...selector, what: "card", zone: "hand"}, state, id, {controller: player}));
@@ -190,6 +192,18 @@ export function resolveEnteringChoice(state, awaiting, indices) {
   }
   /* What was chosen as it entered, kept on the permanent for its abilities to read ("$chosen", script/chosen.mjs). */
   if (option.chosen !== undefined && state.objects[awaiting.objectId]) state.objects[awaiting.objectId].chosen = option.chosen;
+  /* "This artifact enters with a fellowship counter on it for each creature you control of the chosen type" (Banner of
+     Kinship; rules/replacement.mjs, withChoiceCounters): counted now, with the type just chosen, "you" its controller -- and
+     put on as it entered with them (CR 614.12, 122.6), by its controller (122.6a), as riot's counter is below. */
+  const chooser = state.objects[awaiting.objectId];
+  if (option.chosen !== undefined && chooser) for (const {counter, count} of asked?.chosenCounters ?? []) {
+    const n = amountOf(state, withChosen(count, option.chosen), {controller: chooser.controller, source: awaiting.objectId});
+    if (!(n > 0)) continue;
+    const was = chooser.counters[counter] ?? 0;
+    chooser.counters[counter] = was + enteringCountersPlaced(state, awaiting.objectId, counter, n, chooser.controller);
+    events.push({kind: "GameEventCardCounters", data: {turn: state.turn, phase: state.phase,
+      fields: {card: eventCard(state, awaiting.objectId), type: counter, oldValue: was, newValue: chooser.counters[counter], by: chooser.controller}}});
+  }
   if (option.pay) {
     /* Paying life is losing it (CR 119.4, 119.3). */
     events.push(...runEffect(state, {effect: "loseLife", amount: awaiting.life}, {controller: awaiting.player, source: awaiting.objectId}));

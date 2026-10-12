@@ -145,6 +145,9 @@ function subjects(state, event, condition, sourceId, controller) {
   }
   /* "Whenever this creature transforms into Ashling, Rimebound" (CR 701.27e): this permanent, the face it has just after. */
   if (condition.on === "GameEventCardTransformed") return fields.card?.cardId === sourceId && fields.to === condition.into ? [{card: sourceId}] : [];
+  /* "When this Class becomes level 2" (CR 716.2a; wave 4c): this permanent's level made that level from a lower one (a Class
+     with no level is level 1, 716.2d). */
+  if (condition.on === "GameEventCardLevel") return fields.card?.cardId === sourceId && fields.newValue === condition.level && (fields.oldValue ?? 1) < condition.level ? [{card: sourceId}] : [];
   /* "Whenever you commit a crime" (CR 700.13): who did. */
   if (condition.on === "GameEventCrimeCommitted") {
     const criminal = fields.player?.playerId;
@@ -730,6 +733,10 @@ export function collectTriggers(state, events) {
             ...(object.spent ? {spent: {...object.spent}} : {}),
             /* And the alternative cost it was cast for (rules/stack.mjs, `paidFor`), as it triggers, for the same reason. */
             ...(typeof object.paidFor === "string" ? {paidFor: object.paidFor} : {}),
+            /* And whether its offspring cost was paid (CR 702.175a; rules/stack.mjs), as it triggers: "if its offspring cost was
+               paid" is asked again as it resolves (CR 603.4), its creature perhaps gone -- a token copy is made all the same
+               (Coruscation Mage's ruling). */
+            ...(object.offspring === true ? {offspring: true} : {}),
             /* "Choose one that hasn't been chosen" (Gollum, Riddle Master): the modes its permanent had chosen as it triggered,
                for its modes to be chosen by should the permanent be gone by then (CR 113.7a; modesTaken). */
             ...(ability.modal?.unchosen ? {modesChosen: [...(object.modesChosen?.[ability.id] ?? [])]} : {}),
@@ -1128,6 +1135,7 @@ function putOnStack(state, triggers) {
       lastKnown: trigger.cause && trigger.cause.cardId === trigger.source?.cardId && !state.objects[trigger.source.cardId] ? trigger.cause : null,
       spent: trigger.spent ?? null,
       paidFor: trigger.paidFor ?? null,
+      offspring: trigger.offspring === true,
       x: trigger.x ?? null,
       /* A delayed trigger's source, as it was when the trigger was made (CR 701.27f). */
       sourceTransforms: trigger.sourceTransforms,

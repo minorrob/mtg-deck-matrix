@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Coruscation Mage",
+    "oracleId": "88bb91b5-2ccd-4ce9-8cd4-e54d63c12abf",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Otter",
+      "Wizard"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Offspring {2} (You may pay an additional {2} as you cast this spell. If you do, when this creature enters, create a 1/1 token copy of it.)\nWhenever you cast a noncreature spell, this creature deals 1 damage to each opponent.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Offspring {2}",
+      "keyword": "offspring",
+      "cost": "{2}"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a noncreature spell, this creature deals 1 damage to each opponent.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "nonTypes": [
+            "Creature"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "who": "opponent",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}
