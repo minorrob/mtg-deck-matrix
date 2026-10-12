@@ -37,12 +37,13 @@ import {tables} from "./tables.mjs";
 
 /** Whether this person may seat an AI on Claude: the same gates as the table's object checks when it seats one. */
 /* AI COACH SETTINGS (AI-6): the person's own spending over the last 24 hours against their cap, from the call log, for
-   the settings panel's meter; `open` false where the door is shut or they are not on its list. */
-async function aiMeter(env, email) {
+   the settings panel's meter; `open` false where the door is shut or they are not on its list. The 24 hours end at
+   `now` (an ISO time), the request's clock, so a suite's fixed clock reads the window its calls were logged in. */
+async function aiMeter(env, email, now) {
   if (!env.DB) return {open: false};
   let config;
   try {config = settings(env);} catch {return {open: false};}
-  const ai = createAi(env.DB);
+  const ai = createAi(env.DB, {now});
   if (!(await ai.allowed(email))) return {open: false};
   const {mine} = await ai.spent(email);
   return {open: true, spentCents: Math.round(mine / 10000 * 100) / 100, capCents: config.capPerson / 10000};
@@ -160,7 +161,7 @@ export async function handle(request, env, deps = {}) {
     if (method === "GET" && path === "/api/ai-seat") return reply(200, {open: await aiSeatOpen(env, person.email)});
     /* THE DECK ADVISOR (AI-4): a deck's page offers Ask the advisor only where the door would answer this person. */
     if (method === "GET" && path === "/api/ai-advise") return reply(200, {open: await aiSeatOpen(env, person.email, "AI_ADVISE")});
-    if (method === "GET" && path === "/api/ai-meter") return reply(200, await aiMeter(env, person.email));
+    if (method === "GET" && path === "/api/ai-meter") return reply(200, await aiMeter(env, person.email, () => new Date(ms()).toISOString()));
     if (method === "GET" && path === "/api/library") return reply(200, {head: await library.head(person.id)});
     if (method === "PUT" && path === "/api/library") {
       const input = await body(request);
