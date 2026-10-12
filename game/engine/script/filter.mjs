@@ -33,7 +33,7 @@
  */
 
 import {usesThisTurn, valueCostOf} from "../state/index.mjs";
-import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf, subtypesOf} from "../rules/layers.mjs";
+import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf, subtypesOf, staticAbilities} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {hasSubtype, isCreatureType} from "../keywords/types.mjs";
 import {protectedFrom, hexproofFrom} from "../rules/protection.mjs";
@@ -223,9 +223,10 @@ export function shareCreatureType(state, ids) {
   return named.some((type) => types.every((t) => t.every || t.types.includes(type)));
 }
 
-/* A player with hexproof (CR 702.11c): a permanent of theirs with the static "you have hexproof" (rules/statics.mjs). */
-const playerHasHexproof = (state, player) => state.zones.battlefield.some((id) => controllerOf(state, id) === player
-  && (state.objects[id].abilities ?? []).some((a) => a.kind === "static" && a.rule === "player-hexproof"));
+/* A player with hexproof (CR 702.11c): a permanent of theirs with the static "you have hexproof" (rules/statics.mjs), as its
+   abilities are after layer 6 (CR 613.1f). */
+const playerHasHexproof = (state, player) => { const held = staticAbilities(state); return state.zones.battlefield.some((id) => controllerOf(state, id) === player
+  && held(id).some((a) => a.kind === "static" && a.rule === "player-hexproof")); };
 
 /* CR 115.2, and the difference between the two keywords is the part worth getting right:
    hexproof stops opponents only (CR 702.11b); shroud stops everybody, its controller included. */

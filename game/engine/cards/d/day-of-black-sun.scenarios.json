@@ -223,6 +223,41 @@
         "U"
       ],
       "loyalty": 5
+    },
+    "Grave Warden": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Spirit"
+      ],
+      "manaCost": "{1}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "a0",
+          "kind": "replacement",
+          "text": "If a creature an opponent controls would die, exile it instead.",
+          "watches": {
+            "event": "zone-change",
+            "from": "battlefield",
+            "to": "graveyard",
+            "filter": {
+              "types": [
+                "Creature"
+              ],
+              "controller": "opponent"
+            }
+          },
+          "change": {
+            "to": "exile"
+          }
+        }
+      ]
     }
   },
   "scenarios": [
@@ -476,6 +511,141 @@
           "seat": 1,
           "controls": [
             "Giant"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "X is 2: Rob's Grave Warden loses its abilities with the rest, so Maya's Bear dying beside it goes to her graveyard, not to exile (CR 613.1f, 614.1a)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Grave Warden"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Day of Black Sun"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Day of Black Sun",
+          "x": 2
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Grave Warden",
+            "Day of Black Sun"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "X is 1: the Warden, of mana value 2, keeps its abilities, and Maya's Elf is exiled instead of dying",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Grave Warden"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Day of Black Sun"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Elf"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Day of Black Sun",
+          "x": 1
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": []
+        },
+        {
+          "seat": 1,
+          "controls": []
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Grave Warden"
           ]
         }
       ]

@@ -1,0 +1,185 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Oko, Thief of Crowns",
+    "oracleId": "60c60923-ff1b-43f7-8768-731499fcffc9",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Planeswalker"
+    ],
+    "subtypes": [
+      "Oko"
+    ],
+    "manaCost": "{1}{G}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": null,
+    "toughness": null,
+    "loyalty": 4
+  },
+  "oracleText": "+2: Create a Food token. (It's an artifact with \"{2}, {T}, Sacrifice this token: You gain 3 life.\")\n+1: Target artifact or creature loses all abilities and becomes a green Elk creature with base power and toughness 3/3.\n−5: Exchange control of target artifact or creature you control and target creature an opponent controls with power 3 or less.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "+2: Create a Food token. (It's an artifact with \"{2}, {T}, Sacrifice this token: You gain 3 life.\")",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": 2
+        }
+      ],
+      "targets": [],
+      "effects": [
+        {
+          "effect": "createToken",
+          "token": {
+            "predefined": "Food"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "+1: Target artifact or creature loses all abilities and becomes a green Elk creature with base power and toughness 3/3.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": 1
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "layer": 4,
+          "targets": {
+            "target": 0
+          },
+          "until": "ever",
+          "apply": {
+            "addTypes": [
+              "Creature"
+            ],
+            "setCreatureTypes": [
+              "Elk"
+            ]
+          }
+        },
+        {
+          "effect": "effectUntil",
+          "layer": 5,
+          "targets": {
+            "target": 0
+          },
+          "until": "ever",
+          "apply": {
+            "setColors": [
+              "G"
+            ]
+          }
+        },
+        {
+          "effect": "effectUntil",
+          "layer": 6,
+          "targets": {
+            "target": 0
+          },
+          "until": "ever",
+          "apply": {
+            "removeAllAbilities": true
+          }
+        },
+        {
+          "effect": "effectUntil",
+          "layer": 7,
+          "sublayer": "b",
+          "targets": {
+            "target": 0
+          },
+          "until": "ever",
+          "apply": {
+            "setPower": 3,
+            "setToughness": 3
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−5: Exchange control of target artifact or creature you control and target creature an opponent controls with power 3 or less.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -5
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ],
+              "controller": "you"
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you"
+            }
+          ]
+        },
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "opponent",
+          "power": {
+            "max": 3
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "exchangeControl",
+          "from": {
+            "target": 0
+          },
+          "targets": {
+            "target": 1
+          }
+        }
+      ]
+    }
+  ]
+}

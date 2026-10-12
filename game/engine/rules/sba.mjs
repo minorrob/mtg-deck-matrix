@@ -46,7 +46,7 @@
 
 import {moveObject, removeObject, PER_PLAYER, PUBLIC_ZONES, eventCard, rememberExileLooker, recordDeath} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
-import {lastKnown, toughnessOf, typesOf, keywordsOf, controllerOf, deriving} from "./layers.mjs";
+import {lastKnown, toughnessOf, typesOf, keywordsOf, controllerOf, deriving, staticAbilities} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./commander.mjs";
 import {sacrificeOne, moveOne, returnExiledUntil, leavingRef, destructionReplaced, destructionAsks} from "../script/effects/zones.mjs";
@@ -635,10 +635,12 @@ export function finishCommanderReplacement(state, awaiting, indices) {
 /* Whether a static ability of a permanent `player` controls changes this rule for them ("you can't lose the game"), or --
    `opponents` -- one of an opponent of theirs does ("your opponents can't win the game"). */
 export function playerRuled(state, rule, player, {opponents = false} = {}) {
+  /* Its abilities as they are after layer 6 (CR 613.1f): one that lost them all changes no rule. */
+  const held = staticAbilities(state);
   return state.zones.battlefield.some((id) => {
     const controller = controllerOf(state, id);
     if (opponents ? controller === player : controller !== player) return false;
-    return (state.objects[id].abilities ?? []).some((a) => a.kind === "static" && a.rule === rule);
+    return held(id).some((a) => a.kind === "static" && a.rule === rule);
   });
 }
 

@@ -102,6 +102,70 @@
         "W"
       ],
       "loyalty": 9
+    },
+    "Elf Lord": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "abilities": [
+        {
+          "id": "a0",
+          "kind": "static",
+          "text": "Other creatures you control get +1/+1.",
+          "layer": 7,
+          "sublayer": "c",
+          "affects": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "another": true
+          },
+          "apply": {
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    "Cost Imp": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Imp"
+      ],
+      "manaCost": "{1}{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "a0",
+          "kind": "static",
+          "text": "Creature spells you cast cost {1} less to cast.",
+          "rule": "spells-cost-less",
+          "affects": {
+            "what": "spell",
+            "types": [
+              "Creature"
+            ]
+          },
+          "amount": 1
+        }
+      ]
     }
   },
   "scenarios": [
@@ -175,6 +239,366 @@
             "Wastes",
             "Wastes",
             "Song of the Dryads"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "On Rob's Elf Lord: a Forest with no abilities, and his Bear is a 2/2 again (CR 613.1f)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Elf Lord",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Song of the Dryads"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Bear",
+                "power": 3,
+                "toughness": 3
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Song of the Dryads",
+          "targets": [
+            {
+              "card": "Elf Lord"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "On Rob's Cost Imp: its creature spells cost {1} less no more -- his first Bear for {G}, his second not for {G} (CR 613.1f, 601.2f)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Cost Imp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Song of the Dryads",
+            "Bear",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Bear"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Song of the Dryads",
+          "targets": [
+            {
+              "card": "Cost Imp"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Cost Imp"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "pool": {
+                "G": 1
+              }
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Bear"
+          },
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Cost Imp",
+            "Bear",
+            "Song of the Dryads"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "On Eldrazi Monument: whatever the timestamps, Rob's Bear loses its +1/+1, flying and indestructible, and his upkeep asks no sacrifice (CR 613.1f, 613.8a)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Song of the Dryads"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Eldrazi Monument"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Bear",
+                "power": 3,
+                "toughness": 3
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Bear",
+                "has": [
+                  "Flying",
+                  "Indestructible"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Song of the Dryads",
+          "targets": [
+            {
+              "card": "Eldrazi Monument"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Bear",
+                "power": 2,
+                "toughness": 2
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Bear",
+                "lacks": [
+                  "Flying",
+                  "Indestructible"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Bear",
+            "Song of the Dryads",
+            "Eldrazi Monument"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "On Maya's Island: a Forest that could produce {G} and no {U}, so Rob's Exotic Orchard makes {G} from it (CR 106.7, 613.1f)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Exotic Orchard",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Song of the Dryads"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Exotic Orchard",
+                "seat": 0
+              },
+              "count": 1,
+              "mana": [
+                {
+                  "U": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Song of the Dryads",
+          "targets": [
+            {
+              "card": "Island"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Exotic Orchard",
+            "seat": 0
+          },
+          "count": 1,
+          "mana": [
+            {
+              "G": 1
+            }
           ]
         }
       ]

@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1272,
+  "defined": 1273,
   "provisional": 27,
-  "everyRule": 2644
+  "everyRule": 2645
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -3208,10 +3208,10 @@
   },
   "Effects": {
    "tally": {
-    "built": 72,
+    "built": 73,
     "partial": 1,
     "named": 2,
-    "missing": 117
+    "missing": 116
    },
    "entries": [
     {
@@ -4418,13 +4418,13 @@
      "kind": "effect",
      "rule": null,
      "name": "ExchangeControl",
-     "engine": null,
-     "status": "missing",
+     "engine": "exchangeControl",
+     "status": "built",
      "forge": "ExchangeControl",
      "top": 1,
      "all": 35,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",

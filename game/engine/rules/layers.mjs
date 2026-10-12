@@ -41,7 +41,7 @@
 import {conditionHolds} from "../script/condition.mjs";
 import {isCounted, amountOf} from "../script/amount.mjs";
 import {chosenFor} from "../script/chosen.mjs";
-import {hasSubtype, everyCreatureType, isLandType} from "../keywords/types.mjs";
+import {hasSubtype, everyCreatureType, isLandType, isCreatureType} from "../keywords/types.mjs";
 
 /** The seven layers of CR 613.1, in order. */
 export const LAYERS = Object.freeze([1, 2, 3, 4, 5, 6, 7]);
@@ -168,6 +168,13 @@ function applyEffect(current, effect) {
   if (change.setTypes) current.types = [...change.setTypes];
   /* "Enchanted permanent is a colorless Forest land" (Song of the Dryads): its subtypes set, every other one lost (CR 205.1b). */
   if (change.setSubtypes) { current.subtypes = [...change.setSubtypes]; current.everyCreatureType = false; }
+  /* "Becomes a green Elk creature" (Oko, Thief of Crowns), "is a Turtle" (Retro-Mutation): its creature types set, and only
+     those -- each other subtype kept, an Elked Food still a Food (CR 205.1a: a set subtype replaces those of its own set);
+     a changeling's every creature type among those replaced. */
+  if (change.setCreatureTypes) {
+    current.subtypes = [...current.subtypes.filter((subtype) => !isCreatureType(subtype)), ...change.setCreatureTypes];
+    current.everyCreatureType = false;
+  }
   /* "It loses all land types" (Ultima, Origin of Oblivion; CR 205.3i): every land type taken away, the other subtypes kept. */
   if (change.removeLandTypes === true) current.subtypes = current.subtypes.filter((subtype) => !isLandType(subtype));
   /* "It's not a creature" (impending, CR 702.176a): that type taken away, the rest kept. */
@@ -278,6 +285,8 @@ function gatherEffects(state) {
         sourceController: holder.controller,
         /* A static ability's timestamp is its permanent's (CR 613.7d). */
         timestamp: ability.timestamp ?? holder.timestamp,
+        /* Which of its permanent's abilities this is (partOf): one its permanent loses makes no effect from then on. */
+        partOf: partOf(id, ability),
       });
     }
   }
@@ -342,7 +351,7 @@ const trial = (c) => ({...c, types: [...c.types], subtypes: [...c.subtypes], col
    spent most of a game's CPU proving that (the G1 pass of 2026-10-08, D4-D7 seed 3: 20 s of one person's wait). The
    answer is the same either way; `pruneCheck` makes the trial anyway and throws if the two disagree (the suites). */
 const READS = {types: ["types"], subtypes: ["types", "subtypes"], controller: ["controller"], colors: ["colors"], colorless: ["colors"], keywords: ["keywords"]};
-const WRITES = {controller: "controller", addTypes: "types", setTypes: "types", removeTypes: "types", addSubtypes: "subtypes", setSubtypes: "subtypes",
+const WRITES = {controller: "controller", addTypes: "types", setTypes: "types", removeTypes: "types", addSubtypes: "subtypes", setSubtypes: "subtypes", setCreatureTypes: "subtypes",
   allCreatureTypes: "subtypes", removeLandTypes: "subtypes", setColors: "colors", removeAllAbilities: "abilities", addAbilities: "abilities", addKeywords: "abilities", setPower: "pt",
   setToughness: "pt", power: "pt", toughness: "pt", switchPT: "pt"};
 /* Operations on one field that give the same result in either order (canonical sorts types and keywords). */
@@ -516,25 +525,85 @@ export function characteristicsOf(state, id) {
    "power equal to the number of cards in your hand") changes only those (`counted`), and counting asks about the whole
    board again; who controls an object, what it is and what it has are derived with every effect but its counted
    amounts. A derivation with them answers a question without. */
-function derived(state, id, counts = true) {
+function derived(state, id, counts = true, through = 7) {
   if (!state.objects[id]) throw new Error(`There is no object ${id} to describe`);
-  if (memo === null && !memoOff) return deriving(state, () => derived(state, id, counts));
-  const key = memo !== null && memo.state === state ? `${id}|${conditioning > 0 ? 1 : 0}|${counting > 0 ? 1 : 0}` : null;
+  if (memo === null && !memoOff) return deriving(state, () => derived(state, id, counts, through));
+  /* `through`: the last layer derived -- 6, for which of its own abilities a permanent has lost (lostBy). */
+  const key = memo !== null && memo.state === state ? `${id}|${conditioning > 0 ? 1 : 0}|${counting > 0 ? 1 : 0}${through < 7 ? `|${through}` : ""}` : null;
   const known = key !== null ? memo.characteristics.get(key) : undefined;
   if (known && (known.counts || !counts)) return known.current;
-  const current = derive(state, id, counts);
+  const current = derive(state, id, counts, through);
   if (key !== null) memo.characteristics.set(key, {counts, current});
   return current;
 }
 
-function derive(state, id, counts = true) {
+/* WHICH ABILITY A STATIC'S EFFECT IS PART OF: its permanent and its words. A definition writes an ability that works in
+   several layers as statics of one text, a part for each layer -- Eldrazi Monument's +1/+1 (7c) and flying (6), Song of
+   the Dryads in layers 4, 5 and 6 -- so its parts are known as one ability (CR 613.6). */
+const partOf = (id, ability) => `${id}|${ability.text ?? ability.id ?? ""}`;
+
+/* WHO MAY HAVE LOST THEIR ABILITIES (CR 613.1f): the permanents an effect that takes abilities away can reach, from what it
+   affects -- the objects it names, fixed as it began (Oko's +1, Abigale, Day of Black Sun, Retched Wretch), or what its
+   Aura enchants (Song of the Dryads, Infinite Coursework) -- or every one (`true`) when it says a kind of permanent. Null
+   when nothing does: then each permanent's abilities are its own (an effect gives activated, triggered and keyword
+   abilities only, cards/index.mjs GRANTABLE: never a static or a replacement), and nothing is derived to know it. A set to
+   look in, never an answer: each one in it is derived. */
+function losersAmong(state, effects) {
+  let ids = null;
+  for (const {apply, affects: rule, sourceId} of effects) {
+    if (!apply?.removeAllAbilities) continue;
+    ids ??= new Set();
+    if (Array.isArray(rule?.ids)) { for (const id of rule.ids) ids.add(id); continue; }
+    if (rule?.attachedBy === "self") { const host = state.objects[sourceId]?.attachedTo; if (host !== null && host !== undefined) ids.add(host); continue; }
+    return true;
+  }
+  return ids;
+}
+
+/* THE ABILITIES THAT TOOK A PERMANENT'S OWN AWAY (CR 613.1f): its derivation through layer 6, which is all that decides it,
+   each by `partOf` (derive keeps them beside the derivation, in `removals`, so no answer about an object changes shape).
+   Asked again while it is being asked -- a permanent whose own ability takes its abilities away (Humility made a creature)
+   -- and the answer is none but that one: an effect does not depend on itself (CR 613.8a), and keeps applying though its
+   ability is removed by it (CR 613.6). Two permanents each taking the other's abilities, a dependency loop (CR 613.8b),
+   is a board no definition can make: only an Aura or an effect fixed on its objects takes abilities away. */
+const losing = new Set(), removals = new WeakMap();
+function lostBy(state, id) {
+  if (losing.has(id)) return [];
+  losing.add(id);
+  try { return removals.get(derived(state, id, false, 6)) ?? []; } finally { losing.delete(id); }
+}
+
+/* A STATIC ABILITY ITS PERMANENT HAS LOST (CR 613.1f): taken away in layer 6 by another ability, it makes no effect in layers
+   6 and 7 -- whatever the timestamps, since its effect depends on the one that takes it away (CR 613.8a: applying that one
+   changes its existence). Song of the Dryads on an Elf lord: the other Elves are no longer pumped. Unless its effect began
+   to apply to this object in an earlier layer (`begun`): then it carries on in the later ones (CR 613.6) -- a creature that
+   makes lands 1/1 creatures (layers 4 and 7b) still makes them 1/1 once it has lost its abilities. An effect a spell or an
+   ability left (`state.effects`) is no ability of a permanent's, and is never lost. */
+function lostEffect(state, effect, begun, losers) {
+  if (effect.partOf === undefined || begun.has(effect.partOf)) return false;
+  if (losers !== true && !losers.has(effect.sourceId)) return false;
+  return lostBy(state, effect.sourceId).some((part) => part !== effect.partOf);
+}
+
+function derive(state, id, counts = true, through = 7) {
   derivations += 1;
   let current = printed(state, id);
   const effects = allEffects(state);
   const sourceOf = (effect) => effect.sourceController;
+  const losers = losersAmong(state, effects);
+  /* The abilities whose effects have begun to apply to this object (CR 613.6, lostEffect), and those that took its own
+     abilities away (lostBy) -- undefined for an effect a spell or an ability left, which is no permanent's ability. */
+  const begun = new Set(), removedBy = [];
+  const applied = (effect) => {
+    if (effect.partOf !== undefined) begun.add(effect.partOf);
+    if (effect.apply?.removeAllAbilities) removedBy.push(effect.partOf);
+    return applyEffect(current, effect);
+  };
 
   for (const layer of LAYERS) {
-    const inLayer = effects.filter((effect) => (effect.layer ?? 0) === layer);
+    if (layer > through) break;
+    let inLayer = effects.filter((effect) => (effect.layer ?? 0) === layer);
+    if (layer >= 6 && losers !== null) inLayer = inLayer.filter((effect) => !lostEffect(state, effect, begun, losers));
     /* Layer 7 always runs, even with no effects in it: counters are sublayer 7d and they are not
        an effect, they are on the object. Skipping the layer because nothing else was in it left
        every counter on every board doing nothing. */
@@ -542,7 +611,7 @@ function derive(state, id, counts = true) {
 
     if (layer !== 7) {
       for (const effect of orderWithin(state, inLayer, current, sourceOf)) {
-        if (affects(state, effect, current, sourceOf(effect))) current = applyEffect(current, effect);
+        if (affects(state, effect, current, sourceOf(effect))) current = applied(effect);
       }
       continue;
     }
@@ -569,6 +638,7 @@ function derive(state, id, counts = true) {
     }
   }
 
+  removals.set(current, removedBy);
   return current;
 }
 
@@ -621,6 +691,32 @@ export function abilitiesReader(state) {
   return (id) => {
     const object = state.objects[id];
     if (object.zone !== "battlefield" || !change) return object.abilities ?? [];
+    if (!read.has(id)) read.set(id, heldAbilities(object, characteristicsOf(state, id)));
+    return read.get(id);
+  };
+}
+
+/**
+ * WHAT A PERMANENT'S RULES ARE READ FROM (CR 613.1f with 604.1 and 614.12): the abilities it has after layer 6, so one that
+ * has lost all its abilities generates no rule of its own -- no cost change (Marauding Raptor under Song of the Dryads), no
+ * "can't attack", no replacement effect. `staticAbilities(state)` is a reader, `(id) => abilities`, for one look at a board
+ * that does not change while it is read: rules/statics.mjs, rules/replacement.mjs and the others ask it for each permanent.
+ * They run constantly, so a permanent no effect can have taken abilities from (losersAmong, from what is in play without
+ * its conditions: a set to look in) is read as it is, with nothing derived, and inside a question that opened a memo
+ * (`deriving`) the reader and what it has read are shared by the question. Anywhere but the battlefield, the card's own.
+ */
+export const staticAbilities = (state) => onceAQuestion(state, "static-abilities", () => staticReader(state));
+function staticReader(state) {
+  const removers = [...(state.effects ?? [])];
+  const take = (id, here) => { for (const ability of state.objects[id].abilities ?? [])
+    if (ability.kind === "static" && (ability.worksFrom === "graveyard") === here) removers.push({apply: ability.apply, affects: ability.affects, sourceId: id}); };
+  /* A permanent's statics, and a card's that work from its graveyard (CR 113.6b; gatherEffects). */
+  for (const id of state.zones.battlefield) take(id, false);
+  for (const id of (state.zones.graveyard ?? []).flat()) take(id, true);
+  const losers = losersAmong(state, removers), read = new Map();
+  return (id) => {
+    const object = state.objects[id];
+    if (object.zone !== "battlefield" || losers === null || (losers !== true && !losers.has(id))) return object.abilities ?? [];
     if (!read.has(id)) read.set(id, heldAbilities(object, characteristicsOf(state, id)));
     return read.get(id);
   };

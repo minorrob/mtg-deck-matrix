@@ -37,7 +37,7 @@ import {
 } from "./resources.mjs";
 import {
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
-  becomeCopy, earthbend, goad, immediateTrigger, investigate, phaseOut, setState,
+  becomeCopy, earthbend, goad, immediateTrigger, investigate, phaseOut, setState, exchangeControl,
 } from "./permanents.mjs";
 import {alterAttribute} from "./attributes.mjs";
 import {addTurn} from "./turns.mjs";
@@ -180,6 +180,8 @@ export const EFFECTS = Object.freeze({
   /* Train B (X11): counters moved from one permanent to another (CR 122.5; Tidus, Yuna's Guardian), and extra turns (CR
      500.7; Ichormoon Gauntlet). */
   moveCounters, addTurn,
+  /* "Loses all abilities" (Train D): control of two permanents exchanged (CR 701.12b; Oko, Thief of Crowns). */
+  exchangeControl,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */

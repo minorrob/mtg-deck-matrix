@@ -1,0 +1,367 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Retro-Mutation",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Elf Lord": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "abilities": [
+        {
+          "id": "a0",
+          "kind": "static",
+          "text": "Other creatures you control get +1/+1.",
+          "layer": 7,
+          "sublayer": "c",
+          "affects": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "another": true
+          },
+          "apply": {
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    "Pumped Kid": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "a0",
+          "kind": "replacement",
+          "text": "This creature enters with two +1/+1 counters on it.",
+          "watches": {
+            "event": "enters",
+            "who": "self"
+          },
+          "change": {
+            "entersWithCounters": {
+              "counter": "+1/+1",
+              "count": 2
+            }
+          }
+        }
+      ]
+    },
+    "Elf Bane": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{0}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target Elf.",
+        "targets": [
+          {
+            "what": "permanent",
+            "subtypes": [
+              "Elf"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Turtle Snare": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{0}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target Turtle.",
+        "targets": [
+          {
+            "what": "permanent",
+            "subtypes": [
+              "Turtle"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Flash, on Maya's turn, on her Elf Lord: a 0/1 Turtle with no abilities -- her Bear is a 2/2 again, and the lord no Elf (CR 613.1f, 205.1a)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Retro-Mutation"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Elf Lord",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Elf Bane",
+            "Turtle Snare"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "stats": {
+                "card": "Bear",
+                "power": 3,
+                "toughness": 3
+              }
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Turtle Snare",
+                "seat": 1
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "cast": "Retro-Mutation",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Elf Lord"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Elf Lord",
+            "power": 0,
+            "toughness": 1
+          }
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Turtle Snare",
+            "seat": 1
+          },
+          "count": 1,
+          "targets": [
+            [
+              "Elf Lord"
+            ]
+          ]
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Elf Bane",
+            "seat": 1
+          },
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Retro-Mutation"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Base 0/1, and its counters still count (CR 613.4b, 613.4d): Rob's Pumped Kid with two +1/+1 counters is a 2/3",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Pumped Kid",
+            "Retro-Mutation"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Pumped Kid"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Pumped Kid",
+                "power": 3,
+                "toughness": 3
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Retro-Mutation",
+          "targets": [
+            {
+              "card": "Pumped Kid"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Pumped Kid",
+            "power": 2,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Pumped Kid",
+            "counter": "+1/+1",
+            "count": 2
+          }
+        }
+      ]
+    }
+  ]
+}

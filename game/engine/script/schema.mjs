@@ -140,6 +140,10 @@ function checkEffect(effect, path, errors) {
      or for good when unsaid (effects/permanents.mjs). */
   if (name === "gainControl" && effect.until !== undefined && !CONTROL_DURATIONS.includes(effect.until))
     errors.push({path: `${path}.until`, message: `Control is gained for good, or until ${CONTROL_DURATIONS.join(" or ")}`});
+  /* Control of two permanents exchanged (CR 701.12b; effects/permanents.mjs, exchangeControl): the one (`from`) and the other
+     (`targets`) -- or the two of `targets` -- for good. */
+  if (name === "exchangeControl" && (effect.targets === undefined || effect.until !== undefined))
+    errors.push({path: `${path}.targets`, message: "exchangeControl exchanges control of two permanents, for good: `from` the one and `targets` the other, or the two of `targets`"});
   /* "Exile ... until this leaves the battlefield" (CR 610.3): the one "until" the engine returns from. */
   if (name === "exileUntil" && effect.until !== "this leaves")
     errors.push({path: `${path}.until`, message: "exileUntil returns what it exiled when its source leaves the battlefield: `until: \"this leaves\"`"});

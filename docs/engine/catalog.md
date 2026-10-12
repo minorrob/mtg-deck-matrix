@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,272 defined and playable today; 2,644 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,273 defined and playable today; 2,645 with every
 mechanic built, so only their definitions are left to write; 27 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -20,7 +20,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 64 | 0 | 5 | 125 |
 | Keyword actions (CR 701) | 70 | 22 | 5 | 1 | 42 |
-| Effects | 192 | 72 | 1 | 2 | 117 |
+| Effects | 192 | 73 | 1 | 2 | 116 |
 | Triggers | 138 | 24 | 4 | 2 | 108 |
 | Static abilities | 77 | 14 | 2 | 0 | 61 |
 | Replacement effects | 34 | 0 | 6 | 0 | 28 |
@@ -430,7 +430,7 @@ The things that alone hold back the most of the most-played cards.
 | ChooseSource | — | missing | 1 | 67 | 0 | 0 |
 | DamageResolve | — | missing | 1 | 64 | 1 | 1 |
 | Explore | — | missing | 1 | 42 | 1 | 0 |
-| ExchangeControl | — | missing | 1 | 35 | 1 | 1 |
+| ExchangeControl | exchangeControl | built | 1 | 35 | 0 | 0 |
 | RemoveFromCombat | — | missing | 1 | 28 | 1 | 1 |
 | MustBlock | — | missing | 1 | 26 | 1 | 1 |
 | ChangeText | — | missing | 1 | 12 | 1 | 1 |

@@ -530,9 +530,11 @@ function tappedForMana(state, fields, condition, sourceId, controller) {
 export function manaTriggered(state, event) {
   const fields = event?.data?.fields ?? {};
   const made = [];
+  /* Its triggered mana abilities as they are after layer 6 (CR 613.1f): Ultima made an Elk by Oko adds no {C}. */
+  const held = abilitiesReader(state);
   for (const id of state.zones.battlefield) {
     const holder = state.objects[id];
-    for (const ability of holder.abilities ?? []) {
+    for (const ability of held(id)) {
       const mana = ability.kind === "triggered" ? ability.trigger?.manaAbility : null;
       if (!mana || !tappedForMana(state, fields, ability.trigger, id, holder.controller)) continue;
       const [kind] = Object.keys(fields.produced ?? {}).filter((k) => fields.produced[k] > 0);

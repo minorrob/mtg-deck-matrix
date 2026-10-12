@@ -646,7 +646,8 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
   Train C phase 2, 2026-10-11), `goad` (CR 701.15; batch 69), `empowerJace` (loyalty counters on a Jace token you
   control, made first if you control none; the live-game plan of 2026-10-04).
 - Permanents: `createToken`, `copyPermanent`, `becomeCopy`, `earthbend` (added in M4 phase 3, batch 65), `animate`, `animateAll`, `attach`, `gainControl`, `setState` (transform,
-  flip), `phaseOut`.
+  flip), `phaseOut`, `exchangeControl` (control of two permanents exchanged, CR 701.12b: both still there and controlled by
+  different players, or nothing happens; Train D, 2026-10-12).
 - Modifiers: `pump`, `pumpAll`, `alterAttribute`, `effectUntil` (a temporary static), `grantKeyword`, `regenerate` (a regeneration shield, CR 701.19a; added in M4 phase 3, batch 28).
 - Flow: `modal` (Charm), `sequence`, `repeatFor` (RepeatEach), `branch`, `delayedTrigger`, `immediateTrigger`,
   `counterSpell`, `copySpell`, `addTurn`, `chooseCard`, `chooseType`, `chooseColor` (a color chosen as it resolves, CR
