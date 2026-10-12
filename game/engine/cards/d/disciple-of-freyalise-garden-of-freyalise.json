@@ -1,0 +1,119 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Disciple of Freyalise // Garden of Freyalise",
+    "oracleId": "2699005b-a471-429f-a9d8-fbf2077ee2fd",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Druid"
+    ],
+    "manaCost": "{3}{G}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "When this creature enters, you may sacrifice another creature. If you do, you gain X life and draw X cards, where X is that creature's power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, you may sacrifice another creature. If you do, you gain X life and draw X cards, where X is that creature's power.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "who": "you",
+          "count": 1,
+          "optional": true,
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "another": true
+          },
+          "remember": true
+        },
+        {
+          "effect": "gainLife",
+          "amount": {
+            "powerOf": "remembered"
+          },
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        },
+        {
+          "effect": "draw",
+          "count": {
+            "powerOf": "remembered"
+          },
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ]
+    }
+  ],
+  "back": {
+    "identity": {
+      "name": "Garden of Freyalise",
+      "types": [
+        "Land"
+      ],
+      "subtypes": [],
+      "manaCost": null,
+      "colors": [],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "As this land enters, you may pay 3 life. If you don't, it enters tapped.\n{T}: Add {G}.",
+    "abilities": [
+      {
+        "kind": "replacement",
+        "text": "As this land enters, you may pay 3 life. If you don't, it enters tapped.",
+        "watches": {
+          "event": "enters",
+          "who": "self"
+        },
+        "change": {
+          "entersTapped": true,
+          "unlessPay": {
+            "life": 3
+          }
+        }
+      },
+      {
+        "kind": "activated",
+        "text": "{T}: Add {G}.",
+        "mana": true,
+        "cost": [
+          {
+            "atom": "{T}"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "addMana",
+            "mana": {
+              "G": 1
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

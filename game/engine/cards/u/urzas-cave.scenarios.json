@@ -1,0 +1,230 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Urza's Cave",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{T}: {C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Urza's Cave"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Urza's Cave"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "{3}, {T}, sacrificed: Rob finds Vault of Whispers, onto the battlefield tapped, then a shuffle; the Bear is not offered",
+      "library": [
+        "Bear",
+        "Vault of Whispers",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Urza's Cave",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Urza's Cave"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Urza's Cave"
+              ]
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Vault of Whispers"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Vault of Whispers"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Vault of Whispers"
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        },
+        {
+          "event": "GameEventShuffle",
+          "where": {}
+        }
+      ]
+    },
+    {
+      "name": "The land it puts onto the battlefield is not played: Rob may still play his land for the turn (CR 305.4)",
+      "library": [
+        "Forest",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Urza's Cave",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Urza's Cave"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        },
+        {
+          "play": "Swamp"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Forest",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Forest"
+        }
+      ]
+    }
+  ]
+}

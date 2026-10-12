@@ -148,7 +148,7 @@ export function pushSpell(state, objectId, {controller, targets = [], permanent 
  * legal position (CR 113.7a) rather than a bug.
  */
 /* `name`: what an ability with no source is called -- the game's own triggers', their designation (CR 725.2; rules/trigger.mjs). */
-export function pushAbility(state, {sourceId = null, controller, abilityId, kind = "ability", targets = [], script = null, about = null, x = null, lastKnown = null, spent = null, paidFor = null, sourceTransforms = undefined, name = null} = {}) {
+export function pushAbility(state, {sourceId = null, controller, abilityId, kind = "ability", targets = [], script = null, about = null, x = null, lastKnown = null, spent = null, paidFor = null, offspring = false, sourceTransforms = undefined, name = null} = {}) {
   if (!abilityId) throw new Error("An ability on the stack needs an abilityId, or nothing can resolve it");
   const source = sourceId === null ? null : state.objects[sourceId];
   const entry = entryFor(state, {
@@ -169,6 +169,8 @@ export function pushAbility(state, {sourceId = null, controller, abilityId, kind
   /* And the alternative cost its source was cast for, as it triggered (rules/trigger.mjs): "if its surge cost was paid" is
      asked again as it resolves, its source perhaps gone (CR 603.4, 608.2h). */
   if (typeof paidFor === "string") entry.paidFor = paidFor;
+  /* And whether its source's offspring cost was paid (CR 702.175a; rules/trigger.mjs), for the same reason. */
+  if (offspring === true) entry.offspring = true;
   /* "Transform Venat" (CR 701.27f): how many times a double-faced source had transformed as its ability was put on the
      stack -- or, a delayed trigger's, as it was made (effects/permanents.mjs) -- for an instruction to transform it to be
      ignored once it has since. */
@@ -303,7 +305,8 @@ export function resolveTop(state, effect = null, rng = null) {
   /* An intervening "if" asked again as it resolves (CR 603.4): false now, and the ability does nothing. A triggered
      ability's own condition only -- "activate only if" was asked as it was activated (CR 602.5b) and is not again. */
   if (entry.kind === "trigger" && script.condition && !conditionHolds(state, script.condition, {controller: entry.playerId, source, about: entry.about ?? undefined,
-    ...(entry.spent ? {spent: entry.spent} : {}), ...(entry.paidFor ? {paidFor: entry.paidFor} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {})})) return finishTop(state, entry, events, false);
+    ...(entry.spent ? {spent: entry.spent} : {}), ...(entry.paidFor ? {paidFor: entry.paidFor} : {}), ...(entry.offspring ? {offspring: true} : {}),
+    ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {})})) return finishTop(state, entry, events, false);
   /* "If this is the first time this ability has resolved this turn" (Nissa, Leyline Tamer): how many times it has before. */
   const resolvedBefore = resolutionsBefore(state, entry, script);
   /* What its effects need to know about their targets, read once, now (CR 608.2h). */
@@ -483,6 +486,10 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
        chosen player is the one promised it (script/condition.mjs `giftPromised`, script/bind.mjs). A copy entering of a
        permanent already there was promised nothing (its ruling), and a new object after it moves again (CR 400.7) neither. */
     if (to === "battlefield" && entry.gift !== undefined) state.objects[arrived].gift = entry.gift;
+    /* And its offspring cost paid (CR 702.175a): "when this creature enters, if its offspring cost was paid" asks the permanent
+       (script/condition.mjs, `offspringPaid`) -- a token copy of it was cast for nothing, and neither is a new object after it
+       moves again (CR 400.7). */
+    if (to === "battlefield" && entry.offspring === true) state.objects[arrived].offspring = true;
     /* And for its surge cost (CR 702.117a), or another that says so (rules/actions.mjs): "if its surge cost was paid"
        (script/condition.mjs, `paidFor`). A new object after it moves again (CR 400.7) was cast for nothing. */
     if (to === "battlefield" && entry.cast?.paidFor) state.objects[arrived].paidFor = entry.cast.paidFor;

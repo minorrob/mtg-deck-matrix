@@ -93,7 +93,8 @@ const wayfinder = (steps = []) => play({name: "wayfinder", seats: 3, library: ["
   const picking = sift([{choose: ["Stone"]}]);
   eq([picking.state.awaiting?.effect, top(picking.state, 1), revealedNames(picking.events)], ["dig", ["Elk", "Stone", "Glint"], ["Elk", "Stone", "Glint"]],
     "the Stone picked, one more to pick: the three still shown to Maya, said once");
-  const done = sift([{choose: ["Stone"]}, {choose: ["No more"]}]);
+  /* The two left go to the bottom in the order he chooses (CR 401.4; wave 4c, k2): asked once he says no more. */
+  const done = sift([{choose: ["Stone"]}, {choose: ["No more"]}, {answer: [1, 0]}]);
   eq([done.state.awaiting ?? null, top(done.state, 1), projectFor(done.state, 0).players[0].zones.Hand.cards.map((c) => c.name), (done.state.looks ?? []).filter((l) => l.revealed).length],
     [null, [], ["Stone"], 0], "no more: the Stone in his hand, nothing shown, nothing kept of the reveal");
 }

@@ -9,17 +9,17 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1462,
+  "defined": 1540,
   "provisional": 25,
-  "everyRule": 2780
+  "everyRule": 2814
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 73,
+    "built": 77,
     "partial": 0,
-    "named": 5,
-    "missing": 116
+    "named": 6,
+    "missing": 111
    },
    "entries": [
     {
@@ -494,13 +494,13 @@
      "kind": "keyword ability",
      "rule": "702.41",
      "name": "Affinity",
-     "engine": null,
-     "status": "missing",
+     "engine": "Affinity",
+     "status": "built",
      "forge": "Affinity",
      "top": 5,
      "all": 77,
-     "blocks": 5,
-     "alone": 4
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -591,12 +591,12 @@
      "rule": "702.175",
      "name": "Offspring",
      "engine": null,
-     "status": "missing",
+     "status": "named",
      "forge": "Offspring",
      "top": 4,
      "all": 21,
-     "blocks": 4,
-     "alone": 4
+     "blocks": 3,
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -746,13 +746,13 @@
      "kind": "keyword ability",
      "rule": "702.52",
      "name": "Dredge",
-     "engine": null,
-     "status": "missing",
+     "engine": "Dredge",
+     "status": "built",
      "forge": "Dredge",
      "top": 3,
      "all": 14,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -830,13 +830,13 @@
      "kind": "keyword ability",
      "rule": "702.66",
      "name": "Delve",
-     "engine": null,
-     "status": "missing",
+     "engine": "Delve",
+     "status": "built",
      "forge": "Delve",
      "top": 2,
      "all": 29,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -902,13 +902,13 @@
      "kind": "keyword ability",
      "rule": "702.123",
      "name": "Fabricate",
-     "engine": null,
-     "status": "missing",
+     "engine": "Fabricate",
+     "status": "built",
      "forge": "Fabricate",
      "top": 2,
      "all": 16,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -1316,7 +1316,7 @@
      "top": 1,
      "all": 12,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -3208,10 +3208,10 @@
   },
   "Effects": {
    "tally": {
-    "built": 76,
+    "built": 78,
     "partial": 2,
     "named": 1,
-    "missing": 113
+    "missing": 111
    },
    "entries": [
     {
@@ -4051,8 +4051,8 @@
      "forge": "RollDice",
      "top": 7,
      "all": 131,
-     "blocks": 7,
-     "alone": 3
+     "blocks": 6,
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -4142,13 +4142,13 @@
      "kind": "effect",
      "rule": null,
      "name": "Protection",
-     "engine": null,
-     "status": "missing",
+     "engine": "effectUntil",
+     "status": "built",
      "forge": "Protection",
      "top": 5,
      "all": 53,
-     "blocks": 5,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4286,13 +4286,13 @@
      "kind": "effect",
      "rule": null,
      "name": "RevealHand",
-     "engine": null,
-     "status": "missing",
+     "engine": "peekAndReveal",
+     "status": "built",
      "forge": "RevealHand",
      "top": 2,
      "all": 80,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -8197,8 +8197,8 @@
      "forge": "Draw",
      "top": 7,
      "all": 37,
-     "blocks": 7,
-     "alone": 4
+     "blocks": 5,
+     "alone": 3
     },
     {
      "kind": "replacement",
@@ -8925,7 +8925,7 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 62,
+     "blocks": 61,
      "alone": 4
     },
     {
@@ -8949,7 +8949,7 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 66,
+     "blocks": 65,
      "alone": 8
     },
     {
@@ -9009,7 +9009,7 @@
      "forge": "MayPlay",
      "top": 99,
      "all": 625,
-     "blocks": 45,
+     "blocks": 44,
      "alone": 1
     },
     {
@@ -9237,7 +9237,7 @@
      "forge": "PresentZone",
      "top": 9,
      "all": 160,
-     "blocks": 8,
+     "blocks": 7,
      "alone": 4
     },
     {
@@ -9249,8 +9249,8 @@
      "forge": "UnlessCostSac",
      "top": 7,
      "all": 89,
-     "blocks": 7,
-     "alone": 5
+     "blocks": 6,
+     "alone": 4
     },
     {
      "kind": "option",
@@ -9316,10 +9316,10 @@
   },
   "Amounts the game counts": {
    "tally": {
-    "built": 28,
+    "built": 30,
     "partial": 2,
     "named": 0,
-    "missing": 158
+    "missing": 156
    },
    "entries": [
     {
@@ -9434,13 +9434,13 @@
      "kind": "count",
      "rule": null,
      "name": "Cards in a library",
-     "engine": null,
-     "status": "missing",
+     "engine": "{count: {what: \"card\", zone: \"library\"}}",
+     "status": "built",
      "forge": "ValidLibrary",
      "top": 13,
      "all": 63,
-     "blocks": 12,
-     "alone": 8
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -9523,8 +9523,8 @@
      "forge": "Amount",
      "top": 10,
      "all": 43,
-     "blocks": 9,
-     "alone": 5
+     "blocks": 8,
+     "alone": 4
     },
     {
      "kind": "count",
@@ -9962,13 +9962,13 @@
      "kind": "count",
      "rule": null,
      "name": "Threshold (seven cards in your graveyard)",
-     "engine": null,
-     "status": "missing",
+     "engine": "condition {compare: {count: {count: {what: \"card\", zone: \"graveyard\", controller: \"you\"}}, atLeast: 7}}",
+     "status": "built",
      "forge": "Threshold",
      "top": 1,
      "all": 7,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",

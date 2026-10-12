@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Marionette Apprentice",
+    "oracleId": "726d9d2c-736a-4852-9938-a0f50d8fd89f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Artificer"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "Fabricate 1 (When this creature enters, put a +1/+1 counter on it or create a 1/1 colorless Servo artifact creature token.)\nWhenever another creature or artifact you control is put into a graveyard from the battlefield, each opponent loses 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Fabricate 1",
+      "keyword": "fabricate",
+      "amount": 1
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another creature or artifact you control is put into a graveyard from the battlefield, each opponent loses 1 life.",
+      "trigger": {
+        "on": "leaves",
+        "who": "another",
+        "to": "graveyard",
+        "filter": {
+          "anyOf": [
+            {
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "types": [
+                "Artifact"
+              ]
+            }
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "who": "opponent",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

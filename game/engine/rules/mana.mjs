@@ -413,6 +413,18 @@ export function convokePayments(pool, cost, creatures, options = {}, limit = PAY
   return [...found.values()];
 }
 
+/* ---- delve (CR 702.66a): cards of the graveyard help cast a spell ----
+ *
+ * Each card its caster exiles from their graveyard while casting it pays for {1} of the spell's total cost -- generic mana
+ * only, never a colored symbol, and never more cards than that generic (702.66a; the card's ruling). Not an additional or
+ * alternative cost (702.66b): what is left is paid from the pool. `extra` is the generic beyond the cost's own (a tax, an
+ * increase), as `payments` reads it; the cost it leaves has none beside it. `n` is never more than the two together: the
+ * callers count it so (rules/actions.mjs, delveRange, delveWays).
+ */
+export function lessGeneric(cost, extra, n) {
+  return {...cost, generic: cost.generic + extra - n};
+}
+
 /* ---- paying "unless" (CR 118.12) for a player who does not hold priority ----
  *
  * The payer answers a question in the middle of a resolution and has no priority in which to tap, so paying taps for

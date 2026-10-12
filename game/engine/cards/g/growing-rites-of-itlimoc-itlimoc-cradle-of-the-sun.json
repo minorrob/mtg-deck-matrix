@@ -1,0 +1,138 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Growing Rites of Itlimoc // Itlimoc, Cradle of the Sun",
+    "oracleId": "ea9c459a-6047-43aa-968f-a582be4000e8",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When Growing Rites of Itlimoc enters, look at the top four cards of your library. You may reveal a creature card from among them and put it into your hand. Put the rest on the bottom of your library in any order.\nAt the beginning of your end step, if you control four or more creatures, transform Growing Rites of Itlimoc.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Growing Rites of Itlimoc enters, look at the top four cards of your library. You may reveal a creature card from among them and put it into your hand. Put the rest on the bottom of your library in any order.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "dig",
+          "count": 4,
+          "take": 1,
+          "upTo": true,
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "reveal": "taken",
+          "to": "hand",
+          "rest": "bottom"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, if you control four or more creatures, transform Growing Rites of Itlimoc.",
+      "trigger": {
+        "on": "end step"
+      },
+      "effects": [
+        {
+          "effect": "setState",
+          "targets": "self",
+          "transform": true
+        }
+      ],
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        },
+        "atLeast": 4
+      }
+    }
+  ],
+  "layout": "transform",
+  "back": {
+    "identity": {
+      "name": "Itlimoc, Cradle of the Sun",
+      "supertypes": [
+        "Legendary"
+      ],
+      "types": [
+        "Land"
+      ],
+      "subtypes": [],
+      "manaCost": null,
+      "colors": [],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "(Transforms from Growing Rites of Itlimoc.)\n{T}: Add {G}.\n{T}: Add {G} for each creature you control.",
+    "abilities": [
+      {
+        "kind": "activated",
+        "text": "{T}: Add {G}.",
+        "mana": true,
+        "cost": [
+          {
+            "atom": "{T}"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "addMana",
+            "mana": {
+              "G": 1
+            }
+          }
+        ]
+      },
+      {
+        "kind": "activated",
+        "text": "{T}: Add {G} for each creature you control.",
+        "mana": true,
+        "cost": [
+          {
+            "atom": "{T}"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "addMana",
+            "mana": {
+              "G": {
+                "count": {
+                  "types": [
+                    "Creature"
+                  ],
+                  "controller": "you"
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

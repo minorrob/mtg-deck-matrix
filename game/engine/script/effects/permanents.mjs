@@ -161,6 +161,10 @@ export function attachTo(state, auraId, hostId) {
    copy (CR 707.3). `except` is the card's "except ..." (CR 707.9): not legendary, an extra type, keywords, power and
    toughness, colors, its name ("except its name is Sarkhan, Soul Aflame"), an extra supertype ("except it's legendary"), its
    card types set. */
+/* A characteristic-defining ability of its power or toughness (CR 604.3; layer 7a, its own object's), defining one the copy
+   effect sets (CR 707.9d). */
+const definesSetStats = (ability, except) => ability?.kind === "static" && ability.layer === 7 && ability.sublayer === "a" && ability.affects?.self === true
+  && ((except.setPower !== undefined && ability.apply?.setPower !== undefined) || (except.setToughness !== undefined && ability.apply?.setToughness !== undefined));
 function copiable(object, except = {}) {
   const supertypes = [...new Set([...(object.supertypes ?? []).filter((t) => !(except.nonLegendary && t === "Legendary")), ...(except.addSupertypes ?? [])])];
   return {
@@ -175,7 +179,10 @@ function copiable(object, except = {}) {
     keywords: [...new Set([...(object.keywords ?? []), ...(except.addKeywords ?? [])])],
     /* "And it has 'When this token leaves the battlefield, ...'" (Hofri Ghostforge; CR 707.9a): abilities the copy has besides
        the original's, part of its copiable values -- compiled with the card (cards/index.mjs), bound as it is made. */
-    abilities: [...structuredClone(object.abilities ?? []), ...structuredClone(except.addAbilities ?? [])],
+    /* A copy whose power or toughness the effect sets ("except it's 1/1", offspring; "half that creature's power", Saw in
+       Half; wave 4c) does not copy a characteristic-defining ability that would define it (CR 707.9d; Saw in Half's ruling):
+       "Adeline's power is equal to the number of creatures you control" is no ability of a 1/1 copy of her. */
+    abilities: [...structuredClone((object.abilities ?? []).filter((a) => !definesSetStats(a, except))), ...structuredClone(except.addAbilities ?? [])],
     power: except.setPower ?? object.power ?? null, toughness: except.setToughness ?? object.toughness ?? null,
     /* Its printed loyalty (CR 707.2): a planeswalker copied as it enters has that many loyalty counters (CR 306.5b; Spark
        Double, rules/replacement.mjs ownEntering). */
@@ -329,12 +336,31 @@ export function makeCopies(state, ids, params, context, events) {
   afterwards(state, made, {...params, controller}, context);
   return made;
 }
-/* Which event of a copy effect an order answers: the original by its id, or the source as it last existed (`lastKnown`). */
-const copyEventKey = (id) => (id?.values ? "lastKnown" : String(id));
+/* Which event of a copy effect an order answers: the original by its id, or the source as it last existed (`lastKnown`) --
+   or a creature an effect moved, as it last existed, by the id of what it became (`key`; movedCopies). */
+const copyEventKey = (id) => (id?.values ? (id.key !== undefined ? String(id.key) : "lastKnown") : String(id));
+
+/* "ITS CONTROLLER CREATES TWO TOKENS THAT ARE COPIES OF THAT CREATURE, EXCEPT THEIR POWER IS HALF THAT CREATURE'S POWER AND THEIR
+   TOUGHNESS IS HALF THAT CREATURE'S TOUGHNESS. ROUND UP EACH TIME" (Saw in Half; wave 4c): `of: "moved"`, a copy of each
+   creature the effect before it moved and remembered -- "if that creature dies this way", a destroy's `remember` (effects/
+   zones.mjs: none indestructible, regenerated, or sent elsewhere by a replacement) -- as it last existed on the battlefield
+   (CR 608.2h, 113.7a): its copiable values, or what it was copying (CR 707.3; layers.mjs lastKnown's `copiable`), under the
+   control of its controller then. `halfStats`: their base power and toughness half the power and toughness it last had,
+   each rounded up (CR 707.9b; the card's rulings). */
+function movedCopies(state, params, context) {
+  const half = (n) => Math.ceil((n ?? 0) / 2) + 0;
+  /* Each as it last was (`movedWas`), beside what it became (`remembered`): destroy keeps the two in step (effects/zones.mjs). */
+  return (context.movedWas ?? []).map((was, i) => ({id: (context.remembered ?? [])[i], was})).map(({id, was}) => ({id, controller: was.controller,
+    original: was.copiable ?? state.objects[id], except: {...(params.except ?? {}), ...(params.halfStats === true ? {setPower: half(was.power), setToughness: half(was.toughness)} : {})}}));
+}
 
 /** `copyPermanent` — "create a token that's a copy of target creature you control" (CR 707.2), or one of each a selector matches ("for each token you control"). */
 export function copyPermanent(state, params, context) {
   const events = [];
+  if (params.of === "moved") {
+    for (const one of movedCopies(state, params, context)) makeCopies(state, [{values: one.original, key: one.id}], {...params, controller: one.controller, except: one.except}, context, events);
+    return events;
+  }
   const originals = params.selector ? selectMatching(state, params.selector, context) : (params.targets ?? []);
   /* "Create a token that's a copy of this creature" (`targets: "self"`, `lastKnown`; Colorstorm Stallion's Opus), this creature
      gone since its ability was put on the stack: a copy of it as it last existed on the battlefield (CR 608.2h, 113.7a) --
@@ -512,6 +538,14 @@ export function tokenQuestion(state, effect, context, answers = {}) {
     return question ? {...question, controller, count, values, key, answered: answers[key] ?? []} : null;
   };
   const controller = effect?.controller ?? context.controller;
+  /* Copies of what the effect before it moved (Saw in Half; movedCopies): each its controller's, as it last existed. */
+  if (effect?.effect === "copyPermanent" && effect.of === "moved") {
+    for (const one of movedCopies(state, effect, context)) {
+      const asked = ask(one.controller, effect.count ?? 1, copiable(one.original, one.except), String(one.id));
+      if (asked) return asked;
+    }
+    return null;
+  }
   /* Linked tokens are made under the exiled cards' owners' control (linkedTokens): theirs to order, not asked here. */
   if (effect?.effect === "createToken" && effect.linked !== true)
     return ask(controller, effect.count ?? 1, effect.token?.predefined ? PREDEFINED_TOKENS[effect.token.predefined] : effect.token, TOKEN_EVENT);

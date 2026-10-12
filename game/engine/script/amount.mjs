@@ -42,6 +42,8 @@
  *   {excessDamage: true}                 the excess damage the damage before it in this resolution dealt (CR 120.4a)
  *   {countersRemovedThisWay: true}       how many counters the removeCounter before it in this resolution removed ("add one
  *                                        mana of any color for each charge counter removed this way", Coalition Relic)
+ *   {dieRolled: true}                    the result of the die the rollDie before it in this resolution rolled -- "a number
+ *                                        of Treasure tokens equal to the result" (Ancient Copper Dragon; CR 706.2)
  *   {lesserOf: [amount, amount]}         the least of them: "greater than this creature's power or toughness" (increment)
  *   {tappedThisWay: true}                how many creatures this spell's additional cost tapped as it was cast -- "three times
  *                                        the number of creatures tapped this way" (Burn at the Stake; rules/actions.mjs)
@@ -125,7 +127,9 @@ export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf"
   /* Train E, wave 2: "the greatest mana value among cards in your graveyard" (Hapatra, the Desert Fang). */
   "greatestManaValue",
   /* Wave 4b: "if you attacked with two or more creatures this turn" (Minas Tirith). */
-  "creaturesAttackedWithThisTurn"]);
+  "creaturesAttackedWithThisTurn",
+  /* Wave 4c: "equal to the result" of a die rolled (CR 706.2; Ancient Copper Dragon). */
+  "dieRolled"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named", "another", "signed"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -178,6 +182,7 @@ export function amountProblems(value) {
   if ("half" in value && value.half !== true) problems.push("An amount's half is true: halved, rounded down");
   if ("per" in value && !(Number.isInteger(value.per) && value.per > 1)) problems.push("An amount's per is a whole number above 1: \"for every seven\" is per 7");
   if ("countersRemovedThisWay" in value && value.countersRemovedThisWay !== true) problems.push("countersRemovedThisWay is true");
+  if ("dieRolled" in value && value.dieRolled !== true) problems.push("dieRolled is true: the result of the die rolled before it");
   if ("countersPut" in value && value.countersPut !== true) problems.push("countersPut is true");
   if ("manaInPool" in value && value.manaInPool !== "you") problems.push('manaInPool is "you": the mana in your pool');
   /* A player's own counters are "you" ("the number of experience counters you have", Ezuri, Claw of Progress) or a target
@@ -264,6 +269,14 @@ const aboutWas = (ref, context) => (ref === "that card" ? context.about?.lastKno
    before it remembered -- revealed, in a library or elsewhere off the battlefield -- has its printed power and toughness
    there (CR 208.1, 109.3). Null for anything else, which is read as before. */
 const cardFigure = (state, ref, id, key) => (ref === "remembered" && id !== null && state.objects[id] && state.objects[id].zone !== "battlefield" ? state.objects[id][key] ?? 0 : null);
+/* "You may sacrifice another creature. If you do, you gain X life and draw X cards, where X is that creature's power" (Disciple
+   of Freyalise): what the effect before it remembered having moved it off the battlefield -- a sacrifice's `remember`, its
+   `movedWas` kept one for each (effects/asking.mjs) -- as it last existed there (CR 608.2h), a token's too, which no longer
+   exists anywhere (CR 704.5d). Null for anything else, which is read as before. */
+const movedFigure = (ref, context, key) => {
+  const was = context.movedWas ?? [];
+  return ref === "remembered" && was.length > 0 && was.length === (context.remembered ?? []).length ? was[0]?.[key] ?? 0 : null;
+};
 
 /* CR 700.5: each mana symbol among the mana costs of permanents the player controls that is one of these colors. */
 function devotion(state, player, colors) {
@@ -352,7 +365,8 @@ export function amountOf(state, value, context = {}) {
     n = (value.powerOf === "sacrificed" ? was?.power : was?.toughness) ?? 0;
   } else if ("powerOf" in value) {
     const id = objectOf(value.powerOf, context);
-    n = id !== null && state.objects[id]?.zone === "battlefield" ? powerOf(state, id) : cardFigure(state, value.powerOf, id, "power") ?? (aboutWas(value.powerOf, context)?.power ?? context.lastKnown?.power ?? 0);
+    n = id !== null && state.objects[id]?.zone === "battlefield" ? powerOf(state, id) : movedFigure(value.powerOf, context, "power")
+      ?? cardFigure(state, value.powerOf, id, "power") ?? (aboutWas(value.powerOf, context)?.power ?? context.lastKnown?.power ?? 0);
   } else if ("toughnessOf" in value) {
     const id = objectOf(value.toughnessOf, context);
     n = id !== null && state.objects[id]?.zone === "battlefield" ? toughnessOf(state, id) : cardFigure(state, value.toughnessOf, id, "toughness") ?? (aboutWas(value.toughnessOf, context)?.toughness ?? context.lastKnown?.toughness ?? 0);
@@ -403,6 +417,8 @@ export function amountOf(state, value, context = {}) {
   /* "For each charge counter removed this way" (Coalition Relic): what the removeCounter before it removed
      (effects/resources.mjs) -- none removed, or none removed yet, is 0. */
   else if ("countersRemovedThisWay" in value) n = context.countersRemoved ?? 0;
+  /* "Equal to the result" (Ancient Copper Dragon): what the rollDie before it rolled (effects/resources.mjs) -- none rolled, 0. */
+  else if ("dieRolled" in value) n = context.rolled ?? 0;
   /* "For each card type among cards discarded this way" (Occult Epiphany): the card types (CR 205.2a) the remembered
      cards have between them, as they are now -- an artifact creature is two. */
   else if ("cardTypesAmong" in value) n = new Set((context.remembered ?? []).flatMap((id) => state.objects[id]?.types ?? [])).size;

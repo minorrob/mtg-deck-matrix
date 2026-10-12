@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Goreclaw, Terror of Qal Sisma",
+    "oracleId": "befb211f-37ca-4083-98d4-9ff1f28be3f2",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bear"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "Creature spells you cast with power 4 or greater cost {2} less to cast.\nWhenever Goreclaw attacks, each creature you control with power 4 or greater gets +1/+1 and gains trample until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Creature spells you cast with power 4 or greater cost {2} less to cast.",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "types": [
+          "Creature"
+        ],
+        "power": {
+          "min": 4
+        }
+      },
+      "amount": 2
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Goreclaw attacks, each creature you control with power 4 or greater gets +1/+1 and gains trample until end of turn.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "power": {
+              "min": 4
+            }
+          },
+          "power": 1,
+          "toughness": 1,
+          "keywords": [
+            "Trample"
+          ],
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

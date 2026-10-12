@@ -419,6 +419,21 @@ export function loseGame(state, params, context) {
 }
 
 /**
+ * `rollDie` -- "roll a d20" (Ancient Copper Dragon; wave 4c; CR 706.1-706.2): its controller rolls a die of `sides` sides,
+ * each result as likely as any other -- from the game's random stream (rng.mjs), as a shuffle is, never chosen. The result
+ * is what follows reads, "a number of Treasure tokens equal to the result" (`{dieRolled: true}`, script/amount.mjs), and
+ * said to everyone. Nothing yet modifies a roll or watches for one ("whenever you roll a die", CR 706.2's results changed).
+ */
+export function rollDie(state, params, context, rng = null) {
+  if (!rng) throw new Error("A die roll needs the game's random stream");
+  /* A die of no number of sides is no die: nothing rolled (the schema refuses a script that says one, script/schema.mjs). */
+  if (!(Number.isInteger(params.sides) && params.sides >= 2)) return [];
+  const result = rng.int(params.sides) + 1;
+  context.rolled = result;
+  return [event("GameEventDieRolled", state, {player: {playerId: context.controller, name: state.players[context.controller]?.name}, sides: params.sides, result})];
+}
+
+/**
  * THE MONARCH (CR 725): a designation of the game's, not of any card -- none until an effect makes a player the monarch
  * (725.1), and one player's at most (725.3): `state.monarch`, that player's seat, unsaid while there is none, so a game made
  * before it hashes and replays as it did. As a player becomes it the monarch before stops being it. One who is the monarch

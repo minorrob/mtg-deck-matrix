@@ -1,0 +1,713 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Life from the Loam",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Cantrip": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Draw a card.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Two Draws": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Draw two cards.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 2
+          }
+        ]
+      }
+    },
+    "Deep Mill": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Mill eighteen cards.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "mill",
+            "count": 18
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Cast: the three land cards chosen return to Rob's hand, the Bear stays",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Life from the Loam"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Forest",
+            "Island",
+            "Mountain",
+            "Plains",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Life from the Loam",
+          "targets": [
+            [
+              {
+                "card": "Forest"
+              },
+              {
+                "card": "Island"
+              },
+              {
+                "card": "Plains"
+              }
+            ]
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest",
+            "Island",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Mountain",
+            "Bear",
+            "Life from the Loam"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "\"Up to three\": cast with none chosen, it does nothing and goes to the graveyard",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Life from the Loam"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Life from the Loam",
+          "targets": [
+            []
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": []
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Forest",
+            "Life from the Loam"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Rob's draw step: dredge 3 instead of drawing -- three cards milled, Life from the Loam back in his hand, no card drawn",
+      "library": [
+        "Forest",
+        "Island",
+        "Mountain",
+        "Plains"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Life from the Loam"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "DRAW"
+          }
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Draw a card",
+                  "Dredge 3: mill three cards and return Life from the Loam to your hand"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Dredge 3: mill three cards and return Life from the Loam to your hand"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Life from the Loam"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Forest",
+            "Island",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 17
+        }
+      ]
+    },
+    {
+      "name": "Rob's draw step, the draw chosen: the Forest drawn, the Loam stays in the graveyard",
+      "library": [
+        "Forest",
+        "Island",
+        "Mountain",
+        "Plains"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Life from the Loam"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "DRAW"
+          }
+        },
+        {
+          "choose": [
+            "Draw a card"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Life from the Loam"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A draw as a spell resolves may be dredged too",
+      "library": [
+        "Forest",
+        "Island",
+        "Mountain",
+        "Plains"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Cantrip"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Life from the Loam"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Cantrip"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Draw a card",
+                  "Dredge 3: mill three cards and return Life from the Loam to your hand"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Dredge 3: mill three cards and return Life from the Loam to your hand"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Life from the Loam"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Forest",
+            "Island",
+            "Mountain",
+            "Cantrip"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "\"Draw two cards\": each draw its own -- the first dredged, the second drawn with no dredge card left in the graveyard",
+      "library": [
+        "Forest",
+        "Island",
+        "Mountain",
+        "Plains"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Two Draws"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Life from the Loam"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Two Draws"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Dredge 3: mill three cards and return Life from the Loam to your hand"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Life from the Loam",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Forest",
+            "Island",
+            "Mountain",
+            "Two Draws"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "\"Draw two cards\", the first drawn: the second is asked again",
+      "library": [
+        "Forest",
+        "Island",
+        "Mountain",
+        "Plains"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Two Draws"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Life from the Loam"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Two Draws"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Draw a card"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Draw a card",
+                  "Dredge 3: mill three cards and return Life from the Loam to your hand"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Dredge 3: mill three cards and return Life from the Loam to your hand"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest",
+            "Life from the Loam"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Island",
+            "Mountain",
+            "Plains",
+            "Two Draws"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Two cards left in the library: no dredge 3 (CR 702.52b), the card is drawn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Deep Mill",
+            "Cantrip"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Life from the Loam"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Deep Mill"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "library",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Cantrip"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "In Maya's graveyard it is hers: her draw step asks her, and Rob's asks him nothing",
+      "library": [
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Life from the Loam"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "DRAW"
+          }
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1,
+                "options": [
+                  "Draw a card",
+                  "Dredge 3: mill three cards and return Life from the Loam to your hand"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Draw a card"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Life from the Loam"
+          ]
+        }
+      ]
+    }
+  ]
+}

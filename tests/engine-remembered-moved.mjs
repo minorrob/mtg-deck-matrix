@@ -213,8 +213,11 @@ const zoneOf = (s, card) => Object.values(s.objects).filter((o) => o.card === ca
   for (const o of [BEAR, WASTES, BOLT, WASTES]) put(t, o, 0, "library");
   const dug = beginResolution(t, [{effect: "dig", count: 3, selector: {types: ["Land"]}, all: true, toByType: [{types: ["Land"], to: "battlefield", tapped: true}], remember: true},
     {effect: "untap", targets: "remembered"}], you);
-  eq([dug.status, names(t, t.zones.battlefield), t.zones.battlefield.map((id) => t.objects[id].tapped), names(t, t.zones.library[0])],
-    ["done", ["Wastes"], [false], ["Wastes", "Bear", "Bolt"]], "the one land of the top three onto the battlefield and remembered (untapped after); the rest to the bottom");
+  /* The rest to the bottom in the order their owner chooses (CR 401.4; wave 4c, k2): asked, and the land still remembered after. */
+  eq(dug.status, "waiting", "the order of the two left is asked");
+  resolveAwaiting(t, [0, 1]);
+  eq([names(t, t.zones.battlefield), t.zones.battlefield.map((id) => t.objects[id].tapped), names(t, t.zones.library[0])],
+    [["Wastes"], [false], ["Wastes", "Bear", "Bolt"]], "the one land of the top three onto the battlefield and remembered (untapped after); the rest to the bottom");
 }
 {
   /* Each new word's grammar, refused when it is misused rather than read as something else. */

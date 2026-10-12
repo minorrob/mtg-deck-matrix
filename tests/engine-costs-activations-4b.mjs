@@ -228,7 +228,9 @@ const problems = (abilities, more) => compileScript(script(abilities, more)).pro
     "The Ozolith", "Twilight Mire", "Chrome Mox", "Orcish Bowmasters", "Command Beacon", "Grand Abolisher", "Loran of the Third Path", "Bedevil", "Toski, Bearer of Secrets",
     "Land Tax", "Tropical Island", "Academy Ruins", "Minas Tirith", TERROR, "Selvala, Heart of the Wilds", "Volcanic Island", "Massacre Wurm", "Damnation", "Scavenger Grounds"];
   eq(cards.filter((name) => !tableCards(name)), [], "every one of the lane's twenty-eight cards plays at the table");
-  eq(["Mosswort Bridge", "Six"].filter((name) => tableCards(name)), [], "and the two it stopped on do not yet");
+  /* Mosswort Bridge plays since wave 4c's lane k1 built the land played as an effect resolves (CR 305.2a). */
+  eq(["Six"].filter((name) => tableCards(name)), [], "and the one it stopped on, Six, does not yet");
+  eq(["Mosswort Bridge"].filter((name) => !tableCards(name)), [], "while Mosswort Bridge, the other, now plays");
 }
 
 console.log(`engine-costs-activations-4b: ${checks} checks passed -- an activation forbidden of some permanents, always and while its condition holds; a spell's life raised for what it targets, a Phyrexian symbol's life with it, a counted target refused in words; X paid in life, and the house pilot paying the least; the schema's and the compiler's refusals; questions in words; the table playing the lane's cards.`);

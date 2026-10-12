@@ -649,7 +649,8 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
   Train C phase 2, 2026-10-11), `goad` (CR 701.15; batch 69), `empowerJace` (loyalty counters on a Jace token you
   control, made first if you control none; the live-game plan of 2026-10-04), `becomeMonarch` ("you become the monarch",
   CR 725: a designation of the game, one player's at a time, with two triggered abilities of the game's own; Train E,
-  2026-10-12).
+  2026-10-12), `rollDie` ("roll a d20", CR 706: one die of a number of sides, its result from the game's random stream and
+  counted by what follows; Ancient Copper Dragon, wave 4c, 2026-10-12).
 - Permanents: `createToken`, `copyPermanent`, `becomeCopy`, `earthbend` (added in M4 phase 3, batch 65), `animate`, `animateAll`, `attach`, `gainControl`, `setState` (transform,
   flip), `phaseOut`, `exchangeControl` (control of two permanents exchanged, CR 701.12b: both still there and controlled by
   different players, or nothing happens; Train D, 2026-10-12), `incubate` (an Incubator token, a double-faced token that
@@ -669,7 +670,7 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
   M4 phase 3, batch 51; one that adds mana is a mana ability, CR 605.1b), counter added (and once), life gained, life
   lost, token created (once), becomes monstrous, chapter (a Saga's, CR 714.2c; added in M4 phase 3, batch 60),
   proliferated (CR 701.34a), crime committed (CR 700.13), a state trigger (CR 603.8) and transformed (CR 701.27e; all four
-  added in Train C).
+  added in Train C), becomes level (a Class's, CR 716.2a; wave 4c).
 - Statics: continuous characteristic changes, combat damage by toughness, can't attack, can attack as though no
   defender, attack restriction, can't be cast, can't be blocked by, must attack, cost reduction, alternative cost,
   activate as though haste, Panharmonicon-style trigger doubling.

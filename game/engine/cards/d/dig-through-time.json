@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dig Through Time",
+    "oracleId": "f8b17b89-26ce-4208-874a-9e1d66514640",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{6}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Delve (Each card you exile from your graveyard while casting this spell pays for {1}.)\nLook at the top seven cards of your library. Put two of them into your hand and the rest on the bottom of your library in any order.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Delve",
+      "keyword": "delve"
+    },
+    {
+      "kind": "spell",
+      "text": "Look at the top seven cards of your library. Put two of them into your hand and the rest on the bottom of your library in any order.",
+      "effects": [
+        {
+          "effect": "dig",
+          "count": 7,
+          "take": 2,
+          "to": "hand",
+          "rest": "bottom"
+        }
+      ]
+    }
+  ]
+}
