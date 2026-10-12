@@ -140,6 +140,20 @@ function checkEffect(effect, path, errors) {
      or for good when unsaid (effects/permanents.mjs). */
   if (name === "gainControl" && effect.until !== undefined && !CONTROL_DURATIONS.includes(effect.until))
     errors.push({path: `${path}.until`, message: `Control is gained for good, or until ${CONTROL_DURATIONS.join(" or ")}`});
+  /* "With the greatest power", "with the greatest mana value" (Crackling Doom, Soul Shatter; End of the Hunt): what is
+     sacrificed, or a permanent chosen on the battlefield (effects/asking.mjs, greatestBy) -- never read anywhere else. */
+  if (effect.greatest !== undefined && !(["power", "manaValue"].includes(effect.greatest) && (name === "sacrifice" || (name === "chooseCard" && effect.zone === "battlefield"))))
+    errors.push({path: `${path}.greatest`, message: "\"The greatest power\" or \"mana value\" (`greatest`) is a sacrifice's, or a chooseCard's on the battlefield: \"power\" or \"manaValue\""});
+  /* "For each of those permanents, choose a different opponent. Each opponent gains control of the permanent for which they
+     were chosen" (Dack Fayden, Helping Hand; effects/asking.mjs, controlToOpponents): `toEach`, of the permanents `targets`
+     names, for good, to no one player. */
+  if (effect.toEach !== undefined && (name !== "gainControl" || effect.toEach !== "different opponent" || effect.until !== undefined || effect.toPlayer !== undefined
+    || effect.selector !== undefined || effect.targets === undefined))
+    errors.push({path: `${path}.toEach`, message: "A different opponent for each permanent (`toEach: \"different opponent\"`) is gainControl's, of its `targets`, for good, with no `toPlayer`"});
+  /* "Goaded for the rest of the game" (Dack Fayden, Helping Hand; CR 701.15a): a goad's `until` is "game" or unsaid (until
+     its controller's next turn). */
+  if (name === "goad" && effect.until !== undefined && effect.until !== "game")
+    errors.push({path: `${path}.until`, message: "A goad lasts until its controller's next turn, or for the rest of the game (`until: \"game\"`)"});
   /* Control of two permanents exchanged (CR 701.12b; effects/permanents.mjs, exchangeControl): the one (`from`) and the other
      (`targets`) -- or the two of `targets` -- for good. */
   if (name === "exchangeControl" && (effect.targets === undefined || effect.until !== undefined))

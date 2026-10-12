@@ -1,0 +1,71 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Efflorescence",
+    "oracleId": "181da74b-53fb-4e46-afc0-e7c990fda128",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Put two +1/+1 counters on target creature.\nInfusion — If you gained life this turn, that creature also gains trample and indestructible until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Put two +1/+1 counters on target creature.\nInfusion — If you gained life this turn, that creature also gains trample and indestructible until end of turn.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "+1/+1",
+          "count": 2
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "compare": {
+              "count": {
+                "lifeGainedThisTurn": "you"
+              },
+              "atLeast": 1
+            }
+          },
+          "then": [
+            {
+              "effect": "pump",
+              "targets": {
+                "target": 0
+              },
+              "power": 0,
+              "toughness": 0,
+              "keywords": [
+                "Trample",
+                "Indestructible"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

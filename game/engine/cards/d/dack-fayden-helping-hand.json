@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dack Fayden, Helping Hand",
+    "oracleId": "3b21abb0-9a58-4e62-9650-4b04ce2bfb12",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Advisor"
+    ],
+    "manaCost": "{4}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 4,
+    "toughness": 6
+  },
+  "oracleText": "When Dack Fayden enters, reveal cards from the top of your library until you reveal X creature cards, where X is the number of opponents you have. Put those creature cards onto the battlefield, then shuffle. They're goaded for the rest of the game. For each of those permanents, choose a different opponent. Each opponent gains control of the permanent for which they were chosen.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Dack Fayden enters, reveal cards from the top of your library until you reveal X creature cards, where X is the number of opponents you have. Put those creature cards onto the battlefield, then shuffle. They're goaded for the rest of the game. For each of those permanents, choose a different opponent. Each opponent gains control of the permanent for which they were chosen.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "digUntil",
+          "who": "you",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "count": {
+            "count": {
+              "what": "player",
+              "who": "opponent"
+            }
+          },
+          "found": {
+            "to": "battlefield"
+          },
+          "rest": "shuffle",
+          "remember": true
+        },
+        {
+          "effect": "goad",
+          "targets": "remembered",
+          "until": "game"
+        },
+        {
+          "effect": "gainControl",
+          "targets": "remembered",
+          "toEach": "different opponent"
+        }
+      ]
+    }
+  ]
+}

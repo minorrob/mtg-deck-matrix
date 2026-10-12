@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cost of Brilliance",
+    "oracleId": "b45afde2-eaaf-4174-8082-d344efa54c44",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target player draws two cards and loses 2 life. Put a +1/+1 counter on up to one target creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Target player draws two cards and loses 2 life. Put a +1/+1 counter on up to one target creature.",
+      "targets": [
+        {
+          "what": "player"
+        },
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2,
+          "who": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "loseLife",
+          "amount": 2,
+          "who": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 1
+          },
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fateshaper Aspirant",
+    "oracleId": "bb3996b6-b68d-4ea1-b3dd-1600f8da2f1c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Rhino",
+      "Cleric"
+    ],
+    "manaCost": "{4}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "When this creature enters, choose one —\n• Return target legendary card from your graveyard to your hand.\n• Put a +1/+1 counter on target creature. It gains vigilance and indestructible until end of turn. (Damage and effects that say \"destroy\" don't destroy it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, choose one —\n• Return target legendary card from your graveyard to your hand.\n• Put a +1/+1 counter on target creature. It gains vigilance and indestructible until end of turn. (Damage and effects that say \"destroy\" don't destroy it.)",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Return target legendary card from your graveyard to your hand.",
+              "targets": [
+                {
+                  "what": "card",
+                  "zone": "graveyard",
+                  "supertypes": [
+                    "Legendary"
+                  ],
+                  "controller": "you"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": {
+                    "target": 0
+                  },
+                  "to": "hand"
+                }
+              ]
+            },
+            {
+              "text": "Put a +1/+1 counter on target creature. It gains vigilance and indestructible until end of turn.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "putCounter",
+                  "targets": {
+                    "target": 0
+                  },
+                  "counter": "+1/+1",
+                  "count": 1
+                },
+                {
+                  "effect": "pump",
+                  "targets": {
+                    "target": 0
+                  },
+                  "power": 0,
+                  "toughness": 0,
+                  "keywords": [
+                    "Vigilance",
+                    "Indestructible"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
