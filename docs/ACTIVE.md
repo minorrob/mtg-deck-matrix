@@ -54,11 +54,15 @@ refused of the concept, and the passes to come: `docs/ui-lane/plan-play-ui-2026-
 - **Assumed, not proved:** the flights and the turn's light are seen in the fixture (`tools/board-fixture.mjs`) and not
   yet held by a suite; the side seats' boards at 1280×720 are legible as presence, not to read.
 - **Asked of the engine lane:** Requests rows 2 to 6 above.
-- **Outstanding:** the merge of #725 on a green run of its head (the advisor suite's clock, Requests row 7, was fixed on
-  `main` in c629f8c and is merged into the branch); then the staging release, Rob's review, and pass 2
-  (`plan-play-ui-2026-10-12.md` §4).
-  The suites this pass touches are green on its head: a11y-board 288, table-board 281, table-lobby 89, board-callouts 33,
-  settings-r3 63, board-choices 40, coach 60, design-tokens 91; the 19 breaks all caught.
+- **Merged:** #725 on main 222af699 (a merge commit, on the green Actions `suites` run of its head 49c1f31, which carried
+  main to #728). The advisor suite's clock (Requests row 7) was fixed on main in c629f8c before the gate.
+- **On staging** (main 222af699): `tools/release-staging.sh` from the UI lane's container (Rob asked for the push to
+  staging in his brief): release-acceptance 22, play-e2e 35; `release/cloud-staging` 4cc2001b pushed, Workers Builds
+  deploys it. The suites this pass touches were green on the head: a11y-board 288, table-board 281, table-lobby 89,
+  board-callouts 33, settings-r3 63, board-choices 40, coach 60, design-tokens 91; the 19 breaks all caught.
+- **Outstanding:** Rob's review of staging (the lower-confidence areas are `plan-play-ui-2026-10-12.md` §3: the 3D
+  bend, the side seats at 1280×720, the callouts' loudness and place, flights at 250 permanents), then pass 2 (§4) on
+  his feedback. The branch `claude/nice-hypatia-4ajdyi` stays the lane's, restarted from main.
 
 ## 2026-10-12, later: Train E, Rob's library, in waves; the plan to 90%
 
