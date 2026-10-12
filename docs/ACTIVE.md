@@ -118,6 +118,8 @@ usage for this").
     - A draw step brought by an added beginning phase (CR 500.8) still happens: Sphinx of the Second Sun on turn 1.
     - The table's host may turn the skip off (Rob, 2026-10-12; Requests row 2).
     - Breaks: `breaks-first-draw-step.py`, 16 of 16 caught.
+    - Orcish Bowmasters (wave 4b): its turn-1 scenario drew in the step that no longer happens. It now shows Rob's
+      turn-1 draw triggering it. A new dredge scenario (CR 702.52a) catches j4's "an effect's draw" break again.
     - Crossing the lanes: `tests/table-board.mjs`, the UI lane's suite, had its turn-1 history line updated. No UI-lane
       branch touches that file.
   - When two limited permissions allow the same card, the engine merges them and picks one. That choice is the

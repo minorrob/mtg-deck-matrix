@@ -307,11 +307,7 @@
       ]
     },
     {
-      "name": "Rob skips his first draw (CR 103.8a): a card he draws by an effect in that draw step is the first he draws there, and nothing triggers",
-      "at": {
-        "turn": 1,
-        "phase": "DRAW"
-      },
+      "name": "Rob, first in a two-player game, has no draw step on turn 1 (CR 103.8a): a card he draws by an effect that turn is not one drawn in a draw step of his, and Maya's Bowmasters triggers",
       "setup": [
         {
           "seat": 1,
@@ -344,6 +340,23 @@
         },
         {
           "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Rob"
+          ]
+        },
+        {
+          "resolve": true
         }
       ],
       "expect": [
@@ -353,11 +366,127 @@
           "count": 1
         },
         {
+          "seat": 0,
+          "life": 39
+        },
+        {
           "stack": 0
         },
         {
+          "seat": 1,
+          "controls": [
+            "Orcish Bowmasters",
+            "Orc Army"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maya dredges instead of her draw step's draw (CR 702.52a): the first card she draws in that step is a spell's, and Rob's Bowmasters does not trigger",
+      "library": [
+        "Forest",
+        "Island",
+        "Mountain",
+        "Plains"
+      ],
+      "setup": [
+        {
           "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Orcish Bowmasters"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Life from the Loam"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Sage"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "DRAW"
+          }
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1,
+                "options": [
+                  "Draw a card",
+                  "Dredge 3: mill three cards and return Life from the Loam to your hand"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Dredge 3: mill three cards and return Life from the Loam to your hand"
+          ]
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "cast": "Sage",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Life from the Loam",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Forest",
+            "Island",
+            "Mountain",
+            "Sage"
+          ]
+        },
+        {
+          "stack": 0
+        },
+        {
+          "seat": 1,
           "life": 40
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Orcish Bowmasters"
+          ]
         }
       ]
     },
