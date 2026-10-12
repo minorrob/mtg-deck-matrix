@@ -4,7 +4,7 @@
 
 | Lane | Held by | Branch | Doing |
 | --- | --- | --- | --- |
-| **Engine** | Claude, a cloud container | `claude/admiring-franklin-58cxy4` | Train D (the 18 cards of Rob's six decks), then the library's other ~175; the AI on Claude and the deck advisor on staging; G-F, production |
+| **Engine** | Claude, a cloud container | `claude/admiring-franklin-58cxy4` | Train E (the library's cards, in waves); the monarch and CR 506.4; then waves 4 and after, to the most-played 90% of Commander cards (`docs/engine/plan-coverage-90.md`) |
 | **UI** | Fable or Codex Astra (Rob, 2026-10-12), on his computer and in the cloud; Rob prototypes Play in Replit first | `claude/ui-<topic>` or `codex/ui-<topic>` | Rob's notes 9 and 10 (a *Turn Resources* tab; the right pane docked; the hover card no taller than the mat); concepts Rob brings back from prototyping tools. Brief: `docs/ui-lane/README.md` |
 
 ### Requests between the lanes
@@ -15,6 +15,34 @@ other lane answers in the last column.
 | # | From | Asks for | What for | Answer |
 | --- | --- | --- | --- | --- |
 | — | — | (none yet) | — | — |
+
+## 2026-10-12, later: Train E, Rob's library, in waves; the plan to 90%
+
+This session (Claude, a cloud container), with session workers only. No API usage (Rob: "I don't want to use API
+usage for this").
+- **Wave 1, merged #719** (main 0b9de9a8), on staging (b1369b4b3bf3): 44 cards. With them came:
+  - warp, void and sneak;
+  - explore and the Map token.
+- **Wave 2, in this branch:** 63 cards from four workers.
+  - Engine pieces:
+    - morph;
+    - behold-and-exile;
+    - last known power in a trigger;
+    - `differentNames` and `greatestManaValue`;
+    - a goad for the rest of the game;
+    - a different opponent for each permanent given away;
+    - replicate.
+  - Fixed: whether a first-strike damage step happens is now decided as combat damage begins, not at blocks (CR 510.4).
+    A creature given first strike after blocks used to deal no combat damage.
+  - Waiting: Extrapolate the Impossible, which needs cards from outside the game (CR 400.11).
+- **Wave 3 is running:** four workers, 64 cards.
+- **The monarch** (CR 725), with a creature leaving combat when its controller changes (CR 506.4), is with a worker.
+- **The plan to 90%** (Rob: "after wave 3 define a wave 4+ to bring us to the 90% of all cards typically used"):
+  `docs/engine/plan-coverage-90.md`.
+  - The target is 5,869 cards, of which 1,411 are defined.
+  - Waves 4a to 4c build the constructs that block the most cards.
+  - Wave 5 onward defines the rest, 60 to 90 cards a wave.
+  - The week's usage is read before each wave.
 
 ## 2026-10-12: Rob's notes merged and on staging; his v43 library restored there; Train D
 
