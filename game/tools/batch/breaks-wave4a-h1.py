@@ -56,7 +56,7 @@ FOLLOWS = '      if (to === "battlefield" && effect.layer !== undefined && Array
 FOLLOWED = '        effect.affects = {...effect.affects, ids: effect.affects.ids.map((id) => (id === entry.objectId ? arrived : id))};\n'
 CANT_CAST_OK = '    if (!(typeof params.named === "string" || params.allSpells === true) || !Array.isArray(who) || !who.length) return [];'
 CANT_CAST_ALL = 'spells: params.allSpells === true ? {} : {named: params.named},'
-LOOK_PLAYERS = '"no-maximum-hand-size", "look-at-top"].includes(params.rule)'
+LOOK_PLAYERS = '"damage-doubled", "look-at-top"].includes(params.rule)'
 LOOK_EFFECT = '  if ((state.effects ?? []).some((e) => e.rule === "look-at-top" && (e.players ?? []).includes(owner))) looked = true;\n'
 LOOK_CONDITION = '      if (ability.rule === "look-at-top" && conditionHolds(state, ability.condition, {controller: owner, source: id})) looked = true;'
 READS = '  "play-from", "cast-self-from",\n'
@@ -173,7 +173,7 @@ BREAKS = [
 
     # "Until end of turn, you may look at the top card of your library any time" (Gwenom): an effect's.
     ('look at the top: by an effect', PROJECTION, LOOK_EFFECT, ''),
-    ('look at the top: its player', PERMANENTS, LOOK_PLAYERS, '"no-maximum-hand-size"].includes(params.rule)'),
+    ('look at the top: its player', PERMANENTS, LOOK_PLAYERS, '"damage-doubled"].includes(params.rule)'),
 
     # "You can't cast additional spells this turn" (Conduit of Worlds).
     ("can't cast: every spell", PERMANENTS, CANT_CAST_ALL, 'spells: {named: params.named},'),

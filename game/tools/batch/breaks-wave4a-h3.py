@@ -84,7 +84,7 @@ BREAKS = [
      '    if (ability && !(proposal.appliedBy ?? []).includes(appliedKey(null, ability))) found.push({holderId: null, ability});',
      '    if (ability) found.push({holderId: null, ability});'),
     ('lightning: an order to choose', REPLACEMENT, '  n += (state.effects ?? []).filter((e) => e.rule === "damage-doubled").length;\n', ''),
-    ('lightning: the players remembered', PERMANENTS, '"no-maximum-hand-size", "damage-doubled"].includes(params.rule)', '"no-maximum-hand-size"].includes(params.rule)'),
+    ('lightning: the players remembered', PERMANENTS, '"no-maximum-hand-size", "damage-doubled", "look-at-top"]', '"no-maximum-hand-size", "look-at-top"]'),
     ('lightning: named', PERMANENTS,
      '    ...(params.rule === "damage-doubled" ? {name: state.objects[context.source]?.card ?? context.lastKnown?.name ?? "An effect"} : {}),\n', ''),
     ('fenrir: the counters kept', PERMANENTS,
@@ -136,6 +136,6 @@ BREAKS = [
      '    if (!creatures.some((id, at) => controllerOf(state, id) === controller && powers[at] === most)) return false;', '    if (false) return false;'),
     ('fenrir: a power below zero', CONDITION, 'most = Math.max(...powers);', 'most = Math.max(0, ...powers);'),
     ('fenrir: yours', CONDITION, 'creatures.some((id, at) => controllerOf(state, id) === controller && powers[at] === most)', 'creatures.some((id, at) => powers[at] === most)'),
-    ('fenrir: condition key', CONDITION, '  "greatestPower"];', '  ];'),
+    ('fenrir: condition key', CONDITION, '  "greatestPower",\n', ''),
     ('fenrir: condition problems', CONDITION, '  if ("greatestPower" in condition && condition.greatestPower !== "you") problems.push(', '  if (false) problems.push('),
 ]
