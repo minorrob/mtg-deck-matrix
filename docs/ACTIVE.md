@@ -58,11 +58,28 @@ usage for this").
   Crowned now play.
 - **Rob's library, after waves 1 to 3:** 1,216 of his v43 library's 1,217 cards play (`tableCards`). The one left is Extrapolate the Impossible,
   which needs cards from outside the game (CR 400.11).
-- **Wave 4a is running:** four workers, one construct each, on the most-played cards it unlocks:
-  - "you may play that card" from another zone;
-  - the cards an effect moved;
-  - objects an effect remembers;
-  - token and counter replacements.
+- **Wave 4a, in this branch:** four constructs, and 72 of the most-played Commander cards they unlock. The 80% set goes
+  from 1,275 defined to 1,347, and from 2,661 with every rule to 2,743.
+  - "You may play that card" from another zone: 17 cards. Valgavoth waits on a replacement on every route to a
+    graveyard.
+  - The cards an effect moved: 17 cards. Gix, The Legend of Kyoshi and Gisa wait.
+  - Objects an effect remembers: 19 cards. Daretti waits on emblems.
+  - Token and counter replacements: 19 cards. The Earth Crystal waits on counters divided at activation.
+
+  None of the four constructs is credited in full. Each lane names the forms still missing.
+- **Every break anchors once again.** Later merges had moved the anchors of 35 breaks across 13 files, so those breaks
+  no longer broke anything. Each was re-anchored on the code it was written for and proved caught; 1,098 breaks
+  checked.
+- **The plan, reordered** (`docs/engine/plan-coverage-90.md`):
+  - 1,396 of the 80% set's undefined cards already have every rule, so the most-played cards come first, each wave
+    building the small constructs its cards need.
+  - Wave 4b is running: the 120 most-played cards the table can't play yet (ranks 23 to 500), Cyclonic Rift, Toxic
+    Deluge, Swan Song, Teferi's Protection and The One Ring among them.
+- **Open, for later waves:**
+  - In a two-player game the starting player skips the draw step's draw, not the step itself (CR 103.8a). Its
+    beginning triggers still fire on turn 1.
+  - When two limited permissions allow the same card, the engine merges them and picks one. That choice is the
+    player's.
 - **The plan to 90%** (Rob: "after wave 3 define a wave 4+ to bring us to the 90% of all cards typically used"):
   `docs/engine/plan-coverage-90.md`.
   - The target is 5,869 cards, of which 1,411 are defined.
