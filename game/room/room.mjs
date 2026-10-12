@@ -91,11 +91,15 @@ export class RoomError extends Error {
   constructor(status, message, extra = {}) {super(message); this.status = status; Object.assign(this, extra);}
 }
 
-/* The one kind of card the engine can play with no definition: a basic land is a land with a mana ability. */
+/* The one kind of card the engine can play with no definition: a basic land -- Basic, a Land, its land type, and the mana
+   ability that type gives it (CR 205.4c, 305.6; Wastes has no land type and its own {T}: Add {C}). Its supertype and type
+   are what "search your library for a basic land card" and "unless you control a Forest or an Island" read: without them
+   (Rob, 2026-10-11: Rampant Growth found nothing in a library of nineteen basics), every such search and check failed. */
 const BASIC_COLORS = {Plains: "W", Island: "U", Swamp: "B", Mountain: "R", Forest: "G", Wastes: "C"};
 export function basicCards(name) {
   const color = BASIC_COLORS[name];
-  return color ? {types: ["Land"], abilities: [{id: `t-${color.toLowerCase()}`, kind: "mana", tapSelf: true, produces: {[color]: 1}}]} : null;
+  return color ? {types: ["Land"], supertypes: ["Basic"], subtypes: name === "Wastes" ? [] : [name],
+    abilities: [{id: `t-${color.toLowerCase()}`, kind: "mana", tapSelf: true, produces: {[color]: 1}}]} : null;
 }
 
 /* Public facts the house pilot may read about a named card: what anyone reads off the card itself. */

@@ -29,7 +29,11 @@ import {createAi, settings, pilot, pilotWorst, Closed} from "./ai.mjs";
 /* WHAT THE TABLE PLAYS (M5; the plan review's A2 and C4): the basic lands, and every definition in the engine's card
    directory (game/engine/cards/definitions.mjs, generated from it). A deck whose every card is one of these takes a
    seat; any other is refused by name (game/room/table.mjs, readDeck). */
-export const tableCards = (name) => basicCards(name) ?? tableDefinition(name);
+/* The cards a table plays: the engine's own definitions, the ones every card's scenarios are played with (tests/engine-cards.mjs),
+   basic lands among them -- and the room's own basics only for one it does not hold. Basics first, they were the room's
+   bare ones, with no Basic and no land type, so "search your library for a basic land card" found nothing at any table
+   (Rob, 2026-10-11, Rampant Growth; tests/table-basics.mjs). */
+export const tableCards = (name) => tableDefinition(name) ?? basicCards(name);
 
 /* A Durable Object's storage, as the M4 storage contract (game/engine/storage.mjs): strings in, strings out. */
 export function objectStorage(storage) {
