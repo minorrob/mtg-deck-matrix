@@ -1,0 +1,159 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Aesi, Tyrant of Gyre Strait",
+  "scenarios": [
+    {
+      "name": "Two lands on Rob's turn, not a third; landfall each time: he draws for the first, declines for the second",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Aesi, Tyrant of Gyre Strait"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest",
+            "Island",
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Forest"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "play": "Island"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "No"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "offers": {
+            "kind": "play-land",
+            "card": "Swamp"
+          },
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Aesi, Tyrant of Gyre Strait",
+            "Forest",
+            "Island"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A land put onto the battlefield (Marsh Flats' Swamp) is landfall too; Maya's land is not his",
+      "library": [
+        "Swamp"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Aesi, Tyrant of Gyre Strait",
+            "Marsh Flats"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Marsh Flats"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Swamp"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "play": "Forest",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,782 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Windbrisk Heights",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Elf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Goblin": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Captain": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Soldier"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "supertypes": [
+        "Legendary"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters tapped; hideaway 4: of the top four Rob exiles the Ogre face down -- his to look at, not Maya's -- the rest to the bottom",
+      "library": [
+        "Bear",
+        "Ogre",
+        "Elf",
+        "Goblin",
+        "Captain"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Windbrisk Heights"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Windbrisk Heights"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Windbrisk Heights"
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Bear",
+                  "Ogre",
+                  "Elf",
+                  "Goblin"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Ogre"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "faceDown": [
+                "Ogre"
+              ]
+            },
+            {
+              "seat": 1,
+              "of": 0,
+              "zone": "exile",
+              "faceDown": [
+                null
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Captain"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Rob attacked with three creatures: {W}, {T} -- he casts the hidden Ogre without paying its mana cost",
+      "library": [
+        "Ogre",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Windbrisk Heights"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Elf",
+            "Goblin",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Windbrisk Heights"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Ogre"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Bear",
+            "Elf",
+            "Goblin"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "activate": "Windbrisk Heights"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Ogre",
+                  "Don't play"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Ogre"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Bear",
+            "Elf",
+            "Goblin",
+            "Plains",
+            "Windbrisk Heights",
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "count": 0
+        },
+        {
+          "seat": 1,
+          "life": 36
+        }
+      ]
+    },
+    {
+      "name": "He may decline: the Ogre stays hidden",
+      "library": [
+        "Ogre",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Windbrisk Heights"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Elf",
+            "Goblin",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Windbrisk Heights"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Ogre"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Bear",
+            "Elf",
+            "Goblin"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "activate": "Windbrisk Heights"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't play"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "faceDown": [
+            "Ogre"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Two attackers only: the \"if\" is false as it resolves, nothing is played, and the Ogre stays hidden",
+      "library": [
+        "Ogre",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Windbrisk Heights"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Elf",
+            "Goblin",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Windbrisk Heights"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Ogre"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Bear",
+            "Elf"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "activate": "Windbrisk Heights"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            },
+            {
+              "offers": {
+                "kind": "pass",
+                "seat": 0
+              },
+              "count": 1
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "faceDown": [
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Bear",
+            "Elf",
+            "Goblin",
+            "Plains",
+            "Windbrisk Heights"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A hidden land is played, not cast (CR 305.2a): the Forest is Rob's land for the turn, so his Swamp may not be played after it",
+      "library": [
+        "Forest",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Windbrisk Heights"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Elf",
+            "Goblin",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Windbrisk Heights"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Bear",
+            "Elf",
+            "Goblin"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "activate": "Windbrisk Heights"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Forest",
+                  "Don't play"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            },
+            {
+              "event": "GameEventLandPlayed",
+              "where": {}
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Forest",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "count": 0
+        },
+        {
+          "offers": {
+            "kind": "play-land",
+            "card": "Swamp"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Having played his land this turn, Rob may not play the hidden Forest (CR 305.2b): nothing is asked, and it stays exiled",
+      "library": [
+        "Forest",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Windbrisk Heights"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Elf",
+            "Goblin",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Windbrisk Heights"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "play": "Swamp"
+        },
+        {
+          "attack": [
+            "Bear",
+            "Elf",
+            "Goblin"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "activate": "Windbrisk Heights"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "offers": {
+            "kind": "pass",
+            "seat": 0
+          },
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "faceDown": [
+            "Forest"
+          ]
+        }
+      ]
+    }
+  ]
+}

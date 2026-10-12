@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Taiga",
+    "oracleId": "22e3cf1d-3559-4ce1-954c-8dc815342979",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Mountain",
+      "Forest"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "({T}: Add {R} or {G}.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {R} or {G}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "R": 1
+            },
+            {
+              "G": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

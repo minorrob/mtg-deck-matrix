@@ -1,0 +1,127 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Gilded Lotus",
+  "scenarios": [
+    {
+      "name": "{T}: three of one color -- five ways, {R}{R}{R} taken",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gilded Lotus"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Gilded Lotus"
+              },
+              "count": 5,
+              "mana": [
+                {
+                  "W": 3
+                },
+                {
+                  "U": 3
+                },
+                {
+                  "B": 3
+                },
+                {
+                  "R": 3
+                },
+                {
+                  "G": 3
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Gilded Lotus",
+          "mana": {
+            "R": 3
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 3,
+            "G": 0
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Gilded Lotus"
+        }
+      ]
+    },
+    {
+      "name": "Cast for {5}, it enters untapped and taps at once (an artifact, no summoning sickness)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Gilded Lotus"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Gilded Lotus"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Gilded Lotus",
+          "mana": {
+            "G": 3
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 3
+          }
+        }
+      ]
+    }
+  ]
+}

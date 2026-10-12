@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1462,
+  "defined": 1483,
   "provisional": 25,
-  "everyRule": 2780
+  "everyRule": 2782
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -9249,8 +9249,8 @@
      "forge": "UnlessCostSac",
      "top": 7,
      "all": 89,
-     "blocks": 7,
-     "alone": 5
+     "blocks": 6,
+     "alone": 4
     },
     {
      "kind": "option",
@@ -9439,8 +9439,8 @@
      "forge": "ValidLibrary",
      "top": 13,
      "all": 63,
-     "blocks": 12,
-     "alone": 8
+     "blocks": 11,
+     "alone": 7
     },
     {
      "kind": "count",

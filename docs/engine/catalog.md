@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,462 defined and playable today; 2,780 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,483 defined and playable today; 2,782 with every
 mechanic built, so only their definitions are left to write; 25 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -38,19 +38,19 @@ The things that alone hold back the most of the most-played cards.
 | --- | --- | --- | --- | ---: | ---: |
 | count | What entered or died this turn | — | missing | 9 | 9 |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 8 | 66 |
-| count | Cards in a library | — | missing | 8 | 12 |
 | effect | RingTemptsYou | — | missing | 8 | 11 |
+| count | Cards in a library | — | missing | 7 | 11 |
 | effect | ChoosePlayer | — | missing | 6 | 8 |
 | effect | Discover | discover | named | 6 | 6 |
 | count | Amount | — | missing | 5 | 9 |
 | count | How many things an effect remembered | — | missing | 5 | 8 |
-| option | Unless a player sacrifices a permanent | — | missing | 5 | 7 |
 | option | Imprint (a card exiled with this) | — | missing | 5 | 7 |
 | count | Times this resolved this turn | — | missing | 5 | 7 |
 | keyword ability | Spree | — | missing | 5 | 6 |
 | effect | Protection | — | missing | 5 | 5 |
 | keyword ability | Cascade | — | missing | 5 | 5 |
 | trigger | AbilityCast | — | missing | 5 | 5 |
+| option | Remembering what an effect moved | — | missing | 4 | 62 |
 
 ## Keyword abilities (CR 702)
 
@@ -853,7 +853,7 @@ The things that alone hold back the most of the most-played cards.
 | Except it isn't legendary (a copy) | except.nonLegendary | built | 10 | 43 | 0 | 0 |
 | Unless a player reveals a card ("reveal an Island or Swamp card") | unlessReveal, as it enters | built | 10 | 22 | 0 | 0 |
 | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 9 | 160 | 8 | 4 |
-| Unless a player sacrifices a permanent | — | missing | 7 | 89 | 7 | 5 |
+| Unless a player sacrifices a permanent | — | missing | 7 | 89 | 6 | 4 |
 | Unless a player discards a card | unlessPays's discard: each card in the payer's hand an option; the discarded card remembered ("this way") | built | 5 | 83 | 0 | 0 |
 | Populate (copy a creature token you control) | populate | built | 5 | 27 | 0 | 0 |
 | Unless a player pays some other cost (taps, exiles, ...) | — | missing | 3 | 162 | 2 | 2 |
@@ -873,7 +873,7 @@ The things that alone hold back the most of the most-played cards.
 | — | This card's power | {powerOf: "self"} | built | 25 | 251 | 0 | 0 |
 | — | A comparison ("if you control ...") | {if: condition, then, else}; a modal's chooseMore, as it is cast | built | 17 | 146 | 0 | 0 |
 | — | That many counters (the number of counters a replacement changes) | more-counters' times, plus and half (rules/statics.mjs, placeCounters) | built | 16 | 32 | 0 | 0 |
-| — | Cards in a library | — | missing | 13 | 63 | 12 | 8 |
+| — | Cards in a library | — | missing | 13 | 63 | 11 | 7 |
 | — | Spells cast this turn | amount {spellsCastThisTurn: "you" / "that player", filter?} -- by card type and controller | partial | 12 | 139 | 0 | 0 |
 | — | Life you gained this turn | amount {lifeGainedThisTurn} (effects/resources.mjs and rules/combat.mjs keep it) | built | 12 | 84 | 0 | 0 |
 | — | What entered or died this turn | — | missing | 11 | 174 | 9 | 9 |

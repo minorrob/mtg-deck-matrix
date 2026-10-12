@@ -1,0 +1,166 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Plateau",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Played untapped; {T}: {R} or {W}, either",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Plateau"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Plateau"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Plateau",
+              "is": false
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Plateau"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "R": 1
+                },
+                {
+                  "W": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Plateau",
+          "mana": {
+            "W": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1,
+            "R": 0
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Plateau"
+        }
+      ]
+    },
+    {
+      "name": "A Mountain and a Plains: Flooded Strand finds it by one of its land types, and not the Forest; it taps for {R}",
+      "library": [
+        "Forest",
+        "Plateau",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Flooded Strand"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Flooded Strand"
+        },
+        {
+          "activate": "Flooded Strand"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Plateau"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Plateau"
+          ]
+        },
+        {
+          "tap": "Plateau",
+          "mana": {
+            "R": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plateau"
+          ]
+        }
+      ]
+    }
+  ]
+}

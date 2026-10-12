@@ -1404,8 +1404,10 @@ function withFaceDown(state, id, fn) {
    revealed to every player as it is played (CR 400.7). Anything else, as it is -- a face-down permanent too, whose ability's
    question (asCast) is no play of a card. Only the permission's player is asked, and only one who may look at it (permits,
    CR 406.3b), so no other seat is ever offered, or shown, what it is (projection.mjs). Cast face down from there (708.4) is
-   not built: a face-down card offers no disguise. */
-function withFaceUp(state, id, fn) {
+   not built: a face-down card offers no disguise. And for an effect that lets it be played as it resolves -- "you may play
+   the exiled card" of a hideaway card (Windbrisk Heights; CR 702.75a) -- what it may be played as is weighed so too
+   (effects/asking.mjs, `play`). */
+export function withFaceUp(state, id, fn) {
   const card = state.objects[id];
   if (card?.faceDown !== true || card.zone !== "exile") return fn();
   const shown = shownFaceUp(card);
@@ -1827,6 +1829,21 @@ function abilityOffers(state, player, id, ability) {
 /* `terms.graveyardToExile`: "if that spell would be put into a graveyard, exile it instead" (Halo Forager). */
 export function castNow(state, player, action, terms = {}) {
   return perform(state, player, action, {paid: true, ...(terms.graveyardToExile === true ? {graveyardToExile: true} : {})});
+}
+
+/**
+ * PLAYING A LAND AS AN EFFECT RESOLVES (CR 305.2a; effects/asking.mjs, `play`'s `lands`): "you may play the exiled card"
+ * (Windbrisk Heights) plays a land card among them, not casts it -- put onto the battlefield by the play-land action
+ * (perform, through castNow), one of the turn's land plays like any other. Never on another player's turn (CR 305.3), nor
+ * with no land play left (305.2b): the effect's instruction is then ignored, and nothing is offered. The step and the stack
+ * do not matter -- the effect is what lets it be played now. The card as it is: a face-down one is shown face up by the
+ * caller (withFaceUp, CR 406.3a). A modal double-faced card with a land on its back is played with that face up (CR 712.12).
+ */
+export function landChoicesNow(state, player, id) {
+  const object = state.objects[id];
+  if (!object || player !== state.activePlayer || landDropsLeft(state, player) <= 0) return [];
+  return [...(isLand(object) ? [{kind: "play-land", objectId: id, label: object.card, from: object.zone}] : []),
+    ...(backLand(object) ? [{kind: "play-land", objectId: id, label: object.mdfc.back.card, face: "back", from: object.zone}] : [])];
 }
 
 /** The ways to cast this card now as an effect lets it be cast: its targets or modes. Not a land, an Aura, or a spell with an additional cost to choose. */

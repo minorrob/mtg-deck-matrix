@@ -41,7 +41,7 @@ import {targetCandidates, targetName} from "../bind.mjs";
 import {commanderTax} from "../../rules/commander.mjs";
 import {cantBeCountered, counterOrderChoice, cantBeSacrificed, tokenOrderChoice, drawForbidden} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
-import {castNow, castChoicesNow} from "../../rules/actions.mjs";
+import {castNow, castChoicesNow, landChoicesNow, withFaceUp} from "../../rules/actions.mjs";
 
 const cardOptions = (state, ids) => ids.map((id, index) => ({index, label: state.objects[id].card, cardId: id}));
 
@@ -2014,7 +2014,12 @@ export const chooseCard = {
    caster's to choose, and unlessPlans has no ways to pay one -- nor one with an additional cost to choose (castChoicesNow). */
 const manaCostOf = (state, id, adventure) => (adventure ? state.objects[id].adventurer?.adventure?.manaCost : state.objects[id].manaCost) ?? "";
 const payableCost = (state, player, cost) => !cost || unlessPlans(state, player, cost, 1).plans.length > 0;
-const playable = (state, player, pool, {most, free, anyMana, payMana = false}) => {
+/* "YOU MAY PLAY THE EXILED CARD WITHOUT PAYING ITS MANA COST" (Windbrisk Heights; `lands`, CR 305.2a): played, not only cast --
+   a land card among them is played as a land (rules/actions.mjs, landChoicesNow: its player's turn, a land play left, CR
+   305.2b, 305.3), for nothing, since a land has no mana cost. And a card exiled face down -- a hideaway card (CR 702.75a) -- is
+   weighed as the card it is, its mana value and its targets too, since it is turned face up just before it is played (CR
+   406.3a; rules/actions.mjs, withFaceUp); castNow plays it the same way. */
+const playable = (state, player, pool, {most, free, anyMana, payMana = false, lands = false}) => {
   /* Its mana value as it would be cast: an adventurer card cast as its Adventure has the Adventure's (CR 715.3a). */
   const valueOf = (id, adventure = false) => {
     const cost = adventure ? state.objects[id].adventurer?.adventure?.manaCost : state.objects[id].manaCost;
@@ -2022,15 +2027,16 @@ const playable = (state, player, pool, {most, free, anyMana, payMana = false}) =
   };
   const owed = (id, adventure) => (free ? (state.objects[id].zone === "command" ? commanderTax(state, player, id) : 0) : anyMana ? valueOf(id, adventure) : null);
   /* A card cast a moment ago is on the stack as a new object (CR 400.7): its id here no longer names anything. */
-  return pool.filter((id) => state.objects[id] && (valueOf(id) <= most || (Boolean(state.objects[id].adventurer) && valueOf(id, true) <= most)))
-    .flatMap((id) => castChoicesNow(state, player, id).filter((action) => valueOf(id, action.adventure === true) <= most).flatMap((action) => {
-      if (payMana) {
-        const cost = manaCostOf(state, id, action.adventure === true);
-        return payableCost(state, player, cost) ? [{...action, cost}] : [];
-      }
-      const pay = owed(id, action.adventure === true);
-      return pay === null || !canPayGeneric(state, player, pay) ? [] : [{...action, owed: pay}];
-    }));
+  return pool.filter((id) => state.objects[id]).flatMap((id) => withFaceUp(state, id, () => [...(lands ? landChoicesNow(state, player, id) : []),
+    ...(valueOf(id) <= most || (Boolean(state.objects[id].adventurer) && valueOf(id, true) <= most) ? castChoicesNow(state, player, id) : [])
+      .filter((action) => valueOf(id, action.adventure === true) <= most).flatMap((action) => {
+        if (payMana) {
+          const cost = manaCostOf(state, id, action.adventure === true);
+          return payableCost(state, player, cost) ? [{...action, cost}] : [];
+        }
+        const pay = owed(id, action.adventure === true);
+        return pay === null || !canPayGeneric(state, player, pay) ? [] : [{...action, owed: pay}];
+      })]));
 };
 export const play = {
   open(state, params, context) {
@@ -2059,14 +2065,15 @@ export const play = {
       : (params.targets ?? []).filter((id) => state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone)
         /* "For each player, you may cast a card that player milled this way" (The Ur-Sphinx): `ownedBy` "that player". */
         && (params.ownedBy !== "that player" || state.objects[id].owner === context.about?.player));
-    const terms = {most, free: params.free === true, anyMana: params.anyMana === true, payMana: params.payMana === true};
+    const terms = {most, free: params.free === true, anyMana: params.anyMana === true, payMana: params.payMana === true, lands: params.lands === true};
     /* "If that spell would be put into a graveyard, exile it instead" (Halo Forager): the spell cast, so marked (rules/actions.mjs). */
     const exileInstead = params.exileInstead === true ? {exileInstead: true} : {};
     const choices = playable(state, player, pool, terms);
     if (!choices.length) return false;
     /* For `anyNumber`, what may still be cast and on what terms, to ask again (a number, not Infinity: state is JSON). */
     state.awaiting = {kind: "effect-choice", effect: "play", player, choices,
-      ...(params.anyNumber === true ? {again: {pool, ...terms, most: Number.isFinite(most) ? most : null}, cast: 0} : {}), ...exileInstead};
+      ...(params.anyNumber === true ? {again: {pool, ...terms, most: Number.isFinite(most) ? most : null}, cast: 0} : {}), ...exileInstead,
+      ...(terms.lands ? {lands: true} : {})};
     return true;
   },
   choice(state, awaiting) {
@@ -2078,9 +2085,11 @@ export const play = {
       return {id: `play-plan:${awaiting.player}:${state.turn}:${awaiting.cast ?? 0}`, title: `Pay ${awaiting.planning.cost}: choose the mana`, mode: "one", min: 1, max: 1,
         options: plans.map((plan, index) => ({index, label: planWords(units, plan)}))};
     }
-    return {id: `play:${awaiting.player}:${state.turn}${awaiting.again ? `:${awaiting.cast}` : ""}`, title: awaiting.cast ? "Cast another spell?" : "Cast a spell?", mode: "one", min: 1, max: 1,
+    /* Played, a land among them (`lands`): the question says "play". */
+    const [title, decline] = awaiting.lands ? ["Play the card?", "Don't play"] : [awaiting.cast ? "Cast another spell?" : "Cast a spell?", "Don't cast"];
+    return {id: `play:${awaiting.player}:${state.turn}${awaiting.again ? `:${awaiting.cast}` : ""}`, title, mode: "one", min: 1, max: 1,
       options: [...awaiting.choices.map((c, index) => ({index, label: c.targetNames?.length ? `${c.label} → ${c.targetNames.join(", ")}` : c.label, cardId: c.objectId})),
-        {index: awaiting.choices.length, label: "Don't cast"}]};
+        {index: awaiting.choices.length, label: decline}]};
   },
   apply(state, awaiting, indices) {
     let chosen, events;
