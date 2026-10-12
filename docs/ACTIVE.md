@@ -1,5 +1,21 @@
 # Who holds the work
 
+## The lanes (AGENTS.md, *Lanes*), since 2026-10-12
+
+| Lane | Held by | Branch | Doing |
+| --- | --- | --- | --- |
+| **Engine** | Claude, a cloud container | `claude/admiring-franklin-58cxy4` | Train D (the 18 cards of Rob's six decks), then the library's other ~175; the AI on Claude and the deck advisor on staging; G-F, production |
+| **UI** | Open: Rob is choosing (Grok Bot, Codex, or another Claude session) | `<system>/ui-<topic>` | Rob's notes 9 and 10 (a *Turn Resources* tab; the right pane docked; the hover card no taller than the mat); concepts Rob brings back from prototyping tools. Brief: `docs/ui-lane/README.md` |
+
+### Requests between the lanes
+
+A lane that needs something of the other's files asks here: the field or change, what it is for, an example. The
+other lane answers in the last column.
+
+| # | From | Asks for | What for | Answer |
+| --- | --- | --- | --- | --- |
+| — | — | (none yet) | — | — |
+
 ## 2026-10-12: Rob's notes merged and on staging; his v43 library restored there; Train D
 
 This session (Claude, a cloud container):
@@ -18,9 +34,9 @@ This session (Claude, a cloud container):
   (`--decks`); and the board's notes 11 to 13.
 - **Train D:** the 18 cards of the six decks that the engine cannot play yet, three workers of six cards each. Then the
   library's other ~175.
-- **Proposed to Rob, not yet his choice:** a second platform takes a UI lane (the board, its CSS, Settings) while this
-  session keeps the engine, the room and the card loads. The room's view is the seam between them, and one release
-  owner (this session) does staging. Notes 9 and 10 would move to that lane.
+- **Rob's choice, 2026-10-12:** a second system takes the UI lane (the board, its CSS, Settings' Play card) while this
+  session keeps the engine, the room and the card loads (the lanes above; AGENTS.md, *Lanes*). Notes 9 and 10 move to
+  that lane.
 
 ## 2026-10-11: G-A built, G-B proved again with it, the rest waits on Rob
 
