@@ -105,7 +105,7 @@ BREAKS = [
     ('offspring: if paid', INDEX, OFFSPRING_TRIGGER, OFFSPRING_TRIGGER.replace(' condition: {offspringPaid: true},', '')),
     ('offspring: 1/1', INDEX, OFFSPRING_TRIGGER, OFFSPRING_TRIGGER.replace('except: {setPower: 1, setToughness: 1}', 'except: {}')),
     ('offspring: as it last existed', INDEX, OFFSPRING_TRIGGER, OFFSPRING_TRIGGER.replace('lastKnown: true, ', '')),
-    ('vocabulary: offspring', VOCAB, '''  "offspring"];''', '''  ];'''),
+    ('vocabulary: offspring', VOCAB, '''  "offspring",\n''', ''),
 
     # Copies of what an effect moved, halved (Saw in Half), and a copy's characteristic-defining ability (CR 707.9d).
     ('moved copies: halved, rounded up', PERMANENTS, '  const half = (n) => Math.ceil((n ?? 0) / 2) + 0;', '  const half = (n) => Math.floor((n ?? 0) / 2) + 0;'),

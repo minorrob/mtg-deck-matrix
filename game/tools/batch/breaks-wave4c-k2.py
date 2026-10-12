@@ -158,8 +158,8 @@ BREAKS = [
     # ---- a creature tapped for mana without {T} (Relic of Legends) ----
     ('relic: no {T} needed', INDEX, '|| (a?.atom === "tapCreature" && (a.count ?? 1) === 1 && Boolean(a.selector) && typeof a.selector === "object")',
      '|| (a?.atom === "tapCreature" && (a.count ?? 1) === 1 && Boolean(a.selector) && typeof a.selector === "object" && cost.some((t) => t?.atom === "{T}"))'),
-    ('relic: itself, without {T}', ACTIONS, 'state.zones.battlefield.filter((id) => !(tapsSelf && id === sourceId) && !state.objects[id].tapped', 'state.zones.battlefield.filter((id) => id !== sourceId && !state.objects[id].tapped'),
-    ('relic: whether it taps itself', ACTIONS, 'manaTappers(state, player, id, ability.tapCreature, ability.tapSelf)', 'manaTappers(state, player, id, ability.tapCreature)'),
+    ('relic: itself, without {T}', ACTIONS, 'state.zones.battlefield.filter((id) => (!tapsSelf || id !== sourceId) && !state.objects[id].tapped', 'state.zones.battlefield.filter((id) => id !== sourceId && !state.objects[id].tapped'),
+    ('relic: whether it taps itself', ACTIONS, 'manaTappers(state, player, id, ability.tapCreature, ability.tapSelf === true)', 'manaTappers(state, player, id, ability.tapCreature, true)'),
     # ---- the subtypes a lost card type takes with it (CR 205.3d; Darksteel Mutation) ----
     ('205.3d: land types', LAYERS, '(isLandType(subtype) && !has("Land")) || ', ''),
     ('205.3d: planeswalker types', LAYERS, ' || (isPlaneswalkerType(subtype) && !has("Planeswalker"))', ''),
