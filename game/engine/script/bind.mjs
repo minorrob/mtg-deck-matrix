@@ -71,22 +71,34 @@ export const TARGET_CHOICES_MAX = 4096;
  *   `share`                    a counted target's choices together: "graveyard", all from a single graveyard ("up to two
  *                               target cards from a single graveyard", Unlicensed Hearse); "creature type", a creature type
  *                               all of them have ("two target creature cards that share a creature type", Unbury)
+ *   `forEach: "opponent"`      "for each opponent, destroy up to one target creature or planeswalker that player controls"
+ *                               (Lich's Relic's reflexive trigger), with `count: {min: 0, max: 1}`, the count for each of them:
+ *                               one instance of "target" for each opponent (CR 601.2c), so what an opponent controls, no more
+ *                               than one of each opponent's, and as many as there are opponents. Each one chosen keeps the
+ *                               player it was chosen for (`forPlayer`), and is illegal as the ability resolves once that player
+ *                               no longer controls it (CR 608.2b), whoever controls it then
  * None is part of what a target may be (the selector), so each is set aside beside `count`. */
-export const SPEC_KEYS = Object.freeze(["count", "distinctFrom", "onlyIf", "differentControllers", "share"]);
+export const SPEC_KEYS = Object.freeze(["count", "distinctFrom", "onlyIf", "differentControllers", "share", "forEach"]);
 /** What a counted target's choices may share (`share`). */
 export const SHARES = Object.freeze(["graveyard", "creature type"]);
 const selectorOf = (spec) => Object.fromEntries(Object.entries(spec && typeof spec === "object" ? spec : {}).filter(([key]) => !SPEC_KEYS.includes(key)));
+/* "For each opponent ... that player controls" (`forEach`): one of each opponent's, as "controlled by different players" is. */
+const forEachOpponent = (spec) => spec?.forEach === "opponent";
+const oneOfEach = (spec) => spec?.differentControllers === true || forEachOpponent(spec);
 
 /** A target spec's alternatives, each a targeting selector (CR 115.2); its count, if it has one, is not part of them. */
 export function targetAlternatives(spec) {
   const plain = selectorOf(spec);
   const list = Array.isArray(plain.anyOf) ? plain.anyOf : [plain];
-  return list.map((selector) => ({...selector, target: true}));
+  /* "That player controls", for each opponent (`forEach`): only what an opponent controls. */
+  return list.map((selector) => ({...selector, ...(forEachOpponent(spec) ? {controller: "opponent"} : {}), target: true}));
 }
 
 /** A counted target's bounds, `{min, max}` (`max` null for "any number"), or null for a single target. "Up to that many
     target ..." (Bloodthirsty Adversary's reflexive trigger, `max: "X"`): the X it was made with (CR 603.12, 107.3). */
 export function countOf(spec, context = {}) {
+  /* "For each opponent, up to one target" (`forEach`): none at least, and no most but the one of each opponent's (oneOfEach). */
+  if (forEachOpponent(spec)) return {min: 0, max: null};
   const count = spec && typeof spec === "object" ? spec.count : undefined;
   return count && typeof count === "object" ? {min: count.min ?? 0, max: count.max === "X" ? Math.max(0, context?.x ?? 0) : count.max ?? null} : null;
 }
@@ -223,35 +235,45 @@ export function countedChoice(state, spec, context, {id, name, hostile = false, 
   const candidates = groupCandidates(state, spec, context, placeholder);
   const options = candidates.map((c, index) => {
     const whose = c.kind === "object" && state.objects[c.id] && controllerOf(state, c.id) !== context.controller ? ` (${state.players[controllerOf(state, c.id)]?.name}'s)` : "";
-    return {index, label: `${targetName(state, c)}${whose}`, ...(c.kind === "object" ? {cardId: c.id} : {playerId: c.id}), targets: [c], hostile,
-      ...(spec?.differentControllers === true && c.kind === "object" && state.objects[c.id] ? {controllerId: controllerOf(state, c.id)} : {})};
+    /* "For each opponent ... that player controls" (`forEach`): the opponent each is chosen for, kept with it (stillLegal). */
+    const target = forEachOpponent(spec) ? {...c, forPlayer: controllerOf(state, c.id)} : c;
+    return {index, label: `${targetName(state, c)}${whose}`, ...(c.kind === "object" ? {cardId: c.id} : {playerId: c.id}), targets: [target], hostile,
+      ...(oneOfEach(spec) && c.kind === "object" && state.objects[c.id] ? {controllerId: controllerOf(state, c.id)} : {})};
   });
   for (const option of options) {
     const alike = options.filter((o) => o.label === option.label);
     if (alike.length > 1) alike.forEach((o, n) => { o.label = `${o.label} (${n + 1})`; });
   }
-  /* "Controlled by different players" (`differentControllers`): at most one of each player's, refused with what to do instead
-     (controller.mjs reads `capped`; both pilots keep to it). */
-  const capped = spec?.differentControllers === true ? differentControllersCap(state, options, name) : null;
-  return {id, title: `${name}: choose ${countWords(count)}${placeholder?.groupLabel ? ` ${placeholder.groupLabel}` : ""}${capped ? ", each controlled by a different player" : ""}`, mode: "many", min: Math.min(count.min, options.length),
+  /* "Controlled by different players" (`differentControllers`), "for each opponent" (`forEach`): at most one of each player's,
+     refused with what to do instead (controller.mjs reads `capped`; both pilots keep to it). */
+  const capped = oneOfEach(spec) ? differentControllersCap(state, options, name, forEachOpponent(spec)) : null;
+  const words = forEachOpponent(spec) ? "for each opponent, choose up to one target that player controls"
+    : `choose ${countWords(count)}${placeholder?.groupLabel ? ` ${placeholder.groupLabel}` : ""}${capped ? ", each controlled by a different player" : ""}`;
+  return {id, title: `${name}: ${words}`, mode: "many", min: Math.min(count.min, options.length),
     max: count.max === null ? options.length : Math.min(count.max, options.length), options, ...(capped ? {capped} : {})};
 }
 
-/* "Controlled by different players" as a cap: no more than one option of each controller's, and the words that say so. */
-function differentControllersCap(state, options, name) {
+/* "Controlled by different players" as a cap: no more than one option of each controller's, and the words that say so --
+   for each opponent's (`each`), one of that opponent's. */
+function differentControllersCap(state, options, name, each = false) {
   const players = [...new Set(options.map((o) => o.controllerId).filter((p) => p !== undefined))];
+  const whose = (p) => state.players[p]?.name ?? `Seat ${p + 1}`;
   return {by: "controllerId", most: Object.fromEntries(players.map((p) => [p, 1])),
-    why: Object.fromEntries(players.map((p) => [p, `${name}'s targets must be controlled by different players: choose no more than one of ${state.players[p]?.name ?? `Seat ${p + 1}`}'s, and the others from other players.`]))};
+    why: Object.fromEntries(players.map((p) => [p, each ? `${name} targets up to one of each opponent's: choose no more than one of ${whose(p)}'s.`
+      : `${name}'s targets must be controlled by different players: choose no more than one of ${whose(p)}'s, and the others from other players.`]))};
 }
 
-/** Why a counted target's choices break "controlled by different players" (`differentControllers`), in words, or null. */
+/** Why a counted target's choices break "controlled by different players" (`differentControllers`) or "for each opponent"
+    (`forEach`), in words, or null. */
 export function differentControllersProblem(state, spec, chosen, name) {
-  if (spec?.differentControllers !== true) return null;
+  if (!oneOfEach(spec)) return null;
   const seen = new Map();
   for (const t of chosen ?? []) {
     if (t?.kind !== "object" || !state.objects[t.id]) continue;
-    const p = controllerOf(state, t.id);
-    if (seen.has(p)) return `${name}'s targets must be controlled by different players: ${targetName(state, seen.get(p))} and ${targetName(state, t)} are both ${state.players[p]?.name ?? `Seat ${p + 1}`}'s. Choose no more than one of each player's.`;
+    const p = controllerOf(state, t.id), whose = state.players[p]?.name ?? `Seat ${p + 1}`;
+    if (seen.has(p)) return forEachOpponent(spec)
+      ? `${name} targets up to one of each opponent's: ${targetName(state, seen.get(p))} and ${targetName(state, t)} are both ${whose}'s. Choose no more than one of each opponent's.`
+      : `${name}'s targets must be controlled by different players: ${targetName(state, seen.get(p))} and ${targetName(state, t)} are both ${whose}'s. Choose no more than one of each player's.`;
     seen.set(p, t);
   }
   return null;
@@ -260,6 +282,9 @@ export function differentControllersProblem(state, spec, chosen, name) {
 /** Whether a chosen target is still legal (CR 608.2b): still there, and still what its spec asks for. */
 export function stillLegal(state, spec, chosen, context) {
   if (!chosen) return false;
+  /* "That player controls" (`forEach`): still the opponent's it was chosen for -- one that has come under another player's
+     control is no longer that player's creature (CR 608.2b), even another opponent's. */
+  if (forEachOpponent(spec) && state.objects[chosen.id] && controllerOf(state, chosen.id) !== chosen.forPlayer) return false;
   return targetAlternatives(spec).some((selector) => kindOf(selector) === chosen.kind
     && compileSelector(selector)(state, chosen.id, context));
 }

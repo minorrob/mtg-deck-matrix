@@ -316,6 +316,37 @@ function runScenarioSteps(s, steps) {
   eq(s.players[0].castNames, {Bear: 1, Spark: 1}, "but this game's, by name, stay");
 }
 {
+  /* "If an opponent cast a blue spell this turn" (Ricochet Trap, Train D): spellsCastThisTurn "an opponent" -- the most any one
+     opponent still in the game cast (CR 102.2, 800.4a), never several opponents' added together -- each spell's colors as it
+     was cast (CR 105.2; script/filter.mjs, a last known snapshot's `colors`). Four players. */
+  const s = table([at(0, "battlefield", "Island"), at(0, "hand", "Peek"), at(1, "battlefield", "Island", "Island"), at(1, "hand", "Peek", "Glimpse"),
+    at(2, "battlefield", "Island", "Mountain"), at(2, "hand", "Glimpse", "Spark")], 4);
+  const BLUE = {spellsCastThisTurn: "an opponent", filter: {colors: ["U"]}};
+  const blue = (seat) => amount(s, BLUE, seat), any = (seat) => amount(s, {spellsCastThisTurn: "an opponent"}, seat);
+  const cast = (seat, card, land) => {
+    playUntil(s, (x) => x.priorityPlayer === seat && !x.awaiting);
+    applyAction(s, seat, legalActions(s, seat).find((a) => a.kind === "activate-mana" && a.label === land));
+    applyAction(s, seat, legalActions(s, seat).find((a) => a.kind === "cast" && a.label === card && (!a.targets?.length || a.targets[0].kind === "player")));
+    resolveStack(s);
+  };
+  eq([blue(0), any(0)], [0, 0], "four players: nobody has cast anything");
+  cast(0, "Peek", "Island");
+  eq([blue(0), blue(1), blue(3)], [0, 1, 1], "Rob's own blue Peek is no opponent's to him; to Maya and Sam, it is");
+  cast(1, "Peek", "Island");
+  eq(blue(0), 1, "Maya's blue Peek: one opponent of Rob's has cast a blue spell");
+  cast(2, "Spark", "Mountain");
+  eq([blue(0), any(0)], [1, 1], "Trey's Spark is red: still one blue, and one spell is the most any one opponent cast");
+  cast(2, "Glimpse", "Island");
+  eq([blue(0), any(0)], [1, 2], "Trey's blue Glimpse beside Maya's Peek: the most one opponent cast, 1 -- never their 2 together; and Trey's 2 spells");
+  cast(1, "Glimpse", "Island");
+  eq(blue(0), 2, "Maya's second blue spell: two, both hers");
+  concede(s, 1, rng);
+  eq([blue(0), any(0)], [1, 2], "Maya conceded: her spells are no opponent's now (CR 800.4a), Trey's are");
+  eq(amountProblems(BLUE), [], "\"an opponent\", with a filter of colors as each spell was cast");
+  nextTurn(s);
+  eq([blue(0), any(0)], [0, 0], "a new turn: none");
+}
+{
   /* Aetherflux Reservoir's count as its trigger resolves (CR 608.2h): a spell cast in response is among them. */
   const s = table([at(0, "battlefield", "Aetherflux Reservoir", "Mountain", "Mountain"), at(0, "hand", "Spark", "Spark")], 2);
   for (let n = 0; n < 2; n += 1) {

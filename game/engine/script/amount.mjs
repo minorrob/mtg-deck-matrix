@@ -13,7 +13,9 @@
  *                                        "the number of cards in your hand" ({what: "card", zone: "hand", controller: "you"})
  *   {countersOn: ref, counter: kind}     counters of a kind on an object ("for each burden counter on The One Ring"), or
  *                                        of every kind, `counter: "any"` ("for each counter on this creature"); on a target
- *                                        player, theirs ("target player's poison counters", Vraska, Betrayal's Sting)
+ *                                        player, theirs ("target player's poison counters", Vraska, Betrayal's Sting); "you",
+ *                                        its controller's own ("the number of experience counters you have", Ezuri)
+ *   {countersPut: true}                  "that many" counters: how many a "counter added" trigger is about (Simic Ascendancy)
  *   {powerOf: ref}                       an object's power ("Krenko's power"): "self", or "that card"
  *   {toughnessOf: ref}                   its toughness ("its controller gains life equal to its toughness", Condemn)
  *   {greatestPower: selector}            the greatest power among what the selector matches, 0 if nothing (CR 208.1)
@@ -40,7 +42,8 @@
  *   {creaturesDiedThisTurn: who}         the creatures that died this turn under that player's control, or anyone's ("any")
  *   {cardsDrawnThisTurn: who}            the cards that player drew this turn
  *   {scriedOrSurveilledThisTurn: who}    the times that player scried or surveilled this turn
- *   {spellsCastThisTurn: who, filter?}   that player's spells cast this turn, as each was cast
+ *   {spellsCastThisTurn: who, filter?}   that player's spells cast this turn, as each was cast; "an opponent", the most
+ *                                        any one opponent cast
  *   {spellsCastThisGame: who, named}     that player's spells of a name cast this game
  *   {playersDealtNoncombatDamage: "opponent"|"any"}  the players noncombat damage reached this turn
  *   {lifeLostThisTurn: "opponents"}      the life every opponent lost this turn, together
@@ -103,7 +106,9 @@ export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf"
   /* Train C, phase 2 (w2b-amounts): converge, and the planeswalker types among a set. */
   "colorsSpent", "planeswalkerTypesAmong",
   /* Every player's, compared (Train C phase 2, w2a-selectors): the fewest among them, and the graveyards holding so many. */
-  "fewestAmongPlayers", "graveyardsWithAtLeast"]);
+  "fewestAmongPlayers", "graveyardsWithAtLeast",
+  /* Train D: "put that many growth counters" (Simic Ascendancy), the counters a "counter added" trigger is about. */
+  "countersPut"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -124,7 +129,9 @@ export function amountProblems(value) {
   for (const key of Object.keys(value)) if (!AMOUNT_KINDS.includes(key) && !AMOUNT_EXTRAS.includes(key)) problems.push(`An amount has no key ${JSON.stringify(key)}`);
   if ("countersOn" in value && typeof value.counter !== "string") problems.push("Counting counters says which kind: {countersOn, counter}");
   for (const key of ["lifeGainedThisTurn", "tokensCreatedThisTurn", "permanentsLeftThisTurn", "permanentsEnteredThisTurn", "cardsLeftGraveyardThisTurn",
-    "cardsDrawnThisTurn", "scriedOrSurveilledThisTurn", "spellsCastThisTurn", "spellsCastThisGame", "cardsDiscardedThisTurn"]) if (key in value && !["you", "that player"].includes(value[key])) problems.push(`${key} is "you" or "that player"`);
+    "cardsDrawnThisTurn", "scriedOrSurveilledThisTurn", "spellsCastThisGame", "cardsDiscardedThisTurn"]) if (key in value && !["you", "that player"].includes(value[key])) problems.push(`${key} is "you" or "that player"`);
+  /* The spells cast this turn: a player's, or the most of any one opponent's ("if an opponent cast a blue spell this turn"). */
+  if ("spellsCastThisTurn" in value && !["you", "that player", "an opponent"].includes(value.spellsCastThisTurn)) problems.push('spellsCastThisTurn is "you", "that player" or "an opponent"');
   /* The life lost this turn: a player's, or every opponent's together ("if an opponent lost life this turn", spectacle). */
   if ("lifeLostThisTurn" in value && !["you", "that player", "opponents"].includes(value.lifeLostThisTurn)) problems.push('lifeLostThisTurn is "you", "that player" or "opponents"');
   if ("creaturesDiedThisTurn" in value && !["you", "that player", "any"].includes(value.creaturesDiedThisTurn)) problems.push('creaturesDiedThisTurn is "you", "that player" or "any"');
@@ -152,6 +159,11 @@ export function amountProblems(value) {
   if ("half" in value && value.half !== true) problems.push("An amount's half is true: halved, rounded down");
   if ("per" in value && !(Number.isInteger(value.per) && value.per > 1)) problems.push("An amount's per is a whole number above 1: \"for every seven\" is per 7");
   if ("countersRemovedThisWay" in value && value.countersRemovedThisWay !== true) problems.push("countersRemovedThisWay is true");
+  if ("countersPut" in value && value.countersPut !== true) problems.push("countersPut is true");
+  /* A player's own counters are "you" ("the number of experience counters you have", Ezuri, Claw of Progress) or a target
+     player; an object's, the objects an amount names. */
+  if ("countersOn" in value && typeof value.countersOn === "string" && !["self", "that card", "remembered", "you"].includes(value.countersOn))
+    problems.push('countersOn is "self", "that card", "remembered", "you" or a target');
   if ("tappedThisWay" in value && value.tappedThisWay !== true) problems.push("tappedThisWay is true");
   if ("commanderColors" in value && value.commanderColors !== "you") problems.push('commanderColors is "you"');
   if ("graveyardsWithAtLeast" in value && !(Number.isInteger(value.graveyardsWithAtLeast) && value.graveyardsWithAtLeast >= 1)) problems.push("graveyardsWithAtLeast is a whole number of cards, 1 or more");
@@ -292,8 +304,10 @@ export function amountOf(state, value, context = {}) {
   /* "Greater than this creature's power or toughness" (increment, Berta): the lesser of them. */
   else if ("lesserOf" in value) n = Math.min(...value.lesserOf.map((one) => amountOf(state, one, context)));
   else if ("count" in value) n = matching(state, value.count, who).length;
-  else if ("countersOn" in value && targetPlayer(value.countersOn, context) !== null) {
-    const player = state.players[targetPlayer(value.countersOn, context)];
+  /* "The number of experience counters you have" (Ezuri, Claw of Progress; CR 122.1): `countersOn: "you"`, this ability's
+     controller's own counters, as a target player's are counted. */
+  else if ("countersOn" in value && (value.countersOn === "you" || targetPlayer(value.countersOn, context) !== null)) {
+    const player = state.players[value.countersOn === "you" ? context.controller : targetPlayer(value.countersOn, context)];
     const counters = {...(player?.counters ?? {}), poison: player?.poison ?? 0};
     n = value.counter === "any" ? Object.values(counters).reduce((a, b) => a + b, 0) : counters[value.counter] ?? 0;
   } else if ("countersOn" in value) {
@@ -364,6 +378,9 @@ export function amountOf(state, value, context = {}) {
   /* "Each opponent mills that many cards" (The Mindskinner), "a +1/+1 counter for each 1 damage prevented this way" (Vigor):
      the damage a prevention stopped, its follow-up about it (rules/replacement.mjs). */
   else if ("damagePrevented" in value) n = context.about?.amount ?? 0;
+  /* "Put that many growth counters on this enchantment" (Simic Ascendancy): how many counters the "counter added" trigger is
+     about were put on at once (rules/trigger.mjs). */
+  else if ("countersPut" in value) n = context.about?.amount ?? 0;
   /* "If you control a creature with power 4 or greater, instead search for three" (Forge's Count$Compare): one amount
      or the other, by a condition asked now (script/condition.mjs). */
   else if ("if" in value) n = amountOf(state, conditionHolds(state, value.if, {controller: context.controller, source: context.source}) ? value.then ?? 0 : value.else ?? 0, context);
@@ -405,8 +422,15 @@ export function amountOf(state, value, context = {}) {
      Academy Guardian): that player's spells this turn, as each was cast (rules/actions.mjs keeps them), `filter` fitting --
      counted when the amount is read, so one cast after a trigger triggered and before it resolves is among them (CR 608.2h). */
   else if ("spellsCastThisTurn" in value) {
-    const player = playerOf(value.spellsCastThisTurn, context);
-    n = player !== null ? (state.players[player]?.castThisTurn ?? []).filter((cast) => matchesLastKnown(value.filter ?? {}, {...cast, controller: player}, {controller: context.controller})).length : 0;
+    const castBy = (player) => (state.players[player]?.castThisTurn ?? []).filter((cast) => matchesLastKnown(value.filter ?? {}, {...cast, controller: player}, {controller: context.controller})).length;
+    /* "If an opponent cast a blue spell this turn" (Ricochet Trap): the most any one opponent of its controller still in the
+       game cast (CR 102.2, 800.4a) -- one opponent's spells, never several added together. */
+    if (value.spellsCastThisTurn === "an opponent")
+      n = Math.max(0, ...state.players.filter((p) => p.id !== context.controller && !p.lost).map((p) => castBy(p.id)));
+    else {
+      const player = playerOf(value.spellsCastThisTurn, context);
+      n = player !== null ? castBy(player) : 0;
+    }
   }
   /* "You've cast another spell named Approach of the Second Sun this game": that player's spells of the name this game, this
      one included once it is cast (rules/actions.mjs). */

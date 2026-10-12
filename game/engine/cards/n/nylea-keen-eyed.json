@@ -1,0 +1,130 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Nylea, Keen-Eyed",
+    "oracleId": "642bbdf6-9a8c-4158-83c8-d59feb49101b",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "God"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 5,
+    "toughness": 6
+  },
+  "oracleText": "Indestructible\nAs long as your devotion to green is less than five, Nylea isn't a creature.\nCreature spells you cast cost {1} less to cast.\n{2}{G}: Reveal the top card of your library. If it's a creature card, put it into your hand. Otherwise, you may put it into your graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Indestructible",
+      "keyword": "indestructible"
+    },
+    {
+      "kind": "static",
+      "text": "As long as your devotion to green is less than five, Nylea isn't a creature.",
+      "layer": 4,
+      "affects": {
+        "self": true
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "devotion": [
+              "G"
+            ]
+          },
+          "fewerThan": 5
+        }
+      },
+      "apply": {
+        "removeTypes": [
+          "Creature"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Creature spells you cast cost {1} less to cast.",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "types": [
+          "Creature"
+        ]
+      },
+      "amount": 1
+    },
+    {
+      "kind": "activated",
+      "text": "{2}{G}: Reveal the top card of your library. If it's a creature card, put it into your hand. Otherwise, you may put it into your graveyard.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{G}"
+        }
+      ],
+      "targets": [],
+      "effects": [
+        {
+          "effect": "peekAndReveal",
+          "count": 1,
+          "reveal": true,
+          "remember": true
+        },
+        {
+          "effect": "moveZone",
+          "targets": "remembered",
+          "to": "hand",
+          "condition": {
+            "about": "remembered",
+            "is": {
+              "types": [
+                "Creature"
+              ]
+            }
+          }
+        },
+        {
+          "effect": "modal",
+          "title": "Put the revealed card into your graveyard?",
+          "condition": {
+            "about": "remembered",
+            "is": {
+              "nonTypes": [
+                "Creature"
+              ]
+            }
+          },
+          "modes": [
+            {
+              "text": "Yes",
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": "remembered",
+                  "to": "graveyard"
+                }
+              ]
+            },
+            {
+              "text": "No",
+              "effects": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

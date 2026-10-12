@@ -1,8 +1,9 @@
 # Rules of engagement for AI systems working in this repository
 
 Several AI systems hand work to each other here — Claude Code on Personal-HP, Claude in a cloud
-container, Codex, Cursor. Two never work the same thing at once, so these rules are about handoff
-quality, not concurrency. Read `docs/ACTIVE.md` before doing anything else.
+container, Codex, Cursor, Grok Bot. Two never work the same thing at once: since 2026-10-12 two may work
+at the same time, each in its own lane of files (*Lanes*, below). Read `docs/ACTIVE.md` before doing
+anything else.
 
 ## The baton is a file
 
@@ -12,9 +13,40 @@ container and a local session read the same answer.
 
 ## The branch is the lock
 
-Branches are named `<agent>/<topic>` — `claude/`, `codex/`, `cursor/`. One agent owns a branch.
+Branches are named `<agent>/<topic>` — `claude/`, `codex/`, `cursor/`, `grok/`. One agent owns a branch.
 A branch that is handed off is opened as a **draft PR**, so the next session gets a URL, a CI
 status and a place for the handoff in one object.
+
+## Lanes: two systems at once, never on the same files
+
+Rob, 2026-10-12: *"Have another AI platform work on the UI and player interaction branches while you work on the
+engine and finishing card loads, then cleanly merge."* So two systems may now work at the same time, each in its own
+**lane**. A lane is a set of files, and nobody edits a file of another lane. Any system may hold a lane: Grok Bot,
+Codex, Cursor, or a second Claude session.
+
+| Lane | Its files | Its branches |
+| --- | --- | --- |
+| **Engine** | `game/**` (the engine and the room), `cloud/**`, `data/`, `tools/`, the card definitions, their suites, and everything not named for the UI lane | `claude/admiring-franklin-58cxy4` (the engine lane's session) |
+| **UI** | The game screen and the player's interaction with it: `crankmagic-board.js`, `crankmagic-table.js`, `crankmagic-tabletop.js`, `crankmagic-seat-art.js`, `crankmagic-sea.js`, `crankmagic-audio.js`, Settings' Play and display cards, `crankmagic.css`, `crankmagic-design.css`, and the browser suites that drive them | `<system>/ui-<topic>` |
+
+`docs/ACTIVE.md` says who holds each lane now. `docs/ui-lane/README.md` is the UI lane's brief.
+
+- **The room's view is the seam.** The UI lane reads `CrankRoomView@1` (`docs/ui-lane/gameplay-anchor.md`) and never
+  edits `game/` or `cloud/`. A field it needs is asked for in the Requests table of `docs/ACTIVE.md`. The engine lane
+  adds it in a small PR, merged first, and the UI lane builds against `main`.
+- **Shared files have one rule each:**
+  - **Asset versions** (`?v=` in `index.html`, `crankmagic.html`, `crankmagic-sw.js` and `crankmagic-app.js`): the UI
+    lane bumps them, and a merge regenerates them with `node tests/asset-versions.mjs --update`, never by hand.
+  - **The README's suite count:** whoever merges second sets it to the count.
+  - **`docs/ACTIVE.md`:** each lane writes only in its own section, and in the Requests table.
+- **Merging:** each lane merges `main` into its branch before marking a PR ready. A merge commit, never a rebase or
+  force-push of a branch another system has pulled.
+- **One release owner:** the engine lane's session releases staging (`tools/release-staging.sh`), and production on
+  Rob's go. The UI lane merges to `main` and says so in `docs/ACTIVE.md`.
+- **A concept from a prototyping tool** comes back as an exported folder and a `HANDOFF.md`. The UI lane ports it into
+  the board; it does not merge it as it is. A framework for the board is Rob's decision.
+- Every other rule in this file holds in both lanes. That includes breaks, the four things a handoff states, and what
+  a system cannot prove.
 
 ## No session ends with uncommitted work
 

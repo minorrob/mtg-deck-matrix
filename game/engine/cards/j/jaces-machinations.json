@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Jace's Machinations",
+    "oracleId": "89bd056d-8f5b-4d0e-b80a-58a984e21100",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Until end of turn, you may activate loyalty abilities of Jace planeswalkers you control on any player's turn any time you could cast an instant.\nEmpower Jace 8. (Put eight loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Until end of turn, you may activate loyalty abilities of Jace planeswalkers you control on any player's turn any time you could cast an instant.\nEmpower Jace 8. (Put eight loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "rule": "loyalty-at-instant-speed",
+          "affects": {
+            "what": "permanent",
+            "types": [
+              "Planeswalker"
+            ],
+            "subtypes": [
+              "Jace"
+            ],
+            "controller": "you"
+          },
+          "until": "end-of-turn"
+        },
+        {
+          "effect": "empowerJace",
+          "count": 8
+        }
+      ]
+    }
+  ]
+}

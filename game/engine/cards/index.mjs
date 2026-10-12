@@ -242,9 +242,14 @@ const TRIGGERS = {
     ...(Array.isArray(t.anyOf) ? {anyOf: t.anyOf.map((one) => ({...(one.filter ? {filter: one.filter} : {}), ...(one.targets ? {targets: one.targets} : {})}))} : {})}),
   /* "Whenever one or more +1/+1 counters are put on Berta" (CR 122.1): counters of `counter` put on this permanent, once
      for each time they are put on, however many. */
-  "counter added": (t) => ((t.who ?? "self") === "self" && typeof t.counter === "string" ? {on: "GameEventCardCounters", counterAdded: true, counter: t.counter,
+  "counter added": (t) => (typeof t.counter !== "string" ? null : (t.who ?? "self") === "self" ? {on: "GameEventCardCounters", counterAdded: true, counter: t.counter,
     /* "Whenever a +1/+1 counter is put on this creature" (Fathom Mage): once for each counter (`each`), not for each time. */
-    ...(t.each === true ? {each: true} : {})} : null),
+    ...(t.each === true ? {each: true} : {})}
+    /* "Whenever one or more +1/+1 counters are put on a creature you control, put that many growth counters on this
+       enchantment" (Simic Ascendancy; CR 122.6): on any permanent `filter` describes, once for each permanent each time
+       they are put on it -- about that permanent and how many (rules/trigger.mjs; "that many", script/amount.mjs
+       `countersPut`). Once for each time, never for each counter. */
+    : t.who === "any" && t.each === undefined ? {on: "GameEventCardCounters", counterAdded: true, counter: t.counter, who: "any", ...(t.filter ? {filter: t.filter} : {})} : null),
   /* "Whenever you scry or surveil" (Proft, Consulting Detective; CR 701.22a, 701.25a): once each is done, by `scrier`. */
   scried: (t) => ({on: "GameEventScried", scrier: t.scrier ?? "you"}),
   /* "Whenever you proliferate" (Ezuri, Stalker of Spheres; CR 701.34a): once each proliferate is done, by `proliferator`
@@ -1165,6 +1170,11 @@ export function compileScript(script) {
       /* "That player ... puts a +1/+1 counter on it" (Alexios): who puts them, the player a trigger is about. */
       if (effect.effect === "putCounter" && effect.puts !== undefined && effect.puts !== "that player")
         problems.push("putCounter: puts is \"that player\", the player the trigger is about putting them");
+      /* "You get an experience counter" (Ezuri, Claw of Progress; CR 122.1): counters on players (`who`) are of a kind named --
+         never chosen, never +1/+1 (no player has power), never poison, which is the `poison` effect's (CR 122.1f;
+         effects/resources.mjs, putCounter). */
+      if (effect.effect === "putCounter" && effect.who !== undefined && !(typeof effect.counter === "string" && !["chosen", "+1/+1", "poison"].includes(effect.counter)))
+        problems.push("putCounter: counters on players (who) are of a kind named -- not chosen, +1/+1 or poison (the poison effect)");
       /* "Remove up to three counters from another target creature or planeswalker" (Mabel, Bitter Recluse): of any kinds, a
          number of them in all, "up to" (`upTo`) or exactly -- which ones asked as it resolves (effects/asking.mjs,
          countersToRemove), so never where nothing can ask, and never with its answer (`removing`) written in. */

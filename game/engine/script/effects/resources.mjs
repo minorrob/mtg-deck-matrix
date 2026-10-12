@@ -427,6 +427,15 @@ export function putCounter(state, params, context) {
   if (params.counter === "chosen") throw new Error("putCounter with a chosen kind of counter asks its controller which: run it through resolution.mjs");
   for (const {id, kind, count} of counterPlacements(state, params, context, false))
     addCounters(state, id, kind, count, events, putterOf(params, context), params.counterOrders?.[placementKey(id, kind)] ?? []);
+  /* "You get an experience counter" (Ezuri, Claw of Progress; CR 122.1): counters on players -- each player `who` names gets
+     them, as many as "if you would put one or more counters on a player" leaves (rules/statics.mjs, playerCountersPlaced),
+     kept with the player (state/index.mjs `counters`; every seat is shown them, projection.mjs). Poison counters are the
+     `poison` effect's (CR 122.1f; cards/index.mjs refuses them here). */
+  for (const player of params.who !== undefined ? playersFor(state, params.who, context.controller) : []) {
+    const count = playerCountersPlaced(state, player, params.counter, params.count ?? 1, putterOf(params, context));
+    const counters = state.players[player].counters;
+    if (count > 0) counters[params.counter] = (counters[params.counter] ?? 0) + count;
+  }
   return events;
 }
 

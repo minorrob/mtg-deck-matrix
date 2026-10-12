@@ -105,8 +105,10 @@ function recordArrivals(state, events) {
     if (object?.zone !== "battlefield") continue;
     const now = characteristicsOf(state, id);
     if (!state.players[now.controller]) continue;
+    /* Its colors too, as it entered (CR 105.2): a last known snapshot answers a filter's `colors` (script/filter.mjs). */
     (state.players[now.controller].enteredThisTurn ??= []).push({cardId: id, controller: now.controller, types: [...now.types],
-      subtypes: [...(object.subtypes ?? [])], supertypes: [...(object.supertypes ?? [])], everyCreatureType: now.everyCreatureType === true, token: object.token === true});
+      subtypes: [...(object.subtypes ?? [])], supertypes: [...(object.supertypes ?? [])], everyCreatureType: now.everyCreatureType === true, token: object.token === true,
+      colors: [...(now.colors ?? [])]});
   }
 }
 
@@ -191,6 +193,12 @@ function subjects(state, event, condition, sourceId, controller) {
      enters with too (CR 122.6; rules/entering.mjs, enteredWith) -- not once however many, as "one or more" is. */
   if (condition.on === "GameEventCardCounters" && condition.counterAdded && condition.each === true)
     return matches(state, event, condition, sourceId, controller) ? Array.from({length: Math.max(0, (fields.newValue ?? 0) - (fields.oldValue ?? 0))}, () => ({})) : [];
+  /* "Whenever one or more +1/+1 counters are put on a creature you control, put that many growth counters on this
+     enchantment" (Simic Ascendancy; CR 122.6): about the permanent they were put on, and how many were put on it this time
+     -- "that many" (script/amount.mjs, `countersPut`). Counters put on two creatures at once are two events, and two
+     triggerings. */
+  if (condition.on === "GameEventCardCounters" && condition.counterAdded && condition.who === "any")
+    return matches(state, event, condition, sourceId, controller) ? [{card: fields.card?.cardId, amount: (fields.newValue ?? 0) - (fields.oldValue ?? 0)}] : [];
   /* "Whenever this creature attacks", "whenever a creature you control attacks" (CR 508.1m): each attacker, and the
      player it attacks. */
   /* "Whenever you attack" ("attackers declared"): the attack as a whole, by whom, with how many, at whom. */
@@ -428,8 +436,11 @@ function matches(state, event, condition, sourceId, controller) {
   /* A SAGA'S CHAPTER (CR 714.2c): "when one or more lore counters are put onto this Saga, if the number of lore counters
      on it was less than N and became at least N" -- its own counters of the kind, from below N to N or more. */
   /* "Whenever one or more +1/+1 counters are put on this" (cards/index.mjs, `counter added`): more of them than before. */
+  /* "On a creature you control" (Simic Ascendancy; `who: "any"`): the permanent they were put on, as `filter` describes it
+     now -- "you" this ability's controller. */
   if (condition.on === "GameEventCardCounters" && condition.counterAdded)
-    return fields.card?.cardId === sourceId && fields.type === condition.counter && (fields.newValue ?? 0) > (fields.oldValue ?? 0);
+    return (condition.who === "any" ? fits(state, fields.card?.cardId, condition, sourceId, controller) : fields.card?.cardId === sourceId)
+      && fields.type === condition.counter && (fields.newValue ?? 0) > (fields.oldValue ?? 0);
   if (condition.on === "GameEventCardCounters")
     return fields.card?.cardId === sourceId && fields.type === condition.counter && (fields.oldValue ?? 0) < condition.reaches && (fields.newValue ?? 0) >= condition.reaches;
 

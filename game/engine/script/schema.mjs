@@ -113,9 +113,14 @@ function checkEffect(effect, path, errors) {
     if (effect.about !== undefined && effect.about !== "remembered") errors.push({path: `${path}.about`, message: "A reflexive trigger is about what its resolution is, or `about: \"remembered\"`"});
     for (const [index, spec] of (effect.targets ?? []).entries()) {
       /* A counted one ("up to that many target ...", CR 601.2c): its count beside the selector, its most a number or X. */
-      const {count, ...selector} = spec && typeof spec === "object" ? spec : {};
+      const {count, forEach, ...selector} = spec && typeof spec === "object" ? spec : {};
       if (count !== undefined && !countValid(count, {x: true}))
         errors.push({path: `${path}.targets[${index}].count`, message: "A reflexive trigger's target count is `{min, max}`, its max a whole number or \"X\" (up to that many)"});
+      /* "For each opponent, destroy up to one target creature or planeswalker that player controls" (Lich's Relic; script/bind.mjs,
+         `forEach`): for each opponent, up to one of the permanents that player controls (CR 601.2c) -- the one form built. */
+      if (forEach !== undefined && !(forEach === "opponent" && (count?.min ?? 0) === 0 && count?.max === 1
+        && (Array.isArray(selector.anyOf) ? selector.anyOf : [selector]).every((one) => (one?.what ?? "permanent") === "permanent")))
+        errors.push({path: `${path}.targets[${index}].forEach`, message: "\"For each opponent, up to one target ... that player controls\" is forEach: \"opponent\" with count {min: 0, max: 1}, its alternatives permanents"});
       checkSelector(spec && typeof spec === "object" ? selector : spec, `${path}.targets[${index}]`, errors, {choice: true});
     }
     for (const n of targetRefs(effect.effects ?? []))

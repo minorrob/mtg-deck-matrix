@@ -1,5 +1,21 @@
 # Who holds the work
 
+## The lanes (AGENTS.md, *Lanes*), since 2026-10-12
+
+| Lane | Held by | Branch | Doing |
+| --- | --- | --- | --- |
+| **Engine** | Claude, a cloud container | `claude/admiring-franklin-58cxy4` | Train D (the 18 cards of Rob's six decks), then the library's other ~175; the AI on Claude and the deck advisor on staging; G-F, production |
+| **UI** | Open: Rob is choosing (Grok Bot, Codex, or another Claude session) | `<system>/ui-<topic>` | Rob's notes 9 and 10 (a *Turn Resources* tab; the right pane docked; the hover card no taller than the mat); concepts Rob brings back from prototyping tools. Brief: `docs/ui-lane/README.md` |
+
+### Requests between the lanes
+
+A lane that needs something of the other's files asks here: the field or change, what it is for, an example. The
+other lane answers in the last column.
+
+| # | From | Asks for | What for | Answer |
+| --- | --- | --- | --- | --- |
+| — | — | (none yet) | — | — |
+
 ## 2026-10-12: Rob's notes merged and on staging; his v43 library restored there; Train D
 
 This session (Claude, a cloud container):
@@ -12,15 +28,28 @@ This session (Claude, a cloud container):
   - six decks, each final and ready at 100 of 100 (D1 Tymna + Kraum, D2 Chulane, D3 Kiora, D4 Felothar,
     D5 Teysa Karlov, D6 Krenko);
   - 1,217 cards and 2,245 copies; none of the old decks is left.
-- **Production waits on Rob's restore**, done the same way. The old saved versions are kept in D1 (staging 21,
-  production 9); purging them is Rob's call.
-- **This branch next:** Load Live reads two partners as a deck's commanders and a workbook's decks named by hand
-  (`--decks`); and the board's notes 11 to 13.
-- **Train D:** the 18 cards of the six decks that the engine cannot play yet, three workers of six cards each. Then the
-  library's other ~175.
-- **Proposed to Rob, not yet his choice:** a second platform takes a UI lane (the board, its CSS, Settings) while this
-  session keeps the engine, the room and the card loads. The room's view is the seam between them, and one release
-  owner (this session) does staging. Notes 9 and 10 would move to that lane.
+- **Production waits on Rob's restore**, done the same way.
+- **The old saved versions are purged** (Rob's OK, 2026-10-12): every one of his versions but the head, the guard
+  `cloud/library.mjs`'s own pruning uses. Staging lost 20 and keeps v43 (revision 30); production lost 8 and keeps its
+  head of 2026-10-04 until Rob restores v43 there, after which its one old version goes too. D1 Time Travel can still
+  restore either database for 30 days.
+- **Merged #715** (main cb73f7d0) and on staging:
+  - Load Live reads two partners as a deck's commanders, and a workbook's decks named by hand (`--decks`);
+  - the board's notes 11 to 13.
+- **An AI on Claude and the deck advisor are on at staging** (this branch). Rob approved their privacy wording on
+  2026-10-12 ("Approved on privacy wording"). Production's door stays shut.
+- **Train D: 16 of the six decks' 18 cards now play** (this branch), three workers of six. Oko, Thief of Crowns and
+  Retro-Mutation do not yet. **A real engine gap stands in their way:**
+  - "Loses all abilities" turns off keywords, triggered, activated and mana abilities, but not a permanent's own static
+    abilities or replacement effects (CR 613.1f).
+  - So eight cards already defined are wrong on about a quarter of their targets: Song of the Dryads on a lord leaves
+    its anthem on.
+  - It is this lane's next engine task. Then the library's other ~175 cards.
+- **G-F, production:** Rob's go, 2026-10-12. Waiting on one check of his: `crankmagic`'s Workers Builds branch is
+  `release/pages`. Production's D1 has both migrations, as staging's does.
+- **Rob's choice, 2026-10-12:** a second system takes the UI lane (the board, its CSS, Settings' Play card) while this
+  session keeps the engine, the room and the card loads (the lanes above; AGENTS.md, *Lanes*). Notes 9 and 10 move to
+  that lane.
 
 ## 2026-10-11: G-A built, G-B proved again with it, the rest waits on Rob
 

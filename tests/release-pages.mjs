@@ -152,7 +152,7 @@ eq(pw.vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: 
 const staging = build({source: worktreeSource(), profileName: "cloud-staging"});
 eq(staging.problems, [], "the staging build is complete, its Access application's team and audience included");
 eq(JSON.parse(staging.built.get("wrangler.jsonc").toString("utf8")).vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5", PLAYTEST_TABLES: "on", SERVICE_SEATS: "on",
-  AI_ACCESS_AUD: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", AI_CAP_TOTAL_CENTS: "300", AI_CAP_PERSON_CENTS: "300", AI_MODEL: "claude-haiku-5-5", AI_COACH: "on", AI_CAP_COACH_CENTS: "150"},
+  AI_ACCESS_AUD: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", AI_CAP_TOTAL_CENTS: "300", AI_CAP_PERSON_CENTS: "300", AI_MODEL: "claude-haiku-5-5", AI_COACH: "on", AI_CAP_COACH_CENTS: "150", AI_PILOT: "on", AI_CAP_PILOT_GAME_CENTS: "25", AI_ADVISE: "on"},
   "and the Worker trusts that team's keys for that application only (read from the sign-in redirect's kid, and confirmed by Rob from the dashboard); its tables are playtest tables (M8b)");
 const sb = staging.built, sw2 = JSON.parse(sb.get("wrangler.jsonc").toString("utf8"));
 eq([sw2.name, sw2.main, sw2.assets, sw2.routes], ["crankmagic-staging", PLAY_WORKER, {directory: "./", binding: "ASSETS", run_worker_first: ["/api/*"]}, [{pattern: "staging.crankmagic.com", custom_domain: true}]],
@@ -219,23 +219,26 @@ delete uncapped.ai.coachCapCents;
 ok(verify(playConfig(sb, (c) => ({...c, vars: Object.fromEntries(Object.entries(c.vars).filter(([k]) => k !== "AI_CAP_COACH_CENTS"))})), uncapped).some((p) => p.includes("without a daily cap of its own")), "and a release that switches the Coach on without its cap is refused");
 ok(sb.get("privacy.html").toString("utf8").includes("It never sends another player's hand, the order of any library"), "the published privacy policy says what the Coach sends and never sends");
 eq(aiVars({...stagingProfile, ai: {...stagingProfile.ai, coach: true}}).AI_COACH, "on", "and a profile that says so turns it on");
-/* AN AI ON CLAUDE (AI-2): its own switch and each game's cap, from the profile; not on staging until Rob approves what the
-   privacy page says it sends. */
-eq([sw2.vars.AI_PILOT, sw2.vars.AI_CAP_PILOT_GAME_CENTS], [undefined, undefined], "staging seats no AI on Claude yet: its switch is off");
+/* AN AI ON CLAUDE (AI-2): its own switch and each game's cap, from the profile; on staging since Rob approved what the
+   privacy page says it sends (2026-10-12). A policy that leaves a feature out is made by taking its paragraph away. */
+const unsaying = (build, mark) => new Map([...build].map(([f, b]) => [f, f === "privacy.html" ? Buffer.from(b.toString("utf8").replace(mark, "")) : b]));
+eq([sw2.vars.AI_PILOT, sw2.vars.AI_CAP_PILOT_GAME_CENTS], ["on", "25"], "staging seats an AI on Claude, each game capped at 25 cents");
+ok(sb.get("privacy.html").toString("utf8").replace(/\s+/g, " ").includes("It never sends a person's hand, the order of any library, or anyone's name"), "the published privacy policy says what an AI on Claude sends and never sends");
 const pilotProfile = {...stagingProfile, ai: {...stagingProfile.ai, pilot: true}};
 eq([aiVars(pilotProfile).AI_PILOT, aiVars(pilotProfile).AI_CAP_PILOT_GAME_CENTS, aiVars({...stagingProfile, ai: {...stagingProfile.ai, pilot: true, pilotGameCents: 10}}).AI_CAP_PILOT_GAME_CENTS],
   ["on", "25", "10"], "a profile that says so switches it on, each game capped at 25 cents unless it says otherwise (Rob: \"0.25 per game is good\")");
-const withPilot = playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_PILOT: "on", AI_CAP_PILOT_GAME_CENTS: "25"}}));
+const withPilot = playConfig(unsaying(sb, "<strong>AI players on Claude.</strong>"), (c) => ({...c, vars: {...c.vars, AI_PILOT: "on", AI_CAP_PILOT_GAME_CENTS: "25"}}));
 ok(verify(withPilot, pilotProfile).some((p) => p.includes("privacy.html does not say what it sends") && p.includes("AI on Claude")), "a release that seats an AI on Claude where the privacy policy does not say what it sends is refused");
 const said = new Map([...withPilot].map(([f, b]) => [f, f === "privacy.html" ? Buffer.from(b.toString("utf8").replace("</main>", "<p><strong>AI players on Claude.</strong> …</p></main>")) : b]));
 ok(!verify(said, pilotProfile).some((p) => p.includes("AI on Claude")), "and one whose privacy policy says it is not");
 const uncappedPilot = playConfig(said, (c) => ({...c, vars: {...c.vars, AI_CAP_PILOT_GAME_CENTS: "0"}}));
 ok(verify(uncappedPilot, {...pilotProfile, ai: {...pilotProfile.ai, pilotGameCents: 0}}).some((p) => p.includes("without a cap for each game")), "nor one without each game's cap");
-/* THE DECK ADVISOR (AI-4): its own switch, from the profile; not on staging until Rob approves what the privacy page says it sends. */
-eq(sw2.vars.AI_ADVISE, undefined, "staging offers no deck advisor yet: its switch is off");
+/* THE DECK ADVISOR (AI-4): its own switch, from the profile; on staging since Rob approved what the privacy page says it sends (2026-10-12). */
+eq(sw2.vars.AI_ADVISE, "on", "staging offers the deck advisor");
+ok(sb.get("privacy.html").toString("utf8").replace(/\s+/g, " ").includes("It never sends your name or email, what you paid for a card, or another person's library"), "the published privacy policy says what the advisor sends and never sends");
 const advisorProfile = {...stagingProfile, ai: {...stagingProfile.ai, advise: true}};
 eq(aiVars(advisorProfile).AI_ADVISE, "on", "a profile that says so switches it on");
-const withAdvisor = playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_ADVISE: "on"}}));
+const withAdvisor = playConfig(unsaying(sb, "<strong>The deck advisor.</strong>"), (c) => ({...c, vars: {...c.vars, AI_ADVISE: "on"}}));
 ok(verify(withAdvisor, advisorProfile).some((p) => p.includes("the deck advisor is switched on (AI_ADVISE) but privacy.html does not say what it sends")), "a release that offers the advisor where the privacy policy does not say what it sends is refused");
 const advisorSaid = new Map([...withAdvisor].map(([f, b]) => [f, f === "privacy.html" ? Buffer.from(b.toString("utf8").replace("</main>", "<p><strong>The deck advisor.</strong> …</p></main>")) : b]));
 ok(!verify(advisorSaid, advisorProfile).some((p) => p.includes("deck advisor")), "and one whose privacy policy says it is not");

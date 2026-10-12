@@ -10,7 +10,8 @@
  *
  * And what the empower cards needed beside it: a loyalty ability that adds mana is no mana ability (CR 605.1a; Way of the
  * Pyromancer), and a triggered ability's resolution-time choice by another player is no mode (Plan for All Outcomes:
- * `chooser`, cards/index.mjs), its "up to one" target read by a condition (script/condition.mjs).
+ * `chooser`, cards/index.mjs), its "up to one" target read by a condition (script/condition.mjs). And Jace's Machinations'
+ * loyalty abilities at instant speed, on any player's turn (Train D; rules/statics.mjs, `loyalty-at-instant-speed`).
  *
  * The card scenarios play the cards. This suite holds the edges.
  */
@@ -23,6 +24,7 @@ import {loadCardIndex} from "../game/tools/engine-cards.mjs";
 import {runEffect, isBuilt} from "../game/engine/script/effects/index.mjs";
 import {PREDEFINED_TOKENS} from "../game/engine/script/effects/permanents.mjs";
 import {isPrimitive} from "../game/engine/vocabulary.mjs";
+import {STATIC_RULES} from "../game/engine/rules/statics.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -97,6 +99,35 @@ assert.throws(() => runEffect(play([]), {effect: "empowerJace", count: 1}, {cont
   const t = play([at(0, "battlefield", ...lands), at(0, "hand", "Plan for All Outcomes"), at(1, "battlefield", "Bear")],
     [...lands.map((l) => ({tap: l})), {cast: "Plan for All Outcomes"}, {resolve: true}, {choose: ["Bear (Maya's)"]}, {resolve: true}, {choose: ["On the top"]}]);
   eq(t.objects[t.zones.library[1][0]].card, "Bear", "Maya chooses the top: the Bear is the top card of Maya's library");
+}
+
+/* ---- "you may activate loyalty abilities of Jace planeswalkers you control on any player's turn any time you could cast an
+   instant" (Jace's Machinations, Train D): CR 606.3's timing lifted for its controller's Jaces until end of turn, three
+   players at the table ---- */
+{
+  eq(STATIC_RULES["loyalty-at-instant-speed"], "rules/actions.mjs", "the rule, in the closed list, read by rules/actions.mjs");
+  const jaceOffers = (s, seat, card) => legalActions(s, seat).filter((a) => a.kind === "activate" && s.objects[a.objectId]?.card === card).length;
+  const run = (steps) => runScenario({name: "machinations", seats: 3,
+    setup: [at(0, "battlefield", "Island", "Wastes", "Wastes", "Old Jace"), at(0, "hand", "Jace's Machinations"), at(1, "battlefield", "Other Jace")],
+    steps: [{to: {turn: 3, phase: "MAIN1"}}, {pass: 1}, {tap: "Island"}, {tap: "Wastes"}, {tap: "Wastes"}, {cast: "Jace's Machinations"}, {resolve: true}, ...steps]},
+  index.definition, FIX).state;
+  const s = run([{pass: 1}]);
+  eq([s.activePlayer, s.priorityPlayer, loyalty(s, jaces(s)[0]), jaceOffers(s, 0, "Old Jace")], [2, 0, 10, 2],
+    "cast on Trey's turn: Rob's Old Jace at 10 (2 + 8), and both its abilities offered to Rob with Trey active");
+  const t = run([{pass: 2}]);
+  eq([t.priorityPlayer, jaceOffers(t, 1, "Other Jace")], [1, 0], "Maya's Jace is not Rob's: nothing offered to her on Trey's turn");
+  const u = run([{pass: 1}, {activate: "Old Jace", ability: "jace-surveil"}, {resolve: true}, {choose: ["Wastes"]}, {pass: 1}]);
+  eq([u.priorityPlayer, loyalty(u, jaces(u)[0]), jaceOffers(u, 0, "Old Jace")], [0, 9, 0], "one of its loyalty abilities this turn, and no second (CR 606.3)");
+  eq((u.effects ?? []).filter((e) => e.rule === "loyalty-at-instant-speed").map((e) => [e.until, e.sourceController]), [["end-of-turn", 0]], "Rob's, until end of turn");
+  /* Its loyalty abilities only: an activated ability of a Jace's that is no loyalty ability keeps its sorcery timing. */
+  const ODD = {...structuredClone(JACE), card: "Odd Jace", token: true, loyalty: 4, manaCost: null,
+    abilities: [...structuredClone(JACE.abilities), {id: "odd", kind: "activated", text: "{0}: Draw a card. Activate only as a sorcery.", targets: [], timing: "sorcery", cost: [], effects: [{effect: "draw", count: 1}]}]};
+  const odd = (steps) => runScenario({name: "machinations, odd", setup: [at(0, "battlefield", "Island", "Wastes", "Wastes", "Odd Jace"), at(0, "hand", "Jace's Machinations")], steps},
+    index.definition, {...FIX, "Odd Jace": ODD}).state;
+  const abilities = (s) => legalActions(s, 0).filter((a) => a.kind === "activate").map((a) => a.abilityId).sort();
+  eq(abilities(odd([])), ["jace-draw", "jace-surveil", "odd"], "on Rob's main phase, its stack empty: all three");
+  eq(abilities(odd([{to: {turn: 2, phase: "MAIN1"}}, {pass: 1}, {tap: "Island"}, {tap: "Wastes"}, {tap: "Wastes"}, {cast: "Jace's Machinations"}, {resolve: true}, {pass: 1}])),
+    ["jace-draw", "jace-surveil"], "on Maya's turn, after Jace's Machinations: its loyalty abilities, not the other");
 }
 
 console.log(`engine-empower-jace: ${checks} checks passed -- empower Jace: a token made when there is none, the one there is, the controller's choice of two; a Jace card or another player's token aside; and the pieces the empower cards needed.`);
