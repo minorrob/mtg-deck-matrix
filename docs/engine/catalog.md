@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,273 defined and playable today; 2,651 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,275 defined and playable today; 2,661 with every
 mechanic built, so only their definitions are left to write; 27 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -20,13 +20,13 @@ many most-played cards need it among other missing things; **Alone** how many it
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 68 | 0 | 5 | 121 |
 | Keyword actions (CR 701) | 70 | 22 | 5 | 1 | 42 |
-| Effects | 192 | 73 | 1 | 2 | 116 |
+| Effects | 192 | 74 | 1 | 2 | 115 |
 | Triggers | 138 | 24 | 4 | 2 | 108 |
 | Static abilities | 77 | 14 | 2 | 0 | 61 |
 | Replacement effects | 34 | 0 | 6 | 0 | 28 |
 | Costs | 26 | 5 | 2 | 10 | 9 |
 | Options and conditions | 37 | 24 | 5 | 0 | 8 |
-| Amounts the game counts | 188 | 25 | 2 | 0 | 161 |
+| Amounts the game counts | 188 | 26 | 2 | 0 | 160 |
 | Choices | 15 | 12 | 0 | 0 | 3 |
 | Other keyword constructs | 16 | 10 | 0 | 1 | 5 |
 
@@ -392,7 +392,7 @@ The things that alone hold back the most of the most-played cards.
 | RingTemptsYou | — | missing | 11 | 49 | 11 | 8 |
 | Poison | poison | built | 11 | 36 | 0 | 0 |
 | AddTurn | addTurn | built | 10 | 65 | 0 | 0 |
-| BecomeMonarch | — | missing | 10 | 62 | 10 | 3 |
+| BecomeMonarch | becomeMonarch | built | 10 | 62 | 0 | 0 |
 | ChangeTargets | — | missing | 10 | 43 | 7 | 5 |
 | Earthbend | earthbend | built | 10 | 36 | 0 | 0 |
 | Phases | phaseOut | built | 9 | 56 | 0 | 0 |
@@ -700,7 +700,7 @@ The things that alone hold back the most of the most-played cards.
 | AssignCombatDamageAsUnblocked | — | missing | 1 | 14 | 1 | 1 |
 | CantBlockUnless | — | missing | 1 | 9 | 1 | 1 |
 | DisableTriggers | — | missing | 1 | 8 | 1 | 1 |
-| CantDraw | — | missing | 1 | 7 | 1 | 1 |
+| CantDraw | — | missing | 1 | 7 | 0 | 0 |
 | BlockRestrict | — | missing | 1 | 4 | 1 | 0 |
 | Activations | — | missing | 1 | 3 | 1 | 0 |
 | NumLoyaltyAct | — | missing | 1 | 2 | 1 | 0 |
@@ -883,7 +883,7 @@ The things that alone hold back the most of the most-played cards.
 | — | Amount | — | missing | 10 | 43 | 9 | 2 |
 | — | How many things an effect remembered | — | missing | 8 | 71 | 8 | 5 |
 | — | Times this resolved this turn | — | missing | 7 | 31 | 7 | 5 |
-| — | The monarch | — | missing | 7 | 15 | 7 | 0 |
+| — | The monarch | condition {monarch: "you"} (script/condition.mjs); "while you're the monarch", a damage trigger's monarch: "you" | built | 7 | 15 | 0 | 0 |
 | 700.5 | Devotion to two colors (CR 700.5) | {devotion: [color, color]} | built | 6 | 13 | 0 | 0 |
 | — | A number a player chose | — | missing | 5 | 77 | 4 | 0 |
 | — | Attackers declared | — | missing | 5 | 62 | 5 | 4 |

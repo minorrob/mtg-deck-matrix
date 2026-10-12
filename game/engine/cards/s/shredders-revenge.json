@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shredder's Revenge",
+    "oracleId": "5dd31fcd-72db-4daf-b127-ceb27bf25a94",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Target player discards two cards.\n• Target player draws two cards and loses 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Target player discards two cards.\n• Target player draws two cards and loses 2 life.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Target player discards two cards.",
+              "targets": [
+                {
+                  "what": "player"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "discard",
+                  "who": {
+                    "target": 0
+                  },
+                  "count": 2
+                }
+              ]
+            },
+            {
+              "text": "Target player draws two cards and loses 2 life.",
+              "targets": [
+                {
+                  "what": "player"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "draw",
+                  "count": 2,
+                  "who": {
+                    "target": 0
+                  }
+                },
+                {
+                  "effect": "loseLife",
+                  "amount": 2,
+                  "who": {
+                    "target": 0
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

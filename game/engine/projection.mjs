@@ -192,6 +192,8 @@ function playerFor(state, player, viewer) {
     /* A mana pool is public: the board shows it, and so does a table. */
     mana: Object.entries(player.manaPool).filter(([, n]) => n > 0).map(([color, amount]) => ({color, amount})),
     landsPlayed: player.landsPlayed,
+    /* The monarch (CR 725): a designation of the game's, public, one player's at most (725.3) -- said only of that player. */
+    ...(state.monarch === player.id ? {monarch: true} : {}),
     zones,
   };
 }

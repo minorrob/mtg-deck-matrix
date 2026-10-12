@@ -50,7 +50,7 @@ import {lastKnown, toughnessOf, typesOf, keywordsOf, controllerOf, deriving, sta
 import {matchesSelector} from "../script/filter.mjs";
 import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./commander.mjs";
 import {sacrificeOne, moveOne, returnExiledUntil, leavingRef, destructionReplaced, destructionAsks} from "../script/effects/zones.mjs";
-import {changeLife} from "../script/effects/resources.mjs";
+import {changeLife, crown} from "../script/effects/resources.mjs";
 import {enduringStories, citysBlessings} from "../keywords/designations.mjs";
 import {preparedCopyStays} from "../script/effects/attributes.mjs";
 import {endControlChange, nextRecord, endCounterDurations, controlByAuras} from "../script/effects/permanents.mjs";
@@ -170,6 +170,24 @@ export function leaveGame(state, player, reason, events) {
     oldLives: player.life, newLives: player.life, lost: true, lossReason: reason,
   }));
   removePlayerFromBoard(state, player.id, events);
+}
+
+/**
+ * THE MONARCH HAS LEFT THE GAME (CR 725.4): the active player becomes the monarch -- or, the active player leaving too or
+ * gone already (their turn goes on without them, CR 800.4j), the next player in turn order still in the game. With nobody
+ * left, the game goes on with no monarch. Asked once every player leaving at that moment has left -- the losses one check
+ * finds together (checkStateBasedActions), the players an effect makes lose at once (effects/resources.mjs, loseGame) -- so
+ * that "the active player is leaving the game" is known of them all.
+ *
+ * @returns {Array} the events, with the new monarch's when there is one
+ */
+export function monarchLeft(state, events = []) {
+  if (!Number.isInteger(state.monarch) || !state.players[state.monarch].lost) return events;
+  const seats = state.players.length;
+  const heir = Array.from({length: seats}, (_, step) => (state.activePlayer + step) % seats).find((id) => !state.players[id].lost);
+  if (heir === undefined) delete state.monarch;
+  else crown(state, heir, events);
+  return events;
 }
 
 /* A spell or ability that was resolving has left the stack with the player who left (800.4a): nothing is left of it to
@@ -435,6 +453,8 @@ export function checkStateBasedActions(state) {
       leaveGame(state, player, reason, events);
       acted = true;
     }
+    /* The monarch among those who left: the designation passes on as they leave (CR 725.4). */
+    monarchLeft(state, events);
 
     if (!acted) {
       /* CR 903.9a: a commander put into a graveyard or exile since the last check -- its OWNER may put it into the

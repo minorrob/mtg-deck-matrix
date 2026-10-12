@@ -623,14 +623,18 @@ function additionalChoices(state, player, spellId, costs) {
    and per way to choose the chosen modes' targets (601.2c), in the order of the modes. A mode is chosen once (700.2d). */
 /* `exactly`: so many modes and no other number (escalate's variant, additionalVariants; the compiler holds it to what the spell
    allows, cards/index.mjs). `only`: that one mode and no other (tiered's variant, CR 702.183a: its cost is that mode's). */
+/* "CHOOSE UP TO FOUR. YOU MAY CHOOSE THE SAME MODE MORE THAN ONCE" (Moment of Reckoning; CR 700.2d): `choose: 0`, none chosen a
+   choice too ("up to"), and `sameMode`, as many as it says whatever the number of modes -- each mode again after itself, so
+   each choice is offered once, its modes in the order they are written, which is the order they are followed in; the
+   relative order of one mode chosen twice is the order of their targets, each asked in turn (script/bind.mjs, modalScript). */
 function withModes(state, base, modal, context, exactly = null, only = null) {
-  const least = exactly ?? Math.max(1, modal.choose ?? 1);
-  const most = exactly ?? Math.min(modal.modes.length, modal.more && conditionHolds(state, modal.more.condition, context) ? modal.more.choose : modal.upTo ?? least);
+  const least = exactly ?? (modal.choose === 0 ? 0 : Math.max(1, modal.choose ?? 1));
+  const most = exactly ?? (modal.sameMode ? modal.upTo : Math.min(modal.modes.length, modal.more && conditionHolds(state, modal.more.condition, context) ? modal.more.choose : modal.upTo ?? least));
   const picks = [];
   const pick = (from, chosen) => {
     if (chosen.length >= least) picks.push(chosen);
     if (chosen.length === most) return;
-    for (let i = from; i < modal.modes.length; i += 1) pick(i + 1, [...chosen, i]);
+    for (let i = from; i < modal.modes.length; i += 1) pick(modal.sameMode ? i : i + 1, [...chosen, i]);
   };
   if (Number.isInteger(only)) picks.push([only]);
   else pick(0, []);

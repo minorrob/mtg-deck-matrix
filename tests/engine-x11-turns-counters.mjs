@@ -3,7 +3,8 @@
 /* TRAIN B (X11), THE LAST CARDS -- COUNTERS MOVED, A KIND OF COUNTER CHOSEN, "ONLY ONCE EACH TURN", AND EXTRA TURNS: what
  * Tidus, Yuna's Guardian's and Ichormoon Gauntlet's scenarios cannot reach.
  *
- *   moveCounters (CR 122.5; script/effects/resources.mjs): all or nothing
+ *   moveCounters (CR 122.5; script/effects/resources.mjs): each counter that can move, and as many as there are (CR 609.3;
+ *     Train E, Tester of the Tangential)
  *   counterKind (script/effects/asking.mjs): "choose a counter on target permanent", "move a counter" -- which kind, its
  *     controller's question when there are two or more, answerable by both pilots
  *   onceEachTurn ("do this only once each turn", Tidus's Cheer; cards/index.mjs, effects/asking.mjs modal)
@@ -47,7 +48,9 @@ const probe = (ability) => ({schema: "CrankCardScript@1", identity: {name: "Prob
   moveCounters(s, {from: [a], targets: [b], counter: "flying", count: 1}, ctx);
   t.eq([s.objects[a].counters.flying, s.objects[b].counters.flying], [undefined, undefined], "a kind it has not got: nothing moves");
   moveCounters(s, {from: [a], targets: [b], counter: "+1/+1", count: 2}, ctx);
-  t.eq([s.objects[a].counters["+1/+1"], s.objects[b].counters["+1/+1"]], [1, 1], "two asked of one there: nothing moves, all or nothing");
+  t.eq([s.objects[a].counters["+1/+1"], s.objects[b].counters["+1/+1"]], [0, 2], "two asked of one there: the one there moves, and the other cannot (CR 122.5, 609.3)");
+  s.objects[a].counters["+1/+1"] = 1;
+  s.objects[b].counters["+1/+1"] = 1;
   const yard = moveObject(s, gone, "graveyard", 0);
   moveCounters(s, {from: [a], targets: [yard], counter: "+1/+1", count: 1}, ctx);
   t.eq(s.objects[a].counters["+1/+1"], 1, "onto a card no longer on the battlefield: none removed either");

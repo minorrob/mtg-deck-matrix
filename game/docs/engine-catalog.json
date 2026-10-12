@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1273,
+  "defined": 1275,
   "provisional": 27,
-  "everyRule": 2651
+  "everyRule": 2661
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -3208,10 +3208,10 @@
   },
   "Effects": {
    "tally": {
-    "built": 73,
+    "built": 74,
     "partial": 1,
     "named": 2,
-    "missing": 116
+    "missing": 115
    },
    "entries": [
     {
@@ -3962,13 +3962,13 @@
      "kind": "effect",
      "rule": null,
      "name": "BecomeMonarch",
-     "engine": null,
-     "status": "missing",
+     "engine": "becomeMonarch",
+     "status": "built",
      "forge": "BecomeMonarch",
      "top": 10,
      "all": 62,
-     "blocks": 10,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -7563,8 +7563,8 @@
      "forge": "CantDraw",
      "top": 1,
      "all": 7,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "static",
@@ -9316,10 +9316,10 @@
   },
   "Amounts the game counts": {
    "tally": {
-    "built": 25,
+    "built": 26,
     "partial": 2,
     "named": 0,
-    "missing": 161
+    "missing": 160
    },
    "entries": [
     {
@@ -9554,12 +9554,12 @@
      "kind": "count",
      "rule": null,
      "name": "The monarch",
-     "engine": null,
-     "status": "missing",
+     "engine": "condition {monarch: \"you\"} (script/condition.mjs); \"while you're the monarch\", a damage trigger's monarch: \"you\"",
+     "status": "built",
      "forge": "Monarch",
      "top": 7,
      "all": 15,
-     "blocks": 7,
+     "blocks": 0,
      "alone": 0
     },
     {

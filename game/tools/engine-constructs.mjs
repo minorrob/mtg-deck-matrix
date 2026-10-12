@@ -51,6 +51,9 @@ export const FORGE_API = {
   LosesGame: "loseGame",
   /* Goad (batch 69): attacks each combat, not its goader if it can. */
   Goad: "goad",
+  /* BecomeMonarch ("you become the monarch", Ginger, Queen of Sweets; Train E): the game's designation, one player's at a time
+     (CR 725.3), its two triggers the game's own (725.2; rules/trigger.mjs), passed on as its player leaves (725.4; rules/sba.mjs). */
+  BecomeMonarch: "becomeMonarch",
   /* Earthbend (batch 65): the land a creature with haste, its counters, its return. */
   Earthbend: "earthbend",
   /* Clone ("becomes a copy of target land", batch 58): a permanent becoming a copy, for a turn or for good. */
@@ -390,7 +393,8 @@ export const FORGE_COUNTS = Object.freeze({
      go there: effects/zones.mjs, rules/sba.mjs) -- "a creature died this turn" and "died under your control". Built. */
   Morbid: {name: "Morbid (a creature died this turn)", status: "built", engine: "amount {creaturesDiedThisTurn: \"you\" | \"that player\" | \"any\"} (state/index.mjs recordDeath, rules/turn.mjs clears it)"},
   UrzaLands: {name: "The Urza lands", status: "missing"},
-  Monarch: {name: "The monarch", status: "missing"},
+  /* Train E (Ginger, Queen of Sweets): "if you're the monarch" (CR 725). */
+  Monarch: {name: "The monarch", status: "built", engine: "condition {monarch: \"you\"} (script/condition.mjs); \"while you're the monarch\", a damage trigger's monarch: \"you\""},
   YourStartingLife: {name: "Your starting life total", status: "missing"},
   DamageAmount: {name: "Damage dealt", status: "built", engine: "{damageDealt: true}: the damage a damage trigger is about, all of an action's together"},
   /* Train C, p4-replacements: the number a counter replacement changes ("that many plus one", "twice that many"). */

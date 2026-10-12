@@ -39,7 +39,7 @@ import {loseLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";
 import {damageOrderChoice} from "../../rules/replacement.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
 import {commanderTax} from "../../rules/commander.mjs";
-import {cantBeCountered, counterOrderChoice, cantBeSacrificed, tokenOrderChoice} from "../../rules/statics.mjs";
+import {cantBeCountered, counterOrderChoice, cantBeSacrificed, tokenOrderChoice, drawForbidden} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
 import {castNow, castChoicesNow} from "../../rules/actions.mjs";
 
@@ -599,15 +599,26 @@ function chosenFromHandApply(state, awaiting, indices) {
 /* "Do this only once each turn" (Tidus, Yuna's Guardian; cards/index.mjs, `onceEachTurn`): what this permanent's ability has
    done this turn, kept on the permanent as its uses are (state/index.mjs) -- so a new object may again (CR 400.7). */
 const onceKey = (params, context) => (params.onceEachTurn !== undefined && Number.isInteger(context.source) ? `once:${params.onceEachTurn}` : null);
+/* A CHOICE TO DRAW ITS CHOOSER CAN'T TAKE (Narset, Parter of Veils' opponents; CR 121.3, 121.2b): a mode that begins by having
+   its chooser draw -- "you may draw a card", "you may draw a card. If you do, discard a card" -- when they can't draw that many
+   more this turn (rules/statics.mjs, drawForbidden): "you may draw two cards" not even for their first. */
+const drawRefused = (state, mode, chooser, context) => {
+  const first = (mode.effects ?? [])[0];
+  if (first?.effect !== "draw" || first.who !== undefined || chooser !== context.controller) return false;
+  const count = first.count ?? 1;
+  return drawForbidden(state, chooser, typeof count === "number" ? count : amountOf(state, count, context));
+};
 export const modal = {
   open(state, params, context) {
     const key = onceKey(params, context);
     /* Done once this turn: the mode that does it (`once`) is gone, and only "No" is left -- no choice, so nothing is asked. */
     const done = key !== null && usesThisTurn(state, context.source, key) > 0;
-    const modes = (params.modes ?? []).filter((mode) => !(done && mode.once === true));
-    if (modes.length === 0 || (done && modes.every((mode) => !(mode.effects ?? []).length))) return false;
-    const choose = Math.min(params.choose ?? 1, modes.length);
     const chooser = Number.isInteger(params.chooser) ? params.chooser : context.controller;
+    /* And a draw its chooser can't choose: gone, and with only "No" left, nothing is asked. */
+    const refused = (params.modes ?? []).some((mode) => drawRefused(state, mode, chooser, context));
+    const modes = (params.modes ?? []).filter((mode) => !(done && mode.once === true) && !drawRefused(state, mode, chooser, context));
+    if (modes.length === 0 || ((done || refused) && modes.every((mode) => !(mode.effects ?? []).length))) return false;
+    const choose = Math.min(params.choose ?? 1, modes.length);
     state.awaiting = {
       /* Usually the controller's; "its controller may draw up to two cards" is that player's (`chooser`, bound to them). */
       kind: "effect-choice", effect: "modal", player: chooser,
@@ -1024,6 +1035,11 @@ const lifeAsked = (awaiting) => awaiting.life > 0 || (awaiting.life === 0 && !(a
 const noun = (selector) => (selector?.subtypes?.length ? `a ${selector.subtypes[0]}` : selector?.types?.length ? `a ${selector.types[0].toLowerCase()}` : "a permanent");
 /* "Another creature you control" (Faerie Impostor): `another` read against the "unless" ability's own source. */
 const otherNoun = (selector) => (selector?.another === true ? noun(selector).replace(/^a /, "another ") : noun(selector));
+/* "Then discard two cards unless you discard a creature card" (Thirst for Identity; CR 118.12, 701.9a): `discard` a selector
+   of the card in hand -- each card of the payer's it describes its own option, and with none there, not paying is all there
+   is. Any card, as ward's discard is, when it is not one. */
+const discardFits = (state, discard, id, player) => typeof discard !== "object" || compileSelector({...discard, what: "card", zone: "hand"})(state, id, {controller: player});
+const discardNoun = (discard) => (typeof discard === "object" ? `${noun(discard)} card` : "a card");
 /* "Exile this spell and four cards named Sphinx's Approach from your graveyard" (`exileSelf`, `exileFromGraveyard`): the
    cards of the payer's graveyard its selector describes, and the spell itself -- a card on the stack, as it resolves; a copy
    is no card to exile (CR 707.10a), so with one there is no paying. */
@@ -1041,7 +1057,7 @@ function costWords(awaiting, state) {
   if (awaiting.amountX) return "pay {X}";
   if (awaiting.timesAny) return `pay ${awaiting.mana} any number of times`;
   const paid = [awaiting.mana ?? null, awaiting.amount > 0 ? `{${awaiting.amount}}` : null, lifeAsked(awaiting) ? `${awaiting.life} life` : null].filter(Boolean);
-  const other = awaiting.discard ? "discard a card" : awaiting.sacrificeCount ? `sacrifice ${awaiting.sacrificeCount} permanents` : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}`
+  const other = awaiting.discard ? `discard ${discardNoun(awaiting.discard)}` : awaiting.sacrificeCount ? `sacrifice ${awaiting.sacrificeCount} permanents` : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}`
     : awaiting.returnToHand ? `return ${otherNoun(awaiting.returnToHand)} you control to its owner's hand`
     : awaiting.tap ? `tap ${otherNoun(awaiting.tap).replace(/^(a|another) /, "$1 untapped ").replace(/^a untapped/, "an untapped")} you control` : null;
   return [other, paid.length ? `pay ${paid.join(" and ")}` : null].filter(Boolean).join(" and ") || `pay {${awaiting.amount}}`;
@@ -1084,7 +1100,8 @@ function payOptions(state, awaiting) {
     }
     return mine.map((id) => ({label: `Sacrifice ${state.objects[id].card}${also}`, pay: true, sacrifice: id, cardId: id}));
   }
-  if (awaiting.discard) return cardsIn(state, "hand", player).map((id) => ({label: `Discard ${state.objects[id].card}${also}`, pay: true, discard: id, cardId: id}));
+  if (awaiting.discard) return cardsIn(state, "hand", player).filter((id) => discardFits(state, awaiting.discard, id, player))
+    .map((id) => ({label: `Discard ${state.objects[id].card}${also}`, pay: true, discard: id, cardId: id}));
   if (awaiting.exileFromGraveyard) {
     const cards = graveyardToExile(state, awaiting);
     /* Having said they pay, with more than that many there: which ones. */
@@ -1442,6 +1459,16 @@ export const changeTargets = {
     /* The spell it names by its object (`spells`), or the spell or ability by its stack entry (`stack`, Bolt Bend). */
     const entry = state.stack.find((e) => (e.objectId !== null && (params.spells ?? []).includes(e.objectId)) || (Array.isArray(params.stack) && params.stack.includes(e.stackId)));
     if (!entry) return false;
+    /* "YOU MAY CHOOSE NEW TARGETS FOR TARGET INSTANT OR SORCERY SPELL" (Wild Ricochet; CR 115.7d): `may`, each of that spell's
+       targets kept or changed to another it could have, a question at a time, as a copy's are (copySpell) -- one with no
+       other choice is not asked about, and with none to ask, nobody is. A counted target's list is kept, as a copy's is. */
+    if (params.may === true) {
+      const questions = entry.targets.map((t, index) => ({stackId: entry.stackId, index, list: Array.isArray(t)}))
+        .filter((q) => !q.list && (retargetOptions(state, q)?.others ?? []).length > 0).map(({stackId, index}) => ({stackId, index}));
+      if (!questions.length) return false;
+      state.awaiting = {kind: "effect-choice", effect: "changeTargets", player: context.controller, questions};
+      return true;
+    }
     /* "With a single target" (its own targeting asked that): the one there is -- a counted target's list holding one
        included, the others empty. */
     const index = entry.targets.findIndex((t) => (Array.isArray(t) ? t.length > 0 : Boolean(t)));
@@ -1452,11 +1479,20 @@ export const changeTargets = {
     return true;
   },
   choice(state, awaiting) {
+    /* `may`: copySpell's question -- keep it, or one of the others -- about this spell's own target. */
+    if (awaiting.questions) {
+      const question = awaiting.questions[0], entry = state.stack.find((e) => e.stackId === question.stackId);
+      const many = (entry ? specsOf(state, entry) : []).length > 1;
+      return {...copySpell.choice(state, awaiting), id: `changeTargets:${question.stackId}:${question.index}`,
+        title: `${entry?.name ?? "The spell"}: keep ${many ? `its ${ordinal(question.index)} target` : "its target"}, or choose a new one?`};
+    }
     const {entry, others} = retargetOptions(state, awaiting.question) ?? {entry: null, others: []};
     return {id: `changeTargets:${awaiting.question.stackId}`, title: `${entry?.name ?? "The spell"}: its new target`, mode: "one", min: 1, max: 1,
       options: others.map((c, i) => ({index: i, label: targetName(state, c), ...(c.kind === "object" ? {cardId: c.id} : {}), target: c}))};
   },
   apply(state, awaiting, indices) {
+    /* `may`: answered as a copy's new targets are, one question at a time. */
+    if (awaiting.questions) return copySpell.apply(state, awaiting, indices);
     const option = changeTargets.choice(state, awaiting).options[(indices ?? [])[0]];
     if (!option) throw new Error("Invalid selection");
     const entry = state.stack.find((e) => e.stackId === awaiting.question.stackId);

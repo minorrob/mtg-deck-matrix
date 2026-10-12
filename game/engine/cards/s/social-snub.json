@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Social Snub",
+    "oracleId": "b284913e-3530-4a7e-8c75-efb18788dad0",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{W}{B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When you cast this spell while you control a creature, you may copy this spell.\nEach player sacrifices a creature of their choice. Each opponent loses 1 life and you gain 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When you cast this spell while you control a creature, you may copy this spell.",
+      "trigger": {
+        "on": "spell cast",
+        "who": "self",
+        "while": {
+          "present": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          }
+        }
+      },
+      "effects": [
+        {
+          "effect": "copySpell",
+          "spells": "self"
+        }
+      ],
+      "optional": true
+    },
+    {
+      "kind": "spell",
+      "text": "Each player sacrifices a creature of their choice. Each opponent loses 1 life and you gain 1 life.",
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "who": "each",
+          "count": 1,
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        },
+        {
+          "effect": "loseLife",
+          "who": "opponent",
+          "amount": 1
+        },
+        {
+          "effect": "gainLife",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

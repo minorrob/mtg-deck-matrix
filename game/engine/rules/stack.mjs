@@ -36,7 +36,7 @@
 
 import {holdArrival, enteredWith} from "./entering.mjs";
 import {ascendAsItResolves} from "../keywords/designations.mjs";
-import {conditionHolds} from "../script/condition.mjs";
+import {conditionHolds, asksFirstResolution} from "../script/condition.mjs";
 import {moveObject, addObject, removeObject, eventCard} from "../state/index.mjs";
 import {enteringModifications} from "./replacement.mjs";
 import {countersPlaced} from "./statics.mjs";
@@ -147,11 +147,12 @@ export function pushSpell(state, objectId, {controller, targets = [], permanent 
  * `sourceId` may be null for an ability whose source has already left the battlefield, which is a
  * legal position (CR 113.7a) rather than a bug.
  */
-export function pushAbility(state, {sourceId = null, controller, abilityId, kind = "ability", targets = [], script = null, about = null, x = null, lastKnown = null, spent = null, paidFor = null, sourceTransforms = undefined} = {}) {
+/* `name`: what an ability with no source is called -- the game's own triggers', their designation (CR 725.2; rules/trigger.mjs). */
+export function pushAbility(state, {sourceId = null, controller, abilityId, kind = "ability", targets = [], script = null, about = null, x = null, lastKnown = null, spent = null, paidFor = null, sourceTransforms = undefined, name = null} = {}) {
   if (!abilityId) throw new Error("An ability on the stack needs an abilityId, or nothing can resolve it");
   const source = sourceId === null ? null : state.objects[sourceId];
   const entry = entryFor(state, {
-    objectId: null, cardId: source ? source.id : null, name: source ? source.card : null,
+    objectId: null, cardId: source ? source.id : null, name: source ? source.card : name,
     playerId: controller, kind, abilityId, targets,
   });
   /* What it does, carried with it: its source may leave before it resolves, and the ability does not (CR 113.7a). */
@@ -223,6 +224,20 @@ export function specsOf(state, entry) {
   return scriptOf(state, entry)?.targets ?? [];
 }
 
+/* AN ABILITY'S RESOLUTIONS THIS TURN, for "if this is the first time this ability has resolved this turn" (Nissa, Leyline
+   Tamer; script/condition.mjs, `firstResolution`): each resolution of an ability whose effects ask it -- one that fizzled
+   (CR 608.2b) or whose "if" was false (CR 603.4) did not resolve, and is not counted -- by the object it came from and which
+   of its abilities it is. Kept beside the objects, so an ability whose source has left is still counted with it (CR 113.7a),
+   and a source that has left and returned is a new object with abilities of its own (CR 400.7); a new turn counts afresh.
+   Returns how many times it resolved before this one. */
+function resolutionsBefore(state, entry, script) {
+  if (!asksFirstResolution(script.effects)) return undefined;
+  if (state.resolutions?.turn !== state.turn) state.resolutions = {turn: state.turn, counts: {}};
+  const key = `${entry.cardId}:${entry.abilityId}`, before = state.resolutions.counts[key] ?? 0;
+  state.resolutions.counts[key] = before + 1;
+  return before;
+}
+
 /**
  * Resolve the top object.
  *
@@ -285,8 +300,11 @@ export function resolveTop(state, effect = null, rng = null) {
      ability's own condition only -- "activate only if" was asked as it was activated (CR 602.5b) and is not again. */
   if (entry.kind === "trigger" && script.condition && !conditionHolds(state, script.condition, {controller: entry.playerId, source, about: entry.about ?? undefined,
     ...(entry.spent ? {spent: entry.spent} : {}), ...(entry.paidFor ? {paidFor: entry.paidFor} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {})})) return finishTop(state, entry, events, false);
+  /* "If this is the first time this ability has resolved this turn" (Nissa, Leyline Tamer): how many times it has before. */
+  const resolvedBefore = resolutionsBefore(state, entry, script);
   /* What its effects need to know about their targets, read once, now (CR 608.2h). */
-  const outcome = beginResolution(state, script.effects, {...context, targets, facts: factsOf(state, targets)}, rng);
+  const outcome = beginResolution(state, script.effects, {...context, targets, facts: factsOf(state, targets),
+    ...(resolvedBefore !== undefined ? {resolvedBefore} : {})}, rng);
   events.push(...outcome.events);
   if (outcome.status === "waiting") {
     entry.stage = "resolving";

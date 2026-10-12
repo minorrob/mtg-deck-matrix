@@ -14,7 +14,7 @@ other lane answers in the last column.
 
 | # | From | Asks for | What for | Answer |
 | --- | --- | --- | --- | --- |
-| — | — | (none yet) | — | — |
+| 1 | Engine | The board to show the monarch (CR 725): the view's `state.players[i]` now carries `monarch: true` for the monarch, public to every seat, and no key for anyone else; the history says "Maya became the monarch" | Ginger, Queen of Sweets and Tamiyo, Upriser Crowned make their controller the monarch; the monarch draws a card at their end step, and a creature's combat damage to them makes its controller the monarch -- a player should see who holds it | The engine lane built it (Train E, the `monarch` branch); `docs/ui-lane/gameplay-anchor.md` lists the field. For the UI lane to show |
 
 ## 2026-10-12, later: Train E, Rob's library, in waves; the plan to 90%
 
@@ -35,8 +35,34 @@ usage for this").
   - Fixed: whether a first-strike damage step happens is now decided as combat damage begins, not at blocks (CR 510.4).
     A creature given first strike after blocks used to deal no combat damage.
   - Waiting: Extrapolate the Impossible, which needs cards from outside the game (CR 400.11).
-- **Wave 3 is running:** four workers, 64 cards.
-- **The monarch** (CR 725), with a creature leaving combat when its controller changes (CR 506.4), is with a worker.
+- **Wave 3, in this branch:** 63 cards from four workers, the last of Rob's library.
+  - Engine pieces:
+    - Narset's "can't draw more than one card each turn" (CR 121.2b);
+    - a modal "you may choose the same mode more than once" (700.2d);
+    - "the first time this ability has resolved this turn";
+    - a blocks trigger naming what it blocks;
+    - a cast trigger's "while";
+    - incubate and the Incubator token;
+    - "move X counters" moving what is there;
+    - an unless cost's discard of a kind;
+    - "you may choose new targets";
+    - no maximum hand size for the rest of the game.
+  - A second worker made wave 2's CR 510.4 fix independently; wave 2's was kept.
+- **The monarch** (CR 725), in this branch:
+  - one monarch at a time, with its two inherent triggers;
+  - a monarch who leaves passes it on (725.4);
+  - `becomeMonarch`, and `monarch: "you"`;
+  - `monarch: true` in the view (Requests row 1).
+
+  With it, a creature leaves combat when its controller changes (CR 506.4). Ginger, Queen of Sweets and Tamiyo, Upriser
+  Crowned now play.
+- **Rob's library, after waves 1 to 3:** 1,216 of his v43 library's 1,217 cards play (`tableCards`). The one left is Extrapolate the Impossible,
+  which needs cards from outside the game (CR 400.11).
+- **Wave 4a is running:** four workers, one construct each, on the most-played cards it unlocks:
+  - "you may play that card" from another zone;
+  - the cards an effect moved;
+  - objects an effect remembers;
+  - token and counter replacements.
 - **The plan to 90%** (Rob: "after wave 3 define a wave 4+ to bring us to the 90% of all cards typically used"):
   `docs/engine/plan-coverage-90.md`.
   - The target is 5,869 cards, of which 1,411 are defined.

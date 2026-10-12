@@ -784,6 +784,19 @@ export const combatDamage = {
   },
 };
 
+/**
+ * REMOVED FROM COMBAT (CR 506.4): a creature whose controller changes (effects/permanents.mjs, gainControl and
+ * endControlChange: a steal, an exchange, an Aura's control, a change of control ending), or that phases out, stops being an
+ * attacking, blocking, blocked or unblocked creature -- its attack gone, and its place among the blockers of each attack.
+ * Nothing that reads combat finds it again, so it neither deals nor is dealt combat damage. An attacker it was blocking stays
+ * blocked with no blocker left (CR 509.1h), and deals damage to the player only with trample (702.19d; combatDamage.deal).
+ */
+export function removeFromCombat(state, id) {
+  if (!state.combat) return;
+  state.combat.attacks = state.combat.attacks.filter((attack) => attack.attacker !== id);
+  for (const attack of state.combat.attacks) if (attack.blockers.includes(id)) attack.blockers = attack.blockers.filter((blocker) => blocker !== id);
+}
+
 /** CR 511.3: combat ends and everything stops being an attacker or a blocker. */
 export function endCombat(state) {
   state.combat = null;

@@ -23,7 +23,7 @@ import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
 import {typesOf, powerOf, toughnessOf, keywordsOf, isKeywordCounter, controllerOf} from "../../rules/layers.mjs";
 import {cantGainLife, lifeGained, countersPlaced, playerCountersPlaced, placeCounters} from "../../rules/statics.mjs";
-import {playerRuled, leaveGame} from "../../rules/sba.mjs";
+import {playerRuled, leaveGame, monarchLeft} from "../../rules/sba.mjs";
 import {amountOf} from "../amount.mjs";
 import {recordUse} from "../../state/index.mjs";
 
@@ -412,7 +412,36 @@ export function loseGame(state, params, context) {
     .filter((id) => params.withLife === undefined || state.players[id].life === params.withLife)
     .filter((id) => !playerRuled(state, "cant-lose", id));
   for (const id of losing) leaveGame(state, state.players[id], "effect", events);
+  /* The monarch among them: the designation passes on once they have all gone (CR 725.4; rules/sba.mjs). */
+  return monarchLeft(state, events);
+}
+
+/**
+ * THE MONARCH (CR 725): a designation of the game's, not of any card -- none until an effect makes a player the monarch
+ * (725.1), and one player's at most (725.3): `state.monarch`, that player's seat, unsaid while there is none, so a game made
+ * before it hashes and replays as it did. As a player becomes it the monarch before stops being it. One who is the monarch
+ * already does not become it again, and one who has left the game cannot (CR 800.4a). What being it does is two triggered
+ * abilities of the game's own (rules/trigger.mjs, INHERENT_TRIGGERS), and what passes it on as its player leaves, the rule
+ * of rules/sba.mjs (monarchLeft). Said to everyone: the designation is public.
+ *
+ * @returns {Array} the events, with one more when a player became the monarch
+ */
+export function crown(state, player, events = []) {
+  if (state.players[player].lost || state.monarch === player) return events;
+  state.monarch = player;
+  events.push(event("GameEventBecomeMonarch", state, {player: {playerId: player, name: state.players[player].name}}));
   return events;
+}
+
+/**
+ * `becomeMonarch` -- "you become the monarch" (Ginger, Queen of Sweets; Tamiyo, Upriser Crowned), and "its controller
+ * becomes the monarch" (the monarch's own trigger, CR 725.2: `who: "that card's controller"`, the creature's controller now,
+ * or as it last was; script/bind.mjs): `who` one player -- unsaid, the effect's controller; a target player, or nobody once
+ * that target is gone (CR 608.2b).
+ */
+export function becomeMonarch(state, params, context) {
+  const [player] = playersFor(state, params.who ?? "you", context.controller);
+  return player === undefined ? [] : crown(state, player);
 }
 
 /* Who puts them, for "if you would put" (rules/statics.mjs): the effect's controller -- or, "that player ... puts a +1/+1
@@ -535,8 +564,9 @@ export function removeCounter(state, params, context) {
 /**
  * `moveCounters` -- CR 122.5: "you may move a counter from target creature you control onto a second target creature you
  * control" (Tidus, Yuna's Guardian). `count` counters of the kind `counter` taken off `from` (an object, bound as a target
- * is) and put on the effect's `targets` (the second object). All or nothing (122.5): nothing moves when the two are the
- * same object, when the first has fewer than that many of that kind, or when either is no longer on the battlefield. They
+ * is) and put on the effect's `targets` (the second object). Nothing moves (122.5) when the two are the same object, when
+ * the first has none of that kind, or when either is no longer on the battlefield; with fewer than that many there, those
+ * there move (CR 609.3; Train E, Tester of the Tangential's "move X +1/+1 counters"). They
  * are put on as any counters are (addCounters): what watches for counters being put on sees them (CR 122.6), and "twice
  * that many instead" applies. Which kind, when the card leaves it to its controller (`counter: "chosen"`), is asked first
  * (script/resolution.mjs; effects/asking.mjs, counterKind) -- never here.
@@ -550,11 +580,15 @@ export function moveCounters(state, params, context) {
   const kind = params.counter ?? "+1/+1", n = Math.max(0, params.count ?? 1);
   if (from === undefined || to === undefined || from === to || n === 0) return events;
   const source = state.objects[from], destination = state.objects[to];
-  if (source?.zone !== "battlefield" || destination?.zone !== "battlefield" || (source.counters?.[kind] ?? 0) < n) return events;
+  if (source?.zone !== "battlefield" || destination?.zone !== "battlefield" || (source.counters?.[kind] ?? 0) < 1) return events;
+  /* "Move X +1/+1 counters from this creature onto another target creature" (Tester of the Tangential, Train E) with fewer
+     than X there: each counter that can move does, and the rest cannot (CR 122.5: none of a kind it has not got; 609.3: as
+     much as possible). */
+  const moving = Math.min(n, source.counters[kind]);
   const before = source.counters[kind];
-  source.counters[kind] = before - n;
+  source.counters[kind] = before - moving;
   events.push(event("GameEventCardCounters", state, {card: cardRef(state, from), type: kind, oldValue: before, newValue: source.counters[kind]}));
-  addCounters(state, to, kind, n, events, context.controller);
+  addCounters(state, to, kind, moving, events, context.controller);
   return events;
 }
 

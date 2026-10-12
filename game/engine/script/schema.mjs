@@ -38,7 +38,7 @@ import {targetRefs, SHARES} from "./bind.mjs";
 import {LAYERS} from "../rules/layers.mjs";
 import {STATIC_RULES, CANT_ATTACK_DEFENDERS} from "../rules/statics.mjs";
 import {amountProblems, AMOUNT_PARAMS, isCounted} from "./amount.mjs";
-import {conditionProblems} from "./condition.mjs";
+import {conditionProblems, asksFirstResolution} from "./condition.mjs";
 import {isCreatureType} from "../keywords/types.mjs";
 import {parseManaCost} from "../rules/mana.mjs";
 import {CONTROL_DURATIONS} from "./effects/permanents.mjs";
@@ -133,6 +133,10 @@ function checkEffect(effect, path, errors) {
   /* "Each player with exactly 13 life loses the game" (Triskaidekaphobia; effects/resources.mjs): a life total, a whole number. */
   if (effect.withLife !== undefined && (name !== "loseGame" || !Number.isInteger(effect.withLife)))
     errors.push({path: `${path}.withLife`, message: "\"With exactly N life\" is withLife: a whole number, on loseGame"});
+  /* "You become the monarch", "its controller becomes the monarch" (CR 725.3; effects/resources.mjs): one player -- its
+     controller ("you", or unsaid), a target player, or the controller of what the trigger is about. */
+  if (name === "becomeMonarch" && effect.who !== undefined && !["you", "that card's controller"].includes(effect.who) && !Number.isInteger(effect.who?.target))
+    errors.push({path: `${path}.who`, message: "One player becomes the monarch: \"you\" (unsaid), a target player ({target: n}), or \"that card's controller\""});
   /* "The player or planeswalker that creature is attacking" (Raid Bombardment; script/bind.mjs): damage, to that one alone. */
   if (effect.who === "attacked" && (name !== "dealDamage" || effect.targets !== undefined))
     errors.push({path: `${path}.who`, message: "\"The player or planeswalker it's attacking\" (who: \"attacked\") is dealt damage, by dealDamage with no other target"});
@@ -402,6 +406,21 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
     if (!Number.isInteger(effect.chooseUpTo) || effect.chooseUpTo <= (effect.choose ?? 1))
       errors.push({path: `${path}.effects[${index}].chooseUpTo`, message: "chooseUpTo is how many modes at most: a whole number more than choose"});
   }
+  /* "Choose up to four. You may choose the same mode more than once" (Moment of Reckoning; CR 700.2d): `sameMode`, and
+     `choose: 0` for "up to" -- none chosen is a choice too -- each beside a chooseUpTo, so only on such a spell. */
+  for (const [index, effect] of (ability.effects ?? []).entries()) {
+    if (effect?.effect !== "modal") continue;
+    if (effect.sameMode !== undefined && !(effect.sameMode === true && effect.chooseUpTo !== undefined))
+      errors.push({path: `${path}.effects[${index}].sameMode`, message: "\"You may choose the same mode more than once\" is sameMode: true, beside chooseUpTo"});
+    if (effect.choose === 0 && effect.chooseUpTo === undefined)
+      errors.push({path: `${path}.effects[${index}].choose`, message: "choose: 0 is \"up to\" chooseUpTo modes, beside it"});
+  }
+  /* "If this is the first time this ability has resolved this turn" (`firstResolution`; Nissa, Leyline Tamer): asked of a
+     triggered or activated ability's effect as it is reached (script/resolution.mjs; rules/stack.mjs counts) -- never of the
+     ability's own condition, asked before it resolves, nor of a spell's. */
+  if ((ability.condition && typeof ability.condition === "object" && "firstResolution" in ability.condition)
+    || (!["triggered", "activated"].includes(ability.kind) && asksFirstResolution(ability.effects)))
+    errors.push({path, message: "firstResolution is asked of a triggered or activated ability's effect as it resolves"});
 
   const effectful = ["spell", "activated", "triggered"].includes(ability.kind);
   if (effectful) {
@@ -429,6 +448,12 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
     }
     /* A state trigger's state (CR 603.8): a condition, held to the condition grammar. */
     if (on === "state") for (const message of conditionProblems(ability.trigger.state ?? null)) errors.push({path: `${path}.trigger.state`, message});
+    /* "When you cast this spell while you control a creature" (Social Snub): a condition asked as the spell is cast and never
+       again (rules/trigger.mjs) -- of a spell cast trigger, the only one that reads it, and held to the condition grammar. */
+    if (ability.trigger?.while !== undefined) {
+      if (on !== "spell cast") errors.push({path: `${path}.trigger.while`, message: "\"While\" a condition holds is read by a spell cast trigger alone"});
+      for (const message of conditionProblems(ability.trigger.while ?? null)) errors.push({path: `${path}.trigger.while`, message});
+    }
     /* "Attack one of your opponents or a planeswalker they control" (CR 506.3): planeswalkers: true, beside defender: "opponent".
        "Deals combat damage to a player or planeswalker" (Grateful Apparition): planeswalkers: true, on a damage trigger
        about a player. */

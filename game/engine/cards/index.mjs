@@ -178,7 +178,10 @@ const damageDealt = (t) => (t.to === "self" ? {on: "GameEventCardDamaged", to: "
     ? {on: "GameEventPlayerDamaged", who: t.who ?? "self", to: t.to ?? "player", ...(t.combat ? {combat: true} : {}), ...(t.noncombat ? {noncombat: true} : {}), ...(t.sourceYours ? {sourceYours: true} : {}), ...(t.filter ? {filter: t.filter} : {}),
       /* "Deals combat damage to a player or planeswalker" (Grateful Apparition): damage dealt to a planeswalker counts
          too, about its controller (rules/trigger.mjs). */
-      ...(t.planeswalkers === true ? {planeswalkers: true} : {})} : null);
+      ...(t.planeswalkers === true ? {planeswalkers: true} : {}),
+      /* "Whenever one or more creatures deal combat damage to you while you're the monarch" (Tamiyo, Upriser Crowned; CR
+         725): `monarch: "you"`, read as the damage is dealt (rules/trigger.mjs) -- on damage to you alone. */
+      ...(t.monarch === "you" && t.to === "you" ? {monarch: "you"} : {})} : null);
 
 /* "WHENEVER ONE OR MORE CARDS ARE PUT INTO EXILE FROM YOUR LIBRARY AND/OR YOUR GRAVEYARD" (Laelia, the Blade Reforged):
    `from` a list of those zones, `owner` whose they are -- a card is only ever in its owner's library or graveyard (CR
@@ -238,6 +241,10 @@ const TRIGGERS = {
     ...(t.from ? {castFrom: t.from} : {}),
     /* "When you cast this spell" (Emrakul, the Exigent Doom): its own cast, from the stack (rules/trigger.mjs). */
     ...(t.who === "self" ? {who: "self"} : {}),
+    /* "When you cast this spell while you control a creature" (Social Snub): `while`, a condition of script/condition.mjs's
+       asked as the spell is cast (CR 601.2i) and never again -- a trigger condition, not an intervening "if" (CR 603.4), so
+       a creature gone by the time the trigger resolves takes nothing from it (rules/trigger.mjs). */
+    ...(t.while ? {while: t.while} : {}),
     /* "For each other instant and sorcery spell you've cast before it this turn": counted as it triggers. */
     ...(t.countBefore ? {countBefore: true} : {}),
     /* "An instant or sorcery spell that targets a creature" (Rehearsed Debater): what one of its targets is (rules/trigger.mjs). */
@@ -299,8 +306,12 @@ const TRIGGERS = {
      (`each: "attacker"`, 509.3b) once for each attacking creature it blocks. `who` and `filter` the blocker, read as blockers
      are declared (509.3f). About the blocker, and -- for a creature -- the attacker blocked and its controller. A creature
      put onto the battlefield blocking never blocked (509.4); nothing here puts one there. */
-  blocks: (t) => (ARRIVALS.includes(t.who ?? "self") && [undefined, "attacker"].includes(t.each)
-    ? {on: "GameEventBlockersDeclared", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {}), ...(t.each === "attacker" ? {eachBlocked: true} : {})} : null),
+  /* "Whenever this creature blocks a creature with flying" (Skystinger; CR 509.3b): `blocked`, a selector of the attacking
+     creature it blocks, read as blockers are declared -- once for each attacker it blocks that fits. Only with `each:
+     "attacker"`, the creature blocked being what it describes. */
+  blocks: (t) => (ARRIVALS.includes(t.who ?? "self") && [undefined, "attacker"].includes(t.each) && (t.blocked === undefined || t.each === "attacker")
+    ? {on: "GameEventBlockersDeclared", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {}), ...(t.each === "attacker" ? {eachBlocked: true} : {}),
+      ...(t.blocked ? {blocked: t.blocked} : {})} : null),
   /* "When this creature becomes monstrous" (Protector of the Wastes; CR 701.37b): this permanent given the designation
      (effects/attributes.mjs) -- once, since it stays monstrous until it leaves the battlefield. */
   "becomes monstrous": (t) => ((t.who ?? "self") === "self" ? {on: "GameEventCardAttribute", attribute: "monstrous", who: "self"} : null),
@@ -1374,7 +1385,10 @@ export function compileScript(script) {
          no mode of the spell's, and waits for it to resolve. */
       const only = (ability.effects ?? []).length === 1 ? ability.effects[0] : null;
       const modal = only?.effect === "modal" && only.chooser === undefined
+        /* "You may choose the same mode more than once" (`sameMode`, Moment of Reckoning; CR 700.2d), and "choose up to four"
+           (`choose: 0`): rules/actions.mjs offers each such choice of modes, script/bind.mjs their targets. */
         ? {choose: only.choose ?? 1, ...(only.chooseMore ? {more: structuredClone(only.chooseMore)} : {}), ...(only.chooseUpTo ? {upTo: only.chooseUpTo} : {}),
+          ...(only.sameMode === true ? {sameMode: true} : {}),
           modes: (only.modes ?? []).map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? [], ...(m.cost !== undefined ? {cost: m.cost} : {})}))} : null;
       if (modal && (ability.targets ?? []).length) problems.push("a modal spell chosen as it is cast names its targets in its modes, not beside them");
       spell = {id, text: ability.text, targets: ability.targets ?? [], effects: ability.effects, ...(modal ? {modal} : {}), ...(ability.additionalCost ? {additionalCost: ability.additionalCost} : {})};
@@ -1475,6 +1489,10 @@ export function compileScript(script) {
       /* "Whenever ONE OR MORE ...": once for everything that happened at once (rules/trigger.mjs). */
       const trigger = compiled && ability.trigger.batch ? {...compiled, batch: true} : compiled;
       if (!trigger) problems.push(`${ability.trigger.on}${ability.trigger.who ? ` (${ability.trigger.who})` : ""}: a trigger the engine does not watch for yet`);
+      /* "While you're the monarch" (CR 725): read by damage dealt to you alone -- any other trigger would drop it, and trigger
+         whoever is the monarch. */
+      if (ability.trigger.monarch !== undefined && trigger?.monarch !== "you")
+        problems.push(`${ability.text}: "while you're the monarch" is monarch: "you", on damage dealt to you`);
       if (ability.trigger.filter) {
         /* A filter may be a choice ("an instant or sorcery spell", "another creature or planeswalker you control dies"):
            each alternative, with what they share, is a selector of its own (script/filter.mjs, matchesSelector). */
@@ -1482,6 +1500,14 @@ export function compileScript(script) {
         const each = Array.isArray(anyOf) ? anyOf.map((one) => ({...shared, ...one, ...(ability.trigger.on === "spell cast" ? {what: "spell"} : {})}))
           : [{...ability.trigger.filter, ...(ability.trigger.on === "spell cast" ? {what: "spell"} : {})}];
         try { for (const one of each) compileSelector(one); } catch (error) { problems.push(`${ability.text}: ${error.message}`); }
+      }
+      /* The attacking creature a blocker blocks (a blocks trigger's `blocked`, Skystinger's "a creature with flying"): a
+         selector of a permanent. */
+      if (ability.trigger.blocked !== undefined) {
+        const blocked = ability.trigger.blocked;
+        if (ability.trigger.on !== "blocks") problems.push(`${ability.text}: the creature blocked is read by a blocks trigger, and by no other`);
+        else if (!blocked || typeof blocked !== "object" || Array.isArray(blocked)) problems.push(`${ability.text}: the creature blocked is a selector`);
+        else try { compileSelector({...blocked, what: "permanent"}); } catch (error) { problems.push(`${ability.text}: ${error.message}`); }
       }
       /* What a spell cast targets ("that targets a creature"): a selector of its own, read only as a spell is cast -- another
          trigger would drop it, and trigger on everything. */

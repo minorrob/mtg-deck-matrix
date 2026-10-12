@@ -134,6 +134,10 @@ export const STATIC_RULES = Object.freeze({
       614.1a): `affects` the players whose draws it replaces, from its controller's side. drawsInstead, read by the draw
       effect (script/effects/zones.mjs). */
   "draws-instead": "script/effects/zones.mjs",
+  /** "Each opponent can't draw more than one card each turn" (Narset, Parter of Veils; CR 121.2b): `affects` the players it
+      binds, from its controller's side. drawForbidden, read where a card is drawn -- the draw step's (rules/turn.mjs), an
+      effect's (script/effects/zones.mjs) -- and where a "you may draw" is offered (script/effects/asking.mjs, modal). */
+  "cant-draw-more-than-one": "script/effects/zones.mjs",
   /** "Alexios ... can't be sacrificed" (Alexios, Deimos of Kosmos; CR 701.21a): `affects` what can't. cantBeSacrificed, read
       where a permanent would be sacrificed (script/effects/zones.mjs, sacrificeOne) and where one is chosen to be: the
       sacrifice effect and an "unless" cost (script/effects/asking.mjs), a cost (rules/actions.mjs). */
@@ -512,6 +516,18 @@ export function cantBeSacrificed(state, id) {
         && matchesSelector({what: "permanent", ...ability.affects}, state, id, {controller: holder.controller, source: holderId})) return true;
   }
   return false;
+}
+
+/**
+ * "EACH OPPONENT CAN'T DRAW MORE THAN ONE CARD EACH TURN" (Narset, Parter of Veils; CR 121.2b, 101.2): whether `player` may not
+ * draw `count` more cards now -- a `cant-draw-more-than-one` static's `affects` names them, from its controller's side, and
+ * this turn's draws (state/index.mjs, recordDraw: those before the static was there among them, its ruling) and these would
+ * be more than one. Each card of a draw is its own (CR 121.2): the draw of two is carried out as far as it may be, and a
+ * choice to draw two is no choice the player may take (121.2b). A draw replaced was never made (CR 614.6), so is not counted.
+ */
+export function drawForbidden(state, player, count = 1) {
+  if ((state.players[player]?.drawnThisTurn ?? 0) + count <= 1) return false;
+  return playerRuleChanged(state, "cant-draw-more-than-one", player);
 }
 
 /**
@@ -1084,7 +1100,9 @@ export function playerRuleChanged(state, rule, player) {
       if (compileSelector(ability.affects)(state, player, {controller: holder.controller, source: holderId})) return true;
     }
   }
-  return false;
+  /* Or an effect a spell made, for the players it names, for as long as it lasts: "you have no maximum hand size for the
+     rest of the game" (Wisdom of Ages; CR 402.2, 611.2a; effects/permanents.mjs, effectUntil's `players`). */
+  return (state.effects ?? []).some((effect) => effect.rule === rule && (effect.players ?? []).includes(player));
 }
 
 /** Whether any static ability on the battlefield -- or an effect with a duration ("can't be blocked this turn") -- changes `rule` for this object. */

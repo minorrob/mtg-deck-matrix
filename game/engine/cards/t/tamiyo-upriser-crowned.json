@@ -1,0 +1,87 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tamiyo, Upriser Crowned",
+    "oracleId": "8e0f2e26-1e14-422a-aafe-e1da38ab10a3",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Moonfolk",
+      "Warrior"
+    ],
+    "manaCost": "{4}{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 5
+  },
+  "oracleText": "Flying, double strike, haste\nWhen Tamiyo enters, you become the monarch.\nWhenever one or more creatures deal combat damage to you while you're the monarch, tap those creatures and put a stun counter on each of them.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "double strike",
+      "keyword": "double strike"
+    },
+    {
+      "kind": "keyword",
+      "text": "haste",
+      "keyword": "haste"
+    },
+    {
+      "kind": "triggered",
+      "text": "When Tamiyo enters, you become the monarch.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "becomeMonarch"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever one or more creatures deal combat damage to you while you're the monarch, tap those creatures and put a stun counter on each of them.",
+      "trigger": {
+        "on": "damage dealt once",
+        "who": "any",
+        "to": "you",
+        "combat": true,
+        "monarch": "you",
+        "filter": {
+          "types": [
+            "Creature"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "tap",
+          "targets": "those cards"
+        },
+        {
+          "effect": "putCounter",
+          "targets": "those cards",
+          "counter": "stun",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

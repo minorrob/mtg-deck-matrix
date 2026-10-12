@@ -26,7 +26,7 @@ import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf, controllerOf, abilitiesOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector, matchesSelector, shareCreatureType} from "../filter.mjs";
 import {applyReplacements, enteringModifications, regenerated} from "../../rules/replacement.mjs";
-import {cantBeCountered, entersUntapped, countersPlaced, drawsInstead, cantBeSacrificed} from "../../rules/statics.mjs";
+import {cantBeCountered, entersUntapped, countersPlaced, drawsInstead, cantBeSacrificed, drawForbidden} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
 
@@ -568,6 +568,9 @@ export function draw(state, params, context) {
 }
 /* One card off the top of a player's library into their hand, said to be drawn; from an empty library, the mark that loses (CR 704.5b). */
 function drawOne(state, player, events) {
+  /* A card the player can't draw (Narset, Parter of Veils; rules/statics.mjs, drawForbidden) is not drawn, nor tried for: no
+     draw from an empty library either (CR 101.2, 121.2b). */
+  if (drawForbidden(state, player)) return;
   const library = cardsIn(state, "library", player);
   if (library.length === 0) { state.players[player].drewFromEmpty = true; return; }
   const moved = moveOne(state, library[0], "hand", events, {owner: player});

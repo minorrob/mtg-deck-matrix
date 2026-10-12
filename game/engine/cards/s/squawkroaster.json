@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Squawkroaster",
+    "oracleId": "6b79404b-2fae-41fb-994c-d4cd895e8f09",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": 4
+  },
+  "oracleText": "Double strike\nVivid — Squawkroaster's power is equal to the number of colors among permanents you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Double strike",
+      "keyword": "double strike"
+    },
+    {
+      "kind": "static",
+      "text": "Vivid — Squawkroaster's power is equal to the number of colors among permanents you control.",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "colorsAmong": {
+            "what": "permanent",
+            "controller": "you"
+          }
+        }
+      }
+    }
+  ]
+}
