@@ -35,7 +35,7 @@
  *   CR 500.4: mana pools empty at the end of every step and phase, not at end of turn.
  */
 
-import {cardsIn, moveObject, eventCard, recordDraw, recordDiscard} from "../state/index.mjs";
+import {cardsIn, moveObject, eventCard, recordDraw, recordDrawStepDraw, recordDiscard} from "../state/index.mjs";
 import {attackers, blockers, combatDamage, endCombat} from "./combat.mjs";
 import {combatNeedsFirstStrike} from "../keywords/combat.mjs";
 import {checkStateBasedActions, gameOver, finishCommanderReplacement, legendChoice, finishLegendRule, finishDestructionChoice} from "./sba.mjs";
@@ -191,9 +191,13 @@ export function draw(state, player, events) {
     to: {zoneType: ZONE_LABEL.hand, player: {playerId: player}},
     /* A draw (CR 121.1), as "whenever you draw a card" watches for; a search that puts a card into a hand is not one. */
     drawn: true, drawNumber: recordDraw(state, player),
+    /* And which of those drawn in the drawer's own draw step, there (Orcish Bowmasters; state/index.mjs). */
+    ...drawStep(state, player),
   }));
   return moved;
 }
+
+const drawStep = (state, player) => { const n = recordDrawStepDraw(state, player); return n === null ? {} : {drawStepNumber: n}; };
 
 /* CR 103.8a, and note that it is a two-player rule. */
 const skipsFirstDraw = (state) =>

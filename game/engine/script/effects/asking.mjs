@@ -1823,7 +1823,9 @@ export const chooseCard = {
     /* From among what was looked at or moved (Risen Reef's "if it's a land card"), with nothing that fits: nothing to choose,
        and nobody is asked -- the cards are face up to the chooser, so there is no failing to find (CR 701.23b is a search's). */
     /* Exile is face up (CR 406.3): what fits there is seen, so there is no failing to find it either. */
-    const faceUp = among || onField || zone === "exile";
+    /* So is the command zone (CR 400.2): "put your commander into your hand from the command zone" (Command Beacon, wave 4b)
+       takes the one there, and with none there nobody is asked. */
+    const faceUp = among || onField || zone === "exile" || zone === "command";
     if (faceUp && cards.length === 0) return false;
     /* "IF AN EQUIPMENT IS PUT ONTO THE BATTLEFIELD THIS WAY, YOU MAY ATTACH IT TO A CREATURE YOU CONTROL" (Armored Skyhunter;
        `attach: "remembered"`, beside `to: "stay"`): "it" is what the effect before it put there (CR 701.3a) -- the permanent
@@ -1878,6 +1880,8 @@ export const chooseCard = {
       title: awaiting.zone === "battlefield" ? (awaiting.max > 1 ? "Choose permanents" : "Choose a permanent")
         /* A card in exile -- "a card exiled with this artifact" -- is chosen, not searched for. */
         : awaiting.zone === "exile" ? (awaiting.max > 1 ? "Choose cards in exile" : "Choose a card in exile")
+        /* Your commander, from the command zone (Command Beacon): chosen there, not searched for. */
+        : awaiting.zone === "command" ? "Choose a card in your command zone"
         /* Among cards wherever they went (Spirit of Resilience): chosen, not searched for. */
         : awaiting.zone === "any" ? (awaiting.max > 1 ? "Choose cards from among them" : "Choose a card from among them")
         /* Two zones searched as one (Finale of Devastation): both named. */

@@ -53,6 +53,7 @@
  *   {spellsCastThisGame: who, named}     that player's spells of a name cast this game
  *   {playersDealtNoncombatDamage: "opponent"|"any"}  the players noncombat damage reached this turn
  *   {lifeLostThisTurn: "opponents"}      the life every opponent lost this turn, together
+ *   {creaturesAttackedWithThisTurn: "you"}  the creatures that player declared as attackers this turn, each once (Minas Tirith)
  *   {cardsDiscardedThisTurn: "you"}      how many cards that player ("you", "that player") has discarded this turn -- "for each
  *                                        card you've discarded this turn" (Jiang Yanggu, Alone; state/index.mjs keeps it)
  *   {commanderColors: "you"}             the number of colors in your commanders' color identity (CR 903.4; War Room) --
@@ -122,7 +123,9 @@ export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf"
   /* Train E: "the number of differently named lands you control" (Fungal Colossus). */
   "differentNames",
   /* Train E, wave 2: "the greatest mana value among cards in your graveyard" (Hapatra, the Desert Fang). */
-  "greatestManaValue"]);
+  "greatestManaValue",
+  /* Wave 4b: "if you attacked with two or more creatures this turn" (Minas Tirith). */
+  "creaturesAttackedWithThisTurn"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named", "another", "signed"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -143,7 +146,7 @@ export function amountProblems(value) {
   for (const key of Object.keys(value)) if (!AMOUNT_KINDS.includes(key) && !AMOUNT_EXTRAS.includes(key)) problems.push(`An amount has no key ${JSON.stringify(key)}`);
   if ("countersOn" in value && typeof value.counter !== "string") problems.push("Counting counters says which kind: {countersOn, counter}");
   for (const key of ["lifeGainedThisTurn", "tokensCreatedThisTurn", "permanentsLeftThisTurn", "permanentsEnteredThisTurn", "cardsLeftGraveyardThisTurn",
-    "cardsDrawnThisTurn", "scriedOrSurveilledThisTurn", "spellsCastThisGame", "cardsDiscardedThisTurn"]) if (key in value && !["you", "that player"].includes(value[key])) problems.push(`${key} is "you" or "that player"`);
+    "cardsDrawnThisTurn", "scriedOrSurveilledThisTurn", "spellsCastThisGame", "cardsDiscardedThisTurn", "creaturesAttackedWithThisTurn"]) if (key in value && !["you", "that player"].includes(value[key])) problems.push(`${key} is "you" or "that player"`);
   /* The spells cast this turn: a player's, or the most of any one opponent's ("if an opponent cast a blue spell this turn"). */
   if ("spellsCastThisTurn" in value && !["you", "that player", "an opponent"].includes(value.spellsCastThisTurn)) problems.push('spellsCastThisTurn is "you", "that player" or "an opponent"');
   /* "If you've cast ANOTHER instant or sorcery spell this turn" (Burrog Barrage): this spell's own cast left out. */
@@ -518,6 +521,14 @@ export function amountOf(state, value, context = {}) {
   else if ("cardsDiscardedThisTurn" in value) {
     const player = playerOf(value.cardsDiscardedThisTurn, context);
     n = player !== null ? state.players[player]?.discardedThisTurn ?? 0 : 0;
+  }
+  /* "Activate only if you attacked with two or more creatures this turn" (Minas Tirith, wave 4b; CR 508.1): the creatures that
+     player declared as attackers this turn, each once whatever combat it attacked in -- one put onto the battlefield attacking
+     was never declared, and never attacked (CR 508.4). Kept as they are declared (rules/combat.mjs), for that turn alone. */
+  else if ("creaturesAttackedWithThisTurn" in value) {
+    const player = playerOf(value.creaturesAttackedWithThisTurn, context);
+    const attacked = player !== null ? state.players[player]?.attackedWith : undefined;
+    n = attacked?.turn === state.turn ? attacked.ids.length : 0;
   }
   /* "The number of creatures that entered the battlefield under your control this turn" (Kinbinding), and "another
      creature" (Wary Farmer, `another`: not this one): what entered under that player's control, as it entered (rules/

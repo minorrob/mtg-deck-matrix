@@ -40,6 +40,16 @@ export function recordDraw(state, player) {
   who.drawnThisTurn = (who.drawnThisTurn ?? 0) + 1;
   return who.drawnThisTurn;
 }
+/** "Except the first one they draw in each of their draw steps" (Orcish Bowmasters, wave 4b; CR 504.1): which card this is
+ *  of those the player has drawn in their own draw step -- 1 for the first, whether the step's draw or an effect's -- or null
+ *  for a draw anywhere else. Counted on the player against the turn, a turn having one draw step. */
+export function recordDrawStepDraw(state, player) {
+  if (state.phase !== "DRAW" || state.activePlayer !== player) return null;
+  const who = state.players[player];
+  if (who.drawStepDraws?.turn !== state.turn) who.drawStepDraws = {turn: state.turn, count: 0};
+  who.drawStepDraws.count += 1;
+  return who.drawStepDraws.count;
+}
 
 /* MORBID'S RECORD: a creature DIES when it is put into a graveyard from the battlefield (CR 700.4) -- counted as it lands
    there for the player who controlled it as it last existed on the battlefield (`was`, rules/layers.mjs lastKnown: an

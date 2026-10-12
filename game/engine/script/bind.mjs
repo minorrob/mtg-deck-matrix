@@ -421,7 +421,11 @@ function playersOf(value, context, state = null) {
   if (value === "that card's controller") {
     const card = context.about?.card;
     if (state && card !== undefined && card !== null && state.objects[card]?.zone === "battlefield") return [controllerOf(state, card)];
-    return context.about?.controller !== undefined && context.about.controller !== null ? [context.about.controller] : [];
+    if (context.about?.controller !== undefined && context.about.controller !== null) return [context.about.controller];
+    /* "Whenever a creature an opponent controls dies, that player loses 2 life" (Massacre Wurm, wave 4b): a permanent that has
+       left the battlefield, by the controller it had as it last existed there (CR 603.10a, 608.2h). */
+    const was = context.about?.lastKnown?.controller;
+    return Number.isInteger(was) ? [was] : [];
   }
   if (!isRef(value)) return value;
   const chosen = (context.targets ?? [])[value.target];
@@ -509,8 +513,9 @@ export function bindEffect(effect, context, state = null) {
     if (player === undefined) delete bound.toPlayer; else bound.toPlayer = player;
   }
   /* Who makes a choice that is not the controller's ("its controller may draw up to two cards"): one player. */
-  if (isRef(bound.chooser) || bound.chooser === "that player") {
-    const [player] = playersOf(bound.chooser, context);
+  /* "Its controller may draw a card" (Selvala, Heart of the Wilds, wave 4b): the controller of what the trigger is about. */
+  if (isRef(bound.chooser) || bound.chooser === "that player" || bound.chooser === "that card's controller") {
+    const [player] = playersOf(bound.chooser, context, state);
     if (player === undefined) delete bound.chooser; else bound.chooser = player;
   }
   /* "The owner of target nonland permanent puts it into their library second from the top or on the bottom" (Temporal

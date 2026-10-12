@@ -377,6 +377,9 @@ function subjects(state, event, condition, sourceId, controller) {
     if (fields.drawn !== true) return [];
     /* Faerie Mastermind: the second draw itself, even if several draws resolve together. */
     if (condition.nthThisTurn !== undefined && fields.drawNumber !== condition.nthThisTurn) return [];
+    /* "Except the first one they draw in each of their draw steps" (Orcish Bowmasters, wave 4b): not that one (state/index.mjs,
+       recordDrawStepDraw) -- the step's own draw, or an effect's when that was skipped -- and every other. */
+    if (condition.exceptFirstInDrawStep && fields.drawStepNumber === 1) return [];
     const drawer = fields.to?.player?.playerId;
     return whoseIs(condition.drawer ?? "you", drawer, controller) ? [{player: drawer}] : [];
   }
@@ -432,10 +435,21 @@ function matches(state, event, condition, sourceId, controller) {
     if (condition.intoGraveyard) {
       const card = fields.becomes !== undefined ? state.objects[fields.becomes] : undefined;
       if (!card || card.token || !whoseIs(condition.owner ?? "you", card.owner, controller)) return false;
+      /* "From anywhere other than the battlefield" (Syr Konrad, the Grim): a hand, a library, the stack, exile -- not a death. */
+      if (condition.notFrom && fields.from?.zoneType === condition.notFrom) return false;
       return !condition.filter || matchesSelector({...condition.filter, what: "card", zone: "graveyard"}, state, fields.becomes, {controller, source: sourceId});
     }
     /* "Whenever one or more cards leave your graveyard" (Garrison Excavator): the graveyard is its card's owner's. */
-    if (condition.leftGraveyard) return whoseIs(condition.owner ?? "you", fields.card?.owner, controller);
+    /* "A creature card leaves your graveyard" (Syr Konrad, the Grim, wave 4b): what the card was there, looking back (CR
+       603.10a) -- the move's snapshot of it (`wasCard`, effects/zones.mjs and rules/actions.mjs), or the card it became where
+       everyone can see it (CR 400.7e: a commander put into the command zone). */
+    if (condition.leftGraveyard && !condition.filter) return whoseIs(condition.owner ?? "you", fields.card?.owner, controller);
+    if (condition.leftGraveyard) {
+      if (!whoseIs(condition.owner ?? "you", fields.card?.owner, controller)) return false;
+      const became = fields.becomes !== undefined ? state.objects[fields.becomes] : undefined;
+      const was = fields.wasCard ?? (became ? {types: [...(became.types ?? [])], subtypes: [...(became.subtypes ?? [])], supertypes: [...(became.supertypes ?? [])]} : null);
+      return Boolean(was) && matchesLastKnown(condition.filter, was, {controller, source: sourceId});
+    }
     /* `self` means this permanent, compared against the card AS IT WAS — the event's snapshot, not
        the object, because for a death the object no longer exists. An arrival is the other way round:
        the card that moved was the one on the stack or in hand, and the permanent that arrived is a new
@@ -1004,9 +1018,15 @@ export function resolveTriggerCounted(state, awaiting, indices) {
    (CR 700.2d), each with a way to aim its targets; a mode with no legal target can't be chosen. "Each mode must target a
    different player": no player twice among them. "Choose one that hasn't been chosen": never one in `taken` (modesTaken) --
    all of them chosen, and there is no way, so it is removed from the stack (CR 603.3c). */
+/* "CHOOSE ONE OR MORE" (`upTo`, Black Market Connections, wave 4b): each number of modes from `choose` to `upTo`, every set of
+   that many its own way. */
 function modalWays(state, modal, context, taken = []) {
   const ways = [];
-  const n = Math.min(modal.choose, modal.modes.length);
+  for (let n = Math.min(modal.choose, modal.modes.length); n <= Math.min(modal.upTo ?? modal.choose, modal.modes.length); n += 1) ways.push(...modalWaysOf(state, modal, context, taken, n));
+  return ways;
+}
+function modalWaysOf(state, modal, context, taken, n) {
+  const ways = [];
   const pick = (from, chosen) => {
     if (chosen.length === n) {
       for (const targets of targetChoices(state, modalScript(modal, chosen).targets, context)) {
@@ -1047,7 +1067,7 @@ export function triggerTargetsChoice(state, awaiting) {
       return {index, label, modes, targets, hostile: isHostile(modalScript(modal, modes).effects), ...(entry.cardId !== null ? {cardId: entry.cardId} : {})};
     });
     if (modal.mayChooseNone) options.push({index: options.length, label: "Choose none", none: true});
-    return {id: `trigger-targets:${entry.stackId}`, title: `${entry.name ?? "A triggered ability"}: choose ${modal.choose}`, mode: "one", min: 1, max: 1, options};
+    return {id: `trigger-targets:${entry.stackId}`, title: `${entry.name ?? "A triggered ability"}: choose ${modal.choose}${modal.upTo ? " or more" : ""}`, mode: "one", min: 1, max: 1, options};
   }
   const hostile = isHostile(entry.script.effects);
   return {

@@ -252,11 +252,15 @@ const TRIGGERS = {
   /* "Whenever one or more permanent cards are put into your graveyard from anywhere" (Moonshadow): a card arriving in a
      graveyard, from any zone, read as the card it became there -- a token is no card (CR 108.2b) -- `owner` whose
      graveyard (a card goes to its owner's, CR 400.3), `filter` what the card must be. "One or more" is `batch`. */
-  "put into graveyard": (t) => (["you", "opponent", "any"].includes(t.owner ?? "you")
-    ? {on: "GameEventCardChangeZone", to: "Graveyard", intoGraveyard: true, owner: t.owner ?? "you", ...(t.filter ? {filter: t.filter} : {})} : null),
-  /* "Whenever one or more cards leave your graveyard" (Garrison Excavator): to any zone, a card cast from it included. */
-  "left graveyard": (t) => (["you", "opponent", "any"].includes(t.owner ?? "you") && !t.filter
-    ? {on: "GameEventCardChangeZone", from: "Graveyard", leftGraveyard: true, owner: t.owner ?? "you"} : null),
+  /* "A creature card is put into a graveyard from anywhere other than the battlefield" (Syr Konrad, the Grim, wave 4b):
+     `notFrom: "battlefield"`. */
+  "put into graveyard": (t) => (["you", "opponent", "any"].includes(t.owner ?? "you") && [undefined, "battlefield"].includes(t.notFrom)
+    ? {on: "GameEventCardChangeZone", to: "Graveyard", intoGraveyard: true, owner: t.owner ?? "you", ...(t.filter ? {filter: t.filter} : {}),
+      ...(t.notFrom === "battlefield" ? {notFrom: "Battlefield"} : {})} : null),
+  /* "Whenever one or more cards leave your graveyard" (Garrison Excavator): to any zone, a card cast from it included. "A
+     creature card leaves your graveyard" (Syr Konrad, the Grim, wave 4b): `filter`, the card as it was there (rules/trigger.mjs). */
+  "left graveyard": (t) => (["you", "opponent", "any"].includes(t.owner ?? "you")
+    ? {on: "GameEventCardChangeZone", from: "Graveyard", leftGraveyard: true, owner: t.owner ?? "you", ...(t.filter ? {filter: t.filter} : {})} : null),
   upkeep: (t) => ({on: "GameEventTurnPhase", phase: "UPKEEP", ...(t.yours === false ? {} : {yourTurn: true})}),
   /* "Whenever you cast a noncreature spell", "whenever an opponent casts a spell": `caster` you, opponent or any;
      `filter` the spell (CR 601.2i). */
@@ -361,9 +365,10 @@ const TRIGGERS = {
      damage" (Forge's DamageDoneOnce): the same, once for everything one action did -- per player dealt it (trigger.mjs). */
   "damage dealt once": (t) => { const once = damageDealt(t); return once ? {...once, batch: true} : null; },
   /* "Whenever you draw a card", "whenever an opponent draws a card" (CR 121.1): `drawer`. */
-  drawn: (t) => t.nthThisTurn === undefined || (Number.isInteger(t.nthThisTurn) && t.nthThisTurn >= 1)
+  /* "Except the first one they draw in each of their draw steps" (Orcish Bowmasters, wave 4b): `exceptFirstInDrawStep`. */
+  drawn: (t) => (t.nthThisTurn === undefined || (Number.isInteger(t.nthThisTurn) && t.nthThisTurn >= 1)) && [undefined, true].includes(t.exceptFirstInDrawStep)
     ? {on: "GameEventCardChangeZone", from: "Library", to: "Hand", drawn: true, drawer: t.drawer ?? "you",
-      ...(t.nthThisTurn !== undefined ? {nthThisTurn: t.nthThisTurn} : {})} : null,
+      ...(t.nthThisTurn !== undefined ? {nthThisTurn: t.nthThisTurn} : {}), ...(t.exceptFirstInDrawStep ? {exceptFirstInDrawStep: true} : {})} : null,
   /* "Whenever you gain life" (CR 119.9): `gainer` you, opponent or any. */
   "life gained": (t) => ({on: "GameEventPlayerLivesChanged", gainer: t.gainer ?? "you"}),
   /* "Whenever an opponent loses life", "whenever you lose life" (CR 119.3, batch 78): `loser` you, opponent or any; about
@@ -1340,8 +1345,9 @@ export function compileScript(script) {
         problems.push("moveZone: withCounters is the counters it enters the battlefield with, or is exiled with: {kind: 1 or more}");
       /* "Put this creature's counters on that token" (Ambitious Augmenter): `countersOf: "self"`, every kind its source had as
          it last existed, as many -- with no kind or count of its own (effects/resources.mjs, putCounter). */
-      if (effect.effect === "putCounter" && effect.countersOf !== undefined && !(effect.countersOf === "self" && effect.counter === undefined && effect.count === undefined))
-        problems.push("putCounter: countersOf is \"self\", its source's counters as it last existed, with no counter or count of its own");
+      /* Or "that card", those the creature a trigger is about had as it last existed (The Ozolith, wave 4b). */
+      if (effect.effect === "putCounter" && effect.countersOf !== undefined && !(["self", "that card"].includes(effect.countersOf) && effect.counter === undefined && effect.count === undefined))
+        problems.push("putCounter: countersOf is \"self\" or \"that card\", the counters it had as it last existed, with no counter or count of its own");
       /* "That player ... puts a +1/+1 counter on it" (Alexios): who puts them, the player a trigger is about. */
       if (effect.effect === "putCounter" && effect.puts !== undefined && effect.puts !== "that player")
         problems.push("putCounter: puts is \"that player\", the player the trigger is about putting them");
@@ -1464,6 +1470,14 @@ export function compileScript(script) {
             if (one?.atom === "blight" && !(Number.isInteger(one.count ?? 1) && (one.count ?? 1) >= 1)) problems.push("blight: an additional cost of 1 or more -1/-1 counters");
             if (one?.optional !== undefined) problems.push("oneOf: one of a choice is never optional");
           }
+          continue;
+        }
+        /* "As an additional cost to cast this spell, pay X life" (Toxic Deluge, wave 4b): X announced as it is cast, one offer for
+           each value (rules/actions.mjs, lifeXAtom) -- on a spell with no {X} in its mana cost, for one X to name. */
+        if (atom?.atom === "payLife") {
+          let manaX = true;
+          try { manaX = parseManaCost(identity.manaCost ?? "").variable > 0; } catch { /* refused below */ }
+          if (atom.amount !== "X" || manaX) problems.push("payLife: an additional cost of X life, on a spell with no {X} in its mana cost");
           continue;
         }
         if (!["discard", "sacrifice", "blight", "tapCreature", "behold"].includes(atom?.atom)) problems.push(`${atom?.atom ?? "an additional cost"}: an additional cost nothing pays yet`);
@@ -1664,6 +1678,8 @@ export function compileScript(script) {
       const lone = (ability.effects ?? []).length === 1 ? ability.effects[0] : null;
       const modal = lone?.effect === "modal" && lone.chooser === undefined
         ? {choose: lone.choose ?? 1, ...(lone.mayChooseNone ? {mayChooseNone: true} : {}), ...(lone.differentPlayers ? {differentPlayers: true} : {}),
+          /* "Choose one or more" (Black Market Connections, wave 4b): as many as `upTo`, each number of them a way of its own. */
+          ...(lone.chooseUpTo ? {upTo: lone.chooseUpTo} : {}),
           /* "Choose one that hasn't been chosen" (Gollum, Riddle Master): each mode once, for as long as its permanent is
              the object it is (rules/trigger.mjs, modesTaken). */
           ...(lone.unchosen === true ? {unchosen: true} : {}),

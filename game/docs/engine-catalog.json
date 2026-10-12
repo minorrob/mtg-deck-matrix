@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1434,
+  "defined": 1462,
   "provisional": 25,
-  "everyRule": 2773
+  "everyRule": 2780
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -7299,8 +7299,8 @@
      "forge": "RaiseCost",
      "top": 10,
      "all": 91,
-     "blocks": 6,
-     "alone": 5
+     "blocks": 5,
+     "alone": 4
     },
     {
      "kind": "static",
@@ -7347,8 +7347,8 @@
      "forge": "CantBeActivated",
      "top": 5,
      "all": 34,
-     "blocks": 5,
-     "alone": 5
+     "blocks": 4,
+     "alone": 4
     },
     {
      "kind": "static",
@@ -9201,8 +9201,8 @@
      "forge": "Imprint",
      "top": 10,
      "all": 97,
-     "blocks": 8,
-     "alone": 6
+     "blocks": 7,
+     "alone": 5
     },
     {
      "kind": "option",
@@ -9316,10 +9316,10 @@
   },
   "Amounts the game counts": {
    "tally": {
-    "built": 27,
+    "built": 28,
     "partial": 2,
     "named": 0,
-    "missing": 159
+    "missing": 158
    },
    "entries": [
     {
@@ -9590,13 +9590,13 @@
      "kind": "count",
      "rule": null,
      "name": "Attackers declared",
-     "engine": null,
-     "status": "missing",
+     "engine": "amount {creaturesAttackedWithThisTurn: \"you\" | \"that player\"} (rules/combat.mjs keeps them)",
+     "status": "built",
      "forge": "AttackersDeclared",
      "top": 5,
      "all": 62,
-     "blocks": 5,
-     "alone": 4
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",

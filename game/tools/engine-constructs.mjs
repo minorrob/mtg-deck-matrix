@@ -446,7 +446,9 @@ export const FORGE_COUNTS = Object.freeze({
   DamageAmount: {name: "Damage dealt", status: "built", engine: "{damageDealt: true}: the damage a damage trigger is about, all of an action's together"},
   /* Train C, p4-replacements: the number a counter replacement changes ("that many plus one", "twice that many"). */
   CounterNum: {name: "That many counters (the number of counters a replacement changes)", status: "built", engine: "more-counters' times, plus and half (rules/statics.mjs, placeCounters)"},
-  AttackersDeclared: {name: "Attackers declared", status: "missing"},
+  /* Wave 4b (Minas Tirith): "if you attacked with two or more creatures this turn" -- each creature a player declared as an
+     attacker this turn, once, kept as they are declared (rules/combat.mjs). Its one form, built. */
+  AttackersDeclared: {name: "Attackers declared", status: "built", engine: "amount {creaturesAttackedWithThisTurn: \"you\" | \"that player\"} (rules/combat.mjs keeps them)"},
   TimesKicked: {name: "Times kicked", status: "missing"},
   Kicked: {name: "Whether it was kicked", status: "missing"},
   /* Wave 4b (Dawn's Truce): "if the gift was promised" (CR 702.174b, 702.174k). */

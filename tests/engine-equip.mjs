@@ -338,7 +338,7 @@ const equipTo = (s, equipment, target) => applyAction(s, 0, offers(s, "activate"
   const thrill = script("Thrill of Possibility");
   eq(compileScript(thrill).problems, [], "Thrill of Possibility, as written, compiles");
   const bad = compileScript({...thrill, abilities: [{...thrill.abilities[0], additionalCost: [{atom: "payLife", amount: 3}]}]});
-  eq([bad.definition, bad.problems.some((p) => /payLife: an additional cost nothing pays yet/.test(p))], [null, true], "an additional cost the engine cannot pay is refused at compile, so the card stays unplayable");
+  eq([bad.definition, bad.problems.some((p) => /payLife: an additional cost of X life/.test(p))], [null, true], "an additional cost the engine cannot pay -- 3 life, not X (Toxic Deluge's) -- is refused at compile, so the card stays unplayable");
 }
 
 console.log(`engine-equip: ${checks} checks passed — Equip at sorcery speed moves what it grants, the Equipment stays when its creature goes, Treasure, Food and Clue by name, and additional costs chosen as offers.`);

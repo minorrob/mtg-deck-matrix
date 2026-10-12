@@ -21,7 +21,7 @@ import {holdArrival, enteredWith} from "../../rules/entering.mjs";
 import {prepare} from "./attributes.mjs";
 import {afterwards, delayedTrigger, enchantable, enchantOnArrival, controlSourceLeft, endWhileSourceRemains} from "./permanents.mjs";
 import {typesOf} from "../../rules/layers.mjs";
-import {moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard, rememberExileLooker, recordDraw, recordDeath} from "../../state/index.mjs";
+import {moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard, rememberExileLooker, recordDraw, recordDrawStepDraw, recordDeath} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf, controllerOf, abilitiesOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector, matchesSelector, shareCreatureType} from "../filter.mjs";
@@ -166,6 +166,9 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
   events.push(event("GameEventCardChangeZone", state, {
     card,
     ...(leftBehind ? {leftBehind} : {}),
+    /* A card leaving a graveyard, as it was there: "whenever a creature card leaves your graveyard" (Syr Konrad, the Grim,
+       wave 4b; rules/trigger.mjs) looks back (CR 603.10a), wherever it went -- a hand or a library too. */
+    ...(from === "graveyard" ? {wasCard: {types: [...(object.types ?? [])], subtypes: [...(object.subtypes ?? [])], supertypes: [...(object.supertypes ?? [])]}} : {}),
     /* The permanent that arrived is a new object (CR 400.7); "when this enters" looks for it by this. */
     ...(destination === "battlefield" ? {enteredAs: moved} : {}),
     /* "When this land enters untapped" (rules/trigger.mjs) asks how it entered, not how it is later. */
@@ -647,6 +650,9 @@ function drawOne(state, player, events) {
     const fields = events[events.length - 1].data.fields;
     fields.drawn = true;
     fields.drawNumber = recordDraw(state, player);
+    /* In the drawer's own draw step, which of the cards drawn there (Orcish Bowmasters; state/index.mjs). */
+    const inStep = recordDrawStepDraw(state, player);
+    if (inStep !== null) fields.drawStepNumber = inStep;
   }
 }
 

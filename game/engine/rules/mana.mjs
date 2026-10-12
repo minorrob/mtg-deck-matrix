@@ -30,6 +30,7 @@
 
 export const COLORS = Object.freeze(["W", "U", "B", "R", "G"]);
 import {eventCard, activationsForbidden} from "../state/index.mjs";
+import {permanentActivationForbidden} from "./statics.mjs";
 import {sickForAbilities} from "../keywords/timing.mjs";
 import {abilitiesOf} from "./layers.mjs";
 
@@ -431,8 +432,9 @@ function plainSources(state, player) {
   for (const id of state.zones.battlefield) {
     const object = state.objects[id];
     if (object.controller !== player || object.tapped) continue;
-    /* Its mana abilities can't be activated (Koma, Cosmos Serpent; CR 602.5, 605.1a): it pays for nothing. */
-    if (activationsForbidden(state, id)) continue;
+    /* Its mana abilities can't be activated (Koma, Cosmos Serpent; Grand Abolisher's opponents, during its controller's turn;
+       CR 602.5, 605.1a): it pays for nothing. */
+    if (activationsForbidden(state, id) || permanentActivationForbidden(state, id)) continue;
     /* CR 302.6: a creature's {T} waits until it has been theirs since their turn began (or "as though it had haste",
        CR 702.10c: keywords/timing.mjs). */
     if (sickForAbilities(state, id)) continue;

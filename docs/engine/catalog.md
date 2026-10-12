@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,434 defined and playable today; 2,773 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,462 defined and playable today; 2,780 with every
 mechanic built, so only their definitions are left to write; 25 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -26,7 +26,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Replacement effects | 34 | 0 | 6 | 0 | 28 |
 | Costs | 26 | 5 | 2 | 10 | 9 |
 | Options and conditions | 37 | 24 | 5 | 0 | 8 |
-| Amounts the game counts | 188 | 27 | 2 | 0 | 159 |
+| Amounts the game counts | 188 | 28 | 2 | 0 | 158 |
 | Choices | 15 | 12 | 0 | 0 | 3 |
 | Other keyword constructs | 16 | 11 | 0 | 1 | 4 |
 
@@ -41,16 +41,16 @@ The things that alone hold back the most of the most-played cards.
 | count | Cards in a library | — | missing | 8 | 12 |
 | effect | RingTemptsYou | — | missing | 8 | 11 |
 | effect | ChoosePlayer | — | missing | 6 | 8 |
-| option | Imprint (a card exiled with this) | — | missing | 6 | 8 |
 | effect | Discover | discover | named | 6 | 6 |
 | count | Amount | — | missing | 5 | 9 |
 | count | How many things an effect remembered | — | missing | 5 | 8 |
 | option | Unless a player sacrifices a permanent | — | missing | 5 | 7 |
+| option | Imprint (a card exiled with this) | — | missing | 5 | 7 |
 | count | Times this resolved this turn | — | missing | 5 | 7 |
 | keyword ability | Spree | — | missing | 5 | 6 |
-| static | RaiseCost | — | missing | 5 | 6 |
 | effect | Protection | — | missing | 5 | 5 |
 | keyword ability | Cascade | — | missing | 5 | 5 |
+| trigger | AbilityCast | — | missing | 5 | 5 |
 
 ## Keyword abilities (CR 702)
 
@@ -678,11 +678,11 @@ The things that alone hold back the most of the most-played cards.
 | CantBeCast | rules/actions | built | 14 | 97 | 0 | 0 |
 | CastWithFlash | rules/actions | built | 12 | 56 | 0 | 0 |
 | CantAttack | rules/combat | built | 10 | 204 | 0 | 0 |
-| RaiseCost | — | missing | 10 | 91 | 6 | 5 |
+| RaiseCost | — | missing | 10 | 91 | 5 | 4 |
 | CantBlock | rules/combat | built | 8 | 139 | 0 | 0 |
 | CantAttackUnless | rules/combat | built | 7 | 26 | 0 | 0 |
 | UntapOtherPlayer | rules/turn | built | 7 | 15 | 0 | 0 |
-| CantBeActivated | — | missing | 5 | 34 | 5 | 5 |
+| CantBeActivated | — | missing | 5 | 34 | 4 | 4 |
 | MustAttack | rules/combat | built | 4 | 100 | 0 | 0 |
 | CantGainLife | rules/statics | built | 4 | 20 | 0 | 0 |
 | AttackRestrict | — | missing | 4 | 8 | 3 | 2 |
@@ -849,7 +849,7 @@ The things that alone hold back the most of the most-played cards.
 | Unless a player pays mana ("unless that player pays {1}") | unlessPays (generic mana) | built | 16 | 287 | 0 | 0 |
 | A token that enters tapped and attacking | `attacking` on createToken and copyPermanent: that player, or the one its controller chooses (batch 67) | built | 16 | 88 | 0 | 0 |
 | It gains a keyword until end of turn (a token made this way) | gainsUntilEndOfTurn | built | 16 | 67 | 0 | 0 |
-| Imprint (a card exiled with this) | — | missing | 10 | 97 | 8 | 6 |
+| Imprint (a card exiled with this) | — | missing | 10 | 97 | 7 | 5 |
 | Except it isn't legendary (a copy) | except.nonLegendary | built | 10 | 43 | 0 | 0 |
 | Unless a player reveals a card ("reveal an Island or Swamp card") | unlessReveal, as it enters | built | 10 | 22 | 0 | 0 |
 | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 9 | 160 | 8 | 4 |
@@ -886,7 +886,7 @@ The things that alone hold back the most of the most-played cards.
 | — | The monarch | condition {monarch: "you"} (script/condition.mjs); "while you're the monarch", a damage trigger's monarch: "you" | built | 7 | 15 | 0 | 0 |
 | 700.5 | Devotion to two colors (CR 700.5) | {devotion: [color, color]} | built | 6 | 13 | 0 | 0 |
 | — | A number a player chose | — | missing | 5 | 77 | 4 | 0 |
-| — | Attackers declared | — | missing | 5 | 62 | 5 | 4 |
+| — | Attackers declared | amount {creaturesAttackedWithThisTurn: "you" / "that player"} (rules/combat.mjs keeps them) | built | 5 | 62 | 0 | 0 |
 | — | Cards in exile | — | missing | 5 | 42 | 4 | 3 |
 | — | Your starting life total | — | missing | 5 | 23 | 5 | 0 |
 | — | LifeGained | — | missing | 5 | 20 | 4 | 0 |

@@ -132,7 +132,7 @@ const destroy = (s, ids, controller = 1) => run(s, ids.map((id) => ({effect: "de
     identity: {name: "Odd Augmenter", oracleId: "x", types: ["Creature"], subtypes: [], manaCost: "{G}", colors: ["G"], colorIdentity: ["G"], power: 1, toughness: 1},
     oracleText: "x", source: "hand", abilities: [{kind: "triggered", text: "x", trigger: {on: "dies"}, effects: [{effect: "putCounter", targets: "self", ...effect}]}]}).problems;
   eq(problems({countersOf: "self"}), [], "countersOf self compiles");
-  for (const bad of [{countersOf: "that card"}, {countersOf: "self", counter: "+1/+1"}, {countersOf: "self", count: 2}])
+  for (const bad of [{countersOf: "remembered"}, {countersOf: "self", counter: "+1/+1"}, {countersOf: "self", count: 2}])
     ok(problems(bad).some((p) => p.includes("countersOf is \"self\"")), `and refuses ${JSON.stringify(bad)}`);
 }
 

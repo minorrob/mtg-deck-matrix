@@ -121,6 +121,8 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   "targetsLegal",
   /* Summon: Fenrir's "if you control the creature with the greatest power or tied for the greatest power" (CR 208.1). */
   "greatestPower",
+  /* Selvala, Heart of the Wilds' "if its power is greater than each other creature's power" (CR 208.1). */
+  "powerAboveOthers",
   /* Chainer, Nightmare Adept's "if you didn't cast it from your hand" (CR 601.2a). The One Ring's "if you cast it". */
   "castFromYourHand", "castByYou",
   /* A Case's solved designation (CR 719.3b), and Evendo Brushrazer's "as long as you've sacrificed a nontoken permanent this turn". */
@@ -384,6 +386,16 @@ export function conditionHolds(state, condition, {controller, source = null, abo
     const powers = creatures.map((id) => characteristicsOf(state, id).power ?? 0), most = Math.max(...powers);
     if (!creatures.some((id, at) => controllerOf(state, id) === controller && powers[at] === most)) return false;
   }
+  /* "If its power is greater than each other creature's power" (Selvala, Heart of the Wilds, wave 4b; CR 208.1): the creature
+     the trigger is about against every other creature on the battlefield, through the layers, as this is asked -- it gone, its
+     power as it last existed there (CR 608.2h; the card's ruling). A tie is not greater; with no other creature, it is. */
+  if (condition.powerAboveOthers === "that card") {
+    const id = about?.card;
+    const here = id !== undefined && id !== null && state.objects[id]?.zone === "battlefield";
+    const power = here ? characteristicsOf(state, id).power : about?.lastKnown?.power;
+    if (power === null || power === undefined) return false;
+    if (state.zones.battlefield.some((other) => other !== id && typesOf(state, other).includes("Creature") && (characteristicsOf(state, other).power ?? 0) >= power)) return false;
+  }
   /* Surge (CR 702.117a): its controller has cast another spell this turn -- asked as this one's cast is offered, before it
      is counted among them (rules/actions.mjs). */
   if (condition.surge === true && !((state.players[controller]?.castThisTurn ?? []).length > 0)) return false;
@@ -465,6 +477,7 @@ export function conditionProblems(condition) {
   if ("sneak" in condition && condition.sneak !== true) problems.push("sneak is true");
   if ("monarch" in condition && condition.monarch !== "you") problems.push("monarch is \"you\": its controller is the monarch");
   if ("greatestPower" in condition && condition.greatestPower !== "you") problems.push("greatestPower is \"you\": its controller controls the creature with the greatest power, or one tied for it");
+  if ("powerAboveOthers" in condition && condition.powerAboveOthers !== "that card") problems.push("powerAboveOthers is \"that card\": the creature a trigger is about has more power than each other creature");
   if ("firstResolution" in condition && condition.firstResolution !== true) problems.push("firstResolution is true: the first time this ability has resolved this turn");
   if ("freerunning" in condition && condition.freerunning !== true) problems.push("freerunning is true");
   if ("paidFor" in condition && !PAID_FOR.includes(condition.paidFor)) problems.push(`paidFor is the alternative cost a spell was cast for: ${PAID_FOR.join(", ")}`);
