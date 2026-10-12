@@ -337,8 +337,9 @@ Titles vary, and the sample has 19 kinds. Among them:
   - sometimes `continuing`, `stepByStep` and `yourTurn`.
 - **`state`:** `turn`, `turnPlayerId`, `priorityPlayerId`, `phase`, `players`, `combat`, `stack`, `stackSize`,
   `gameOver`.
-- **Each player:** `{playerId, name, life, health, counters, mana, landsPlayed, zones}`. A player's `counters` is an open
-  set.
+- **Each player:** `{playerId, name, life, health, counters, mana, landsPlayed, monarch?, zones}`. A player's `counters`
+  is an open set. `monarch: true` is on the monarch alone (one player at most, public to every seat); no other player
+  carries the key, and with no monarch nobody does.
 - **A card** in a zone:
   - `cardId`, `name`, `faceDown`, `faceDownName?`;
   - `owner`, `controller`, `tapped`, `damage`;
@@ -351,7 +352,7 @@ Titles vary, and the sample has 19 kinds. Among them:
   - summoning sickness;
   - colors and mana cost;
   - which face of a double-faced card is up.
-- **Not in the game at all:** the monarch, and the initiative.
+- **Not in the game at all:** the initiative.
 
 ## What players see of the AI
 

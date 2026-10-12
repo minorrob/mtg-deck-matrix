@@ -147,11 +147,12 @@ export function pushSpell(state, objectId, {controller, targets = [], permanent 
  * `sourceId` may be null for an ability whose source has already left the battlefield, which is a
  * legal position (CR 113.7a) rather than a bug.
  */
-export function pushAbility(state, {sourceId = null, controller, abilityId, kind = "ability", targets = [], script = null, about = null, x = null, lastKnown = null, spent = null, paidFor = null, sourceTransforms = undefined} = {}) {
+/* `name`: what an ability with no source is called -- the game's own triggers', their designation (CR 725.2; rules/trigger.mjs). */
+export function pushAbility(state, {sourceId = null, controller, abilityId, kind = "ability", targets = [], script = null, about = null, x = null, lastKnown = null, spent = null, paidFor = null, sourceTransforms = undefined, name = null} = {}) {
   if (!abilityId) throw new Error("An ability on the stack needs an abilityId, or nothing can resolve it");
   const source = sourceId === null ? null : state.objects[sourceId];
   const entry = entryFor(state, {
-    objectId: null, cardId: source ? source.id : null, name: source ? source.card : null,
+    objectId: null, cardId: source ? source.id : null, name: source ? source.card : name,
     playerId: controller, kind, abilityId, targets,
   });
   /* What it does, carried with it: its source may leave before it resolves, and the ability does not (CR 113.7a). */

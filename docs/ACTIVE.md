@@ -14,7 +14,7 @@ other lane answers in the last column.
 
 | # | From | Asks for | What for | Answer |
 | --- | --- | --- | --- | --- |
-| — | — | (none yet) | — | — |
+| 1 | Engine | The board to show the monarch (CR 725): the view's `state.players[i]` now carries `monarch: true` for the monarch, public to every seat, and no key for anyone else; the history says "Maya became the monarch" | Ginger, Queen of Sweets and Tamiyo, Upriser Crowned make their controller the monarch; the monarch draws a card at their end step, and a creature's combat damage to them makes its controller the monarch -- a player should see who holds it | The engine lane built it (Train E, the `monarch` branch); `docs/ui-lane/gameplay-anchor.md` lists the field. For the UI lane to show |
 
 ## 2026-10-12, later: Train E, Rob's library, in waves; the plan to 90%
 

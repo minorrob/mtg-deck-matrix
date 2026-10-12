@@ -23,7 +23,7 @@ import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
 import {typesOf, powerOf, toughnessOf, keywordsOf, isKeywordCounter, controllerOf} from "../../rules/layers.mjs";
 import {cantGainLife, lifeGained, countersPlaced, playerCountersPlaced, placeCounters} from "../../rules/statics.mjs";
-import {playerRuled, leaveGame} from "../../rules/sba.mjs";
+import {playerRuled, leaveGame, monarchLeft} from "../../rules/sba.mjs";
 import {amountOf} from "../amount.mjs";
 import {recordUse} from "../../state/index.mjs";
 
@@ -412,7 +412,36 @@ export function loseGame(state, params, context) {
     .filter((id) => params.withLife === undefined || state.players[id].life === params.withLife)
     .filter((id) => !playerRuled(state, "cant-lose", id));
   for (const id of losing) leaveGame(state, state.players[id], "effect", events);
+  /* The monarch among them: the designation passes on once they have all gone (CR 725.4; rules/sba.mjs). */
+  return monarchLeft(state, events);
+}
+
+/**
+ * THE MONARCH (CR 725): a designation of the game's, not of any card -- none until an effect makes a player the monarch
+ * (725.1), and one player's at most (725.3): `state.monarch`, that player's seat, unsaid while there is none, so a game made
+ * before it hashes and replays as it did. As a player becomes it the monarch before stops being it. One who is the monarch
+ * already does not become it again, and one who has left the game cannot (CR 800.4a). What being it does is two triggered
+ * abilities of the game's own (rules/trigger.mjs, INHERENT_TRIGGERS), and what passes it on as its player leaves, the rule
+ * of rules/sba.mjs (monarchLeft). Said to everyone: the designation is public.
+ *
+ * @returns {Array} the events, with one more when a player became the monarch
+ */
+export function crown(state, player, events = []) {
+  if (state.players[player].lost || state.monarch === player) return events;
+  state.monarch = player;
+  events.push(event("GameEventBecomeMonarch", state, {player: {playerId: player, name: state.players[player].name}}));
   return events;
+}
+
+/**
+ * `becomeMonarch` -- "you become the monarch" (Ginger, Queen of Sweets; Tamiyo, Upriser Crowned), and "its controller
+ * becomes the monarch" (the monarch's own trigger, CR 725.2: `who: "that card's controller"`, the creature's controller now,
+ * or as it last was; script/bind.mjs): `who` one player -- unsaid, the effect's controller; a target player, or nobody once
+ * that target is gone (CR 608.2b).
+ */
+export function becomeMonarch(state, params, context) {
+  const [player] = playersFor(state, params.who ?? "you", context.controller);
+  return player === undefined ? [] : crown(state, player);
 }
 
 /* Who puts them, for "if you would put" (rules/statics.mjs): the effect's controller -- or, "that player ... puts a +1/+1

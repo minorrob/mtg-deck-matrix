@@ -178,7 +178,10 @@ const damageDealt = (t) => (t.to === "self" ? {on: "GameEventCardDamaged", to: "
     ? {on: "GameEventPlayerDamaged", who: t.who ?? "self", to: t.to ?? "player", ...(t.combat ? {combat: true} : {}), ...(t.noncombat ? {noncombat: true} : {}), ...(t.sourceYours ? {sourceYours: true} : {}), ...(t.filter ? {filter: t.filter} : {}),
       /* "Deals combat damage to a player or planeswalker" (Grateful Apparition): damage dealt to a planeswalker counts
          too, about its controller (rules/trigger.mjs). */
-      ...(t.planeswalkers === true ? {planeswalkers: true} : {})} : null);
+      ...(t.planeswalkers === true ? {planeswalkers: true} : {}),
+      /* "Whenever one or more creatures deal combat damage to you while you're the monarch" (Tamiyo, Upriser Crowned; CR
+         725): `monarch: "you"`, read as the damage is dealt (rules/trigger.mjs) -- on damage to you alone. */
+      ...(t.monarch === "you" && t.to === "you" ? {monarch: "you"} : {})} : null);
 
 /* "WHENEVER ONE OR MORE CARDS ARE PUT INTO EXILE FROM YOUR LIBRARY AND/OR YOUR GRAVEYARD" (Laelia, the Blade Reforged):
    `from` a list of those zones, `owner` whose they are -- a card is only ever in its owner's library or graveyard (CR
@@ -1483,6 +1486,10 @@ export function compileScript(script) {
       /* "Whenever ONE OR MORE ...": once for everything that happened at once (rules/trigger.mjs). */
       const trigger = compiled && ability.trigger.batch ? {...compiled, batch: true} : compiled;
       if (!trigger) problems.push(`${ability.trigger.on}${ability.trigger.who ? ` (${ability.trigger.who})` : ""}: a trigger the engine does not watch for yet`);
+      /* "While you're the monarch" (CR 725): read by damage dealt to you alone -- any other trigger would drop it, and trigger
+         whoever is the monarch. */
+      if (ability.trigger.monarch !== undefined && trigger?.monarch !== "you")
+        problems.push(`${ability.text}: "while you're the monarch" is monarch: "you", on damage dealt to you`);
       if (ability.trigger.filter) {
         /* A filter may be a choice ("an instant or sorcery spell", "another creature or planeswalker you control dies"):
            each alternative, with what they share, is a selector of its own (script/filter.mjs, matchesSelector). */

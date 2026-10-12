@@ -24,7 +24,8 @@
  *   (`targets: "any"` takes the first legal aim; `optional` skips a move the rules do not offer; `settle` answers every
  *   question with its first legal answer and resolves the stack until it is empty -- the card loader's smoke test.)
  *     expect: [ {seat, of?, zone, cards?, count?, faceDown?} | {seat, life} | {seat, poison} | {stack} | {seat, tapped, is}
- *             | {seat, pool} | {seat, counters: {card, counter, count}} | {offers: {kind, card, seat?}, count, targets?} | {event, where} ] }]}
+ *             | {seat, pool} | {seat, counters: {card, counter, count}} | {offers: {kind, card, seat?}, count, targets?} | {event, where}
+ *             | {monarch: seat | null} ] }]}
  */
 
 import {controllerOf} from "../rules/layers.mjs";
@@ -329,6 +330,11 @@ export function runScenario(scenario, cards, fixtures = {}) {
         if (!card) fail(`${e.stats.card} is not on ${names[e.seat]}'s battlefield`);
         if (card.power !== e.stats.power || card.toughness !== e.stats.toughness) fail(`${e.stats.card} is ${card.power}/${card.toughness}, not ${e.stats.power}/${e.stats.toughness}`);
         passed.push(`${e.stats.card}: ${e.stats.power}/${e.stats.toughness}`);
+      } else if (e.monarch !== undefined) {
+        /* Who is the monarch (CR 725), as every seat's view says it (projection.mjs): a seat, or null for nobody. */
+        const got = projectFor(state, 0).players.find((p) => p.monarch === true)?.playerId ?? null;
+        if (got !== e.monarch) fail(`the monarch is ${got === null ? "nobody" : names[got]}, not ${e.monarch === null ? "nobody" : names[e.monarch]}`);
+        passed.push(`the monarch: ${e.monarch === null ? "nobody" : names[e.monarch]}`);
       } else if (e.event !== undefined) {
         const hit = events.some((ev) => ev.kind === e.event && Object.entries(e.where ?? {}).every(([k, v]) => JSON.stringify(ev.data?.fields?.[k]) === JSON.stringify(v)));
         if (!hit) fail(`no ${e.event} with ${JSON.stringify(e.where ?? {})}`);

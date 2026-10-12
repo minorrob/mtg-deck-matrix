@@ -171,13 +171,18 @@ const tapFive = [{tap: "Plains"}, {tap: "Plains"}, {tap: "Wastes"}, {tap: "Waste
   /* In his declare blockers step alone: the combat damage step, the Bear still unblocked and attacking, is too late. */
   const u = play([at(0, "hand", LEO), at(0, "battlefield", ...LANDS, "Bear")], [{attack: ["Bear"]}, {to: {turn: 1, phase: "COMBAT_DAMAGE"}}, ...tapFive], {}, FIX);
   eq([u.phase, ways(u, LEO)], ["COMBAT_DAMAGE", []], "the combat damage step: no sneak");
-  /* "Your" declare blockers step: Maya, who took Rob's unblocked attacker in his, may not sneak Splinter for it. */
+  /* "Your" declare blockers step: Maya, who took Rob's unblocked attacker in his, may not sneak Splinter for it. Since CR
+     506.4 was built (Train E), the Bear she took is out of combat as it changes hands -- no unblocked attacker of hers -- so
+     this game no longer reaches sneak's own timing; the condition is asked of both players directly instead. */
   const v = play([at(0, "battlefield", "Bear"), at(1, "hand", "Splinter, Hamato Yoshi"), at(1, "battlefield", "Swamp")],
     [{attack: ["Bear"]}, {to: {turn: 1, phase: "COMBAT_DECLARE_BLOCKERS"}}], {}, FIX);
   happen(v, {effect: "gainControl", targets: [idOf(v, "Bear")], toPlayer: 1}, {controller: 1, source: null});
   drive(v, (st) => st.priorityPlayer === 1);
   applyAction(v, 1, legalActions(v, 1).find((a) => a.kind === "activate-mana" && a.label === "Swamp"));
-  eq([v.phase, controllerOf(v, idOf(v, "Bear")), ways(v, "Splinter, Hamato Yoshi", 1)], ["COMBAT_DECLARE_BLOCKERS", 1, []], "Rob's declare blockers step is not Maya's: no sneak");
+  eq([v.phase, controllerOf(v, idOf(v, "Bear")), v.combat.attacks.length, ways(v, "Splinter, Hamato Yoshi", 1)], ["COMBAT_DECLARE_BLOCKERS", 1, 0, []],
+    "the Bear Maya took is out of combat (CR 506.4): no sneak for her");
+  eq([conditionHolds(v, {sneak: true}, {controller: 0}), conditionHolds(v, {sneak: true}, {controller: 1})], [true, false],
+    "Rob's declare blockers step is his to sneak in, not Maya's (CR 702.190a)");
 }
 {
   /* The planeswalker the returned creature attacked (CR 702.190b, 506.3a). */

@@ -1,0 +1,151 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ginger, Queen of Sweets",
+    "oracleId": "5ea93956-085d-409b-bd95-dd669fa69eeb",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Food",
+      "Noble"
+    ],
+    "manaCost": "{6}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 6,
+    "toughness": 4
+  },
+  "oracleText": "When Ginger enters, you become the monarch.\n{2}, {T}, Sacrifice Ginger: You gain 6 life.\nAt the beginning of each upkeep, if you're the monarch, create a Gingerbrute token. (It's a {1} 1/1 Food Golem artifact creature with haste, \"{1}: This token can't be blocked this turn except by creatures with haste,\" and \"{2}, {T}, Sacrifice this token: You gain 3 life.\")",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Ginger enters, you become the monarch.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "becomeMonarch"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{2}, {T}, Sacrifice Ginger: You gain 6 life.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of each upkeep, if you're the monarch, create a Gingerbrute token. (It's a {1} 1/1 Food Golem artifact creature with haste, \"{1}: This token can't be blocked this turn except by creatures with haste,\" and \"{2}, {T}, Sacrifice this token: You gain 3 life.\")",
+      "trigger": {
+        "on": "upkeep",
+        "yours": false
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "token": {
+            "name": "Gingerbrute",
+            "types": [
+              "Artifact",
+              "Creature"
+            ],
+            "subtypes": [
+              "Food",
+              "Golem"
+            ],
+            "colors": [],
+            "manaCost": "{1}",
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Haste"
+            ],
+            "abilities": [
+              {
+                "id": "gingerbrute-evasion",
+                "kind": "activated",
+                "text": "{1}: This token can't be blocked this turn except by creatures with haste.",
+                "cost": [
+                  {
+                    "atom": "mana",
+                    "cost": "{1}"
+                  }
+                ],
+                "targets": [],
+                "effects": [
+                  {
+                    "effect": "effectUntil",
+                    "rule": "cant-be-blocked-by",
+                    "targets": "self",
+                    "by": {
+                      "types": [
+                        "Creature"
+                      ],
+                      "nonKeywords": [
+                        "Haste"
+                      ]
+                    },
+                    "until": "end-of-turn"
+                  }
+                ]
+              },
+              {
+                "id": "gingerbrute-food",
+                "kind": "activated",
+                "text": "{2}, {T}, Sacrifice this token: You gain 3 life.",
+                "cost": [
+                  {
+                    "atom": "mana",
+                    "cost": "{2}"
+                  },
+                  {
+                    "atom": "{T}"
+                  },
+                  {
+                    "atom": "sacrifice",
+                    "self": true
+                  }
+                ],
+                "targets": [],
+                "effects": [
+                  {
+                    "effect": "gainLife",
+                    "amount": 3
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "condition": {
+        "monarch": "you"
+      }
+    }
+  ]
+}

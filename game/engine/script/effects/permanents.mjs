@@ -26,6 +26,7 @@ import {typesOf, controllerOf, staticAbilities} from "../../rules/layers.mjs";
 import {protectedFrom} from "../../rules/protection.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
 import {countersPlaced, tokensCreated} from "../../rules/statics.mjs";
+import {removeFromCombat} from "../../rules/combat.mjs";
 
 /* A continuous effect needs a timestamp to be ordered by (CR 613.7), and it has to be part of the
    state so a checkpoint carries it. The state's own counter is the right source: it is monotonic
@@ -536,6 +537,9 @@ function makeToken(state, spec, controller, params, context, events) {
     supertypes: spec.supertypes ?? [],
     /* "A 1/1 red Elemental" is red (CR 111.4): "white creatures you control" has to find a white token. */
     colors: spec.colors ?? [],
+    /* A mana cost only when the effect gives it one (CR 111.3): "a {1} 1/1 Food Golem artifact creature" (Ginger, Queen of
+       Sweets' Gingerbrute) has mana value 1; a token made without one has none. */
+    ...(spec.manaCost ? {manaCost: spec.manaCost} : {}),
     power: sized(spec.power),
     toughness: sized(spec.toughness),
     keywords: spec.keywords ?? [],
@@ -802,7 +806,8 @@ export function endWhileSourceRemains(state, departed) {
  * (endControlChange): as the turn ends (rules/turn.mjs), as its source leaves the battlefield (effects/zones.mjs), or --
  * for good ones too -- as the player it gave control to leaves the game (CR 800.4a; rules/sba.mjs). It has changed
  * controller, so it is summoning sick for its new controller unless it has haste (CR 302.6), and again for its old one
- * when it returns.
+ * when it returns. And it is removed from combat (CR 506.4; rules/combat.mjs): an attacker taken in the middle of a combat
+ * attacks no one, and a blocker taken blocks nothing -- each time its controller changes, going and coming back.
  */
 export function gainControl(state, params, context) {
   /* "Choose a different opponent" for each (`toEach`, Dack Fayden, Helping Hand) is its controller's choice: asked by the
@@ -821,7 +826,10 @@ export function gainControl(state, params, context) {
     (state.effects ??= []).push({id: `control-returns:${id}:${state.effects.length}`, rule: "control-returns", affects: {ids: [id]},
       apply: {controller: object.controller}, to, ...(params.until ? {until: params.until} : {}), ...(params.until === "this leaves" ? {source} : {}), sourceController: context.controller});
     rememberExileLooker(state, id, controllerOf(state, id));
-    if (object.controller !== to) object.controlledSinceTurn = state.turn;
+    if (object.controller !== to) {
+      object.controlledSinceTurn = state.turn;
+      removeFromCombat(state, id);
+    }
     object.controller = to;
     rememberExileLooker(state, id, controllerOf(state, id));
   }
@@ -854,9 +862,10 @@ export const CONTROL_DURATIONS = Object.freeze(["end-of-turn", "this leaves"]);
  * still holds it, and then that one is told to give it back there in its turn, as though this one had never been. "Gain
  * control until end of turn" twice in a turn ends with the first controller; a creature Sower of Temptation took and then
  * lent until end of turn goes to its owner when the Sower leaves only once the loan ends. Changing hands, it is summoning
- * sick for whom it returns to (CR 302.6), and not at all for one who has had it all along. A permanent gone from the
- * battlefield is a new object (CR 400.7) whose records are spent as it leaves (controlSourceLeft). Ending one may exile its
- * permanent (CR 800.4c), so a caller ending several asks for the next one still standing each time (`nextRecord`).
+ * sick for whom it returns to (CR 302.6), and not at all for one who has had it all along, and it leaves combat (CR 506.4).
+ * A permanent gone from the battlefield is a new object (CR 400.7) whose records are spent as it leaves (controlSourceLeft).
+ * Ending one may exile its permanent (CR 800.4c), so a caller ending several asks for the next one still standing each time
+ * (`nextRecord`).
  */
 export function endControlChange(state, record, events = []) {
   const id = record.affects.ids[0];
@@ -870,6 +879,9 @@ export function endControlChange(state, record, events = []) {
   else if (state.objects[id].controller !== record.apply.controller) {
     state.objects[id].controller = record.apply.controller;
     state.objects[id].controlledSinceTurn = state.turn;
+    /* Its controller changes back, and it leaves the combat it is in (CR 506.4): one Sower of Temptation or Tractor Beam
+       held, given back mid-combat as its source leaves, attacks or blocks no longer. */
+    removeFromCombat(state, id);
   }
   return events;
 }
@@ -965,10 +977,7 @@ export function phaseOut(state, params, context) {
     object.zone = "phased";
     object.phasedOut = {player: ids.includes(object.attachedTo) ? state.objects[object.attachedTo].controller : object.controller};
     (state.phasedOut ??= []).push(id);
-    if (state.combat) {
-      state.combat.attacks = (state.combat.attacks ?? []).filter((a) => a.attacker !== id);
-      for (const attack of state.combat.attacks ?? []) attack.blockers = (attack.blockers ?? []).filter((b) => b !== id);
-    }
+    removeFromCombat(state, id);
   }
   return [];
 }

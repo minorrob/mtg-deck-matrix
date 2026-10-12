@@ -646,7 +646,9 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
   `replaceCounters`, `amass`, `poison` (a player's poison counters; added in M4 phase 3, batch 64), `winGame` ("you win
   the game", CR 104.2b; batch 68), `loseGame` ("that player loses the game", CR 104.3e: they leave the game at once;
   Train C phase 2, 2026-10-11), `goad` (CR 701.15; batch 69), `empowerJace` (loyalty counters on a Jace token you
-  control, made first if you control none; the live-game plan of 2026-10-04).
+  control, made first if you control none; the live-game plan of 2026-10-04), `becomeMonarch` ("you become the monarch",
+  CR 725: a designation of the game, one player's at a time, with two triggered abilities of the game's own; Train E,
+  2026-10-12).
 - Permanents: `createToken`, `copyPermanent`, `becomeCopy`, `earthbend` (added in M4 phase 3, batch 65), `animate`, `animateAll`, `attach`, `gainControl`, `setState` (transform,
   flip), `phaseOut`, `exchangeControl` (control of two permanents exchanged, CR 701.12b: both still there and controlled by
   different players, or nothing happens; Train D, 2026-10-12), `incubate` (an Incubator token, a double-faced token that

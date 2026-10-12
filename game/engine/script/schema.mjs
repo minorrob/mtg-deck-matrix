@@ -133,6 +133,10 @@ function checkEffect(effect, path, errors) {
   /* "Each player with exactly 13 life loses the game" (Triskaidekaphobia; effects/resources.mjs): a life total, a whole number. */
   if (effect.withLife !== undefined && (name !== "loseGame" || !Number.isInteger(effect.withLife)))
     errors.push({path: `${path}.withLife`, message: "\"With exactly N life\" is withLife: a whole number, on loseGame"});
+  /* "You become the monarch", "its controller becomes the monarch" (CR 725.3; effects/resources.mjs): one player -- its
+     controller ("you", or unsaid), a target player, or the controller of what the trigger is about. */
+  if (name === "becomeMonarch" && effect.who !== undefined && !["you", "that card's controller"].includes(effect.who) && !Number.isInteger(effect.who?.target))
+    errors.push({path: `${path}.who`, message: "One player becomes the monarch: \"you\" (unsaid), a target player ({target: n}), or \"that card's controller\""});
   /* "The player or planeswalker that creature is attacking" (Raid Bombardment; script/bind.mjs): damage, to that one alone. */
   if (effect.who === "attacked" && (name !== "dealDamage" || effect.targets !== undefined))
     errors.push({path: `${path}.who`, message: "\"The player or planeswalker it's attacking\" (who: \"attacked\") is dealt damage, by dealDamage with no other target"});

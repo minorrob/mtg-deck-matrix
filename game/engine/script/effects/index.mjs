@@ -33,7 +33,7 @@ import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sa
 import {
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
   putCounter, putCounterAll, removeCounter, proliferate, damageAll, fight, poison, winGame, loseGame, multiplyCounters,
-  exchangeLife, damageEach, moveCounters,
+  exchangeLife, damageEach, moveCounters, becomeMonarch,
 } from "./resources.mjs";
 import {
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
@@ -186,6 +186,8 @@ export const EFFECTS = Object.freeze({
   exchangeControl,
   /* Train E: incubate (CR 701.53a; Sunfall), an Incubator token entering with +1/+1 counters. */
   incubate,
+  /* Train E: "you become the monarch" (CR 725; Ginger, Queen of Sweets), and the monarch's own trigger (rules/trigger.mjs). */
+  becomeMonarch,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */
