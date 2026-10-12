@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1273,
+  "defined": 1275,
   "provisional": 27,
-  "everyRule": 2660
+  "everyRule": 2661
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -7563,8 +7563,8 @@
      "forge": "CantDraw",
      "top": 1,
      "all": 7,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "static",

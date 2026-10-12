@@ -554,11 +554,16 @@ export function modalScript(modal, modes) {
     if (isRef(value)) return {...value, target: value.target + by};
     return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, shift(v, by)]));
   };
+  /* A MODE THAT MAY BE CHOSEN MORE THAN ONCE (`sameMode`, Moment of Reckoning; CR 700.2d): each time chosen, its own instance of
+     "target" -- the same object or player as another's, or not -- so each target is a counted one of one, picked in turn once
+     the offer is taken (rules/actions.mjs): a spell aimed four times at a crowded board is a handful of offers, not every
+     product of its targets. */
+  const each = (spec) => (modal.sameMode === true && spec.count === undefined ? {...spec, count: {min: 1, max: 1}} : spec);
   for (const index of modes ?? []) {
     const mode = modal.modes[index];
     if (!mode) continue;
     effects.push(...shift(structuredClone(mode.effects ?? []), targets.length));
-    targets.push(...structuredClone(mode.targets ?? []));
+    targets.push(...structuredClone(mode.targets ?? []).map(each));
   }
   return {targets, effects};
 }

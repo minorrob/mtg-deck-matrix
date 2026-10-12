@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Page, Loose Leaf",
+    "oracleId": "3bbad38b-7d88-4ff2-9fd3-5081536e7c56",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Construct"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 0,
+    "toughness": 2
+  },
+  "oracleText": "{T}: Add {C}.\nGrandeur — Discard another card named Page, Loose Leaf: Reveal cards from the top of your library until you reveal an instant or sorcery card. Put that card into your hand and the rest on the bottom of your library in a random order.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Grandeur — Discard another card named Page, Loose Leaf: Reveal cards from the top of your library until you reveal an instant or sorcery card. Put that card into your hand and the rest on the bottom of your library in a random order.",
+      "cost": [
+        {
+          "atom": "discard",
+          "selector": {
+            "named": "Page, Loose Leaf"
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "digUntil",
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Instant"
+                ]
+              },
+              {
+                "types": [
+                  "Sorcery"
+                ]
+              }
+            ]
+          },
+          "count": 1,
+          "found": {
+            "to": "hand"
+          },
+          "rest": "bottom"
+        }
+      ]
+    }
+  ]
+}

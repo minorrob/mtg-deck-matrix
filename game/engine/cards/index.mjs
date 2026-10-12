@@ -1385,7 +1385,10 @@ export function compileScript(script) {
          no mode of the spell's, and waits for it to resolve. */
       const only = (ability.effects ?? []).length === 1 ? ability.effects[0] : null;
       const modal = only?.effect === "modal" && only.chooser === undefined
+        /* "You may choose the same mode more than once" (`sameMode`, Moment of Reckoning; CR 700.2d), and "choose up to four"
+           (`choose: 0`): rules/actions.mjs offers each such choice of modes, script/bind.mjs their targets. */
         ? {choose: only.choose ?? 1, ...(only.chooseMore ? {more: structuredClone(only.chooseMore)} : {}), ...(only.chooseUpTo ? {upTo: only.chooseUpTo} : {}),
+          ...(only.sameMode === true ? {sameMode: true} : {}),
           modes: (only.modes ?? []).map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? [], ...(m.cost !== undefined ? {cost: m.cost} : {})}))} : null;
       if (modal && (ability.targets ?? []).length) problems.push("a modal spell chosen as it is cast names its targets in its modes, not beside them");
       spell = {id, text: ability.text, targets: ability.targets ?? [], effects: ability.effects, ...(modal ? {modal} : {}), ...(ability.additionalCost ? {additionalCost: ability.additionalCost} : {})};

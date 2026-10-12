@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,273 defined and playable today; 2,660 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,275 defined and playable today; 2,661 with every
 mechanic built, so only their definitions are left to write; 27 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -700,7 +700,7 @@ The things that alone hold back the most of the most-played cards.
 | AssignCombatDamageAsUnblocked | — | missing | 1 | 14 | 1 | 1 |
 | CantBlockUnless | — | missing | 1 | 9 | 1 | 1 |
 | DisableTriggers | — | missing | 1 | 8 | 1 | 1 |
-| CantDraw | — | missing | 1 | 7 | 1 | 1 |
+| CantDraw | — | missing | 1 | 7 | 0 | 0 |
 | BlockRestrict | — | missing | 1 | 4 | 1 | 0 |
 | Activations | — | missing | 1 | 3 | 1 | 0 |
 | NumLoyaltyAct | — | missing | 1 | 2 | 1 | 0 |

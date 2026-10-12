@@ -39,7 +39,7 @@ import {loseLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";
 import {damageOrderChoice} from "../../rules/replacement.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
 import {commanderTax} from "../../rules/commander.mjs";
-import {cantBeCountered, counterOrderChoice, cantBeSacrificed, tokenOrderChoice} from "../../rules/statics.mjs";
+import {cantBeCountered, counterOrderChoice, cantBeSacrificed, tokenOrderChoice, drawForbidden} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
 import {castNow, castChoicesNow} from "../../rules/actions.mjs";
 
@@ -599,15 +599,26 @@ function chosenFromHandApply(state, awaiting, indices) {
 /* "Do this only once each turn" (Tidus, Yuna's Guardian; cards/index.mjs, `onceEachTurn`): what this permanent's ability has
    done this turn, kept on the permanent as its uses are (state/index.mjs) -- so a new object may again (CR 400.7). */
 const onceKey = (params, context) => (params.onceEachTurn !== undefined && Number.isInteger(context.source) ? `once:${params.onceEachTurn}` : null);
+/* A CHOICE TO DRAW ITS CHOOSER CAN'T TAKE (Narset, Parter of Veils' opponents; CR 121.3, 121.2b): a mode that begins by having
+   its chooser draw -- "you may draw a card", "you may draw a card. If you do, discard a card" -- when they can't draw that many
+   more this turn (rules/statics.mjs, drawForbidden): "you may draw two cards" not even for their first. */
+const drawRefused = (state, mode, chooser, context) => {
+  const first = (mode.effects ?? [])[0];
+  if (first?.effect !== "draw" || first.who !== undefined || chooser !== context.controller) return false;
+  const count = first.count ?? 1;
+  return drawForbidden(state, chooser, typeof count === "number" ? count : amountOf(state, count, context));
+};
 export const modal = {
   open(state, params, context) {
     const key = onceKey(params, context);
     /* Done once this turn: the mode that does it (`once`) is gone, and only "No" is left -- no choice, so nothing is asked. */
     const done = key !== null && usesThisTurn(state, context.source, key) > 0;
-    const modes = (params.modes ?? []).filter((mode) => !(done && mode.once === true));
-    if (modes.length === 0 || (done && modes.every((mode) => !(mode.effects ?? []).length))) return false;
-    const choose = Math.min(params.choose ?? 1, modes.length);
     const chooser = Number.isInteger(params.chooser) ? params.chooser : context.controller;
+    /* And a draw its chooser can't choose: gone, and with only "No" left, nothing is asked. */
+    const refused = (params.modes ?? []).some((mode) => drawRefused(state, mode, chooser, context));
+    const modes = (params.modes ?? []).filter((mode) => !(done && mode.once === true) && !drawRefused(state, mode, chooser, context));
+    if (modes.length === 0 || ((done || refused) && modes.every((mode) => !(mode.effects ?? []).length))) return false;
+    const choose = Math.min(params.choose ?? 1, modes.length);
     state.awaiting = {
       /* Usually the controller's; "its controller may draw up to two cards" is that player's (`chooser`, bound to them). */
       kind: "effect-choice", effect: "modal", player: chooser,
