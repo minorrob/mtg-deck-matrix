@@ -62,7 +62,7 @@ export const PRIMITIVES = Object.freeze({
   zones: Object.freeze([
     "moveZone", "moveZoneAll", "draw", "discard", "mill", "shuffle", "dig", "surveil", "scry",
     "peekAndReveal", "sacrifice", "sacrificeAll", "destroy", "destroyAll", "exileUntil",
-    "returnToHand", "play", "mayPlay", "discover", "digUntil", "manifest",
+    "returnToHand", "play", "mayPlay", "discover", "digUntil", "manifest", "explore",
   ]),
   mana: Object.freeze([
     "addMana", "addManaReflected", "tap", "untap", "untapAll", "costReduction", "alternativeCost",

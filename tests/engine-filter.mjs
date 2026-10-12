@@ -186,6 +186,20 @@ const names = (state, ids) => ids.map((id) => state.objects[id].card).sort();
   refuses(() => compileSelector({prepared: "no"}), /prepared/, "and `prepared` is true or false, not a word that would read as true");
 }
 
+/* ---- "target attacking or blocking creature" (Gideon's Memorial; CR 508.1k, 509.1g) ---- */
+{
+  const {s, mine, alsoMine, theirs} = board();
+  const blocking = compileSelector({what: "permanent", types: ["Creature"], blocking: true});
+  const attacking = compileSelector({what: "permanent", types: ["Creature"], attacking: true});
+  ok(SELECTOR_KEYS.includes("blocking"), "blocking is a key of the grammar");
+  eq([mine, alsoMine, theirs].filter((id) => blocking(s, id, {controller: 0})), [], "no combat: nothing is blocking");
+  s.combat = {attacks: [{attacker: mine, defender: 1, blocked: true, blockers: [theirs]}, {attacker: alsoMine, defender: 1, blocked: false, blockers: []}]};
+  eq([mine, alsoMine, theirs].filter((id) => blocking(s, id, {controller: 0})), [theirs], "the creature declared as a blocker is blocking; the attackers are not");
+  eq([mine, alsoMine, theirs].filter((id) => attacking(s, id, {controller: 0})), [mine, alsoMine], "and attacking is the attackers', blocked or not");
+  s.combat = null;
+  ok(!blocking(s, theirs, {controller: 0}), "combat over (rules/combat.mjs clears it): it blocks no longer");
+}
+
 /* ---- selectors are plain data ---- */
 {
   const selector = {what: "permanent", types: ["Creature"], controller: "you", another: true, manaValue: {max: 3}};

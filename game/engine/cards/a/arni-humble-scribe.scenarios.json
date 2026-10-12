@@ -1,0 +1,442 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Arni, Humble Scribe",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Muster": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Create a 1/1 white Soldier creature token.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 1,
+            "token": {
+              "name": "Soldier",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Soldier"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": 1,
+              "toughness": 1
+            }
+          }
+        ]
+      }
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{T}: Rob draws a Wastes, then discards the Bear he chooses",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Arni, Humble Scribe"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Arni, Humble Scribe",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "min": 1
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Arni, Humble Scribe"
+        }
+      ]
+    },
+    {
+      "name": "Tapped to loot, a Bear cast: Arni untaps, and loots again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Arni, Humble Scribe",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Arni, Humble Scribe",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Wastes"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Arni, Humble Scribe"
+            },
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Arni, Humble Scribe"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bear"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Arni, Humble Scribe",
+              "is": false
+            }
+          ]
+        },
+        {
+          "activate": "Arni, Humble Scribe",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Wastes"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "tapped": "Arni, Humble Scribe"
+        }
+      ]
+    },
+    {
+      "name": "A token creature is no nontoken one: the Soldier does not untap Arni",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Arni, Humble Scribe",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Muster"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Arni, Humble Scribe",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Wastes"
+          ]
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Muster"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Arni, Humble Scribe",
+            "Plains",
+            "Soldier"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Arni, Humble Scribe"
+        }
+      ]
+    },
+    {
+      "name": "Maya's Ogre entering is not Rob's creature: Arni stays tapped; and Arni itself entering untaps nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Arni, Humble Scribe"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Arni, Humble Scribe",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Wastes"
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Ogre",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Arni, Humble Scribe"
+        }
+      ]
+    },
+    {
+      "name": "Arni cast: no trigger of its own -- \"another\" creature",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Arni, Humble Scribe"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Arni, Humble Scribe"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Arni, Humble Scribe"
+          ]
+        }
+      ]
+    }
+  ]
+}

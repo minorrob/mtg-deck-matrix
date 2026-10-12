@@ -80,6 +80,11 @@ export const PREDEFINED_TOKENS = Object.freeze({
     abilities: [{id: "mutagen", kind: "activated", text: "{1}, {T}, Sacrifice this token: Put a +1/+1 counter on target creature. Activate only as a sorcery.",
       timing: "sorcery", targets: [{what: "permanent", types: ["Creature"]}],
       cost: [{atom: "mana", cost: "{1}"}, {atom: "{T}"}, {atom: "sacrifice", self: true}], effects: [{effect: "putCounter", targets: {target: 0}, counter: "+1/+1", count: 1}]}]},
+  /* CR 111.10s (Restless Anchorage): explore, CR 701.44 (effects/asking.mjs, explore). */
+  Map: {name: "Map", types: ["Artifact"], subtypes: ["Map"],
+    abilities: [{id: "map", kind: "activated", text: "{1}, {T}, Sacrifice this token: Target creature you control explores. Activate only as a sorcery.",
+      timing: "sorcery", targets: [{what: "permanent", types: ["Creature"], controller: "you"}],
+      cost: [{atom: "mana", cost: "{1}"}, {atom: "{T}"}, {atom: "sacrifice", self: true}], effects: [{effect: "explore", targets: {target: 0}}]}]},
 });
 
 /**
@@ -270,17 +275,19 @@ function rememberedIn(abilities, remembered) {
 }
 export function makeCopies(state, ids, params, context, events) {
   const controller = params.controller ?? context.controller;
-  const made = [];
+  const made = [], added = [], pending = [];
   for (const id of ids) {
     /* "A copy of THAT CREATURE" (Hofri Ghostforge; CR 707.2, 608.2h): the creature the trigger is about, its copiable values as
        it last existed on the battlefield (`asItLastWas`) -- a creature that was copying something, or face down, is that
        (rules/layers.mjs, lastKnown's `copiable`); one that was neither, its card's own, which is where it now is. */
-    const original = params.asItLastWas === true && context.about?.copiedAs && state.objects[id] ? context.about.copiedAs : state.objects[id];
+    const original = id?.values ?? (params.asItLastWas === true && context.about?.copiedAs && state.objects[id] ? context.about.copiedAs : state.objects[id]);
     if (!original) continue;
     const except = params.except?.addAbilities ? {...params.except, addAbilities: rememberedIn(params.except.addAbilities, context.remembered)} : params.except;
-    /* Twice as many copies (Anointed Procession), or Dragons instead of a copy that would be an artifact (Draconic Visitor):
-       rules/statics.mjs, tokensCreated -- read against what the copy would be. */
-    const {count, instead} = tokensCreated(state, controller, params.count ?? 1, copiable(original, except));
+    /* Twice as many copies (Anointed Procession), Dragons instead of a copy that would be an artifact (Draconic Visitor), a
+       Soldier beside a creature's (Queen Allenal): rules/statics.mjs, tokensCreated -- read against what the copy would be,
+       in the order its controller chose for this original (tokenQuestion). */
+    const {count, instead, plus} = tokensCreated(state, controller, params.count ?? 1, copiable(original, except), {orders: params.tokenOrders?.[copyEventKey(id)] ?? []});
+    pending.push(plus);
     for (let i = 0; i < count; i += 1) {
       if (instead) { made.push(makeToken(state, instead, controller, params, context, events)); continue; }
       const values = copiable(original, except);
@@ -298,14 +305,22 @@ export function makeCopies(state, ids, params, context, events) {
     }
   }
   afterwards(state, made, {...params, controller}, context);
-  return made;
+  /* What a replacement added beside them, made after them and given nothing of theirs (addedTokens). */
+  for (const plus of pending) added.push(...addedTokens(state, plus, controller, context, events));
+  return [...made, ...added];
 }
+/* Which event of a copy effect an order answers: the original by its id, or the source as it last existed (`lastKnown`). */
+const copyEventKey = (id) => (id?.values ? "lastKnown" : String(id));
 
 /** `copyPermanent` — "create a token that's a copy of target creature you control" (CR 707.2), or one of each a selector matches ("for each token you control"). */
 export function copyPermanent(state, params, context) {
   const events = [];
   const originals = params.selector ? selectMatching(state, params.selector, context) : (params.targets ?? []);
-  const made = makeCopies(state, originals, params, context, events);
+  /* "Create a token that's a copy of this creature" (`targets: "self"`, `lastKnown`; Colorstorm Stallion's Opus), this creature
+     gone since its ability was put on the stack: a copy of it as it last existed on the battlefield (CR 608.2h, 113.7a) --
+     the copiable values its last known information kept for that ability (rules/layers.mjs, lastKnown). */
+  const gone = params.lastKnown === true && !originals.length && context.lastKnown?.copiable ? [{values: context.lastKnown.copiable}] : null;
+  const made = makeCopies(state, gone ?? originals, params, context, events);
   /* "If the token is an Aura, untap Yenna" (batch 70): the tokens made, for the effects after it. */
   if (params.remember) context.remembered = made;
   return events;
@@ -430,17 +445,56 @@ export function createToken(state, params, context) {
   const [host] = params.attachedTo ?? [];
   if (params.attachedTo !== undefined && !enchantable(state, spec.enchant, controller).includes(host)) return events;
   const made = [];
-  /* "Twice that many of those tokens instead" (Anointed Procession), artifact tokens made Dragons instead (Draconic Visitor):
-     what is made, and how many (rules/statics.mjs, tokensCreated). */
-  const {count: many, instead} = tokensCreated(state, controller, count, spec);
+  /* "Twice that many of those tokens instead" (Anointed Procession), artifact tokens made Dragons instead (Draconic Visitor),
+     "those tokens plus a 1/1 white Soldier" (Queen Allenal): what is made, how many, and what beside them, in the order
+     their controller chose (rules/statics.mjs, tokensCreated; effects/asking.mjs, orderTokens). */
+  const {count: many, instead, plus} = tokensCreated(state, controller, count, spec, {orders: params.tokenOrders?.[TOKEN_EVENT] ?? []});
   for (let i = 0; i < many; i += 1) made.push(makeToken(state, instead ?? spec, controller, params, context, events));
   if (params.attachedTo !== undefined) for (const id of made) attachTo(state, id, host);
   /* "They gain haste until end of turn" (Ovika), and the rest a made permanent may gain (afterwards). */
   afterwards(state, made, {...params, controller}, context);
+  const added = addedTokens(state, plus, controller, context, events);
   /* "Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all OTHER creatures" (Martial Coup): the
-     tokens this made, for the effects after it. */
-  if (params.remember) context.remembered = made;
+     tokens this made, for the effects after it -- the ones a replacement added among them (CR 614.6). */
+  if (params.remember) context.remembered = [...made, ...added];
   return events;
+}
+
+/* WHAT A REPLACEMENT ADDS BESIDE THE TOKENS (`tokens-plus`; Queen Allenal of Ruadach, CR 614.1a): each the token it names and
+   nothing more -- not tapped, not attacking, gaining nothing the effect says of "those tokens" or "it". */
+function addedTokens(state, plus, controller, context, events) {
+  return (plus ?? []).flatMap(({token, count}) => Array.from({length: count}, () => makeToken(state, token, controller, {}, context, events)));
+}
+
+/* The answers kept for the order of the effects changing tokens (CR 616.1; effects/asking.mjs, orderTokens): by the event --
+   a createToken's one, or each original a copy is made of. */
+const TOKEN_EVENT = "made";
+/**
+ * The first event of this token effect whose replacement effects' order is the tokens' controller's to choose and not yet
+ * chosen (CR 616.1), given `answers` (by event): `{player, options, controller, count, values, key}`, or null. It changes
+ * nothing. A createToken or a copyPermanent of targets; the rest (populate, amass, investigate's Clues, which no adder adds
+ * to unless they are made Dragons first) take the order that makes the most (rules/statics.mjs, tokensCreated).
+ */
+export function tokenQuestion(state, effect, context, answers = {}) {
+  const ask = (controller, count, values, key) => {
+    const {question} = tokensCreated(state, controller, count, values, {orders: answers[key] ?? [], askable: true});
+    return question ? {...question, controller, count, values, key, answered: answers[key] ?? []} : null;
+  };
+  const controller = effect?.controller ?? context.controller;
+  /* Linked tokens are made under the exiled cards' owners' control (linkedTokens): theirs to order, not asked here. */
+  if (effect?.effect === "createToken" && effect.linked !== true)
+    return ask(controller, effect.count ?? 1, effect.token?.predefined ? PREDEFINED_TOKENS[effect.token.predefined] : effect.token, TOKEN_EVENT);
+  if (effect?.effect === "copyPermanent" && !effect.selector && Array.isArray(effect.targets)) {
+    for (const id of effect.targets) {
+      if (!state.objects[id]) continue;
+      const asked = ask(controller, effect.count ?? 1, copiable(state.objects[id], effect.except), copyEventKey(id));
+      if (asked) return asked;
+    }
+    /* A copy of this creature as it last existed (copyPermanent's `lastKnown`). */
+    if (effect.lastKnown === true && !effect.targets.length && context.lastKnown?.copiable)
+      return ask(controller, effect.count ?? 1, copiable(context.lastKnown.copiable, effect.except), copyEventKey({values: true}));
+  }
+  return null;
 }
 
 /* One token of this spec, under `controller`'s control, as the effect says it is made (tapped), said so. */

@@ -1,0 +1,250 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Saheeli, Consul of Oversight",
+  "fixtures": {
+    "Glimpse": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Scry 1.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "scry",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Peek": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Surveil 1.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "surveil",
+            "count": 1
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob scries: a Thopter; scries again this turn: no second one",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Saheeli, Consul of Oversight",
+            "Island",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Glimpse",
+            "Glimpse"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Glimpse"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Wastes"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Glimpse"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Saheeli, Consul of Oversight",
+            "Island",
+            "Island",
+            "Thopter"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Surveil too, and once each turn -- not once: on Maya's turn Rob surveils and gets another",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Saheeli, Consul of Oversight",
+            "Island",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Glimpse",
+            "Peek"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Glimpse"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "cast": "Peek",
+          "seat": 0
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Saheeli, Consul of Oversight",
+            "Island",
+            "Island",
+            "Thopter",
+            "Thopter"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maya's scry is not Rob's: nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Saheeli, Consul of Oversight"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Glimpse"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "cast": "Glimpse",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Saheeli, Consul of Oversight"
+          ]
+        }
+      ]
+    }
+  ]
+}

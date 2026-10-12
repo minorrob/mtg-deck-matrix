@@ -1,0 +1,96 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pia, Determined Rebuilder",
+    "oracleId": "a49c0c64-ea87-44f4-9acf-e7181962aeb2",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Artificer"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "When Pia enters, create a 1/1 colorless Thopter artifact creature token with flying.\n{5}{R}: Target creature gets +X/+0 until end of turn, where X is the number of artifacts you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Pia enters, create a 1/1 colorless Thopter artifact creature token with flying.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Thopter",
+            "types": [
+              "Artifact",
+              "Creature"
+            ],
+            "subtypes": [
+              "Thopter"
+            ],
+            "colors": [],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{5}{R}: Target creature gets +X/+0 until end of turn, where X is the number of artifacts you control.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{5}{R}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": {
+            "count": {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ],
+              "controller": "you"
+            }
+          },
+          "toughness": 0
+        }
+      ]
+    }
+  ]
+}

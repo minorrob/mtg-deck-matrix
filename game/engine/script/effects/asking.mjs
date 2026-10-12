@@ -39,7 +39,7 @@ import {loseLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";
 import {damageOrderChoice} from "../../rules/replacement.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
 import {commanderTax} from "../../rules/commander.mjs";
-import {cantBeCountered, counterOrderChoice, cantBeSacrificed} from "../../rules/statics.mjs";
+import {cantBeCountered, counterOrderChoice, cantBeSacrificed, tokenOrderChoice} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
 import {castNow, castChoicesNow} from "../../rules/actions.mjs";
 
@@ -2099,6 +2099,87 @@ export const orderCounters = {
   },
 };
 
+/* ---- explore (CR 701.44) ----
+
+   "Target creature you control explores" (a Map token's, CR 111.10s; Restless Anchorage makes them): the exploring
+   permanent's controller reveals the top card of their library (CR 701.44a). A land card goes to their hand. Anything
+   else -- or nothing, a library with no card to reveal -- puts a +1/+1 counter on the exploring permanent, if it is still
+   on the battlefield, and that player may put the revealed card into their graveyard: one question, surveil's shape, the
+   card shown to every seat while it is open. One no longer on the battlefield is told whose by its last known information
+   (701.44c). One permanent explores, the first of `targets`; it has explored whatever of this could be done (701.44b) --
+   nothing here triggers on that yet. */
+export const explore = {
+  open(state, params, context) {
+    const [id] = params.targets ?? [];
+    if (id === undefined || id === null) return false;
+    const here = state.objects[id]?.zone === "battlefield";
+    const player = here ? controllerOf(state, id) : context.lastKnown?.cardId === id ? context.lastKnown.controller : context.controller;
+    if (!state.players[player] || state.players[player].lost) return false;
+    const [top] = cardsIn(state, "library", player);
+    const events = top === undefined ? [] : revealedEvents(state, player, [top]);
+    if (top !== undefined && typesOf(state, top).includes("Land")) {
+      moveOne(state, top, "hand", events, {owner: player});
+      return {events};
+    }
+    if (here) addCounters(state, id, "+1/+1", 1, events, player);
+    if (top === undefined) return {events};
+    state.resolving?.events.push(...events);
+    showRevealed(state, player, [top]);
+    state.awaiting = {kind: "effect-choice", effect: "explore", player, cards: [top]};
+    return true;
+  },
+  choice(state, awaiting) {
+    return {id: `explore:${awaiting.cards.join(",")}`, title: `Explore: you may put ${state.objects[awaiting.cards[0]]?.card ?? "the revealed card"} into your graveyard`,
+      mode: "many", min: 0, max: 1, options: cardOptions(state, awaiting.cards)};
+  },
+  apply(state, awaiting, indices) {
+    const events = [];
+    unshowRevealed(state, awaiting.player);
+    const chosen = (indices ?? []).map((index) => awaiting.cards[index]).filter((id) => id !== undefined && state.objects[id]?.zone === "library");
+    for (const id of chosen) moveOne(state, id, "graveyard", events, {owner: state.objects[id].owner});
+    return events;
+  },
+  /* The exploring player has left the game, their library with them (CR 800.4a): nothing to put anywhere. */
+  left(state, awaiting) {
+    unshowRevealed(state, awaiting.player);
+    return [];
+  },
+};
+
+/* ---- the order of the effects that change tokens made (CR 616.1) ----
+
+   Two or more replacement effects would change the tokens one effect makes, and the order changes what is made: Anointed
+   Procession's "twice that many of those tokens" and Queen Allenal of Ruadach's "those tokens plus a 1/1 white Soldier" --
+   one Elemental becomes two and a Soldier, or two and two Soldiers. The tokens' controller chooses which applies first;
+   asked BEFORE any is made, an event at a time (a copy effect's, each original), and then the effect is done with every
+   answer (`tokenOrders`, by event). The resolution puts this question in front of a createToken or copyPermanent that has
+   one (script/resolution.mjs; effects/permanents.mjs, tokenQuestion); an order that ends the same either way is never
+   asked (rules/statics.mjs, tokensCreated). */
+export const orderTokens = {
+  /* Opened only with the question the resolution found in front of it (`question`), so there is always one to ask. */
+  open(state, params) {
+    const {question} = params;
+    state.awaiting = {kind: "effect-choice", effect: "orderTokens", player: question.player, key: question.key, controller: question.controller,
+      count: question.count, values: question.values, options: question.options, answered: question.answered, answers: params.answers, make: params.make};
+    return true;
+  },
+  choice(state, awaiting) {
+    return tokenOrderChoice(state, awaiting);
+  },
+  /* The effect itself again, with this answer added, where it stood in the resolution: asked once more while an order is still
+     to be chosen, and done once none is. */
+  apply(state, awaiting, indices) {
+    const chosen = Array.isArray(indices) && indices.length === 1 ? awaiting.options[indices[0]] : undefined;
+    if (chosen === undefined) throw new Error("Invalid selection");
+    const answers = {...awaiting.answers, [awaiting.key]: [...(awaiting.answers[awaiting.key] ?? []), chosen]};
+    return {events: [], splice: [{...awaiting.make, tokenOrders: answers}]};
+  },
+  /* The tokens' controller has left the game: none is made under their control (CR 800.4a; effects/permanents.mjs). */
+  left(state, awaiting) {
+    return {events: [], splice: [{...awaiting.make, tokenOrders: awaiting.answers}]};
+  },
+};
+
 /* ---- whose Alms Collector replaces a draw (CR 616.1) ----
 
    Maya would draw three cards, and Rob's and Trey's Alms Collectors would each replace it: "instead you and that player each
@@ -2342,5 +2423,5 @@ export const chooseInstead = {
   },
 };
 
-export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, chooseColor, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, orderCounters, orderDraws,
+export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, chooseColor, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, orderCounters, orderTokens, orderDraws, explore,
   conniveWhich, manaColors, counterKind, countersToRemove, countersOnto, orderDestruction, chooseInstead, chooseSource, vote});

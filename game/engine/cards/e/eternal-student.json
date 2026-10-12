@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Eternal Student",
+    "oracleId": "140cb5cf-8aa2-457c-9d65-5acefea00195",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie",
+      "Warlock"
+    ],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 4,
+    "toughness": 2
+  },
+  "oracleText": "{1}{B}, Exile this card from your graveyard: Create two 1/1 white and black Inkling creature tokens with flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{1}{B}, Exile this card from your graveyard: Create two 1/1 white and black Inkling creature tokens with flying.",
+      "zone": "graveyard",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{B}"
+        },
+        {
+          "atom": "exileFromGraveyard",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 2,
+          "token": {
+            "name": "Inkling",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Inkling"
+            ],
+            "colors": [
+              "W",
+              "B"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

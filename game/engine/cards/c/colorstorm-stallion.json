@@ -1,0 +1,93 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Colorstorm Stallion",
+    "oracleId": "47ee6837-2e2f-4344-ab9f-6b8887874f77",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental",
+      "Horse"
+    ],
+    "manaCost": "{1}{U}{R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Ward {1}, haste\nOpus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, create a token that's a copy of this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Ward {1}",
+      "keyword": "ward",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "haste",
+      "keyword": "haste"
+    },
+    {
+      "kind": "triggered",
+      "text": "Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, create a token that's a copy of this creature.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "anyOf": [
+            {
+              "types": [
+                "Instant"
+              ]
+            },
+            {
+              "types": [
+                "Sorcery"
+              ]
+            }
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 1
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "compare": {
+              "count": {
+                "manaSpent": "that card"
+              },
+              "atLeast": 5
+            }
+          },
+          "then": [
+            {
+              "effect": "copyPermanent",
+              "targets": "self",
+              "lastKnown": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -142,6 +142,10 @@ export const STATIC_RULES = Object.freeze({
       flying are created instead" (Draconic Visitor): `affects` the tokens it replaces, `token` what is made instead.
       tokensCreated (script/effects/permanents.mjs). */
   "tokens-instead": "script/effects/permanents.mjs",
+  /** "If one or more creature tokens would be created under your control, those tokens plus a 1/1 white Soldier creature
+      token are created instead" (Queen Allenal of Ruadach; CR 614.1a): `affects` the tokens it adds to, by their card
+      types, `token` the one it adds. tokensCreated (script/effects/permanents.mjs). */
+  "tokens-plus": "script/effects/permanents.mjs",
   /** "Your opponents can't cast spells from anywhere other than their hands", "during your turn", "more than one spell each
       turn" (CantBeCast): castForbidden, read where a cast is offered. rules/actions.mjs. And for a while, by an effect
       (effectUntil): "can't cast spells with the same name as that creature until your next turn" (Reflector Mage). */
@@ -389,24 +393,106 @@ export function cantGainLife(state, player) {
  *                     matchesLastKnown); `token` what is made instead, as many;
  *   `more-tokens`     "if an effect would create one or more tokens under your control, it creates twice that many of
  *                     those tokens instead" (Anointed Procession): `affects` the player creating them, "you" its
- *                     controller; `times`.
- * Each applies once (CR 614.5). Every Draconic Visitor makes the same Dragons, and doubling and making Dragons instead end
- * the same in either order, so nobody is asked (CR 616.1).
+ *                     controller; `times` -- of every token the event then makes, one an adder added included;
+ *   `tokens-plus`     "if one or more creature tokens would be created under your control, those tokens plus a 1/1 white
+ *                     Soldier creature token are created instead" (Queen Allenal of Ruadach): its controller's; `affects`
+ *                     the tokens it adds to, by their card types, as the event then stands -- Dragons made instead of
+ *                     Treasures, or a Soldier another adder added, are creature tokens; `token` the one it adds (`plus`).
+ * Each applies once (CR 614.5), and after each the rest are asked again whether they now apply (CR 616.1e). Every Draconic
+ * Visitor makes the same Dragons, and Dragons instead change what is made, never how many, ending the same in any order:
+ * they apply first, and nobody is asked. Nor is anybody of doublers alone, or adders alone. A doubler and an adder end
+ * differently -- the Soldier doubled, or not -- and their order is the affected player's, the tokens' controller (CR
+ * 616.1): a resolution asks before any is made (effects/asking.mjs, orderTokens), each answer kept with the effect and
+ * replayed here through `orders`; `askable` when the caller can stop to ask, the next unanswered choice coming back as
+ * `question`. Where nothing can stop to ask, the order that makes the most.
  *
- * @returns {{count: number, instead: ?object}} how many, and the spec made instead when one is
+ * @returns {{count: number, instead: ?object, plus: Array<{token: object, count: number}>, question?: object}} how many,
+ *   the spec made instead when one is, and the tokens added beside them
  */
-export function tokensCreated(state, controller, count, values) {
-  let n = count, instead = null;
+export function tokensCreated(state, controller, count, values, {orders = [], askable = false} = {}) {
+  const {instead, made, changers} = tokenChangers(state, controller, values);
+  let event = {count, plus: []}, rest = changers, used = 0;
+  for (let now = applying(rest, made, event); now.length; now = applying(rest, made, event)) {
+    let next = now[0];
+    if (now.length > 1 && tokenEnds(rest, made, event).size > 1) {
+      const answered = orders[used] === undefined ? undefined : now.find((c) => tokenEffectKey(c) === orders[used]);
+      if (answered) { used += 1; next = answered; }
+      else if (askable) return {count: event.count, instead, plus: event.plus, question: {player: controller, options: now.map(tokenEffectKey)}};
+      else next = now.reduce((top, c) => (mostAfter(rest, made, c, event) > mostAfter(rest, made, top, event) ? c : top), now[0]);
+    }
+    event = tokenChange(next.ability, event);
+    rest = rest.filter((c) => c !== next);
+  }
+  return {count: event.count, instead, plus: event.plus};
+}
+/* The effects that would change tokens made under `controller`'s control like `values`: what is made instead, and the rest. */
+function tokenChangers(state, controller, values) {
+  let instead = null;
+  const changers = [];
   const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
     for (const ability of held(holderId)) {
       if (ability.kind !== "static") continue;
       if (ability.rule === "tokens-instead" && holder.controller === controller && matchesLastKnown(ability.affects, values)) instead = ability.token;
-      if (ability.rule === "more-tokens" && compileSelector({what: "player", ...ability.affects})(state, controller, {controller: holder.controller, source: holderId})) n *= ability.times;
+      if (ability.rule === "more-tokens" && compileSelector({what: "player", ...ability.affects})(state, controller, {controller: holder.controller, source: holderId})) changers.push({holderId, ability});
+      if (ability.rule === "tokens-plus" && holder.controller === controller) changers.push({holderId, ability});
     }
   }
-  return {count: n, instead};
+  return {instead, made: instead ?? values, changers};
+}
+/* Which of them apply to the event as it now stands: a doubler always; an adder while it makes a token it adds to. */
+const applying = (rest, made, event) => rest.filter(({ability}) => ability.rule === "more-tokens"
+  || (event.count > 0 && matchesLastKnown(ability.affects, made)) || event.plus.some((p) => matchesLastKnown(ability.affects, p.token)));
+/* What one of them makes of the event. */
+const tokenChange = (ability, event) => (ability.rule === "more-tokens"
+  ? {count: event.count * ability.times, plus: event.plus.map((p) => ({...p, count: p.count * ability.times}))}
+  : {count: event.count, plus: [...event.plus, {token: ability.token, count: 1}]});
+const tokensIn = (event) => event.count + event.plus.reduce((n, p) => n + p.count, 0);
+const endKey = (event) => `${event.count}:${event.plus.map((p) => `${p.token.name}x${p.count}`).sort().join(",")}`;
+/* Every way the event can end, over every order of them (CR 616.1), and the most tokens any order after `first` makes. */
+function tokenEnds(rest, made, event, out = new Map()) {
+  const now = applying(rest, made, event);
+  if (!now.length) { out.set(endKey(event), tokensIn(event)); return out; }
+  for (const c of now) tokenEnds(rest.filter((o) => o !== c), made, tokenChange(c.ability, event), out);
+  return out;
+}
+const mostAfter = (rest, made, first, event) => Math.max(...tokenEnds(rest.filter((o) => o !== first), made, tokenChange(first.ability, event)).values());
+/** Which effect an answer names: its holder and ability (CR 614.5 is per effect). */
+export const tokenEffectKey = ({holderId, ability}) => `${holderId}:${ability.id}`;
+
+/**
+ * The choice for CR 616.1 over tokens: which of the effects that would change them applies next, asked of their controller.
+ * `awaiting` carries the event (`controller`, `count` and `values` as the effect would make them, the answers so far) and
+ * the candidates (`options`, tokenEffectKey). Each option says where it leads -- "Anointed Procession first: 4 tokens" --
+ * with `makes`, the most it can end at, for a pilot.
+ */
+export function tokenOrderChoice(state, awaiting) {
+  const {instead, made, changers} = tokenChangers(state, awaiting.controller, awaiting.values);
+  let event = {count: awaiting.count, plus: []}, rest = changers;
+  /* The event as the answers so far left it. */
+  for (const key of awaiting.answered ?? []) {
+    const c = rest.find((one) => tokenEffectKey(one) === key);
+    if (!c) break;
+    event = tokenChange(c.ability, event);
+    rest = rest.filter((o) => o !== c);
+  }
+  const byKey = new Map(rest.map((c) => [tokenEffectKey(c), c]));
+  const names = awaiting.options.map((key) => state.objects[byKey.get(key)?.holderId]?.card);
+  const nameOf = (c) => { const card = state.objects[c.holderId].card; return names.filter((n) => n === card).length > 1 ? `${state.players[state.objects[c.holderId].controller].name}'s ${card}` : card; };
+  const options = awaiting.options.map((key, index) => {
+    const c = byKey.get(key);
+    if (!c) return {index, label: "An effect no longer there", makes: tokensIn(event)};
+    const ends = [...tokenEnds(rest.filter((o) => o !== c), made, tokenChange(c.ability, event)).values()];
+    const lo = Math.min(...ends), hi = Math.max(...ends);
+    return {index, label: `${nameOf(c)} first: ${lo === hi ? lo : `${lo} to ${hi}`} token${hi === 1 ? "" : "s"}`, cardId: c.holderId, makes: hi};
+  });
+  for (const option of options) {
+    const alike = options.filter((o) => o.label === option.label);
+    if (alike.length > 1) alike.forEach((o, n) => { o.label = `${o.label} (${n + 1})`; });
+  }
+  return {id: `order-tokens:${state.turn}:${awaiting.key}:${(awaiting.answered ?? []).length}`,
+    title: `${tokensIn(event)} ${(instead ?? made).name ?? "token"} token${tokensIn(event) === 1 ? "" : "s"}: which applies first?`, mode: "one", min: 1, max: 1, options};
 }
 
 /**
