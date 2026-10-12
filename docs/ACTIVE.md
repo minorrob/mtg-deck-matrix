@@ -19,6 +19,7 @@ other lane answers in the last column.
 | 4 | UI | Per player, the mana tapped this step (`manaTapped`), or on each land whether it was tapped for mana | Turn Resources' "mana tapped this step"; today it counts tapped lands, which includes a land tapped for anything else | the view's players | |
 | 5 | UI | On a card: whether it is a token; what an Aura or Equipment is attached to; summoning sickness; colors and mana cost; which face is up | The anchor's own list. Dice on tokens, Turn Resources by color, attachments drawn under their host, a double-faced card's right picture | the view's cards | |
 | 6 | UI | A `roll` frame at the game's start: the d20 for first player, sent to every seat with its result | The brief's die, which animates to the result it was sent | the room, at launch | |
+| 7 | UI | `tests/advisor.mjs` to pass again: its clock is fixed at 2026-10-11T12:00Z and its `ai_calls` rows are written at that clock, but the meter's 24-hour window (`cloud/ai.mjs` `since()`, through `aiMeter` in `cloud/worker.mjs`) runs on the real clock, so from 2026-10-12T11:59Z the rows fall outside it and the meter check fails on every branch, `main` included | The Actions gate is red for every PR until it is fixed; #725 (the UI pass) waits on it to merge | `cloud/worker.mjs` (`aiMeter`: pass the request's `now` to the door's `spent`), or the suite's rows at the real clock | |
 | 1 | Engine | The board to show the monarch (CR 725): the view's `state.players[i]` now carries `monarch: true` for the monarch, public to every seat, and no key for anyone else; the history says "Maya became the monarch" | Ginger, Queen of Sweets and Tamiyo, Upriser Crowned make their controller the monarch; the monarch draws a card at their end step, and a creature's combat damage to them makes its controller the monarch -- a player should see who holds it | The engine lane built it (Train E, the `monarch` branch); `docs/ui-lane/gameplay-anchor.md` lists the field. For the UI lane to show |
 
 ## 2026-10-12: the UI lane's pass 1 on the Play screen (Fable, a Claude session in a cloud container)
@@ -53,7 +54,10 @@ refused of the concept, and the passes to come: `docs/ui-lane/plan-play-ui-2026-
 - **Assumed, not proved:** the flights and the turn's light are seen in the fixture (`tools/board-fixture.mjs`) and not
   yet held by a suite; the side seats' boards at 1280×720 are legible as presence, not to read.
 - **Asked of the engine lane:** Requests rows 2 to 6 above.
-- **Outstanding:** Rob's review of staging, then pass 2 (`plan-play-ui-2026-10-12.md` §4).
+- **Outstanding:** the merge of #725 waits on `tests/advisor.mjs`, red on `main` since 2026-10-12T11:59Z by its own clock
+  (Requests row 7, the engine lane's); then the staging release, Rob's review, and pass 2 (`plan-play-ui-2026-10-12.md` §4).
+  The suites this pass touches are green on its head: a11y-board 288, table-board 281, table-lobby 89, board-callouts 33,
+  settings-r3 63, board-choices 40, coach 60, design-tokens 91; the 19 breaks all caught.
 
 ## 2026-10-12, later: Train E, Rob's library, in waves; the plan to 90%
 
