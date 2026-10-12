@@ -3216,6 +3216,27 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 .cm-board-step{padding:3px 10px;border-radius:7px;background:var(--accent-fill);color:var(--color-on-accent);font-weight:800;font-size:13px;flex:0 0 auto}
 .cm-board-count{border:0;background:none;color:var(--v-muted);font:inherit;font-size:13px;padding:4px 6px;cursor:pointer;border-radius:6px;white-space:nowrap}
 .cm-board-count:hover{background:var(--v-raised)}
+/* THE TURN'S SEVEN STEPS IN THE STRIP (Rob, 2026-10-12): one ribbon, a button, every step named. Gone-by steps are
+   struck through in the muted ink, the step now is the accent chip (the same .cm-board-step the suites read), the
+   steps to come are in ink. The strip is a container: under 1240px each step but the current shows its short form. */
+.cm-board-strip{container:strip / inline-size}
+.cm-board-ribbon-button{padding:0;border-radius:999px}
+.cm-board-ribbon.is-strip{margin:0;padding:3px;gap:1px;background:color-mix(in srgb,var(--v-ink) 7%,transparent);font-size:12px;overflow:visible}
+.cm-board-ribbon.is-strip li{padding:2px 8px;color:var(--v-ink);font-weight:600;transition:none}
+.cm-board-ribbon.is-strip li.is-done{color:var(--v-muted);text-decoration:line-through;text-decoration-thickness:1px}
+.cm-board-ribbon.is-strip li.is-now{padding:2px 10px;background:var(--accent-fill);color:var(--color-on-accent);font-weight:800;border-radius:999px}
+.cm-board-ribbon.is-strip .cm-step-short{display:none}
+@container strip (max-width:1400px){.cm-board-ribbon.is-strip .cm-step-long{display:none}.cm-board-ribbon.is-strip .cm-step-short{display:inline}.cm-board-ribbon.is-strip li{padding:2px 6px}.cm-board-strip .cm-view-word{display:none}}
+/* The pass button and the ribbon never shrink: the waiting words give way first (at 1280 the button once read "P…"). */
+#matrix-v2 .cm-board-strip [data-action=board-pass],.cm-board-turnsteps{flex:0 0 auto}
+.cm-board-ribbon-button:hover .cm-board-ribbon.is-strip,.cm-board-ribbon-button:focus-visible .cm-board-ribbon.is-strip{background:color-mix(in srgb,var(--v-ink) 14%,transparent)}
+.cm-board-step.is-alone{display:inline-block}
+/* Full screen's pill carries the same ribbon, on the pill's dark: its ink is the mat's. */
+.cm-full-pill .cm-board-ribbon.is-strip{background:rgb(255 255 255 / .1)}
+.cm-full-pill .cm-board-ribbon.is-strip li{color:var(--mat-ink)}
+.cm-full-pill .cm-board-ribbon.is-strip li.is-done{color:color-mix(in srgb,var(--mat-ink) 70%,transparent)}
+.cm-full-pill .cm-board-ribbon.is-strip li.is-now{color:var(--color-on-accent)}
+.cm-full-pill .cm-board-menu{left:0;right:auto;top:calc(100% + 8px);color:var(--v-ink)}
 .cm-board-prompt{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:10px;overflow:hidden}
 .cm-board-next,.cm-board-waiting,.cm-board-conn{font-size:13px;color:var(--v-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .cm-board-next{flex:0 1 auto}
@@ -3266,7 +3287,7 @@ button.cm-vitals{cursor:pointer}
 .cm-mat[data-fit="focus"]{--bc:calc(clamp(92px,var(--mat-w,1060px) * .078,136px) * var(--board-scale,1))}
 .cm-mat[data-fit="table"]{--bc:calc(clamp(30px,var(--row-w,var(--board-w,620px)) * .074,60px) * var(--board-scale,1));border-radius:10px}
 .cm-mat[data-fit="full"]{--bc:calc(clamp(64px,var(--full-w,1200px) * .075,112px) * var(--board-scale,1))}
-.cm-mat[data-fit="opp"]{--bc:calc(clamp(28px,var(--opp-w,400px) * .11,48px) * var(--board-scale,1))}
+.cm-mat[data-fit="opp"]{--bc:min(calc(clamp(28px,var(--opp-w,400px) * .11,48px) * var(--board-scale,1)),var(--opp-bc-max,48px))}
 .cm-mat[data-fit="phone"]{--bc:calc(44px * var(--board-scale,1))}
 .cm-mat[data-fit="mini"]{--bc:calc(var(--mini-w,300px) * .074 * var(--board-scale,1));border-radius:8px;--pad:calc(var(--bc) * .06)}
 /* WORDS OVER ARTWORK (the accessibility pass, docs/plan-to-done-2026-09-30.md Part 6): a mat can be any picture, the
@@ -3531,7 +3552,29 @@ button.cm-vitals{cursor:pointer}
 .cm-board-main>.cm-board-hand{position:absolute;left:calc((100% - var(--mat-w,100%)) / 2);width:var(--mat-w,100%);top:var(--tray-top,auto);border-radius:16px;border-bottom:1px solid rgba(255,255,255,.12)}
 .cm-board-main>.cm-board-ask{top:52px}
 /* FULL SCREEN: the rail, the others across the top, the big board across the foot, the column at the side. */
-.cm-board[data-view="full"]{grid-template-rows:minmax(0,1fr);grid-template-columns:44px minmax(0,1fr) 210px;gap:8px;padding:8px;background:color-mix(in srgb,var(--v-bg) 20%,var(--mat-felt-edge))}   /* the table's dark in both themes: half Felt & Cream's cream left a gray no ink read on */
+/* FULL SCREEN IS THE TABLE FROM YOUR CHAIR (Rob, 2026-10-12). The big board's mat is the whole ground, drawn under the rail,
+   the table and the side column alike; the other seats are smaller boards at the far sides and the back (grid areas
+   left · back · right); the big board, bare, takes what is left and the hand its foot. The rail and the side column
+   lie on a near-opaque dark, so their words read over any art. */
+.cm-board[data-view="full"]{grid-template-rows:minmax(0,1fr);grid-template-columns:44px minmax(0,1fr) 210px;gap:8px;padding:8px;background:var(--mat-felt-edge)}   /* no overflow:hidden: a hand made larger runs on below, the board scrolling to it (Rob, 2026-10-09) */
+.cm-board[data-view="full"]>.cm-full-center,.cm-board[data-view="full"]>.cm-full-side{position:relative;z-index:1}
+.cm-board[data-view="full"]>.cm-full-rail{position:relative;z-index:3}   /* its menus open over the table */
+.cm-full-ground{position:absolute;inset:0;z-index:0;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,var(--mat-felt),var(--mat-felt-edge) 78%);--horizon-px:300px}
+.cm-full-wall,.cm-full-floor{display:none}
+/* THE 3D TABLE (data-3d=on): the ground in two parts of the one picture, the wall beyond the horizon standing, the floor
+   from the horizon to your hand lying down under a perspective, hinged at the horizon so its near edge widens past the
+   window and leaves no gap; the back seat leans away a little, the side seats turn in a little; your board stays flat
+   and whole, every word on it as readable as on the flat table. */
+.cm-board[data-3d="on"] .cm-full-ground{perspective:1400px;perspective-origin:50% var(--horizon-px)}
+.cm-board[data-3d="on"] .cm-full-wall,.cm-board[data-3d="on"] .cm-full-floor{display:block;position:absolute;left:0;right:0;background:inherit;background-size:100% auto;background-repeat:no-repeat}
+.cm-board[data-3d="on"] .cm-full-wall{top:0;height:var(--horizon-px);background-position:center 0}
+.cm-board[data-3d="on"] .cm-full-floor{top:var(--horizon-px);height:130%;background-position:center calc(-1 * var(--horizon-px));transform-origin:50% 0;transform:rotateX(38deg);box-shadow:0 -40px 80px -30px rgb(0 0 0 / .6)}
+.cm-board[data-3d="on"] .cm-full-other[data-side="back"]{transform:perspective(1400px) rotateX(12deg);transform-origin:50% 100%}
+.cm-board[data-3d="on"] .cm-full-other[data-side="left"]{transform:perspective(1400px) rotateY(10deg);transform-origin:0 50%}
+.cm-board[data-3d="on"] .cm-full-other[data-side="right"]{transform:perspective(1400px) rotateY(-10deg);transform-origin:100% 50%}
+@media (prefers-reduced-motion:no-preference){.cm-full-other{transition:transform .25s}}
+.cm-full-rail{background:rgb(10 9 8 / .86);border-radius:10px;padding:6px 0}
+.cm-full-side{background:rgb(10 9 8 / .88);border-radius:10px;padding:6px}
 .cm-full-rail{display:flex;flex-direction:column;align-items:center;gap:8px;min-height:0}
 .cm-full-rail .cm-board-views{flex-direction:column;background:transparent;padding:0}
 /* The rail squares ITS OWN buttons; the menus it opens (Tools, History) keep the app's buttons (item 23). */
@@ -3539,22 +3582,44 @@ button.cm-vitals{cursor:pointer}
 .cm-full-rail>.v-button .cm-icon,.cm-full-rail>.cm-board-tools>.v-button .cm-icon{width:18px;height:18px}
 .cm-full-rail .cm-board-menu{left:calc(100% + 6px);right:auto;top:0}
 .cm-full-turn{font-weight:800;font-size:11px;color:color-mix(in srgb,var(--mat-ink) 80%,transparent)}
-.cm-full-center{position:relative;display:grid;grid-template-rows:minmax(0,2fr) minmax(0,3fr);gap:3px;min-width:0;min-height:0}
-.cm-full-others{display:grid;grid-template-columns:repeat(var(--cols),minmax(0,1fr));gap:3px;min-height:0;min-width:0}
-.cm-full-other{min-width:0;min-height:0;display:grid}
+.cm-full-center{position:relative;display:grid;grid-template-columns:var(--side-w,clamp(150px,15%,320px)) minmax(0,1fr) var(--side-w,clamp(150px,15%,320px));grid-template-rows:var(--back-h,clamp(190px,26%,340px)) minmax(0,1fr);grid-template-areas:"left back right" "left mine right";gap:6px;min-width:0;min-height:0}
+.cm-full-center[data-others="2"]{grid-template-rows:0 minmax(0,1fr);row-gap:0}
+.cm-full-center[data-others="1"]{grid-template-columns:0 minmax(0,1fr) 0;column-gap:0}
+.cm-full-others{display:contents}
+.cm-full-other{min-width:0;min-height:0;display:grid;border-radius:8px}
+.cm-full-other[data-side="left"]{grid-area:left}.cm-full-other[data-side="back"]{grid-area:back}.cm-full-other[data-side="right"]{grid-area:right}
+.cm-full-mine{grid-area:mine}
+/* A side seat's board: a tall, narrow bare board, its cards sized to the column and wrapping in rows. */
+.cm-mat[data-fit="side"]{--bc:calc(clamp(26px,var(--opp-w,300px) * .15,52px) * var(--board-scale,1))}
+.cm-mat[data-fit="side"] .cm-mat-head{flex-wrap:wrap;white-space:normal;height:auto;row-gap:2px}
+/* A side seat's rows wrap rather than overlap (overlap() leaves them be): every card whole, none under another. */
+.cm-mat[data-fit="side"] .cm-board-cards{flex-wrap:wrap;row-gap:4px}
+/* A card with the keyboard's focus is drawn over the cards that overlap it (the accessibility pass, 2026-10-12). */
+#matrix-v2 .cm-board .cm-board-cards>.cm-bcard:focus-visible{z-index:4}
+.cm-mat[data-fit="side"] .cm-mat-grid{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:minmax(0,1fr) auto var(--pile-row)}
+.cm-mat[data-fit="side"] .cm-board-field{grid-column:1 / 5;grid-row:1}
+.cm-mat[data-fit="side"] .cm-board-lands{grid-column:1 / 5;grid-row:2}
+.cm-mat[data-fit="side"] .cm-board-pile[data-zone="command"]{grid-column:1;grid-row:3}
+.cm-mat[data-fit="side"] .cm-board-pile[data-zone="exile"]{grid-column:2;grid-row:3}
+.cm-mat[data-fit="side"] .cm-board-pile[data-zone="library"]{grid-column:3;grid-row:3}
+.cm-mat[data-fit="side"] .cm-board-pile[data-zone="graveyard"]{grid-column:4;grid-row:3}
+/* The big board is the ground itself: no backing, no frame, no ring of its own. */
+.cm-full-mine>.cm-mat[data-mat]{background:transparent;border-color:transparent;box-shadow:none}
 .cm-full-other>.cm-mat{height:100%}
 .cm-full-mine{position:relative;min-height:0;min-width:0;display:grid;--hc:calc(112px * var(--hand-scale,1))}
 .cm-full-mine>.cm-mat{height:100%;padding-top:52px;--mat-reserve:var(--tray-h,calc(var(--hc) * 7 / 5 + 22px))}   /* the pill over it; the whole hand tray along its foot (item 25) */
 .cm-full-mine>.cm-mat[data-fit="full"]{--bc:min(calc(clamp(64px,var(--full-w,1200px) * .075,112px) * var(--board-scale,1)),var(--full-bc-max,112px))}
-.cm-full-pill{position:absolute;left:50%;top:8px;z-index:6;display:flex;align-items:center;gap:8px;padding:4px 6px 4px 12px;transform:translateX(-50%);border-radius:999px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.15);white-space:nowrap;max-width:calc(100% - 16px);color:var(--mat-ink)}
+.cm-full-pill{position:absolute;left:8px;right:8px;top:8px;z-index:6;display:flex;align-items:center;gap:8px;padding:4px 6px 4px 8px;border-radius:999px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.15);white-space:nowrap;color:var(--mat-ink);container:pill / inline-size}
+.cm-full-pill .cm-board-waiting{flex:1 1 auto;min-width:0}
+@container pill (max-width:1060px){.cm-full-pill .cm-board-ribbon.is-strip .cm-step-long{display:none}.cm-full-pill .cm-board-ribbon.is-strip .cm-step-short{display:inline}.cm-full-pill .cm-board-ribbon.is-strip li{padding:2px 6px}}
 .cm-full-pill .cm-board-waiting{color:var(--mat-ink)}
 .cm-full-pill .cm-board-next{color:color-mix(in srgb,var(--mat-ink) 80%,transparent)}   /* the theme's muted is a page's, not the pill's */
 #matrix-v2 .cm-full-corner .v-button.compact{min-height:0;height:28px;padding:0 10px}
-.cm-full-corner{position:absolute;left:12px;top:10px;z-index:6;display:flex;align-items:center;gap:8px}
+.cm-full-corner{display:flex;align-items:center;gap:8px;flex:0 0 auto}
 .cm-full-corner-name{font-size:12px;font-weight:700;color:var(--mat-ink);text-shadow:0 1px 3px rgba(0,0,0,.8);padding:1px 8px;border-radius:999px;background:var(--mat-scrim)}   /* over the art: a shadow alone read at 2.5:1 */
 /* The tray starts where the room kept for it starts, and a larger hand grows down past the window, never up over the
    board (Rob, 2026-10-09). */
-.cm-full-mine>.cm-board-hand{position:absolute;left:120px;right:120px;top:calc(100% - var(--tray-h,calc(var(--hc) * 7 / 5 + 22px)));z-index:5}
+.cm-full-mine>.cm-board-hand{position:absolute;left:16px;right:16px;top:calc(100% - var(--tray-h,calc(var(--hc) * 7 / 5 + 22px)));z-index:5}
 .cm-full-side{display:flex;flex-direction:column;gap:6px;min-width:0;min-height:0;overflow:hidden auto}   /* scrolls, so what the keyboard reaches in it is brought into view */
 .cm-full-vitals{display:grid;gap:3px}
 .cm-full-vitals>div{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;background:linear-gradient(90deg,color-mix(in srgb,var(--seat) 30%,var(--mat-cavern)),var(--mat-cavern));font-size:11px;color:var(--mat-ink)}
@@ -3589,8 +3654,37 @@ button.cm-vitals{cursor:pointer}
 .cm-board-band li span:first-child{overflow:hidden;text-overflow:ellipsis;min-width:0}
 .cm-board-band .cm-history-turn{color:var(--mat-ink)}
 /* PANEL ▸: the right panel of the handoff (Card · the stack · History), over the surface. */
-.cm-board-panel{position:fixed;top:48px;right:0;bottom:0;z-index:74;width:min(360px,100vw);display:flex;flex-direction:column;gap:12px;padding:14px 16px;background:var(--v-panel);color:var(--v-ink);border-left:1px solid var(--v-line-strong);box-shadow:-24px 0 48px -24px rgb(0 0 0 / .6);overflow:hidden}
-.cm-board[data-view="full"] .cm-board-panel{top:0}
+/* DOCKED (Rob's note 10): a column beside the mat in Focus and in the Table view, the mat giving it its width; its edge
+   is a divider. In Full screen, where the side column already holds the same, it stays a slide-over. */
+.cm-board-panel{position:relative;z-index:6;display:flex;flex-direction:column;gap:12px;padding:12px 14px 12px 18px;background:var(--v-panel);color:var(--v-ink);border-left:1px solid var(--v-line-strong);overflow:hidden;min-width:0;min-height:0}
+.cm-board[data-view="full"] .cm-board-panel{position:fixed;top:0;right:0;bottom:0;z-index:74;width:min(360px,100vw);box-shadow:-24px 0 48px -24px rgb(0 0 0 / .6)}
+.cm-board-body.has-panel{grid-template-columns:var(--pane-w,168px) minmax(0,1fr) var(--panel-w,340px)}
+.cm-board-body.has-panel:has(.cm-board-pane.is-shut){grid-template-columns:44px minmax(0,1fr) var(--panel-w,340px)}
+.cm-board[data-view="table"].has-panel{grid-template-columns:minmax(0,1fr) var(--panel-w,340px)}
+.cm-board[data-view="table"].has-panel>.cm-board-strip{grid-column:1 / 3}
+.cm-board[data-view="table"].has-panel>.cm-board-panel{grid-column:2;grid-row:2 / 4}
+.cm-board[data-view="table"].has-panel>.cm-board-tabletop,.cm-board[data-view="table"].has-panel>.cm-board-hand{grid-column:1}
+.cm-board-panelgrip{position:absolute;top:0;bottom:0;left:-6px;width:12px;z-index:7;display:flex}
+.cm-board[data-view="full"] .cm-board-panelgrip{display:none}
+.cm-panel-tabs{display:flex;gap:4px;flex:1 1 auto;min-width:0;padding:3px;border-radius:10px;background:color-mix(in srgb,var(--v-ink) 6%,transparent)}
+.cm-panel-tab{flex:1 1 auto;min-width:0;height:28px;padding:0 8px;border:0;border-radius:8px;background:transparent;color:var(--v-ink);font:inherit;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.cm-panel-tab:hover{background:var(--v-raised)}
+.cm-panel-tab.is-on{background:var(--accent-fill);color:var(--color-on-accent);font-weight:800}
+.cm-panel-history.is-whole{flex:1 1 auto}
+/* TURN RESOURCES (note 9): short lists, the number at the right; a row with something castable or untapped is lit. */
+.cm-resources{display:flex;flex-direction:column;gap:6px;min-height:0;overflow:auto}
+.cm-resources h3{margin:8px 0 2px}
+.cm-resources h3 .cm-muted{font-weight:400;text-transform:none;letter-spacing:0;margin-left:6px}
+.cm-res-list{list-style:none;margin:0;padding:0;display:grid;gap:2px;font-size:13px}
+.cm-res-list li{display:flex;justify-content:space-between;gap:8px;padding:3px 8px;border-radius:6px;background:color-mix(in srgb,var(--v-ink) 4%,transparent);color:var(--v-muted)}
+.cm-res-list li.is-live{color:var(--v-ink);background:color-mix(in srgb,var(--v-accent) 14%,transparent)}
+.cm-res-list li b{font-variant-numeric:tabular-nums;font-weight:800}
+.cm-res-list li.cm-muted{background:none}
+.cm-res-summary li{color:var(--v-ink)}
+.cm-res-pips{display:flex;flex-wrap:wrap;gap:6px}
+.cm-res-pip{display:inline-flex;align-items:center;gap:5px;padding:2px 8px 2px 4px;border-radius:999px;background:var(--v-raised);font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}
+.cm-res-pip i{width:14px;height:14px;border-radius:50%;background:var(--v-muted);border:1px solid rgb(0 0 0 / .4)}
+.cm-res-pip[data-color="W"] i{background:var(--mana-W)}.cm-res-pip[data-color="U"] i{background:var(--mana-U)}.cm-res-pip[data-color="B"] i{background:var(--mana-B)}.cm-res-pip[data-color="R"] i{background:var(--mana-R)}.cm-res-pip[data-color="G"] i{background:var(--mana-G)}
 .cm-board-panel>header{display:flex;justify-content:space-between;align-items:center}
 .cm-board-panel h2{margin:0;font-size:16px}
 .cm-board-panel h3{margin:0 0 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--v-muted)}
@@ -3648,7 +3742,7 @@ button.cm-vitals{cursor:pointer}
 .cm-hand-rest{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
 .cm-hand-rest .cm-bcard{--bc:calc(72px * var(--card-scale,1));cursor:pointer}
 .cm-board-peek{position:fixed;left:50%;top:50%;z-index:65;transform:translate(-50%,-50%);pointer-events:none;filter:drop-shadow(0 30px 60px rgb(0 0 0 / .7))}
-.cm-board-peek .cm-bcard{--bc:min(calc(400px * var(--card-scale,1)),calc((100vh - 80px) * 5 / 7),calc(100vw - 48px))}
+.cm-board-peek .cm-bcard{--bc:min(calc(400px * var(--card-scale,1)),calc((100vh - 80px) * 5 / 7),calc(100vw - 48px),calc(var(--peek-max,100vh) * 5 / 7))}   /* and never taller than the mat (Rob, 2026-10-11) */
 .cm-board-zoom .cm-bcard{--bc:min(calc(400px * var(--card-scale,1)),calc(100vw - 80px))}
 .cm-board-zoom{display:grid;justify-items:center;padding:6px 0 12px}
 /* A card used more than one way: its ways to choose from, wrapping, scrolling past a third of the window. */
@@ -3746,10 +3840,10 @@ button.cm-vitals{cursor:pointer}
 .cm-phone-ask .cm-board-decision-foot{margin:0}
 /* THE MATS (M5, the handoff's Choose mat). Every board is drawn on its seat's mat; felt is the default. */
 .cm-mat-swatch{background:radial-gradient(ellipse at 50% 30%,var(--mat-felt),var(--mat-felt-edge) 78%)}
-[data-mat="forge"]:is(.cm-board-mat,.cm-seatboard,.cm-mat-swatch){background:radial-gradient(ellipse at 50% 100%,color-mix(in srgb,var(--mat-forge-glow) 40%,transparent),transparent 55%),radial-gradient(ellipse at 50% 30%,var(--mat-forge),var(--mat-forge-edge) 80%)}
-[data-mat="cavern"]:is(.cm-board-mat,.cm-seatboard,.cm-mat-swatch){background:repeating-linear-gradient(115deg,color-mix(in srgb,var(--mat-ink) 3%,transparent) 0 2px,transparent 2px 9px),linear-gradient(160deg,var(--mat-cavern),var(--mat-cavern-edge))}
-[data-mat="sea"]:is(.cm-board-mat,.cm-seatboard,.cm-mat-swatch){background:repeating-radial-gradient(ellipse at 50% 130%,transparent 0 22px,color-mix(in srgb,var(--mat-sea-foam) 9%,transparent) 22px 24px),radial-gradient(ellipse at 50% 30%,var(--mat-sea),var(--mat-sea-edge) 80%)}
-[data-mat="night"]:is(.cm-board-mat,.cm-seatboard,.cm-mat-swatch){background:radial-gradient(1.5px 1.5px at 18% 24%,var(--mat-ink) 50%,transparent 51%),radial-gradient(1px 1px at 62% 14%,var(--mat-ink) 50%,transparent 51%),radial-gradient(1.5px 1.5px at 81% 58%,var(--mat-ink) 50%,transparent 51%),radial-gradient(1px 1px at 35% 72%,var(--mat-ink) 50%,transparent 51%),radial-gradient(1px 1px at 90% 30%,var(--mat-ink) 50%,transparent 51%),radial-gradient(ellipse at 50% 30%,var(--mat-night),var(--mat-night-edge) 80%)}
+[data-mat="forge"]:is(.cm-board-mat,.cm-seatboard,.cm-mat-swatch,.cm-full-ground){background:radial-gradient(ellipse at 50% 100%,color-mix(in srgb,var(--mat-forge-glow) 40%,transparent),transparent 55%),radial-gradient(ellipse at 50% 30%,var(--mat-forge),var(--mat-forge-edge) 80%)}
+[data-mat="cavern"]:is(.cm-board-mat,.cm-seatboard,.cm-mat-swatch,.cm-full-ground){background:repeating-linear-gradient(115deg,color-mix(in srgb,var(--mat-ink) 3%,transparent) 0 2px,transparent 2px 9px),linear-gradient(160deg,var(--mat-cavern),var(--mat-cavern-edge))}
+[data-mat="sea"]:is(.cm-board-mat,.cm-seatboard,.cm-mat-swatch,.cm-full-ground){background:repeating-radial-gradient(ellipse at 50% 130%,transparent 0 22px,color-mix(in srgb,var(--mat-sea-foam) 9%,transparent) 22px 24px),radial-gradient(ellipse at 50% 30%,var(--mat-sea),var(--mat-sea-edge) 80%)}
+[data-mat="night"]:is(.cm-board-mat,.cm-seatboard,.cm-mat-swatch,.cm-full-ground){background:radial-gradient(1.5px 1.5px at 18% 24%,var(--mat-ink) 50%,transparent 51%),radial-gradient(1px 1px at 62% 14%,var(--mat-ink) 50%,transparent 51%),radial-gradient(1.5px 1.5px at 81% 58%,var(--mat-ink) 50%,transparent 51%),radial-gradient(1px 1px at 35% 72%,var(--mat-ink) 50%,transparent 51%),radial-gradient(1px 1px at 90% 30%,var(--mat-ink) 50%,transparent 51%),radial-gradient(ellipse at 50% 30%,var(--mat-night),var(--mat-night-edge) 80%)}
 /* Thirty mats since Rob's artwork (2026-09-29): a grid that scrolls, not one long row. */
 .cm-mat-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;max-height:min(300px,38vh);overflow-y:auto;padding:4px 6px 10px 2px;list-style:none;margin:0 0 10px}
 .cm-mat-pick{display:grid;gap:4px;width:100%;padding:0;border:0;background:none;color:inherit;font:inherit;font-size:12px;font-weight:700;text-align:left;cursor:pointer}
@@ -3801,3 +3895,40 @@ button.cm-vitals{cursor:pointer}
    icon (still named, role=img, for a screen reader), so it no longer covers the poison count (the accessibility pass) */
 .cm-board-tile{container-type:inline-size}
 @container (max-width:200px){.cm-board-tile>.cm-board-turn-mark b{display:none}.cm-board-tile>.cm-board-turn-mark{padding:2px}}
+/* MOTION (Rob, 2026-10-12): a card in flight is a copy over the board (crankmagic-board.js, motionPlay); the real card
+   waits unseen until it lands. The turn's light arrives with a crossfade when the turn moves (data-turn-changed on the
+   board for that paint): the active player's fan and ring fade in over 600 ms. Reduce motion stills all of it. */
+.cm-board-flight{box-shadow:0 18px 40px -12px rgb(0 0 0 / .7);will-change:transform}
+@keyframes cm-light-in{from{opacity:0}to{opacity:1}}
+.cm-board[data-turn-changed] .cm-board-fan{animation:cm-light-in .6s ease-out both}
+.cm-board[data-turn-changed] .cm-board-tile.is-turn,.cm-board[data-turn-changed] .cm-mat.is-bare.is-active,.cm-board[data-turn-changed] .cm-full-vitals>.is-turn{animation:cm-light-in .6s ease-out both}
+@media (prefers-reduced-motion:reduce){.cm-board[data-turn-changed] .cm-board-fan,.cm-board[data-turn-changed] .cm-board-tile.is-turn,.cm-board[data-turn-changed] .cm-mat.is-bare.is-active,.cm-board[data-turn-changed] .cm-full-vitals>.is-turn{animation:none}}
+/* CALLOUTS: a column of at most three over the table's upper middle, under the strip, never over the hand or the pass
+   button. Bold condensed capitals with an ink stroke and a glow in the tone's color: red harm, blue answer, green growth,
+   gold value, violet fade. The line under each sits on a dark backing at 4.5:1. The Overlay level (--level, 0 to 1)
+   scales the size and the glow. The layer is beside the board, above it, and takes no pointer. */
+.cm-board-callouts{position:fixed;left:50%;top:72px;z-index:58;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;max-width:min(720px,90vw)}
+.cm-board[data-view="full"]~.cm-board-callouts{top:16%}
+.cm-callout{display:grid;justify-items:center;gap:2px;--glow:var(--v-accent);--size:calc(38px + 26px * var(--level,.6));color:var(--tone);filter:drop-shadow(0 0 calc(6px + 10px * var(--level,.6)) var(--glow))}
+.cm-callout.is-big{--size:calc(52px + 36px * var(--level,.6))}
+.cm-callout.is-harm{--tone:#ff5c4d;--glow:rgb(255 70 50 / .9)}
+.cm-callout.is-answer{--tone:#5fd3ff;--glow:rgb(70 190 255 / .9)}
+.cm-callout.is-growth{--tone:#6ff06a;--glow:rgb(80 230 90 / .9)}
+.cm-callout.is-value{--tone:#ffd34d;--glow:rgb(255 200 60 / .9)}
+.cm-callout.is-fade{--tone:#c99bff;--glow:rgb(180 130 255 / .9)}
+.cm-callout-glyph{display:inline-block;width:calc(var(--size) * .8);height:calc(var(--size) * .8)}
+.cm-callout-glyph svg{width:100%;height:100%;display:block}
+.cm-callout-word{display:flex;align-items:baseline;gap:.25em;font-family:'Barlow Condensed',var(--font-display),sans-serif;font-weight:800;font-style:italic;font-size:var(--size);line-height:.95;letter-spacing:.02em;text-transform:uppercase;-webkit-text-stroke:1.5px rgb(0 0 0 / .85);paint-order:stroke fill;white-space:nowrap}
+.cm-callout-word b{font-weight:900}
+.cm-callout-line{margin-top:4px;padding:2px 10px;border-radius:8px;background:rgb(12 12 14 / .9);color:#f3efe6;font-size:12px;font-weight:600;filter:none;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;-webkit-text-stroke:0}
+/* Settings › Play › Overlay: the slider with its value beside it (AGENTS.md: sizes and levels are sliders). */
+#matrix-v2 .cm-settings-slider{display:flex;align-items:center;gap:10px;flex:1 1 320px;max-width:480px;font-size:13px}
+#matrix-v2 .cm-settings-slider input[type=range]{flex:1 1 auto;min-height:0;height:18px;margin:0;accent-color:var(--v-accent)}
+#matrix-v2 .cm-settings-slider output{min-width:4ch;text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+/* Play home's recent games (2026-10-12): one line a game, the outcome first. */
+.cm-table-recent-list{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:4px}
+.cm-table-recent-row{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;padding:6px 10px;border-radius:8px;background:color-mix(in srgb,var(--v-ink) 4%,transparent);font-size:13px}
+.cm-table-recent-row b{min-width:5.5em}
+.cm-table-recent-row[data-outcome="win"] b{color:var(--st-inbox)}
+.cm-table-recent-row[data-outcome="loss"] b{color:var(--st-remove)}
+.cm-table-launch-note{margin:4px 0 0;font-size:12px}

@@ -626,6 +626,22 @@ try {
   const fullGeo = await maya.page.evaluate(() => {const r = document.getElementById("cm-board").getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height), innerWidth, innerHeight, document.documentElement.scrollWidth - document.documentElement.clientWidth];});
   ok(fullGeo[0] === 0 && fullGeo[1] === 0 && fullGeo[2] === fullGeo[4] && fullGeo[3] === fullGeo[5] && fullGeo[6] === 0, `Full screen takes the whole window by itself where the browser gives no full screen (${fullGeo.slice(0, 4).join(",")} of ${fullGeo[4]}×${fullGeo[5]})`);
   ok(await maya.page.locator(".cm-full-others .cm-seatboard").count() === 1 && await maya.page.locator(".cm-full-mine .cm-seatboard.is-you").count() === 1, "the other seat across the top, hers across the foot");
+  /* THE TABLE FROM HER CHAIR (Rob, 2026-10-12): her mat is the whole ground under the rail, the table and the side
+     column; her own board on it has no backing of its own; the one other seat sits at the back; the table lies flat
+     until 3D is switched on, which bends the ground at the horizon and is remembered on the device. */
+  const fullShape = await maya.page.evaluate(() => {const g = document.querySelector(".cm-full-ground"), o = document.querySelector(".cm-full-other"), big = document.querySelector(".cm-full-mine .cm-seatboard"), gr = g.getBoundingClientRect(), b = document.getElementById("cm-board").getBoundingClientRect();
+    return {mat: g.dataset.mat, side: o.dataset.side, others: document.querySelector(".cm-full-center").dataset.others, bigBg: getComputedStyle(big).backgroundImage, whole: Math.abs(gr.width - b.width) < 2 && Math.abs(gr.height - b.height) < 2, three: document.getElementById("cm-board").dataset["3d"], floor: getComputedStyle(document.querySelector(".cm-full-floor")).display};});
+  ok(fullShape.mat === "night" && fullShape.whole && fullShape.bigBg === "none" && fullShape.side === "back" && fullShape.others === "1" && fullShape.three === "off" && fullShape.floor === "none",
+    `Full screen's ground is her mat (${fullShape.mat}), the whole window (${fullShape.whole}); her board on it has no backing (${fullShape.bigBg}); the other seat sits at the back (${fullShape.side}, ${fullShape.others}); the table lies flat (3D ${fullShape.three})`);
+  await maya.page.click(".cm-full-rail [data-action=board-3d]");
+  await maya.page.waitForFunction(() => document.getElementById("cm-board").dataset["3d"] === "on");
+  const threeD = await maya.page.evaluate(() => {const f = document.querySelector(".cm-full-floor"), st = getComputedStyle(f); return {display: st.display, transform: st.transform, kept: localStorage.getItem("cm-board-3d"), pressed: document.querySelector(".cm-full-rail [data-action=board-3d]").getAttribute("aria-pressed"), horizon: getComputedStyle(document.querySelector(".cm-full-ground")).getPropertyValue("--horizon-px").trim()};});
+  ok(threeD.display === "block" && threeD.transform !== "none" && threeD.kept === "on" && threeD.pressed === "true" && /^\d+px$/.test(threeD.horizon) && parseInt(threeD.horizon, 10) > 100,
+    `3D bends the ground at the horizon (${threeD.horizon}, the floor ${threeD.transform.slice(0, 12)}…), says it is on, and is remembered (${threeD.kept})`);
+  await shot(maya.page, "board-full-3d-1280");
+  await maya.page.click(".cm-full-rail [data-action=board-3d]");
+  await maya.page.waitForFunction(() => document.getElementById("cm-board").dataset["3d"] === "off");
+  ok(await maya.page.evaluate(() => localStorage.getItem("cm-board-3d")) === "off", "and off again, flat and remembered so");
   ok(/played (Forest|Island)/.test(await text(maya.page, ".cm-full-side .cm-board-band")), "and the history in the side column");
   const firstHand = maya.page.locator(".cm-board-hand .cm-bcard").first(), firstName = (await firstHand.getAttribute("aria-label")).split(/[,:]/)[0];
   await firstHand.click();
@@ -648,6 +664,23 @@ try {
   await maya.page.click("[data-action=board-view][data-view=focus][aria-label='Leave full screen']");
   await maya.page.locator(".cm-board-strip").waitFor();
   ok(await maya.page.getAttribute("#cm-board", "data-view") === "focus", "⎋ leaves Full screen for Focus");
+  /* THE HOVER CARD NO TALLER THAN THE MAT (Rob, 2026-10-11): at 1280x800 her mat is shorter than the 400px card is tall,
+     so the card shown under the pointer is held to the mat's height. */
+  await maya.page.hover(".cm-board-hand .cm-bcard[data-card]");
+  await maya.page.locator("#cm-board-peek .cm-bcard").waitFor({timeout: 5000});
+  const peekCap = await maya.page.evaluate(() => {const p = document.querySelector("#cm-board-peek .cm-bcard").getBoundingClientRect(), m = document.querySelector(".cm-board-mat").getBoundingClientRect(); return {peek: Math.round(p.height), mat: Math.round(m.height), w: Math.round(p.width)};});
+  ok(peekCap.mat < 560 && peekCap.peek <= peekCap.mat + 1 && peekCap.w < 400, `the card under the pointer is no taller than the mat (${peekCap.peek} of ${peekCap.mat}px; ${peekCap.w}px wide, under the 400 it would be)`);
+  await maya.page.mouse.move(2, 2);
+  await maya.page.locator("#cm-board-peek").waitFor({state: "detached", timeout: 5000});
+  /* THE CALLOUTS (the Replit brief's overlay): Tools › Try the callouts shows the grammar on demand, at most three at
+     once, in a layer beside the board that a view's repaint leaves alone. */
+  await maya.page.click(".cm-board-strip [data-action=board-tools]");
+  await maya.page.click("[data-action=board-callout-demo]");
+  await maya.page.locator(".cm-callout").first().waitFor({timeout: 3000});
+  await maya.page.waitForTimeout(1500);
+  const called = await maya.page.evaluate(() => ({n: document.querySelectorAll("#cm-board-callouts .cm-callout").length, words: [...document.querySelectorAll("#cm-board-callouts .cm-callout-word")].map((w) => w.textContent.trim()), outside: !document.getElementById("cm-board").contains(document.getElementById("cm-board-callouts")), hidden: document.getElementById("cm-board-callouts").getAttribute("aria-hidden")}));
+  ok(called.n >= 1 && called.n <= 3 && called.words.some((w) => /YOUR TURN|INCOMING|HIT/.test(w)) && called.outside && called.hidden === "true", `the callouts show, three at most (${called.n}: ${called.words.join(", ")}), beside the board and not read aloud`);
+  await maya.page.waitForFunction(() => !document.querySelector("#cm-board-callouts .cm-callout"), null, {timeout: 20000});
   await maya.page.click("[data-action=board-view][data-view=full]");
   await maya.page.locator(".cm-full-rail").waitFor();
   const pillClear = await maya.page.evaluate(() => {const pill = document.querySelector(".cm-full-pill").getBoundingClientRect(), first = document.querySelector(".cm-full-mine .cm-seatboard-body").getBoundingClientRect(); return first.top >= pill.bottom;});
@@ -782,7 +815,7 @@ try {
   ok(new RegExp(`Yield this turn passes your priority for you through the rest of ${active === rob ? "Maya" : "Rob"}'s turn`).test(yieldHelp) && /you hold priority/.test(yieldHelp),
     `Tools says what yielding does, and that until then you hold priority ("${yieldHelp.trim().slice(0, 90)}…")`);
   await active.page.click("[data-action=board-tools]");
-  eq(await rob.page.locator(".cm-board-mat .cm-board-ribbon li.is-now").count() + await maya.page.locator(".cm-board-mat .cm-board-ribbon li.is-now").count(), 1, "the step ribbon lights the current step on the active player's own board");
+  eq(await rob.page.locator(".cm-board-strip .cm-board-ribbon li.is-now").count() + await maya.page.locator(".cm-board-strip .cm-board-ribbon li.is-now").count(), 2, "the step ribbon in each strip lights exactly one step, on every turn");
 
   /* CARD SIZE: the app's slider, in Tools; ⌘/Ctrl − steps it. */
   const handWidth = (page) => page.evaluate(() => document.querySelector(".cm-board-hand .cm-bcard").getBoundingClientRect().width);
@@ -963,6 +996,37 @@ try {
      untaps on a click (room.mjs, untapMana), and this one is only shown. */
   await second.page.click("[data-action=board-panel]");
   await second.page.locator(".cm-board-mat .cm-board-lands .cm-bcard.is-tapped").first().click();
+  await second.page.locator(".cm-board-panel .cm-panel-card .cm-bcard").waitFor();
+  /* THE PANE IS DOCKED (Rob's note 10): beside the mat and the hand, never over them, 340px wide until its edge is
+     dragged; its tabs are Turn Resources, Panel and History, on Panel. */
+  const matWide = await second.page.evaluate(() => document.querySelector(".cm-board-mat").getBoundingClientRect().width);
+  const dockedPane = await second.page.evaluate(() => {const p = document.querySelector(".cm-board-panel").getBoundingClientRect(), m = document.querySelector(".cm-board-mat").getBoundingClientRect(), h = document.querySelector(".cm-board-main>.cm-board-hand").getBoundingClientRect();
+    return {beside: p.left >= m.right - 1 && p.left >= h.right - 1, w: Math.round(p.width), tabs: [...document.querySelectorAll(".cm-panel-tab")].map((x) => x.textContent.trim()), on: document.querySelector(".cm-panel-tab.is-on").textContent.trim(), fixed: getComputedStyle(document.querySelector(".cm-board-panel")).position};});
+  ok(dockedPane.beside && dockedPane.w === 340 && dockedPane.tabs.join("|") === "Turn Resources|Panel|History" && dockedPane.on === "Panel" && dockedPane.fixed !== "fixed",
+    `the Panel is docked beside the mat and the hand (${dockedPane.beside}, ${dockedPane.fixed}), ${dockedPane.w}px wide, with the tabs ${dockedPane.tabs.join(" · ")}, on ${dockedPane.on}`);
+  const edge = await second.page.locator(".cm-board-panel [data-drag=panelw]").boundingBox();
+  await second.page.mouse.move(edge.x + edge.width / 2, edge.y + 200);
+  await second.page.mouse.down();
+  await second.page.mouse.move(edge.x + edge.width / 2 - 50, edge.y + 200, {steps: 4});
+  await second.page.mouse.move(edge.x + edge.width / 2 - 100, edge.y + 200, {steps: 4});
+  await second.page.mouse.up();
+  const widened = await second.page.evaluate(() => ({w: Math.round(document.querySelector(".cm-board-panel").getBoundingClientRect().width), kept: localStorage.getItem("cm-board-panel-w"), mat: document.querySelector(".cm-board-mat").getBoundingClientRect().width}));
+  ok(widened.w === 440 && widened.kept === "440" && widened.mat < matWide - 60, `its edge drags: 100px left, the pane ${dockedPane.w} → ${widened.w}px and remembered (${widened.kept}); the mat gives it the room (${matWide.toFixed(0)} → ${widened.mat.toFixed(0)}px)`);
+  await second.page.focus(".cm-board-panel [data-drag=panelw]");
+  for (let i = 0; i < 5; i += 1) await second.page.keyboard.press("ArrowRight");
+  ok(await second.page.evaluate(() => localStorage.getItem("cm-board-panel-w")) === "340", "the arrow keys move it too, 20px a press");
+  /* TURN RESOURCES (note 9): the hand by type and the lands by name, castable now over in hand and untapped over all,
+     the same facts the mat shows. */
+  await second.page.click("[data-action=board-panel-tab][data-view=resources]");
+  await second.page.locator(".cm-board-panel .cm-resources").waitFor();
+  const resources = await second.page.evaluate(() => {
+    const lands = [...document.querySelectorAll(".cm-board-mat .cm-board-lands .cm-bcard[data-card]")], up = lands.filter((c) => !c.classList.contains("is-tapped")).length;
+    const row = document.querySelector(".cm-board-panel .cm-res-list[aria-label='Your lands by name'] li"), types = [...document.querySelectorAll(".cm-board-panel .cm-res-list[aria-label='Your hand by type'] li")].map((li) => li.textContent.replace(/\s+/g, " ").trim());
+    const hand = document.querySelectorAll(".cm-board-hand .cm-bcard[data-card]").length, inHand = types.reduce((n, t) => n + Number(t.split("/").pop()), 0);
+    return {row: row ? `${row.querySelector("span").textContent.trim()} ${row.querySelector("b").textContent.trim()}` : "", up, all: lands.length, types, hand, inHand, label: document.querySelector(".cm-board-panel").getAttribute("aria-label")};});
+  ok(resources.label === "Turn Resources" && resources.row === `${secondLand} ${resources.up}/${resources.all}` && resources.inHand === resources.hand && resources.types[0].startsWith("Land"),
+    `Turn Resources lists the lands by name as the mat has them (${resources.row}) and the hand by type adding up to the hand (${resources.inHand} of ${resources.hand}: ${resources.types.join(", ")})`);
+  await second.page.click("[data-action=board-panel-tab][data-view=panel]");
   await second.page.locator(".cm-board-panel .cm-panel-card .cm-bcard").waitFor();
   const panelCard = await second.page.evaluate(() => {
     const el = document.querySelector(".cm-board-panel .cm-panel-card .cm-bcard"), r = el.getBoundingClientRect(), onMat = document.querySelector(".cm-board-mat .cm-board-lands .cm-bcard.is-tapped");

@@ -98,6 +98,16 @@
     return {name: deck.name, commander: [...commanders].map(name).filter(Boolean), cards: cards.filter(Boolean), ...(Number.isInteger(bracket) ? {bracket} : {}), source: {deckId: deck.id, deckVersion: deck.version}};
   }
   const libraryDecks = () => (C.state.decks || []).filter((d) => !d.archived && (d.commanders || []).length);
+  /* A SEAT'S COLOR FAN (the brief's lobby, 2026-10-12): once a commander is chosen, the quadrant wears its color identity,
+     read from the card's record -- the library's own, else the records the app ships -- never guessed. Partners add
+     their colors together. A commander no record knows draws no fan. */
+  const WUBRG = ["W", "U", "B", "R", "G"];
+  const recordByName = (name) => (C.cards().find((c) => c.name === name)) || (C.catalog && C.catalog.exact ? C.catalog.exact(name) : null);
+  const identityOf = (deck) => {
+    const colors = new Set();
+    for (const name of (deck && deck.commander) || []) for (const c of ((recordByName(name) || {}).colorIdentity || [])) colors.add(c);
+    return WUBRG.filter((c) => colors.has(c));
+  };
 
   /* ---- YOUR DECKS AND THE TABLE (AI-5, docs/plan-to-done-2026-09-30.md) ----
      A deck says whether the table can play it, on its tile and its page, before any table is opened: the Worker is asked
@@ -199,8 +209,10 @@
     if (t.phase === "countdown") {
       launch = `<p class="cm-table-count" aria-live="polite">Starting in <strong id="cm-table-seconds">${Math.max(0, Math.ceil((t.countdownAt - tableNow()) / 1000))}</strong></p>${t.youAreHost ? b("Cancel", "table-cancel", {}, false, {cls: "compact"}) : ""}`;
     } else if (t.phase === "selecting") {
-      const why = t.blockers.length ? (waiting ? `Waiting on ${waiting} seat${waiting === 1 ? "" : "s"}.` : t.blockers[0].reason + ".") : "Everyone is ready.";
-      launch = `<p class="cm-table-launch${t.launchError ? " is-error" : ""}">${e(t.launchError || why)}</p>${t.youAreHost ? b("Start", "table-start", {}, !t.blockers.length, {cls: "compact"}) : ""}`;
+      /* "Launches when all are ready · n to go" (the brief, 2026-10-12): the count of seats still to go, then the one
+         reason that is not a seat's, if any. The host's Start begins the ten-second countdown; it never launches outright. */
+      const why = t.blockers.length ? `Launches when all are ready · ${waiting ? `${waiting} seat${waiting === 1 ? "" : "s"} to go` : t.blockers[0].reason}.` : "Everyone is ready.";
+      launch = `<p class="cm-table-launch${t.launchError ? " is-error" : ""}">${e(t.launchError || why)}</p>${t.youAreHost ? b("Start", "table-start", {}, !t.blockers.length, {cls: "compact"}) : ""}${t.blockers.length || t.youAreHost ? "" : `<p class="cm-muted cm-table-launch-note">The host starts the ten-second countdown.</p>`}`;
     } else launch = `<p class="cm-table-launch">${e(t.phase === "playing" ? "The game is on." : t.phase === "rematch" ? "The game is over." : "Starting…")}</p>`;
     return `<section class="cm-table-center" aria-label="Table rules">
       <img class="cm-table-stamp" src="assets/crankmagic/crankmagic-logo-gear-v4-256.webp" alt="" aria-hidden="true">
@@ -259,7 +271,7 @@
       const s = t.seats[i];
       if (!s) return "";
       const {state, inner} = seatBox(s, t);
-      return art.quadrant(corner, s.you ? "is-you" : "", [], state, inner);
+      return art.quadrant(corner, s.you ? "is-you" : "", s.deck ? identityOf(s.deck) : [], state, inner);
     }).join("");
     /* Drawn anew, the lobby keeps the focus on the control the keyboard was on (the accessibility pass). */
     C.keepFocus(C.main, () => {
@@ -337,6 +349,7 @@
       <p class="cm-muted">You sit in seat 1 as the host. Each other seat is a person you invite, an AI, or nobody; a table seats two to four.</p>
       <form id="cm-table-new"><div class="cm-table-new-deck" id="cm-table-new-deck" hidden></div><label>Your name at the table<input name="hostName" maxlength="60" required></label>${row(2)}${row(3)}${row(4)}
       <div class="cm-actions">${b("Create the table", "table-create", {}, true)}</div></form></section>`;
+    recentGames();
     const bring = deckId ? libraryDecks().find((d) => d.id === deckId) : null;
     if (bring) bringing(bring);
     const kept = seatKept();
@@ -365,6 +378,17 @@
       if (select.querySelector("option[value=ai-llm]")) continue;
       select.querySelector("option[value=ai-easy]").insertAdjacentHTML("afterend", `<option value="ai-llm">An AI · Claude</option>`);
     }
+  }
+  /* RECENT GAMES (Play home, 2026-10-12): the last few results filed in the library, under New table -- the outcome, the
+     deck, the pod and the day -- each a way to its deck's record. Nothing when none is filed yet. */
+  function recentGames() {
+    const games = [...(C.state.games || [])].sort((a, b) => String(b.playedAt || b.at || "").localeCompare(String(a.playedAt || a.at || ""))).slice(0, 5);
+    const form = document.querySelector(".cm-table-new");
+    if (!games.length || !form) return;
+    const deckName = (id) => ((C.state.decks || []).find((d) => d.id === id) || {}).name || "a deck no longer in the library";
+    const WORD = {win: "Won", loss: "Lost", draw: "Drew", unfinished: "Unfinished"};
+    const rows = games.map((g) => `<li class="cm-table-recent-row" data-outcome="${e(g.outcome || "")}"><b>${e(WORD[g.outcome] || g.outcome || "Played")}</b><span>${e(deckName(g.deckId))}</span><span class="cm-muted">${g.pod ? `${g.pod} seats · ` : ""}${g.playedAt || g.at ? e(C.usDate(g.playedAt || g.at)) : ""}</span></li>`).join("");
+    form.insertAdjacentHTML("afterend", `<section class="v-panel cm-table-recent" id="cm-table-recent" aria-label="Recent games"><h2>Recent games</h2><ol class="cm-table-recent-list">${rows}</ol><p class="cm-muted">Every game you finish at a table is filed under the deck you brought. Its record is on the deck's page.</p></section>`);
   }
   /* The kept seat, if it is still yours and its game not over: said first, above New table. */
   async function waitingSeat(id, bring = null) {

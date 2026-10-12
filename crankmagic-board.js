@@ -63,7 +63,9 @@
    after the last one this seat saw, these are those turns, from the table's public history: each turn's own line
    ("Turn 2 · Maya") and what happened in it, the steps that passed by themselves left out. Null when no whole turn
    went by -- a game with other people in it is seen as it is played. */
-globalThis.CrankBoard = Object.freeze({
+globalThis.CrankBoard = Object.seal({
+  /** The callouts a new view earns against the last (crankmagic-board.js, calloutsFor); set once the board is loaded. */
+  calloutsFor: null,
   turnsWentBy(was, next) {
     if (!was || !next || was.matchId !== next.matchId || !was.state || !next.state) return null;
     const from = was.state.turn, to = next.state.turn;
@@ -117,6 +119,10 @@ globalThis.CrankBoard = Object.freeze({
   /* The three views, and the one this person last chose, remembered on this device. */
   const VIEWS = [["table", "⊞", "Table"], ["focus", "◧", "Focus"], ["full", "⛶", "Full screen"]];
   const VIEW_KEY = "cm-board-view";
+  /* FULL SCREEN IN 3D (Rob, 2026-10-12, from the Replit concept): the table seen from your chair, the ground bending at
+     a horizon. A switch in the rail, remembered on this device; off, the same full screen lies flat. */
+  const THREE_KEY = "cm-board-3d";
+  let three = (() => {try {return localStorage.getItem(THREE_KEY) === "on";} catch {return false;}})();
   let mode = (() => {try {const v = localStorage.getItem(VIEW_KEY); return VIEWS.some(([k]) => k === v) ? v : "focus";} catch {return "focus";}})();
   let selected = null, hover = null;   /* Full screen: the card shown large in the side column (picked, and under the pointer) */
   let showing = null, held = null;     /* Show hand: null, "fan" or "held"; the card held up */
@@ -162,6 +168,12 @@ globalThis.CrankBoard = Object.freeze({
      past which each tile is a miniature of that seat's board; and the share of the Panel, and of Full screen's side
      column, given to the card above its divider. */
   const PANE_KEY = "cm-board-pane", PANE = [140, 560], MINI_AT = 300;
+  /* THE RIGHT PANE, DOCKED (Rob's note 10, 2026-10-11: "it should sit beside it like the left one, its width dragged
+     within the same bounds"): beside the mat in Focus and the Table view, never over them, its width remembered on the
+     device; its tabs are Turn Resources (note 9), Panel (the card to read, the stack, the history) and History. */
+  const PANELW_KEY = "cm-board-panel-w", PANELW = [240, 560];
+  const panelWidth = () => {const raw = stored(PANELW_KEY), v = Number(raw); return raw !== null && v >= PANELW[0] && v <= PANELW[1] ? v : 340;};
+  let panelTab = "panel";
   const SPLIT_KEY = {panel: "cm-board-split:panel", side: "cm-board-split:side"}, SPLIT = [0.2, 0.8], SPLIT_AT = {panel: 0.45, side: 0.4};
   const paneWidth = () => {const raw = stored(PANE_KEY), v = Number(raw); return raw !== null && v >= PANE[0] && v <= PANE[1] ? v : 168;};
   const splitOf = (k) => {const raw = stored(SPLIT_KEY[k]), v = Number(raw); return raw !== null && v >= SPLIT[0] && v <= SPLIT[1] ? v : SPLIT_AT[k];};
@@ -217,6 +229,9 @@ globalThis.CrankBoard = Object.freeze({
       wentTimer = setTimeout(() => {if (wentBy === went) {wentBy = null; draw();}}, WENT_MS);
     } else if (wentBy && (next.matchId !== (was && was.matchId) || next.state.turn !== wentBy.now)) wentBy = null;
     listen(was, next);
+    motionFor = was && was.matchId === next.matchId && next.revision > was.revision ? next.revision : null;
+    if (was && was.matchId === next.matchId && was.state.turnPlayerId !== next.state.turnPlayerId) turnLit = performance.now();
+    if (motionFor !== null && attached) callouts(calloutsFor(was, next));
     if (focus === null) focus = view.seat;
     /* On a phone the board you are looking at is the only one on screen: when you are asked, it is yours. */
     if (phone() && view.decision && view.decision.id !== before) focus = view.seat;
@@ -476,17 +491,30 @@ globalThis.CrankBoard = Object.freeze({
     if (!o || view.status === "finished") return "";
     return b(`Resolve all ${Number(o.count).toLocaleString("en-US")}`, "board-resolve-all", {}, false, {cls: "compact", disabled: sending});
   }
+  /* THE TURN'S SEVEN STEPS, ALWAYS IN VIEW (Rob, 2026-10-12: "I want to see all 7 phases listed out during each turn,
+     which phases are complete and which is active and which are yet to come, but very concise yet readable"). One
+     ribbon in the strip on every turn, whoever's it is: the steps gone by struck through and dimmed, the step now a
+     chip in the accent with its combat sub-step, the steps to come in ink. The ribbon is a button: it opens the same
+     steps menu the old "n / 7 ▾" did. Narrow windows show each step's short form (`data-short`), the current one whole.
+     The current step keeps the class .cm-board-step, which the suites and docs/playtest-harness.md read for its words. */
+  const SHORT = ["Un", "Up", "Dr", "M1", "Cb", "M2", "End"];
+  function turnRibbon() {
+    const {at, step, detail} = stepInfo();
+    if (at < 0) return `<span class="cm-board-step is-alone">${e(step)}</span>`;
+    const items = STEPS.map(([label], i) => i === at
+      ? `<li class="is-now cm-board-step">${e(step)}${e(detail)}</li>`
+      : `<li class="${i < at ? "is-done" : "is-next"}"><span class="cm-step-long">${e(label)}</span><span class="cm-step-short" aria-hidden="true">${SHORT[i]}</span></li>`).join("");
+    return `<button type="button" class="cm-board-count cm-board-ribbon-button" data-action="board-steps" aria-expanded="${stepsOpen}" aria-label="Step ${at + 1} of ${STEPS.length}, ${step}${detail}; show the steps"><ol class="cm-board-ribbon is-strip" aria-hidden="true">${items}</ol></button>`;
+  }
   function strip() {
     const s = view.state, turnName = s.turnPlayerId === null ? "" : nameOf(s.turnPlayerId);
-    const {at, step, detail, next} = stepInfo();
     /* Said by the board's one status region (say), not by a live region drawn again with every view. */
     const conn = status === "open" ? "" : `<span class="cm-board-conn">${status === "reconnecting" ? "Reconnecting…" : "Connecting…"}</span>`;
     return `<header class="cm-board-strip">
       <span class="cm-board-tools">${ib("☰", "board-menu", "Menu", {}, {expanded: menuOpen})}${menuOpen ? menu() : ""}</span>
       <span class="cm-board-turn"${view.yourTurn ? ` title="Turn ${s.turn} of the game, counting every player's; your ${ordinal(view.yourTurn)} turn"` : ""}>${s.turn ? `Turn ${s.turn} · ${e(turnName)}${view.yourTurn ? ` (your ${ordinal(view.yourTurn)})` : ""}` : "Before turn 1"}</span>
-      <span class="cm-board-step">${e(step)}${e(detail)}</span>
-      <span class="cm-board-tools">${at < 0 ? "" : `<button type="button" class="cm-board-count" data-action="board-steps" aria-expanded="${stepsOpen}" aria-label="Step ${at + 1} of ${STEPS.length}; show the steps">${at + 1} / ${STEPS.length} ▾</button>`}${stepsOpen ? stepsMenu() : ""}</span>
-      <span class="cm-board-prompt">${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}<span class="cm-board-waiting">${e(waitingText())}</span>${conn}</span>
+      <span class="cm-board-tools cm-board-turnsteps">${turnRibbon()}${stepsOpen ? stepsMenu() : ""}</span>
+      <span class="cm-board-prompt"><span class="cm-board-waiting">${e(waitingText())}</span>${conn}</span>
       ${passButton()}
       ${resolveAllButton()}
       ${b(skipWords(), "board-skip", {}, false, {cls: `compact${skipping === null ? "" : " is-on"}`, disabled: view.status === "finished"})}
@@ -499,7 +527,7 @@ globalThis.CrankBoard = Object.freeze({
     </header>`;
   }
   function switcher(icons = false) {
-    return `<span class="cm-board-views" role="group" aria-label="View">${VIEWS.map(([k, icon, label]) => `<button type="button" class="v-button compact${mode === k ? " is-on" : ""}" data-action="board-view" data-view="${k}" aria-pressed="${mode === k}"${icons ? ` aria-label="${label}" title="${label}"` : ""}>${icons ? icon : `${icon} ${label}`}</button>`).join("")}</span>`;
+    return `<span class="cm-board-views" role="group" aria-label="View">${VIEWS.map(([k, icon, label]) => `<button type="button" class="v-button compact${mode === k ? " is-on" : ""}" data-action="board-view" data-view="${k}" aria-pressed="${mode === k}"${icons ? ` aria-label="${label}" title="${label}"` : ` title="${label}"`}>${icons ? icon : `${icon}<span class="cm-view-word"> ${label}</span>`}</button>`).join("")}</span>`;
   }
   /* ☰: the app's pages, over the game. The surface is the whole window, so the rail lives here. A list of links and a
      button, so it is a navigation region, not an ARIA menu (whose items would want arrow keys it does not take). */
@@ -532,6 +560,7 @@ globalThis.CrankBoard = Object.freeze({
       ${priority}
       <div class="cm-board-size">${C.cardScaleSlider()}<p class="cm-muted">${lo}% – ${hi}% · the table's size: it sets Board cards and Hand cards too · remembered on this device · ⌘/Ctrl + / − also work</p></div>
       ${soundMenu()}
+      <div class="cm-actions cm-board-menu-row">${b("Try the callouts", "board-callout-demo", {}, false, {cls: "compact"})}<span class="cm-muted">Overlay ${overlay()}% · set in Settings › Play</span></div>
       <p class="cm-muted">End game stops it for everyone and keeps its record. Concede leaves it to the others.</p>
       <div class="cm-actions">${end}${b("Concede", "board-concede", {}, false, {disabled: over || left})}</div></div>`;
   }
@@ -587,11 +616,10 @@ globalThis.CrankBoard = Object.freeze({
     const other = field.filter((c) => !c.types.includes("Land") && !c.types.includes("Creature"));
     const group = (label, cards) => cards.length ? `<div class="cm-board-group"><h3>${e(label)} · ${cards.length}</h3><div class="cm-board-cards">${cards.map((c) => card(c)).join("")}</div></div>` : "";
     const mana = p.mana.reduce((n, m) => n + m.amount, 0);
-    const bare = size === "full" || size === "opp" || size === "phone";
+    const bare = size === "full" || size === "opp" || size === "side" || size === "phone";
     const active = view.state.turnPlayerId === i;
     const header = head === "none" ? "" : `<header class="cm-mat-head cm-seatboard-head">
         <strong class="cm-mat-name">${e(seatLabel(p))}</strong>${vitals(p, {big: size === "focus"})}<span class="cm-mat-cmdr cm-muted">${e((commanderOf(p) || {}).name || "")}</span>
-        ${size === "focus" && you ? ribbon(active) : ""}
         ${you ? "" : `<span class="cm-board-their-hand">${e(p.name)}'s hand · ${z.Hand.count}</span>`}
         <span class="cm-board-tile-flag">${e(seatFlag(p))}</span>
         ${focusButton ? b("⤢ Focus", "board-focus", {seat: String(i)}, false, {cls: "compact"}) : ""}</header>`;
@@ -674,30 +702,37 @@ globalThis.CrankBoard = Object.freeze({
         ${b("My board", "board-focus", {seat: String(view.seat)}, true)}${b("⊞ Table view", "board-view", {view: "table"})}
         <button type="button" class="cm-board-coach-open" data-action="board-coach" aria-pressed="${coach.open}" aria-label="CrankMagic Coach">${COACH}Coach</button></nav>`;
     const paneGrip = paneShut ? "" : `<span class="cm-board-panegrip">${grip("pane", "The boards' width: drag, or use the arrow keys", paneWidth(), PANE, "vertical")}</span>`;
-    return `<div class="cm-board-body" style="--pane-w:${paneShut ? 44 : paneWidth()}px">${pane}${paneGrip}<div class="cm-board-main"><div class="cm-board-stage">${fan(p.playerId)}${mat(p, {size: "focus"})}</div>${ask()}${hand()}</div></div>`;
+    return `<div class="cm-board-body${panelOpen ? " has-panel" : ""}" style="--pane-w:${paneShut ? 44 : paneWidth()}px;--panel-w:${panelWidth()}px">${pane}${paneGrip}<div class="cm-board-main"><div class="cm-board-stage">${fan(p.playerId)}${mat(p, {size: "focus"})}</div>${ask()}${hand()}</div>${panel()}</div>`;
   }
   /* THE FULL SCREEN VIEW: the page given to the game. A slim rail; the others across the top, the big board across
      the foot -- yours, or whichever ⟳ Rotate has walked to -- with the step, Next and Pass over it and your hand along
      its bottom edge; at the side, every seat's vitals, the card under the pointer, and the log. */
   function fullView() {
     const s = view.state, me = players()[view.seat], big = players()[focus] || me, others = players().filter((p) => p.playerId !== big.playerId);
-    const {step, next} = stepInfo();
     const rail = `<nav class="cm-full-rail" aria-label="Board"><span class="cm-full-turn" title="Turn ${s.turn}">T${s.turn}</span>${switcher(true)}
       ${ib("⟳", "board-rotate", "Rotate: the next seat's board", {by: "1"})}
+      ${ib("3D", "board-3d", three ? "3D table: on. Lay the table flat" : "3D table: off. See the table in 3D", {}, {pressed: three})}
       <span class="cm-board-tools">${ib(CLOCK, "board-history", "History", {}, {expanded: historyOpen})}${historyOpen ? historyMenu() : ""}</span>
       ${ib(COACH, "board-coach", "CrankMagic Coach", {}, {pressed: coach.open})}
       <span class="cm-board-tools">${ib("⚙", "board-tools", "Tools", {}, {expanded: tools})}${tools ? toolsMenu() : ""}</span>
       <span class="cm-board-spacer"></span>${ib("⎋", "board-view", "Leave full screen", {view: "focus"})}</nav>`;
-    const pill = `<div class="cm-full-pill"><span class="cm-board-step">${e(step)}</span>${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}
-      <span class="cm-board-waiting">${e(waitingText())}</span>
-      ${passButton()}${b(skipWords(true), "board-skip", {}, false, {cls: "compact"})}</div>`;
-    /* The big board's corner: whose it is and their vitals; when it is not yours, ⟳ and My board are there too. */
+    /* The big board's corner, at the pill's head: whose it is and their vitals; when it is not yours, ⟳ and My board too. */
     const viewing = big.playerId !== view.seat;
     const corner = `<div class="cm-full-corner${viewing ? " cm-full-viewing" : ""}">${vitals(big, {big: true})}<span class="cm-full-corner-name">${viewing ? `Viewing ${e(big.name)}` : e(seatLabel(big))}</span>
       ${viewing ? `${ib("⟳", "board-rotate", "Rotate: the next seat's board", {by: "1"})}${b("My board", "board-focus", {seat: String(view.seat)}, true, {cls: "compact"})}` : ""}</div>`;
-    return `${rail}<div class="cm-full-center">
-        <div class="cm-full-others" style="--cols:${Math.max(1, others.length)}">${others.map((p) => `<div class="cm-full-other" style="--seat:${seatColor(p.playerId)}">${mat(p, {size: "opp", focusButton: true})}</div>`).join("")}</div>
-        <div class="cm-full-mine">${pill}${mat(big, {size: "full", head: "none"})}${corner}${viewing ? handBacks(big) : hand()}</div></div>
+    const pill = `<div class="cm-full-pill">${corner}<span class="cm-board-tools cm-board-turnsteps">${turnRibbon()}${stepsOpen ? stepsMenu() : ""}</span>
+      <span class="cm-board-waiting">${e(waitingText())}</span>
+      ${passButton()}${b(skipWords(true), "board-skip", {}, false, {cls: "compact"})}</div>`;
+    /* THE TABLE FROM YOUR CHAIR (Rob, 2026-10-12): the big board's mat is the whole ground, not a mat on it; the others
+       sit at the far sides and the back, the next seat round to your left, the one across at the back, the last to your
+       right (two: left and right; one: across), each a smaller board of its own; the big board keeps the most room. The
+       ground is drawn under everything (the rail and the side column lie over it), in two parts that the 3D switch bends
+       at the horizon: the wall beyond it, the floor from it to your hand. */
+    const n = others.length, SIDES = n >= 3 ? ["left", "back", "right"] : n === 2 ? ["left", "right"] : ["back"];
+    const ground = `<div class="cm-full-ground" data-mat="${e(matOf(big.playerId))}" aria-hidden="true"><div class="cm-full-wall"></div><div class="cm-full-floor"></div></div>`;
+    return `${ground}${rail}<div class="cm-full-center" data-others="${n}">
+        <div class="cm-full-others" style="--cols:${Math.max(1, n)}">${others.map((p, k) => `<div class="cm-full-other" data-side="${SIDES[k] || "back"}" style="--seat:${seatColor(p.playerId)}">${mat(p, {size: SIDES[k] === "back" || n === 1 ? "opp" : "side", focusButton: true})}</div>`).join("")}</div>
+        <div class="cm-full-mine">${pill}${mat(big, {size: "full", head: "none"})}${viewing ? handBacks(big) : hand()}</div></div>
       <aside class="cm-full-side" aria-label="The table" style="--split:${Math.round(splitOf("side") * 100)}%"><div class="cm-full-vitals">${players().map((p) => `<div class="${view.state.turnPlayerId === p.playerId ? "is-turn" : ""}" data-seat="${p.playerId}" style="--seat:${seatColor(p.playerId)}"><span>${e(seatLabel(p))}${turnMark(p.playerId)}</span>${vitals(p, {big: true})}</div>`).join("")}</div>
         <div id="cm-full-pick">${pickPanel()}</div>${splitBar("side")}${went()}${decision()}${stack()}${historyBand(30)}</aside>`;
   }
@@ -775,10 +810,15 @@ globalThis.CrankBoard = Object.freeze({
     return `<section class="cm-board-stack" aria-label="The stack"><h3>On the stack · ${items.length}</h3>${topCard}<ol>${rows.map(({s, n}) => `<li${s.name ? ` class="cm-stack-entry" tabindex="0" data-stack-name="${e(s.name)}" aria-label="${e(s.name)}${n > 1 ? `, ${n} of them` : ""}, ${e(nameOf(s.playerId))}'s: show the card"` : ""}>${e(s.name || "A face-down spell")}${n > 1 ? ` <b>×${n.toLocaleString("en-US")}</b>` : ""} <span class="cm-muted">${e(nameOf(s.playerId))}</span></li>`).join("")}</ol></section>`;
   }
   /* PANEL ▸: the right panel of the handoff (Card · Tracker · History · Combat), sliding over the surface. */
+  const PANEL_TABS = [["resources", "Turn Resources"], ["panel", "Panel"], ["history", "History"]];
   function panel() {
     if (!panelOpen) return "";
     const id = hover ?? selected, pick = id === null ? null : findCard(id);
-    return `<aside class="cm-board-panel" aria-label="Panel" style="--split:${Math.round(splitOf("panel") * 100)}%"><header><h2>Panel</h2>${ib("✕", "board-panel", "Close the panel")}</header>
+    const tabs = `<div class="cm-panel-tabs" role="tablist" aria-label="Pane">${PANEL_TABS.map(([k, label]) => `<button type="button" role="tab" class="cm-panel-tab${panelTab === k ? " is-on" : ""}" data-action="board-panel-tab" data-view="${k}" aria-selected="${panelTab === k}">${label}</button>`).join("")}</div>`;
+    const head = `<span class="cm-board-panelgrip">${grip("panelw", "The pane's width: drag, or use the arrow keys", panelWidth(), PANELW, "vertical")}</span><header>${tabs}${ib("✕", "board-panel", "Close the panel")}</header>`;
+    if (panelTab === "resources") return `<aside class="cm-board-panel" aria-label="Turn Resources" data-tab="resources">${head}${turnResources()}</aside>`;
+    if (panelTab === "history") return `<aside class="cm-board-panel" aria-label="History" data-tab="history">${head}<section class="cm-panel-history is-whole"><h3>History · newest first</h3>${historyList()}</section></aside>`;
+    return `<aside class="cm-board-panel" aria-label="Panel" data-tab="panel" style="--split:${Math.round(splitOf("panel") * 100)}%">${head}
       <section class="cm-panel-pick">${pick && pick.name ? `<div class="cm-panel-card">${card(pick, {where: "pick", action: "board-zoom-open"})}<div class="cm-board-options">${optionsFor(pick.cardId).map((o) => `<button type="button" class="v-button compact primary" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${sayHtml(o)}</button>`).join("")}</div></div>` : `<p class="cm-muted">Click a card on the board or in your hand to keep it here.</p>`}</section>
       ${splitBar("panel")}${stack()}
       <section class="cm-panel-history"><h3>History · newest first</h3>${historyList()}</section></aside>`;
@@ -881,6 +921,39 @@ globalThis.CrankBoard = Object.freeze({
     const n = Object.fromEntries(HAND_TYPES.map((k) => [k, [0, 0]])), live = view.decision && !sending;
     for (const c of cards) {const k = handType(c); n[k][1] += 1; if (live && optionsFor(c.cardId).length) n[k][0] += 1;}
     return `<ul class="cm-board-hand-types" aria-label="Castable now, of each type in your hand">${HAND_TYPES.map((k) => `<li data-type="${k}"${n[k][0] ? ' class="is-live"' : ""} aria-label="${k}: ${n[k][0]} of ${n[k][1]} castable now"><span>${k}</span><b>${n[k][0]}/${n[k][1]}</b></li>`).join("")}</ul>`;
+  }
+  /* TURN RESOURCES (Rob's note 9, 2026-10-11: "by land and by card type: how many can be played this turn, how many in
+     all, and the mana tapped"). Everything here is read from the view and the decision, nothing worked out: castable is
+     what the decision offers for the card (the fact that brightens it); the lands are the mat's, untapped over all, by
+     name; the pool is the player's mana as the room sends it. */
+  const RES_TYPES = ["Land", "Creature", "Instant", "Sorcery", "Artifact", "Enchantment", "Planeswalker"];
+  const resType = (c) => !c.name ? "Other" : c.types.includes("Land") ? "Land"
+    : (c.types.includes("Instant") || (c.keywords || []).some((k) => /^flash$/i.test(k))) ? "Instant" : RES_TYPES.find((t) => c.types.includes(t)) || "Other";
+  function turnResources() {
+    const me = players()[view.seat];
+    if (!me) return "";
+    const live = view.decision && !sending, hand = me.zones.Hand.cards, field = me.zones.Battlefield.cards;
+    const byType = Object.fromEntries([...RES_TYPES, "Other"].map((t) => [t, {now: 0, all: 0}]));
+    for (const c of hand) {const t = resType(c); byType[t].all += 1; if (live && optionsFor(c.cardId).length) byType[t].now += 1;}
+    const typeRows = [...RES_TYPES, "Other"].filter((t) => byType[t].all || t !== "Other").map((t) => `<li data-type="${t}"${byType[t].now ? ' class="is-live"' : ""}><span>${t === "Instant" ? "Instant · flash" : t}</span><b>${byType[t].now}/${byType[t].all}</b></li>`).join("");
+    const lands = field.filter((c) => c.types.includes("Land")), untapped = lands.filter((c) => !c.tapped).length;
+    const byLand = new Map();
+    for (const c of lands) {const k = c.name || "A face-down land"; const r = byLand.get(k) || {up: 0, all: 0}; r.all += 1; if (!c.tapped) r.up += 1; byLand.set(k, r);}
+    const BASICS = ["Plains", "Island", "Swamp", "Mountain", "Forest"];
+    const landRows = [...byLand].sort((a, b) => (BASICS.indexOf(a[0]) === -1 ? 9 : BASICS.indexOf(a[0])) - (BASICS.indexOf(b[0]) === -1 ? 9 : BASICS.indexOf(b[0])) || a[0].localeCompare(b[0]))
+      .map(([name, r]) => `<li${r.up ? ' class="is-live"' : ""}><span>${e(name)}</span><b>${r.up}/${r.all}</b></li>`).join("");
+    const pool = me.mana.reduce((n, m) => n + m.amount, 0);
+    const pips = me.mana.filter((m) => m.amount > 0).map((m) => `<span class="cm-res-pip" data-color="${e(m.color)}" aria-label="${m.amount} ${e(m.color)}"><i></i>${m.amount}</span>`).join("");
+    const castable = live ? new Set(view.decision.options.filter((o) => o.cardId !== undefined && ["cast", "play-land", "activate"].includes(o.act)).map((o) => o.cardId)).size : 0;
+    return `<section class="cm-resources" aria-label="Turn Resources">
+      <h3>This turn</h3>
+      <ul class="cm-res-list cm-res-summary"><li><span>Land drop</span><b>${me.landsPlayed ? "used" : "1 left"}</b></li><li><span>Mana in pool</span><b>${pool}</b></li><li><span>Lands untapped</span><b>${untapped}/${lands.length}</b></li><li><span>Lands tapped</span><b>${lands.length - untapped}</b></li><li><span>Cards you can use now</span><b>${castable}</b></li></ul>
+      ${pips ? `<div class="cm-res-pips" aria-label="Mana pool">${pips}</div>` : ""}
+      <h3>Your hand by type <span class="cm-muted">castable now / in hand</span></h3>
+      <ul class="cm-res-list" aria-label="Your hand by type">${typeRows}</ul>
+      <h3>Your lands <span class="cm-muted">untapped / all</span></h3>
+      <ul class="cm-res-list" aria-label="Your lands by name">${landRows || `<li class="cm-muted"><span>No lands on your board yet.</span></li>`}</ul>
+      <p class="cm-muted">Castable is what the table offers you for the card right now, the same fact that lights it. ${live ? "" : "Nothing is castable while it is not your decision."}</p></section>`;
   }
   function hand() {
     const mine = players()[view.seat];
@@ -1101,6 +1174,195 @@ globalThis.CrankBoard = Object.freeze({
     return "";
   }
   const LEFT = "You have left this game; the others play on.";
+  /* ---- MOTION (Rob, 2026-10-12, from the Replit concept: "more fluid, better transitions") ----
+     The board is drawn anew at every view, so nothing moves by itself. This is a FLIP pass around a paint caused by a
+     new view of the same game: before it, where every card and pile is; after it, a card that changed zone -- played
+     from the hand to the mat, drawn from the library into the hand, put from the mat into the graveyard or exile -- is
+     flown from where it was to where it is (180 ms to the mat, 220 ms elsewhere), as a copy over the board while the real
+     card waits unseen; a card that was tapped or untapped turns where it lies. Reduce motion (Settings, or the device)
+     makes every one an instant change: nothing flies. Never more than eight flights a view, and never a hidden card: a
+     card that was a back flies as a back. */
+  let motionFor = null, turnLit = -1e9;
+  const reduced = () => !!(globalThis.CrankMotion && CrankMotion.reduced());
+  const FLY_MS = {field: 180, hand: 220, pile: 220};
+  function motionSnapshot(host) {
+    if (reduced() || phone()) return null;
+    const cards = new Map(), piles = new Map();
+    for (const el of host.querySelectorAll(".cm-bcard[data-card]")) {
+      if (el.closest(".cm-board-peek, .cm-full-pick, .cm-panel-card, .cm-hand-show, .cm-board-mini")) continue;
+      const id = Number(el.dataset.card);
+      if (cards.has(id)) continue;
+      const zone = el.closest(".cm-board-hand") ? "hand" : el.closest(".cm-board-pile") ? `pile:${el.closest(".cm-board-pile").dataset.zone}` : "field";
+      cards.set(id, {rect: el.getBoundingClientRect(), zone, tapped: el.classList.contains("is-tapped"), back: el.classList.contains("is-back")});
+    }
+    for (const pile of host.querySelectorAll(".cm-mat .cm-board-pile")) {
+      const mat = pile.closest(".cm-mat");
+      piles.set(`${mat ? mat.dataset.seat : ""}:${pile.dataset.zone}`, pile.getBoundingClientRect());
+    }
+    return {cards, piles};
+  }
+  function motionPlay(host, before) {
+    if (!before || !view || reduced()) return;
+    const after = motionSnapshot(host);
+    if (!after) return;
+    let flights = 0;
+    const seatOf = (el) => {const m = el.closest(".cm-mat"); return m ? m.dataset.seat : String(view.seat);};
+    const fly = (el, from, to, ms, {back = false, tilt = 0} = {}) => {
+      if (flights >= 8 || !from || !to || (Math.abs(from.left - to.left) < 6 && Math.abs(from.top - to.top) < 6)) return;
+      flights += 1;
+      const ghost = el.cloneNode(true);
+      ghost.className = `cm-bcard cm-board-flight${back ? " is-back" : ""}`;
+      ghost.removeAttribute("data-action"); ghost.removeAttribute("aria-label"); ghost.setAttribute("aria-hidden", "true");
+      ghost.style.cssText = `position:fixed;left:${from.left}px;top:${from.top}px;width:${from.width}px;height:${from.height}px;margin:0;z-index:66;pointer-events:none;transform-origin:50% 50%`;
+      document.body.append(ghost);
+      el.style.visibility = "hidden";
+      const sx = to.width / Math.max(1, from.width), sy = to.height / Math.max(1, from.height);
+      const a = ghost.animate([{transform: "translate(0,0) scale(1,1) rotate(0deg)"}, {transform: `translate(${to.left - from.left}px,${to.top - from.top}px) scale(${sx},${sy}) rotate(${tilt}deg)`}], {duration: ms, easing: "cubic-bezier(.2,.8,.2,1)", fill: "forwards"});
+      const done = () => {ghost.remove(); el.style.visibility = "";};
+      a.finished.then(done, done);
+      setTimeout(done, ms + 400);
+    };
+    for (const [id, now] of after.cards) {
+      const was = before.cards.get(id), el = host.querySelector(`.cm-bcard[data-card="${id}"]:not(.cm-board-flight)`);
+      if (!el) continue;
+      if (was && was.zone !== now.zone) {
+        /* hand to the mat, the mat to a pile: from where it was, to where it is */
+        fly(el, was.rect, now.rect, now.zone === "field" ? FLY_MS.field : now.zone === "hand" ? FLY_MS.hand : FLY_MS.pile, {back: now.back, tilt: now.zone.startsWith("pile:graveyard") ? 8 : 0});
+      } else if (!was && now.zone === "hand") {
+        /* drawn: it lifts from the library into the hand */
+        fly(el, before.piles.get(`${seatOf(el)}:library`) || null, now.rect, FLY_MS.hand, {back: false});
+      } else if (was && was.tapped !== now.tapped && now.zone === "field") {
+        /* turned where it lies */
+        el.animate([{transform: now.tapped ? "rotate(0deg) scale(1)" : "rotate(90deg) scale(.86)"}, {transform: now.tapped ? "rotate(90deg) scale(.86)" : "rotate(0deg) scale(1)"}], {duration: 160, easing: "ease-out"});
+      }
+    }
+    /* A card that left the mat for a pile whose top is another card: it flies to that pile and fades there. */
+    for (const [id, was] of before.cards) {
+      if (after.cards.has(id) || was.zone !== "field") continue;
+      const c = findCard(id), zone = c ? (players().flatMap((p) => Object.entries(p.zones)).find(([, z]) => z.cards.some((x) => x.cardId === id)) || [])[0] : null;
+      if (!zone || !["Graveyard", "Exile"].includes(zone)) continue;
+      const owner = c && c.owner !== undefined ? c.owner : view.seat, to = after.piles.get(`${owner}:${zone.toLowerCase()}`);
+      if (!to || flights >= 8) continue;
+      flights += 1;
+      const ghost = document.createElement("div");
+      ghost.className = `cm-bcard cm-board-flight${was.back ? " is-back" : ""}`;
+      ghost.setAttribute("aria-hidden", "true");
+      if (!was.back && c && c.name) ghost.innerHTML = `<img src="${e(pictureOf(c.name))}" alt="" referrerpolicy="no-referrer">`;
+      ghost.style.cssText = `position:fixed;left:${was.rect.left}px;top:${was.rect.top}px;width:${was.rect.width}px;height:${was.rect.height}px;margin:0;z-index:66;pointer-events:none`;
+      document.body.append(ghost);
+      const a = ghost.animate([{transform: "translate(0,0) rotate(0deg)", opacity: 1}, {transform: `translate(${to.left + to.width / 2 - was.rect.left - was.rect.width / 2}px,${to.top + to.height / 2 - was.rect.top - was.rect.height / 2}px) rotate(${zone === "Graveyard" ? 10 : -6}deg) scale(.6)`, opacity: .2}], {duration: 240, easing: "cubic-bezier(.2,.8,.2,1)", fill: "forwards"});
+      a.finished.then(() => ghost.remove(), () => ghost.remove());
+      setTimeout(() => ghost.remove(), 700);
+    }
+  }
+
+  /* ---- CALLOUTS (the Replit brief's overlay, fighting-game style): what just happened, called out over the table
+     in a bold condensed word with a glyph, a number where there is one, and a line under it saying whose. Red for
+     harm, blue for answers, green for growth, gold for value, violet for what fades. Each is read from the difference
+     between the last view and this one, never from anything the view does not carry, and never names a hidden card.
+     Three at most on screen, the oldest leaving first; each enters in 300 ms, holds 0.9 s plus the Overlay setting's
+     share (Settings › Play, 0 to 100: 0 is off), and leaves in 150 ms. Reduce motion shows the final frame and the exit
+     alone. The layer lies beside the board, so a view's repaint never takes a callout away mid-word. ---- */
+  const overlay = () => {const v = Number((((C.state.preferences || {}).play || {}).overlay)); return Number.isFinite(v) ? Math.min(100, Math.max(0, v)) : 60;};
+  const GLYPH = {
+    swords: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4l5 1 9 9-2 2-9-9zM21 4l-5 1-9 9 2 2 9-9zM5 17l2 2M17 17l2 2M4 20l3-3M20 20l-3-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+    shield: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`,
+    burst: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2 6 6-2-4 5 5 3-6 1 1 6-4-4-4 4 1-6-6-1 5-3-4-5 6 2z" fill="currentColor"/></svg>`,
+    heart: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8-5.3-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.7-8 11-8 11z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`,
+    crack: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8-5.3-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.7-8 11-8 11z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 7l-2 4 3 2-2 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
+    trophy: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v5a5 5 0 0 1-10 0zM7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3M12 13v4M8 21h8M9 17h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+    pips: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="16" r="2.5" fill="currentColor"/><circle cx="12" cy="10" r="2.5" fill="currentColor"/><circle cx="18" cy="5" r="2.5" fill="currentColor"/></svg>`,
+    bloom: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
+    slash: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 6l12 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+    seal: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 8l8 8M16 8l-8 8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+    fade: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v16H6z" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 2"/></svg>`,
+  };
+  const LIFE_STEPS = new Set(["COMBAT_FIRST_STRIKE_DAMAGE", "COMBAT_DAMAGE"]);
+  function calloutsFor(was, next) {
+    const out = [], who = (i) => (i === next.seat ? "You" : ((next.state.players[i] || {}).name || `Seat ${i + 1}`));
+    const seatName = (seatId) => ((next.seats.find((x) => x.seatId === seatId) || {}).name || seatId);
+    const pw = Object.fromEntries(was.state.players.map((p) => [p.playerId, p]));
+    if (next.status === "finished" && was.status !== "finished") {
+      const r = next.result || {};
+      out.push({tone: "value", glyph: "trophy", word: r.winner === next.seatId ? "VICTORY" : "GAME OVER", line: r.winner ? `${r.winner === next.seatId ? "You" : seatName(r.winner)} won` : "", big: true});
+      return out;
+    }
+    if (next.state.turnPlayerId === next.seat && was.state.turnPlayerId !== next.seat) out.push({tone: "value", glyph: "trophy", word: "YOUR TURN", line: `Turn ${next.state.turn}`});
+    /* attacks declared against you that were not there before */
+    const mine = (s) => ((s.combat && s.combat.attacks) || []).filter((a) => a.defender === next.seat).map((a) => a.attacker);
+    const before = new Set(mine(was.state)), incoming = mine(next.state).filter((id) => !before.has(id));
+    if (incoming.length) out.push({tone: "harm", glyph: "swords", word: "INCOMING", number: incoming.length > 1 ? `×${incoming.length}` : "", line: `${incoming.length} attacking you`});
+    /* something added to a stack that already held something */
+    if (next.state.stack.length > was.state.stack.length && was.state.stack.length > 0) {const top = next.state.stack[next.state.stack.length - 1]; out.push({tone: "answer", glyph: "shield", word: "RESPONSE", line: top.name ? `${who(top.playerId)} · ${top.name}` : `${who(top.playerId)} · a face-down spell`});}
+    /* life, per seat: in a combat damage step it is a hit; a seat that fell is KO */
+    for (const p of next.state.players) {
+      const w = pw[p.playerId]; if (!w) continue;
+      const d = p.health.life - w.health.life;
+      if (p.health.status === "lost" && w.health.status !== "lost") {out.push({tone: "harm", glyph: "seal", word: "KO", line: `${who(p.playerId)} · ${p.health.lossReason || "out of the game"}`, big: true}); continue;}
+      if (d < 0 && LIFE_STEPS.has(next.state.phase)) out.push({tone: "harm", glyph: "burst", word: -d >= 10 ? "CRITICAL" : "HIT", number: String(d), line: `${who(p.playerId)} · ${p.health.life}`});
+      else if (d < 0) out.push({tone: "harm", glyph: "crack", word: "LIFE", number: String(d), line: `${who(p.playerId)} · ${p.health.life}`});
+      else if (d > 0) out.push({tone: "growth", glyph: "heart", word: "LIFE", number: `+${d}`, line: `${who(p.playerId)} · ${p.health.life}`});
+      if (p.health.poison >= 10 && w.health.poison < 10) out.push({tone: "harm", glyph: "seal", word: "FATAL", line: `${who(p.playerId)} · 10 poison`, big: true});
+      const most = (h) => Math.max(0, ...Object.values(h.commanderDamage || {}));
+      if (most(p.health) >= 21 && most(w.health) < 21) out.push({tone: "harm", glyph: "seal", word: "FATAL", line: `${who(p.playerId)} · 21 from a commander`, big: true});
+    }
+    /* the history's new lines: countered, proliferate, tokens */
+    const seen = new Set((was.history || []).map((l) => `${l.turn}|${l.text}`));
+    for (const l of (next.history || []).filter((l) => !seen.has(`${l.turn}|${l.text}`)).slice(0, 12)) {
+      const t = l.text || "";
+      if (/\bcountered\b/i.test(t)) out.push({tone: "answer", glyph: "slash", word: "COUNTERED", line: t.slice(0, 60)});
+      else if (/\bproliferate/i.test(t)) out.push({tone: "growth", glyph: "pips", word: "PROLIFERATE", line: t.slice(0, 60)});
+      else if (/created (\d+)\b.*\btokens?\b/i.test(t)) {const n = /created (\d+)/i.exec(t)[1]; out.push({tone: "value", glyph: "bloom", word: "TOKENS", number: `×${n}`, line: t.slice(0, 60)});}
+    }
+    /* permanents that left the mat for a graveyard or exile; counters that grew */
+    const at = (s) => {const m = new Map(); for (const p of s.players) for (const [zone, z] of Object.entries(p.zones)) for (const c of z.cards) m.set(c.cardId, {zone, c, owner: p.playerId}); return m;};
+    const a = at(was.state), b = at(next.state);
+    let gone = 0;
+    for (const [id, x] of a) {
+      const y = b.get(id);
+      if (x.zone === "Battlefield" && y && (y.zone === "Graveyard" || y.zone === "Exile") && gone < 2) {gone += 1; out.push(y.zone === "Graveyard" ? {tone: "harm", glyph: "burst", word: "DESTROYED", line: x.c.name || "A face-down permanent"} : {tone: "fade", glyph: "fade", word: "EXILED", line: x.c.name || "A face-down permanent"});}
+      if (y && y.zone === "Battlefield" && x.zone === "Battlefield") {
+        const grew = ["+1/+1", "loyalty"].map((k) => ((y.c.counters || {})[k] || 0) - ((x.c.counters || {})[k] || 0)).filter((n) => n > 0);
+        if (grew.length) out.push({tone: "growth", glyph: "pips", word: "", number: `+${grew.reduce((n, v) => n + v, 0)}`, line: y.c.name || "A face-down permanent"});
+      }
+    }
+    return out.slice(0, 6);
+  }
+  globalThis.CrankBoard.calloutsFor = calloutsFor;
+  const SAMPLE_CALLOUTS = [{tone: "value", glyph: "trophy", word: "YOUR TURN", line: "Turn 9"}, {tone: "harm", glyph: "swords", word: "INCOMING", number: "×3", line: "3 attacking you"},
+    {tone: "harm", glyph: "burst", word: "HIT", number: "-7", line: "You · 33"}, {tone: "answer", glyph: "slash", word: "COUNTERED", line: "Rhystic Study, by Counterspell"},
+    {tone: "growth", glyph: "pips", word: "", number: "+2", line: "Ezuri, Renegade Leader"}, {tone: "value", glyph: "bloom", word: "TOKENS", number: "×4", line: "Krenko, Mob Boss"},
+    {tone: "fade", glyph: "fade", word: "EXILED", line: "Sun Titan"}, {tone: "harm", glyph: "seal", word: "KO", line: "Maya · 0 life", big: true}];
+  let calloutQueue = [], calloutTimer = null;
+  function callouts(list) {
+    const level = overlay();
+    if (!level || !list.length) return;
+    calloutQueue.push(...list);
+    if (!calloutTimer) nextCallout();
+  }
+  function nextCallout() {
+    calloutTimer = null;
+    const layer = document.getElementById("cm-board-callouts");
+    if (!layer || !calloutQueue.length) {calloutQueue = []; return;}
+    const c = calloutQueue.shift(), level = overlay(), still = reduced();
+    const el = document.createElement("div");
+    el.className = `cm-callout is-${c.tone}${c.big ? " is-big" : ""}`;
+    el.style.setProperty("--level", String(level / 100));
+    el.innerHTML = `<span class="cm-callout-glyph">${GLYPH[c.glyph] || ""}</span><span class="cm-callout-word">${e(c.word)}${c.number ? `<b>${e(c.number)}</b>` : ""}</span>${c.line ? `<span class="cm-callout-line">${e(c.line)}</span>` : ""}`;
+    while (layer.children.length >= 3) layer.firstElementChild.remove();
+    layer.append(el);
+    if (!still) el.animate([{opacity: 0, transform: "scale(.4) rotate(-6deg) translateY(12px)"}, {opacity: 1, transform: "scale(1.06) rotate(0deg) translateY(0)", offset: .7}, {opacity: 1, transform: "scale(1) rotate(0deg) translateY(0)"}], {duration: 300, easing: "cubic-bezier(.2,.8,.2,1)"});
+    const hold = 900 + level * 10 + (c.line ? 400 : 0);
+    setTimeout(() => {
+      const out = el.animate([{opacity: 1, transform: "scale(1)"}, {opacity: 0, transform: "scale(1.12)"}], {duration: still ? 0 : 150, fill: "forwards"});
+      out.finished.then(() => el.remove(), () => el.remove());
+      setTimeout(() => el.remove(), 400);
+    }, hold);
+    /* the next one a beat later, so two in a row are read one at a time */
+    calloutTimer = setTimeout(nextCallout, Math.min(700, hold / 3));
+  }
+  actions["board-callout-demo"] = () => {tools = false; draw(); callouts(SAMPLE_CALLOUTS);};
+
   /* THE BOARD'S ONE STATUS REGION (WCAG 4.1.3): a polite live region beside the board, not in it, so the board drawn
      again with every view never makes it anew -- a region made anew with its words already in it is heard twice, or
      not at all. What it says is what has just happened to you: the question the table asks, the turns that went by, the
@@ -1174,7 +1436,10 @@ globalThis.CrankBoard = Object.freeze({
     const host = document.getElementById("cm-board");
     if (!host) return;
     if (showing && !handWas) handFrom = C.focusKey(document.activeElement);
+    const before = motionFor !== null ? motionSnapshot(host) : null;
     C.keepFocus(host, () => paint(host));
+    if (before) motionPlay(host, before);
+    motionFor = null;
     holdHand(host);
     handWas = showing;
     announce();
@@ -1206,9 +1471,14 @@ globalThis.CrankBoard = Object.freeze({
     applyScales(host);
     host.dataset.view = mode;
     host.dataset.coach = coach.open ? "open" : "shut";
+    host.dataset["3d"] = mode === "full" && three ? "on" : "off";
+    /* The turn moved to another seat a moment ago: this paint's light arrives, crossfading (~600 ms). */
+    if (performance.now() - turnLit < 900) host.dataset.turnChanged = "1"; else delete host.dataset.turnChanged;
+    host.style.setProperty("--panel-w", `${panelWidth()}px`);
+    host.classList.toggle("has-panel", panelOpen && mode !== "full");
     if (mode === "full") host.innerHTML = `${fullView()}${showHand()}${panel()}${banner()}`;
-    else if (mode === "table") host.innerHTML = `${strip()}${tableView()}${showHand()}${panel()}${banner()}`;
-    else host.innerHTML = `${strip()}${focusView()}${showHand()}${panel()}${banner()}`;
+    else if (mode === "table") host.innerHTML = `${strip()}${tableView()}${panel()}${showHand()}${banner()}`;
+    else host.innerHTML = `${strip()}${focusView()}${showHand()}${banner()}`;
     fit();
   }
 
@@ -1233,6 +1503,7 @@ globalThis.CrankBoard = Object.freeze({
         el.style.setProperty("--hand-scale", String(C.cardScale() / 100));
         try {return measure();} finally {el.style.removeProperty("--hand-scale");}
       };
+      host.style.removeProperty("--peek-max");
       const tbl = host.querySelector(".cm-board-table");
       if (tbl) {
         const tray = host.querySelector(":scope > .cm-board-hand");
@@ -1283,7 +1554,12 @@ globalThis.CrankBoard = Object.freeze({
         if (8 + matW * 9 / 16 + GAP + trayH > box.height) {matW = widest(trayH); trayAt(matW);}
         main.style.setProperty("--mat-reserve", "0px");
         main.style.setProperty("--tray-top", `${Math.round(8 + matW * 9 / 16 + GAP)}px`);
+        /* The card shown large under the pointer is never taller than the mat (Rob, 2026-10-11). */
+        host.style.setProperty("--peek-max", `${Math.round(matW * 9 / 16)}px`);
       }
+      /* The 3D ground's horizon: a third of the way down the window (Rob: the mat bends two thirds to three quarters up). */
+      const ground = host.querySelector(".cm-full-ground");
+      if (ground) ground.style.setProperty("--horizon-px", `${Math.round(host.clientHeight * 0.3)}px`);
       const big = host.querySelector(".cm-full-mine");
       if (big) {
         /* The hand is whole (item 25): the tray is a full row along the big board's foot, the board keeping that much
@@ -1303,7 +1579,12 @@ globalThis.CrankBoard = Object.freeze({
            two card-height rows (5:7, with the pad) and their captions, under the 52px the pill takes. */
         big.style.setProperty("--full-bc-max", `${Math.max(40, Math.floor((bigBox.height - 52 - trayH - 44) / 3.2))}px`);
       }
-      for (const opp of host.querySelectorAll(".cm-full-other")) opp.style.setProperty("--opp-w", `${Math.round(opp.getBoundingClientRect().width)}px`);
+      for (const opp of host.querySelectorAll(".cm-full-other")) {
+        const r = opp.getBoundingClientRect();
+        opp.style.setProperty("--opp-w", `${Math.round(r.width)}px`);
+        /* The seat at the back has a short band: its cards no larger than its three card rows can stand in it. */
+        opp.style.setProperty("--opp-bc-max", `${Math.max(26, Math.floor((r.height - 70) / 4.4))}px`);
+      }
       /* The card to read, the largest 5:7 its share of the column holds, what it can do under it (item 18). */
       for (const sec of host.querySelectorAll(".cm-panel-pick, #cm-full-pick")) {
         const box = sec.getBoundingClientRect(), opts = sec.querySelector(".cm-board-options"), room = box.height - 20 - (opts && opts.children.length ? opts.getBoundingClientRect().height + 8 : 0);
@@ -1335,7 +1616,8 @@ globalThis.CrankBoard = Object.freeze({
       row.style.removeProperty("--lap");
       row.classList.remove("is-scrolling");
       const kids = [...row.children];
-      if (kids.length < 2) continue;
+      /* A side seat's rows wrap (Full screen's far sides): nothing to overlap. */
+      if (kids.length < 2 || row.closest('.cm-mat[data-fit="side"]')) continue;
       const footprint = (k) => {const cs = getComputedStyle(k); return k.offsetWidth + (parseFloat(cs.marginLeft) || 0) + (parseFloat(cs.marginRight) || 0);};
       const room = row.clientWidth, need = kids.reduce((n, k) => n + footprint(k), 0) + 6 * (kids.length - 1);
       if (need <= room) continue;
@@ -1409,6 +1691,18 @@ globalThis.CrankBoard = Object.freeze({
     }
     return w;
   }
+  function setPanelW(v) {
+    const w = Math.min(PANELW[1], Math.max(PANELW[0], Math.round(v)));
+    keep(PANELW_KEY, w);
+    const host = document.getElementById("cm-board");
+    if (host) host.style.setProperty("--panel-w", `${w}px`);
+    const body = document.querySelector("#cm-board .cm-board-body");
+    if (body) body.style.setProperty("--panel-w", `${w}px`);
+    const g = document.querySelector('#cm-board [data-drag="panelw"]');
+    if (g) g.setAttribute("aria-valuenow", String(w));
+    fit();
+    return w;
+  }
   function setSplit(k, v) {
     const share = Math.min(SPLIT[1], Math.max(SPLIT[0], Math.round(v * 1000) / 1000));
     keep(SPLIT_KEY[k], share);
@@ -1452,7 +1746,7 @@ globalThis.CrankBoard = Object.freeze({
       for (const [seat, w] of awaySaid) if (w.at > asked) heard(seat, w.until);
       if (!document.getElementById("cm-board")) {
         records = null; saidKey = null;
-        C.main.innerHTML = `<div class="cm-board" id="cm-board" data-view="${mode}"></div><aside class="cm-board-coach" id="cm-board-coach" aria-label="CrankMagic Coach" hidden></aside><p class="cm-sr-only" id="cm-board-said" role="status" aria-live="polite" aria-atomic="true"></p>`;
+        C.main.innerHTML = `<div class="cm-board" id="cm-board" data-view="${mode}"></div><div class="cm-board-callouts" id="cm-board-callouts" aria-hidden="true"></div><aside class="cm-board-coach" id="cm-board-coach" aria-label="CrankMagic Coach" hidden></aside><p class="cm-sr-only" id="cm-board-said" role="status" aria-live="polite" aria-atomic="true"></p>`;
         draw();
         watch();
       } else if (said() !== before) draw();
@@ -1471,6 +1765,7 @@ globalThis.CrankBoard = Object.freeze({
       stopSea(); if (observer) {observer.disconnect(); observer = null;} peek(null); leaveFullscreen();
       tools = false; confirmEnd = false; historyOpen = false; menuOpen = false; stepsOpen = false; alsoOpen = false; showing = null; held = null;
       coach.open = false; coach.asked += 1; coach.typing = false;
+      calloutQueue = []; clearTimeout(calloutTimer); calloutTimer = null;
       gameChip();
     },
     /** A game of yours that is on: {tableId, turn}, or null. Play opens it. */
@@ -1570,6 +1865,7 @@ globalThis.CrankBoard = Object.freeze({
   actions["board-also"] = (el) => {alsoOpen = !alsoOpen; menuOpen = false; stepsOpen = false; tools = false; historyOpen = false; opened(el, alsoOpen); draw();};
   actions["board-steps"] = (el) => {stepsOpen = !stepsOpen; menuOpen = false; tools = false; historyOpen = false; opened(el, stepsOpen); draw();};
   actions["board-panel"] = () => {panelOpen = !panelOpen; if (panelOpen && coach.open) {coach.open = false; drawCoach();} draw();};
+  actions["board-panel-tab"] = (el) => {if (PANEL_TABS.some(([k]) => k === el.dataset.view)) {panelTab = el.dataset.view; draw();}};
   let lastPhone = null;
   addEventListener("resize", () => {
     if (!document.getElementById("cm-board") || !view) return;
@@ -1577,6 +1873,7 @@ globalThis.CrankBoard = Object.freeze({
     if (now !== lastPhone) {lastPhone = now; draw(); if (coach.open) drawCoach();} else fit();
   });
   actions["board-vitals"] = () => {if (view) tableVitals();};
+  actions["board-3d"] = () => {three = !three; keep(THREE_KEY, three ? "on" : "off"); draw();};
   actions["board-view"] = (el) => setMode(el.dataset.view);
   /* Full screen asks the browser for the whole screen as well, where it may; the view stands either way. It asks for
      the DOCUMENT, not the board: a browser shows only the fullscreen element's own subtree, and the Coach, the app's
@@ -1823,6 +2120,7 @@ globalThis.CrankBoard = Object.freeze({
     event.preventDefault();
     const kind = el.dataset.drag, tbl = document.querySelector("#cm-board .cm-board-table");
     if (kind === "pane") drag = {kind, x: event.clientX, from: paneWidth()};
+    else if (kind === "panelw") drag = {kind, x: event.clientX, from: panelWidth()};
     else if (kind === "panel" || kind === "side") {
       const col = el.closest(kind === "panel" ? ".cm-board-panel" : ".cm-full-side");
       drag = {kind, y: event.clientY, from: splitOf(kind), per: Math.max(1, col ? col.getBoundingClientRect().height : 600)};
@@ -1841,6 +2139,7 @@ globalThis.CrankBoard = Object.freeze({
   document.addEventListener("pointermove", (event) => {
     if (!drag) return;
     if (drag.kind === "pane") {setPane(drag.from + event.clientX - drag.x); return;}
+    if (drag.kind === "panelw") {setPanelW(drag.from - (event.clientX - drag.x)); return;}
     const dy = event.clientY - drag.y;
     if (drag.kind === "panel" || drag.kind === "side") setSplit(drag.kind, drag.from + dy / drag.per);
     else if (drag.kind === "rows") setRows(drag.from + (drag.side ? event.clientX - drag.x : dy) / drag.per);
@@ -1855,6 +2154,11 @@ globalThis.CrankBoard = Object.freeze({
     if (el.dataset.drag === "pane") {
       if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
       event.preventDefault(); setPane(paneWidth() + (event.key === "ArrowRight" ? 20 : -20)); return;
+    }
+    /* The right pane's edge: ← widens it (the edge moves left), → narrows it. */
+    if (el.dataset.drag === "panelw") {
+      if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+      event.preventDefault(); setPanelW(panelWidth() + (event.key === "ArrowLeft" ? 20 : -20)); return;
     }
     /* The upright bar between two boards side by side moves with ← and →, as it looks. */
     if (el.dataset.drag === "rows" && el.getAttribute("aria-orientation") === "vertical") {
