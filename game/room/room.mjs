@@ -249,7 +249,8 @@ export function offerDetails(state, seat, actions) {
     /* The modes chosen as it is cast (CR 700.2), in the card's words. */
     /* And an activated ability's, chosen as it is activated (Aetheric Amplifier): its own modes' words. */
     const modal = a.kind === "activate" ? (state.objects[a.objectId]?.abilities ?? []).find((b) => b.id === a.abilityId)?.modal : card(a.objectId)?.spell?.modal;
-    if (Array.isArray(a.modes)) parts.push(a.modes.map((i) => modal?.modes?.[i]?.text ?? `mode ${i + 1}`).join(" + "));
+    /* None at all ("choose up to four", Moment of Reckoning): said so. */
+    if (Array.isArray(a.modes)) parts.push(a.modes.length ? a.modes.map((i) => modal?.modes?.[i]?.text ?? `mode ${i + 1}`).join(" + ") : "no modes");
     if (a.x !== undefined) parts.push(`X = ${a.x}`);
     /* A manifested permanent of the seat's own turned face up for its card's mana cost (CR 701.40b): the label is the card,
        which only this seat is offered (CR 708.5). */

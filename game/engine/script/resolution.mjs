@@ -53,7 +53,9 @@ export function beginResolution(state, effects, context = {}, rng = null) {
       /* How many times its source had transformed as the ability went on the stack (CR 701.27f; rules/stack.mjs). */
       ...(context.sourceTransforms !== undefined ? {sourceTransforms: context.sourceTransforms} : {}),
       /* What the cost sacrificed, as it last existed ("the sacrificed creature's power"; script/amount.mjs). */
-      ...(context.sacrificed ? {sacrificed: context.sacrificed} : {})},
+      ...(context.sacrificed ? {sacrificed: context.sacrificed} : {}),
+      /* How many times its ability resolved before this one this turn (rules/stack.mjs; script/condition.mjs, firstResolution). */
+      ...(context.resolvedBefore !== undefined ? {resolvedBefore: context.resolvedBefore} : {})},
     events: [],
   };
   return runResolution(state, rng);
@@ -92,7 +94,9 @@ export function runResolution(state, rng = null) {
       excessDamage: resolving.context.excessDamage, rememberedControllers: resolving.context.rememberedControllers,
       /* "If a Pirate was exiled this way" (`movedWas`), "if you search your library this way" (`searched`), and the source as it
          last was (CR 113.7a): what this resolution remembers of what its effects did. */
-      movedWas: resolving.context.movedWas, searched: resolving.context.searched, lastKnown: resolving.context.lastKnown})) {
+      movedWas: resolving.context.movedWas, searched: resolving.context.searched, lastKnown: resolving.context.lastKnown,
+      /* "If this is the first time this ability has resolved this turn" (rules/stack.mjs counts them). */
+      resolvedBefore: resolving.context.resolvedBefore})) {
       resolving.queue.shift();
       continue;
     }
@@ -102,7 +106,7 @@ export function runResolution(state, rng = null) {
     if (effect?.effect === "branch") {
       const holds = conditionHolds(state, effect.if, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about,
         remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast,
-        movedWas: resolving.context.movedWas, searched: resolving.context.searched, lastKnown: resolving.context.lastKnown});
+        movedWas: resolving.context.movedWas, searched: resolving.context.searched, lastKnown: resolving.context.lastKnown, resolvedBefore: resolving.context.resolvedBefore});
       resolving.queue.shift();
       resolving.queue.unshift(...structuredClone((holds ? effect.then : effect.otherwise) ?? []));
       continue;

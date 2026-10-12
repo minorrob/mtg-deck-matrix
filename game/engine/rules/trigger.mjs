@@ -46,6 +46,8 @@
  * STATE TRIGGERS (CR 603.8; Train C): "when this artifact has twenty or more charge counters on it, you win the game"
  * (Darksteel Reactor) -- a trigger on a state, not an event (`on: "state"`, its `state` a condition), read whenever what
  * triggers is read, and not again while it waits or is on the stack.
+ *
+ * THE GAME'S OWN TRIGGERS (CR 725.2; Train E): the monarch's two, which no card has -- INHERENT_TRIGGERS, below.
  */
 
 import {conditionHolds} from "../script/condition.mjs";
@@ -159,6 +161,9 @@ function subjects(state, event, condition, sourceId, controller) {
     if (condition.castFrom && fields.castFrom !== condition.castFrom) return [];
     /* "When you cast this spell" (CR 603.2, Emrakul, the Exigent Doom): this spell's own cast, and no other. */
     if (condition.who === "self" && spell !== sourceId) return [];
+    /* "When you cast this spell while you control a creature" (Social Snub): `while` holds as it is cast, and is not asked
+       again as it resolves -- a trigger condition, not an intervening "if" (CR 603.4). */
+    if (!conditionHolds(state, condition.while, {controller, source: sourceId})) return [];
     /* "An instant or sorcery spell that targets a creature" (Rehearsed Debater): one of what it targets, chosen as it was
        cast (CR 601.2c) and so before it became cast (601.2i), fits `targets`. A player it targets fits no such selector. */
     const aimed = () => (state.stack.find((e) => e.stackId === fields.sa?.stackId)?.targets ?? []).flat();
@@ -250,7 +255,10 @@ function subjects(state, event, condition, sourceId, controller) {
   if (condition.on === "GameEventBlockersDeclared") {
     const blocks = (fields.blockers ?? []).filter((b) => fits(state, b.card?.cardId, condition, sourceId, controller));
     const attacking = state.combat?.attackingPlayerId ?? state.activePlayer;
-    if (condition.eachBlocked) return blocks.map((b) => ({card: b.card.cardId, blocked: b.blocking?.cardId, player: attacking}));
+    /* "Blocks a creature with flying" (Skystinger; CR 509.3b): each attacker it blocks that `blocked` describes -- any, unsaid
+       -- read as blockers are declared, "you" this ability's controller. */
+    if (condition.eachBlocked) return blocks.filter((b) => matchesSelector({what: "permanent", ...(condition.blocked ?? {})}, state, b.blocking?.cardId, {controller, source: sourceId}))
+      .map((b) => ({card: b.card.cardId, blocked: b.blocking?.cardId, player: attacking}));
     return [...new Set(blocks.map((b) => b.card.cardId))].map((card) => ({card, player: attacking}));
   }
   /* "When this creature becomes monstrous" (CR 701.37b): this permanent given that designation (effects/attributes.mjs). */
@@ -274,6 +282,9 @@ function subjects(state, event, condition, sourceId, controller) {
     if (condition.to === "opponent" && to === controller) return [];
     /* "Whenever a creature deals combat damage to you" (Strixhaven Stadium): this ability's controller, and no one else. */
     if (condition.to === "you" && to !== controller) return [];
+    /* "... while you're the monarch" (Tamiyo, Upriser Crowned; CR 725): the monarch as the damage is dealt -- part of what
+       triggers it, never an intervening "if" asked again as it resolves (CR 603.4 is an "if"'s). */
+    if (condition.monarch === "you" && state.monarch !== controller) return [];
     if (!fits(state, source, condition, sourceId, controller)) return [];
     /* "Create that many Treasure tokens": the damage dealt (CR 120.3), with who dealt it and to whom. */
     return [{card: source, player: to, amount: fields.amount ?? 0}];
@@ -553,6 +564,39 @@ export function manaTriggered(state, event) {
   return made;
 }
 
+/**
+ * THE GAME'S OWN TRIGGERED ABILITIES (CR 725.2): the two that come with being the monarch. They have no source -- an
+ * exception to CR 113.8 -- and are controlled by the player who was the monarch as they triggered. So each is written as a
+ * card's trigger is (`trigger`, the condition `subjects` reads; `effects`, the script it carries to the stack), and the
+ * game, not a permanent, says whose it is: nobody's until a player becomes the monarch (CR 725.1), then the monarch's. On
+ * the stack it waits, is responded to and resolves as any trigger does (putOnStack), named for the designation; one whose
+ * controller has left the game never goes there (CR 800.4d; openTriggers).
+ *   - "At the beginning of the monarch's end step, that player draws a card": the monarch's own end step.
+ *   - "Whenever a creature deals combat damage to the monarch, its controller becomes the monarch": once for each creature
+ *     that does -- trample's damage too, combat damage all the same (CR 702.19b) -- about it and its controller as it dealt
+ *     the damage: "its controller" is read as it resolves, or as it last was (script/bind.mjs, "that card's controller"; CR
+ *     608.2h). Combat damage is only ever a creature's (CR 510.1).
+ */
+export const INHERENT_TRIGGERS = Object.freeze([
+  {abilityId: "monarch-end-step", text: "At the beginning of the monarch's end step, that player draws a card.",
+    trigger: {on: "GameEventTurnPhase", phase: "END_OF_TURN", yourTurn: true}, effects: [{effect: "draw", count: 1}]},
+  {abilityId: "monarch-combat-damage", text: "Whenever a creature deals combat damage to the monarch, its controller becomes the monarch.",
+    trigger: {on: "GameEventPlayerDamaged", who: "any", to: "you", combat: true}, effects: [{effect: "becomeMonarch", who: "that card's controller"}]},
+].map((ability) => Object.freeze(ability)));
+/** What a trigger with no source is shown as: the designation it comes with. */
+export const MONARCH_NAME = "The monarch";
+
+/* The game's own triggers this event triggers, waiting with the rest: the monarch's -- with no monarch, nobody's turn and
+   nobody dealt damage is the monarch's, and nothing triggers. */
+function inherentTriggers(state, event) {
+  const dealer = event.data?.fields?.source?.controller;
+  for (const ability of INHERENT_TRIGGERS) for (const about of subjects(state, event, ability.trigger, null, state.monarch)) {
+    state.pendingTriggers.push({abilityId: ability.abilityId, text: ability.text, controller: state.monarch, source: {cardId: null, name: MONARCH_NAME},
+      cause: null, optional: false, inherent: true, about: {...about, ...(Number.isInteger(dealer) ? {controller: dealer} : {})},
+      script: {targets: [], effects: structuredClone(ability.effects)}});
+  }
+}
+
 export function collectTriggers(state, events) {
   if (!state.pendingTriggers) state.pendingTriggers = [];
   recordArrivals(state, events);
@@ -670,6 +714,8 @@ export function collectTriggers(state, events) {
         }
       }
     }
+    /* And the game's own, the monarch's (CR 725.2). */
+    inherentTriggers(state, event);
     /* A DELAYED TRIGGER (CR 603.7) -- "sacrifice it at the beginning of the next end step" -- made by a resolving spell
        or ability, triggers once, at the next end step's beginning, and then it is gone. One made during an end step was
        made after that step began, so the next beginning this sees is the following turn's (CR 603.7c). */
@@ -1041,6 +1087,8 @@ function putOnStack(state, triggers) {
       x: trigger.x ?? null,
       /* A delayed trigger's source, as it was when the trigger was made (CR 701.27f). */
       sourceTransforms: trigger.sourceTransforms,
+      /* One of the game's own, which has no source (CR 725.2): named for its designation. */
+      ...(trigger.inherent ? {name: trigger.source.name} : {}),
     });
     /* Its targets are asked for once every trigger of the round is on the stack (askTriggerTargets) -- and a modal one's
        modes with them (CR 603.3c). */

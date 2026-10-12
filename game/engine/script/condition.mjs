@@ -68,6 +68,12 @@
  *                                      rules/actions.mjs record them this turn (Plasma Bolt, Temporal Intervention)
  *   {sneak: true}                      sneak's "during your declare blockers step" (CR 702.190a): its controller's turn, that
  *                                      step (Leonardo, Leader in Blue)
+ *   {monarch: "you"}                   "if you're the monarch" (CR 725; Ginger, Queen of Sweets): its controller is the
+ *                                      monarch now (`state.monarch`, effects/resources.mjs) -- with no monarch in the game, nobody
+ *                                      is (725.1)
+ *   {firstResolution: true}            "if this is the first time this ability has resolved this turn" (Nissa, Leyline
+ *                                      Tamer): an effect's own, of a triggered or activated ability -- its ability resolved
+ *                                      no time before this one this turn (rules/stack.mjs counts them)
  *
  * The keys are closed, like every other grammar here: an unknown one is refused at the schema rather than read as true.
  */
@@ -93,7 +99,14 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   /* Smaug, Wicked Worm's "if mana from a Treasure was spent to cast it" (CR 106.3, 601.2h). */
   "spentFrom",
   /* Void (CR 207.2c, 702.185c) and sneak's timing (CR 702.190a). */
-  "void", "sneak"];
+  "void", "sneak",
+  /* "If you're the monarch" (CR 725). */
+  "monarch",
+  /* Nissa, Leyline Tamer's "if this is the first time this ability has resolved this turn". */
+  "firstResolution"];
+/** Whether these effects, nested ones included, ask `firstResolution` -- so their ability's resolutions are counted
+    (rules/stack.mjs). */
+export const asksFirstResolution = (effects) => JSON.stringify(effects ?? []).includes('"firstResolution"');
 /* The alternative costs a spell may be marked as cast for (cards/index.mjs; rules/actions.mjs): sneak's (CR 702.190a) too --
    "if his sneak cost was paid" (Leonardo, Leader in Blue). */
 const PAID_FOR = ["surge", "freerunning", "sneak"];
@@ -180,8 +193,11 @@ function castHolds(rule, cast) {
 
 /** Whether a condition holds now, for an ability controlled by `controller` on object `source`. No condition holds. */
 export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined, excessDamage = undefined, rememberedControllers = undefined,
-  movedWas = undefined, searched = undefined, lastKnown = undefined, paidFor = undefined} = {}) {
+  movedWas = undefined, searched = undefined, lastKnown = undefined, paidFor = undefined, resolvedBefore = undefined} = {}) {
   if (!condition) return true;
+  /* "IF THIS IS THE FIRST TIME THIS ABILITY HAS RESOLVED THIS TURN" (Nissa, Leyline Tamer): asked as one of its effects is
+     reached, of the times its ability resolved before this one this turn (rules/stack.mjs counts them) -- none. */
+  if (condition.firstResolution === true && resolvedBefore !== 0) return false;
   /* "If you search your library this way" (Claim Jumper): a search made earlier in this resolution (script/resolution.mjs). */
   if (condition.searched === true && searched !== true) return false;
   /* Guardian Project (CR 603.4, 201.2a): compare the entering creature's current name,
@@ -307,6 +323,8 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   /* SNEAK'S TIMING (CR 702.190a): "any time you could cast an instant during your declare blockers step" -- its controller's
      own turn, in that step (rules/actions.mjs offers the cast at an instant's timing then). */
   if (condition.sneak === true && !(state.activePlayer === controller && state.phase === "COMBAT_DECLARE_BLOCKERS")) return false;
+  /* "If you're the monarch" (CR 725.1, 725.3): its controller holds the game's designation now. */
+  if (condition.monarch === "you" && state.monarch !== controller) return false;
   /* Surge (CR 702.117a): its controller has cast another spell this turn -- asked as this one's cast is offered, before it
      is counted among them (rules/actions.mjs). */
   if (condition.surge === true && !((state.players[controller]?.castThisTurn ?? []).length > 0)) return false;
@@ -385,6 +403,8 @@ export function conditionProblems(condition) {
   if ("surge" in condition && condition.surge !== true) problems.push("surge is true");
   if ("void" in condition && condition.void !== true) problems.push("void is true");
   if ("sneak" in condition && condition.sneak !== true) problems.push("sneak is true");
+  if ("monarch" in condition && condition.monarch !== "you") problems.push("monarch is \"you\": its controller is the monarch");
+  if ("firstResolution" in condition && condition.firstResolution !== true) problems.push("firstResolution is true: the first time this ability has resolved this turn");
   if ("freerunning" in condition && condition.freerunning !== true) problems.push("freerunning is true");
   if ("paidFor" in condition && !PAID_FOR.includes(condition.paidFor)) problems.push(`paidFor is the alternative cost a spell was cast for: ${PAID_FOR.join(", ")}`);
   if ("opponentPoisonAtLeast" in condition && !(Number.isInteger(condition.opponentPoisonAtLeast) && condition.opponentPoisonAtLeast >= 1))

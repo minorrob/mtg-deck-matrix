@@ -26,6 +26,7 @@ import {typesOf, controllerOf, staticAbilities} from "../../rules/layers.mjs";
 import {protectedFrom} from "../../rules/protection.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
 import {countersPlaced, tokensCreated} from "../../rules/statics.mjs";
+import {removeFromCombat} from "../../rules/combat.mjs";
 
 /* A continuous effect needs a timestamp to be ordered by (CR 613.7), and it has to be part of the
    state so a checkpoint carries it. The state's own counter is the right source: it is monotonic
@@ -85,6 +86,14 @@ export const PREDEFINED_TOKENS = Object.freeze({
     abilities: [{id: "map", kind: "activated", text: "{1}, {T}, Sacrifice this token: Target creature you control explores. Activate only as a sorcery.",
       timing: "sorcery", targets: [{what: "permanent", types: ["Creature"], controller: "you"}],
       cost: [{atom: "mana", cost: "{1}"}, {atom: "{T}"}, {atom: "sacrifice", self: true}], effects: [{effect: "explore", targets: {target: 0}}]}]},
+  /* CR 111.10i, 701.53b (Train E, Sunfall's incubate): a double-faced token. Its front face a colorless Incubator artifact
+     with "{2}: Transform this token.", its back face (`back`) a 0/0 colorless Phyrexian artifact creature named Phyrexian
+     Token. makeToken gives the token both faces, and it transforms as a double-faced permanent does (CR 701.27a, 712.18;
+     state/index.mjs, transformObject): the same object, its counters still on it. */
+  Incubator: {name: "Incubator", types: ["Artifact"], subtypes: ["Incubator"], colors: [],
+    abilities: [{id: "incubator", kind: "activated", text: "{2}: Transform this token.", targets: [],
+      cost: [{atom: "mana", cost: "{2}"}], effects: [{effect: "setState", targets: "self", transform: true}]}],
+    back: {name: "Phyrexian Token", types: ["Artifact", "Creature"], subtypes: ["Phyrexian"], colors: [], power: 0, toughness: 0}},
 });
 
 /**
@@ -411,6 +420,22 @@ export function investigate(state, params, context) {
 }
 
 /**
+ * `incubate` — CR 701.53a (Train E, Sunfall: "Incubate X, where X is the number of creatures exiled this way"): one
+ * Incubator token (CR 111.10i) that enters the battlefield with N +1/+1 counters on it. `count` is the N, an amount counted
+ * as the effect is applied (CR 608.2h). The counters are given as it enters (CR 122.6), by its controller (122.6a), so an
+ * effect that changes how many are put sees them; none at all, and it enters with none.
+ */
+export function incubate(state, params, context) {
+  return createToken(state, {count: 1, token: {predefined: "Incubator"}, entersWithCounters: {"+1/+1": params.count ?? 0}}, context);
+}
+
+/* A face of a double-faced token (an Incubator, CR 111.10i), as a double-faced card's face is kept (cards/index.mjs,
+   faceOfDefinition): what transformObject turns over (state/index.mjs). */
+const tokenFace = (spec) => ({card: spec.name ?? "Token", types: [...(spec.types ?? [])], subtypes: [...(spec.subtypes ?? [])], supertypes: [...(spec.supertypes ?? [])],
+  manaCost: null, colors: [...(spec.colors ?? [])], power: spec.power ?? null, toughness: spec.toughness ?? null, keywords: [...(spec.keywords ?? [])],
+  abilities: structuredClone(spec.abilities ?? [])});
+
+/**
  * "THE EXILED CARD'S OWNER CREATES AN X/X BLUE ILLUSION CREATURE TOKEN, WHERE X IS THE MANA VALUE OF THE EXILED CARD"
  * (Skyclave Apparition; CR 607.2a): createToken's `linked`. What this permanent's linked ability exiled (effects/zones.mjs,
  * `link`), while each is still that card in exile (CR 400.7) -- read against the source as it last was, since its leaving
@@ -512,18 +537,30 @@ function makeToken(state, spec, controller, params, context, events) {
     supertypes: spec.supertypes ?? [],
     /* "A 1/1 red Elemental" is red (CR 111.4): "white creatures you control" has to find a white token. */
     colors: spec.colors ?? [],
+    /* A mana cost only when the effect gives it one (CR 111.3): "a {1} 1/1 Food Golem artifact creature" (Ginger, Queen of
+       Sweets' Gingerbrute) has mana value 1; a token made without one has none. */
+    ...(spec.manaCost ? {manaCost: spec.manaCost} : {}),
     power: sized(spec.power),
     toughness: sized(spec.toughness),
     keywords: spec.keywords ?? [],
     abilities: spec.abilities ?? [],
     /* An Aura token's Enchant (a Role's, CR 303.7): what the state-based actions hold it to (CR 704.5m). */
     ...(spec.enchant ? {enchant: spec.enchant} : {}),
+    /* A double-faced token (an Incubator, CR 111.10i): both faces, its front face up as it enters (CR 712.14's default),
+       so it is one that can transform (CR 701.27a, 712.9). */
+    ...(spec.back ? {mdfc: {front: tokenFace(spec), back: tokenFace(spec.back), transforming: true}} : {}),
     owner: controller,
     controller,
     token: true,
   }, "battlefield");
   /* "Create a tapped Treasure token": the effect says so as well as a spec can. */
   if (spec.tapped || params.tapped) state.objects[id].tapped = true;
+  /* "An Incubator token that enters the battlefield with N +1/+1 counters on it" (incubate, CR 701.53a): given as it enters,
+     before the event that says it entered (CR 122.6), by its controller (122.6a) -- "twice that many instead" sees them. */
+  for (const [counter, n] of Object.entries(params.entersWithCounters ?? {})) {
+    const placed = countersPlaced(state, id, counter, n, controller);
+    if (placed > 0) state.objects[id].counters[counter] = (state.objects[id].counters[counter] ?? 0) + placed;
+  }
   events.push(event("GameEventCardChangeZone", state, {
     card: cardRef(state, id),
     /* The token is the object that arrived: "for each of them, create a token that's a copy of it" names it. */
@@ -718,7 +755,9 @@ export function effectUntil(state, params, context) {
     until: params.until === "ever" ? null : params.until ?? "end-of-turn",
     /* "Until that player's next turn" (Teferi's Reproach): `their-next-turn`, the player `who` names (rules/turn.mjs). And a
        rule changed for players (`players`): their protection, their life total that can't change. */
-    ...(params.until === "their-next-turn" || ["protection", "life-cant-change"].includes(params.rule) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
+    /* And "you have no maximum hand size for the rest of the game" (Wisdom of Ages; CR 402.2, 611.2a): read at cleanup
+       (rules/statics.mjs, playerRuleChanged). */
+    ...(params.until === "their-next-turn" || ["protection", "life-cant-change", "no-maximum-hand-size"].includes(params.rule) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
     ...(params.rule === "protection" ? {from: params.from ?? "everything"} : {}),
     /* A PREVENTION SHIELD OF A PLAYER'S (CR 615; rules/replacement.mjs, preventionsFor): "prevent all combat damage that would
        be dealt to you this turn" (Inkshield) -- `who`, the players it shields -- "the next time a source of your choice
@@ -767,7 +806,8 @@ export function endWhileSourceRemains(state, departed) {
  * (endControlChange): as the turn ends (rules/turn.mjs), as its source leaves the battlefield (effects/zones.mjs), or --
  * for good ones too -- as the player it gave control to leaves the game (CR 800.4a; rules/sba.mjs). It has changed
  * controller, so it is summoning sick for its new controller unless it has haste (CR 302.6), and again for its old one
- * when it returns.
+ * when it returns. And it is removed from combat (CR 506.4; rules/combat.mjs): an attacker taken in the middle of a combat
+ * attacks no one, and a blocker taken blocks nothing -- each time its controller changes, going and coming back.
  */
 export function gainControl(state, params, context) {
   /* "Choose a different opponent" for each (`toEach`, Dack Fayden, Helping Hand) is its controller's choice: asked by the
@@ -786,7 +826,10 @@ export function gainControl(state, params, context) {
     (state.effects ??= []).push({id: `control-returns:${id}:${state.effects.length}`, rule: "control-returns", affects: {ids: [id]},
       apply: {controller: object.controller}, to, ...(params.until ? {until: params.until} : {}), ...(params.until === "this leaves" ? {source} : {}), sourceController: context.controller});
     rememberExileLooker(state, id, controllerOf(state, id));
-    if (object.controller !== to) object.controlledSinceTurn = state.turn;
+    if (object.controller !== to) {
+      object.controlledSinceTurn = state.turn;
+      removeFromCombat(state, id);
+    }
     object.controller = to;
     rememberExileLooker(state, id, controllerOf(state, id));
   }
@@ -819,9 +862,10 @@ export const CONTROL_DURATIONS = Object.freeze(["end-of-turn", "this leaves"]);
  * still holds it, and then that one is told to give it back there in its turn, as though this one had never been. "Gain
  * control until end of turn" twice in a turn ends with the first controller; a creature Sower of Temptation took and then
  * lent until end of turn goes to its owner when the Sower leaves only once the loan ends. Changing hands, it is summoning
- * sick for whom it returns to (CR 302.6), and not at all for one who has had it all along. A permanent gone from the
- * battlefield is a new object (CR 400.7) whose records are spent as it leaves (controlSourceLeft). Ending one may exile its
- * permanent (CR 800.4c), so a caller ending several asks for the next one still standing each time (`nextRecord`).
+ * sick for whom it returns to (CR 302.6), and not at all for one who has had it all along, and it leaves combat (CR 506.4).
+ * A permanent gone from the battlefield is a new object (CR 400.7) whose records are spent as it leaves (controlSourceLeft).
+ * Ending one may exile its permanent (CR 800.4c), so a caller ending several asks for the next one still standing each time
+ * (`nextRecord`).
  */
 export function endControlChange(state, record, events = []) {
   const id = record.affects.ids[0];
@@ -835,6 +879,9 @@ export function endControlChange(state, record, events = []) {
   else if (state.objects[id].controller !== record.apply.controller) {
     state.objects[id].controller = record.apply.controller;
     state.objects[id].controlledSinceTurn = state.turn;
+    /* Its controller changes back, and it leaves the combat it is in (CR 506.4): one Sower of Temptation or Tractor Beam
+       held, given back mid-combat as its source leaves, attacks or blocks no longer. */
+    removeFromCombat(state, id);
   }
   return events;
 }
@@ -930,10 +977,7 @@ export function phaseOut(state, params, context) {
     object.zone = "phased";
     object.phasedOut = {player: ids.includes(object.attachedTo) ? state.objects[object.attachedTo].controller : object.controller};
     (state.phasedOut ??= []).push(id);
-    if (state.combat) {
-      state.combat.attacks = (state.combat.attacks ?? []).filter((a) => a.attacker !== id);
-      for (const attack of state.combat.attacks ?? []) attack.blockers = (attack.blockers ?? []).filter((b) => b !== id);
-    }
+    removeFromCombat(state, id);
   }
   return [];
 }

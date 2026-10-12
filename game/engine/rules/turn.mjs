@@ -46,7 +46,7 @@ import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
 import {answerResolution, answerDeparted, resolutionChoice} from "../script/resolution.mjs";
 import {finishResolving} from "./stack.mjs";
 import {priorityOrder} from "./priority.mjs";
-import {playerRuleChanged, untapsDuringOthers, ruleChanged} from "./statics.mjs";
+import {playerRuleChanged, untapsDuringOthers, ruleChanged, drawForbidden} from "./statics.mjs";
 import {emptyRestricted, colorlessPool} from "./restricted-mana.mjs";
 import {endCopies, phaseIn, endControlChange, nextRecord} from "../script/effects/permanents.mjs";
 import {untapOne} from "../script/effects/resources.mjs";
@@ -174,6 +174,9 @@ function untap(state, events) {
    not throw and does not lose the game here: the player is marked, and state-based actions turn the
    mark into a loss in 1.5. Throwing would make an ordinary, legal game position into a crash. */
 export function draw(state, player, events) {
+  /* A draw the player can't make (Narset, Parter of Veils: one drawn already this turn; rules/statics.mjs) is not made --
+     nor is it a draw from an empty library (CR 101.2, 121.2b). */
+  if (drawForbidden(state, player)) return null;
   const library = cardsIn(state, "library", player);
   if (library.length === 0) {
     state.players[player].drewFromEmpty = true;

@@ -80,6 +80,9 @@ export function historyLines(event, names = []) {
     /* A face-down permanent turned face up (CR 701.40b, 708.8): its card is shown to everyone as it is, so it is named now. */
     case "GameEventCardTurnedFaceUp":
       return line(`${who(f.player.playerId)} turned ${cardName(f.card)} face up`);
+    /* The monarch (CR 725.3): a designation of the game's, and public. */
+    case "GameEventBecomeMonarch":
+      return line(`${who(f.player.playerId)} became the monarch`);
     /* A Class's level (CR 716.2a). */
     case "GameEventCardLevel":
       return line(`${cardName(f.card)} reached level ${f.newValue}`);
