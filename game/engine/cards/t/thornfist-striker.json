@@ -1,0 +1,87 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thornfist Striker",
+    "oracleId": "d0d13d5d-677d-4e1a-9e58-2f9840581f6d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Druid"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Ward {1} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {1}.)\nInfusion — Creatures you control get +1/+0 and have trample as long as you gained life this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Ward {1}",
+      "keyword": "ward",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Infusion — Creatures you control get +1/+0 and have trample as long as you gained life this turn.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "power": 1
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "lifeGainedThisTurn": "you"
+          },
+          "atLeast": 1
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Infusion — Creatures you control get +1/+0 and have trample as long as you gained life this turn.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Trample"
+        ]
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "lifeGainedThisTurn": "you"
+          },
+          "atLeast": 1
+        }
+      }
+    }
+  ]
+}

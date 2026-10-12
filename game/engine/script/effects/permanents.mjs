@@ -718,7 +718,9 @@ export function effectUntil(state, params, context) {
     until: params.until === "ever" ? null : params.until ?? "end-of-turn",
     /* "Until that player's next turn" (Teferi's Reproach): `their-next-turn`, the player `who` names (rules/turn.mjs). And a
        rule changed for players (`players`): their protection, their life total that can't change. */
-    ...(params.until === "their-next-turn" || ["protection", "life-cant-change"].includes(params.rule) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
+    /* And "you have no maximum hand size for the rest of the game" (Wisdom of Ages; CR 402.2, 611.2a): read at cleanup
+       (rules/statics.mjs, playerRuleChanged). */
+    ...(params.until === "their-next-turn" || ["protection", "life-cant-change", "no-maximum-hand-size"].includes(params.rule) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
     ...(params.rule === "protection" ? {from: params.from ?? "everything"} : {}),
     /* A PREVENTION SHIELD OF A PLAYER'S (CR 615; rules/replacement.mjs, preventionsFor): "prevent all combat damage that would
        be dealt to you this turn" (Inkshield) -- `who`, the players it shields -- "the next time a source of your choice

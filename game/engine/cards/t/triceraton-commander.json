@@ -1,0 +1,90 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Triceraton Commander",
+    "oracleId": "45d40cdb-21cc-4569-a894-83dd3026c947",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dinosaur",
+      "Soldier"
+    ],
+    "manaCost": "{X}{X}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying\nWhen this creature enters, create X 2/2 white Dinosaur Soldier creature tokens.\nWhenever this creature attacks, Dinosaurs you control other than this creature get +1/+1 and gain flying until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, create X 2/2 white Dinosaur Soldier creature tokens.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": {
+            "x": true
+          },
+          "token": {
+            "name": "Dinosaur Soldier",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Dinosaur",
+              "Soldier"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks, Dinosaurs you control other than this creature get +1/+1 and gain flying until end of turn.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "subtypes": [
+              "Dinosaur"
+            ],
+            "controller": "you",
+            "another": true
+          },
+          "power": 1,
+          "toughness": 1,
+          "keywords": [
+            "Flying"
+          ],
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

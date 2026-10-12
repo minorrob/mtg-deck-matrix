@@ -1084,7 +1084,9 @@ export function playerRuleChanged(state, rule, player) {
       if (compileSelector(ability.affects)(state, player, {controller: holder.controller, source: holderId})) return true;
     }
   }
-  return false;
+  /* Or an effect a spell made, for the players it names, for as long as it lasts: "you have no maximum hand size for the
+     rest of the game" (Wisdom of Ages; CR 402.2, 611.2a; effects/permanents.mjs, effectUntil's `players`). */
+  return (state.effects ?? []).some((effect) => effect.rule === rule && (effect.players ?? []).includes(player));
 }
 
 /** Whether any static ability on the battlefield -- or an effect with a duration ("can't be blocked this turn") -- changes `rule` for this object. */
