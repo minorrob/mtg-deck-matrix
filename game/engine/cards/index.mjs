@@ -238,6 +238,10 @@ const TRIGGERS = {
     ...(t.from ? {castFrom: t.from} : {}),
     /* "When you cast this spell" (Emrakul, the Exigent Doom): its own cast, from the stack (rules/trigger.mjs). */
     ...(t.who === "self" ? {who: "self"} : {}),
+    /* "When you cast this spell while you control a creature" (Social Snub): `while`, a condition of script/condition.mjs's
+       asked as the spell is cast (CR 601.2i) and never again -- a trigger condition, not an intervening "if" (CR 603.4), so
+       a creature gone by the time the trigger resolves takes nothing from it (rules/trigger.mjs). */
+    ...(t.while ? {while: t.while} : {}),
     /* "For each other instant and sorcery spell you've cast before it this turn": counted as it triggers. */
     ...(t.countBefore ? {countBefore: true} : {}),
     /* "An instant or sorcery spell that targets a creature" (Rehearsed Debater): what one of its targets is (rules/trigger.mjs). */
@@ -299,8 +303,12 @@ const TRIGGERS = {
      (`each: "attacker"`, 509.3b) once for each attacking creature it blocks. `who` and `filter` the blocker, read as blockers
      are declared (509.3f). About the blocker, and -- for a creature -- the attacker blocked and its controller. A creature
      put onto the battlefield blocking never blocked (509.4); nothing here puts one there. */
-  blocks: (t) => (ARRIVALS.includes(t.who ?? "self") && [undefined, "attacker"].includes(t.each)
-    ? {on: "GameEventBlockersDeclared", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {}), ...(t.each === "attacker" ? {eachBlocked: true} : {})} : null),
+  /* "Whenever this creature blocks a creature with flying" (Skystinger; CR 509.3b): `blocked`, a selector of the attacking
+     creature it blocks, read as blockers are declared -- once for each attacker it blocks that fits. Only with `each:
+     "attacker"`, the creature blocked being what it describes. */
+  blocks: (t) => (ARRIVALS.includes(t.who ?? "self") && [undefined, "attacker"].includes(t.each) && (t.blocked === undefined || t.each === "attacker")
+    ? {on: "GameEventBlockersDeclared", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {}), ...(t.each === "attacker" ? {eachBlocked: true} : {}),
+      ...(t.blocked ? {blocked: t.blocked} : {})} : null),
   /* "When this creature becomes monstrous" (Protector of the Wastes; CR 701.37b): this permanent given the designation
      (effects/attributes.mjs) -- once, since it stays monstrous until it leaves the battlefield. */
   "becomes monstrous": (t) => ((t.who ?? "self") === "self" ? {on: "GameEventCardAttribute", attribute: "monstrous", who: "self"} : null),
@@ -1482,6 +1490,14 @@ export function compileScript(script) {
         const each = Array.isArray(anyOf) ? anyOf.map((one) => ({...shared, ...one, ...(ability.trigger.on === "spell cast" ? {what: "spell"} : {})}))
           : [{...ability.trigger.filter, ...(ability.trigger.on === "spell cast" ? {what: "spell"} : {})}];
         try { for (const one of each) compileSelector(one); } catch (error) { problems.push(`${ability.text}: ${error.message}`); }
+      }
+      /* The attacking creature a blocker blocks (a blocks trigger's `blocked`, Skystinger's "a creature with flying"): a
+         selector of a permanent. */
+      if (ability.trigger.blocked !== undefined) {
+        const blocked = ability.trigger.blocked;
+        if (ability.trigger.on !== "blocks") problems.push(`${ability.text}: the creature blocked is read by a blocks trigger, and by no other`);
+        else if (!blocked || typeof blocked !== "object" || Array.isArray(blocked)) problems.push(`${ability.text}: the creature blocked is a selector`);
+        else try { compileSelector({...blocked, what: "permanent"}); } catch (error) { problems.push(`${ability.text}: ${error.message}`); }
       }
       /* What a spell cast targets ("that targets a creature"): a selector of its own, read only as a spell is cast -- another
          trigger would drop it, and trigger on everything. */

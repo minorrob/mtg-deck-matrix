@@ -159,6 +159,9 @@ function subjects(state, event, condition, sourceId, controller) {
     if (condition.castFrom && fields.castFrom !== condition.castFrom) return [];
     /* "When you cast this spell" (CR 603.2, Emrakul, the Exigent Doom): this spell's own cast, and no other. */
     if (condition.who === "self" && spell !== sourceId) return [];
+    /* "When you cast this spell while you control a creature" (Social Snub): `while` holds as it is cast, and is not asked
+       again as it resolves -- a trigger condition, not an intervening "if" (CR 603.4). */
+    if (!conditionHolds(state, condition.while, {controller, source: sourceId})) return [];
     /* "An instant or sorcery spell that targets a creature" (Rehearsed Debater): one of what it targets, chosen as it was
        cast (CR 601.2c) and so before it became cast (601.2i), fits `targets`. A player it targets fits no such selector. */
     const aimed = () => (state.stack.find((e) => e.stackId === fields.sa?.stackId)?.targets ?? []).flat();
@@ -250,7 +253,10 @@ function subjects(state, event, condition, sourceId, controller) {
   if (condition.on === "GameEventBlockersDeclared") {
     const blocks = (fields.blockers ?? []).filter((b) => fits(state, b.card?.cardId, condition, sourceId, controller));
     const attacking = state.combat?.attackingPlayerId ?? state.activePlayer;
-    if (condition.eachBlocked) return blocks.map((b) => ({card: b.card.cardId, blocked: b.blocking?.cardId, player: attacking}));
+    /* "Blocks a creature with flying" (Skystinger; CR 509.3b): each attacker it blocks that `blocked` describes -- any, unsaid
+       -- read as blockers are declared, "you" this ability's controller. */
+    if (condition.eachBlocked) return blocks.filter((b) => matchesSelector({what: "permanent", ...(condition.blocked ?? {})}, state, b.blocking?.cardId, {controller, source: sourceId}))
+      .map((b) => ({card: b.card.cardId, blocked: b.blocking?.cardId, player: attacking}));
     return [...new Set(blocks.map((b) => b.card.cardId))].map((card) => ({card, player: attacking}));
   }
   /* "When this creature becomes monstrous" (CR 701.37b): this permanent given that designation (effects/attributes.mjs). */

@@ -429,6 +429,12 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
     }
     /* A state trigger's state (CR 603.8): a condition, held to the condition grammar. */
     if (on === "state") for (const message of conditionProblems(ability.trigger.state ?? null)) errors.push({path: `${path}.trigger.state`, message});
+    /* "When you cast this spell while you control a creature" (Social Snub): a condition asked as the spell is cast and never
+       again (rules/trigger.mjs) -- of a spell cast trigger, the only one that reads it, and held to the condition grammar. */
+    if (ability.trigger?.while !== undefined) {
+      if (on !== "spell cast") errors.push({path: `${path}.trigger.while`, message: "\"While\" a condition holds is read by a spell cast trigger alone"});
+      for (const message of conditionProblems(ability.trigger.while ?? null)) errors.push({path: `${path}.trigger.while`, message});
+    }
     /* "Attack one of your opponents or a planeswalker they control" (CR 506.3): planeswalkers: true, beside defender: "opponent".
        "Deals combat damage to a player or planeswalker" (Grateful Apparition): planeswalkers: true, on a damage trigger
        about a player. */
