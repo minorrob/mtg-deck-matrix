@@ -104,7 +104,7 @@ async function playAt(env, tableId) {
   }
   return {ctx, table, room, matchId, made, alarmed, waits};
 }
-const pilotCalls = () => DB.raw.prepare("SELECT email, feature, model, outcome, cost_micros FROM ai_calls WHERE feature = 'pilot' ORDER BY rowid").all().map((r) => ({...r}));
+const pilotCalls = () => DB.raw.prepare("SELECT email, feature, model, outcome, cost_micros, at FROM ai_calls WHERE feature = 'pilot' ORDER BY rowid").all().map((r) => ({...r}));
 
 /* ---- 1. Seated only through the door ---- */
 {
@@ -134,6 +134,7 @@ const pilotCalls = () => DB.raw.prepare("SELECT email, feature, model, outcome, 
   ok(sent.every((b) => {const h = JSON.parse(b.messages[0].content).housePilotWouldChoose; return Array.isArray(h) && h.length > 0;}), "and every brief carries the house pilot's choice, the hint");
   const calls = pilotCalls();
   ok(calls.length === sent.length && calls.every((c) => c.email === ROB && c.outcome === "ok" && c.cost_micros > 0), `each call logged as pilot, under the host, ok (${calls.length})`);
+  ok(calls.every((c) => c.at === new Date(clock).toISOString()), `and at the table's clock, not the machine's (${calls[0]?.at})`);
   const replay = await replayMatch({storage: objectStorage(game.ctx.storage), matchId: game.matchId, cards: tableCards});
   const before = sent.length;
   ok(replay.same && sent.length === before, "and the game replays from its tape to the same end without asking the model again");
@@ -162,4 +163,15 @@ const pilotCalls = () => DB.raw.prepare("SELECT email, feature, model, outcome, 
     "a failed call costs nothing, is logged as an error, and the seat's own pilot answers");
 }
 
-console.log(`agent-seat-table: ${checks} checks passed — an AI on Claude is seated only through the AI door, its close calls go to the model on the table's alarm with no person's name, logged under the host and held to the game's cap, and anything it cannot answer the seat's own pilot does.`);
+/* ---- 5. The day's caps, on the table's clock ---- */
+{
+  DB.raw.prepare("DELETE FROM ai_calls").run();
+  DB.raw.prepare("INSERT INTO ai_calls (id, email, feature, model, input_tokens, output_tokens, cost_micros, outcome, at) VALUES ('day', ?, 'coach', 'claude-haiku-5-5', 0, 0, 3000000, 'ok', ?)").run(ROB, new Date(clock - 60e3).toISOString());
+  sent = []; answerWith = () => ({indices: [0], why: "First."});
+  const capped = await playAt(OPEN, "llmtablee1");
+  ok(capped.room.status === "finished" && sent.length === 0 && pilotCalls().length === 0,
+    "the host's whole 300 cents spent a minute before the table's clock: the model is not asked, and the seat's own pilot plays to the end");
+  DB.raw.prepare("DELETE FROM ai_calls WHERE id = 'day'").run();
+}
+
+console.log(`agent-seat-table: ${checks} checks passed — an AI on Claude is seated only through the AI door, its close calls go to the model on the table's alarm with no person's name, logged under the host on the table's clock and held to the game's cap and the day's, and anything it cannot answer the seat's own pilot does.`);
