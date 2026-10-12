@@ -105,8 +105,10 @@ function recordArrivals(state, events) {
     if (object?.zone !== "battlefield") continue;
     const now = characteristicsOf(state, id);
     if (!state.players[now.controller]) continue;
+    /* Its colors too, as it entered (CR 105.2): a last known snapshot answers a filter's `colors` (script/filter.mjs). */
     (state.players[now.controller].enteredThisTurn ??= []).push({cardId: id, controller: now.controller, types: [...now.types],
-      subtypes: [...(object.subtypes ?? [])], supertypes: [...(object.supertypes ?? [])], everyCreatureType: now.everyCreatureType === true, token: object.token === true});
+      subtypes: [...(object.subtypes ?? [])], supertypes: [...(object.supertypes ?? [])], everyCreatureType: now.everyCreatureType === true, token: object.token === true,
+      colors: [...(now.colors ?? [])]});
   }
 }
 

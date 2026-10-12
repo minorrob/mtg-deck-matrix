@@ -203,6 +203,9 @@ const SMOKE_FIXTURES = Object.freeze({
   "Smoke Whelp": {types: ["Creature"], manaCost: "{0}", power: 1, toughness: 1},
   /* A changeling card, every creature type (CR 702.73a), in the hand of a card that beholds ("behold an Elf", CR 701.4a). */
   "Smoke Changeling": {types: ["Creature"], subtypes: ["Shapeshifter"], manaCost: "{1}", keywords: ["Changeling"], power: 1, toughness: 1},
+  /* A Jace planeswalker card, in the hand of a card that beholds a Jace ("behold a Jace or pay {1}", Countersculpt): Jace is a
+     planeswalker type, which no changeling has (CR 205.3j, 702.73a). */
+  "Smoke Jace": {types: ["Planeswalker"], subtypes: ["Jace"], supertypes: ["Legendary"], manaCost: "{2}{U}", colors: ["U"], loyalty: 3},
 });
 
 /**
@@ -240,8 +243,9 @@ export function smokeScenario(script) {
     .flatMap((a) => (a?.atom === "oneOf" && Array.isArray(a.options) ? a.options.flat() : [a]));
   /* As many cards as its discard takes ("discard two cards", Cathartic Reunion). */
   const fodderHand = [...Array.from({length: Math.max(0, ...extra.filter((a) => a?.atom === "discard").map((a) => a.count ?? 1))}, () => "Smoke Charm"),
-    /* And as many changeling cards as it beholds, to reveal (CR 701.4a). */
-    ...Array.from({length: Math.max(0, ...extra.filter((a) => a?.atom === "behold").map((a) => a.count ?? 1))}, () => "Smoke Changeling")];
+    /* And as many changeling cards as it beholds, to reveal (CR 701.4a) -- or Jace cards, for a Jace. */
+    ...extra.filter((a) => a?.atom === "behold").slice(0, 1).flatMap((a) => Array.from({length: a.count ?? 1},
+      () => ((a.selector?.subtypes ?? []).includes("Jace") ? "Smoke Jace" : "Smoke Changeling")))];
   /* A card aimed at its caster's own things ("target creature you control") gets something of the caster's to aim at. */
   const ownTargets = (script.abilities ?? []).some((a) => aims(a).some((t) => JSON.stringify(t).includes('"controller":"you"'))
     /* An Aura's target is its Enchant's: "Enchant creature you control" (Super State). */

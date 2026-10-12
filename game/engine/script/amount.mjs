@@ -40,7 +40,8 @@
  *   {creaturesDiedThisTurn: who}         the creatures that died this turn under that player's control, or anyone's ("any")
  *   {cardsDrawnThisTurn: who}            the cards that player drew this turn
  *   {scriedOrSurveilledThisTurn: who}    the times that player scried or surveilled this turn
- *   {spellsCastThisTurn: who, filter?}   that player's spells cast this turn, as each was cast
+ *   {spellsCastThisTurn: who, filter?}   that player's spells cast this turn, as each was cast; "an opponent", the most
+ *                                        any one opponent cast
  *   {spellsCastThisGame: who, named}     that player's spells of a name cast this game
  *   {playersDealtNoncombatDamage: "opponent"|"any"}  the players noncombat damage reached this turn
  *   {lifeLostThisTurn: "opponents"}      the life every opponent lost this turn, together
@@ -124,7 +125,9 @@ export function amountProblems(value) {
   for (const key of Object.keys(value)) if (!AMOUNT_KINDS.includes(key) && !AMOUNT_EXTRAS.includes(key)) problems.push(`An amount has no key ${JSON.stringify(key)}`);
   if ("countersOn" in value && typeof value.counter !== "string") problems.push("Counting counters says which kind: {countersOn, counter}");
   for (const key of ["lifeGainedThisTurn", "tokensCreatedThisTurn", "permanentsLeftThisTurn", "permanentsEnteredThisTurn", "cardsLeftGraveyardThisTurn",
-    "cardsDrawnThisTurn", "scriedOrSurveilledThisTurn", "spellsCastThisTurn", "spellsCastThisGame", "cardsDiscardedThisTurn"]) if (key in value && !["you", "that player"].includes(value[key])) problems.push(`${key} is "you" or "that player"`);
+    "cardsDrawnThisTurn", "scriedOrSurveilledThisTurn", "spellsCastThisGame", "cardsDiscardedThisTurn"]) if (key in value && !["you", "that player"].includes(value[key])) problems.push(`${key} is "you" or "that player"`);
+  /* The spells cast this turn: a player's, or the most of any one opponent's ("if an opponent cast a blue spell this turn"). */
+  if ("spellsCastThisTurn" in value && !["you", "that player", "an opponent"].includes(value.spellsCastThisTurn)) problems.push('spellsCastThisTurn is "you", "that player" or "an opponent"');
   /* The life lost this turn: a player's, or every opponent's together ("if an opponent lost life this turn", spectacle). */
   if ("lifeLostThisTurn" in value && !["you", "that player", "opponents"].includes(value.lifeLostThisTurn)) problems.push('lifeLostThisTurn is "you", "that player" or "opponents"');
   if ("creaturesDiedThisTurn" in value && !["you", "that player", "any"].includes(value.creaturesDiedThisTurn)) problems.push('creaturesDiedThisTurn is "you", "that player" or "any"');
@@ -405,8 +408,15 @@ export function amountOf(state, value, context = {}) {
      Academy Guardian): that player's spells this turn, as each was cast (rules/actions.mjs keeps them), `filter` fitting --
      counted when the amount is read, so one cast after a trigger triggered and before it resolves is among them (CR 608.2h). */
   else if ("spellsCastThisTurn" in value) {
-    const player = playerOf(value.spellsCastThisTurn, context);
-    n = player !== null ? (state.players[player]?.castThisTurn ?? []).filter((cast) => matchesLastKnown(value.filter ?? {}, {...cast, controller: player}, {controller: context.controller})).length : 0;
+    const castBy = (player) => (state.players[player]?.castThisTurn ?? []).filter((cast) => matchesLastKnown(value.filter ?? {}, {...cast, controller: player}, {controller: context.controller})).length;
+    /* "If an opponent cast a blue spell this turn" (Ricochet Trap): the most any one opponent of its controller still in the
+       game cast (CR 102.2, 800.4a) -- one opponent's spells, never several added together. */
+    if (value.spellsCastThisTurn === "an opponent")
+      n = Math.max(0, ...state.players.filter((p) => p.id !== context.controller && !p.lost).map((p) => castBy(p.id)));
+    else {
+      const player = playerOf(value.spellsCastThisTurn, context);
+      n = player !== null ? castBy(player) : 0;
+    }
   }
   /* "You've cast another spell named Approach of the Second Sun this game": that player's spells of the name this game, this
      one included once it is cast (rules/actions.mjs). */

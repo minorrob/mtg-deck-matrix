@@ -1,0 +1,90 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Glen Elendra Guardian",
+    "oracleId": "97febf6b-302c-4c41-8838-eef7c7353bdc",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Faerie",
+      "Wizard"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Flash\nFlying\nThis creature enters with a -1/-1 counter on it.\n{1}{U}, Remove a counter from this creature: Counter target noncreature spell. Its controller draws a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "replacement",
+      "text": "This creature enters with a -1/-1 counter on it.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "-1/-1",
+          "count": 1
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{1}{U}, Remove a counter from this creature: Counter target noncreature spell. Its controller draws a card.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{U}"
+        },
+        {
+          "atom": "removeAnyCounter",
+          "self": true
+        }
+      ],
+      "targets": [
+        {
+          "what": "spell",
+          "nonTypes": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "draw",
+          "count": 1,
+          "who": {
+            "controllerOf": {
+              "target": 0
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

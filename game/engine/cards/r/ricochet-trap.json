@@ -1,0 +1,72 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ricochet Trap",
+    "oracleId": "15df3467-c67e-4ae2-9e6f-ffb6ad288a5a",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [
+      "Trap"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If an opponent cast a blue spell this turn, you may pay {R} rather than pay this spell's mana cost.\nChange the target of target spell with a single target.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If an opponent cast a blue spell this turn, you may pay {R} rather than pay this spell's mana cost.",
+      "rule": "alternative-cost",
+      "affects": {
+        "what": "card",
+        "self": true
+      },
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{R}"
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "spellsCastThisTurn": "an opponent",
+            "filter": {
+              "colors": [
+                "U"
+              ]
+            }
+          },
+          "atLeast": 1
+        }
+      }
+    },
+    {
+      "kind": "spell",
+      "text": "Change the target of target spell with a single target.",
+      "targets": [
+        {
+          "what": "spell",
+          "singleTarget": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "changeTargets",
+          "spells": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -47,6 +47,9 @@ const BEAR = [{tap: "Forest"}, {tap: "Forest"}, {cast: "Bear"}, {resolve: true}]
   eq([count(s, 0, another, bear), count(s, 0, another, s.zones.battlefield[0])], [0, 1], "\"another creature\": not the one asking");
   const next = play([at(0, "battlefield", "Forest", "Forest"), at(0, "hand", "Bear")], [...BEAR, {to: {turn: 2, phase: "UPKEEP"}}]);
   eq([record(next, 0), count(next, 0, CREATURES)], [[], 0], "a turn begins: cleared");
+  /* Train D: a filter's colors (script/filter.mjs), which the record keeps as each entered (CR 105.2). */
+  eq([count(s, 0, {permanentsEnteredThisTurn: "you", filter: {colors: ["G"]}}), count(s, 0, {permanentsEnteredThisTurn: "you", filter: {colors: ["U"]}})], [1, 0],
+    "a green creature entered, and no blue one: the green Bear, not the colorless Plains");
 }
 {
   const s = play([at(1, "battlefield", "Forest", "Forest"), at(1, "hand", "Bear")], BEAR, {at: {turn: 2, phase: "MAIN1"}});

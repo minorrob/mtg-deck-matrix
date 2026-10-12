@@ -238,6 +238,10 @@ export const STATIC_RULES = Object.freeze({
       (Thousand-Year Elixir): `affects` the creatures, "you" its controller. Their {T} abilities are not held back by CR
       302.6; their attack still is. keywords/timing.mjs, sickForAbilities. */
   "activate-as-though-haste": "keywords/timing.mjs",
+  /** CR 606.3's timing lifted by permission: "Until end of turn, you may activate loyalty abilities of Jace planeswalkers you
+      control on any player's turn any time you could cast an instant" (Jace's Machinations): `affects` the planeswalkers,
+      "you" its controller. Only the timing: one loyalty ability of a permanent each turn still holds (606.3). rules/actions.mjs. */
+  "loyalty-at-instant-speed": "rules/actions.mjs",
   /** A requirement on attacking (CR 508.1d): "Other Goblin creatures you control attack each combat if able" (Goblin
       Rabblemaster): `affects` the creatures, "you" its controller. Required of each that can attack someone with no cost to
       pay; a declaration leaving out one it could have is refused, saying which (attacksEachCombat, below; rules/combat.mjs). */
