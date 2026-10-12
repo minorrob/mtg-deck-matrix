@@ -18,7 +18,7 @@
  *   Targeted by a spell or ability from one, never    script/filter.mjs (a permanent, or a player)
  */
 
-import {staticAffects, typesOf, colorsOf, controllerOf, onceAQuestion} from "./layers.mjs";
+import {staticAffects, typesOf, colorsOf, controllerOf, onceAQuestion, staticAbilities} from "./layers.mjs";
 import {chosenFor} from "../script/chosen.mjs";
 
 /* Every protection there is now, each with what it covers and its quality: once a question, since a question asks it of
@@ -26,9 +26,11 @@ import {chosenFor} from "../script/chosen.mjs";
 const protections = (state) => onceAQuestion(state, "protections", () => gatherProtections(state));
 function gatherProtections(state) {
   const found = [];
+  /* Its abilities as they are after layer 6 (CR 613.1f): one that lost them all gives no protection. */
+  const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield ?? []) {
     const holder = state.objects[holderId];
-    for (const own of holder?.abilities ?? []) {
+    for (const own of holder ? held(holderId) : []) {
       if (own.kind !== "static" || own.rule !== "protection") continue;
       found.push({ability: holder.chosen !== undefined ? chosenFor(own, holder) : own, holderId, controller: controllerOf(state, holderId)});
     }

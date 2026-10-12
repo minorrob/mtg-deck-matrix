@@ -15,6 +15,86 @@
       ],
       "power": 2,
       "toughness": 2
+    },
+    "Rallying Ground": {
+      "types": [
+        "Land"
+      ],
+      "manaCost": null,
+      "colors": [],
+      "abilities": [
+        {
+          "id": "a0",
+          "kind": "static",
+          "text": "Creatures you control get +1/+1.",
+          "layer": 7,
+          "sublayer": "c",
+          "affects": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "apply": {
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    "Swamp Spreader": {
+      "types": [
+        "Land"
+      ],
+      "manaCost": null,
+      "colors": [],
+      "abilities": [
+        {
+          "id": "a0",
+          "kind": "static",
+          "text": "Each land is a Swamp in addition to its other land types.",
+          "layer": 4,
+          "affects": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ]
+          },
+          "apply": {
+            "addSubtypes": [
+              "Swamp"
+            ]
+          }
+        }
+      ]
+    },
+    "Bog Drain": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{0}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target Swamp.",
+        "targets": [
+          {
+            "what": "permanent",
+            "subtypes": [
+              "Swamp"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
     }
   },
   "scenarios": [
@@ -263,6 +343,152 @@
             "counter": "blight",
             "count": 0
           }
+        }
+      ]
+    },
+    {
+      "name": "A blight counter on Maya's Rallying Ground: its abilities gone, her Bear is a 2/2 again (CR 613.1f)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ultima, Origin of Oblivion"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Rallying Ground",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "stats": {
+                "card": "Bear",
+                "power": 3,
+                "toughness": 3
+              }
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Ultima, Origin of Oblivion"
+          ]
+        },
+        {
+          "choose": [
+            "Rallying Ground"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 1,
+          "counters": {
+            "card": "Rallying Ground",
+            "counter": "blight",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "A blight counter on Maya's Swamp Spreader: it loses its own land types, but its abilities go only in layer 6 -- its layer-4 effect has made her Forest a Swamp already (CR 613.1d, 613.1f)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ultima, Origin of Oblivion"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bog Drain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp Spreader",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Bog Drain"
+              },
+              "count": 2,
+              "targets": [
+                [
+                  "Swamp Spreader"
+                ],
+                [
+                  "Forest"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Ultima, Origin of Oblivion"
+          ]
+        },
+        {
+          "choose": [
+            "Swamp Spreader"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Bog Drain"
+          },
+          "count": 1,
+          "targets": [
+            [
+              "Forest"
+            ]
+          ]
         }
       ]
     }

@@ -36,15 +36,27 @@ This session (Claude, a cloud container):
 - **Merged #715** (main cb73f7d0) and on staging:
   - Load Live reads two partners as a deck's commanders, and a workbook's decks named by hand (`--decks`);
   - the board's notes 11 to 13.
-- **An AI on Claude and the deck advisor are on at staging** (this branch). Rob approved their privacy wording on
+- **Merged #716** (main 4a024c1b): an AI on Claude and the deck advisor on at staging; the lanes and the UI brief; Train D's
+  first 16 cards.
+- **An AI on Claude and the deck advisor are on at staging.** Rob approved their privacy wording on
   2026-10-12 ("Approved on privacy wording"). Production's door stays shut.
-- **Train D: 16 of the six decks' 18 cards now play** (this branch), three workers of six. Oko, Thief of Crowns and
-  Retro-Mutation do not yet. **A real engine gap stands in their way:**
-  - "Loses all abilities" turns off keywords, triggered, activated and mana abilities, but not a permanent's own static
-    abilities or replacement effects (CR 613.1f).
-  - So eight cards already defined are wrong on about a quarter of their targets: Song of the Dryads on a lord leaves
-    its anthem on.
-  - It is this lane's next engine task. Then the library's other ~175 cards.
+- **Train D: all 18 of the six decks' cards now play.** 16 came in #716. Oko, Thief of Crowns and Retro-Mutation come
+  in this branch, with the engine gap that stood in their way:
+  - "Loses all abilities" now switches off a permanent's static abilities and replacement effects, not only its
+    keywords and its triggered, activated and mana abilities (CR 613.1f).
+  - An effect begun in an earlier layer keeps applying (613.6). Every static and replacement reader takes an object's
+    abilities as they are after layer 6.
+  - Eight cards already defined were wrong on about a quarter of their targets, and 16 new scenarios show each one
+    right: Song of the Dryads on a lord no longer leaves its anthem on.
+  - New: `exchangeControl` (CR 701.12), and a layer-4 change of creature types only (205.1a), so an Elked Food stays a
+    Food. `tests/engine-ability-loss.mjs`, 109 checks; `breaks-ability-loss.py`, 76 of 76 caught.
+  - **Left open:**
+    - Song of the Dryads' ability loss belongs to its layer-4 effect (CR 305.7), and is applied in layer 6.
+    - A Saga under it still reads its printed chapters.
+    - An ability lost as a permanent enters (614.12) is not built.
+
+    No card in the library depends on any of these.
+  - Next, the library's other ~175 cards.
 - **G-F, production:** Rob's go, 2026-10-12. Waiting on one check of his: `crankmagic`'s Workers Builds branch is
   `release/pages`. Production's D1 has both migrations, as staging's does.
 - **Rob's choice, 2026-10-12:** a second system takes the UI lane (the board, its CSS, Settings' Play card) while this

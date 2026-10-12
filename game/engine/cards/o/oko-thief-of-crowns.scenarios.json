@@ -1,0 +1,825 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Oko, Thief of Crowns",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Elf Lord": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "abilities": [
+        {
+          "id": "a0",
+          "kind": "static",
+          "text": "Other creatures you control get +1/+1.",
+          "layer": 7,
+          "sublayer": "c",
+          "affects": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "another": true
+          },
+          "apply": {
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{3}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "Food Fight": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{0}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target Food.",
+        "targets": [
+          {
+            "what": "permanent",
+            "subtypes": [
+              "Food"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Shatter": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{0}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target artifact.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Artifact"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Elk Hunt": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{0}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target Elk.",
+        "targets": [
+          {
+            "what": "permanent",
+            "subtypes": [
+              "Elk"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Elf Bane": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{0}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target Elf.",
+        "targets": [
+          {
+            "what": "permanent",
+            "subtypes": [
+              "Elf"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Grow": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{0}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Target creature gets +2/+2 until end of turn.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "pump",
+            "targets": {
+              "target": 0
+            },
+            "power": 2,
+            "toughness": 2
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "+2: a Food token, and Oko at six loyalty",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Oko, Thief of Crowns"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Oko, Thief of Crowns"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Oko, Thief of Crowns",
+                "counter": "loyalty",
+                "count": 4
+              }
+            }
+          ]
+        },
+        {
+          "activate": "Oko, Thief of Crowns",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Island",
+            "Wastes",
+            "Oko, Thief of Crowns",
+            "Food"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Oko, Thief of Crowns",
+            "counter": "loyalty",
+            "count": 6
+          }
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "+1 on Maya's Elf Lord: a 3/3 green Elk with no abilities -- her Bear is a 2/2 again, and the lord is an Elk, no Elf (CR 613.1f, 205.1a)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Oko, Thief of Crowns"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Elk Hunt",
+            "Elf Bane"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Elf Lord",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "stats": {
+                "card": "Bear",
+                "power": 3,
+                "toughness": 3
+              }
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Elf Bane"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Elf Lord"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Oko, Thief of Crowns",
+          "ability": "a1",
+          "targets": [
+            {
+              "card": "Elf Lord"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Elf Lord",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Elk Hunt"
+          },
+          "count": 1,
+          "targets": [
+            [
+              "Elf Lord"
+            ]
+          ]
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Elf Bane"
+          },
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Oko, Thief of Crowns",
+            "counter": "loyalty",
+            "count": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "+1 on his own Food: a 3/3 Elk artifact creature, still a Food, and without its \"{2}, {T}, Sacrifice\" (Oko's ruling; CR 205.1a)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Oko, Thief of Crowns",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Food Fight",
+            "Shatter",
+            "Elk Hunt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Oko, Thief of Crowns",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Food"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Oko, Thief of Crowns",
+          "ability": "a1",
+          "targets": [
+            {
+              "card": "Food"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Food",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Food"
+          },
+          "count": 0
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Food Fight"
+          },
+          "count": 1,
+          "targets": [
+            [
+              "Food"
+            ]
+          ]
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Shatter"
+          },
+          "count": 1,
+          "targets": [
+            [
+              "Food"
+            ]
+          ]
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Elk Hunt"
+          },
+          "count": 1,
+          "targets": [
+            [
+              "Food"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "-5: Rob's Food for Maya's Bear -- each controls the other's, and for good (CR 701.12b); her 4/4 Ogre is never a target",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Oko, Thief of Crowns"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Oko, Thief of Crowns",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Oko, Thief of Crowns"
+              },
+              "count": 5,
+              "targets": [
+                [],
+                [
+                  "Food"
+                ],
+                [
+                  "Bear"
+                ],
+                [
+                  "Ogre"
+                ],
+                [
+                  "Food",
+                  "Bear"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Oko, Thief of Crowns",
+          "ability": "a2",
+          "targets": [
+            {
+              "card": "Food"
+            },
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Oko, Thief of Crowns",
+                "Bear"
+              ]
+            },
+            {
+              "seat": 1,
+              "controls": [
+                "Food",
+                "Ogre"
+              ]
+            },
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Oko, Thief of Crowns",
+                "counter": "loyalty",
+                "count": 1
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Oko, Thief of Crowns",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Food",
+            "Ogre"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "-5, and Maya's Grow makes her Bear a 4/4 in response: no longer a legal target, so no part of the exchange happens (CR 701.12a, 608.2b)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Oko, Thief of Crowns"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Grow"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Oko, Thief of Crowns",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Oko, Thief of Crowns",
+          "ability": "a2",
+          "targets": [
+            {
+              "card": "Food"
+            },
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "cast": "Grow",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "stats": {
+                "card": "Bear",
+                "power": 4,
+                "toughness": 4
+              }
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Oko, Thief of Crowns",
+            "Food"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "+1 on his own Ultima: an Elk with no abilities, so a land tapped for {C} makes no additional {C} (CR 613.1f, 605.1b)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Oko, Thief of Crowns",
+            "Ultima, Origin of Oblivion",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "pool": {
+                "C": 2
+              }
+            }
+          ]
+        },
+        {
+          "activate": "Oko, Thief of Crowns",
+          "ability": "a1",
+          "targets": [
+            {
+              "card": "Ultima, Origin of Oblivion"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 3
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Ultima, Origin of Oblivion",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Ultima, Origin of Oblivion",
+            "lacks": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

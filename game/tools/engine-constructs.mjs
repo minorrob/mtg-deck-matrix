@@ -36,6 +36,9 @@ export const FORGE_API = {
   ReduceCost: "costReduction", AlternativeCost: "alternativeCost",
   GainLife: "gainLife", LoseLife: "loseLife", DealDamage: "dealDamage", EachDamage: "damageEach",
   DamageAll: "damageAll", ExchangeLifeVariant: "exchangeLife", Fight: "fight",
+  /* ExchangeControl ("exchange control of target artifact or creature you control and target creature an opponent controls",
+     Oko, Thief of Crowns; "of two target creatures", Switcheroo; Train D): CR 701.12b. */
+  ExchangeControl: "exchangeControl",
   PutCounter: "putCounter", PutCounterAll: "putCounterAll", RemoveCounter: "removeCounter",
   Proliferate: "proliferate", MultiplyCounter: "multiplyCounters", MoveCounter: "moveCounters",
   ReplaceCounter: "replaceCounters", Amass: "amass",

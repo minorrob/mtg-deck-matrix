@@ -18,6 +18,48 @@
       "keywords": [
         "Flying"
       ]
+    },
+    "Fog Sentry": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 3,
+      "abilities": [
+        {
+          "id": "a0",
+          "kind": "static",
+          "text": "Creatures can't attack you.",
+          "rule": "cant-attack",
+          "affects": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "defender": "you"
+        }
+      ]
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
     }
   },
   "scenarios": [
@@ -499,6 +541,99 @@
           "cards": [
             "Vraska, Betrayal's Sting"
           ]
+        }
+      ]
+    },
+    {
+      "name": "-2 on Maya's Fog Sentry: a Treasure with no abilities, so \"creatures can't attack you\" is gone and Rob's Bear attacks her (CR 613.1f, 508.1c)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vraska, Betrayal's Sting"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Fog Sentry"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Vraska, Betrayal's Sting"
+        },
+        {
+          "choose": [
+            "{B}{B}{C}{C}{C}{C}"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Vraska, Betrayal's Sting",
+          "ability": "a2",
+          "targets": [
+            {
+              "card": "Fog Sentry"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Bear"
+          ],
+          "at": "Maya"
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
         }
       ]
     }
