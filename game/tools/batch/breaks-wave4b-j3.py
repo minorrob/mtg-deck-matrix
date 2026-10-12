@@ -115,14 +115,13 @@ BREAKS = [
     # "You gain hexproof until end of turn" (Dawn's Truce; CR 702.11c).
     ('player hexproof: its players', PERMANENTS, '"damage-doubled", "look-at-top", "player-hexproof"].includes(params.rule)', '"damage-doubled", "look-at-top"].includes(params.rule)'),
     ('player hexproof: read', FILTER, '''  || (state.effects ?? []).some((e) => e.rule === "player-hexproof" && (e.players ?? []).includes(player)); };''', '''; };'''),
-    # A basic land type given (CR 305.7): its mana ability, a land's, the right mana, read.
-    ('land type: its ability', LAYERS, '''    if (BASIC_LAND_MANA[subtype] && current.types.includes("Land"))
-      current.granted.push(''', '''    if (false)
-      current.granted.push('''),
-    ('land type: a land\'s', LAYERS, '    if (BASIC_LAND_MANA[subtype] && current.types.includes("Land"))\n', '    if (BASIC_LAND_MANA[subtype])\n'),
-    ('land type: its mana', LAYERS, 'const BASIC_LAND_MANA = Object.freeze({Plains: "W", Island: "U", Swamp: "B", Mountain: "R", Forest: "G"});',
-     'const BASIC_LAND_MANA = Object.freeze({Plains: "W", Island: "U", Swamp: "B", Mountain: "R", Forest: "C"});'),
-    ('land type: abilities read', LAYERS, '''    || (apply.addSubtypes ?? []).some((subtype) => BASIC_LAND_MANA[subtype])));''', '''    ));'''),
+    # A basic land type given (CR 305.7): its mana ability, a land's, the right mana, read. Lanes j1, j2 and j3 each built it;
+    # j2's intrinsicMana, at the end of layer 4, is the one kept (wave 4b integration), and these break it.
+    ('land type: its ability', LAYERS,
+     '    current.granted.push({id: `intrinsic:${type}`, kind: "mana", tapSelf: true, produces: {[color]: 1}, text: `{T}: Add {${color}}.`});\n', ''),
+    ('land type: a land\'s', LAYERS, '  if (!current.types.includes("Land")) return;\n', ''),
+    ('land type: its mana', LAYERS, 'produces: {[color]: 1}', 'produces: {C: 1}'),
+    ('land type: abilities read', LAYERS, '''    || [...(apply.addSubtypes ?? []), ...(apply.setSubtypes ?? [])].some((type) => BASIC_LAND_MANA[type])));''', '''    ));'''),
     # Base power (CR 208.4b).
     ('base power: kept', LAYERS, '      if (sublayer === "c") { current.basePower = current.power; current.baseToughness = current.toughness; }\n', ''),
     ('base power: after setting', LAYERS, '      if (sublayer === "c") { current.basePower', '      if (sublayer === "b") { current.basePower'),

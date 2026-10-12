@@ -42,8 +42,8 @@ KEY = '  const key = `${entry.cardId}:${entry.abilityId}`, before = state.resolu
 INCREMENT = '  state.resolutions.counts[key] = before + 1;\n'
 HANDED = '    ...(resolvedBefore !== undefined ? {resolvedBefore} : {})}, rng);'
 CARRIED = '      ...(context.resolvedBefore !== undefined ? {resolvedBefore: context.resolvedBefore} : {})},'
-EFFECT_CONDITION = '      resolvedBefore: resolving.context.resolvedBefore})) {'
-BRANCH_IF = 'lastKnown: resolving.context.lastKnown, resolvedBefore: resolving.context.resolvedBefore});'
+EFFECT_CONDITION = '      resolvedBefore: resolving.context.resolvedBefore, gift: resolving.context.gift})) {'
+BRANCH_IF = 'lastKnown: resolving.context.lastKnown, resolvedBefore: resolving.context.resolvedBefore,\n        gift: resolving.context.gift});'
 SAME_MODE_SCHEMA = ('    if (effect.sameMode !== undefined && !(effect.sameMode === true && (effect.chooseUpTo !== undefined'
                     ' || (Number.isInteger(effect.choose) && effect.choose >= 2))))')
 CHOOSE_ZERO_SCHEMA = '    if (effect.choose === 0 && effect.chooseUpTo === undefined)'
@@ -91,8 +91,8 @@ BREAKS = [
     ('first resolution: each counted', STACK, INCREMENT, ''),
     ('first resolution: handed to the resolution', STACK, HANDED, '    }, rng);'),
     ('first resolution: kept by the resolution', RESOLUTION, CARRIED, '},'),
-    ("first resolution: an effect's condition", RESOLUTION, EFFECT_CONDITION, '      resolvedBefore: undefined})) {'),
-    ("first resolution: a branch's if", RESOLUTION, BRANCH_IF, 'lastKnown: resolving.context.lastKnown});'),
+    ("first resolution: an effect's condition", RESOLUTION, EFFECT_CONDITION, '      resolvedBefore: undefined, gift: resolving.context.gift})) {'),
+    ("first resolution: a branch's if", RESOLUTION, BRANCH_IF, 'lastKnown: resolving.context.lastKnown,\n        gift: resolving.context.gift});'),
     ("first resolution: never an ability's own condition", SCHEMA, OWN_CONDITION, '  if ((false)'),
     ('first resolution: a condition not an object refused, not thrown', SCHEMA, OWN_CONDITION, OWN_CONDITION.replace(' && typeof ability.condition === "object"', '')),
     ("first resolution: never a spell's", SCHEMA, NOT_SPELL, '    || (false))'),
