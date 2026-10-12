@@ -3299,6 +3299,10 @@ button.cm-vitals{cursor:pointer}
 .cm-board-group h3{display:inline-block;margin:0 0 4px;padding:0 5px;border-radius:5px;background:rgb(0 0 0 / .62);font-size:clamp(10px,calc(var(--bc) * .08),11px);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mat-ink);white-space:nowrap}
 .cm-board-cards{display:flex;align-items:flex-end;gap:6px;min-width:0}
 .cm-board-cards>*+*{margin-left:var(--lap,0px)}
+/* A tapped card keeps the room its turn needs and overlaps the one before it as any card does (overlap, in the board). */
+.cm-board-cards>.cm-bcard.is-tapped:not(:first-child){margin-left:calc(var(--bc) * .22 + var(--lap,0px))}
+/* Fuller than a readable strip of each card allows: the row scrolls sideways, its bar seen, room above for a card lifted. */
+.cm-board-cards.is-scrolling{overflow-x:auto;overflow-y:hidden;padding-top:14px;scrollbar-width:thin;scrollbar-color:var(--mat-ink) transparent}
 .cm-board-empty{align-self:flex-start;margin:0;padding:0 6px;border-radius:5px;background:rgb(0 0 0 / .62);color:var(--mat-ink);font-size:clamp(10px,calc(var(--bc) * .12),13px)}
 .cm-board-pile{margin:0;display:grid;grid-template-rows:minmax(0,1fr) auto;justify-items:center;align-items:center;padding:var(--pad) var(--pad) 2px;border-radius:8px}
 .cm-board-pile[data-zone="command"]{grid-column:2;grid-row:1}
@@ -3439,6 +3443,12 @@ button.cm-vitals{cursor:pointer}
 .cm-board-amount{display:grid;gap:4px;font-size:12px}
 .cm-board-amount input{width:80px}
 .cm-board-stack ol{margin:0;padding-left:18px;font-size:13px}
+/* The spell on top of the stack, seen as its card while it resolves; each named entry shows its card beside the box. */
+.cm-stack-top{display:flex;justify-content:center;margin:0 0 8px}
+.cm-stack-card{--bc:clamp(72px,calc(96px * var(--card-scale,1)),120px)}
+.cm-stack-entry{cursor:zoom-in;border-radius:4px}
+.cm-stack-entry:hover,.cm-stack-entry:focus-visible{text-decoration:underline;text-underline-offset:3px}
+.cm-board-peek.cm-stack-peek{transform:none}
 /* THE HAND on its slate tray: a row along the foot in Table view; docked over the mat's bottom edge in Focus and
    Full screen, the cards peeking and lifting on hover (Space fans the whole hand). */
 .cm-board-hand{position:relative;z-index:5;display:flex;align-items:flex-start;gap:12px;padding:30px 16px 10px;border-radius:16px 16px 0 0;background:var(--tray);backdrop-filter:blur(3px);border:1px solid rgba(255,255,255,.12);border-bottom:0;color:var(--mat-ink);min-width:0;overflow:visible}
