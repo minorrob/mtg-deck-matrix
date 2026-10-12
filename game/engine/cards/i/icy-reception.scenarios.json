@@ -1,0 +1,654 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Icy Reception",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Crown": {
+      "types": [
+        "Artifact"
+      ],
+      "supertypes": [
+        "Legendary"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Tidings": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Draw a card.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's creature spell, countered: she cannot pay {3}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Icy Reception"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Bear",
+          "seat": 1
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "cast": "Icy Reception",
+          "seat": 0,
+          "modes": [
+            0
+          ],
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Icy Reception"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "She pays {3}: the Bear resolves",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Icy Reception"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Bear",
+          "seat": 1
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "cast": "Icy Reception",
+          "seat": 0,
+          "modes": [
+            0
+          ],
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Pay {3}"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Or she does not pay, though she could: countered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Icy Reception"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Bear",
+          "seat": 1
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "cast": "Icy Reception",
+          "seat": 0,
+          "modes": [
+            0
+          ],
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "A legendary artifact spell is a target too: Maya's Crown, countered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Icy Reception"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Crown"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Crown",
+          "seat": 1
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "cast": "Icy Reception",
+          "seat": 0,
+          "modes": [
+            0
+          ],
+          "targets": [
+            {
+              "card": "Crown"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Crown"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A nonlegendary noncreature spell is no target: against her Rock, only the -5/-0 mode is offered, at her Ogre",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Icy Reception"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Rock",
+          "seat": 1
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Icy Reception",
+                "seat": 0
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Ogre"
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "-5/-0: Maya's attacking Ogre deals no damage, and it survives",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Icy Reception"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Ogre"
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "cast": "Icy Reception",
+          "seat": 0,
+          "modes": [
+            1
+          ],
+          "targets": [
+            {
+              "card": "Ogre"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "stats": {
+                "card": "Ogre",
+                "power": -2,
+                "toughness": 3
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "COMBAT_END"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Ogre"
+          ]
+        }
+      ]
+    }
+  ]
+}

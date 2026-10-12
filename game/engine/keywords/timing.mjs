@@ -46,8 +46,10 @@ export const KEYWORD_FAMILIES = Object.freeze({
       at the timing it could be cast (rules/actions.mjs); then one removed each upkeep, and the free cast (rules/trigger.mjs). */
   zones: Object.freeze(["Flashback", "Escape", "Rebound", "Unearth", "Suspend"]),
   /** What happens as a spell is cast: Storm (CR 702.40a), "when you cast this spell, copy it for each spell cast before
-      it this turn" -- a triggered ability of the spell (rules/actions.mjs). */
-  cast: Object.freeze(["Storm"]),
+      it this turn" -- a triggered ability of the spell (rules/actions.mjs). Replicate (CR 702.56a), its cost paid any number
+      of times as it is cast, and a copy for each time -- an additional cost and a triggered ability of the spell (cards/
+      index.mjs, rules/actions.mjs; Lose Focus, Train E). */
+  cast: Object.freeze(["Storm", "Replicate"]),
   /** How a spell may be paid for: Convoke (CR 702.51a), each creature its caster taps paying {1} or one mana of its color --
       offered beside the cast the pool pays, the creatures picked once it is taken (rules/actions.mjs, rules/mana.mjs).
       Evoke (CR 702.74a), its evoke cost rather than its mana cost -- an alternative cost (rules/actions.mjs) -- and, if it

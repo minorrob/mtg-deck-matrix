@@ -1,0 +1,248 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Intrepid Tenderfoot",
+  "fixtures": {
+    "Tidings": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Draw a card.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{3}: a +1/+1 counter, a 3/3; and again, a 4/4",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Intrepid Tenderfoot",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Intrepid Tenderfoot"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Intrepid Tenderfoot"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Intrepid Tenderfoot",
+            "counter": "+1/+1",
+            "count": 2
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Intrepid Tenderfoot",
+            "power": 4,
+            "toughness": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "Only as a sorcery: not in Maya's turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Intrepid Tenderfoot",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Intrepid Tenderfoot",
+                "seat": 0
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "Nor with a spell on the stack",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Intrepid Tenderfoot",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tidings"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Tidings"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Intrepid Tenderfoot"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "Summoning sick, it may still activate: no {T} in the cost",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Intrepid Tenderfoot"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Intrepid Tenderfoot"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Intrepid Tenderfoot",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        }
+      ]
+    }
+  ]
+}

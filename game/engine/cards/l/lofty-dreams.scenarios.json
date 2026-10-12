@@ -1,0 +1,528 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Lofty Dreams",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Elf Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Sprite": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Faerie"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "keywords": [
+        "Flying"
+      ]
+    },
+    "Doom": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "On Rob's Bear: he draws, and the Bear is a 4/4 flier",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lofty Dreams"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Lofty Dreams",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 4,
+            "toughness": 4
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bear",
+            "has": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Convoked: two Islands pay {U}{U}, and the Bear, two Elves and a blue Sprite the rest",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Bear",
+            "Elf Pal",
+            "Elf Pal",
+            "Sprite"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lofty Dreams"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Lofty Dreams",
+          "convoke": true,
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Bear",
+            "Elf Pal (1)",
+            "Elf Pal (2)"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Bear"
+        },
+        {
+          "seat": 0,
+          "tapped": "Sprite",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 4,
+            "toughness": 4
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "On Maya's Ogre: a 5/5 flier, it attacks Rob for 5",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lofty Dreams"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Lofty Dreams",
+          "targets": [
+            {
+              "card": "Ogre"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Ogre"
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "COMBAT_END"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 35
+        },
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Ogre",
+            "has": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "No creature: it cannot be cast",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lofty Dreams"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Lofty Dreams"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "Its creature dies: the Aura goes to the graveyard (CR 704.5m), and the draw stays drawn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lofty Dreams"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Doom"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Lofty Dreams",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Swamp",
+          "seat": 1
+        },
+        {
+          "cast": "Doom",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Lofty Dreams"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ]
+    }
+  ]
+}

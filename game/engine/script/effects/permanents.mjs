@@ -200,7 +200,7 @@ export function enterAttacking(state, ids, whom, context, controller) {
      The active player's, who is the attacking player (CR 506.2, 506.3b), once attackers are declared (Meandering
      Towershell, back "at the beginning of the declare attackers step"). */
   if (!state.combat && state.phase === "COMBAT_DECLARE_ATTACKERS" && controller === state.activePlayer)
-    state.combat = {attackingPlayerId: controller, defenders: [], attacks: [], firstStrike: false};
+    state.combat = {attackingPlayerId: controller, defenders: [], attacks: []};
   if (!state.combat || state.combat.attackingPlayerId !== controller) return;
   if (whom === "that player") {
     const player = context.about?.player, planeswalker = context.about?.planeswalker;

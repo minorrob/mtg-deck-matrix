@@ -54,8 +54,11 @@ t.ok(scenarios("r/return-to-dust") >= 3, "conditional and distinct targets also 
   t.ok(refused(variant((spec) => { spec.count = {min: 0, max: 2}; })), "up to two for each is refused");
   t.ok(refused(variant((spec) => { spec.count = {min: 1, max: 1}; })), "exactly one for each is not the form built: refused");
   t.ok(refused(variant((spec) => { spec.anyOf.push({what: "player"}); })), "a player is not a permanent that player controls: refused");
-  t.ok(variant((spec, script) => { script.abilities[2].targets[0] = {what: "permanent", types: ["Creature"], count: {min: 0, max: 1}, forEach: "opponent"}; })
-    .errors.some((e) => /no key "forEach"/.test(e.message)), "on an ability's own target it is not built, and refused");
+  /* On a triggered ability's own target it is built since Train E (Hapatra, the Desert Fang); on an activated ability's, not. */
+  t.ok(refused(variant((spec, script) => { script.abilities[2].targets[0] = {what: "permanent", types: ["Creature"], count: {min: 0, max: 1}, forEach: "opponent"}; })),
+    "on an activated ability's own target (Equip's) it is not built, and refused");
+  t.eq(variant((spec, script) => { script.abilities[0].targets = [{what: "permanent", types: ["Creature"], count: {min: 0, max: 1}, forEach: "opponent"}]; }).errors, [],
+    "on a triggered ability's own target it validates (Hapatra, the Desert Fang)");
   t.ok(scenarios("l/lichs-relic") >= 9, "and through real play: two to four players, up to one, a target stolen or gone in response");
 }
 t.done();

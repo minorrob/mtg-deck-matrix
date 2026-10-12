@@ -1,0 +1,97 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Icy Reception",
+    "oracleId": "612c7807-be70-4e2f-afd2-3d3c03eddbbe",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Counter target creature or legendary spell unless its controller pays {3}.\n• Target creature gets -5/-0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Counter target creature or legendary spell unless its controller pays {3}.\n• Target creature gets -5/-0 until end of turn.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Counter target creature or legendary spell unless its controller pays {3}.",
+              "targets": [
+                {
+                  "anyOf": [
+                    {
+                      "what": "spell",
+                      "types": [
+                        "Creature"
+                      ]
+                    },
+                    {
+                      "what": "spell",
+                      "supertypes": [
+                        "Legendary"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "unlessPays",
+                  "who": {
+                    "controllerOf": {
+                      "target": 0
+                    }
+                  },
+                  "amount": 3,
+                  "effects": [
+                    {
+                      "effect": "counterSpell",
+                      "spells": {
+                        "target": 0
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "text": "Target creature gets -5/-0 until end of turn.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "pump",
+                  "targets": {
+                    "target": 0
+                  },
+                  "power": -5,
+                  "toughness": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

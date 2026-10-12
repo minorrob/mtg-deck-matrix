@@ -1,0 +1,144 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Jhoira, Weatherlight Corsair",
+    "oracleId": "cf9b0bb5-d545-4efd-9255-39b10c2be0ee",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Pirate"
+    ],
+    "manaCost": "{4}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Whenever Jhoira enters or attacks, target opponent reveals cards from the top of their library until they reveal a historic permanent card. You put that card onto the battlefield under your control and lose life equal to that permanent's mana value. That player puts the rest of the revealed cards on the bottom of their library in a random order. (Artifacts, legendaries, and Sagas are historic.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever Jhoira enters or attacks, target opponent reveals cards from the top of their library until they reveal a historic permanent card. You put that card onto the battlefield under your control and lose life equal to that permanent's mana value. That player puts the rest of the revealed cards on the bottom of their library in a random order. (Artifacts, legendaries, and Sagas are historic.)",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "digUntil",
+          "who": {
+            "target": 0
+          },
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Artifact"
+                ]
+              },
+              {
+                "supertypes": [
+                  "Legendary"
+                ],
+                "nonTypes": [
+                  "Instant",
+                  "Sorcery"
+                ]
+              },
+              {
+                "subtypes": [
+                  "Saga"
+                ]
+              }
+            ]
+          },
+          "found": {
+            "to": "battlefield",
+            "controller": "you"
+          },
+          "rest": "bottom",
+          "remember": true
+        },
+        {
+          "effect": "loseLife",
+          "amount": {
+            "manaValueOf": "remembered"
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Jhoira enters or attacks, target opponent reveals cards from the top of their library until they reveal a historic permanent card. You put that card onto the battlefield under your control and lose life equal to that permanent's mana value. That player puts the rest of the revealed cards on the bottom of their library in a random order. (Artifacts, legendaries, and Sagas are historic.)",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "digUntil",
+          "who": {
+            "target": 0
+          },
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Artifact"
+                ]
+              },
+              {
+                "supertypes": [
+                  "Legendary"
+                ],
+                "nonTypes": [
+                  "Instant",
+                  "Sorcery"
+                ]
+              },
+              {
+                "subtypes": [
+                  "Saga"
+                ]
+              }
+            ]
+          },
+          "found": {
+            "to": "battlefield",
+            "controller": "you"
+          },
+          "rest": "bottom",
+          "remember": true
+        },
+        {
+          "effect": "loseLife",
+          "amount": {
+            "manaValueOf": "remembered"
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ]
+    }
+  ]
+}

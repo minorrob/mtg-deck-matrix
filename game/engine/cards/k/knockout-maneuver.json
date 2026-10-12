@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Knockout Maneuver",
+    "oracleId": "7e4931f4-f518-4200-aad4-4ac8acf202e5",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Put a +1/+1 counter on target creature you control, then it deals damage equal to its power to target creature an opponent controls.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Put a +1/+1 counter on target creature you control, then it deals damage equal to its power to target creature an opponent controls.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        },
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "+1/+1",
+          "count": 1,
+          "remember": true
+        },
+        {
+          "effect": "dealDamage",
+          "from": "remembered",
+          "targets": {
+            "target": 1
+          },
+          "amount": {
+            "powerOf": "remembered"
+          },
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ]
+    }
+  ]
+}

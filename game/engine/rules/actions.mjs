@@ -546,6 +546,12 @@ function additionalVariants(costs) {
       variants = variants.flatMap((v) => Array.from({length: MULTIKICK_MOST + 1}, (_, k) => ({...v, mana: v.mana + (atom.cost ?? "").repeat(k), kicked: k})));
       continue;
     }
+    /* REPLICATE (CR 702.56a; Lose Focus, Train E): "you may pay [cost] any number of times" -- as multikicker's, each number of
+       times its own cast, that many times its mana added (`replicated`, the copies its trigger makes). */
+    if (atom?.atom === "replicate") {
+      variants = variants.flatMap((v) => Array.from({length: MULTIKICK_MOST + 1}, (_, k) => ({...v, mana: v.mana + (atom.cost ?? "").repeat(k), replicated: k})));
+      continue;
+    }
     /* TIERED (CR 702.183a): one mode, and its cost -- each mode its own variant, that mode alone (withModes), its cost added. */
     if (atom?.atom === "tiered") {
       variants = variants.flatMap((v) => (atom.costs ?? []).map((cost, tier) => ({...v, mana: v.mana + cost, tier})));
@@ -1425,6 +1431,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
       const base = {kind: "cast", objectId: id, label: way?.disguise ? object.faceDownCard.card : object.card, payment: convoke || payWays ? null : payment, from, tax, ...(X !== null ? {x: X} : {}), ...(autoTap && !convoke ? {autoTap: true} : {}),
         ...(payWays && !convoke ? {payWays: true} : {}),
         ...(convoke ? {convoke: true} : {}), ...(variant.mana ? {extraMana: variant.mana} : {}), ...(variant.kicked ? {kicked: variant.kicked} : {}),
+        ...(variant.replicated ? {replicated: variant.replicated} : {}),
         ...(tapsAny ? {tapAny: true} : {}), ...(beholds ? {behold: beholds.count ?? 1} : {}),
         /* Escalated (CR 702.120a): how many modes beyond the first, and how many creatures that taps. */
         ...(variant.escalate ? {escalate: variant.escalate} : {}), ...(variant.escalateTap ? {escalateTap: variant.escalateTap.count} : {}),
@@ -1819,6 +1826,8 @@ const sameAction = (a, b) => a.kind === b.kind
      ("or pay {3}") another than paying its other choice. */
   && (a.alternative ?? null) === (b.alternative ?? null)
   && (a.extraMana ?? null) === (b.extraMana ?? null)
+  /* And replicated that many times (CR 702.56a): another cost, and that many copies. */
+  && (a.replicated ?? 0) === (b.replicated ?? 0)
   /* And escalated for that many modes beyond the first, tapping that many creatures (CR 702.120a): another cost. Which
      creatures is picked after the offer is taken, so they are not part of it (and are held to the cost as it is paid). */
   && (a.escalate ?? 0) === (b.escalate ?? 0) && (a.escalateTap ?? 0) === (b.escalateTap ?? 0)
@@ -2369,6 +2378,15 @@ function performOffered(state, player, action, during) {
         source: {cardId: entry.objectId, name: object.card}, cause: null, optional: false,
         about: {card: entry.objectId, player, stackId: entry.stackId, castBefore: Math.max(0, before)},
         script: {targets: [], effects: [{effect: "copySpell", spells: "that card", count: {castBefore: true}, newTargets: true}]}});
+    }
+    /* REPLICATE (CR 702.56a): "when you cast this spell, if a replicate cost was paid for it, copy it for each time its
+       replicate cost was paid. If the spell has any targets, you may choose new targets for any of the copies" -- a triggered
+       ability of the spell, waiting with the rest, as storm's; none when it was not paid (CR 603.4). */
+    if (action.replicated > 0) {
+      (state.pendingTriggers ??= []).push({abilityId: "replicate", text: `Replicate: copy ${object.card} for each time its replicate cost was paid.`, controller: player,
+        source: {cardId: entry.objectId, name: object.card}, cause: null, optional: false,
+        about: {card: entry.objectId, player, stackId: entry.stackId},
+        script: {targets: [], effects: [{effect: "copySpell", spells: "that card", count: action.replicated, newTargets: true}]}});
     }
     events.push(event("GameEventSpellAbilityCast", state, {
       card,

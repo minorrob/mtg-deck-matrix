@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 67 | 0 | 5 | 122 |
+| Keyword abilities (CR 702) | 194 | 68 | 0 | 5 | 121 |
 | Keyword actions (CR 701) | 70 | 22 | 5 | 1 | 42 |
 | Effects | 192 | 73 | 1 | 2 | 116 |
 | Triggers | 138 | 24 | 4 | 2 | 108 |
@@ -188,7 +188,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.167 | Craft | — | missing | 0 | 24 | 0 | 0 |
 | 702.54 | Bloodthirst | — | missing | 0 | 23 | 0 | 0 |
 | 702.160 | Prototype | — | missing | 0 | 21 | 0 | 0 |
-| 702.56 | Replicate | — | missing | 0 | 21 | 0 | 0 |
+| 702.56 | Replicate | Replicate | built | 0 | 21 | 0 | 0 |
 | 702.159 | Visit | — | missing | 0 | 21 | 0 | 0 |
 | 702.112 | Renown | — | missing | 0 | 20 | 0 | 0 |
 | 702.32 | Fading | — | missing | 0 | 18 | 0 | 0 |

@@ -1,0 +1,774 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Lose Focus",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Gift": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "You gain 2 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 2
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "No replicate: one Lose Focus, no copy, and Maya's Bear countered -- she cannot pay {2}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lose Focus"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Bear",
+          "seat": 1
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "cast": "Lose Focus",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Replicated once: a copy at the same Bear; Maya pays {2} for the copy, and has nothing left for the original",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lose Focus"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Bear",
+          "seat": 1
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Lose Focus",
+                "seat": 0
+              },
+              "count": 2
+            }
+          ]
+        },
+        {
+          "cast": "Lose Focus",
+          "seat": 0,
+          "extraMana": "{U}",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 3
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Keep Bear"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 3
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Pay {2}"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Lose Focus"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "The copy's new target: the original at Maya's Gift, its copy at her Bear -- both countered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lose Focus"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Gift"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Bear",
+          "seat": 1
+        },
+        {
+          "tap": "Plains",
+          "seat": 1
+        },
+        {
+          "cast": "Gift",
+          "seat": 1
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "cast": "Lose Focus",
+          "seat": 0,
+          "extraMana": "{U}",
+          "targets": [
+            {
+              "card": "Gift"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Keep Gift",
+                  "Bear",
+                  "Lose Focus"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Gift"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Replicated twice: two copies, three counters -- Maya pays twice and loses the Bear to the third",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Island",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lose Focus"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Bear",
+          "seat": 1
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "cast": "Lose Focus",
+          "seat": 0,
+          "extraMana": "{U}{U}",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Keep Bear"
+          ]
+        },
+        {
+          "choose": [
+            "Keep Bear"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 4
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Pay {2}"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Pay {2}"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Without the {U} for replicate, only the plain cast is offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lose Focus"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Bear",
+          "seat": 1
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Lose Focus",
+                "seat": 0
+              },
+              "count": 1
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "She pays {2}: the Bear resolves",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lose Focus"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Bear",
+          "seat": 1
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "cast": "Lose Focus",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Pay {2}"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        }
+      ]
+    }
+  ]
+}

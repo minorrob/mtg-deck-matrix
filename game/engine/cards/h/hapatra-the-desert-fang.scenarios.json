@@ -1,0 +1,680 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Hapatra, the Desert Fang",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Troll": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Troll"
+      ],
+      "manaCost": "{3}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Charm": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ]
+    },
+    "Big Insight": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{4}{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Draw a card.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Greatest mana value 5 in Rob's graveyard (a Giant, beside a Bear): five -1/-1 counters on Maya's Troll, which dies",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hapatra, the Desert Fang"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Giant"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Troll"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Hapatra, the Desert Fang"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Troll (Maya's)"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Troll"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Swamp",
+            "Swamp",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Hapatra, the Desert Fang"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Three players: one creature of each opponent's -- Maya's Bear and Trey's Ogre, two counters each (a Charm, mana value 2)",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hapatra, the Desert Fang"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Rock",
+            "Charm"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Troll"
+          ]
+        },
+        {
+          "seat": 2,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Hapatra, the Desert Fang"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "min": 0,
+                "options": [
+                  "Bear (Maya's)",
+                  "Troll (Maya's)",
+                  "Ogre (Trey's)"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Bear (Maya's)",
+            "Ogre (Trey's)"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "counters": {
+            "card": "Troll",
+            "counter": "-1/-1",
+            "count": 0
+          }
+        },
+        {
+          "seat": 2,
+          "counters": {
+            "card": "Ogre",
+            "counter": "-1/-1",
+            "count": 2
+          }
+        },
+        {
+          "seat": 2,
+          "stats": {
+            "card": "Ogre",
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Up to one: Rob targets only Trey's Ogre, and Maya's Bear is spared",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hapatra, the Desert Fang"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Charm"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 2,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Hapatra, the Desert Fang"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Ogre (Trey's)"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "counters": {
+            "card": "Bear",
+            "counter": "-1/-1",
+            "count": 0
+          }
+        },
+        {
+          "seat": 2,
+          "counters": {
+            "card": "Ogre",
+            "counter": "-1/-1",
+            "count": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rob's own creatures are no targets: with only his Bear beside it, nothing is asked",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hapatra, the Desert Fang"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Giant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Hapatra, the Desert Fang"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Bear",
+            "counter": "-1/-1",
+            "count": 0
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Hapatra, the Desert Fang",
+            "counter": "-1/-1",
+            "count": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "An empty graveyard: X is 0, and no counters",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hapatra, the Desert Fang"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Hapatra, the Desert Fang"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear (Maya's)"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "counters": {
+            "card": "Bear",
+            "counter": "-1/-1",
+            "count": 0
+          }
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "X is counted as it resolves (CR 608.2h): a five-mana instant cast in response is in the graveyard by then, five counters on the Troll",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hapatra, the Desert Fang",
+            "Big Insight"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Troll"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Hapatra, the Desert Fang"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Troll (Maya's)"
+          ]
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Big Insight"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Troll"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Big Insight"
+          ]
+        }
+      ]
+    }
+  ]
+}

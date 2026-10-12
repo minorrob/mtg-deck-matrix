@@ -37,6 +37,7 @@
 
 import {cardsIn, moveObject, eventCard, recordDraw, recordDiscard} from "../state/index.mjs";
 import {attackers, blockers, combatDamage, endCombat} from "./combat.mjs";
+import {combatNeedsFirstStrike} from "../keywords/combat.mjs";
 import {checkStateBasedActions, gameOver, finishCommanderReplacement, legendChoice, finishLegendRule, finishDestructionChoice} from "./sba.mjs";
 import {destructionChoice} from "../script/effects/zones.mjs";
 import {commanderChoice} from "./commander.mjs";
@@ -85,10 +86,11 @@ export const PHASE_NAMES = Object.freeze(STEPS.map((s) => s.phase));
 const CONDITIONS = {
   /* CR 506.5: no attackers, no declare blockers step and no combat damage step. */
   attackers: (state) => (state.combat?.attacks?.length ?? 0) > 0,
-  /* CR 510.4: the first-strike damage step exists only if a creature in combat has first or double
-     strike. `combat.firstStrike` is set when attackers are declared and stays false until phase 2
-     gives creatures keywords, so for now the step never happens — which is correct, not deferred. */
-  firstStrike: (state) => CONDITIONS.attackers(state) && (state.combat?.firstStrike ?? false) === true,
+  /* CR 510.4: the first-strike damage step exists only if an attacking or blocking creature has first or double strike
+     AS THE COMBAT DAMAGE STEP BEGINS -- read then, as the declare blockers step ends, not as the attackers and blockers
+     were declared: "target creature gets +2/+2 and gains first strike until end of turn" cast after blocks (Interjection,
+     Train E) makes the step happen, and its creature deals its damage in it. */
+  firstStrike: (state) => CONDITIONS.attackers(state) && combatNeedsFirstStrike(state),
 };
 
 /** The step the game is in, as the name the board already reads. */

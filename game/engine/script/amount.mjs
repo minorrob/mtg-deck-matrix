@@ -20,6 +20,8 @@
  *   {toughnessOf: ref}                   its toughness ("its controller gains life equal to its toughness", Condemn)
  *   {greatestPower: selector}            the greatest power among what the selector matches, 0 if nothing (CR 208.1)
  *   {totalPower: selector}               their powers added together
+ *   {greatestManaValue: selector}        the greatest mana value among what the selector matches, 0 if nothing (CR 202.3):
+ *                                        "among cards in your graveyard" (Hapatra, the Desert Fang)
  *   {differentPowers: selector}          how many different powers there are among them (Loot, the Nexus): a 2/1 and two
  *                                        3/3s are two
  *   {differentNames: selector}           how many different names there are among them ("the number of differently named
@@ -114,7 +116,9 @@ export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf"
   /* Train E: "for each unspent mana you have" (Omnath, Locus of the Void). */
   "manaInPool",
   /* Train E: "the number of differently named lands you control" (Fungal Colossus). */
-  "differentNames"]);
+  "differentNames",
+  /* Train E, wave 2: "the greatest mana value among cards in your graveyard" (Hapatra, the Desert Fang). */
+  "greatestManaValue"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named", "another"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -189,7 +193,7 @@ export function amountProblems(value) {
     for (const key of ["then", "else"]) if (key in value) problems.push(...amountProblems(value[key]));
   }
   /* What it counts is a selector, held to the selector grammar (script/filter.mjs), a choice of them included. */
-  for (const key of ["count", "greatestPower", "totalPower", "mostAmongOpponents", "differentPowers", "differentNames", "planeswalkerTypesAmong", "fewestAmongPlayers"]) {
+  for (const key of ["count", "greatestPower", "totalPower", "mostAmongOpponents", "differentPowers", "differentNames", "planeswalkerTypesAmong", "fewestAmongPlayers", "greatestManaValue"]) {
     if (!(key in value)) continue;
     const {anyOf, ...shared} = value[key] ?? {};
     try { for (const one of Array.isArray(anyOf) ? anyOf.map((a) => ({...shared, ...a})) : [value[key]]) compileSelector(one); }
@@ -349,6 +353,10 @@ export function amountOf(state, value, context = {}) {
   } else if ("greatestToughness" in value) {
     /* "Draw cards equal to the greatest toughness among creatures you control" (Last March of the Ents). */
     n = Math.max(0, ...matching(state, value.greatestToughness, who).map((id) => characteristicsOf(state, id).toughness ?? 0));
+  } else if ("greatestManaValue" in value) {
+    /* "Where X is the greatest mana value among cards in your graveyard" (Hapatra, the Desert Fang; Train E): each one's mana
+       value (CR 202.3; a double-faced card there its front face's, 712.8a), 0 when there is none. */
+    n = Math.max(0, ...matching(state, value.greatestManaValue, who).map((id) => manaValue(parseManaCost(valueCostOf(state.objects[id])))));
   } else if ("greatestPower" in value || "totalPower" in value) {
     const powers = matching(state, value.greatestPower ?? value.totalPower, who).map((id) => characteristicsOf(state, id).power ?? 0);
     n = "greatestPower" in value ? Math.max(0, ...powers) : powers.reduce((a, b) => a + b, 0);

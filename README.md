@@ -903,7 +903,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 491 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 492 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1397,6 +1397,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-explore` - `tests/engine-explore.mjs`: explore (CR 701.44) and the Map token (CR 111.10s; Restless Anchorage) -- a land to its hand, a nonland's +1/+1 counter and the graveyard asked, an empty library, the exploring permanent's controller's library, one gone told by its last known information (701.44c), the revealed card in every seat's view while it is asked, a player who left
 - `engine-different-opponents` - `tests/engine-different-opponents.mjs`: a different opponent for each permanent given away (Dack Fayden, Helping Hand) -- its controller asked permanent by permanent, the last forced, the rest kept when no opponent is left, the gone and the repeated left out, each for good, refused run directly; a goad for the rest of the game (CR 701.15a); the greatest power or mana value among what a player chooses, a tie theirs (End of the Hunt; CR 608.2d); and where the schema lets each be said
 - `engine-train-e-f1` - `tests/engine-train-e-f1.mjs`: morph (Akroma, Angel of Fury; CR 702.37) cast face down for {3} as a 2/2 with no text and no ward, turned face up for its morph cost alone, a manifested card with morph either way, and the table's words for each; "behold a Goblin and exile it" (Champion of the Weird; CR 701.4a, 607.2q), the card exiled with the cost and linked to the permanent the spell becomes, only in a spell's own additional cost; "another instant or sorcery spell" cast this turn (Burrog Barrage), a copy's count; "that creature's power" with the creature gone (Arni, Renowned Champion; CR 608.2h); a target's power as it now is; and April O'Neil's blockers
+- `engine-replicate-first-strike` - `tests/engine-replicate-first-strike.mjs`: replicate (Lose Focus; CR 702.56a) -- a mana cost on an instant or sorcery, once; each number of times paid its own cast, and no cast claiming more copies than it paid for -- and first strike read as the combat damage step begins (Interjection; CR 510.4): given after blocks, the first-strike step happens; in the second step, those that had neither as the first began, and double strikers; a first striker gone before it, not counted. Also a triggered ability's "for each opponent, up to one target ... that player controls" (Hapatra, the Desert Fang), the greatest mana value among cards (a land 0, a double-faced card its front face, CR 712.8a), and a card found "under your control" (Jhoira, Weatherlight Corsair)
 
 ## Design and execution record
 
