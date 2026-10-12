@@ -254,7 +254,9 @@ export function smokeScenario(script) {
   /* A card aimed at a card in a graveyard ("return target permanent card ... from your graveyard", Sevinne's Reclamation;
      Reanimate) gets a creature card in its player's graveyard to aim at (batch 70), and a sorcery card ("target instant or
      sorcery card in your graveyard gains flashback", Flashback). */
-  const graveTargets = (script.abilities ?? []).some((a) => aims(a).some((t) => JSON.stringify(t).includes('"zone":"graveyard"')));
+  const graveTargets = (script.abilities ?? []).some((a) => aims(a).some((t) => JSON.stringify(t).includes('"zone":"graveyard"'))
+    /* An Aura's target is its Enchant's: "Enchant creature card in a graveyard" (Animate Dead). */
+    || (a?.kind === "keyword" && String(a.keyword).toLowerCase() === "enchant" && JSON.stringify(a.target ?? {}).includes('"zone":"graveyard"')));
   const steps = [];
   /* A land that asks as it enters, or triggers (a scry land), is answered and resolved before the game moves on. */
   /* A double-faced card is played, as it is cast, by its front face's name (Brightclimb Pathway // Grimclimb Pathway). */

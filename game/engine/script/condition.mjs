@@ -78,6 +78,9 @@
  *   {castFromYourHand: true|false}     the permanent the trigger is about was cast by its controller from their hand, or
  *                                      was not (Chainer, Nightmare Adept: "if you didn't cast it from your hand") -- read on
  *                                      the permanent (rules/stack.mjs); one gone gains nothing either way
+ *   {castByYou: true|false}            the permanent the trigger is about was cast by its controller, from anywhere (The One
+ *                                      Ring: "when The One Ring enters, if you cast it") -- read on the permanent as
+ *                                      castFromYourHand is (rules/stack.mjs); one put onto the battlefield was not cast
  *   {firstResolution: true}            "if this is the first time this ability has resolved this turn" (Nissa, Leyline
  *                                      Tamer): an effect's own, of a triggered or activated ability -- its ability resolved
  *                                      no time before this one this turn (rules/stack.mjs counts them)
@@ -115,8 +118,8 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   "targetsLegal",
   /* Summon: Fenrir's "if you control the creature with the greatest power or tied for the greatest power" (CR 208.1). */
   "greatestPower",
-  /* Chainer, Nightmare Adept's "if you didn't cast it from your hand" (CR 601.2a). */
-  "castFromYourHand",
+  /* Chainer, Nightmare Adept's "if you didn't cast it from your hand" (CR 601.2a). The One Ring's "if you cast it". */
+  "castFromYourHand", "castByYou",
   /* A Case's solved designation (CR 719.3b), and Evendo Brushrazer's "as long as you've sacrificed a nontoken permanent this turn". */
   "solved", "sacrificedNontokenThisTurn"];
 /** Whether these effects, nested ones included, ask `firstResolution` -- so their ability's resolutions are counted
@@ -266,6 +269,13 @@ export function conditionHolds(state, condition, {controller, source = null, abo
     const id = about?.card ?? source;
     const cast = id !== null && id !== undefined ? state.objects[id]?.castFrom : undefined;
     if ((cast?.zone === "hand" && cast.by === controller) !== condition.castFromYourHand) return false;
+  }
+  /* "If you cast it" (The One Ring; CR 601.2): cast at all, from any zone, by its controller (CR 603.4: asked as it triggers and
+     again as it resolves) -- a permanent put onto the battlefield without being cast, or a new object since (CR 400.7), was not. */
+  if (condition.castByYou !== undefined) {
+    const id = about?.card ?? source;
+    const cast = id !== null && id !== undefined ? state.objects[id]?.castFrom : undefined;
+    if ((cast !== undefined && cast.by === controller) !== condition.castByYou) return false;
   }
   /* Echo's "if this permanent came under your control since the beginning of your last upkeep" (CR 702.30a): the turn it
      came under its controller's control (state/index.mjs, controlledSinceTurn -- entering, or a change of control) is that
@@ -459,6 +469,7 @@ export function conditionProblems(condition) {
   if ("cameFrom" in condition && !CAME_FROM.includes(condition.cameFrom)) problems.push(`cameFrom is the zone the permanent came from: ${CAME_FROM.join(", ")}`);
   if ("sinceYourLastUpkeep" in condition && condition.sinceYourLastUpkeep !== true) problems.push("sinceYourLastUpkeep is true");
   if ("castFromYourHand" in condition && typeof condition.castFromYourHand !== "boolean") problems.push("castFromYourHand is true or false");
+  if ("castByYou" in condition && typeof condition.castByYou !== "boolean") problems.push("castByYou is true or false");
   if ("solved" in condition && typeof condition.solved !== "boolean") problems.push("solved is true or false");
   if ("sacrificedNontokenThisTurn" in condition && condition.sacrificedNontokenThisTurn !== true) problems.push("sacrificedNontokenThisTurn is true");
   if ("uniqueCreatureName" in condition && condition.uniqueCreatureName !== true) problems.push("uniqueCreatureName is true");

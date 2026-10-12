@@ -1571,12 +1571,14 @@ export function compileScript(script) {
       /* A TRIGGERED MANA ABILITY (CR 605.1b): one that triggers on a mana ability and adds mana -- a fixed amount, or "one
          mana of any type that land produced" -- with no target. It is not put on the stack (rules/trigger.mjs, manaTriggered). */
       const [adds] = effects ?? [];
+      /* Or "an additional one mana of the chosen color" (Utopia Sprawl): the color its permanent chose as it entered
+         (`chosenColor`, rules/trigger.mjs). */
       if (trigger?.on === "GameEventManaPool" && effects.length === 1 && adds?.effect === "addMana" && !(ability.targets ?? []).length && !ability.optional
-        && (MANA(adds.mana) || adds.produced === true)) {
+        && (MANA(adds.mana) || adds.produced === true || adds.chosenColor === true)) {
         /* What a triggered mana ability adds goes straight to the pool: one that says what its mana may pay for is refused
            until it is carried there. */
         if (adds.spendOnly !== undefined || adds.cantSpend !== undefined) problems.push(`${ability.text}: a triggered mana ability whose mana may pay for only some things is not built`);
-        trigger.manaAbility = adds.produced === true ? {produced: true} : {mana: {...adds.mana}};
+        trigger.manaAbility = adds.produced === true ? {produced: true} : adds.chosenColor === true ? {chosenColor: true} : {mana: {...adds.mana}};
       }
       /* MODES CHOSEN AS IT IS PUT ON THE STACK (CR 603.3c, 700.2b): a triggered ability whose one effect is a modal -- its
          modes and their targets are chosen then (rules/trigger.mjs), never as it resolves, whether its modes name targets or

@@ -65,6 +65,13 @@ export const isKeywordCounter = (kind) => Boolean(KEYWORD_COUNTERS[kind]);
 const stampedCounterKeywords = (object) => Object.entries(object.counters ?? {}).filter(([kind, n]) => n > 0 && KEYWORD_COUNTERS[kind])
   .map(([kind]) => [KEYWORD_COUNTERS[kind], object.counterStamps?.[kind] ?? object.timestamp ?? 0]);
 
+/* THE BASIC LAND TYPES' MANA (CR 305.6): Plains {W}, Island {U}, Swamp {B}, Mountain {R}, Forest {G} -- and the intrinsic
+   ability a land given one of them has, as the card compiler writes a basic land's own (cards/index.mjs, manaAbility). */
+const BASIC_MANA = Object.freeze({Plains: "W", Island: "U", Swamp: "B", Mountain: "R", Forest: "G"});
+const intrinsicMana = (subtype) => ({id: `intrinsic:${subtype}`, kind: "mana", tapSelf: true, produces: {[BASIC_MANA[subtype]]: 1},
+  text: `{T}: Add {${BASIC_MANA[subtype]}}.`});
+const givesBasicType = (apply) => (apply?.addSubtypes ?? []).some((subtype) => BASIC_MANA[subtype] !== undefined);
+
 /* An object's printed characteristics: where a derivation starts. */
 function printed(state, id) {
   const object = state.objects[id];
@@ -166,7 +173,14 @@ function applyEffect(current, effect) {
   /* CR 613.1d: "in addition to its other types" adds; setTypes replaces. */
   if (change.addTypes) for (const type of change.addTypes) if (!current.types.includes(type)) current.types.push(type);
   /* And subtypes "in addition to its other types" (CR 205.1b; effects/permanents.mjs, animate's `subtypes`). */
-  if (change.addSubtypes) for (const subtype of change.addSubtypes) if (!current.subtypes.includes(subtype)) current.subtypes.push(subtype);
+  /* A LAND GIVEN A BASIC LAND TYPE HAS THAT TYPE'S MANA ABILITY (CR 305.6): "each land is a Swamp in addition to its other
+     land types" (Urborg, Tomb of Yawgmoth) gives a Forest "{T}: Add {B}" -- given with the type, in layer 4, so an effect that
+     takes abilities away in layer 6 takes it too. A land that has the type already (a Swamp, an Underground Sea) has the
+     ability already, and is given no second. */
+  if (change.addSubtypes) for (const subtype of change.addSubtypes) if (!current.subtypes.includes(subtype)) {
+    current.subtypes.push(subtype);
+    if (BASIC_MANA[subtype]) current.granted.push(intrinsicMana(subtype));
+  }
   if (change.setTypes) current.types = [...change.setTypes];
   /* "Enchanted permanent is a colorless Forest land" (Song of the Dryads): its subtypes set, every other one lost (CR 205.1b). */
   if (change.setSubtypes) { current.subtypes = [...change.setSubtypes]; current.everyCreatureType = false; }
@@ -668,7 +682,8 @@ const heldAbilities = (object, current) => [...(current.lostAbilities ? [] : obj
    graveyard (where one may work from, allEffects): when none does, a permanent's abilities are its own, and nothing need
    be derived to read them. */
 function abilitiesChange(state) {
-  const changes = (apply) => Boolean(apply && (apply.addAbilities || apply.removeAllAbilities || apply.topCardAbilities || apply.graveyardAbilities));
+  /* And one that gives a land a basic land type, with its mana ability (CR 305.6; applyEffect). */
+  const changes = (apply) => Boolean(apply && (apply.addAbilities || apply.removeAllAbilities || apply.topCardAbilities || apply.graveyardAbilities || givesBasicType(apply)));
   if ((state.effects ?? []).some((effect) => changes(effect.apply))) return true;
   const holders = [...state.zones.battlefield, ...(state.zones.graveyard ?? []).flat()];
   return holders.some((id) => (state.objects[id].abilities ?? []).some((ability) => ability.kind === "static" && changes(ability.apply)));

@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Seething Song",
+    "oracleId": "64bf8929-f5f2-4d50-8667-13b1d007bcfc",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Add {R}{R}{R}{R}{R}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Add {R}{R}{R}{R}{R}.",
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "R": 5
+          }
+        }
+      ]
+    }
+  ]
+}

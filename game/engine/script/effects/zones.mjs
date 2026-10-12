@@ -485,11 +485,15 @@ export function moveZone(state, params, context, rng = null) {
   /* "Exile another target nonland permanent" (Oblivion Ring, `link`): what it exiled, kept against this source for the
      ability linked to it (CR 607.2a); used, the link is spent. Each time the ability exiles adds to what it exiled -- the
      same trigger twice (Panharmonicon) is "the exiled cards", both (Skyclave Apparition's ruling of 2020-09-25). */
+  /* And what it put onto the battlefield: "Return enchanted creature card to the battlefield under your control ... When this
+     Aura leaves the battlefield, that creature's controller sacrifices it" (Animate Dead) -- that creature, while it is the
+     same object (CR 400.7), for the ability that names it (`linked`). */
   if (params.link === true && linkOf(context) !== null) {
     const links = (state.links ??= {}), source = linkOf(context);
     const linked = became.filter(id => state.objects[id]?.zone === "exile");
     for (const id of linked) state.objects[id].exiledTurn = state.turn;
-    links[source] = [...(links[source] ?? []), ...linked];
+    const entered = became.filter(id => state.objects[id]?.zone === "battlefield");
+    links[source] = [...(links[source] ?? []), ...linked, ...entered];
   }
   if (params.linked === true && state.links) {
     /* Only some of them (`linkedOnly`): the others are still exiled with it (CR 607.2a). */
@@ -582,9 +586,12 @@ export function moveZoneAll(state, params, context, rng = null) {
   const matched = selectMatching(state, params.selector ?? {what: "permanent"}, context);
   /* A copy, because each move rewrites the zone list underneath the iteration. */
   const was = {};
+  /* "Put all creature cards from all graveyards onto the battlefield under your control" (Rise of the Dark Realms): each enters
+     under this effect's controller's control, not its owner's (CR 110.2a) -- as it enters, before what it enters with. */
+  const under = params.to === "battlefield" && params.controller === "you" ? context.controller : null;
   for (const id of [...matched]) {
     const controller = state.objects[id]?.zone === "battlefield" ? controllerOf(state, id) : null;
-    const moved = moveOne(state, id, params.to ?? "graveyard", events, {tapped: params.tapped === true});
+    const moved = moveOne(state, id, params.to ?? "graveyard", events, {tapped: params.tapped === true, controller: under});
     if (moved !== null) { arrivedAll.push(moved); if (controller !== null) was[moved] = controller; }
   }
   /* "Each player shuffles the cards from their hand into their library" (Winds of Change, batch 80, `shuffle`): each library

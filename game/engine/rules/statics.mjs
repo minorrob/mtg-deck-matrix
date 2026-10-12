@@ -870,6 +870,12 @@ export function attacksEachCombat(state, id) {
      creature, for the one combat phase it names -- its source named, as a static's holder is, gone or not. */
   for (const effect of state.effects ?? [])
     if (effect.rule === "attacks-each-combat" && effect.combat === (state.combatsThisTurn ?? 0) && effect.affects.ids.includes(id)) sources.push(effect.sourceId);
+  /* And "creatures your opponents control attack this turn if able" (Bident of Thassa; effectUntil's `rule:
+     "attacks-each-combat"` with `affects`): a rule changed for every combat of the turn, not a characteristic, so it takes in
+     each creature as it now is -- one that entered or changed control after it resolved too (CR 611.2c) -- the opponents of
+     its controller as it resolved. */
+  for (const effect of state.effects ?? [])
+    if (effect.rule === "attacks-each-combat" && effect.combat === undefined && staticAffects(state, effect, id, effect.sourceController)) sources.push(effect.sourceId);
   return sources;
 }
 

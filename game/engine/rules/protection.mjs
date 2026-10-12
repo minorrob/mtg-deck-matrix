@@ -77,6 +77,11 @@ export function protectedFrom(state, {card = null, player = null}, sourceId) {
   if (sourceId === null || sourceId === undefined) return false;
   /* "They gain protection from everything" (Teferi's Reproach): an effect over players (effectUntil's `rule: "protection"`). */
   if (player !== null && player !== undefined && (state.effects ?? []).some((e) => e.rule === "protection" && (e.players ?? []).includes(player) && hasQuality(state, e.from, sourceId))) return true;
+  /* "Creatures you control gain ... protection from each color until end of turn" (Akroma's Will): an effect over the
+     permanents it named as it resolved (effectUntil's `rule: "protection"` with `selector` or `targets`; CR 611.2c), each for
+     as long as it is that object (CR 400.7). "From each color" is a protection from each of the five (`colors`). */
+  if (card !== null && card !== undefined
+    && (state.effects ?? []).some((e) => e.rule === "protection" && (e.affects?.ids ?? []).includes(card) && hasQuality(state, e.from, sourceId))) return true;
   for (const {ability, holderId, controller} of protections(state)) {
     if (!hasQuality(state, ability.from, sourceId)) continue;
     if (card !== null && card !== undefined && ability.affects && state.objects[card]?.zone === "battlefield"

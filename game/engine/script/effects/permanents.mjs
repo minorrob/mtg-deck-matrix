@@ -106,6 +106,12 @@ export function attach(state, params, context) {
   const source = sourceId === null || sourceId === undefined ? null : state.objects[sourceId];
   const [hostId] = params.targets ?? [];
   const host = hostId === undefined ? null : state.objects[hostId];
+  /* "It loses 'enchant creature card in a graveyard' and gains 'enchant creature put onto the battlefield with this Aura.'
+     ... attach this Aura to it" (Animate Dead; CR 303.4, 613.1f): `enchants: true`, the Aura's Enchant from now on that one
+     creature alone, for as long as the Aura is this object (`enchantOnly`, which a zone change does not carry, CR 400.7;
+     rules/sba.mjs reads it). Changed whether or not the Aura can then be attached: with no creature put onto the battlefield,
+     or one it can't enchant (protection from black), it enchants nothing it may, and goes to its owner's graveyard (CR 704.5m). */
+  if (params.enchants === true && source && source.zone === "battlefield") source.enchantOnly = host && host.zone === "battlefield" ? hostId : null;
   if (!source || !host || source.zone !== "battlefield" || host.zone !== "battlefield" || sourceId === hostId) return events;
   /* CR 701.3b: attaching it to what it is already attached to does nothing. */
   if (source.attachedTo === hostId) return events;
@@ -126,6 +132,9 @@ export function attach(state, params, context) {
    and a token is not made (CR 303.4g). What it may enchant here are permanents; an Aura that enchants a player is not
    built, and finds nothing. */
 export function enchantable(state, enchant, controller) {
+  /* "Enchant creature card in a graveyard" (Animate Dead returned by Sun Titan; CR 303.4f, 303.4a): a card in that zone it
+     could enchant, as it is there. */
+  if (enchant?.what === "card" && typeof enchant.zone === "string" && !Array.isArray(enchant.anyOf)) return selectMatching(state, enchant, {controller});
   const {anyOf, ...shared} = enchant ?? {};
   const each = (Array.isArray(anyOf) ? anyOf.map((one) => ({...shared, ...one})) : [enchant ?? {}])
     .filter((one) => (one.what ?? "permanent") === "permanent")
@@ -757,7 +766,11 @@ export function effectUntil(state, params, context) {
     /* And "you have no maximum hand size for the rest of the game" (Wisdom of Ages; CR 402.2, 611.2a): read at cleanup
        (rules/statics.mjs, playerRuleChanged). And "until end of turn, you may look at the top card of your library any time"
        (Gwenom, Remorseless; CR 401.2): read as the library is shown (projection.mjs, topSeenBy). */
-    ...(params.until === "their-next-turn" || ["protection", "life-cant-change", "no-maximum-hand-size", "damage-doubled", "look-at-top"].includes(params.rule) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
+    /* "Creatures you control gain ... protection from each color until end of turn" (Akroma's Will; CR 702.16, 611.2c) is a
+       protection over the permanents it names, fixed as it resolves (`selector`, `targets`), and no player's
+       (rules/protection.mjs, protectedFrom). */
+    ...(params.until === "their-next-turn" || (["protection", "life-cant-change", "no-maximum-hand-size", "damage-doubled", "look-at-top"].includes(params.rule)
+      && !(params.rule === "protection" && (params.targets || params.selector))) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
     /* "If a source would deal damage to that player or a permanent that player controls, it deals double that damage
        instead" (Lightning, Army of One; rules/replacement.mjs, rememberedReplacement): `who` the players it remembers, its
        name for the order's question (CR 616.1). "That creature enters with an additional +1/+1 counter on it" (Summon:
@@ -765,6 +778,9 @@ export function effectUntil(state, params, context) {
     ...(params.rule === "damage-doubled" ? {name: state.objects[context.source]?.card ?? context.lastKnown?.name ?? "An effect"} : {}),
     ...(params.rule === "enters-with-counters" ? {counters: {counter: params.counter, count: params.count ?? 1}} : {}),
     ...(params.rule === "protection" ? {from: params.from ?? "everything"} : {}),
+    /* "Creatures your opponents control attack this turn if able" (Bident of Thassa; rules/statics.mjs, attacksEachCombat):
+       named by its source when a declaration breaks it, as it was then, gone or not (rules/combat.mjs). */
+    ...(params.rule === "attacks-each-combat" ? {sourceId: context.source ?? null, sourceName: state.objects[context.source]?.card ?? context.lastKnown?.name ?? null} : {}),
     /* A PREVENTION SHIELD OF A PLAYER'S (CR 615; rules/replacement.mjs, preventionsFor): "prevent all combat damage that would
        be dealt to you this turn" (Inkshield) -- `who`, the players it shields -- "the next time a source of your choice
        would deal damage to you this turn" (Deflecting Palm) -- `from`, the sources chosen (CR 609.7a), and `next`, used up

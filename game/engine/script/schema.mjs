@@ -277,10 +277,18 @@ function checkEffect(effect, path, errors) {
   if (name === "moveZone" && effect.only !== undefined) checkSelector(effect.only, `${path}.only`, errors);
   if (name === "moveZone" && effect.returnTapped !== undefined && !(effect.returnTapped === true && effect.andReturn !== undefined))
     errors.push({path: `${path}.returnTapped`, message: "A flicker's return tapped is `returnTapped: true`, beside `andReturn`"});
+  /* "Onto the battlefield under your control" (Rise of the Dark Realms, wave 4b j1; effects/zones.mjs moveZoneAll). */
+  if (name === "moveZoneAll" && effect.controller !== undefined && !(effect.controller === "you" && effect.to === "battlefield"))
+    errors.push({path: `${path}.controller`, message: "What a move of all puts onto the battlefield under its controller's control is `controller: \"you\"` with `to: \"battlefield\"`"});
   if (name === "moveZoneAll" && effect.link !== undefined && !(effect.link === true && effect.to === "exile"))
     errors.push({path: `${path}.link`, message: "What a move of all exiles, kept for its source's linked ability, is `link: true` with `to: \"exile\"`"});
   if (name === "chooseCard" && effect.attach !== undefined && !(effect.attach === "remembered" && effect.to === "stay" && effect.zone === "battlefield"))
     errors.push({path: `${path}.attach`, message: "Attaching what the effect before it put onto the battlefield to a permanent chosen is `attach: \"remembered\"`, with `zone: \"battlefield\"` and `to: \"stay\"`"});
+  /* "It loses 'enchant creature card in a graveyard' and gains 'enchant creature put onto the battlefield with this Aura.' ...
+     attach this Aura to it" (Animate Dead, wave 4b j1; effects/permanents.mjs attach): `enchants: true`, an Aura attaching
+     itself, its Enchant from then on that creature alone. */
+  if (effect.enchants !== undefined && !(name === "attach" && effect.enchants === true && effect.source === undefined))
+    errors.push({path: `${path}.enchants`, message: "An Aura that enchants only what it attaches itself to is attach's `enchants: true`, with no other `source`"});
   if (name === "dig" && effect.all !== undefined && !(effect.all === true && effect.selector !== undefined && effect.upTo === undefined && effect.take === undefined))
     errors.push({path: `${path}.all`, message: "Every card a selector fits, taken with nobody asked, is `all: true` beside a `selector`, with no `take` or `upTo`"});
   /* Counters moved (moveCounters, CR 122.5; script/effects/resources.mjs): from one object onto another, of a kind named --
