@@ -4,8 +4,8 @@
 
 | Lane | Held by | Branch | Doing |
 | --- | --- | --- | --- |
-| **Engine** | Claude, a cloud container; **paused 2026-10-12 at 90% of the week's usage: `docs/handoff-2026-10-12.md`** | `claude/admiring-franklin-58cxy4` | Waves 4 and after, to the most-played 90% of Commander cards (`docs/engine/plan-coverage-90.md`); wave 4c in #726 |
-| **UI** | Fable or Codex Astra (Rob, 2026-10-12), on his computer and in the cloud; Rob prototypes Play in Replit first | `claude/ui-<topic>` or `codex/ui-<topic>` | Rob's notes 9 and 10 (a *Turn Resources* tab; the right pane docked; the hover card no taller than the mat); concepts Rob brings back from prototyping tools. Brief: `docs/ui-lane/README.md` |
+| **Engine** | Claude, a cloud container; **paused 2026-10-12 at 90% of the week's usage: `docs/handoff-2026-10-12.md`** | `claude/admiring-franklin-58cxy4` | Waves 4 and after, to the most-played 90% of Commander cards (`docs/engine/plan-coverage-90.md`); waves to 4c merged and on staging; next, wave 4d |
+| **UI** | Fable (a Claude session in a cloud container), since 2026-10-12 | `claude/nice-hypatia-4ajdyi` (the session's own branch, by its harness; the `claude/ui-<topic>` form waits for the next topic) | Pass 1 of the Play screen on the Replit concept: the seven steps in the strip, Full screen as the table from your chair with a 3D switch, the right pane docked with Turn Resources (notes 9 and 10), the hover card no taller than the mat, motion and callouts, the lobby's fans and launch line. The plan: `docs/ui-lane/plan-play-ui-2026-10-12.md`. Brief: `docs/ui-lane/README.md` |
 
 ### Requests between the lanes
 
@@ -14,7 +14,51 @@ other lane answers in the last column.
 
 | # | From | Asks for | What for | Answer |
 | --- | --- | --- | --- | --- |
+| 2 | UI | The lobby's countdown to start by itself once every seat is connected, has a deck and is ready, with no Start press; the host's Cancel stays, and a seat's Not ready stops it | The brief's lobby ("No Launch button: when every human is ready, a 10-second countdown starts, cancelable by the host"). Today the lobby reads "Launches when all are ready · n to go" and the host presses Start | `game/room/table.mjs`, where `ready` is taken: begin the countdown when nothing blocks. The lobby already follows `phase: countdown` | |
+| 3 | UI | A structured record of what happened since the last revision: `events: [{kind, …}]` on the view (damage dealt with its source and target; a spell countered and by what; tokens created with their count; proliferate; a permanent destroyed or exiled; life gained or lost with its cause; a seat out) | The callouts over the table and the sounds read these from the difference between two views and from the history's sentences (`/countered/`, `/created N … tokens/`), which is brittle and carries no cause; the brief's readouts (damage per source, what was prevented) need the facts | `game/room/history.mjs` already knows each; the view's builder in `game/room/room.mjs` | |
+| 4 | UI | Per player, the mana tapped this step (`manaTapped`), or on each land whether it was tapped for mana | Turn Resources' "mana tapped this step"; today it counts tapped lands, which includes a land tapped for anything else | the view's players | |
+| 5 | UI | On a card: whether it is a token; what an Aura or Equipment is attached to; summoning sickness; colors and mana cost; which face is up | The anchor's own list. Dice on tokens, Turn Resources by color, attachments drawn under their host, a double-faced card's right picture | the view's cards | |
+| 6 | UI | A `roll` frame at the game's start: the d20 for first player, sent to every seat with its result | The brief's die, which animates to the result it was sent | the room, at launch | |
+| 7 | UI | `tests/advisor.mjs` to pass again: its clock is fixed at 2026-10-11T12:00Z and its `ai_calls` rows are written at that clock, but the meter's 24-hour window (`cloud/ai.mjs` `since()`, through `aiMeter` in `cloud/worker.mjs`) runs on the real clock, so from 2026-10-12T11:59Z the rows fall outside it and the meter check fails on every branch, `main` included | The Actions gate is red for every PR until it is fixed; #725 (the UI pass) waits on it to merge | `cloud/worker.mjs` (`aiMeter`: pass the request's `now` to the door's `spent`), or the suite's rows at the real clock | Fixed on `main` in c629f8c1 (#723): `aiMeter` takes the request's clock. #727 puts the LLM seat's call log on the table's clock too (`cloud/game-room.mjs`), with `tools/ai-clock-breaks.py`; the AI suites pass with the machine's clock moved days either way |
 | 1 | Engine | The board to show the monarch (CR 725): the view's `state.players[i]` now carries `monarch: true` for the monarch, public to every seat, and no key for anyone else; the history says "Maya became the monarch" | Ginger, Queen of Sweets and Tamiyo, Upriser Crowned make their controller the monarch; the monarch draws a card at their end step, and a creature's combat damage to them makes its controller the monarch -- a player should see who holds it | The engine lane built it (Train E, the `monarch` branch); `docs/ui-lane/gameplay-anchor.md` lists the field. For the UI lane to show |
+
+## 2026-10-12: the UI lane's pass 1 on the Play screen (Fable, a Claude session in a cloud container)
+
+Rob's brief of 2026-10-12: evaluate the Replit concept (`CrankMagic-Play`, with its `HANDOFF.md`) and the board, plan
+the port, build a first pass, put it on staging, and iterate on his feedback. The plan, what was kept and what was
+refused of the concept, and the passes to come: `docs/ui-lane/plan-play-ui-2026-10-12.md`.
+
+- **Branch** `claude/nice-hypatia-4ajdyi`, from main 494bf0f (#722). The harness names the branch; the lane's
+  `claude/ui-<topic>` form is for the next topic.
+- **Built** (the board, its CSS, the mats sheet, the lobby, Settings' Play card; nothing of the engine's):
+  - the seven steps always in the strip and in Full screen's pill, done · now · to come, short forms under 1400px;
+  - Full screen as the table from your chair: the big board's mat is the whole ground; the other seats at the far sides
+    and the back as boards of their own; a **3D** switch in the rail bends the ground at a horizon, remembered on the device;
+  - the right pane docked beside the mat in Focus and Table, its own width divider, with the tabs Turn Resources · Panel
+    · History (Rob's notes 9 and 10); the hover card no taller than the mat;
+  - motion: a played card flies from the hand to the mat, a drawn one from the library, a destroyed one to its pile; a
+    tapped card turns where it lies; the turn's light crossfades; Reduce motion stills all of it;
+  - the callouts (the brief's overlay): YOUR TURN, INCOMING, HIT, KO, COUNTERED, TOKENS, DESTROYED, EXILED, +N and the
+    rest, read from the difference between two views; three at most; Settings › Play › Overlay (a slider) sets how
+    loud and how long; Tools › Try the callouts fires the set;
+  - the lobby: a seated deck's quadrant wears its commander's color fan; "Launches when all are ready · n to go";
+  - Play home: Recent games under New table.
+- **Proved** (each command from the repository root, `GEOMETRY_REQUIRED=1`):
+  - `node tests/table-board.mjs`: the ribbon, Full screen's ground and seats, 3D, the docked pane and its divider, Turn
+    Resources, the hover cap, the callouts' layer;
+  - `node tests/board-callouts.mjs` (new, in Node): the callouts' reading of a view, a hidden card never named;
+  - `node tests/table-lobby.mjs`, `node tests/settings-r3.mjs`, `node tests/a11y-board.mjs`, `node tests/board-choices.mjs`,
+    `node tests/coach.mjs`, `node tests/feature-wiring.mjs`, `node tests/room-resolve-all.mjs`, `node tests/room-beats.mjs`,
+    `node tests/playtest-harness.mjs`, `node tests/data-integrity.mjs`, `node tests/asset-versions.mjs`;
+  - breaks: `python3 game/tools/batch/breaks.py game/tools/batch/breaks-play-ui.py` (12) and `breaks-play-ui-rest.py` (7).
+- **Assumed, not proved:** the flights and the turn's light are seen in the fixture (`tools/board-fixture.mjs`) and not
+  yet held by a suite; the side seats' boards at 1280×720 are legible as presence, not to read.
+- **Asked of the engine lane:** Requests rows 2 to 6 above.
+- **Outstanding:** the merge of #725 on a green run of its head (the advisor suite's clock, Requests row 7, was fixed on
+  `main` in c629f8c and is merged into the branch); then the staging release, Rob's review, and pass 2
+  (`plan-play-ui-2026-10-12.md` §4).
+  The suites this pass touches are green on its head: a11y-board 288, table-board 281, table-lobby 89, board-callouts 33,
+  settings-r3 63, board-choices 40, coach 60, design-tokens 91; the 19 breaks all caught.
 
 ## 2026-10-12: the AI call log on the clock it is handed (`claude/advisor-meter-clock`)
 
@@ -106,7 +150,7 @@ usage for this").
   - The 80% set: 1,462 defined (from 1,347), 2,780 with every rule. The 90% set: 1,605 of 5,869 defined (from 1,411).
     The defined cards now cover 60.3% of all card appearances (52.0% when the plan was written).
   - Breaks: j1 33, j2 45, j3 111, j4 81, each caught.
-- **Wave 4c, #726:** 78 of the next 80 most-played cards (ranks 501 to 723), in four lanes by theme, each owning the
+- **Wave 4c, merged #726** (main 0540d882): 78 of the next 80 most-played cards (ranks 501 to 723), in four lanes by theme, each owning the
   rules its cards need:
   - k1 lands, 21: a land played as an effect resolves (Windbrisk Heights, and Mosswort Bridge, which 4b had left).
   - k2 graveyard and combat, 19: delve, dredge, fabricate, a flashback cost that sacrifices, the rest of a dig on the
@@ -124,8 +168,11 @@ usage for this").
     `train-b6-breaks.py` the earlier scans never read. 53 files, 1,712 breaks.
   - The 80% set: 1,540 defined (from 1,462), 2,814 with every rule. The 90% set: 1,683 of 5,869. The defined cards
     cover 62.5% of all card appearances.
-  - **Staging still serves wave 4a.** The release of main a61244a0 stopped at `play-e2e`, which named Cyclonic Rift
-    as unplayable; the fix rides #726, and staging takes waves 4b and 4c together once it merges.
+  - **On staging with wave 4b** (main 0540d882): release-acceptance 22, play-e2e 35; Workers Builds deployed version
+    fe296442, its `play-worker.js` byte for byte the release's dry run (sha256 dc3437729abb); `staging-check` signed in
+    reads 0540d882. The release of a61244a0 had stopped at `play-e2e` (Cyclonic Rift named as unplayable); #726 fixed it.
+- **Paused here at 83% of the week's usage**, at a wave's end rather than mid-wave (Rob's 90% rule): the handoff is
+  `docs/handoff-2026-10-12.md`. Wave 4d starts at rank 724 of the 80% set, plus the leftovers it lists.
 - **Open, for later waves:**
   - In a two-player game the starting player skips the draw step's draw, not the step itself (CR 103.8a). Its
     beginning triggers still fire on turn 1.
