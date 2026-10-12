@@ -6,6 +6,7 @@
  *   node tools/build-live-load.mjs [workbook] --check                      # report and diff; exit 1 if the file is stale
  *   node tools/build-live-load.mjs <workbook> --adjust plans.json          # replace per-deck options/planned lists
  *   node tools/build-live-load.mjs <workbook> --scryfall cache.json        # resolve names against a Scryfall dump too
+ *   node tools/build-live-load.mjs <workbook> --decks decks.json --out f   # the decks' names and commanders by hand
  *
  * The Master sheet of Rob's workbook carries, per card, how many he owns (Own), how many are
  * still to buy (Buy Count), how many are on order (Ordered), the price ($ Each), the target
@@ -118,12 +119,20 @@ function priorDecks(prior){
   return {head,rows:(prior?.decks||[]).map(d=>[d.id,d.commander,d.name]),get:(r,n)=>{const i=head.indexOf(n);return i<0?null:r[i];}};
 }
 
-export async function importStarWorkbook(workbook,{prior=null,now=new Date(),lookup,canon,notes}){
+/* THE DECKS NAMED BY HAND (--decks decks.json): [{id, name, commander}], a commander a name or two partners' names. For a
+   workbook with no master_decks or deck_strategies sheet whose decks are not the committed file's (Rob's v43, 2026-10-12:
+   six new decks, Tymna and Kraum partners among them). */
+function namedDecks(list){
+  const head=['Deck','Commander','Name'];
+  return {head,rows:list.map(d=>[d.id,d.commander,d.name]),get:(r,n)=>{const i=head.indexOf(n);return i<0?null:r[i];}};
+}
+
+export async function importStarWorkbook(workbook,{prior=null,now=new Date(),lookup,canon,notes,decks:named=null}){
   const main=starTable(workbook,'master_main'),tgt=starTable(workbook,'master_target'),
         act=starTable(workbook,'master_actuals'),
         up=starTable(workbook,'master_buy_upgrade',{required:false}),
         strat=starTable(workbook,'deck_strategies',{required:false});
-  let dk=starTable(workbook,'master_decks',{required:!prior?.decks?.length});
+  let dk=named?namedDecks(named):starTable(workbook,'master_decks',{required:!prior?.decks?.length});
   if(!dk){dk=priorDecks(prior);notes.push('No master_decks or deck_strategies sheet; each deck\'s id, commander and name were carried from the committed file.');}
   if(!strat&&prior?.decks?.some(d=>d.strategy))notes.push('No deck_strategies sheet; each deck\'s overview was carried from the committed file.');
 
@@ -185,14 +194,14 @@ export async function importStarWorkbook(workbook,{prior=null,now=new Date(),loo
     const id=String(dk.get(r,'Deck')||'').trim();if(!DECK_IDS.includes(id))continue;
     const p=priorDeck(id),total=targets[id].reduce((n,c)=>n+c[1],0);
     ensure(total===100,`${id}: the target column sums to ${total}, not 100. Fix the workbook before building.`);
-    const commander=canon(String(dk.get(r,'Commander')||'').trim());
+    const lead=dk.get(r,'Commander'),commander=Array.isArray(lead)?lead.map(n=>canon(String(n).trim())):canon(String(lead||'').trim());
     /* A DECK THE COMMITTED FILE HAS NEVER SEEN STILL NEEDS A DEFINITION. Mechanics are read
        off the hundred the same way the app reads them, so a deck added in the workbook
        arrives described rather than blank; the brackets follow the rest of the table until
        Trey says otherwise, and any definition already committed wins over this. */
     let definition=p?.definition;
     if(!definition||!Array.isArray(definition.mechanics)||definition.mechanics.length<2){
-      const recs=targets[id].map(([n])=>lookup(n)).filter(Boolean),lead=lookup(commander);
+      const recs=targets[id].map(([n])=>lookup(n)).filter(Boolean),lead=lookup([].concat(commander)[0]);
       const mech=Catalog.deckMechanics(recs,lead,4)||[];
       definition={baseBracket:3,bracketCeiling:3,playStyle:'Balanced',...(definition||{}),mechanics:mech};
       if(mech.length<2)notes.push(`${id}: only ${mech.length} mechanic(s) could be read from the hundred; add them by hand in live-load.json.`);
@@ -308,7 +317,7 @@ export async function importStarWorkbook(workbook,{prior=null,now=new Date(),loo
   return {doc,notes,built};
 }
 
-export async function importWorkbook(workbook,{prior=null,adjust=null,scryfall=null,now=new Date()}={}){
+export async function importWorkbook(workbook,{prior=null,adjust=null,scryfall=null,decks:named=null,now=new Date()}={}){
   const notes=[];
   const lookup=await bundledLookup({scryfall});
   const unresolved=new Set();
@@ -316,7 +325,7 @@ export async function importWorkbook(workbook,{prior=null,adjust=null,scryfall=n
   /* A workbook that carries master_main is read through its star schema: dynamic decks,
      no formula cells, and the metadata the app mirrors. */
   if(sheet(workbook,'master_main')||widestar(workbook)){
-    const out=await importStarWorkbook(workbook,{prior,now,lookup,canon,notes});
+    const out=await importStarWorkbook(workbook,{prior,now,lookup,canon,notes,decks:named});
     ensure(!unresolved.size,`${unresolved.size} name${unresolved.size===1?'':'s'} could not be resolved against the catalog: ${[...unresolved].join('; ')}.`);
     return out;
   }
@@ -525,14 +534,15 @@ export function diff(prior,doc){
 
 if(process.argv[1]&&pathToFileURL(process.argv[1]).href===import.meta.url){
   const args=process.argv.slice(2),flag=name=>{const i=args.indexOf(name);return i>=0?args[i+1]:null;},check=args.includes('--check');
-  const positional=args.filter((a,i)=>!a.startsWith('--')&&!['--adjust','--scryfall','--out'].includes(args[i-1]));
+  const positional=args.filter((a,i)=>!a.startsWith('--')&&!['--adjust','--scryfall','--out','--decks'].includes(args[i-1]));
   const out=flag('--out')?pathToFileURL(flag('--out')):SOURCE;
   try{
     const workbook=positional[0]||await newestWorkbook();
     const prior=await readFile(out,'utf8').then(JSON.parse).catch(()=>null);
     const adjust=flag('--adjust')?JSON.parse(await readFile(flag('--adjust'),'utf8')):null;
     const scryfall=flag('--scryfall')?JSON.parse(await readFile(flag('--scryfall'),'utf8')):null;
-    const {doc,notes,built}=await importWorkbook(workbook,{prior,adjust,scryfall});
+    const decks=flag('--decks')?JSON.parse(await readFile(flag('--decks'),'utf8')):null;
+    const {doc,notes,built}=await importWorkbook(workbook,{prior,adjust,scryfall,decks});
     console.log(`live-load from ${doc.workbook}: ${doc.decks.length} decks · ${doc.owned.bench.length} bench rows · ${doc.ordered.length} ordered rows · ${doc.buy.length} buy rows · ${doc.upgrades.length} upgrades · options ${doc.decks.reduce((n,d)=>n+(d.options||[]).length,0)} · planned ${doc.decks.reduce((n,d)=>n+(d.planned||[]).length,0)}`);
     for(const n of notes)console.log('  note: '+n);
     console.log(diff(prior,doc).join('\n'));

@@ -53,6 +53,7 @@
   const listed=(x,where)=>{const o=typeof x==='string'?{card:x}:x;ensure(o&&typeof o.card==='string'&&o.card.trim(),`${where}: every row needs a card.`);ensure(o.quantity===undefined||isQty(o.quantity),`${where}: ${o.card} has an invalid quantity.`);return {card:o.card.trim(),why:typeof o.why==='string'?o.why.trim():'',quantity:o.quantity||1};};
 
   /* The document's shape, before any card is looked up. Errors here are about the file. */
+  const commandersOf=d=>[].concat(d&&d.commander!==undefined?d.commander:[]);
   function check(doc){
     ensure(doc&&typeof doc==='object'&&!Array.isArray(doc),'Not a live-load document.');
     ensure(doc.format===FORMAT,`Expected format "${FORMAT}", found "${doc.format}".`);
@@ -63,11 +64,13 @@
       ensure(d&&typeof d.id==='string'&&/^[A-Za-z0-9_-]{1,20}$/.test(d.id),'Every deck needs a short id such as "D1".');
       ensure(!ids.has(d.id),`Duplicate deck id ${d.id}.`);ids.add(d.id);
       ensure(typeof d.name==='string'&&d.name.trim(),`${d.id}: deck needs a name.`);
-      ensure(typeof d.commander==='string'&&d.commander.trim(),`${d.id}: deck needs a commander.`);
+      /* A COMMANDER, OR TWO PARTNERS (CR 702.124): "Tymna the Weaver" or ["Tymna the Weaver", "Kraum, Ludevic's Opus"]. */
+      const leads=commandersOf(d);
+      ensure(leads.length>=1&&leads.length<=2&&leads.every(n=>typeof n==='string'&&n.trim()),`${d.id}: deck needs a commander, or two partners.`);
       ensure(Array.isArray(d.cards)&&d.cards.length,`${d.id}: cards must be a nonempty array.`);
       for(const row of d.cards)pair(row,d.id);
       const total=d.cards.reduce((n,r)=>n+r[1],0);ensure(total===100,`${d.id}: target lists ${total} cards; Commander needs exactly 100 including the commander.`);
-      ensure(d.cards.some(r=>fold(r[0])===fold(d.commander)&&r[1]===1),`${d.id}: the commander must appear once in its own card list.`);
+      for(const lead of leads)ensure(d.cards.some(r=>fold(r[0])===fold(lead)&&r[1]===1),`${d.id}: the commander must appear once in its own card list (${lead}).`);
       const seen=new Set();for(const [n] of d.cards){ensure(!seen.has(fold(n)),`${d.id}: ${n} is listed twice; merge the rows.`);seen.add(fold(n));}
       ensure(d.options===undefined||Array.isArray(d.options),`${d.id}: options must be an array.`);ensure(d.planned===undefined||Array.isArray(d.planned),`${d.id}: planned must be an array.`);
       for(const o of d.options||[]){const {card}=listed(o,d.id+'.options');ensure(seen.has(fold(card)),`${d.id}: option ${card} is not in the deck's hundred; an Option flag goes on a card that is in the list.`);}
@@ -105,7 +108,7 @@
   /* Every distinct name the document mentions, in first-seen order. */
   function names(doc){
     const out=[],seen=new Set(),add=n=>{const k=fold(n);if(k&&!seen.has(k)){seen.add(k);out.push(String(n).trim());}};
-    for(const d of doc.decks){add(d.commander);for(const [n] of d.cards)add(n);for(const p of d.planned||[])add(listed(p,d.id).card);}
+    for(const d of doc.decks){for(const lead of commandersOf(d))add(lead);for(const [n] of d.cards)add(n);for(const p of d.planned||[])add(listed(p,d.id).card);}
     for(const rows of Object.values(doc.owned.inDeck))for(const [n] of rows)add(n);
     for(const [n] of doc.owned.bench)add(n);for(const [n] of doc.ordered)add(n);for(const [n] of doc.buy)add(n);
     for(const n of Object.keys(doc.paid||{}))add(n);
@@ -144,7 +147,7 @@
       const deckId='deck:live:'+d.id,groupId='group:live:'+d.id;deckIds[d.id]=deckId;groupOf[d.id]=groupId;
       const slots=d.cards.map(([name,qty])=>({id:`slot:live:${d.id}:${idOf(name).slice(5)}`,cardId:idOf(name),quantity:qty,purpose:'main'}));
       run({type:'createGroup',groupId,name:d.name});
-      run({type:'createDeck',deckId,name:d.name,commanders:[idOf(d.commander)],slots,definition:d.definition||{},notes:d.notes||'',groupId});
+      run({type:'createDeck',deckId,name:d.name,commanders:commandersOf(d).map(idOf),slots,definition:d.definition||{},notes:d.notes||'',groupId});
       slotOf[d.id]=new Map(slots.map(r=>[r.cardId,r.id]));
       try{run({type:'finalize',deckId});}catch(err){issues.push(`${d.name} stays a draft: ${err.message}`);}
       for(const o of d.options||[]){const {card,why}=listed(o,d.id+'.options');run({type:'flag',deckId,slotId:slotOf[d.id].get(idOf(card)),option:true,why});}

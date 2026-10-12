@@ -1,5 +1,27 @@
 # Who holds the work
 
+## 2026-10-12: Rob's notes merged and on staging; his v43 library restored there; Train D
+
+This session (Claude, a cloud container):
+- **Merged #714** (main a8008918) on one green `suites` run: notes 1 to 8 and 14 of Rob's playtest notes (the table
+  below). Its 50 breaks are all caught. It is released to staging, and the deployed worker is byte for byte the dry
+  run's (play-worker.js 597fe3975a37).
+- **Rob's library is v43 on staging.** Rob restored `crankmagic-library-v43.json` (built from his v43 Master workbook,
+  the six Target decks only) through Settings. The cloud's head, revision 30, read back from D1 and decoded:
+  - its cards, decks, copies and groups are identical to the file;
+  - six decks, each final and ready at 100 of 100 (D1 Tymna + Kraum, D2 Chulane, D3 Kiora, D4 Felothar,
+    D5 Teysa Karlov, D6 Krenko);
+  - 1,217 cards and 2,245 copies; none of the old decks is left.
+- **Production waits on Rob's restore**, done the same way. The old saved versions are kept in D1 (staging 21,
+  production 9); purging them is Rob's call.
+- **This branch next:** Load Live reads two partners as a deck's commanders and a workbook's decks named by hand
+  (`--decks`); and the board's notes 11 to 13.
+- **Train D:** the 18 cards of the six decks that the engine cannot play yet, three workers of six cards each. Then the
+  library's other ~175.
+- **Proposed to Rob, not yet his choice:** a second platform takes a UI lane (the board, its CSS, Settings) while this
+  session keeps the engine, the room and the card loads. The room's view is the seam between them, and one release
+  owner (this session) does staging. Notes 9 and 10 would move to that lane.
+
 ## 2026-10-11: G-A built, G-B proved again with it, the rest waits on Rob
 
 This session (Claude, a cloud container) built the rest of G-A and merged each piece on the gate, released to
@@ -49,15 +71,16 @@ Rob played Focus at staging and sent his notes through the evening, with screens
 | 6 | Rampant Growth: "Search your library: nothing to find", with 19 basics in his library | **A real bug, at every table.** The table's card lookup took the room's bare basics first: no Basic supertype, no land type. Every "basic land card" search failed (Rampant Growth, Fertilid, Fabled Passage), and so did "a Plains card" and "unless you control a Forest or an Island" (Hinterland Harbor). | **Fixed.** The table plays the engine's own definitions, basics included; the room's basics are Basic and of their land type (CR 205.4c, 305.6). tests/table-basics.mjs plays all 3,876 card scenarios through the table's lookup. |
 | 7 | Valorous Stance offered only the indestructible mode on an opponent's Fertilid | As intended: Fertilid is printed 0/0, so with two +1/+1 counters it is 2/2, and the destroy mode needs toughness 4 or greater (CR 700.2a). Counters do count (CR 613.4c), as Rob asked. | **As intended.** And his follow-up is built: an option that helps an opponent says *helps Maya*, one aimed at your own *against your own* (room.mjs `leaning`), marked on the board. |
 | 8 | Freyalise's Elf Druid token's mana ability | Already fixed in #703 (another session), and on staging. | **Done** earlier. |
-| 9 | A *Turn Resources* tab beside *Panel*: by land and card type, how many can be played this turn, how many in all, the mana tapped | Not built. | **Open.** The worker building notes 9 to 14 was stopped; its partial diff is unused. |
+| 9 | A *Turn Resources* tab beside *Panel*: by land and card type, how many can be played this turn, how many in all, the mana tapped | Not built. | **Open.** Proposed for the UI lane (above). |
 | 10 | The right pane lies over the mat; it should sit beside it like the left one, its width dragged within the same bounds | The right pane is an overlay. | **Open**, with the hover card no taller than the mat (his note of the same day). |
-| 11 | Hovering a stack entry ("1. Fertilid") shows the card beside the On the stack box | Not built. | **Open.** |
-| 12 | A sorcery or instant is not seen while it resolves ("they should appear on the battlefield while being resolved") | The stack is a list of names. | **Open.** |
-| 13 | The Lands row cuts off its last cards with no scroll bar | The zone clips. | **Open.** |
+| 11 | Hovering a stack entry ("1. Fertilid") shows the card beside the On the stack box | Not built. | **Built.** An entry under the pointer, focused or tapped shows its card at the hover's size beside the box: to its left where it fits, else below. Escape or the pointer leaving puts it away. |
+| 12 | A sorcery or instant is not seen while it resolves ("they should appear on the battlefield while being resolved") | The stack is a list of names. | **Built.** The On the stack box shows its top spell as a card above the list. |
+| 13 | The Lands row cuts off its last cards with no scroll bar | The zone clips. A tapped land's margins were left out of the row's measure, and it took no share of the overlap. | **Built.** A full row overlaps to fit, its tapped lands included. Past a readable strip of each card (30%), it scrolls with a bar. |
 | 14 | Show hand: the end of a long card name ran under the next card (found by a11y-board, not Rob) | The fan overlaps each card's right edge. | **Fixed.** A covered card's name wraps within what shows of it. |
 
 Breaks: `game/tools/batch/breaks-turn-flow.py` (the room, 15), `breaks-turn-flow-board.py` (the board and Settings, 10),
 `breaks-untap-mana.py` (14), `breaks-table-basics.py` (3), `breaks-leaning.py` (8).
+Notes 11 to 13: `breaks-board-rows-stack.py` (10). Load Live's partners: `breaks-live-load-partners.py` (4).
 
 ## RESUMED, 2026-10-08: the review-response session (Claude, a cloud container), on Rob's "Keep building"
 
