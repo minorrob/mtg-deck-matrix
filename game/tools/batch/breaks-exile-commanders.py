@@ -10,15 +10,15 @@ BREAKS=[
  ('resolved permission loses free flag',A,'free: e.free === true','free: false'),
  ('riders are not distinct offers',A,'ability.free === true, ability.graveyardToLibraryBottom === true','false, false'),
  ('cast loses bottom rider',A,'if (permission?.ability.graveyardToLibraryBottom) entry.graveyardToLibraryBottom = true;',''),
- ('no-cost spell never castable',A,'if (!object.manaCost && lifeCost === null && !(permit?.ability.free || freeCast(state, player, id)))','if (!object.manaCost && lifeCost === null)'),
+ ('no-cost spell never castable',A,'if (!object.manaCost && lifeCost === null && !disguise && !(permit?.ability.free || freeCast(state, player, id)))','if (!object.manaCost && lifeCost === null && !disguise)'),
  ('free permission cannot pay',A,'permission?.ability.free ? {source: permission.source, limited: false}','false ? {source: permission.source, limited: false}'),
  ('adventure may repeat itself',A,'!(ability.notAdventure && state.objects[id].face === "adventure")','true'),
- ('adventure candidates require main face',A,'...allPlayPermissions(state, player).flatMap(({ability}) => permittedFrom(state, player, ability))','...[]'),
+ ('adventure candidates require main face',A,'map(e => e.id),\n    ...allPlayPermissions(state, player).flatMap(({ability}) => permittedFrom(state, player, ability))','map(e => e.id),\n    ...[]'),
  ('link forgets old source',Z,'const links = (state.links ??= {}), source = linkOf(context);','const links = (state.links ??= {}), source = context.source;'),
  ('linked exile forgets turn',Z,'state.objects[id].exiledTurn = state.turn','state.objects[id].exiledTurn = -1'),
  ('move ignores bottom rider',Z,'state.stack[leaving].graveyardToLibraryBottom && proposal.to === "graveyard"','false && proposal.to === "graveyard"'),
  ('counter ignores bottom rider',Z,'params.to === "top" || entry.graveyardToLibraryBottom ? "library"','params.to === "top" ? "library"'),
- ('counter always puts on top',Z,'if (to === "library" && params.to === "top" && moved','if (to === "library" && moved'),
+ ('counter always puts on top',Z,'if (to === "library" && params.to === "top" && landed','if (to === "library" && landed'),
  ('resolve ignores bottom rider',S,'entry.graveyardToLibraryBottom ? "library" : "graveyard"','"graveyard"'),
  ('resolution names caster as library owner',S,'["graveyard", "library"].includes(to) ? owner : entry.playerId','to === "graveyard" ? owner : entry.playerId'),
  ('commander fizzle silently bottoms',S,'if (to === "library" && object.commander === true)','if (false)'),
@@ -49,6 +49,6 @@ card_fault('Quintorius lasts an extra turn',Q,lambda d:d['abilities'][2]['effect
 
 BREAKS += [
  ('granted static ignored',A,'const mayGain = (state.effects','const mayGain = false && (state.effects'),
- ('permission id collision',Z,'while (effects.some(e => e.id === id))','while (false)'),
+ ('permission id collision',Z,'do { id = `may-play:${ids.join(",")}:${serial++}`; } while (effects.some(e => e.id === id));','do { id = `may-play:${ids.join(",")}:${serial++}`; } while (false);'),
  ('false turn predicate accepted',F,'if (selector.exiledThisTurn !== undefined && selector.exiledThisTurn !== true) throw new Error("exiledThisTurn is true");',''),
 ]

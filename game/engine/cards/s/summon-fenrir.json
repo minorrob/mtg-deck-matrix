@@ -1,0 +1,109 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Summon: Fenrir",
+    "oracleId": "3509171e-8d7d-4e9e-97a1-58e6c7d225ed",
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "Saga",
+      "Wolf"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)\nI — Crescent Fang — Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.\nII — Heavenward Howl — When you next cast a creature spell this turn, that creature enters with an additional +1/+1 counter on it.\nIII — Ecliptic Growl — Draw a card if you control the creature with the greatest power or tied for the greatest power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.",
+      "keyword": "saga"
+    },
+    {
+      "kind": "triggered",
+      "text": "I — Crescent Fang — Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 1
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "supertypes": [
+              "Basic"
+            ],
+            "types": [
+              "Land"
+            ]
+          },
+          "to": "battlefield",
+          "tapped": true,
+          "shuffle": true
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "II — Heavenward Howl — When you next cast a creature spell this turn, that creature enters with an additional +1/+1 counter on it.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 2
+      },
+      "effects": [
+        {
+          "effect": "delayedTrigger",
+          "when": {
+            "on": "spell cast",
+            "caster": "you",
+            "filter": {
+              "types": [
+                "Creature"
+              ]
+            }
+          },
+          "thisTurn": true,
+          "once": true,
+          "text": "When you next cast a creature spell this turn, that creature enters with an additional +1/+1 counter on it.",
+          "effects": [
+            {
+              "effect": "effectUntil",
+              "targets": "that card",
+              "rule": "enters-with-counters",
+              "counter": "+1/+1",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "III — Ecliptic Growl — Draw a card if you control the creature with the greatest power or tied for the greatest power.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 3
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1,
+          "condition": {
+            "greatestPower": "you"
+          }
+        }
+      ]
+    }
+  ]
+}

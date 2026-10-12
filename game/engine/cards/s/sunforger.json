@@ -1,0 +1,125 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sunforger",
+    "oracleId": "d1421070-a3cc-4af3-bf91-0f97372f4161",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Equipped creature gets +4/+0.\n{R}{W}, Unattach this Equipment: Search your library for a red or white instant card with mana value 4 or less and cast that card without paying its mana cost. Then shuffle.\nEquip {3}",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +4/+0.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 4,
+        "toughness": 0
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{R}{W}, Unattach this Equipment: Search your library for a red or white instant card with mana value 4 or less and cast that card without paying its mana cost. Then shuffle.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{R}{W}"
+        },
+        {
+          "atom": "unattach",
+          "self": true
+        }
+      ],
+      "targets": [],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Instant"
+                ],
+                "colors": [
+                  "R"
+                ],
+                "manaValue": {
+                  "max": 4
+                }
+              },
+              {
+                "types": [
+                  "Instant"
+                ],
+                "colors": [
+                  "W"
+                ],
+                "manaValue": {
+                  "max": 4
+                }
+              }
+            ]
+          },
+          "to": "stay",
+          "remember": true
+        },
+        {
+          "effect": "play",
+          "from": "targets",
+          "targets": "remembered",
+          "free": true
+        },
+        {
+          "effect": "shuffle"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Equip {3}",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "timing": "sorcery"
+    }
+  ]
+}

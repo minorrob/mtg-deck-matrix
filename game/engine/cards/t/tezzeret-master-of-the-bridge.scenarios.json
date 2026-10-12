@@ -1,0 +1,354 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Tezzeret, Master of the Bridge",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Blade": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [
+        "Equipment"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "abilities": [
+        {
+          "id": "blade",
+          "kind": "static",
+          "text": "Equipped creature gets +2/+0.",
+          "layer": 7,
+          "sublayer": "c",
+          "affects": {
+            "what": "permanent",
+            "attachedBy": "self"
+          },
+          "apply": {
+            "power": 2,
+            "toughness": 0
+          }
+        }
+      ]
+    },
+    "Big Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [],
+      "manaCost": "{3}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "+2 with two artifacts: 2 damage to Maya, 2 life for Rob, loyalty 7",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tezzeret, Master of the Bridge",
+            "Rock",
+            "Blade"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Tezzeret, Master of the Bridge",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "life": 42
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Tezzeret, Master of the Bridge",
+            "counter": "loyalty",
+            "count": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "+2 at a four-player table: 2 to each of three opponents, 2 life once",
+      "seats": 4,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tezzeret, Master of the Bridge",
+            "Rock",
+            "Blade"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Tezzeret, Master of the Bridge",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        },
+        {
+          "seat": 2,
+          "life": 38
+        },
+        {
+          "seat": 3,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "life": 42
+        }
+      ]
+    },
+    {
+      "name": "−3: his Rock back from his graveyard to his hand; loyalty 2",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tezzeret, Master of the Bridge"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Rock",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Tezzeret, Master of the Bridge",
+          "ability": "a2",
+          "targets": [
+            {
+              "card": "Rock"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rock"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Tezzeret, Master of the Bridge",
+            "counter": "loyalty",
+            "count": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "−8 (at 9 after two +2s): his top ten exiled, the Rock and the Blade among them onto the battlefield, the rest stay exiled",
+      "library": [
+        "Wastes",
+        "Wastes",
+        "Rock",
+        "Bear",
+        "Blade"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tezzeret, Master of the Bridge"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Tezzeret, Master of the Bridge",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Tezzeret, Master of the Bridge",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Tezzeret, Master of the Bridge",
+          "ability": "a3"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Tezzeret, Master of the Bridge",
+            "Rock",
+            "Blade"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "count": 8
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Tezzeret, Master of the Bridge",
+            "counter": "loyalty",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Affinity for artifacts: with two artifacts the {2}{R} Ogre costs {R}; the {3} Big Rock, an artifact spell, costs {3}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tezzeret, Master of the Bridge",
+            "Rock",
+            "Blade",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ogre",
+            "Big Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Big Rock"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "cast": "Ogre"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Tezzeret, Master of the Bridge",
+            "Rock",
+            "Blade",
+            "Mountain",
+            "Ogre"
+          ]
+        }
+      ]
+    }
+  ]
+}

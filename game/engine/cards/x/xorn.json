@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Xorn",
+    "oracleId": "11d8fab8-93af-4291-80bd-cf9436e99f4b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "If you would create one or more Treasure tokens, instead create those tokens plus an additional Treasure token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If you would create one or more Treasure tokens, instead create those tokens plus an additional Treasure token.",
+      "rule": "tokens-plus",
+      "affects": {
+        "subtypes": [
+          "Treasure"
+        ]
+      },
+      "token": {
+        "predefined": "Treasure"
+      }
+    }
+  ]
+}

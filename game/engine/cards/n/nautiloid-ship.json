@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Nautiloid Ship",
+    "oracleId": "613a8774-165e-4cf6-ad43-124f9ffc9980",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Vehicle"
+    ],
+    "manaCost": "{4}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Flying\nWhen this Vehicle enters, exile target player's graveyard.\nWhenever this Vehicle deals combat damage to a player, you may put a creature card exiled with this Vehicle onto the battlefield under your control.\nCrew 3",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this Vehicle enters, exile target player's graveyard.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "card",
+            "zone": "graveyard",
+            "controller": {
+              "target": 0
+            }
+          },
+          "to": "exile",
+          "link": true
+        }
+      ],
+      "targets": [
+        {
+          "what": "player"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this Vehicle deals combat damage to a player, you may put a creature card exiled with this Vehicle onto the battlefield under your control.",
+      "trigger": {
+        "on": "damage dealt",
+        "combat": true
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "exile",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "exiledWith": "self"
+          },
+          "upTo": true,
+          "to": "battlefield",
+          "controller": "you"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Crew 3",
+      "keyword": "crew",
+      "amount": 3
+    }
+  ]
+}

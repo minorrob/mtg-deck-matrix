@@ -73,8 +73,20 @@ Rob: *"I don't want to use API usage for this. Continue forward, and your plan i
    the tail on demand through the API is out. The tail is reached by more waves, beyond 90%, in time.
 
 **The order:**
-1. Train E's waves 2 and 3, Rob's library.
-2. Waves 4a to 4c, the constructs.
-3. Wave 5 onward: definitions of the 90% set, most-played first, 60 to 90 cards a wave.
+1. Train E's waves 2 and 3, Rob's library. Done (#720, #721): 1,216 of his 1,217 cards play.
+2. Wave 4a, the four constructs that block the most cards (#722).
+3. **Wave 4b onward: the most-played cards first, with the constructs they need.** This is reordered from "constructs,
+   then definitions". Measured after wave 4a, 1,396 of the 80% set's 1,892 undefined cards already have every rule.
+   So do 99 of the next 120 most-played (ranks 23 to 500), among them Cyclonic Rift, Toxic Deluge, Swan Song,
+   Teferi's Protection and The One Ring. A deck is refused for a single card it can't play, and a staple sits in more
+   decks than any card a rare construct unlocks. Each wave of 120 also builds the small constructs its cards need,
+   one family per lane:
+   - remembered objects;
+   - targets and the top of the library;
+   - keywords;
+   - activation limits and costs.
+
+   The larger constructs (emblems, replacements on every route to a graveyard, divided counters, the Ring, dice) come
+   in their own waves, when the most-played cards still waiting need them.
 
 The week's usage is read before each wave, and the work stops for a handoff at 90%.

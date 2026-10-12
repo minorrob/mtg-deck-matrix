@@ -9,7 +9,7 @@ BIND = 'game/engine/script/bind.mjs'
 SCHEMA = 'game/engine/script/schema.mjs'
 BREAKS = [
     # bind.mjs: the spec key set aside from the selector.
-    ('forEach is no selector key', BIND, '"share", "forEach"]);', '"share"]);'),
+    ('forEach is no selector key', BIND, '"share", "forEach", "ownedByControllerOf"]);', '"share", "ownedByControllerOf"]);'),
     # Only what an opponent controls.
     ('an opponent\'s only', BIND, '...(forEachOpponent(spec) ? {controller: "opponent"} : {}), ', ''),
     # As many as there are opponents: no most but the cap.
@@ -31,7 +31,11 @@ BREAKS = [
     ('the schema reads it', SCHEMA, 'const {count, forEach, ...selector} = spec && typeof spec', 'const {count, ...selector} = spec && typeof spec'),
     ('the schema refuses another form', SCHEMA, 'if (forEach !== undefined && !(forEach === "opponent"', 'if (false && !(forEach === "opponent"'),
     ('for each opponent, not each player', SCHEMA, '!(forEach === "opponent" && (count?.min', '!((count?.min'),
-    ('none at least', SCHEMA, '(count?.min ?? 0) === 0 && count?.max === 1', 'count?.max === 1'),
-    ('up to one', SCHEMA, '&& count?.max === 1\n', '\n'),
-    ('of permanents', SCHEMA, '.every((one) => (one?.what ?? "permanent") === "permanent")))', '.every(() => true)))'),
+    ('none at least', SCHEMA, '!(forEach === "opponent" && (count?.min ?? 0) === 0 && count?.max === 1', '!(forEach === "opponent" && count?.max === 1'),
+    ('up to one', SCHEMA, '!(forEach === "opponent" && (count?.min ?? 0) === 0 && count?.max === 1\n', '!(forEach === "opponent" && (count?.min ?? 0) === 0\n'),
+    ('of permanents', SCHEMA,
+     '!(forEach === "opponent" && (count?.min ?? 0) === 0 && count?.max === 1\n'
+     '        && (Array.isArray(selector.anyOf) ? selector.anyOf : [selector]).every((one) => (one?.what ?? "permanent") === "permanent")))',
+     '!(forEach === "opponent" && (count?.min ?? 0) === 0 && count?.max === 1\n'
+     '        && (Array.isArray(selector.anyOf) ? selector.anyOf : [selector]).every(() => true)))'),
 ]

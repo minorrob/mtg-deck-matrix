@@ -76,7 +76,18 @@ const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "trig
   "cant-activate",
   /* "As long as there is a Lesson card in your graveyard, this creature can attack as though it didn't have defender"
      (Platypus-Bear; CR 702.3b): rules/statics.mjs defenderLifted asks it as attackers are offered. */
-  "attacks-despite-defender"];
+  "attacks-despite-defender",
+  /* "Coven -- As long as you control three or more creatures with different powers, you may cast creature spells from the
+     top of your library" (Augur of Autumn), "you may cast this card from your graveyard as long as you control a Zombie"
+     (Gravecrawler): asked whenever a card would be played through it (rules/actions.mjs, permissionOpen and
+     playableElsewhere). */
+  "play-from", "cast-self-from",
+  /* "3+ | You may play an additional land on each of your turns" (Exploration Broodship's station; CR 305.2): asked as the
+     land drops are counted (rules/actions.mjs, landDropsLeft). */
+  "extra-land-drop",
+  /* "Solved -- You may look at the top card of your library any time" (Case of the Locked Hothouse; CR 719.3c): asked as the
+     library is shown (projection.mjs, topSeenBy). */
+  "look-at-top"];
 
 /* A target picked after the offer is taken ("up to two target creatures", script/bind.mjs): not chosen with it. */
 const countedTarget = (spec) => Boolean(spec) && typeof spec === "object" && spec.count !== undefined;
@@ -123,6 +134,21 @@ export function escapeCostProblems(cost, {given = false} = {}) {
     problems.push(given ? "an escape given costs each card's own mana cost: its cost says only the cards to exile" : "an escape cost has its mana, once");
   if (exile.length !== 1 || !(Number.isInteger(exile[0].count) && exile[0].count >= 1)) problems.push("an escape cost exiles a number of other cards from the graveyard, 1 or more, once");
   return problems;
+}
+
+/* A TOKEN A REPLACEMENT MAKES, NAMED AS A PREDEFINED ONE (CR 111.10): "plus an additional Food token" (Peregrin Took), "plus an
+   additional Treasure token" (Xorn), "one of each" Clue, Food and Treasure (Academy Manufactor) -- given the definition
+   createToken makes it from (PREDEFINED_TOKENS), so rules/statics.mjs reads what the token is. One it does not know is a
+   problem, by name. */
+const TOKEN_REPLACEMENTS = ["tokens-instead", "tokens-plus", "tokens-each"];
+function predefinedIn(ability, problems) {
+  if (ability.kind !== "static" || !TOKEN_REPLACEMENTS.includes(ability.rule)) return ability;
+  const spec = (token) => {
+    if (!token?.predefined) return token;
+    if (!Object.hasOwn(PREDEFINED_TOKENS, token.predefined)) { problems.push(`${ability.text}: no predefined token named ${token.predefined}`); return token; }
+    return structuredClone(PREDEFINED_TOKENS[token.predefined]);
+  };
+  return {...ability, ...(ability.token ? {token: spec(ability.token)} : {}), ...(Array.isArray(ability.each) ? {each: ability.each.map(spec)} : {})};
 }
 
 /* THE PARTNER ABILITIES (CR 702.124a), read from the card's own words: a deck rule a table holds a deck to
@@ -254,14 +280,18 @@ const TRIGGERS = {
     ...(Array.isArray(t.anyOf) ? {anyOf: t.anyOf.map((one) => ({...(one.filter ? {filter: one.filter} : {}), ...(one.targets ? {targets: one.targets} : {})}))} : {})}),
   /* "Whenever one or more +1/+1 counters are put on Berta" (CR 122.1): counters of `counter` put on this permanent, once
      for each time they are put on, however many. */
-  "counter added": (t) => (typeof t.counter !== "string" ? null : (t.who ?? "self") === "self" ? {on: "GameEventCardCounters", counterAdded: true, counter: t.counter,
+  /* "Whenever YOU put one or more +1/+1 counters on this creature" (Exemplar of Light), "whenever you put one or more -1/-1
+     counters on a creature" (Nest of Scarabs): `putBy: "you"`, put by this ability's controller -- an effect's controller,
+     or as a permanent enters its controller (CR 122.6a; rules/trigger.mjs). */
+  "counter added": (t) => (typeof t.counter !== "string" || ![undefined, "you"].includes(t.putBy) ? null : (t.who ?? "self") === "self" ? {on: "GameEventCardCounters", counterAdded: true, counter: t.counter,
     /* "Whenever a +1/+1 counter is put on this creature" (Fathom Mage): once for each counter (`each`), not for each time. */
-    ...(t.each === true ? {each: true} : {})}
+    ...(t.each === true ? {each: true} : {}), ...(t.putBy ? {putBy: t.putBy} : {})}
     /* "Whenever one or more +1/+1 counters are put on a creature you control, put that many growth counters on this
        enchantment" (Simic Ascendancy; CR 122.6): on any permanent `filter` describes, once for each permanent each time
        they are put on it -- about that permanent and how many (rules/trigger.mjs; "that many", script/amount.mjs
        `countersPut`). Once for each time, never for each counter. */
-    : t.who === "any" && t.each === undefined ? {on: "GameEventCardCounters", counterAdded: true, counter: t.counter, who: "any", ...(t.filter ? {filter: t.filter} : {})} : null),
+    : t.who === "any" && t.each === undefined ? {on: "GameEventCardCounters", counterAdded: true, counter: t.counter, who: "any", ...(t.filter ? {filter: t.filter} : {}),
+      ...(t.putBy ? {putBy: t.putBy} : {})} : null),
   /* "Whenever you scry or surveil" (Proft, Consulting Detective; CR 701.22a, 701.25a): once each is done, by `scrier`. */
   scried: (t) => ({on: "GameEventScried", scrier: t.scrier ?? "you"}),
   /* "Whenever you proliferate" (Ezuri, Stalker of Spheres; CR 701.34a): once each proliferate is done, by `proliferator`
@@ -1229,9 +1259,10 @@ export function compileScript(script) {
         problems.push("moveZone: look is true, beside faceDown: the cards looked at, then exiled face down");
       /* "Return ... to the battlefield with a finality counter on it" (Excava, the Risen Past): onto the battlefield only, each
          kind of counter a whole number, 1 or more (effects/zones.mjs, moveOne's `counters`). */
-      if (effect.effect === "moveZone" && effect.withCounters !== undefined && !(effect.to === "battlefield" && effect.withCounters && typeof effect.withCounters === "object"
+      /* Or that it is exiled with ("exile it ... with a stash counter on it", Tinybones, Bauble Burglar; effects/zones.mjs). */
+      if (effect.effect === "moveZone" && effect.withCounters !== undefined && !(["battlefield", "exile"].includes(effect.to) && effect.withCounters && typeof effect.withCounters === "object"
         && Object.keys(effect.withCounters).length && Object.values(effect.withCounters).every((n) => Number.isInteger(n) && n >= 1)))
-        problems.push("moveZone: withCounters is the counters it enters the battlefield with, {kind: 1 or more}");
+        problems.push("moveZone: withCounters is the counters it enters the battlefield with, or is exiled with: {kind: 1 or more}");
       /* "Put this creature's counters on that token" (Ambitious Augmenter): `countersOf: "self"`, every kind its source had as
          it last existed, as many -- with no kind or count of its own (effects/resources.mjs, putCounter). */
       if (effect.effect === "putCounter" && effect.countersOf !== undefined && !(effect.countersOf === "self" && effect.counter === undefined && effect.count === undefined))
@@ -1613,8 +1644,9 @@ export function compileScript(script) {
     /* What follows a prevention is done at once, inside the damage event (CR 615.5): nothing in it may stop to ask. */
     if (ability.kind === "replacement") for (const effect of ability.change?.then ?? [])
       if (!EFFECTS[effect?.effect]) problems.push(`${ability.text}: ${effect?.effect} follows a prevention, and it asks a question or is not built`);
-    /* static and replacement: their schema is the rules modules' own shape. */
-    abilities.push({...ability, id});
+    /* static and replacement: their schema is the rules modules' own shape -- a token a replacement makes, named as a
+       predefined one, given its definition (predefinedIn). */
+    abilities.push({...predefinedIn(ability, problems), id});
   });
 
   /* What a static or an effect gives (compileGrant): compiled here, in place of the script's words. */

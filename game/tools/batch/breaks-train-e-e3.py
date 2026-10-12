@@ -28,8 +28,9 @@ VOCAB = 'game/engine/vocabulary.mjs'
 PILOT = 'game/engine/pilots/house-pilot.mjs'
 
 GONE = 'const gone = params.lastKnown === true && !originals.length && context.lastKnown?.copiable ? [{values: context.lastKnown.copiable}] : null;'
-APPLYING = '''const applying = (rest, made, event) => rest.filter(({ability}) => ability.rule === "more-tokens"
-  || (event.count > 0 && matchesLastKnown(ability.affects, made)) || event.plus.some((p) => matchesLastKnown(ability.affects, p.token)));'''
+APPLYING = '''const applying = (rest, event) => rest.filter(({ability}) => live(event).some((g) => (ability.rule === "more-tokens" ? true
+  : ability.rule === "tokens-each" ? Boolean(kindOf(ability, g.token)) : describes(ability.affects, g.token))));'''
+TOKENS_CHANGED = 'const TOKENS_CHANGED = ["tokens-instead", "tokens-plus", "tokens-each"];'
 EXPLORE_PLAYER = 'const player = here ? controllerOf(state, id) : context.lastKnown?.cardId === id ? context.lastKnown.controller : context.controller;'
 
 BREAKS = [
@@ -58,45 +59,46 @@ BREAKS = [
      '(state.combat?.attacks ?? []).some((attack) => attack.attacker === id)) return false;'),
 
     # Queen Allenal of Ruadach: "those tokens plus a 1/1 white Soldier creature token are created instead" (rules/statics.mjs,
-    # tokensCreated's `tokens-plus`; the order beside a doubler asked, effects/asking.mjs orderTokens).
-    ('tokens-plus: read', STATICS,
-     '      if (ability.rule === "tokens-plus" && holder.controller === controller) changers.push({holderId, ability});\n', ''),
+    # tokensCreated's `tokens-plus`; the order beside a doubler asked, effects/asking.mjs orderTokens). Wave 4a rewrote the
+    # token event as groups (breaks-wave4a-h4.py breaks the rest of it): these are the Queen's own, on that code. And her
+    # ruling of 2022-09-09 there: the Soldier is made as the effect makes its tokens (tapped, hasty), no longer bare.
+    ('tokens-plus: read', STATICS, TOKENS_CHANGED, TOKENS_CHANGED.replace('"tokens-plus", ', '')),
     ('tokens-plus: its controller\'s tokens only', STATICS,
-     'if (ability.rule === "tokens-plus" && holder.controller === controller) changers.push',
-     'if (ability.rule === "tokens-plus") changers.push'),
-    ('tokens-plus: a doubler always applies', STATICS, APPLYING, APPLYING.replace('ability.rule === "more-tokens"\n  ||', 'false\n  ||')),
-    ('tokens-plus: an adder to the tokens it names only', STATICS, APPLYING, APPLYING.replace('(event.count > 0 && matchesLastKnown(ability.affects, made))', 'true')),
-    ('tokens-plus: none made, none added to', STATICS, APPLYING, APPLYING.replace('(event.count > 0 && matchesLastKnown(', '(matchesLastKnown(')),
-    ('tokens-plus: a token another added counts', STATICS, APPLYING, APPLYING.replace(' || event.plus.some((p) => matchesLastKnown(ability.affects, p.token))', '')),
+     '      if (!TOKENS_CHANGED.includes(ability.rule) || holder.controller !== controller) continue;\n', '      if (!TOKENS_CHANGED.includes(ability.rule)) continue;\n'),
+    ('tokens-plus: a doubler always applies', STATICS, APPLYING, APPLYING.replace('(ability.rule === "more-tokens" ? true', '(ability.rule === "more-tokens" ? false')),
+    ('tokens-plus: an adder to the tokens it names only', STATICS, APPLYING, APPLYING.replace(': describes(ability.affects, g.token))));', ': true)));')),
+    ('tokens-plus: none made, none added to', STATICS, APPLYING, APPLYING.replace('live(event).some(', 'event.some(')),
+    ('tokens-plus: a token another added counts', STATICS, APPLYING, APPLYING.replace('live(event).some(', 'live(event).filter((g) => g.own).some(')),
     ('tokens-plus: a doubler doubles the added ones', STATICS,
-     '? {count: event.count * ability.times, plus: event.plus.map((p) => ({...p, count: p.count * ability.times}))}',
-     '? {count: event.count * ability.times, plus: event.plus}'),
+     'if (ability.rule === "more-tokens") return event.map((g) => ({...g, count: g.count * ability.times}));',
+     'if (ability.rule === "more-tokens") return event.map((g) => (g.own ? {...g, count: g.count * ability.times} : g));'),
     ('tokens-plus: asked only when the order matters', STATICS,
-     'if (now.length > 1 && tokenEnds(rest, made, event).size > 1) {', 'if (now.length > 1) {'),
+     'if (now.length > 1 && tokenEnds(rest, event).size > 1) {', 'if (now.length > 1) {'),
     ('tokens-plus: an answer replayed', STATICS,
      'const answered = orders[used] === undefined ? undefined : now.find((c) => tokenEffectKey(c) === orders[used]);',
      'const answered = undefined;'),
     ('tokens-plus: asked where it can be', STATICS,
-     'else if (askable) return {count: event.count, instead, plus: event.plus, question: {player: controller, options: now.map(tokenEffectKey)}};', ''),
+     '      else if (askable) return {event, rest, question: {player: controller, options: now.map(tokenEffectKey)}};\n', ''),
     ('tokens-plus: unasked, the most', STATICS,
-     'else next = now.reduce((top, c) => (mostAfter(rest, made, c, event) > mostAfter(rest, made, top, event) ? c : top), now[0]);', ''),
+     '      else next = now.reduce((top, c) => (mostAfter(rest, c, event) > mostAfter(rest, top, event) ? c : top), now[0]);\n', ''),
     ('tokens-plus: the choice\'s numbers', STATICS,
-     'return {index, label: `${nameOf(c)} first: ${lo === hi ? lo : `${lo} to ${hi}`} token${hi === 1 ? "" : "s"}`, cardId: c.holderId, makes: hi};',
-     'return {index, label: `${nameOf(c)} first: ${hi} tokens`, cardId: c.holderId, makes: lo};'),
+     'return {index, label: `${nameOfHolder(c)} first: ${ranges.get(index)} token${hi === 1 ? "" : "s"}`, cardId: c.holderId, makes: hi};',
+     'return {index, label: `${nameOfHolder(c)} first: ${hi} tokens`, cardId: c.holderId, makes: lo};'),
     ('tokens-plus: the choice replays the answers', STATICS,
-     '  for (const key of awaiting.answered ?? []) {\n    const c = rest.find((one) => tokenEffectKey(one) === key);',
-     '  for (const key of []) {\n    const c = rest.find((one) => tokenEffectKey(one) === key);'),
+     'tokenEvent(state, awaiting.controller, awaiting.count, awaiting.values, awaiting.answered ?? [], true);',
+     'tokenEvent(state, awaiting.controller, awaiting.count, awaiting.values, [], true);'),
     ('createToken: the added ones made', PERM,
-     '  const added = addedTokens(state, plus, controller, context, events);\n', '  const added = [];\n'),
-    ('createToken: the added ones given none of the effect\'s words', PERM,
-     'Array.from({length: count}, () => makeToken(state, token, controller, {}, context, events))',
-     'Array.from({length: count}, () => makeToken(state, token, controller, {tapped: true}, context, events))'),
+     '  for (const {token, count: many} of groups) for', '  for (const {token, count: many} of groups.slice(0, 1)) for'),
+    ('createToken: the added ones given the effect\'s words', PERM,
+     '  for (const {token, count: many} of groups) for (let i = 0; i < many; i += 1) made.push(makeToken(state, token, controller, params, context, events));',
+     '  for (const {token, count: many, own} of groups) for (let i = 0; i < many; i += 1) made.push(makeToken(state, token, controller, own ? params : {}, context, events));'),
     ('createToken: the added ones remembered', PERM,
-     '  if (params.remember) context.remembered = [...made, ...added];', '  if (params.remember) context.remembered = made;'),
+     'among them (CR 614.6). */\n  if (params.remember) context.remembered = made;', 'among them (CR 614.6). */\n  if (params.remember) context.remembered = made.slice(0, groups[0]?.count ?? 0);'),
     ('createToken: its answers', PERM,
      '{orders: params.tokenOrders?.[TOKEN_EVENT] ?? []}', '{orders: []}'),
     ('copies: the added ones made', PERM,
-     '  for (const plus of pending) added.push(...addedTokens(state, plus, controller, context, events));\n', ''),
+     '      if (!own) { made.push(makeToken(state, token, controller, params, context, events)); continue; }',
+     '      if (false) { made.push(makeToken(state, token, controller, params, context, events)); continue; }'),
     ('copies: their answers, by original', PERM,
      '{orders: params.tokenOrders?.[copyEventKey(id)] ?? []}', '{orders: params.tokenOrders?.[String(id)] ?? []}'),
     ('question: a createToken asked about', PERM,
@@ -117,10 +119,10 @@ BREAKS = [
      '  /* The tokens\' controller has left the game: none is made under their control (CR 800.4a; effects/permanents.mjs). */\n  left(state, awaiting) {\n    return {events: []};'),
     ('orderTokens: registered', ASKING, 'orderCounters, orderTokens, orderDraws,', 'orderCounters, orderDraws,'),
     ('schema: tokens-plus by card types', SCHEMA,
-     'if (Object.keys(ability.affects ?? {}).some((key) => key !== "types") || !Array.isArray(ability.affects?.types)) errors.push({path: `${path}.affects`, message: "The tokens another is added to',
-     'if (false) errors.push({path: `${path}.affects`, message: "The tokens another is added to'),
+     '        errors.push({path: `${path}.affects`, message: "The tokens another is added to are told by their card types and subtypes, or any token: affects {types?, subtypes?}"});',
+     '        void 0;'),
     ('schema: tokens-plus adds a token', SCHEMA,
-     'if (!(ability.token && isText(ability.token.name) && Array.isArray(ability.token.types))) errors.push({path: `${path}.token`, message: "What is added is a token',
+     'if (!tokenSpec(ability.token)) errors.push({path: `${path}.token`, message: "What is added is a token',
      'if (false) errors.push({path: `${path}.token`, message: "What is added is a token'),
     ('pilot: the most tokens', PILOT,
      'const best = options.reduce((b, o) => ((o.makes ?? 0) > (b.makes ?? 0) ? o : b));\n', 'const best = options[0];\n'),

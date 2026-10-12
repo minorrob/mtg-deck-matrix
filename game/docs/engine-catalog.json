@@ -9,17 +9,17 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1275,
+  "defined": 1347,
   "provisional": 27,
-  "everyRule": 2661
+  "everyRule": 2743
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 68,
+    "built": 69,
     "partial": 0,
     "named": 5,
-    "missing": 121
+    "missing": 120
    },
    "entries": [
     {
@@ -794,13 +794,13 @@
      "kind": "keyword ability",
      "rule": "702.28",
      "name": "Shadow",
-     "engine": null,
-     "status": "missing",
+     "engine": "Shadow",
+     "status": "built",
      "forge": "Shadow",
      "top": 2,
      "all": 39,
-     "blocks": 2,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -3209,8 +3209,8 @@
   "Effects": {
    "tally": {
     "built": 74,
-    "partial": 1,
-    "named": 2,
+    "partial": 2,
+    "named": 1,
     "missing": 115
    },
    "entries": [
@@ -3787,20 +3787,20 @@
      "forge": "ReplaceToken",
      "top": 17,
      "all": 35,
-     "blocks": 16,
+     "blocks": 4,
      "alone": 0
     },
     {
      "kind": "effect",
      "rule": null,
      "name": "ReplaceCounter",
-     "engine": "replaceCounters",
-     "status": "named",
+     "engine": "the AddCounter replacement (rules/statics)",
+     "status": "partial",
      "forge": "ReplaceCounter",
      "top": 16,
      "all": 33,
-     "blocks": 12,
-     "alone": 10
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -5522,9 +5522,9 @@
   },
   "Triggers": {
    "tally": {
-    "built": 24,
+    "built": 25,
     "partial": 4,
-    "named": 2,
+    "named": 1,
     "missing": 108
    },
    "entries": [
@@ -5688,13 +5688,13 @@
      "kind": "trigger",
      "rule": null,
      "name": "CounterAddedOnce",
-     "engine": "counter added once",
-     "status": "named",
+     "engine": "counter added",
+     "status": "built",
      "forge": "CounterAddedOnce",
      "top": 10,
      "all": 47,
-     "blocks": 9,
-     "alone": 6
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -8173,7 +8173,7 @@
      "forge": "CreateToken",
      "top": 17,
      "all": 32,
-     "blocks": 16,
+     "blocks": 4,
      "alone": 0
     },
     {
@@ -8925,8 +8925,8 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 80,
-     "alone": 21
+     "blocks": 63,
+     "alone": 4
     },
     {
      "kind": "option",
@@ -8949,8 +8949,8 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 86,
-     "alone": 27
+     "blocks": 67,
+     "alone": 8
     },
     {
      "kind": "option",
@@ -9009,8 +9009,8 @@
      "forge": "MayPlay",
      "top": 99,
      "all": 625,
-     "blocks": 62,
-     "alone": 18
+     "blocks": 45,
+     "alone": 1
     },
     {
      "kind": "option",
@@ -9524,7 +9524,7 @@
      "top": 10,
      "all": 43,
      "blocks": 9,
-     "alone": 2
+     "alone": 5
     },
     {
      "kind": "count",

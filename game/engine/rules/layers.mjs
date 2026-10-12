@@ -56,7 +56,9 @@ const SUBLAYERS = Object.freeze(["a", "b", "c", "d", "e"]);
    old as the permanent. The ones the engine plays. */
 const KEYWORD_COUNTERS = Object.freeze({"flying": "Flying", "first strike": "First Strike", "double strike": "Double Strike", "deathtouch": "Deathtouch",
   "haste": "Haste", "hexproof": "Hexproof", "indestructible": "Indestructible", "lifelink": "Lifelink", "menace": "Menace", "reach": "Reach",
-  "trample": "Trample", "vigilance": "Vigilance"});
+  "trample": "Trample", "vigilance": "Vigilance",
+  /* A shadow counter (Minas Morgul, Dark Fortress; CR 122.1b, 702.28): shadow, keywords/combat.mjs. */
+  "shadow": "Shadow"});
 const counterKeywords = (counters) => Object.entries(counters ?? {}).filter(([kind, n]) => n > 0 && KEYWORD_COUNTERS[kind]).map(([kind]) => KEYWORD_COUNTERS[kind]);
 export const isKeywordCounter = (kind) => Boolean(KEYWORD_COUNTERS[kind]);
 /* The keywords an object's counters give it, each with its counter's timestamp. */
@@ -784,4 +786,4 @@ export function lastKnown(state, id) {
 }
 /* The copiable values a permanent shows (effects/permanents.mjs, COPY_KEYS: the same list, kept here to keep the layers free
    of the effects). */
-const COPIED_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "spell", "enchant"]);
+const COPIED_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "loyalty", "spell", "enchant"]);

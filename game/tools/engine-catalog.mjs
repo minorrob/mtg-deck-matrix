@@ -34,7 +34,7 @@ import {isBuilt} from "../engine/script/effects/index.mjs";
 import {TRIGGER_KINDS} from "../engine/cards/index.mjs";
 import {loadCardIndex, loadCardScripts} from "./engine-cards.mjs";
 import {createCardIndex} from "../engine/cards/index.mjs";
-import {FORGE_API, FORGE_TRIGGER, FORGE_STATIC, FORGE_REPLACEMENT, FORGE_OPTIONS, FORGE_COUNTS, BROAD_TRIGGERS, keywordBuilt, missingFor} from "./engine-constructs.mjs";
+import {FORGE_API, FORGE_TRIGGER, FORGE_STATIC, FORGE_REPLACEMENT, FORGE_REPLACING_API, FORGE_OPTIONS, FORGE_COUNTS, BROAD_TRIGGERS, keywordBuilt, missingFor} from "./engine-constructs.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const CR_INDEX = path.join(REPO, "game", "docs", "cr-index.json");
@@ -154,6 +154,11 @@ function main() {
   const PARTIAL_EFFECTS = new Set(["delayedTrigger"]);
   const effectStatus = (primitive) => (!primitive ? "missing" : isBuilt(primitive) ? (PARTIAL_EFFECTS.has(primitive) ? "partial" : "built") : isPrimitive(primitive) ? "named" : "missing");
   const effects = [...ALL.apis.keys()].map((api) => {
+    /* A replacement's "instead" (ReplaceCounter): where its replacement mode is (engine-constructs.mjs), and as that mode
+       stands -- partial, as every replacement mode is listed. */
+    const replacing = FORGE_REPLACING_API[api];
+    if (replacing) return entry({kind: "effect", rule: null, name: api, engine: `the ${replacing} replacement (${FORGE_REPLACEMENT[replacing] ?? "none"})`,
+      status: FORGE_REPLACEMENT[replacing] ? "partial" : "missing", forge: api, top: TOP.apis.get(api) ?? 0, all: ALL.apis.get(api) ?? 0, ...byKey(`api:${api}`)});
     const primitive = FORGE_API[api] ?? null;
     return entry({kind: "effect", rule: null, name: api, engine: primitive, status: effectStatus(primitive), forge: api, top: TOP.apis.get(api) ?? 0, all: ALL.apis.get(api) ?? 0,
       ...byKey(primitive && !isBuilt(primitive) ? `api:${primitive}` : `api:${api}`)});

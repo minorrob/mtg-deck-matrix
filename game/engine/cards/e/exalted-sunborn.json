@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Exalted Sunborn",
+    "oracleId": "43febbcd-ecbe-4edb-ad90-7fc6dc381d05",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel",
+      "Wizard"
+    ],
+    "manaCost": "{3}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Flying, lifelink\nIf one or more tokens would be created under your control, twice that many of those tokens are created instead.\nWarp {1}{W} (You may cast this card from your hand for its warp cost. Exile this creature at the beginning of the next end step, then you may cast it from exile on a later turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "lifelink",
+      "keyword": "lifelink"
+    },
+    {
+      "kind": "static",
+      "text": "If one or more tokens would be created under your control, twice that many of those tokens are created instead.",
+      "rule": "more-tokens",
+      "affects": {
+        "who": "you"
+      },
+      "times": 2
+    },
+    {
+      "kind": "keyword",
+      "text": "Warp {1}{W}",
+      "keyword": "warp",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{W}"
+        }
+      ]
+    }
+  ]
+}

@@ -214,7 +214,9 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   "warp", "sneak",
   /* Train E, wave 2: replicate (CR 702.56a; Lose Focus), an additional cost paid any number of times and a cast trigger
      copying the spell for each (cards/index.mjs, rules/actions.mjs). */
-  "replicate"];
+  "replicate",
+  /* Wave 4a: shadow (CR 702.28), a keyword counter's (Minas Morgul, Dark Fortress; CR 122.1b; keywords/combat.mjs). */
+  "shadow"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

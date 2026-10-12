@@ -25,13 +25,13 @@ BREAKS=[
  ('aura host uses owner',ZONE,'enchantable(state, object.enchant, enteringController)','enchantable(state, object.enchant, object.owner)'),
  ('arrival event names owner',ZONE,'playerId: destination === "battlefield" ? enteringController : holder','playerId: holder'),
  ('search recipient dropped','game/engine/script/effects/asking.mjs','controller: awaiting.controller, tapped: where.tapped','controller: null, tapped: where.tapped'),
- ('forestwalk ignored',COMBAT,'if (has(state, attackerId, "Forestwalk")) {','if (false) {'),
- ('forestwalk affects every attacker',COMBAT,'if (has(state, attackerId, "Forestwalk")) {','if (true) {'),
+ ('forestwalk ignored',COMBAT,'if (!has(state, attackerId, walk)) continue;','if (walk === "Forestwalk" || !has(state, attackerId, walk)) continue;'),
+ ('forestwalk affects every attacker',COMBAT,'if (!has(state, attackerId, walk)) continue;','if (walk !== "Forestwalk" && !has(state, attackerId, walk)) continue;'),
  ('any opponent forest prevents block',COMBAT,'controllerOf(state, id) === defender','controllerOf(state, id) !== controllerOf(state, attackerId)'),
  ('forestwalk reads printed control',COMBAT,'controllerOf(state, id) === defender','state.objects[id].controller === defender'),
  ('forestwalk ignores Land type',COMBAT,'&& typesOf(state, id).includes("Land")',''),
- ('forestwalk ignores Forest subtype',COMBAT,'&& subtypesOf(state, id).includes("Forest")',''),
- ('forestwalk ignores subtype layers',COMBAT,'subtypesOf(state, id).includes("Forest")','state.objects[id].subtypes.includes("Forest")'),
+ ('forestwalk ignores Forest subtype',COMBAT,' && subtypesOf(state, id).includes(type)',''),
+ ('forestwalk ignores subtype layers',COMBAT,'subtypesOf(state, id).includes(type)','(state.objects[id].subtypes ?? []).includes(type)'),
  ('forestwalk not executable','game/engine/vocabulary.mjs','"forestwalk",',''),
 ]
 def card_fault(name,path,mutate):

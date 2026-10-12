@@ -268,7 +268,7 @@
       ]
     },
     {
-      "name": "\"It gains haste\": the Goblin made has it, the Soldier added beside it does not",
+      "name": "\"It gains haste\": the Goblin made has it, and so does the Soldier added beside it (the card's ruling of 2022-09-09)",
       "setup": [
         {
           "seat": 0,
@@ -320,7 +320,7 @@
           "seat": 0,
           "keywords": {
             "card": "Soldier",
-            "lacks": [
+            "has": [
               "Haste"
             ]
           }

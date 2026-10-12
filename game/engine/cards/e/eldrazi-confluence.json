@@ -1,0 +1,110 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Eldrazi Confluence",
+    "oracleId": "01160cb5-6d83-4317-9522-74083b3a83bb",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{C}{C}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose three. You may choose the same mode more than once.\n• Target creature gets +3/-3 until end of turn.\n• Exile target nonland permanent, then return it to the battlefield tapped under its owner's control.\n• Create a 1/1 colorless Eldrazi Scion creature token with \"Sacrifice this token: Add {C}.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose three. You may choose the same mode more than once.\n• Target creature gets +3/-3 until end of turn.\n• Exile target nonland permanent, then return it to the battlefield tapped under its owner's control.\n• Create a 1/1 colorless Eldrazi Scion creature token with \"Sacrifice this token: Add {C}.\"",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 3,
+          "sameMode": true,
+          "modes": [
+            {
+              "text": "Target creature gets +3/-3 until end of turn.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "pump",
+                  "targets": {
+                    "target": 0
+                  },
+                  "power": 3,
+                  "toughness": -3
+                }
+              ]
+            },
+            {
+              "text": "Exile target nonland permanent, then return it to the battlefield tapped under its owner's control.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "nonTypes": [
+                    "Land"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": {
+                    "target": 0
+                  },
+                  "to": "exile",
+                  "andReturn": "now",
+                  "returnTapped": true
+                }
+              ]
+            },
+            {
+              "text": "Create a 1/1 colorless Eldrazi Scion creature token with \"Sacrifice this token: Add {C}.\"",
+              "effects": [
+                {
+                  "effect": "createToken",
+                  "count": 1,
+                  "token": {
+                    "name": "Eldrazi Scion",
+                    "types": [
+                      "Creature"
+                    ],
+                    "subtypes": [
+                      "Eldrazi",
+                      "Scion"
+                    ],
+                    "colors": [],
+                    "power": 1,
+                    "toughness": 1,
+                    "abilities": [
+                      {
+                        "id": "scion",
+                        "kind": "mana",
+                        "tapSelf": false,
+                        "produces": {
+                          "C": 1
+                        },
+                        "sacrificeSelf": true,
+                        "text": "Sacrifice this token: Add {C}."
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

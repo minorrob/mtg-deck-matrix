@@ -1,0 +1,96 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "The Indomitable",
+    "oracleId": "276dc5c8-c8cf-4b9c-ad75-31876e6e040a",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Vehicle"
+    ],
+    "manaCost": "{2}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Trample\nWhenever a creature you control deals combat damage to a player, draw a card.\nCrew 3\nYou may cast this card from your graveyard as long as you control three or more tapped Pirates and/or Vehicles.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature you control deals combat damage to a player, draw a card.",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "any",
+        "to": "player",
+        "combat": true,
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Crew 3",
+      "keyword": "crew",
+      "amount": 3
+    },
+    {
+      "kind": "static",
+      "text": "You may cast this card from your graveyard as long as you control three or more tapped Pirates and/or Vehicles.",
+      "rule": "cast-self-from",
+      "affects": {
+        "self": true
+      },
+      "zones": [
+        "graveyard"
+      ],
+      "condition": {
+        "present": {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "subtypes": [
+                "Pirate"
+              ],
+              "tapped": true,
+              "controller": "you"
+            },
+            {
+              "what": "permanent",
+              "subtypes": [
+                "Vehicle"
+              ],
+              "tapped": true,
+              "controller": "you"
+            }
+          ]
+        },
+        "atLeast": 3
+      }
+    }
+  ]
+}

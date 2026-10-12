@@ -77,8 +77,12 @@ export const TARGET_CHOICES_MAX = 4096;
  *                               than one of each opponent's, and as many as there are opponents. Each one chosen keeps the
  *                               player it was chosen for (`forPlayer`), and is illegal as the ability resolves once that player
  *                               no longer controls it (CR 608.2b), whoever controls it then
+ *   `ownedByControllerOf: n`   "target artifact a player controls and target artifact card in that player's graveyard" (Goblin
+ *                               Welder): a card whose owner -- whose graveyard it is in (CR 400.3) -- controls the permanent
+ *                               chosen for target n, as it is chosen and again as the ability resolves (CR 608.2b): that
+ *                               permanent gone, or another player's now, and this target is illegal too (relatedLegal)
  * None is part of what a target may be (the selector), so each is set aside beside `count`. */
-export const SPEC_KEYS = Object.freeze(["count", "distinctFrom", "onlyIf", "differentControllers", "share", "forEach"]);
+export const SPEC_KEYS = Object.freeze(["count", "distinctFrom", "onlyIf", "differentControllers", "share", "forEach", "ownedByControllerOf"]);
 /** What a counted target's choices may share (`share`). */
 export const SHARES = Object.freeze(["graveyard", "creature type"]);
 const selectorOf = (spec) => Object.fromEntries(Object.entries(spec && typeof spec === "object" ? spec : {}).filter(([key]) => !SPEC_KEYS.includes(key)));
@@ -128,6 +132,14 @@ const kindOf = (selector) => ((selector.what ?? "permanent") === "player" ? "pla
    stack entry holds them so far (`context.chosenTargets`, or the way being built). */
 const otherThan = (spec, chosen) => (Array.isArray(spec?.distinctFrom) ? spec.distinctFrom.flatMap((n) => [].concat((chosen ?? [])[n] ?? [])).filter((t) => t && (t.kind === "object" || t.kind === "player")) : []);
 const sameTarget = (a, b) => a.kind === b.kind && a.id === b.id;
+/* "In that player's graveyard" (`ownedByControllerOf`): the candidate a card owned by whoever controls the permanent chosen for
+   that target -- with none chosen there yet, or that one gone, no candidate is. Any other spec, every candidate. */
+function relatedLegal(state, spec, chosen, candidate) {
+  if (!Number.isInteger(spec?.ownedByControllerOf)) return true;
+  const first = (chosen ?? [])[spec.ownedByControllerOf];
+  return Boolean(first) && !Array.isArray(first) && first.kind === "object" && state.objects[first.id]?.zone === "battlefield"
+    && candidate?.kind === "object" && state.objects[candidate.id]?.owner === controllerOf(state, first.id);
+}
 
 /** Every legal choice for one target, as `{kind, id}`: in the selectors' order, each in its stable order. */
 export function targetCandidates(state, spec, context) {
@@ -136,7 +148,10 @@ export function targetCandidates(state, spec, context) {
   for (const selector of targetAlternatives(spec)) {
     const kind = kindOf(selector);
     for (const id of selectMatching(state, selector, context)) {
-      if (!found.some((c) => c.kind === kind && c.id === id) && !others.some((o) => sameTarget(o, {kind, id}))) found.push({kind, id});
+      if (!found.some((c) => c.kind === kind && c.id === id) && !others.some((o) => sameTarget(o, {kind, id}))
+        /* Of the targets chosen so far, when they are known (an offer's, a stack entry's); every way's own, otherwise
+           (targetChoices, below). */
+        && (!Number.isInteger(spec?.ownedByControllerOf) || !Array.isArray(context?.chosenTargets) || relatedLegal(state, spec, context.chosenTargets, {kind, id}))) found.push({kind, id});
     }
   }
   return found;
@@ -215,8 +230,10 @@ export function targetChoices(state, specs, context) {
       continue;
     }
     const next = [];
-    /* "A second target creature" (`distinctFrom`): never the one chosen for that other target. */
-    for (const chosen of choices) for (const candidate of candidates) if (!otherThan(spec, chosen).some((o) => sameTarget(o, candidate))) next.push([...chosen, candidate]);
+    /* "A second target creature" (`distinctFrom`): never the one chosen for that other target. "In that player's graveyard"
+       (`ownedByControllerOf`): only a card of the player who controls the permanent that way chose. */
+    for (const chosen of choices) for (const candidate of candidates)
+      if (!otherThan(spec, chosen).some((o) => sameTarget(o, candidate)) && relatedLegal(state, spec, chosen, candidate)) next.push([...chosen, candidate]);
     choices = next;
     if (choices.length > TARGET_CHOICES_MAX)
       throw new Error(`More than ${TARGET_CHOICES_MAX} ways to choose these targets; a card that needs this many is refused at prepare`);
@@ -313,6 +330,10 @@ export function recheckTargets(state, specs, chosen, context) {
     legal += 1;
     return was;
   });
+  /* "In that player's graveyard" (`ownedByControllerOf`, CR 608.2b): the permanent it is about gone or illegal, or another
+     player's now, and this card is no longer a legal target either. */
+  for (const [index, spec] of (specs ?? []).entries())
+    if (Number.isInteger(spec?.ownedByControllerOf) && targets[index] && !relatedLegal(state, spec, targets, targets[index])) { targets[index] = null; legal -= 1; }
   return {targets, fizzles: had > 0 && legal === 0};
 }
 

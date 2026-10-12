@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Spark Double",
+    "oracleId": "8dcb35e5-ae44-455f-86e3-4a77d496ff34",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Illusion"
+    ],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 0,
+    "toughness": 0
+  },
+  "oracleText": "You may have this creature enter as a copy of a creature or planeswalker you control, except it enters with an additional +1/+1 counter on it if it's a creature, it enters with an additional loyalty counter on it if it's a planeswalker, and it isn't legendary.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "You may have this creature enter as a copy of a creature or planeswalker you control, except it enters with an additional +1/+1 counter on it if it's a creature, it enters with an additional loyalty counter on it if it's a planeswalker, and it isn't legendary.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "copyOf": {
+          "anyOf": [
+            {
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "types": [
+                "Planeswalker"
+              ]
+            }
+          ],
+          "controller": "you"
+        },
+        "except": {
+          "nonLegendary": true,
+          "entersWithCounters": [
+            {
+              "if": {
+                "types": [
+                  "Creature"
+                ]
+              },
+              "counter": "+1/+1",
+              "count": 1
+            },
+            {
+              "if": {
+                "types": [
+                  "Planeswalker"
+                ]
+              },
+              "counter": "loyalty",
+              "count": 1
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lae'zel, Vlaakith's Champion",
+    "oracleId": "c066f921-e349-45d1-8ec3-0955d10bbf19",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Gith",
+      "Warrior"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "If you would put one or more counters on a creature or planeswalker you control or on yourself, put that many plus one of each of those kinds of counters on that permanent or player instead.\nChoose a Background (You can have a Background as a second commander.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If you would put one or more counters on a creature or planeswalker you control or on yourself, put that many plus one of each of those kinds of counters on that permanent or player instead.",
+      "rule": "more-counters",
+      "affects": {
+        "what": "permanent",
+        "anyOf": [
+          {
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          {
+            "types": [
+              "Planeswalker"
+            ],
+            "controller": "you"
+          }
+        ]
+      },
+      "players": "you",
+      "putBy": "you",
+      "plus": 1
+    },
+    {
+      "kind": "keyword",
+      "text": "Choose a Background",
+      "keyword": "choose a background"
+    }
+  ]
+}

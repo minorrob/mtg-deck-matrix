@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ghostly Flicker",
+    "oracleId": "ad0070db-6454-41cb-861f-8f5b8fc2a3b8",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Exile two target artifacts, creatures, and/or lands you control, then return those cards to the battlefield under your control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Exile two target artifacts, creatures, and/or lands you control, then return those cards to the battlefield under your control.",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ],
+              "controller": "you"
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you"
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Land"
+              ],
+              "controller": "you"
+            }
+          ],
+          "count": {
+            "min": 2,
+            "max": 2
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "andReturn": "now",
+          "under": "you"
+        }
+      ]
+    }
+  ]
+}

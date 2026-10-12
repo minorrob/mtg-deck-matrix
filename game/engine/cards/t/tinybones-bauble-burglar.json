@@ -1,0 +1,89 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tinybones, Bauble Burglar",
+    "oracleId": "fd335b2f-e6a2-45ac-949e-a67278b21cb6",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Skeleton",
+      "Rogue"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Whenever an opponent discards a card, exile it from their graveyard with a stash counter on it.\nDuring your turn, you may play cards you don't own with stash counters on them from exile, and mana of any type can be spent to cast those spells.\n{3}{B}, {T}: Each opponent discards a card. Activate only as a sorcery.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent discards a card, exile it from their graveyard with a stash counter on it.",
+      "trigger": {
+        "on": "discarded",
+        "discarder": "opponent"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "that card",
+          "to": "exile",
+          "withCounters": {
+            "stash": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "During your turn, you may play cards you don't own with stash counters on them from exile, and mana of any type can be spent to cast those spells.",
+      "rule": "play-from",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "zone": "exile",
+      "lands": {
+        "owner": "opponent",
+        "counters": "stash"
+      },
+      "spells": {
+        "owner": "opponent",
+        "counters": "stash"
+      },
+      "yourTurn": true,
+      "anyMana": true
+    },
+    {
+      "kind": "activated",
+      "text": "{3}{B}, {T}: Each opponent discards a card. Activate only as a sorcery.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{B}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "timing": "sorcery",
+      "effects": [
+        {
+          "effect": "discard",
+          "who": "opponent",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

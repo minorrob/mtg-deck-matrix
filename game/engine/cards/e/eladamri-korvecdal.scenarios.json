@@ -1,0 +1,507 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Eladamri, Korvecdal",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Elf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Cub": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "power": 2,
+      "toughness": 2
+    },
+    "Troll": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Troll"
+      ],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Tidings": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Draw a card.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Flash Cub": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "power": 2,
+      "toughness": 2,
+      "keywords": [
+        "Flash"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "The Bear on top, seen and cast from there",
+      "library": [
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Eladamri, Korvecdal",
+            "Forest",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "library",
+              "cards": [
+                "Bear"
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bear"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Eladamri, Korvecdal",
+            "Forest",
+            "Wastes",
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "{G}, {T}, the Elf and the Cub tapped: the Troll revealed from his hand is put onto the battlefield",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Eladamri, Korvecdal",
+            "Elf",
+            "Cub",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Troll",
+            "Tidings"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "activate": "Eladamri, Korvecdal",
+          "tapping": [
+            "Elf",
+            "Cub"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Reveal a card from your hand."
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Troll",
+                  "Tidings"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Troll"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Eladamri, Korvecdal",
+            "Elf",
+            "Cub",
+            "Forest",
+            "Troll"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tidings"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Eladamri, Korvecdal"
+        },
+        {
+          "seat": 0,
+          "tapped": "Elf"
+        },
+        {
+          "seat": 0,
+          "tapped": "Cub"
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "A noncreature card revealed from his hand stays there",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Eladamri, Korvecdal",
+            "Elf",
+            "Cub",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tidings"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "activate": "Eladamri, Korvecdal",
+          "tapping": [
+            "Elf",
+            "Cub"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Reveal a card from your hand."
+          ]
+        },
+        {
+          "choose": [
+            "Tidings"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tidings"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Eladamri, Korvecdal",
+            "Elf",
+            "Cub",
+            "Forest"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The top card instead: a Troll there is put onto the battlefield; a Wastes there stays on top",
+      "library": [
+        "Troll",
+        "Wastes"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Eladamri, Korvecdal",
+            "Elf",
+            "Cub",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "activate": "Eladamri, Korvecdal",
+          "tapping": [
+            "Elf",
+            "Cub"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Reveal the top card of your library."
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Eladamri, Korvecdal",
+            "Elf",
+            "Cub",
+            "Forest",
+            "Troll"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        }
+      ]
+    },
+    {
+      "name": "A land on top is revealed and stays",
+      "library": [
+        "Wastes"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Eladamri, Korvecdal",
+            "Elf",
+            "Cub",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "activate": "Eladamri, Korvecdal",
+          "tapping": [
+            "Elf",
+            "Cub"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Reveal the top card of your library."
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Eladamri, Korvecdal",
+            "Elf",
+            "Cub",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 20
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Only during his turn, and only with two other untapped creatures",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Eladamri, Korvecdal",
+            "Elf",
+            "Forest",
+            "Cub"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Eladamri, Korvecdal"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Eladamri, Korvecdal",
+            "seat": 0
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "One other creature is not two: not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Eladamri, Korvecdal",
+            "Elf",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Eladamri, Korvecdal"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

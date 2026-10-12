@@ -39,7 +39,7 @@ import {ascendAsItResolves} from "../keywords/designations.mjs";
 import {conditionHolds, asksFirstResolution} from "../script/condition.mjs";
 import {moveObject, addObject, removeObject, eventCard} from "../state/index.mjs";
 import {enteringModifications} from "./replacement.mjs";
-import {countersPlaced} from "./statics.mjs";
+import {enteringCountersPlaced} from "./statics.mjs";
 import {beginResolution, resolutionPending} from "../script/resolution.mjs";
 import {delayedTrigger, enterAttacking} from "../script/effects/permanents.mjs";
 import {prepare} from "../script/effects/attributes.mjs";
@@ -433,6 +433,11 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     for (const effect of state.effects ?? []) {
       if (effect.dealer === entry.objectId) effect.dealer = arrived;
       if (to === "battlefield" && Array.isArray(effect.sources) && effect.sources.includes(entry.objectId)) effect.sources = effect.sources.map((id) => (id === entry.objectId ? arrived : id));
+      /* AN EFFECT THAT CHANGED THE SPELL (CR 400.7a): one of a spell's or an ability's that changed this permanent spell's
+         characteristics on the stack goes on applying to the permanent it becomes -- "whenever you cast a Dragon creature
+         spell from your graveyard, it gains 'When this creature dies, exile it'" (Rivaz of the Claw). */
+      if (to === "battlefield" && effect.layer !== undefined && Array.isArray(effect.affects?.ids) && effect.affects.ids.includes(entry.objectId))
+        effect.affects = {...effect.affects, ids: effect.affects.ids.map((id) => (id === entry.objectId ? arrived : id))};
     }
     /* Rebound's delayed trigger (CR 702.88a, 603.7d: its controller the spell's): at the beginning of THEIR next upkeep, the
        card in exile -- the object it now is, so one that leaves exile meanwhile is not cast (CR 400.7) -- may be cast
@@ -442,6 +447,10 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
         effects: [{effect: "play", from: "targets", targets: [arrived], free: true}]}, {controller: entry.playerId, source: arrived});
     /* "Or was cast from your library" (Fblthp, the Lost; script/condition.mjs, `cameFrom`): a permanent spell cast from a library. */
     if (to === "battlefield" && entry.cast?.from === "library") state.objects[arrived].cameFrom = {zone: "library", owner, cast: true};
+    /* And where it was cast from, and by whom (CR 601.2a): "if you didn't cast it from your hand" (Chainer, Nightmare Adept;
+       script/condition.mjs, `castFromYourHand`). A copy was not cast (CR 707.10), and a new object after it moves again
+       (CR 400.7) was cast from nowhere. */
+    if (to === "battlefield" && entry.cast?.from !== undefined) state.objects[arrived].castFrom = {zone: entry.cast.from, by: entry.playerId};
     /* The delayed trigger's source is the card, now in exile (CR 603.7d: the source of the ability that made it). */
     if (paradigm?.delayed) paradigm.delayed.source = arrived;
     /* CR 608.3a: it enters under its caster's control -- not its owner's, when a card was cast by another player (Tinybones,
@@ -482,7 +491,7 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     /* And for its impending cost (CR 702.176a): marked, with its N time counters (put on it as it enters, CR 122.6). */
     if (to === "battlefield" && entry.impending) {
       state.objects[arrived].impending = true;
-      state.objects[arrived].counters.time = (state.objects[arrived].counters.time ?? 0) + countersPlaced(state, arrived, "time", entry.impending, entry.playerId);
+      state.objects[arrived].counters.time = (state.objects[arrived].counters.time ?? 0) + enteringCountersPlaced(state, arrived, "time", entry.impending, entry.playerId);
     }
     /* And the mana spent to cast it (rules/actions.mjs): "if {G}{G} was spent to cast it" asks the permanent. */
     if (to === "battlefield" && object.spent) state.objects[arrived].spent = {...object.spent};
@@ -498,7 +507,7 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
       for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: arrived, ...ask});
       /* Counters it enters with are put on it (CR 122.6) -- by its controller (122.6a): "twice that many instead" sees them. */
       for (const [counter, count] of Object.entries(entering.counters)) {
-        state.objects[arrived].counters[counter] = (state.objects[arrived].counters[counter] ?? 0) + countersPlaced(state, arrived, counter, count, entry.playerId);
+        state.objects[arrived].counters[counter] = (state.objects[arrived].counters[counter] ?? 0) + enteringCountersPlaced(state, arrived, counter, count, entry.playerId);
       }
     }
     /* SNEAK (CR 702.190b): a permanent spell whose sneak cost was paid enters tapped and attacking the player or planeswalker

@@ -100,8 +100,10 @@ const answer = (s, label) => {
   const context = make(s, {token: GOBLIN, tapped: true, gainsUntilEndOfTurn: ["Haste"], remember: true});
   const [goblin] = named(s, "Goblin"), [soldier] = named(s, "Soldier");
   eq([named(s, "Goblin").length, named(s, "Soldier").length, s.players[0].tokensThisTurn], [1, 1, 2], "a Goblin: that Goblin plus a Soldier, both counted as made this turn");
-  eq([s.objects[goblin].tapped, keywordsOf(s, goblin).includes("Haste"), s.objects[soldier].tapped === true, keywordsOf(s, soldier).includes("Haste")], [true, true, false, false],
-    "the effect's words are the Goblin's alone: the Soldier is untapped and gains no haste");
+  /* Wave 4a: the Queen's ruling (2022-09-09) -- what the effect says of its tokens (tapped, attacking, "that token gains haste")
+     applies to the Soldier too; only the abilities they were created with are theirs alone. */
+  eq([s.objects[goblin].tapped, keywordsOf(s, goblin).includes("Haste"), s.objects[soldier].tapped === true, keywordsOf(s, soldier).includes("Haste")], [true, true, true, true],
+    "the effect's words are said of the Soldier too: it is tapped and gains haste");
   eq(context.remembered, [goblin, soldier], "and both are what the effect made, for what follows (CR 614.6)");
   make(s, {token: {predefined: "Treasure"}});
   eq([named(s, "Treasure").length, named(s, "Soldier").length], [1, 1], "a Treasure is no creature token: no Soldier");
@@ -143,14 +145,19 @@ const answer = (s, label) => {
   eq([named(t, "Goblin").length, named(t, "Soldier").length], [2, 2], "the Queen first: the Goblin and the Soldier, both doubled");
 }
 {
-  /* Draconic Visitor's Dragons come first -- they change what, never how many -- and are creature tokens the Queen adds to. */
+  /* Draconic Visitor's Dragons are creature tokens the Queen adds to; with the two alone, either order ends the same. */
   const s = table([at(0, "battlefield", QA, DV)]);
   eq(resolve(s, {effect: "createToken", count: 1, token: {predefined: "Treasure"}}).status, "done", "a Treasure with the Visitor and the Queen: nobody is asked");
   eq([named(s, "Treasure").length, named(s, "Dragon").length, named(s, "Soldier").length], [0, 1, 1], "a Dragon instead, and a Soldier beside it");
+  /* Wave 4a: only the effects that apply to the event as it stands are chosen among (CR 616.1e-f) -- to a Treasure, the
+     Visitor and the Procession; the Queen once there is a Dragon. */
   const t = table([at(0, "battlefield", QA, DV, AP)]);
   resolve(t, {effect: "createToken", count: 1, token: {predefined: "Treasure"}});
+  eq(awaitingChoice(t).options.map((o) => o.label).sort(), ["Anointed Procession first: 3 tokens", "Draconic Visitor first: 3 to 4 tokens"],
+    "with the Procession too: the Visitor's order and the Procession's, the Queen's not yet");
+  answer(t, "Draconic Visitor first: 3 to 4 tokens");
   eq(awaitingChoice(t).options.map((o) => o.label).sort(), ["Anointed Procession first: 3 tokens", "Queen Allenal of Ruadach first: 4 tokens"],
-    "with the Procession too: still the Procession's order and the Queen's, the Visitor's asked of nobody");
+    "a Dragon now: the Procession's order and the Queen's");
   answer(t, "Anointed Procession first: 3 tokens");
   eq([named(t, "Dragon").length, named(t, "Soldier").length], [2, 1], "two Dragons, one Soldier");
   const u = table([at(0, "battlefield", QA, AP)]);
@@ -208,8 +215,12 @@ const answer = (s, label) => {
     identity: {name: "Odd Banner", oracleId: "x", types: ["Enchantment"], subtypes: [], manaCost: "{W}", colors: ["W"], colorIdentity: ["W"]},
     oracleText: "x", source: "hand", abilities: [{kind: "static", text: "x", ...fields}]}).problems;
   eq(problems({rule: "tokens-plus", affects: {types: ["Creature"]}, token: SOLDIER}), [], "tokens-plus compiles");
-  ok(problems({rule: "tokens-plus", affects: {subtypes: ["Goblin"]}, token: SOLDIER}).some((p) => p.includes("told by their card types")), "tokens-plus told by anything but card types is refused");
+  /* Wave 4a: by subtypes too ("one or more Treasure tokens", Xorn), and of any token unsaid (Peregrin Took). */
+  eq([problems({rule: "tokens-plus", affects: {subtypes: ["Treasure"]}, token: {predefined: "Treasure"}}), problems({rule: "tokens-plus", affects: {}, token: {predefined: "Food"}})], [[], []],
+    "tokens-plus by subtype, and of any token, compile -- the token added a predefined one");
+  ok(problems({rule: "tokens-plus", affects: {colors: ["R"]}, token: SOLDIER}).some((p) => p.includes("told by their card types and subtypes")), "tokens-plus told by anything but card types and subtypes is refused");
   ok(problems({rule: "tokens-plus", affects: {types: ["Creature"]}, token: {power: 1}}).some((p) => p.includes("What is added is a token")), "and one adding no token");
+  ok(problems({rule: "tokens-plus", affects: {}, token: {predefined: "Gizmo"}}).some((p) => p.includes("no predefined token named Gizmo")), "and a predefined token there is none of");
 }
 {
   const problems = (fields) => compileScript({schema: "CrankCardScript@1",

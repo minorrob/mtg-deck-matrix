@@ -1,0 +1,387 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Elspeth, Storm Slayer",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ox": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ox"
+      ],
+      "manaCost": "{2}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Soldier Maker": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Create a 1/1 white Soldier creature token.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 1,
+            "token": {
+              "name": "Soldier",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Soldier"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": 1,
+              "toughness": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "+1: a Soldier -- and her own replacement makes it two; six loyalty",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elspeth, Storm Slayer"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Elspeth, Storm Slayer",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Elspeth, Storm Slayer",
+            "Soldier",
+            "Soldier"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Elspeth, Storm Slayer",
+            "counter": "loyalty",
+            "count": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "Another effect's tokens are doubled too: a Soldier Maker makes two",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elspeth, Storm Slayer",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Soldier Maker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Soldier Maker"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Elspeth, Storm Slayer",
+            "Soldier",
+            "Soldier",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "0: a +1/+1 counter on each of Rob's creatures, and flying until his next turn -- through Maya's turn, gone on his; Maya's Bear has neither",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elspeth, Storm Slayer",
+            "Bear",
+            "Ox"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Elspeth, Storm Slayer",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Bear",
+                "counter": "+1/+1",
+                "count": 1
+              }
+            },
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Ox",
+                "counter": "+1/+1",
+                "count": 1
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Ox",
+                "has": [
+                  "Flying"
+                ]
+              }
+            },
+            {
+              "seat": 1,
+              "counters": {
+                "card": "Bear",
+                "counter": "+1/+1",
+                "count": 0
+              }
+            },
+            {
+              "seat": 1,
+              "keywords": {
+                "card": "Bear",
+                "lacks": [
+                  "Flying"
+                ]
+              }
+            },
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Elspeth, Storm Slayer",
+                "counter": "loyalty",
+                "count": 5
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Ox",
+                "has": [
+                  "Flying"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Ox",
+            "lacks": [
+              "Flying"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Ox",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "-3: only a creature of Maya's with mana value 3 or more -- her Giant, not her Bear nor Rob's Ox",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elspeth, Storm Slayer",
+            "Ox"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Giant",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Elspeth, Storm Slayer"
+          },
+          "count": 3,
+          "targets": [
+            [],
+            [],
+            [
+              "Giant"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "-3: her Giant destroyed; two loyalty left",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elspeth, Storm Slayer"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Giant",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Elspeth, Storm Slayer",
+          "ability": "a3",
+          "targets": [
+            {
+              "card": "Giant",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Giant"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Elspeth, Storm Slayer",
+            "counter": "loyalty",
+            "count": 2
+          }
+        }
+      ]
+    }
+  ]
+}

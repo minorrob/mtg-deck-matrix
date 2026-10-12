@@ -30,7 +30,7 @@ import {cardsIn, moveObject, addObject, valueCostOf, rememberExileLooker, usesTh
 import {compileSelector, selectMatching} from "../filter.mjs";
 import {event, cardRef, moveOne, playersFor, sacrificeOne, destructionQuestion, destructionChoice} from "./zones.mjs";
 import {proliferate as giveEachAnother, addCounters, putCounter, moveCounters, removeCounter} from "./resources.mjs";
-import {makeCopies, afterwards, joinAttack, attackPlaces, attachTo, createToken, effectUntil, COPY_KEYS, gainControl} from "./permanents.mjs";
+import {makeCopies, afterwards, joinAttack, attackPlaces, attachTo, createToken, effectUntil, COPY_KEYS, gainControl, attach} from "./permanents.mjs";
 import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits, unlessPlans, planWords, payPlan} from "../../rules/mana.mjs";
 import {typesOf, characteristicsOf, everyCreatureTypeOf, controllerOf, lastKnown, staticAbilities} from "../../rules/layers.mjs";
 import {isLandType} from "../../keywords/types.mjs";
@@ -349,6 +349,18 @@ export const dig = {
     if (offered.length === 0) {
       const events = [...revealed];
       digRest(state, context.controller, looked, {rest: params.rest ?? "bottom", random: params.random === true}, rng, events);
+      return {events};
+    }
+    /* "REVEAL THE TOP X CARDS OF YOUR LIBRARY. PUT ALL LAND CARDS FROM AMONG THEM ONTO THE BATTLEFIELD TAPPED and the rest on
+       the bottom of your library in a random order" (Animist's Awakening; `all`): every card the selector fits is taken --
+       nobody chooses, so nobody is asked -- and what it took is remembered for the effects after it ("untap those lands"). */
+    if (params.all === true) {
+      const events = [...revealed];
+      const taking = {player: context.controller, cards: looked, to: params.to ?? "hand", rest: params.rest ?? "bottom", random: params.random === true,
+        ...(Array.isArray(params.toByType) ? {toByType: structuredClone(params.toByType)} : {})};
+      const found = digMoved(state, taking, offered, events);
+      digRest(state, context.controller, looked.filter((id) => !offered.includes(id)), taking, rng, events);
+      if (params.remember) context.remembered = found;
       return {events};
     }
     if (revealed.length) { state.resolving?.events.push(...revealed); showRevealed(state, context.controller, looked); }
@@ -1320,8 +1332,11 @@ export const chooseType = {
    script/bind.mjs, chosen.mjs). ---- */
 const COLOR_NAMES = Object.freeze([["W", "White"], ["U", "Blue"], ["B", "Black"], ["R", "Red"], ["G", "Green"]]);
 export const chooseColor = {
+  /* "Each player chooses a color" (Selective Obliteration): repeated for each player, the one a repetition is about choosing
+     (`chooser: "that player"`, bound to them, script/bind.mjs) -- each one's color kept by whose it is (`colorChooser`;
+     script/resolution.mjs, the context's `chosenColors`), for a selector's `onlyChosenColor` (script/filter.mjs). */
   open(state, params, context) {
-    state.awaiting = {kind: "effect-choice", effect: "chooseColor", player: context.controller, source: context.source ?? null};
+    state.awaiting = {kind: "effect-choice", effect: "chooseColor", player: Number.isInteger(params.chooser) ? params.chooser : context.controller, source: context.source ?? null};
     return true;
   },
   choice(state, awaiting) {
@@ -1332,7 +1347,7 @@ export const chooseColor = {
   apply(state, awaiting, indices) {
     const picked = (indices ?? []).length === 1 ? COLOR_NAMES[indices[0]] : undefined;
     if (!picked) throw new Error("Choose one color");
-    return {events: [], chosenColor: picked[0]};
+    return {events: [], chosenColor: picked[0], colorChooser: awaiting.player};
   },
 };
 
@@ -1731,12 +1746,18 @@ export const chooseCard = {
     /* Exile is face up (CR 406.3): what fits there is seen, so there is no failing to find it either. */
     const faceUp = among || onField || zone === "exile";
     if (faceUp && cards.length === 0) return false;
+    /* "IF AN EQUIPMENT IS PUT ONTO THE BATTLEFIELD THIS WAY, YOU MAY ATTACH IT TO A CREATURE YOU CONTROL" (Armored Skyhunter;
+       `attach: "remembered"`, beside `to: "stay"`): "it" is what the effect before it put there (CR 701.3a) -- the permanent
+       chosen is what it is attached to, not a target. It no longer there, there is nothing to attach, and nobody is asked. */
+    const attaching = params.attach === "remembered" ? (context.remembered ?? []).find((id) => state.objects[id]?.zone === "battlefield") : undefined;
+    if (params.attach === "remembered" && attaching === undefined) return false;
     const count = params.count ?? 1;
     const min = params.upTo || (!faceUp && hasQuality(params.selector)) ? 0 : Math.min(count, cards.length);
     const awaiting = {
       kind: "effect-choice", effect: "chooseCard", player, zone, cards, min, max: Math.min(count, cards.length),
       destinations: params.destinations ?? [{to: params.to ?? "hand", ...(params.tapped ? {tapped: true} : {})}],
       shuffle: params.shuffle === true, reveal: params.reveal === true, controller: params.controller === "you" ? context.controller : params.controller ?? null,
+      ...(attaching !== undefined ? {attaching} : {}),
       /* "Untap that land" (Fabled Passage): what it found, for the effects after it (resolution.mjs). "Add": beside what was
          remembered before -- each player's creature chosen in turn, "not chosen this way" all of them (The Eternal Wanderer). */
       ...(params.remember ? {remember: params.remember === "add" ? "add" : true} : {}),
@@ -1784,7 +1805,12 @@ export const chooseCard = {
       mode: awaiting.max <= 1 ? (awaiting.min === 0 ? "many" : "one") : "many",
       min: awaiting.min,
       max: awaiting.max,
-      options: cardOptions(state, awaiting.cards),
+      /* "Then look at the exiled cards and put them on top of your library in any order" (Scroll Rack): a card exiled face
+         down that its chooser may look at (CR 406.3; projection.mjs, `lookers`) is named to them by the card it is. */
+      options: cardOptions(state, awaiting.cards).map((option) => {
+        const object = state.objects[option.cardId];
+        return object?.faceDown === true && (object.lookers ?? []).includes(awaiting.player) ? {...option, label: object.faceDownCard?.card ?? option.label} : option;
+      }),
     };
   },
 
@@ -1834,7 +1860,12 @@ export const chooseCard = {
       }
       /* "Put a -1/-1 counter on a creature you control" (blight, CR 701.68a): a permanent chosen where it is, and left there --
          remembered for what follows ("the blighted creature", 701.68c). */
-      if (where.to === "stay") { found.push(id); return; }
+      if (where.to === "stay") {
+        found.push(id);
+        /* Armored Skyhunter's Equipment, attached to the creature chosen (CR 701.3a; effects/permanents.mjs, attach). */
+        if (awaiting.attaching !== undefined) events.push(...attach(state, {source: awaiting.attaching, targets: [id]}, {controller: player}));
+        return;
+      }
       const moved = moveOne(state, id, where.to, events, {owner: state.objects[id].owner, controller: awaiting.controller, tapped: where.tapped === true});
       if (moved !== null && state.objects[moved]) found.push(moved);
       if (moved !== null && state.objects[moved] && where.to === "battlefield") {

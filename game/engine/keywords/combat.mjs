@@ -25,8 +25,8 @@
  *
  * WHAT IS DEFERRED AND NAMED: protection (CR 702.16) needs a quality — "protection from black" is
  * not a keyword, it is a keyword with an argument, and the card script has to express that;
- * other landwalk forms remain deferred; Forestwalk is implemented for Yavimaya Dryad, Islandwalk for Meandering Towershell. Fear is here (batch 59); intimidate, shadow and horsemanship are one card each in
- * the pool and belong with the long tail. Infect (batch 78) and wither change what damage DOES rather than who may block,
+ * other landwalk forms remain deferred; Forestwalk is implemented for Yavimaya Dryad, Islandwalk for Meandering Towershell. Fear is here (batch 59), and shadow (wave 4a, Minas Morgul's
+ * shadow counter); intimidate and horsemanship are one card each in the pool and belong with the long tail. Infect (batch 78) and wither change what damage DOES rather than who may block,
  * and go with the counters family.
  */
 
@@ -38,7 +38,9 @@ import {protectedFrom} from "../rules/protection.mjs";
 /** The families of §3.1, so a caller can ask what this module covers. */
 export const KEYWORD_FAMILIES = Object.freeze({
   /** Who may block, and whom. */
-  evasion: Object.freeze(["Flying", "Reach", "Menace", "Fear", "Forestwalk", "Islandwalk"]),
+  evasion: Object.freeze(["Flying", "Reach", "Menace", "Fear", "Forestwalk", "Islandwalk",
+    /* Shadow (CR 702.28; Minas Morgul, Dark Fortress's shadow counter, CR 122.1b): canBlockAttacker, below. */
+    "Shadow"]),
   /** What happens when damage is dealt. */
   combat: Object.freeze(["Deathtouch", "Trample", "Lifelink", "First Strike", "Double Strike", "Vigilance", "Defender",
     /* Infect (CR 702.90, batch 78): its damage is poison counters to a player and -1/-1 counters to a creature (rules/combat.mjs,
@@ -96,6 +98,9 @@ export function canBlockAttacker(state, blockerId, attackerId) {
      is — flying restricts who may block IT, and does not restrict what it may block. */
   if (has(state, attackerId, "Flying")
       && !has(state, blockerId, "Flying") && !has(state, blockerId, "Reach")) return false;
+  /* CR 702.28b: shadow -- a creature with shadow can block or be blocked by only creatures with shadow; one without it,
+     neither (Minas Morgul, Dark Fortress's shadow counter). */
+  if (has(state, attackerId, "Shadow") !== has(state, blockerId, "Shadow")) return false;
   /* CR 702.36b: fear -- blocked only by an artifact creature or a black creature. */
   if (has(state, attackerId, "Fear")) {
     const blocker = characteristicsOf(state, blockerId);

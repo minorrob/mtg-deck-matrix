@@ -1,0 +1,637 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Goblin Welder",
+  "fixtures": {
+    "Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Engine": {
+      "types": [
+        "Artifact",
+        "Creature"
+      ],
+      "subtypes": [
+        "Construct"
+      ],
+      "manaCost": "{4}",
+      "colors": [],
+      "power": 4,
+      "toughness": 4
+    },
+    "Their Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Their Engine": {
+      "types": [
+        "Artifact",
+        "Creature"
+      ],
+      "subtypes": [
+        "Construct"
+      ],
+      "manaCost": "{4}",
+      "colors": [],
+      "power": 4,
+      "toughness": 4
+    },
+    "Scrub": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Exile target card from a graveyard.",
+        "targets": [
+          {
+            "what": "card",
+            "zone": "graveyard"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "moveZone",
+            "targets": {
+              "target": 0
+            },
+            "to": "exile"
+          }
+        ]
+      }
+    },
+    "Shatter": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target artifact.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Artifact"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Snatch": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Gain control of target artifact.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Artifact"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "gainControl",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob's Relic sacrificed, and the Engine in his graveyard returned to the battlefield",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin Welder",
+            "Relic"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Engine"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Goblin Welder",
+          "targets": [
+            {
+              "card": "Relic"
+            },
+            {
+              "card": "Engine"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Goblin Welder",
+            "Engine"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Relic"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Goblin Welder"
+        },
+        {
+          "event": "GameEventCardChangeZone",
+          "where": {
+            "sacrificed": true,
+            "sacrificer": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "That player's graveyard: each player's artifact with an artifact card of that player's, never across",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin Welder",
+            "Relic"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Engine",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Relic"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Their Engine"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Goblin Welder"
+          },
+          "count": 2,
+          "targets": [
+            [
+              "Relic",
+              "Engine"
+            ],
+            [
+              "Their Relic",
+              "Their Engine"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "On Maya's artifact: Maya sacrifices it, and her Engine returns under her control",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin Welder"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Relic"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Their Engine"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Goblin Welder",
+          "targets": [
+            {
+              "card": "Their Relic"
+            },
+            {
+              "card": "Their Engine"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Their Engine"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Their Relic"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Goblin Welder"
+          ]
+        },
+        {
+          "event": "GameEventCardChangeZone",
+          "where": {
+            "sacrificed": true,
+            "sacrificer": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Both targets must still be legal: Maya exiles the Engine in response, and Rob's Relic is not sacrificed",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin Welder",
+            "Relic"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Engine"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Scrub"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Goblin Welder",
+          "targets": [
+            {
+              "card": "Relic"
+            },
+            {
+              "card": "Engine"
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "cast": "Scrub",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Engine"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Goblin Welder",
+            "Relic"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Engine"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "And the other way: Maya's Shatter destroys the Relic in response, and the Engine stays in Rob's graveyard",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin Welder",
+            "Relic"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Engine"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Shatter"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Goblin Welder",
+          "targets": [
+            {
+              "card": "Relic"
+            },
+            {
+              "card": "Engine"
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Shatter",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Relic"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Goblin Welder"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Engine",
+            "Relic"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "That player no longer controls it: Maya takes the Relic in response, so the Engine is no card of its controller's, and nothing happens",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin Welder",
+            "Relic"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Engine"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Snatch"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Goblin Welder",
+          "targets": [
+            {
+              "card": "Relic"
+            },
+            {
+              "card": "Engine"
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "cast": "Snatch",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Relic"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Island",
+            "Relic"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Engine"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "{T}: a Welder that came under Rob's control this turn can't be activated (CR 302.6)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin Welder"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Relic"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Engine"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Goblin Welder"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,416 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Armored Skyhunter",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Charm": {
+      "types": [
+        "Enchantment"
+      ],
+      "subtypes": [
+        "Aura"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "enchant": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "spell": {
+        "id": "enchant",
+        "text": "Enchant creature",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": []
+      }
+    },
+    "Blade": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [
+        "Equipment"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "abilities": [
+        {
+          "id": "blade",
+          "kind": "static",
+          "text": "Equipped creature gets +2/+0.",
+          "layer": 7,
+          "sublayer": "c",
+          "affects": {
+            "what": "permanent",
+            "attachedBy": "self"
+          },
+          "apply": {
+            "power": 2,
+            "toughness": 0
+          }
+        }
+      ]
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It attacks: the Blade among his top six, put onto the battlefield and attached to the Skyhunter -- 5 damage to Maya",
+      "library": [
+        "Wastes",
+        "Blade",
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Armored Skyhunter",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Armored Skyhunter"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Blade"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Blade"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Armored Skyhunter",
+                  "Bear"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Armored Skyhunter"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Armored Skyhunter",
+            "Bear",
+            "Blade"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 35
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Armored Skyhunter",
+            "power": 5,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        }
+      ]
+    },
+    {
+      "name": "An Aura instead: onto the battlefield enchanting his only creature, and no attach question -- it is no Equipment",
+      "library": [
+        "Charm"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Armored Skyhunter"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Armored Skyhunter"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Charm"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Armored Skyhunter",
+            "Charm"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 37
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "He may decline: nothing put onto the battlefield, all six on the bottom",
+      "library": [
+        "Blade"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Armored Skyhunter"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Armored Skyhunter"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Armored Skyhunter"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 20
+        },
+        {
+          "seat": 1,
+          "life": 37
+        }
+      ]
+    },
+    {
+      "name": "The Blade put in, and he may decline to attach it: it stays unattached",
+      "library": [
+        "Blade"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Armored Skyhunter"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Armored Skyhunter"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Blade"
+          ]
+        },
+        {
+          "answer": []
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Armored Skyhunter",
+            "Blade"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 37
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Armored Skyhunter",
+            "power": 3,
+            "toughness": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "No Aura or Equipment among them: nobody is asked",
+      "library": [
+        "Bear",
+        "Ogre"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Armored Skyhunter"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Armored Skyhunter"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Armored Skyhunter"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 20
+        }
+      ]
+    }
+  ]
+}

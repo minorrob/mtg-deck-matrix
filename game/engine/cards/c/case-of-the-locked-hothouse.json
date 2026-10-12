@@ -1,0 +1,100 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Case of the Locked Hothouse",
+    "oracleId": "2380fd04-6d19-4f5a-8a9e-c17d9ae09fb6",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Case"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You may play an additional land on each of your turns.\nTo solve — You control seven or more lands. (If unsolved, solve at the beginning of your end step.)\nSolved — You may look at the top card of your library any time, and you may play lands and cast creature and enchantment spells from the top of your library.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may play an additional land on each of your turns.",
+      "rule": "extra-land-drop",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "To solve — You control seven or more lands. (If unsolved, solve at the beginning of your end step.)",
+      "trigger": {
+        "on": "end step"
+      },
+      "effects": [
+        {
+          "effect": "alterAttribute",
+          "targets": "self",
+          "attribute": "solved"
+        }
+      ],
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        },
+        "atLeast": 7,
+        "solved": false
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Solved — You may look at the top card of your library any time",
+      "rule": "look-at-top",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "condition": {
+        "solved": true
+      }
+    },
+    {
+      "kind": "static",
+      "text": "you may play lands and cast creature and enchantment spells from the top of your library.",
+      "rule": "play-from",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "zone": "library-top",
+      "lands": true,
+      "spells": {
+        "anyOf": [
+          {
+            "types": [
+              "Creature"
+            ]
+          },
+          {
+            "types": [
+              "Enchantment"
+            ]
+          }
+        ]
+      },
+      "condition": {
+        "solved": true
+      }
+    }
+  ]
+}

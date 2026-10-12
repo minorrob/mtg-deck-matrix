@@ -47,14 +47,14 @@ BREAKS = [
     ('void: a spell warped', CONDITION,
      ' || state.players.some((p) => (p.castThisTurn ?? []).some((cast) => cast.warped === true)))) return false;', ')) return false;'),
     ('void: true in the grammar', CONDITION, '  if ("void" in condition && condition.void !== true) problems.push("void is true");\n', ''),
-    ('void and sneak: condition keys', CONDITION, '  "void", "sneak"];', '  ];'),
+    ('void and sneak: condition keys', CONDITION, '  "void", "sneak",\n', ''),
     # Warp, compiled (cards/index.mjs) and its words (vocabulary.mjs, keywords/timing.mjs).
     ('warp: compiled', INDEX, '    if (word === "warp") {', '    if (false) {'),
     ('warp: from the hand, compiled', INDEX, 'paidFor: "warp", fromHand: true,', 'paidFor: "warp",'),
     ('warp: a mana cost without X', INDEX, "problems.push(`${ability.text}: a warp cost of mana, once, without X`);", 'void 0;'),
     ('warp: a permanent card', INDEX, "problems.push(`${ability.text}: warp on a card that never becomes a permanent from the stack`);", 'void 0;'),
-    ('keywords: warp and sneak declared', VOCAB, '  "warp", "sneak"];', '  ];'),
-    ('built: Warp and Sneak', TIMING, '"Disguise", "Warp", "Sneak"]),', '"Disguise"]),'),
+    ('keywords: warp and sneak declared', VOCAB, '  "warp", "sneak",\n', ''),
+    ('built: Warp and Sneak', TIMING, '"Disguise", "Morph", "Warp", "Sneak"]),', '"Disguise", "Morph"]),'),
     # Warp, offered (rules/actions.mjs).
     ('warp: fromHand carried to the way', ACTIONS, '      ...(ability.fromHand === true ? {fromHand: true} : {}),\n', ''),
     ('warp: from the hand alone', ACTIONS, '.filter((w) => !w.fromHand || from === "hand");', ';'),
@@ -113,7 +113,7 @@ BREAKS = [
     ('manaInPool: counted', AMOUNT,
      'n = player ? Object.values(player.manaPool ?? {}).reduce((a, b) => a + b, 0) + (player.restrictedMana ?? []).length : 0;', 'n = 0;'),
     ('manaInPool: the restricted mana too', AMOUNT, ', 0) + (player.restrictedMana ?? []).length : 0;', ', 0) : 0;'),
-    ('manaInPool: an amount kind', AMOUNT, '  "manaInPool"]);', '  ]);'),
+    ('manaInPool: an amount kind', AMOUNT, '  "manaInPool",\n', ''),
     ('manaInPool: "you"', AMOUNT, 'if ("manaInPool" in value && value.manaInPool !== "you") problems.push', 'if (false) problems.push'),
     # Omnath: "that mana becomes colorless instead" (rules/statics.mjs, rules/turn.mjs, rules/restricted-mana.mjs).
     ('omnath: the rule declared', STATICS, '  "mana-becomes-colorless": "rules/turn.mjs",\n', ''),

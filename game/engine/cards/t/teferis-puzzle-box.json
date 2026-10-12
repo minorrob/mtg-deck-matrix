@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Teferi's Puzzle Box",
+    "oracleId": "37abcc92-9466-47ea-9e0b-5eda2eb62c8e",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "At the beginning of each player's draw step, that player puts the cards in their hand on the bottom of their library in any order, then draws that many cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of each player's draw step, that player puts the cards in their hand on the bottom of their library in any order, then draws that many cards.",
+      "trigger": {
+        "on": "step",
+        "step": "DRAW",
+        "yours": false
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "hand",
+          "who": "that player",
+          "count": 99,
+          "to": "library",
+          "remember": true
+        },
+        {
+          "effect": "draw",
+          "who": "that player",
+          "count": {
+            "rememberedCount": true
+          }
+        }
+      ]
+    }
+  ]
+}

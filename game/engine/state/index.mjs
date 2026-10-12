@@ -225,7 +225,7 @@ const FACE_DOWN_EXILED = Object.freeze({card: null, types: [], subtypes: [], sup
    projection.mjs), and what it becomes as it is turned face up (708.8) or leaves the battlefield (708.9). */
 /* A permanent's copiable values (CR 707.2): what a copy effect writes onto it (effects/permanents.mjs, becomeCopy), its own
    kept beside them as `uncopied` -- only the values it has, so it is the same object woken from storage as in memory. */
-export const COPY_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "spell", "enchant"]);
+export const COPY_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "loyalty", "spell", "enchant"]);
 /* An adventurer card's two sets of characteristics (`adventurer`, CR 715.2) are the card's too: kept beside it face down, so a
    card exiled face down and played from there may still be cast as its Adventure (715.3), and one manifested leaves the
    battlefield as the card it is (708.9). */
@@ -458,6 +458,15 @@ export function cardsIn(state, zone, player = null) {
 export function usesThisTurn(state, id, key) {
   const used = state.objects[id]?.used;
   return used && used.turn === state.turn ? used.counts[key] ?? 0 : 0;
+}
+/* "TAP TARGET PERMANENT. ITS ACTIVATED ABILITIES CAN'T BE ACTIVATED THIS TURN" (Koma, Cosmos Serpent; CR 602.5): the
+   permanents an effect named as it resolved (effectUntil's `rule: "cant-activate-its-abilities"`, its targets), each of
+   whose activated abilities -- its mana abilities too (CR 605.1a) -- is offered to nobody while the effect lasts: not where
+   activations are offered, nor where a cost taps a source for mana (rules/actions.mjs, rules/mana.mjs). One that leaves
+   and returns is a new object (CR 400.7), and none of them. */
+export const ACTIVATIONS_FORBIDDEN = "cant-activate-its-abilities";
+export function activationsForbidden(state, id) {
+  return (state.effects ?? []).some((effect) => effect.rule === ACTIVATIONS_FORBIDDEN && (effect.affects?.ids ?? []).includes(id));
 }
 export function recordUse(state, id, key) {
   const object = state.objects[id];

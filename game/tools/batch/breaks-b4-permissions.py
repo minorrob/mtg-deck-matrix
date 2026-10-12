@@ -73,7 +73,7 @@ BREAKS = [
     ('return schema permits mixed cost', 'game/engine/script/schema.mjs',
      'if (effect.sacrifice !== undefined || effect.discard !== undefined)', 'if (false)'),
     ('sacrifice omits last known information', 'game/engine/rules/actions.mjs',
-     'if (was) (entry.sacrificed ??= []).push(was);', 'void was;'),
+     'if (was) (entry.sacrificed ??= []).push({...was, manaValue: cost ? manaValue(parseManaCost(cost)) : 0});', 'void was;'),
     ('stack drops sacrificed context', 'game/engine/rules/stack.mjs',
      '...(entry.sacrificed ? {sacrificed: entry.sacrificed} : {}),', ''),
     ('resolution drops sacrificed context', 'game/engine/script/resolution.mjs',

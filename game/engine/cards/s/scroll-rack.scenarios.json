@@ -1,0 +1,311 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Scroll Rack",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [],
+      "manaCost": "{1}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "The Bear and the Ogre exiled face down, his top two (Forest, Island) into his hand, then the Ogre and the Bear back on top, the Ogre first",
+      "library": [
+        "Forest",
+        "Island",
+        "Mountain"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Scroll Rack",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Ogre",
+            "Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Scroll Rack"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Bear",
+                  "Ogre",
+                  "Rock"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Bear",
+            "Ogre"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "faceDown": [
+                "Bear",
+                "Ogre"
+              ]
+            },
+            {
+              "seat": 1,
+              "of": 0,
+              "zone": "exile",
+              "faceDown": [
+                null,
+                null
+              ]
+            },
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": [
+                "Rock",
+                "Forest",
+                "Island"
+              ]
+            },
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Bear",
+                  "Ogre"
+                ],
+                "min": 2
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Ogre",
+            "Bear"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "library",
+              "count": 20
+            },
+            {
+              "seat": 0,
+              "zone": "exile",
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rock",
+            "Forest",
+            "Island",
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        }
+      ]
+    },
+    {
+      "name": "Any number: none exiled, so none taken -- his hand and library as they were",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Scroll Rack",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Scroll Rack"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 20
+        },
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "tapped": "Scroll Rack"
+        }
+      ]
+    },
+    {
+      "name": "All three: his top three into his hand, and all three exiled cards back on top in the order he chooses",
+      "library": [
+        "Forest",
+        "Island",
+        "Mountain"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Scroll Rack",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Ogre",
+            "Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Scroll Rack"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear",
+            "Ogre",
+            "Rock"
+          ]
+        },
+        {
+          "choose": [
+            "Rock",
+            "Bear",
+            "Ogre"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest",
+            "Island",
+            "Mountain",
+            "Rock"
+          ]
+        }
+      ]
+    }
+  ]
+}

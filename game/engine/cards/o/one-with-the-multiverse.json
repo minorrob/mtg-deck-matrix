@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "One with the Multiverse",
+    "oracleId": "06bb4272-25d1-46db-8585-15f919267e1e",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{6}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You may look at the top card of your library any time.\nYou may play lands and cast spells from the top of your library.\nOnce during each of your turns, you may cast a spell from your hand or the top of your library without paying its mana cost.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may look at the top card of your library any time.",
+      "rule": "look-at-top",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "You may play lands and cast spells from the top of your library.",
+      "rule": "play-from",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "zone": "library-top",
+      "lands": true,
+      "spells": true
+    },
+    {
+      "kind": "static",
+      "text": "Once during each of your turns, you may cast a spell from your hand or the top of your library without paying its mana cost.",
+      "rule": "cast-without-paying",
+      "affects": {},
+      "zones": [
+        "hand",
+        "library"
+      ],
+      "limit": 1,
+      "condition": {
+        "yourTurn": true
+      }
+    }
+  ]
+}
