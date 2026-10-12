@@ -253,6 +253,21 @@ function checkEffect(effect, path, errors) {
     if (effect.linked !== true) errors.push({path: `${path}.linkedOnly`, message: "linkedOnly narrows a linked move: it goes with `linked: true`"});
     checkSelector(effect.linkedOnly, `${path}.linkedOnly`, errors);
   }
+  /* WHAT AN EFFECT MOVED, REFERRED TO AFTER IT (wave 4a, h2): "put all artifact cards from among them onto the battlefield"
+     (Tezzeret, Master of the Bridge) -- of what a move names, those a selector fits (`only`); "then return it to the
+     battlefield tapped" (Eldrazi Confluence) -- a flicker's return, tapped (`returnTapped`, beside `andReturn`); "exile target
+     player's graveyard" kept for "a creature card exiled with this Vehicle" (Nautiloid Ship; moveZoneAll's `link`); "you may
+     attach it to a creature you control" (Armored Skyhunter; chooseCard's `attach`, a permanent chosen where it is); "put all
+     land cards from among them onto the battlefield" (Animist's Awakening; dig's `all`, nobody asked). */
+  if (name === "moveZone" && effect.only !== undefined) checkSelector(effect.only, `${path}.only`, errors);
+  if (name === "moveZone" && effect.returnTapped !== undefined && !(effect.returnTapped === true && effect.andReturn !== undefined))
+    errors.push({path: `${path}.returnTapped`, message: "A flicker's return tapped is `returnTapped: true`, beside `andReturn`"});
+  if (name === "moveZoneAll" && effect.link !== undefined && !(effect.link === true && effect.to === "exile"))
+    errors.push({path: `${path}.link`, message: "What a move of all exiles, kept for its source's linked ability, is `link: true` with `to: \"exile\"`"});
+  if (name === "chooseCard" && effect.attach !== undefined && !(effect.attach === "remembered" && effect.to === "stay" && effect.zone === "battlefield"))
+    errors.push({path: `${path}.attach`, message: "Attaching what the effect before it put onto the battlefield to a permanent chosen is `attach: \"remembered\"`, with `zone: \"battlefield\"` and `to: \"stay\"`"});
+  if (name === "dig" && effect.all !== undefined && !(effect.all === true && effect.selector !== undefined && effect.upTo === undefined && effect.take === undefined))
+    errors.push({path: `${path}.all`, message: "Every card a selector fits, taken with nobody asked, is `all: true` beside a `selector`, with no `take` or `upTo`"});
   /* Counters moved (moveCounters, CR 122.5; script/effects/resources.mjs): from one object onto another, of a kind named --
      or "chosen", its controller's choice among the kinds there (effects/asking.mjs, counterKind). */
   if (name === "moveCounters") {
@@ -415,8 +430,9 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
      `choose: 0` for "up to" -- none chosen is a choice too -- each beside a chooseUpTo, so only on such a spell. */
   for (const [index, effect] of (ability.effects ?? []).entries()) {
     if (effect?.effect !== "modal") continue;
-    if (effect.sameMode !== undefined && !(effect.sameMode === true && effect.chooseUpTo !== undefined))
-      errors.push({path: `${path}.effects[${index}].sameMode`, message: "\"You may choose the same mode more than once\" is sameMode: true, beside chooseUpTo"});
+    /* Or exactly so many, two or more: "Choose three. You may choose the same mode more than once" (Eldrazi Confluence). */
+    if (effect.sameMode !== undefined && !(effect.sameMode === true && (effect.chooseUpTo !== undefined || (Number.isInteger(effect.choose) && effect.choose >= 2))))
+      errors.push({path: `${path}.effects[${index}].sameMode`, message: "\"You may choose the same mode more than once\" is sameMode: true, beside chooseUpTo or a choose of two or more"});
     if (effect.choose === 0 && effect.chooseUpTo === undefined)
       errors.push({path: `${path}.effects[${index}].choose`, message: "choose: 0 is \"up to\" chooseUpTo modes, beside it"});
   }

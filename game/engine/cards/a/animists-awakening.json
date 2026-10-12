@@ -1,0 +1,81 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Animist's Awakening",
+    "oracleId": "6f1bfe50-b61a-4fdd-963c-40d59117bdf4",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{X}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Reveal the top X cards of your library. Put all land cards from among them onto the battlefield tapped and the rest on the bottom of your library in a random order.\nSpell mastery — If there are two or more instant and/or sorcery cards in your graveyard, untap those lands.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Reveal the top X cards of your library. Put all land cards from among them onto the battlefield tapped and the rest on the bottom of your library in a random order.\nSpell mastery — If there are two or more instant and/or sorcery cards in your graveyard, untap those lands.",
+      "effects": [
+        {
+          "effect": "dig",
+          "count": "X",
+          "reveal": true,
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          },
+          "all": true,
+          "toByType": [
+            {
+              "types": [
+                "Land"
+              ],
+              "to": "battlefield",
+              "tapped": true
+            }
+          ],
+          "rest": "bottom",
+          "random": true,
+          "remember": true
+        },
+        {
+          "effect": "untap",
+          "targets": "remembered",
+          "condition": {
+            "compare": {
+              "count": {
+                "count": {
+                  "what": "card",
+                  "zone": "graveyard",
+                  "controller": "you",
+                  "anyOf": [
+                    {
+                      "types": [
+                        "Instant"
+                      ]
+                    },
+                    {
+                      "types": [
+                        "Sorcery"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "atLeast": 2
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

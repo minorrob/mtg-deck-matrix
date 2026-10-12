@@ -627,9 +627,11 @@ function additionalChoices(state, player, spellId, costs) {
    choice too ("up to"), and `sameMode`, as many as it says whatever the number of modes -- each mode again after itself, so
    each choice is offered once, its modes in the order they are written, which is the order they are followed in; the
    relative order of one mode chosen twice is the order of their targets, each asked in turn (script/bind.mjs, modalScript). */
+/* "CHOOSE THREE. You may choose the same mode more than once" (Eldrazi Confluence; CR 700.2d): `sameMode` beside a `choose` of
+   its own, no "up to" -- exactly that many. */
 function withModes(state, base, modal, context, exactly = null, only = null) {
   const least = exactly ?? (modal.choose === 0 ? 0 : Math.max(1, modal.choose ?? 1));
-  const most = exactly ?? (modal.sameMode ? modal.upTo : Math.min(modal.modes.length, modal.more && conditionHolds(state, modal.more.condition, context) ? modal.more.choose : modal.upTo ?? least));
+  const most = exactly ?? (modal.sameMode ? modal.upTo ?? least : Math.min(modal.modes.length, modal.more && conditionHolds(state, modal.more.condition, context) ? modal.more.choose : modal.upTo ?? least));
   const picks = [];
   const pick = (from, chosen) => {
     if (chosen.length >= least) picks.push(chosen);
@@ -717,7 +719,10 @@ export const costAtomBuilt = (atom) => (COST_ATOMS_BUILT.includes(atom?.atom) &&
   /* "Waterbend {3}" (Giant Koi; CR 701.67a): generic mana, some or all of it paid by tapping artifacts and creatures. */
   || (atom?.atom === "waterbend" && genericOnly(atom.cost))
   /* "Pay eight {E}" (Salvation Colossus's unearth; CR 107.14): that many energy counters removed from the player paying. */
-  || (atom?.atom === "payEnergy" && Number.isInteger(atom.count) && atom.count >= 1);
+  || (atom?.atom === "payEnergy" && Number.isInteger(atom.count) && atom.count >= 1)
+  /* "{R}{W}, Unattach this Equipment: ..." (Sunforger; CR 701.3d): the source moved off what it is attached to -- payable only
+     while it is attached to something (CR 118.3). */
+  || (atom?.atom === "unattach" && atom.self === true);
 
 /* CREW (CR 702.122a): the sets of other untapped creatures you control whose power totals at least N -- each smallest
    such set, so no offer taps a creature it does not need; ids ascending, and no more than CREW_OFFERS_MAX of them. A
@@ -930,6 +935,9 @@ function costPayment(state, player, id, cost, x = 0, less = 0, key = undefined, 
     if (atom.atom === "removeCountersAmong" && counterUnits(state, player, id, atom).length < atom.count) return null;
     /* Energy (CR 107.14): no more than the player has (CR 118.3). */
     if (atom.atom === "payEnergy" && (state.players[player].counters?.energy ?? 0) < atom.count) return null;
+    /* Unattach this Equipment (Sunforger; CR 701.3d): attached to nothing, there is nothing to unattach, and the cost can't be
+       paid (CR 118.3). */
+    if (atom.atom === "unattach" && state.objects[object.attachedTo]?.zone !== "battlefield") return null;
   }
   /* The increase on an ability that printed no mana: that much generic, from the pool (as its own mana would be). */
   if (!printedMana && more > 0) {
@@ -2537,6 +2545,13 @@ function performOffered(state, player, action, during) {
       /* "Pay eight {E}": that many energy counters removed from the player (CR 107.14) -- as many as they have, or it was not
          offered (costPayment). The board shows a player's counters. */
       if (atom.atom === "payEnergy") state.players[player].counters.energy -= atom.count;
+      /* "Unattach this Equipment" (Sunforger; CR 701.3d): off what it was attached to, and still on the battlefield. */
+      if (atom.atom === "unattach") {
+        const host = state.objects[object.attachedTo];
+        if (host) host.attachments = (host.attachments ?? []).filter((a) => a !== action.objectId);
+        object.attachedTo = null;
+        events.push(event("GameEventCardAttachment", state, {card: cardRef(state, action.objectId), attachedTo: null}));
+      }
       /* Three counters from among them, each removed from the permanent it was picked on. */
       if (atom.atom === "removeCountersAmong") for (const {id, counter} of action.counterSet ?? [])
         state.objects[id].counters[counter] = Math.max(0, (state.objects[id].counters[counter] ?? 0) - 1);

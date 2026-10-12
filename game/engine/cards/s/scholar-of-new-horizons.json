@@ -1,0 +1,126 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Scholar of New Horizons",
+    "oracleId": "3c7ea603-c985-4107-806b-a467b5fcca36",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Scout"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "This creature enters with a +1/+1 counter on it.\n{T}, Remove a counter from a permanent you control: Search your library for a Plains card and reveal it. If an opponent controls more lands than you, you may put that card onto the battlefield tapped. If you don't put the card onto the battlefield, put it into your hand. Then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This creature enters with a +1/+1 counter on it.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "+1/+1",
+          "count": 1
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}, Remove a counter from a permanent you control: Search your library for a Plains card and reveal it. If an opponent controls more lands than you, you may put that card onto the battlefield tapped. If you don't put the card onto the battlefield, put it into your hand. Then shuffle.",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "removeCountersAmong",
+          "count": 1,
+          "selector": {}
+        }
+      ],
+      "targets": [],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "subtypes": [
+              "Plains"
+            ]
+          },
+          "to": "stay",
+          "reveal": true,
+          "remember": true
+        },
+        {
+          "effect": "modal",
+          "title": "Put the Plains card onto the battlefield tapped?",
+          "condition": {
+            "about": "remembered",
+            "is": {},
+            "compare": {
+              "count": {
+                "mostAmongOpponents": {
+                  "what": "permanent",
+                  "types": [
+                    "Land"
+                  ],
+                  "controller": "you"
+                }
+              },
+              "moreThan": {
+                "count": {
+                  "what": "permanent",
+                  "types": [
+                    "Land"
+                  ],
+                  "controller": "you"
+                }
+              }
+            }
+          },
+          "modes": [
+            {
+              "text": "Yes",
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": "remembered",
+                  "to": "battlefield",
+                  "tapped": true
+                }
+              ]
+            },
+            {
+              "text": "No",
+              "effects": []
+            }
+          ]
+        },
+        {
+          "effect": "moveZone",
+          "targets": "remembered",
+          "to": "hand"
+        },
+        {
+          "effect": "shuffle"
+        }
+      ]
+    }
+  ]
+}

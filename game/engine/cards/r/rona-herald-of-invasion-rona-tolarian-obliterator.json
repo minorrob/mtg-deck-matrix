@@ -1,0 +1,181 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rona, Herald of Invasion // Rona, Tolarian Obliterator",
+    "oracleId": "cf5bd3a4-3899-4c25-ad1f-f1778c1d9c60",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Whenever you cast a legendary spell, untap Rona.\n{T}: Draw a card, then discard a card.\n{5}{B/P}: Transform Rona. Activate only as a sorcery. ({B/P} can be paid with either {B} or 2 life.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a legendary spell, untap Rona.",
+      "trigger": {
+        "on": "spell cast",
+        "filter": {
+          "supertypes": [
+            "Legendary"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "untap",
+          "targets": "self"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Draw a card, then discard a card.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "discard",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{5}{B/P}: Transform Rona. Activate only as a sorcery.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{5}{B/P}"
+        }
+      ],
+      "targets": [],
+      "effects": [
+        {
+          "effect": "setState",
+          "targets": "self",
+          "transform": true
+        }
+      ],
+      "timing": "sorcery"
+    }
+  ],
+  "layout": "transform",
+  "back": {
+    "identity": {
+      "name": "Rona, Tolarian Obliterator",
+      "supertypes": [
+        "Legendary"
+      ],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Phyrexian",
+        "Wizard"
+      ],
+      "manaCost": null,
+      "colors": [
+        "B",
+        "U"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "oracleText": "Trample\nWhenever a source deals damage to Rona, that source's controller exiles a card from their hand at random. If it's a land card, you may put it onto the battlefield under your control. Otherwise, you may cast it without paying its mana cost.",
+    "abilities": [
+      {
+        "kind": "keyword",
+        "text": "Trample",
+        "keyword": "trample"
+      },
+      {
+        "kind": "triggered",
+        "text": "Whenever a source deals damage to Rona, that source's controller exiles a card from their hand at random. If it's a land card, you may put it onto the battlefield under your control. Otherwise, you may cast it without paying its mana cost.",
+        "trigger": {
+          "on": "damage dealt",
+          "to": "self"
+        },
+        "effects": [
+          {
+            "effect": "chooseCard",
+            "zone": "hand",
+            "who": "that player",
+            "random": true,
+            "count": 1,
+            "to": "exile",
+            "remember": true
+          },
+          {
+            "effect": "modal",
+            "title": "Put the exiled land card onto the battlefield under your control?",
+            "condition": {
+              "about": "remembered",
+              "is": {
+                "types": [
+                  "Land"
+                ]
+              }
+            },
+            "modes": [
+              {
+                "text": "Yes",
+                "effects": [
+                  {
+                    "effect": "moveZone",
+                    "targets": "remembered",
+                    "to": "battlefield",
+                    "controller": "you"
+                  }
+                ]
+              },
+              {
+                "text": "No",
+                "effects": []
+              }
+            ]
+          },
+          {
+            "effect": "play",
+            "from": "targets",
+            "targets": "remembered",
+            "free": true,
+            "condition": {
+              "about": "remembered",
+              "is": {
+                "nonTypes": [
+                  "Land"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,313 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Brago, King Eternal",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Charm": {
+      "types": [
+        "Enchantment"
+      ],
+      "subtypes": [
+        "Aura"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "enchant": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "spell": {
+        "id": "enchant",
+        "text": "Enchant creature",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": []
+      }
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [],
+      "manaCost": "{1}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Brago hits Maya: Brago, his Elvish Visionary and his Rock exiled, then all three returned -- the Visionary draws again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Brago, King Eternal",
+            "Elvish Visionary",
+            "Rock",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Brago, King Eternal"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Brago, King Eternal",
+                  "Elvish Visionary",
+                  "Rock"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Brago, King Eternal",
+            "Elvish Visionary",
+            "Rock"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Brago, King Eternal",
+            "Elvish Visionary",
+            "Rock",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 1,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "tapped": "Brago, King Eternal",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "His Bear and the Aura on it, returned together: the Aura can't enchant the Bear returning beside it -- Brago or Maya's Ogre",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Brago, King Eternal",
+            "Bear",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Charm"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Charm",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Brago, King Eternal"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "choose": [
+            "Bear",
+            "Charm"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Brago, King Eternal",
+                  "Ogre"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Brago, King Eternal"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Brago, King Eternal",
+            "Bear",
+            "Plains",
+            "Charm"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Any number: none chosen, and nothing moves",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Brago, King Eternal",
+            "Elvish Visionary"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Brago, King Eternal"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "answer": []
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Brago, King Eternal",
+            "Elvish Visionary"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "tapped": "Brago, King Eternal"
+        }
+      ]
+    }
+  ]
+}
