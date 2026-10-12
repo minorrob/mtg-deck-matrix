@@ -1,12 +1,8 @@
 # CrankMagic's game table: the facts any game screen must support
 
-*For a prototyping tool (Replit, Lovable, Magic Patterns or another). Paste everything below the line as your first
-message, and attach `sample-views.json` from this folder. Read from CrankMagic's room and engine on 2026-10-12.*
-
-**Before you paste:**
-- **Lovable:** add "Do not connect Supabase or add sign-in."
-- **Replit:** add "A static front end and, at most, a small local mock server. No database."
-- **Magic Patterns:** attach only a handful of views from the sample, not the whole file.
+*For Replit, with Fable (a Claude session) or Codex Astra building it, on Rob's computer and in the cloud. Paste
+everything below the line as the first message to whoever builds it, and put `sample-views.json` from this folder in
+the project. Read from CrankMagic's room and engine on 2026-10-12.*
 
 ---
 
@@ -16,20 +12,64 @@ You are exploring new game screens for **CrankMagic**: an online table where two
 *Magic: The Gathering* in the **Commander** format. The rules engine, the game server, the AI players, accounts and
 each person's deck library already exist. They are not yours to build or to change.
 
-You build only **the screen a player sees during a game**. It is driven entirely by data the server sends, plus the
-answers the player sends back.
+You build only **Play**: the table where a game is set up, and the screen it is played on. It is driven entirely by
+data the server sends, plus the answers the player sends back.
 
 This brief deliberately says nothing about how that screen should look, be arranged, move, sound or feel. That is the
 open question you are exploring, and the more ambitious the better. Everything below is a fact about the game the
 screen must support. **When an idea conflicts with a fact here, the fact wins.** If an idea needs something the facts
 don't provide, don't invent it: list it in your handoff (the last section) as a request.
 
+**In scope: Play, and only Play.** The screen a game is played on, and the way into it from the rest of the app.
+
+**The rest of CrankMagic: its menus and links, with nothing behind them.** The prototype carries the app's real
+navigation, so a concept can be judged in place. Each item is a link to the real app, or an entry that does nothing;
+none is built.
+- **The main pages:**
+  - Decks: `https://staging.crankmagic.com/#decks`
+  - Library: `https://staging.crankmagic.com/#cards`
+  - Explore: `https://staging.crankmagic.com/#discover`
+  - Play: `https://staging.crankmagic.com/#game`, the one page you build
+  - the CrankMagic name and logo: home, `https://staging.crankmagic.com/#welcome`
+- **The Menu** (the person's menu, with their own functions):
+  - Settings;
+  - Save a backup file, Restore from a backup file, Reset All;
+  - Help & glossary;
+  - Term definitions on hover (on or off);
+  - Take a Tour;
+  - Send Feedback;
+  - Show a QR code;
+  - a choice of theme.
+- **The footer:**
+  - the Wizards of the Coast Fan Content Policy notice;
+  - the credits to Scryfall and EDHREC;
+  - links: Fan Content Policy, Scryfall, EDHREC, License, Disclaimer, Third-party notices, Privacy
+    (`privacy.html`), Terms (`terms.html`), Contact (`admin@crankmagic.com`).
+
+Staging is behind a sign-in, so its links open the real app only for someone invited to it. That is expected.
+
 **Out of scope:**
 - rules logic, and working out what is legal;
-- deck building, accounts or sign-in, databases, payments;
-- a real backend.
+- anything behind a link to another part of the app: decks, the library, Explore, Settings, backups;
+- accounts or sign-in, databases, payments, a real backend, a deploy beyond Replit's own preview;
+- any call to CrankMagic's servers, staging or production.
 
-Use the sample data. A small local mock that plays it back is fine.
+Use the sample data: a static front end and, at most, a small local mock server that plays it back.
+
+## If you work with access to Rob's computer
+
+The system building this may have access to Rob's computer. These hold as well as everything below:
+- **Work only in the Replit project, and in a folder Rob gives you for it.** CrankMagic's repository
+  (`C:\Users\robmi\CrankMagic\repo`) may be read for facts (`docs/ui-lane/` above all), but this work never edits
+  it, never runs git in it, and never imports its code into the prototype.
+- **Secrets are never read, printed, copied or uploaded.** That includes browser profiles and saved passwords,
+  `wrangler`'s sign-in, `.env` and `.dev.vars` files, SSH keys, API keys, and service tokens. If a step seems to need
+  one, stop and ask Rob.
+- **Nothing is deployed, published or pushed** to CrankMagic's GitHub repository, its Cloudflare account, or any
+  site, from this work. Never run `wrangler`. Never touch Cloudflare, Access or GitHub settings.
+- **Nothing outside the project is deleted or moved,** and nothing is installed system-wide, without Rob's say-so.
+- **The concept comes back one way:** an export and its `HANDOFF.md` (the last section), which a CrankMagic UI session
+  ports into the app on a branch of its own (`docs/ui-lane/README.md`).
 
 ## The one architectural rule
 
@@ -53,8 +93,9 @@ the real connection can replace the mock later without touching the rest.
 
 ## The format
 
-- **Seats:** two to four, in a fixed order, and seat 0 always takes the first turn. A seat is a person or an AI. In the
-  sample, `s0` is the person and the other three are AI.
+- **Seats:** two to four, in a fixed order. The room names them `s0` to `s3`, and the table calls them seats 1 to 4.
+  Seat `s0`, the host's, always takes the first turn. A seat is a person or an AI. In the sample, `s0` is the person and
+  the other three are AI.
 - **Commander:**
   - Each deck is 100 cards, led by one commander or two partner commanders.
   - Commanders begin in the **command zone** and can be cast from there.
@@ -83,6 +124,39 @@ the real connection can replace the mock later without touching the rest.
 - **A player who leaves takes their cards with them.** Everything they own leaves every zone, effects that gave them
   control end, and whatever they still control is exiled.
 - **A dropped connection:** the seat is "away" for up to 5 minutes before it times out, and the other seats are told.
+
+## Before the game: the table
+
+Play opens on a table, where a game is set up. These facts come from the table's code. The sample has no lobby views,
+so a concept mocks this part.
+
+- **Seats:** the host creates the table and takes seat 1. Seats 2 to 4 are each a person to invite, or an AI at Easy,
+  at Normal, or as an AI on Claude (the last only for someone invited to AI features).
+- **Invitations:**
+  - Only the host invites, one link for each person's seat. A link lasts 24 hours, and a new one withdraws the old.
+  - The host can withdraw an invitation.
+  - Joining needs a CrankMagic account: a seat is a signed-in person, one seat each.
+- **Decks:**
+  - Each person brings a deck of their own, from their library.
+  - The host picks each AI seat's deck, and that makes the AI seat ready.
+  - A commander is a legendary creature, or a card that says it can be one, and there can be two partners. A deck has
+    a bracket, 1 to 5, as its library measures it.
+- **The table's rules:** set by the host before anyone is ready. Starting life is 40 unless the host sets 1 to 999.
+  There may be a bracket limit, 1 to 5, or none.
+- **Mats:** each seat plays on a mat it chooses, any time, the game included, and everyone sees it. There are 30 today:
+  five drawn by the app and 25 of Rob's own artwork. Every seat starts on felt.
+- **Starting:**
+  - A 10-second countdown runs once there are at least two seats and at least one person, and every seat is
+    connected, has a deck and is ready. An invited person who has not joined yet holds it.
+  - Pressing start with a person's seat that nobody was invited to is refused, with what to do: invite someone, or
+    make the seat an AI.
+  - If the launch fails, the table goes back to choosing decks and says why.
+  - The table's phases are `selecting`, `countdown`, `starting`, `playing` and `rematch`.
+- **The opening hand:** each person is asked to keep or mulligan (below). Then the first turn is seat 1's.
+- **Afterward:**
+  - A finished game's record can be downloaded.
+  - The result is filed in each person's own library.
+  - A rematch is not built in the cloud.
 
 ## Zones, and who sees what
 

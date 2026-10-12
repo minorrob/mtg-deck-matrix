@@ -21,8 +21,8 @@ status and a place for the handoff in one object.
 
 Rob, 2026-10-12: *"Have another AI platform work on the UI and player interaction branches while you work on the
 engine and finishing card loads, then cleanly merge."* So two systems may now work at the same time, each in its own
-**lane**. A lane is a set of files, and nobody edits a file of another lane. Any system may hold a lane: Grok Bot,
-Codex, Cursor, or a second Claude session.
+**lane**. A lane is a set of files, and nobody edits a file of another lane. Any system may hold a lane: Fable or another
+Claude session, Codex (Astra), Cursor, or Grok Bot.
 
 | Lane | Its files | Its branches |
 | --- | --- | --- |

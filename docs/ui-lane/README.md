@@ -1,7 +1,8 @@
 # The UI lane: a brief for the session that takes it
 
-*Written 2026-10-12 by the engine lane's session (Claude, a cloud container), on Rob's go. Whoever picks this up may be
-Grok Bot, Codex, another Claude session or another system. The rules are the same for each.*
+*Written 2026-10-12 by the engine lane's session (Claude, a cloud container), on Rob's go. Whoever picks this up is
+Fable (a Claude session) or Codex Astra, working on Rob's computer and in the cloud (Rob, 2026-10-12). The rules are
+the same for any system.*
 
 ## Read first, in this order
 
@@ -77,6 +78,23 @@ Rob may also bring back concepts from prototyping tools. See *Concepts from prot
   2. Run `GEOMETRY_REQUIRED=1 python3 game/tools/batch/breaks.py <file>` until it prints `missed: []`.
   3. Never edit files while a breaks run is going: it edits them itself and puts them back.
 
+## Working on Rob's computer
+
+The system holding this lane may work on Rob's computer (Personal-HP) as well as in the cloud.
+- **The one clone** is `C:\Users\robmi\CrankMagic\repo` (AGENTS.md, *Where things are on Personal-HP*). Git runs
+  there and nowhere else. A cloud session uses its own checkout.
+- **Your branch only:** `claude/ui-<topic>` for Fable, `codex/ui-<topic>` for Codex Astra. Never push `main`,
+  `release/pages` or `release/cloud-staging`. Never force-push, and never rewrite a branch another system has pulled.
+- **Secrets are never read, printed, copied or uploaded.** That includes browser profiles and saved passwords,
+  `wrangler`'s sign-in in the user profile, `.env` and `.dev.vars`, SSH keys, API keys and Access service tokens. A step
+  that seems to need one stops and asks Rob.
+- **Never** run `wrangler`, deploy, or change Cloudflare, Access or GitHub settings. Releases are the engine lane's,
+  and production is Rob's go.
+- **Nothing outside the repository and the folder Rob gives you is deleted, moved or cleaned** (AGENTS.md, *Things no
+  agent does*). Nothing is installed system-wide without his say-so.
+- **A prototype's export lives in its own folder,** outside the repository. It is ported in; it is never committed
+  as it is.
+
 ## How work reaches `main`
 
 1. **Branch** `<your-system>/ui-<topic>`, from `main`. Open a **draft** PR at once.
@@ -93,9 +111,10 @@ Rob may also bring back concepts from prototyping tools. See *Concepts from prot
 
 ## Concepts from prototyping tools
 
-Rob is trying alternative game screens in prototyping tools, with `docs/ui-lane/gameplay-anchor.md` as their brief and
-`docs/ui-lane/sample-views.json` as their data. When he brings one back, it comes as an exported folder and a
-`HANDOFF.md`. Your part:
+Rob is trying alternative Play screens in Replit, with `docs/ui-lane/gameplay-anchor.md` as the brief and
+`docs/ui-lane/sample-views.json` as the data. Each concept covers Play only, the table and the game. It carries the
+app's real menus and links to the rest of CrankMagic, with nothing built behind them. When he brings one back, it
+comes as an exported folder and a `HANDOFF.md`. Your part:
 
 - **Port it; don't drop it in.** The board is plain JavaScript in `crankmagic-board.js` and its CSS. A concept built in
   React or another framework is a reference to port, not code to merge. Moving the board onto a framework is Rob's

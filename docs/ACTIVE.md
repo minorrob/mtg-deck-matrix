@@ -5,7 +5,7 @@
 | Lane | Held by | Branch | Doing |
 | --- | --- | --- | --- |
 | **Engine** | Claude, a cloud container | `claude/admiring-franklin-58cxy4` | Train D (the 18 cards of Rob's six decks), then the library's other ~175; the AI on Claude and the deck advisor on staging; G-F, production |
-| **UI** | Open: Rob is choosing (Grok Bot, Codex, or another Claude session) | `<system>/ui-<topic>` | Rob's notes 9 and 10 (a *Turn Resources* tab; the right pane docked; the hover card no taller than the mat); concepts Rob brings back from prototyping tools. Brief: `docs/ui-lane/README.md` |
+| **UI** | Fable or Codex Astra (Rob, 2026-10-12), on his computer and in the cloud; Rob prototypes Play in Replit first | `claude/ui-<topic>` or `codex/ui-<topic>` | Rob's notes 9 and 10 (a *Turn Resources* tab; the right pane docked; the hover card no taller than the mat); concepts Rob brings back from prototyping tools. Brief: `docs/ui-lane/README.md` |
 
 ### Requests between the lanes
 
