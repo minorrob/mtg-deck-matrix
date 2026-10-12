@@ -139,6 +139,15 @@ export const STATIC_RULES = Object.freeze({
       binds, from its controller's side. drawForbidden, read where a card is drawn -- the draw step's (rules/turn.mjs), an
       effect's (script/effects/zones.mjs) -- and where a "you may draw" is offered (script/effects/asking.mjs, modal). */
   "cant-draw-more-than-one": "script/effects/zones.mjs",
+  /** "If you would draw a card while your library has no cards in it, you win the game instead" (Laboratory Maniac; CR 614.11,
+      121.6a, 104.2b): `affects` the players whose draws it replaces, from its controller's side. emptyDrawWins, read where a
+      card is drawn -- the draw step's (rules/turn.mjs), an effect's (script/effects/zones.mjs). */
+  "empty-draw-wins": "script/effects/zones.mjs",
+  /** "If you would draw a card except the first one you draw in each of your draw steps, draw two cards instead" (Teferi's
+      Ageless Insight; CR 614.11, 614.11a, 614.5): `affects` the players, from its controller's side, `count` the cards drawn
+      instead, `exceptFirstInDrawStep`. drawsMore, read where an effect's card is drawn (script/effects/zones.mjs); the draw
+      step's own draw is always the first of that step (CR 504.1, 504.2), so rules/turn.mjs never asks. */
+  "draws-more": "script/effects/zones.mjs",
   /** "Alexios ... can't be sacrificed" (Alexios, Deimos of Kosmos; CR 701.21a): `affects` what can't. cantBeSacrificed, read
       where a permanent would be sacrificed (script/effects/zones.mjs, sacrificeOne) and where one is chosen to be: the
       sacrifice effect and an "unless" cost (script/effects/asking.mjs), a cost (rules/actions.mjs). */
@@ -606,6 +615,40 @@ export function cantBeSacrificed(state, id) {
 export function drawForbidden(state, player, count = 1) {
   if ((state.players[player]?.drawnThisTurn ?? 0) + count <= 1) return false;
   return playerRuleChanged(state, "cant-draw-more-than-one", player);
+}
+
+/**
+ * "IF YOU WOULD DRAW A CARD WHILE YOUR LIBRARY HAS NO CARDS IN IT, YOU WIN THE GAME INSTEAD" (Laboratory Maniac; CR 614.11,
+ * 121.6a): whether an `empty-draw-wins` static names `player`, who would now draw from an empty library. Asked only once the
+ * draw is one the player may make (drawForbidden first: a draw that can't happen is no event to replace, CR 101.2).
+ */
+export function emptyDrawWins(state, player) {
+  return playerRuleChanged(state, "empty-draw-wins", player);
+}
+
+/**
+ * "IF YOU WOULD DRAW A CARD EXCEPT THE FIRST ONE YOU DRAW IN EACH OF YOUR DRAW STEPS, DRAW TWO CARDS INSTEAD" (Teferi's Ageless
+ * Insight; CR 614.11, 614.11a): the `draws-more` statics whose `affects` names `player` for the card they would draw now, each
+ * `{key, count}` -- its holder and ability, so each applies once to a draw and to the draws it became (CR 614.5), and
+ * another's still may: two of them make four. `exceptFirstInDrawStep`: not the first card the player would draw in their own
+ * draw step -- none drawn there yet this turn (state/index.mjs, recordDrawStepDraw), the step's own draw or, it skipped, an
+ * effect's. Only multiplying draws is built, so their order never changes the outcome and nobody is asked (CR 616.1).
+ */
+export function drawsMore(state, player) {
+  const steps = state.players[player]?.drawStepDraws;
+  const first = state.phase === "DRAW" && state.activePlayer === player && !(steps?.turn === state.turn && steps.count > 0);
+  const found = [];
+  const held = staticAbilities(state);
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of held(holderId)) {
+      if (ability.kind !== "static" || ability.rule !== "draws-more") continue;
+      if (ability.exceptFirstInDrawStep === true && first) continue;
+      if (compileSelector({what: "player", ...ability.affects})(state, player, {controller: holder.controller, source: holderId}))
+        found.push({key: `${holderId}:${ability.id}`, count: ability.count});
+    }
+  }
+  return found;
 }
 
 /**

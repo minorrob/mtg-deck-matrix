@@ -26,7 +26,8 @@ import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf, controllerOf, abilitiesOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector, matchesSelector, shareCreatureType} from "../filter.mjs";
 import {applyReplacements, enteringModifications, regenerated} from "../../rules/replacement.mjs";
-import {cantBeCountered, entersUntapped, enteringCountersPlaced, drawsInstead, cantBeSacrificed, drawForbidden} from "../../rules/statics.mjs";
+import {cantBeCountered, entersUntapped, enteringCountersPlaced, drawsInstead, cantBeSacrificed, drawForbidden, emptyDrawWins, drawsMore} from "../../rules/statics.mjs";
+import {winGame} from "./resources.mjs";
 import {amountOf} from "../amount.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
 
@@ -346,6 +347,9 @@ export function sacrificeAll(state, params, context) {
  * names a looked-at card to nobody.
  */
 export function peekAndReveal(state, params, context) {
+  /* A hand looked at is asked of its looker as the resolution reaches it (script/resolution.mjs; effects/asking.mjs,
+     handLook): run here, nobody would see it -- refused, never read as the library's top. */
+  if (params.zone === "hand") throw new Error("A look at a hand is shown to its looker as a resolution reaches it; it is not run on its own");
   const events = [], seen = [];
   const count = params.count ?? 1;
   for (const player of playersFor(state, params.who, context.controller)) {
@@ -639,11 +643,21 @@ export function draw(state, params, context) {
   return events;
 }
 /* One card off the top of a player's library into their hand, said to be drawn; from an empty library, the mark that loses (CR 704.5b). */
-function drawOne(state, player, events) {
+function drawOne(state, player, events, replaced = []) {
   /* A card the player can't draw (Narset, Parter of Veils; rules/statics.mjs, drawForbidden) is not drawn, nor tried for: no
      draw from an empty library either (CR 101.2, 121.2b). */
   if (drawForbidden(state, player)) return;
   const library = cardsIn(state, "library", player);
+  /* "IF YOU WOULD DRAW A CARD WHILE YOUR LIBRARY HAS NO CARDS IN IT, YOU WIN THE GAME INSTEAD" (Laboratory Maniac; CR 614.11,
+     121.6a): replaced even with no card to draw, so it is no draw from an empty library -- and an opponent's "you can't win
+     the game" (effects/resources.mjs, winGame) leaves the player neither winning nor losing for it (its ruling). Before "draw
+     two instead": either order ends with the same win, so nobody is asked (CR 616.1). */
+  if (library.length === 0 && emptyDrawWins(state, player)) { winGame(state, {who: [player]}, {controller: player}); return; }
+  /* "DRAW TWO CARDS INSTEAD" (Teferi's Ageless Insight; CR 614.11a, 614.5): each `draws-more` not yet applied to this draw
+     replaces it with that many draws, each one the others may still replace -- all of them made before the rest of the draw
+     goes on. */
+  const more = drawsMore(state, player).find((m) => !replaced.includes(m.key));
+  if (more) { for (let i = 0; i < more.count; i += 1) drawOne(state, player, events, [...replaced, more.key]); return; }
   if (library.length === 0) { state.players[player].drewFromEmpty = true; return; }
   const moved = moveOne(state, library[0], "hand", events, {owner: player});
   if (moved !== null && state.objects[moved]?.zone === "hand") {

@@ -292,13 +292,14 @@ function castPayments(state, player, action) {
   const reckoned = castCost(state, player, action.objectId, tax, Boolean(free), lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : null, action.extraMana ?? "", action.targets);
   const {x} = reckoned, cost = anyTypeCost(reckoned.cost, permission);
   return paymentOptions(poolFor(state, player, {spell: action.objectId}), cost,
-    {life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0) - (lifeCost ?? 0), x: x + (action.x ?? 0) * cost.variable}, PAY_CHOICES);
+    {life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0) - (lifeCost ?? 0) - (action.extraLife ?? 0), x: x + (action.x ?? 0) * cost.variable}, PAY_CHOICES);
 }
 /* The life a cast owes beyond its mana, its alternative cost's and the Citadel's: an increase for what it targets (Terror of the
    Peaks; rules/statics.mjs, lifeIncrease) and an additional cost of X life (Toxic Deluge; lifeXAtom). */
+/* And an additional cost's fixed life, a choice's (Redirect Lightning; additionalVariants, `extraLife`). */
 function lifeOwed(state, player, action) {
   const object = state.objects[action.objectId];
-  return lifeIncrease(state, player, action.objectId, action.targets) + (lifeXAtom(object?.spell?.additionalCost) ? action.x ?? 0 : 0);
+  return (action.extraLife ?? 0) + lifeIncrease(state, player, action.objectId, action.targets) + (lifeXAtom(object?.spell?.additionalCost) ? action.x ?? 0 : 0);
 }
 /* The ways the pool pays an ability taken with `payWays`: its mana, as costPayment reckons it. */
 function abilityPayments(state, player, action) {
@@ -581,8 +582,12 @@ function additionalVariants(costs) {
       continue;
     }
     const options = atom?.atom === "oneOf" ? atom.options ?? [] : [[atom]];
-    variants = variants.flatMap((v) => options.map((option) => ({...v, atoms: [...v.atoms, ...option.filter((a) => a.atom !== "mana")],
-      mana: v.mana + option.filter((a) => a.atom === "mana").map((a) => a.cost ?? "").join("")})));
+    /* "As an additional cost to cast this spell, pay 5 life or pay {2}" (Redirect Lightning; CR 601.2b, 119.4): a choice's
+       life, a fixed amount, paid with the rest of the cost (`life`, the offer's `extraLife`) -- not a cost to pick. */
+    const fixedLife = (a) => a.atom === "payLife" && Number.isInteger(a.amount);
+    variants = variants.flatMap((v) => options.map((option) => ({...v, atoms: [...v.atoms, ...option.filter((a) => a.atom !== "mana" && !fixedLife(a))],
+      mana: v.mana + option.filter((a) => a.atom === "mana").map((a) => a.cost ?? "").join(""),
+      ...(option.some(fixedLife) ? {life: (v.life ?? 0) + option.filter(fixedLife).reduce((n, a) => n + a.amount, 0)} : {})})));
   }
   return variants;
 }
@@ -1508,7 +1513,10 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
      costs more for targeting this way (Terror of the Peaks) -- less than none, and no way to aim it so is offered
      (`affordable`, below; CR 119.4). */
   const aimLife = lifeIncrease(state, player, id, aim);
-  const lifeLeft = state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0) - (paidLife ?? 0) - aimLife;
+  /* An additional cost's fixed life (Redirect Lightning; CR 119.4): off what is left, so a way it leaves less than none is no
+     way to cast it (`affordable`, below). */
+  const extraLife = variant.life ?? 0;
+  const lifeLeft = state.players[player].life - extraLife - (back?.life ?? 0) - (way?.life ?? 0) - (paidLife ?? 0) - aimLife;
   /* {X} (CR 107.3, 601.2b): one offer per value the pool can pay, from nothing up; a spell without X, one. And X life
      (lifeX): one per value that life can pay. */
   /* The pool, and mana that may be spent only on this spell (rules/restricted-mana.mjs). */
@@ -1553,7 +1561,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
       const base = {kind: "cast", objectId: id, label: way?.disguise ? object.faceDownCard.card : object.card, payment: convoke || payWays ? null : payment, from, tax, ...(X !== null ? {x: X} : {}),
         ...(lifeX ? {payLifeX: true} : {}), ...(autoTap && !convoke ? {autoTap: true} : {}),
         ...(payWays && !convoke ? {payWays: true} : {}),
-        ...(convoke ? {convoke: true} : {}), ...(variant.mana ? {extraMana: variant.mana} : {}), ...(variant.kicked ? {kicked: variant.kicked} : {}),
+        ...(convoke ? {convoke: true} : {}), ...(variant.mana ? {extraMana: variant.mana} : {}), ...(extraLife ? {extraLife} : {}), ...(variant.kicked ? {kicked: variant.kicked} : {}),
         ...(variant.replicated ? {replicated: variant.replicated} : {}), ...(gift !== undefined ? {gift} : {}), ...(variant.offspring ? {offspring: true} : {}),
         ...(tapsAny ? {tapAny: true} : {}), ...(beholds ? {behold: beholds.count ?? 1} : {}),
         /* Escalated (CR 702.120a): how many modes beyond the first, and how many creatures that taps. */
@@ -1971,6 +1979,8 @@ const sameAction = (a, b) => a.kind === b.kind
      ("or pay {3}") another than paying its other choice. */
   && (a.alternative ?? null) === (b.alternative ?? null)
   && (a.extraMana ?? null) === (b.extraMana ?? null)
+  /* And paying an additional cost's life ("pay 5 life or pay {2}") another than paying its mana. */
+  && (a.extraLife ?? 0) === (b.extraLife ?? 0)
   /* And replicated that many times (CR 702.56a): another cost, and that many copies. */
   && (a.replicated ?? 0) === (b.replicated ?? 0)
   /* And a gift promised, to that opponent (CR 702.174a): another cost, and another player given it. */
@@ -2427,7 +2437,7 @@ function performOffered(state, player, action, during) {
       /* Escalate's cost too, paid for a mode beyond the first (CR 702.120a: an additional cost). */
       /* Not sneak's returned creature: part of an alternative cost (CR 702.190a, 118.9), no additional cost. */
       /* Not the permission's own (Exploration Broodship's land): that is no cost of this spell's to ask after. */
-      ...((extraPaid.some(([kind]) => kind !== "returnToHand") && !(permission?.ability.additionalCost && !(object.spell?.additionalCost ?? []).length)) || action.extraMana || action.escalate > 0 || (beholding.length && additionalAtom(object.spell?.additionalCost, "behold")) ? {additionalPaid: true} : {}),
+      ...((extraPaid.some(([kind]) => kind !== "returnToHand") && !(permission?.ability.additionalCost && !(object.spell?.additionalCost ?? []).length)) || action.extraMana || action.extraLife || action.escalate > 0 || (beholding.length && additionalAtom(object.spell?.additionalCost, "behold")) ? {additionalPaid: true} : {}),
       /* The creatures tapped to convoke it (CR 702.51c: they "convoked" it): "each creature that convoked this spell
          connives" (Lethal Scheme; script/bind.mjs, "convoked"). */
       ...((convoke?.ids ?? []).length ? {convoked: [...convoke.ids]} : {}),

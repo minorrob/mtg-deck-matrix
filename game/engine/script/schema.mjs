@@ -327,12 +327,14 @@ function checkEffect(effect, path, errors) {
     errors.push({path: `${path}.value`, message: "A Case once solved stays solved (CR 719.3b): solved is given, never taken"});
   /* "Each opponent may sacrifice ... For each opponent who doesn't, ..." (Braids, Arisen Nightmare; effects/asking.mjs): a
      sacrifice that may be declined (`optional`), and what follows for each player who sacrifices nothing (`ifNot`), held to
-     the effect grammar -- only beside `optional`. */
+     the effect grammar. */
   if (name === "sacrifice") {
     if (effect.optional !== undefined && effect.optional !== true) errors.push({path: `${path}.optional`, message: "A sacrifice that may be declined is optional: true"});
+    /* Declined, or -- a sacrifice that must be made -- one a player can't make: "each player who can't discards a card"
+       (Plaguecrafter; effects/asking.mjs, sacrifice's `named`). Never beside keeping (Tragic Arrogance's `keep`). */
     if (effect.ifNot !== undefined) {
-      if (effect.optional !== true || !Array.isArray(effect.ifNot) || !effect.ifNot.length)
-        errors.push({path: `${path}.ifNot`, message: "What follows a sacrifice declined is a list of effects, beside optional: true"});
+      if (!Array.isArray(effect.ifNot) || !effect.ifNot.length || effect.keep !== undefined || effect.keepTypes !== undefined || effect.keepPowerAtMost !== undefined)
+        errors.push({path: `${path}.ifNot`, message: "What follows a sacrifice declined, or one a player can't make, is a list of effects -- never beside keeping"});
       else effect.ifNot.forEach((child, index) => checkEffect(child, `${path}.ifNot[${index}]`, errors));
     }
   }
@@ -567,9 +569,10 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
         if (ability.lands) errors.push({path: `${path}.additionalCost`, message: "An additional cost is a spell's (CR 601.2b): a permission with one lets spells be cast, not lands be played"});
       }
     }
-    /* What causes a trigger to trigger again: an arrival, a death, an attack, or an arrival or a departure (rules/trigger.mjs). */
-    if (ability.rule === "triggers-again" && ability.cause !== undefined && !["enters", "dies", "attacks", "enters or leaves"].includes(ability.cause?.event))
-      errors.push({path: `${path}.cause`, message: "What causes it to trigger again is an event: enters, dies, attacks, or enters or leaves"});
+    /* What causes a trigger to trigger again: an arrival, a death, an attack, an arrival or a departure, or its controller
+       casting or copying a spell (Veyran, Voice of Duality; rules/trigger.mjs). */
+    if (ability.rule === "triggers-again" && ability.cause !== undefined && !["enters", "dies", "attacks", "enters or leaves", "cast or copy"].includes(ability.cause?.event))
+      errors.push({path: `${path}.cause`, message: "What causes it to trigger again is an event: enters, dies, attacks, or enters or leaves; or a spell's, cast or copy"});
     /* A restriction on attacking (CR 508.1c): whom, in its words, and a condition under which it does not apply. */
     if (ability.rule === "cant-attack") {
       if (ability.defender !== undefined && !CANT_ATTACK_DEFENDERS.includes(ability.defender))
@@ -640,6 +643,12 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
        names, two or more predefined tokens (CR 111.10), each told by its subtype. */
     if (ability.rule === "tokens-each" && !(Array.isArray(ability.each) && ability.each.length >= 2 && ability.each.every((kind) => isText(kind?.predefined) && Object.keys(kind).length === 1)))
       errors.push({path: `${path}.each`, message: "One of each says which tokens: each, two or more [{predefined}]"});
+    /* "Draw two cards instead" (Teferi's Ageless Insight; rules/statics.mjs, drawsMore): how many cards for each one, 2 or more,
+       and the first card of the player's draw step left alone or not. */
+    if (ability.rule === "draws-more") {
+      if (!(Number.isInteger(ability.count) && ability.count >= 2)) errors.push({path: `${path}.count`, message: "More draws instead says how many cards for each: a whole number, 2 or more"});
+      if (ability.exceptFirstInDrawStep !== undefined && ability.exceptFirstInDrawStep !== true) errors.push({path: `${path}.exceptFirstInDrawStep`, message: "exceptFirstInDrawStep is true"});
+    }
     /* "Twice that much life instead" (rules/statics.mjs, lifeGained): how many times, 2 or more. */
     if (ability.rule === "more-life" && !(Number.isInteger(ability.times) && ability.times >= 2))
       errors.push({path: `${path}.times`, message: "More life instead says how many times as much: a whole number, 2 or more"});

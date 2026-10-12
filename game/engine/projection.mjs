@@ -153,10 +153,12 @@ function topLookedAtBy(state, viewer, ids) {
    choose a nonland card from it" (Render Speechless) -- each card of it shown to every player while the card is chosen, and
    to nobody once the question is gone, however it goes: those of this hand's cards the question revealed. */
 /* And a card revealed from an opening hand (CR 103.6b): until the first turn begins. */
-function handShown(state, ids) {
+/* And A HAND LOOKED AT (CR 701.20e; effects/asking.mjs, handLook): "look at target player's hand" (Gitaxian Probe) -- shown to
+   its looker alone (`handLookedBy`), while they look. */
+function handShown(state, ids, viewer) {
   const asking = state.awaiting;
   const opening = state.stepIndex === undefined ? state.mulligan?.revealed ?? [] : [];
-  return ids.filter((id) => (asking?.handRevealed === true && asking.cards.includes(id)) || opening.includes(id));
+  return ids.filter((id) => (asking?.handRevealed === true && asking.cards.includes(id)) || (asking?.handLookedBy === viewer && asking.cards.includes(id)) || opening.includes(id));
 }
 
 function zoneFor(state, zone, owner, viewer) {
@@ -167,7 +169,7 @@ function zoneFor(state, zone, owner, viewer) {
   const visible = rule === "public" || (rule === "owner" && viewer === owner);
   const looked = zone === "library" ? topLookedAtBy(state, viewer, ids) : 0;
   const cards = visible ? ids.map((id) => cardFor(state, id, true, viewer)).filter(Boolean)
-    : zone === "hand" ? handShown(state, ids).map((id) => cardFor(state, id, true)).filter(Boolean)
+    : zone === "hand" ? handShown(state, ids, viewer).map((id) => cardFor(state, id, true)).filter(Boolean)
     : zone === "library" && ids.length && (looked || topSeenBy(state, owner, viewer)) ? ids.slice(0, Math.max(1, looked)).map((id) => cardFor(state, id, true)).filter(Boolean) : [];
   return {
     count: ids.length,

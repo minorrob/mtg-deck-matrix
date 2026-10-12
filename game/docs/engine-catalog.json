@@ -9,17 +9,17 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1501,
+  "defined": 1521,
   "provisional": 25,
-  "everyRule": 2786
+  "everyRule": 2794
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 73,
+    "built": 74,
     "partial": 0,
     "named": 6,
-    "missing": 115
+    "missing": 114
    },
    "entries": [
     {
@@ -494,13 +494,13 @@
      "kind": "keyword ability",
      "rule": "702.41",
      "name": "Affinity",
-     "engine": null,
-     "status": "missing",
+     "engine": "Affinity",
+     "status": "built",
      "forge": "Affinity",
      "top": 5,
      "all": 77,
-     "blocks": 5,
-     "alone": 4
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -3208,10 +3208,10 @@
   },
   "Effects": {
    "tally": {
-    "built": 76,
+    "built": 77,
     "partial": 2,
     "named": 1,
-    "missing": 113
+    "missing": 112
    },
    "entries": [
     {
@@ -4286,13 +4286,13 @@
      "kind": "effect",
      "rule": null,
      "name": "RevealHand",
-     "engine": null,
-     "status": "missing",
+     "engine": "peekAndReveal",
+     "status": "built",
      "forge": "RevealHand",
      "top": 2,
      "all": 80,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -8197,8 +8197,8 @@
      "forge": "Draw",
      "top": 7,
      "all": 37,
-     "blocks": 7,
-     "alone": 4
+     "blocks": 5,
+     "alone": 3
     },
     {
      "kind": "replacement",
@@ -9237,7 +9237,7 @@
      "forge": "PresentZone",
      "top": 9,
      "all": 160,
-     "blocks": 8,
+     "blocks": 7,
      "alone": 4
     },
     {

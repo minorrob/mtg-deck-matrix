@@ -548,6 +548,17 @@ function causedBy(state, event, cause, context) {
   if (cause.event === "dies") return event.kind === "GameEventCardChangeZone" && fields.from?.zoneType === "Battlefield" && fields.to?.zoneType === "Graveyard"
     && Boolean(fields.leftBehind) && matchesLastKnown(cause.filter ?? {}, fields.leftBehind, context);
   if (cause.event === "attacks") return event.kind === "GameEventAttackersDeclared" && (fields.attackers ?? []).length > 0;
+  /* "If you casting or copying an instant or sorcery spell causes a triggered ability of a permanent you control to trigger"
+     (Veyran, Voice of Duality; CR 603.2d, 601.2i, 707.10): a spell this static's controller cast, or a copy of one they put on
+     the stack (the copy's controller, the magecraft rulings), the spell as it is there that `filter` describes. An ability
+     activated is no spell there, and no spell the selector finds. */
+  if (cause.event === "cast or copy") {
+    const cast = event.kind === "GameEventSpellAbilityCast";
+    if (!cast && event.kind !== "GameEventSpellCopied") return false;
+    if ((cast ? fields.si?.actor?.playerId : fields.playerId) !== context.controller) return false;
+    const spell = cast ? state.stack.find((e) => e.stackId === fields.sa?.stackId)?.objectId ?? fields.card?.cardId : fields.card?.cardId;
+    return Boolean(state.objects[spell]) && matchesSelector({...(cause.filter ?? {}), what: "spell"}, state, spell, context);
+  }
   return false;
 }
 

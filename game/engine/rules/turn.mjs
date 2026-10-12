@@ -46,10 +46,10 @@ import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
 import {answerResolution, answerDeparted, resolutionChoice} from "../script/resolution.mjs";
 import {finishResolving} from "./stack.mjs";
 import {priorityOrder} from "./priority.mjs";
-import {playerRuleChanged, untapsDuringOthers, ruleChanged, drawForbidden} from "./statics.mjs";
+import {playerRuleChanged, untapsDuringOthers, ruleChanged, drawForbidden, emptyDrawWins} from "./statics.mjs";
 import {emptyRestricted, colorlessPool} from "./restricted-mana.mjs";
 import {endCopies, phaseIn, endControlChange, nextRecord} from "../script/effects/permanents.mjs";
-import {untapOne} from "../script/effects/resources.mjs";
+import {untapOne, winGame} from "../script/effects/resources.mjs";
 import {runEffect} from "../script/effects/index.mjs";
 import {askEntering, enteringChoice, resolveEnteringChoice} from "./entering.mjs";
 import {collectTriggers, openTriggers, askTriggerTargets, triggerChoice, resolveTriggerOrder, triggerTargetsChoice, resolveTriggerTargets, triggerCountedChoice, resolveTriggerCounted} from "./trigger.mjs";
@@ -179,6 +179,9 @@ export function draw(state, player, events) {
   if (drawForbidden(state, player)) return null;
   const library = cardsIn(state, "library", player);
   if (library.length === 0) {
+    /* "You win the game instead" (Laboratory Maniac; CR 614.11, 121.6a): replaced, and no draw from an empty library
+       (script/effects/zones.mjs says why, for an effect's draw). */
+    if (emptyDrawWins(state, player)) { winGame(state, {who: [player]}, {controller: player}); return null; }
     state.players[player].drewFromEmpty = true;
     return null;
   }

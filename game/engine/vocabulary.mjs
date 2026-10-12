@@ -223,6 +223,9 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   "replicate",
   /* Wave 4a: shadow (CR 702.28), a keyword counter's (Minas Morgul, Dark Fortress; CR 122.1b; keywords/combat.mjs). */
   "shadow",
+  /* Wave 4c: affinity (CR 702.41), the spell's own cost reduction for each of a kind of permanent its caster controls
+     (cards/index.mjs). */
+  "affinity",
   /* Wave 4b: exalted (CR 702.83) and extort (CR 702.101), triggered abilities; eternalize (CR 702.129), embalm's 4/4 black
      copy; gift (CR 702.174), an optional additional cost choosing an opponent (cards/index.mjs, rules/actions.mjs). */
   "exalted", "extort", "eternalize", "gift",

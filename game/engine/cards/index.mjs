@@ -775,6 +775,19 @@ export function compileScript(script) {
       keywords.push("Prowess");
       return;
     }
+    /* AFFINITY FOR [TEXT] (CR 702.41a; Thought Monitor, wave 4c): "This spell costs {1} less to cast for each [text] you
+       control" -- the keyword IS that static ability of the spell's own (`this-costs-less`, rules/statics.mjs costReduction),
+       `of` the permanents it counts, a selector, "you control" added. Each instance applies (702.41b). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "affinity") {
+      const of = ability.of;
+      const counted = {...(of ?? {}), what: "permanent", controller: "you"};
+      if (!(of && typeof of === "object" && !Array.isArray(of) && of.controller === undefined && of.what === undefined))
+        problems.push(`${ability.text}: affinity says what it counts, \`of\` a selector of permanents with no controller or what of its own`);
+      else try { compileSelector(counted); } catch (error) { problems.push(`${ability.text}: ${error.message}`); }
+      abilities.push({id, kind: "static", rule: "this-costs-less", text: ability.text, affects: {self: true}, amount: {count: counted}});
+      keywords.push("Affinity");
+      return;
+    }
     /* EXALTED (CR 702.83a; Ignoble Hierarch, wave 4b): "Whenever a creature you control attacks alone, that creature gets +1/+1
        until end of turn" -- the keyword IS that triggered ability, "alone" the only creature declared as an attacker (702.83b,
        506.5; rules/trigger.mjs). Each instance triggers, on any permanent that has it. */
@@ -1458,6 +1471,16 @@ export function compileScript(script) {
          more than one of it, one color for all. */
       if (effect.effect === "addMana" && effect.oneColor !== undefined && !(effect.oneColor === true && effect.anyColor === true && effect.mana === undefined && effect.count >= 2))
         problems.push("addMana: oneColor is true, beside anyColor and a count of 2 or more -- that many mana, all of one color");
+      /* "Add {B} or {G} for each permanent destroyed this way" as a spell resolves (Culling Ritual; script/resolution.mjs): two
+         or more of the five colors, each mana one of them as its controller chooses -- plain mana, nothing else said of it. */
+      if (effect.effect === "addMana" && effect.colors !== undefined && !(Array.isArray(effect.colors) && effect.colors.length >= 2
+        && new Set(effect.colors).size === effect.colors.length && effect.colors.every((c) => ["W", "U", "B", "R", "G"].includes(c))
+        && ["mana", "anyColor", "oneColor", "spendOnly", "cantSpend", "whenSpent", "untilEndOfCombat"].every((k) => effect[k] === undefined)))
+        problems.push("addMana: colors is two or more of W, U, B, R and G, each once -- one of them for each mana, with no mana, anyColor, restriction or rider besides");
+      /* "Look at target player's hand" (Gitaxian Probe; effects/asking.mjs, handLook): a look at the whole hand, by this effect's
+         controller -- no count, nothing revealed to everyone and nothing remembered from it (none of those is built for a hand). */
+      if (effect.effect === "peekAndReveal" && effect.zone !== undefined && !(effect.zone === "hand" && ["count", "reveal", "remember"].every((k) => effect[k] === undefined)))
+        problems.push("peekAndReveal: zone is \"hand\", a look at the whole of each hand `who` names, with no count, reveal or remember");
       /* "Target opponent reveals their hand. You choose a nonland card from it. That player discards that card" (Render
          Speechless; effects/asking.mjs): a discard chosen by this effect's controller (`chooser: "you"`, CR 701.9b) is from a
          hand revealed (`reveal: true`, CR 701.20a) -- the two together, and one card or more of it; "any number" is the
@@ -1486,6 +1509,9 @@ export function compileScript(script) {
               let parsed = null;
               try { parsed = parseManaCost(one.cost ?? ""); } catch { /* refused below */ }
               if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`oneOf: ${JSON.stringify(one.cost ?? "")} is no mana to pay`);
+            /* "Pay 5 life or pay {2}" (Redirect Lightning; rules/actions.mjs, additionalVariants): a fixed amount of life, 1 or more. */
+            } else if (one?.atom === "payLife") {
+              if (!(Number.isInteger(one.amount) && one.amount >= 1)) problems.push("oneOf: a choice's life to pay is a whole number, 1 or more");
             } else if (!["discard", "sacrifice", "blight", "behold"].includes(one?.atom)) problems.push(`${one?.atom ?? "an additional cost"}: an additional cost nothing pays yet`);
             problems.push(...beholdProblems(one));
             if (one?.atom === "blight" && !(Number.isInteger(one.count ?? 1) && (one.count ?? 1) >= 1)) problems.push("blight: an additional cost of 1 or more -1/-1 counters");

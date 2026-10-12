@@ -1,0 +1,71 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Redirect Lightning",
+    "oracleId": "c62b5c22-e058-436f-9575-a01cb2112829",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [
+      "Lesson"
+    ],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As an additional cost to cast this spell, pay 5 life or pay {2}.\nChange the target of target spell or ability with a single target.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "As an additional cost to cast this spell, pay 5 life or pay {2}.\nChange the target of target spell or ability with a single target.",
+      "additionalCost": [
+        {
+          "atom": "oneOf",
+          "options": [
+            [
+              {
+                "atom": "payLife",
+                "amount": 5
+              }
+            ],
+            [
+              {
+                "atom": "mana",
+                "cost": "{2}"
+              }
+            ]
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "spell",
+              "singleTarget": true
+            },
+            {
+              "what": "ability",
+              "singleTarget": true
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "changeTargets",
+          "stack": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

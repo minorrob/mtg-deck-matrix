@@ -269,6 +269,14 @@ const aboutWas = (ref, context) => (ref === "that card" ? context.about?.lastKno
    before it remembered -- revealed, in a library or elsewhere off the battlefield -- has its printed power and toughness
    there (CR 208.1, 109.3). Null for anything else, which is read as before. */
 const cardFigure = (state, ref, id, key) => (ref === "remembered" && id !== null && state.objects[id] && state.objects[id].zone !== "battlefield" ? state.objects[id][key] ?? 0 : null);
+/* "You may sacrifice another creature. If you do, you gain X life and draw X cards, where X is that creature's power" (Disciple
+   of Freyalise): what the effect before it remembered having moved it off the battlefield -- a sacrifice's `remember`, its
+   `movedWas` kept one for each (effects/asking.mjs) -- as it last existed there (CR 608.2h), a token's too, which no longer
+   exists anywhere (CR 704.5d). Null for anything else, which is read as before. */
+const movedFigure = (ref, context, key) => {
+  const was = context.movedWas ?? [];
+  return ref === "remembered" && was.length > 0 && was.length === (context.remembered ?? []).length ? was[0]?.[key] ?? 0 : null;
+};
 
 /* CR 700.5: each mana symbol among the mana costs of permanents the player controls that is one of these colors. */
 function devotion(state, player, colors) {
@@ -357,7 +365,8 @@ export function amountOf(state, value, context = {}) {
     n = (value.powerOf === "sacrificed" ? was?.power : was?.toughness) ?? 0;
   } else if ("powerOf" in value) {
     const id = objectOf(value.powerOf, context);
-    n = id !== null && state.objects[id]?.zone === "battlefield" ? powerOf(state, id) : cardFigure(state, value.powerOf, id, "power") ?? (aboutWas(value.powerOf, context)?.power ?? context.lastKnown?.power ?? 0);
+    n = id !== null && state.objects[id]?.zone === "battlefield" ? powerOf(state, id) : movedFigure(value.powerOf, context, "power")
+      ?? cardFigure(state, value.powerOf, id, "power") ?? (aboutWas(value.powerOf, context)?.power ?? context.lastKnown?.power ?? 0);
   } else if ("toughnessOf" in value) {
     const id = objectOf(value.toughnessOf, context);
     n = id !== null && state.objects[id]?.zone === "battlefield" ? toughnessOf(state, id) : cardFigure(state, value.toughnessOf, id, "toughness") ?? (aboutWas(value.toughnessOf, context)?.toughness ?? context.lastKnown?.toughness ?? 0);

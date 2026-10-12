@@ -880,8 +880,12 @@ export const sacrifice = {
        the last has chosen -- and `ifNot`, what follows for each of them who sacrifices nothing, a player with nothing to
        sacrifice among them, "that player" each in turn order (unrefused, below). */
     if (params.optional === true) Object.assign(asked, {optional: true, everyone, ...(Array.isArray(params.ifNot) ? {ifNot: structuredClone(params.ifNot)} : {})});
+    /* "EACH PLAYER SACRIFICES A CREATURE OR PLANESWALKER OF THEIR CHOICE. EACH PLAYER WHO CAN'T DISCARDS A CARD" (Plaguecrafter):
+       a sacrifice that must be made, and `ifNot` what follows for each player named who sacrificed nothing -- only one with
+       nothing they could sacrifice -- "that player" each in turn order (unrefused, below), once every sacrifice is made. */
+    else if (Array.isArray(params.ifNot)) Object.assign(asked, {ifNot: structuredClone(params.ifNot), named: everyone});
     if (queue.length === 0) {
-      if (asked.optional) return {events: [], splice: unrefused(state, asked, [])};
+      if (asked.optional || asked.named) return {events: [], splice: unrefused(state, asked, [])};
       /* Nobody has a choice to make, and what the keeping does is still done: each keeps all they have. */
       if (!asked.everyone) return false;
       const events = [];
@@ -975,7 +979,7 @@ export const sacrifice = {
       }
       if (awaiting.remember === player) remembering = [...remembering, ...gone];
     }
-    const refused = awaiting.optional ? unrefused(state, awaiting, decided) : null;
+    const refused = awaiting.optional || awaiting.named ? unrefused(state, awaiting, decided) : null;
     return remembering || refused ? {events, ...(remembering ? {remembered: remembering, movedWas} : {}), ...(refused ? {splice: refused} : {})} : events;
   },
 
@@ -989,11 +993,11 @@ export const sacrifice = {
 /* WHAT FOLLOWS A "MAY SACRIFICE" NOT TAKEN (`ifNot`): for each player named who sacrificed nothing -- declined, or had nothing
    to -- in turn order from the active player, its effects with that player "that player" (a mark before them, as a
    repetition's are spliced, script/resolution.mjs), and the resolution's own subject back after the last. None, and
-   nothing follows. */
+   nothing follows. And what follows a sacrifice that must be made, for each player named who couldn't (`named`, Plaguecrafter). */
 function unrefused(state, awaiting, decided) {
   if (!Array.isArray(awaiting.ifNot)) return [];
   const gave = new Set(decided.filter((d) => d.ids.length > 0).map((d) => d.player));
-  const refusers = awaiting.everyone.filter((player) => !gave.has(player) && !state.players[player].lost);
+  const refusers = (awaiting.everyone ?? awaiting.named).filter((player) => !gave.has(player) && !state.players[player].lost);
   const before = state.resolving?.context?.about;
   return [...refusers.flatMap((player) => [{effect: "__about", about: {...(before ?? {}), player}}, ...structuredClone(awaiting.ifNot)]),
     {effect: "__about", ...(before !== undefined ? {about: before} : {})}];
@@ -1400,23 +1404,29 @@ export const chooseColor = {
    event. None to add, and nobody is asked. A mana ability's color is chosen as it is activated (rules/actions.mjs), never
    here. */
 const MANA_COLORS = Object.freeze([["W", "White"], ["U", "Blue"], ["B", "Black"], ["R", "Red"], ["G", "Green"]]);
+/* "Add {B} or {G} for each permanent destroyed this way" (Culling Ritual): of those colors only (`colors`), each mana its
+   own choice among them; otherwise any of the five. */
+const colorsOffered = (awaiting) => (Array.isArray(awaiting.colors) ? MANA_COLORS.filter(([color]) => awaiting.colors.includes(color)) : MANA_COLORS);
 export const manaColors = {
   open(state, params, context) {
     const count = Math.max(0, Number.isInteger(params.count) ? params.count : 1);
     if (count === 0 || !state.players[context.controller]) return false;
     state.awaiting = {kind: "effect-choice", effect: "manaColors", player: context.controller, count, chosen: [], source: context.source ?? null,
-      ...(params.oneColor === true ? {oneColor: true} : {}), ...(params.spendOnly ? {spendOnly: params.spendOnly} : {})};
+      ...(params.oneColor === true ? {oneColor: true} : {}), ...(params.spendOnly ? {spendOnly: params.spendOnly} : {}),
+      ...(Array.isArray(params.colors) ? {colors: [...params.colors]} : {})};
     return true;
   },
   choice(state, awaiting) {
     const name = awaiting.source !== null ? state.objects[awaiting.source]?.card : null;
+    const named = colorsOffered(awaiting).map(([, label]) => label.toLowerCase());
+    const of = Array.isArray(awaiting.colors) ? `${named.slice(0, -1).join(", ")} or ${named[named.length - 1]}` : "any color";
     return {id: `manaColors:${awaiting.player}:${state.turn}:${awaiting.chosen.length}`,
       title: awaiting.oneColor ? `${name ? `${name}: a` : "A"}dd ${awaiting.count} mana of any one color`
-        : `${name ? `${name}: a` : "A"}dd one mana of any color${awaiting.count > 1 ? ` (${awaiting.chosen.length + 1} of ${awaiting.count})` : ""}`,
-      mode: "one", min: 1, max: 1, options: MANA_COLORS.map(([, label], index) => ({index, label}))};
+        : `${name ? `${name}: a` : "A"}dd one mana of ${of}${awaiting.count > 1 ? ` (${awaiting.chosen.length + 1} of ${awaiting.count})` : ""}`,
+      mode: "one", min: 1, max: 1, options: colorsOffered(awaiting).map(([, label], index) => ({index, label}))};
   },
   apply(state, awaiting, indices) {
-    const picked = (indices ?? []).length === 1 ? MANA_COLORS[indices[0]] : undefined;
+    const picked = (indices ?? []).length === 1 ? colorsOffered(awaiting)[indices[0]] : undefined;
     if (!picked) throw new Error("Choose one color for the mana");
     /* Of one color: the color once, for all of it. */
     const chosen = awaiting.oneColor ? Array.from({length: awaiting.count}, () => picked[0]) : [...awaiting.chosen, picked[0]];
@@ -1427,6 +1437,44 @@ export const manaColors = {
     const mana = {};
     for (const color of chosen) mana[color] = (mana[color] ?? 0) + 1;
     return {events: addMana(state, {mana, ...(awaiting.spendOnly ? {spendOnly: awaiting.spendOnly} : {})}, {controller: awaiting.player, source: awaiting.source})};
+  },
+};
+
+/* ---- handLook: "look at target player's hand" (Gitaxian Probe; CR 701.20e, 701.20a) ----
+
+   peekAndReveal's `zone: "hand"` (script/resolution.mjs puts this in its place). Each hand `who` names is shown to this
+   effect's controller alone, for as long as they look: an acknowledgment asked of them (`ack`), the hand's cards its options,
+   and in their view only that hand face up (projection.mjs, `handLookedBy`) -- to nobody once they have seen it. The hands
+   one at a time, in turn order from the active player (CR 101.4). An empty hand has nothing to look at, nor does the
+   controller's own, already theirs to see: nobody is asked. Nothing moves (CR 701.20b), and the history names no card. */
+export const handLook = {
+  open(state, params, context) {
+    const seats = state.players.length, apnap = (p) => (p - state.activePlayer + seats) % seats;
+    const hands = playersFor(state, params.who, context.controller).filter((p) => p !== context.controller && cardsIn(state, "hand", p).length > 0)
+      .sort((a, b) => apnap(a) - apnap(b));
+    if (!hands.length) return false;
+    state.awaiting = {kind: "effect-choice", effect: "handLook", player: context.controller, from: hands[0], remaining: hands.slice(1), cards: cardsIn(state, "hand", hands[0]),
+      handLookedBy: context.controller, source: context.source ?? null};
+    return true;
+  },
+  choice(state, awaiting) {
+    const name = awaiting.source !== null ? state.objects[awaiting.source]?.card : null;
+    return {id: `handLook:${awaiting.from}:${state.turn}`, title: `${name ? `${name}: ` : ""}you look at ${state.players[awaiting.from].name}'s hand`,
+      mode: "ack", min: 0, max: 0, options: cardOptions(state, awaiting.cards)};
+  },
+  apply(state, awaiting, indices) {
+    if ((indices ?? []).length !== 0) throw new Error("Nothing is chosen from a hand you look at: say you have seen it");
+    /* One who has left the game since took their hand with them (CR 800.4a). */
+    const next = (awaiting.remaining ?? []).filter((p) => !state.players[p].lost);
+    if (next.length) {
+      state.awaiting = {...awaiting, from: next[0], remaining: next.slice(1), cards: cardsIn(state, "hand", next[0])};
+      return {events: [], again: true};
+    }
+    return [];
+  },
+  /* The looker has left the game (CR 800.4a): the spell left with them, and nobody looks. */
+  left() {
+    return [];
   },
 };
 
@@ -2642,5 +2690,7 @@ export const chooseInstead = {
 
 export const ASKING = Object.freeze({twoPiles, scry, rearrangeTop, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, chooseColor, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, orderCounters, orderTokens, orderDraws, explore,
   conniveWhich, manaColors, counterKind, countersToRemove, countersOnto, orderDestruction, chooseInstead, chooseSource, vote,
+  /* Wave 4c: a hand looked at (Gitaxian Probe). */
+  handLook,
   /* Train E: a different opponent for each permanent given away (Dack Fayden, Helping Hand). */
   controlToOpponents});

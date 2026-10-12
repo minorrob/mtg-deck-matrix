@@ -158,6 +158,18 @@ export function runResolution(state, rng = null) {
         ...(effect.spendOnly ? {spendOnly: effect.spendOnly} : {})};
       continue;
     }
+    /* "LOOK AT TARGET PLAYER'S HAND" (Gitaxian Probe; CR 701.20e): a look at a hand is shown to its looker while they look,
+       and asked of them so they may (effects/asking.mjs, handLook). */
+    if (effect?.effect === "peekAndReveal" && effect.zone === "hand") {
+      resolving.queue[0] = {effect: "handLook", who: effect.who};
+      continue;
+    }
+    /* "ADD {B} OR {G} FOR EACH PERMANENT DESTROYED THIS WAY" (Culling Ritual; CR 106.1a): one of `colors` for each mana, its
+       controller's to say mana by mana (effects/asking.mjs, manaColors) -- how many counted now, as the effect reaches the head. */
+    if (effect?.effect === "addMana" && Array.isArray(effect.colors) && effect.mana === undefined) {
+      resolving.queue[0] = {effect: "manaColors", count: Number.isInteger(effect.count) ? effect.count : 1, colors: [...effect.colors]};
+      continue;
+    }
     if (effect?.effect === "empowerJace") {
       const jace = {what: "permanent", token: true, subtypes: ["Jace"], controller: "you"};
       const count = Math.max(0, effect.count ?? 0);

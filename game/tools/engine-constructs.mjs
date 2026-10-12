@@ -32,6 +32,10 @@ export const FORGE_API = {
      (Spellskite, Hydroelectric Specimen; `to: "self"`). Named, not built: a new target chosen at random (Grip of Chaos). */
   ChangeTargets: "changeTargets",
   PeekAndReveal: "peekAndReveal", Sacrifice: "sacrifice", SacrificeAll: "sacrificeAll",
+  /* RevealHand ("look at target player's hand", Gitaxian Probe; wave 4c): peekAndReveal's `zone: "hand"`, the hand shown to its
+     looker alone while they look (CR 701.20e; effects/asking.mjs, handLook). The pool's two cards are both looks. Named, not
+     built: a hand revealed to every player on its own, with no card chosen from it (CR 701.20a). */
+  RevealHand: "peekAndReveal",
   Destroy: "destroy", DestroyAll: "destroyAll", Regenerate: "regenerate", ExileUntil: "exileUntil", ReturnToHand: "returnToHand",
   Play: "play", Discover: "discover",
   /* DigUntil ("reveal cards until you reveal a land card", batch 62). */
@@ -198,7 +202,8 @@ export const DECK_RULE_KEYWORDS = {Partner: "room/table.mjs", "Choose a Backgrou
      Answers), "sacrifice an artifact or creature or pay {4}" (Stir Up Trouble): one additional cost of a choice of them
      (CR 601.2b, 601.2h), each choice its own offer -- a sacrifice, a discard, a blight or mana (rules/actions.mjs,
      additionalVariants, `{atom: "oneOf"}`). Built before it was credited (Bogslither's Embrace, Silence the Echo); no new
-     code. Named, not built: an exile or a life payment as one of the choices.
+     code. Wave 4c: a fixed life payment as one of the choices ("pay 5 life or pay {2}", Redirect Lightning; CR 119.4), paid
+     with the rest of the cost. Named, not built: an exile as one of the choices.
    ETBReplacement -- "[this permanent] enters ..." and "as [this permanent] enters ..." (CR 614.1c, 614.12): tapped, with
      counters, as a copy, with a choice made, unless a cost is paid or a card revealed, and -- new here -- prepared
      (Goblin Glasswright, CR 722.3a; rules/replacement.mjs, script/effects/attributes.mjs). Named, not built: one that
@@ -215,7 +220,11 @@ export const DECK_RULE_KEYWORDS = {Partner: "room/table.mjs", "Choose a Backgrou
      revealing a card for a delayed trigger (103.6b, Chancellor of the Forge), or beginning the game with it on the battlefield,
      its counters on it (103.6a), not the starting player's to take when it says so, and then a card exiled from the hand
      (rules/mulligan.mjs). */
+/* Affinity (CR 702.41a; Thought Monitor, wave 4c) -- "this spell costs {1} less to cast for each [text] you control": the
+     spell's own `this-costs-less` (cards/index.mjs), read as it is cast (rules/statics.mjs, costReduction) -- for artifacts,
+     tokens, or anything a selector says. */
 export const CAST_RULE_KEYWORDS = {AlternateAdditionalCost: "rules/actions.mjs", ETBReplacement: "rules/replacement.mjs", Overload: "rules/actions.mjs",
+  Affinity: "rules/statics.mjs",
   Gift: "rules/actions.mjs", MayEffectFromOpeningHand: "rules/mulligan.mjs"};
 
 export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: "chooseCard", Enchant: "attach",

@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,501 defined and playable today; 2,786 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,521 defined and playable today; 2,794 with every
 mechanic built, so only their definitions are left to write; 25 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,9 +18,9 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 73 | 0 | 6 | 115 |
+| Keyword abilities (CR 702) | 194 | 74 | 0 | 6 | 114 |
 | Keyword actions (CR 701) | 70 | 22 | 5 | 1 | 42 |
-| Effects | 192 | 76 | 2 | 1 | 113 |
+| Effects | 192 | 77 | 2 | 1 | 112 |
 | Triggers | 138 | 26 | 4 | 1 | 107 |
 | Static abilities | 77 | 14 | 2 | 0 | 61 |
 | Replacement effects | 34 | 0 | 6 | 0 | 28 |
@@ -95,7 +95,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.33 | Kicker | — | missing | 5 | 239 | 5 | 1 |
 | 702.14 | Landwalk | — | named | 5 | 131 | 5 | 4 |
 | 702.11 | Hexproof | Hexproof | built | 5 | 94 | 0 | 0 |
-| 702.41 | Affinity | — | missing | 5 | 77 | 5 | 4 |
+| 702.41 | Affinity | Affinity | built | 5 | 77 | 0 | 0 |
 | 702.85 | Cascade | — | missing | 5 | 37 | 5 | 5 |
 | 702.116 | Myriad | — | missing | 5 | 23 | 5 | 4 |
 | 702.143 | Foretell | — | missing | 4 | 55 | 4 | 2 |
@@ -419,7 +419,7 @@ The things that alone hold back the most of the most-played cards.
 | RearrangeTopOfLibrary | rearrangeTop | built | 3 | 32 | 0 | 0 |
 | ReplaceMana | — | missing | 3 | 22 | 3 | 0 |
 | Reveal | — | missing | 2 | 84 | 2 | 1 |
-| RevealHand | — | missing | 2 | 80 | 2 | 2 |
+| RevealHand | peekAndReveal | built | 2 | 80 | 0 | 0 |
 | TapAll | — | missing | 2 | 73 | 2 | 2 |
 | SetLife | — | missing | 2 | 45 | 2 | 1 |
 | ReplaceDamage | — | missing | 2 | 38 | 2 | 2 |
@@ -757,7 +757,7 @@ The things that alone hold back the most of the most-played cards.
 | Counter | rules/statics | partial | 21 | 110 | 0 | 0 |
 | CreateToken | — | missing | 17 | 32 | 4 | 0 |
 | AddCounter | rules/statics | partial | 15 | 30 | 0 | 0 |
-| Draw | — | missing | 7 | 37 | 7 | 4 |
+| Draw | — | missing | 7 | 37 | 5 | 3 |
 | GainLife | — | missing | 6 | 21 | 5 | 1 |
 | Untap | rules/turn | partial | 5 | 157 | 0 | 0 |
 | ProduceMana | — | missing | 2 | 11 | 2 | 0 |
@@ -852,7 +852,7 @@ The things that alone hold back the most of the most-played cards.
 | Imprint (a card exiled with this) | — | missing | 10 | 97 | 7 | 5 |
 | Except it isn't legendary (a copy) | except.nonLegendary | built | 10 | 43 | 0 | 0 |
 | Unless a player reveals a card ("reveal an Island or Swamp card") | unlessReveal, as it enters | built | 10 | 22 | 0 | 0 |
-| Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 9 | 160 | 8 | 4 |
+| Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 9 | 160 | 7 | 4 |
 | Unless a player sacrifices a permanent | — | missing | 7 | 89 | 6 | 4 |
 | Unless a player discards a card | unlessPays's discard: each card in the payer's hand an option; the discarded card remembered ("this way") | built | 5 | 83 | 0 | 0 |
 | Populate (copy a creature token you control) | populate | built | 5 | 27 | 0 | 0 |
