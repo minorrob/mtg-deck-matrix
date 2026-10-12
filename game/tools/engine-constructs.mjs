@@ -23,6 +23,14 @@ import {TRIGGER_KINDS} from "../engine/cards/index.mjs";
 export const FORGE_API = {
   ChangeZone: "moveZone", ChangeZoneAll: "moveZoneAll", Draw: "draw", Discard: "discard",
   Mill: "mill", Shuffle: "shuffle", Dig: "dig", Surveil: "surveil", Scry: "scry",
+  /* RearrangeTopOfLibrary ("look at the top three cards of your library, then put them back in any order": Ponder, Sensei's
+     Divining Top, Halimar Depths; wave 4b): rearrangeTop, the looker's order of them. */
+  RearrangeTopOfLibrary: "rearrangeTop",
+  /* ChangeTargets (CR 115.7; wave 4b): changeTargets in the pool's three forms -- "change the target of target spell or ability
+     with a single target" (Bolt Bend, Untimely Malfunction; batch 65), "you may choose new targets for target spell or
+     ability" (Deflecting Swat, Wild Ricochet; `may`), and "change a target of target spell or ability to this creature"
+     (Spellskite, Hydroelectric Specimen; `to: "self"`). Named, not built: a new target chosen at random (Grip of Chaos). */
+  ChangeTargets: "changeTargets",
   PeekAndReveal: "peekAndReveal", Sacrifice: "sacrifice", SacrificeAll: "sacrificeAll",
   Destroy: "destroy", DestroyAll: "destroyAll", Regenerate: "regenerate", ExileUntil: "exileUntil", ReturnToHand: "returnToHand",
   Play: "play", Discover: "discover",
@@ -94,6 +102,10 @@ export const FORGE_TRIGGER = {
   Always: "state",
   /* "Whenever this creature transforms into ..." (Train C, w2c-hands-triggers; CR 701.27e). */
   Transformed: "transformed",
+  /* Magecraft, "whenever you cast or copy an instant or sorcery spell" (Archmage Emeritus, Storm-Kiln Artist; wave 4b): the
+     engine's "spell cast" with `orCopy` -- a copy an effect of yours puts on the stack too, once for each (CR 707.10;
+     rules/trigger.mjs). Every one of the pool's cards says it this way. */
+  SpellCastOrCopy: "spell cast",
 };
 
 /* Forge static and replacement modes the engine can execute today. `Continuous` is an anthem or a

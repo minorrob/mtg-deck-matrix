@@ -41,5 +41,8 @@ const LAND_TYPES = new Set(["Cave", "Desert", "Forest", "Gate", "Island", "Lair"
   "Sphere", "Swamp", "Tower", "Town", "Urza's"]);
 /** Whether a subtype is a land type. */
 export const isLandType = (subtype) => LAND_TYPES.has(subtype);
+/* THE BASIC LAND TYPES AND THEIR INTRINSIC MANA ABILITIES (CR 305.6): an object with one has "{T}: Add [its mana]" -- a land
+   given the type by an effect gains it too (CR 305.7; rules/layers.mjs, intrinsicMana). */
+export const BASIC_LAND_MANA = Object.freeze({Plains: "W", Island: "U", Swamp: "B", Mountain: "R", Forest: "G"});
 /** Whether an object with these subtypes -- every creature type, or not -- has `subtype`. */
 export const hasSubtype = (subtypes, every, subtype) => subtypes.includes(subtype) || (every === true && isCreatureType(subtype));

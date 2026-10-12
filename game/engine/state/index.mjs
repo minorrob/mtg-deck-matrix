@@ -208,6 +208,12 @@ export function valueCostOf(object) {
   return object.manaCost ?? null;
 }
 
+/** The value of X in an object's mana value (CR 202.3e): the one chosen for it while it is a spell on the stack -- its stack
+    entry's, a copy's copied with it (CR 707.10) -- and zero anywhere else, where no stack entry is its. */
+export function xOnStack(state, id) {
+  return (state?.stack ?? []).find((e) => e.objectId === id)?.x ?? 0;
+}
+
 /* A FACE-DOWN PERMANENT'S CHARACTERISTICS (CR 708.2a, 701.40a): a nameless 2/2 creature, textless, without subtypes or a
    mana cost -- and so colorless, with no supertype -- its copiable values while it is face down. */
 const FACE_DOWN = Object.freeze({card: null, types: ["Creature"], subtypes: [], supertypes: [], manaCost: null, colors: [], power: 2, toughness: 2, keywords: [], abilities: []});

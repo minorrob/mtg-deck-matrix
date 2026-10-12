@@ -150,6 +150,46 @@ export const scry = {
   },
 };
 
+/* ---- rearrangeTop (Forge's RearrangeTopOfLibrary): "look at the top three cards of your library, then put them back in any
+   order" (Ponder, Sensei's Divining Top, Halimar Depths). `count` cards off the top of the library of the player `who` names
+   (its controller's own unless it says), looked at by this effect's controller alone -- nothing is revealed -- and put back
+   on top in the order that player chooses, the first chosen on top: one question, an order of them all. One card has no
+   order to choose: it is looked at, and nobody is asked; none, and nothing happens. What the looker then knows is the top
+   of that library as it now is (state.looks; projection.mjs). ---- */
+function knowsTop(state, viewer, owner, ids) {
+  state.looks = [...(state.looks ?? []).filter((l) => !(l.viewer === viewer && l.owner === owner)), {viewer, owner, ids: [...ids]}];
+}
+export const rearrangeTop = {
+  open(state, params, context) {
+    const [owner] = playersFor(state, params.who, context.controller);
+    if (owner === undefined) return false;
+    const looked = cardsIn(state, "library", owner).slice(0, params.count ?? 1);
+    if (looked.length === 0) return false;
+    if (looked.length === 1) { knowsTop(state, context.controller, owner, looked); return false; }
+    state.awaiting = {kind: "effect-choice", effect: "rearrangeTop", player: context.controller, owner, cards: looked};
+    return true;
+  },
+  choice(state, awaiting) {
+    const whose = awaiting.owner === awaiting.player ? "your" : `${state.players[awaiting.owner]?.name ?? "that player"}'s`;
+    return {id: `rearrangeTop:${awaiting.cards.join(",")}`, title: `Put them back on top of ${whose} library in any order, the first you choose on top`,
+      mode: "order", min: awaiting.cards.length, max: awaiting.cards.length, options: cardOptions(state, awaiting.cards)};
+  },
+  /* The cards in the order named (inOrder: one an answer leaves out keeps its place after them), lifted out and put back on
+     top together -- one still there, since a card no longer in the library is left where it is. */
+  apply(state, awaiting, indices) {
+    const library = state.zones.library[awaiting.owner];
+    const back = inOrder(awaiting.cards, indices).filter((id) => library.includes(id));
+    for (const id of back) library.splice(library.indexOf(id), 1);
+    library.unshift(...back);
+    knowsTop(state, awaiting.player, awaiting.owner, back);
+    return {events: []};
+  },
+  /* The looker has left the game (CR 800.4a): the cards stay where they are, in the order they were. */
+  left() {
+    return [];
+  },
+};
+
 /* ---- twoPiles (Forge's TwoPiles): "reveal the top five cards of your library. An opponent separates those cards into two
    piles. Put one pile into your hand and the other into your graveyard" (Fact or Fiction). The cards revealed (CR 701.20a);
    the opponent who separates them, chosen by this effect's controller when there is more than one (CR 102.3 makes each
@@ -1399,7 +1439,7 @@ export const manaColors = {
    copy is never its own target (CR 115.5). `except.nonLegendary`: "except it isn't legendary" (Double Major). The
    copies are made as the question opens, so what they did is in the resolution's events even when nothing is asked. */
 const ordinal = (n) => ["first", "second", "third", "fourth"][n] ?? `#${n + 1}`;
-function retargetOptions(state, question) {
+function retargetOptions(state, question, {withOthers = false} = {}) {
   const entry = state.stack.find((e) => e.stackId === question.stackId);
   const spec = entry ? specsOf(state, entry)[question.index] : null;
   if (!entry || !spec) return null;
@@ -1408,7 +1448,9 @@ function retargetOptions(state, question) {
   const current = (Array.isArray(was) ? was[0] : was) ?? null;
   /* An ability's source is the object it came from (entry.cardId), while it is still that object (CR 113.7a). */
   const source = entry.objectId ?? (entry.cardId !== null && state.objects[entry.cardId] ? entry.cardId : null);
-  const others = targetCandidates(state, spec, {controller: entry.playerId, source, ...(entry.about ? {about: entry.about} : {}), ...(entry.x !== undefined ? {x: entry.x} : {})})
+  /* `withOthers`: read against the entry's other targets as they stand -- "another target" (`distinctFrom`) not one of them. */
+  const others = targetCandidates(state, spec, {controller: entry.playerId, source, ...(entry.about ? {about: entry.about} : {}), ...(entry.x !== undefined ? {x: entry.x} : {}),
+    ...(withOthers ? {chosenTargets: entry.targets} : {})})
     /* Never itself (CR 115.5): a spell its own object, an ability its own entry. */
     .filter((c) => !(c.kind === "object" && c.id === entry.objectId) && !(c.kind === "ability" && c.id === entry.stackId))
     .filter((c) => !(current && c.kind === current.kind && c.id === current.id));
@@ -1474,6 +1516,25 @@ export const changeTargets = {
     /* The spell it names by its object (`spells`), or the spell or ability by its stack entry (`stack`, Bolt Bend). */
     const entry = state.stack.find((e) => (e.objectId !== null && (params.spells ?? []).includes(e.objectId)) || (Array.isArray(params.stack) && params.stack.includes(e.stackId)));
     if (!entry) return false;
+    /* "CHANGE A TARGET OF TARGET SPELL OR ABILITY TO THIS CREATURE" (Spellskite; "the target of target instant or sorcery
+       spell with a single target to this creature", Hydroelectric Specimen; CR 115.7a-b): one of its targets changed to this
+       effect's source, a target that source could legally be instead -- by that target's own requirements, never one it is
+       already, and not one another target of it must differ from (`distinctFrom`, both ways). Which one, when more than one
+       could, is this effect's controller's choice; none, and every target is unchanged (CR 115.7a), nobody asked. The source
+       no longer on the battlefield, the resolution has none (rules/stack.mjs), and there is nothing to change one to. A
+       counted target's list is left as it is (NAMED). */
+    if (params.to === "self") {
+      const self = context.source;
+      const specs = specsOf(state, entry);
+      const isSelf = (t) => t?.kind === "object" && t.id === self;
+      const indices = entry.targets.map((_, index) => index).filter((index) => !Array.isArray(entry.targets[index])
+        && !specs.some((spec, j) => j !== index && (spec?.distinctFrom ?? []).includes(index) && [].concat(entry.targets[j] ?? []).some(isSelf))
+        && (retargetOptions(state, {stackId: entry.stackId, index}, {withOthers: true})?.others ?? []).some(isSelf));
+      if (!indices.length) return false;
+      if (indices.length === 1) return {events: changeTargets.retarget(state, entry, indices[0], {kind: "object", id: self})};
+      state.awaiting = {kind: "effect-choice", effect: "changeTargets", player: context.controller, toSelf: {stackId: entry.stackId, indices, self}};
+      return true;
+    }
     /* "YOU MAY CHOOSE NEW TARGETS FOR TARGET INSTANT OR SORCERY SPELL" (Wild Ricochet; CR 115.7d): `may`, each of that spell's
        targets kept or changed to another it could have, a question at a time, as a copy's are (copySpell) -- one with no
        other choice is not asked about, and with none to ask, nobody is. A counted target's list is kept, as a copy's is. */
@@ -1493,7 +1554,20 @@ export const changeTargets = {
     state.awaiting = {kind: "effect-choice", effect: "changeTargets", player: context.controller, question};
     return true;
   },
+  /* A target of `entry`, at `index`, made `chosen` -- the same shape it had, a counted list holding one -- and it becoming the
+     spell's or ability's target (ward, CR 702.21a). */
+  retarget(state, entry, index, chosen) {
+    entry.targets[index] = Array.isArray(entry.targets[index]) ? [chosen] : chosen;
+    return chosen.kind === "object" ? becameTarget(state, entry, chosen.id) : [];
+  },
   choice(state, awaiting) {
+    /* "Change a target ... to this creature": which of its targets becomes it. */
+    if (awaiting.toSelf) {
+      const {stackId, indices, self} = awaiting.toSelf, entry = state.stack.find((e) => e.stackId === stackId);
+      const many = (entry ? specsOf(state, entry) : []).length > 1;
+      return {id: `changeTargets:${stackId}:to-self`, title: `${entry?.name ?? "The spell"}: which target becomes ${state.objects[self]?.card ?? "this"}?`, mode: "one", min: 1, max: 1,
+        options: indices.map((index, i) => ({index: i, label: `${many ? `Its ${ordinal(index)} target, ` : ""}${targetName(state, entry?.targets[index]) || "its target, now gone"}`, targetIndex: index}))};
+    }
     /* `may`: copySpell's question -- keep it, or one of the others -- about this spell's own target. */
     if (awaiting.questions) {
       const question = awaiting.questions[0], entry = state.stack.find((e) => e.stackId === question.stackId);
@@ -1510,15 +1584,14 @@ export const changeTargets = {
     if (awaiting.questions) return copySpell.apply(state, awaiting, indices);
     const option = changeTargets.choice(state, awaiting).options[(indices ?? [])[0]];
     if (!option) throw new Error("Invalid selection");
-    const entry = state.stack.find((e) => e.stackId === awaiting.question.stackId);
-    const events = [];
-    if (entry) {
-      const index = awaiting.question.index ?? 0, chosen = {kind: option.target.kind, id: option.target.id};
-      entry.targets[index] = Array.isArray(entry.targets[index]) ? [chosen] : chosen;
-      /* It becomes the spell's target (ward, CR 702.21a). */
-      if (option.target.kind === "object") events.push(...becameTarget(state, entry, option.target.id));
+    /* "To this creature": the target chosen becomes it. */
+    if (awaiting.toSelf) {
+      const entry = state.stack.find((e) => e.stackId === awaiting.toSelf.stackId);
+      return {events: entry ? changeTargets.retarget(state, entry, option.targetIndex, {kind: "object", id: awaiting.toSelf.self}) : []};
     }
-    return {events};
+    const entry = state.stack.find((e) => e.stackId === awaiting.question.stackId);
+    /* It becomes the spell's target (ward, CR 702.21a). */
+    return {events: entry ? changeTargets.retarget(state, entry, awaiting.question.index ?? 0, {kind: option.target.kind, id: option.target.id}) : []};
   },
 };
 
@@ -2544,7 +2617,7 @@ export const chooseInstead = {
   },
 };
 
-export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, chooseColor, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, orderCounters, orderTokens, orderDraws, explore,
+export const ASKING = Object.freeze({twoPiles, scry, rearrangeTop, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, chooseColor, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, orderCounters, orderTokens, orderDraws, explore,
   conniveWhich, manaColors, counterKind, countersToRemove, countersOnto, orderDestruction, chooseInstead, chooseSource, vote,
   /* Train E: a different opponent for each permanent given away (Dack Fayden, Helping Hand). */
   controlToOpponents});

@@ -64,7 +64,10 @@ function hasQuality(state, from, sourceId) {
 export function hexproofFrom(state, id, chooser, sourceId) {
   if (sourceId === null || sourceId === undefined || !state.objects[sourceId] || controllerOf(state, id) === chooser) return false;
   const colors = state.objects[sourceId].zone === "battlefield" ? colorsOf(state, sourceId) : (state.objects[sourceId].colors ?? []);
-  return (state.effects ?? []).some((e) => e.rule === "hexproof-from" && (e.affects?.ids ?? []).includes(id) && (e.colors ?? []).some((c) => colors.includes(c)));
+  /* Being a hexproof ability, it is lost with hexproof (Shadowspear's "lose hexproof", rules/layers.mjs removeKeywords; the
+     card's ruling): one given before that effect is gone, one given after it is had (CR 613.7). */
+  const lostAt = Math.max(-1, ...(state.effects ?? []).filter((e) => (e.apply?.removeKeywords ?? []).includes("Hexproof") && (e.affects?.ids ?? []).includes(id)).map((e) => e.timestamp ?? 0));
+  return (state.effects ?? []).some((e) => e.rule === "hexproof-from" && (e.timestamp ?? 0) > lostAt && (e.affects?.ids ?? []).includes(id) && (e.colors ?? []).some((c) => colors.includes(c)));
 }
 
 /**

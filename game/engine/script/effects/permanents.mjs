@@ -27,6 +27,7 @@ import {protectedFrom} from "../../rules/protection.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
 import {countersPlaced, enteringCountersPlaced, tokensCreated} from "../../rules/statics.mjs";
 import {removeFromCombat} from "../../rules/combat.mjs";
+import {enteringModifications} from "../../rules/replacement.mjs";
 
 /* A continuous effect needs a timestamp to be ordered by (CR 613.7), and it has to be part of the
    state so a checkpoint carries it. The state's own counter is the right source: it is monotonic
@@ -560,6 +561,14 @@ function makeToken(state, spec, controller, params, context, events) {
   }, "battlefield");
   /* "Create a tapped Treasure token": the effect says so as well as a spec can. */
   if (spec.tapped || params.tapped) state.objects[id].tapped = true;
+  /* "Creatures your opponents control enter tapped" (Authority of the Consuls; CR 614.1c, 614.12): a token is a permanent
+     entering the battlefield too (CR 111.1), and a replacement that has it enter tapped applies as it is made. Only that is
+     taken from them here -- what else a token enters with, the effect's own words give (above, below) -- and not "tapped
+     unless you pay" (a shock land's), which asks a question no token is asked yet (NAMED). */
+  else {
+    const entering = enteringModifications(state, {objectId: id, player: controller, types: state.objects[id].types, abilities: state.objects[id].abilities});
+    if (entering.tapped && !entering.asks.some((ask) => ask.life !== undefined || ask.reveal !== undefined)) state.objects[id].tapped = true;
+  }
   /* "An Incubator token that enters the battlefield with N +1/+1 counters on it" (incubate, CR 701.53a): given as it enters,
      before the event that says it entered (CR 122.6), by its controller (122.6a) -- "twice that many instead" sees them. */
   for (const [counter, n] of Object.entries(params.entersWithCounters ?? {})) {

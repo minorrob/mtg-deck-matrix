@@ -273,6 +273,10 @@ const TRIGGERS = {
     ...(t.while ? {while: t.while} : {}),
     /* "For each other instant and sorcery spell you've cast before it this turn": counted as it triggers. */
     ...(t.countBefore ? {countBefore: true} : {}),
+    /* MAGECRAFT, "whenever you cast OR COPY an instant or sorcery spell" (Archmage Emeritus, Storm-Kiln Artist; CR 207.2c,
+       707.10): `orCopy`, a copy put on the stack by an effect of `caster`'s too -- once for each copy, the copy what it is
+       about (rules/trigger.mjs). A copy cast is a spell cast (CR 707.12), so it is seen as one already. */
+    ...(t.orCopy === true ? {orCopy: true} : {}),
     /* "An instant or sorcery spell that targets a creature" (Rehearsed Debater): what one of its targets is (rules/trigger.mjs). */
     ...(t.targets ? {targets: t.targets} : {}),
     /* "An Equipment spell or a spell that targets a creature you control" (Danitha, Sword of Hope): either, each its own
@@ -528,7 +532,9 @@ function spendOnlyValid(only) {
    of its controller's own turn ("exile those creatures at the beginning of your next upkeep", Rally the Ancestors). */
 /* "At end of combat" (Wall of Junk; CR 511.2) and "at the beginning of the declare attackers step on your next turn"
    (Meandering Towershell) too: the next end of combat step, and that step of a turn of its controller's after this one. */
-const DELAYED_MOMENTS = ["end step", "upkeep", "your upkeep", "end of combat", "your next declare attackers"];
+/* "At the beginning of your next main phase" (Mana Drain; CR 505.1): "your next main", the next main phase of a turn of its
+   controller's, precombat or postcombat -- this turn's postcombat one, made in its precombat one (rules/trigger.mjs). */
+const DELAYED_MOMENTS = ["end step", "upkeep", "your upkeep", "end of combat", "your next declare attackers", "your next main"];
 function withDelayedTriggers(abilities, problems) {
   const walk = (effect) => {
     if (!effect || typeof effect !== "object") return effect;

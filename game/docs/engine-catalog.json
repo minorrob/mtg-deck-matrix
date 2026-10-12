@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1373,
+  "defined": 1404,
   "provisional": 27,
-  "everyRule": 2744
+  "everyRule": 2757
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -452,7 +452,7 @@
      "top": 6,
      "all": 21,
      "blocks": 6,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "keyword ability",
@@ -3208,10 +3208,10 @@
   },
   "Effects": {
    "tally": {
-    "built": 74,
+    "built": 76,
     "partial": 2,
     "named": 1,
-    "missing": 115
+    "missing": 113
    },
    "entries": [
     {
@@ -3974,13 +3974,13 @@
      "kind": "effect",
      "rule": null,
      "name": "ChangeTargets",
-     "engine": null,
-     "status": "missing",
+     "engine": "changeTargets",
+     "status": "built",
      "forge": "ChangeTargets",
      "top": 10,
      "all": 43,
-     "blocks": 7,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4040,7 +4040,7 @@
      "top": 8,
      "all": 58,
      "blocks": 8,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -4250,13 +4250,13 @@
      "kind": "effect",
      "rule": null,
      "name": "RearrangeTopOfLibrary",
-     "engine": null,
-     "status": "missing",
+     "engine": "rearrangeTop",
+     "status": "built",
      "forge": "RearrangeTopOfLibrary",
      "top": 3,
      "all": 32,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4568,7 +4568,7 @@
      "top": 1,
      "all": 6,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -5522,10 +5522,10 @@
   },
   "Triggers": {
    "tally": {
-    "built": 25,
+    "built": 26,
     "partial": 4,
     "named": 1,
-    "missing": 108
+    "missing": 107
    },
    "entries": [
     {
@@ -5712,13 +5712,13 @@
      "kind": "trigger",
      "rule": null,
      "name": "SpellCastOrCopy",
-     "engine": null,
-     "status": "missing",
+     "engine": "spell cast",
+     "status": "built",
      "forge": "SpellCastOrCopy",
      "top": 6,
      "all": 31,
-     "blocks": 6,
-     "alone": 4
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -9679,8 +9679,8 @@
      "forge": "TriggerRememberAmount",
      "top": 3,
      "all": 21,
-     "blocks": 3,
-     "alone": 2
+     "blocks": 2,
+     "alone": 1
     },
     {
      "kind": "count",

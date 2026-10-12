@@ -96,7 +96,7 @@ import {selectMatching, compileSelector, matchesLastKnown, matchesSelector} from
 import {powerOf, toughnessOf, characteristicsOf, controllerOf, subtypesOf} from "../rules/layers.mjs";
 import {isPlaneswalkerType} from "../keywords/types.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
-import {valueCostOf, commanderKeyOf} from "../state/index.mjs";
+import {valueCostOf, commanderKeyOf, xOnStack} from "../state/index.mjs";
 import {commanderIdentity, hasCommander} from "../rules/commander.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
@@ -542,8 +542,8 @@ export function amountOf(state, value, context = {}) {
   else if (value.manaValueOf === "sacrificed") n = (context.sacrificed ?? [])[0]?.manaValue ?? 0;
   else if ("manaValueOf" in value) {
     const id = objectOf(value.manaValueOf, context);
-    /* A transformed permanent's is its front face's (CR 202.3b). */
-    n = id !== null && valueCostOf(state.objects[id]) ? manaValue(parseManaCost(valueCostOf(state.objects[id]))) : 0;
+    /* A transformed permanent's is its front face's (CR 202.3b); a spell's on the stack, with X its chosen value (CR 202.3e). */
+    n = id !== null && valueCostOf(state.objects[id]) ? manaValue(parseManaCost(valueCostOf(state.objects[id])), {x: xOnStack(state, id)}) : 0;
   }
   /* "Scry X, where X is the number of times it's been cast from the command zone this game" (Study Hall; CR 903.8): the
      commander a trigger is about, by the key its casts are kept under (rules/commander.mjs) -- taken as it triggered, so

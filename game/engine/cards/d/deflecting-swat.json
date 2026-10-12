@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Deflecting Swat",
+    "oracleId": "ae120613-97d6-4393-b39d-c3e6c076f5d6",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If you control a commander, you may cast this spell without paying its mana cost.\nYou may choose new targets for target spell or ability.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If you control a commander, you may cast this spell without paying its mana cost.",
+      "rule": "alternative-cost",
+      "affects": {
+        "what": "card",
+        "self": true
+      },
+      "cost": [],
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "commander": true,
+          "controller": "you"
+        }
+      }
+    },
+    {
+      "kind": "spell",
+      "text": "You may choose new targets for target spell or ability.",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "spell"
+            },
+            {
+              "what": "ability"
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "changeTargets",
+          "stack": {
+            "target": 0
+          },
+          "may": true
+        }
+      ]
+    }
+  ]
+}

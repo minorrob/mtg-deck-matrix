@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rhythm of the Wild",
+    "oracleId": "acfa77fd-3610-4f12-9c3c-bd860ce91700",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}{G}",
+    "colors": [
+      "G",
+      "R"
+    ],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creature spells you control can't be countered.\nNontoken creatures you control have riot. (They enter with your choice of a +1/+1 counter or haste.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Creature spells you control can't be countered.",
+      "rule": "cant-be-countered",
+      "affects": {
+        "what": "spell",
+        "controller": "you",
+        "types": [
+          "Creature"
+        ]
+      }
+    },
+    {
+      "kind": "replacement",
+      "text": "Nontoken creatures you control have riot.",
+      "watches": {
+        "event": "enters",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "token": false,
+          "controller": "you"
+        }
+      },
+      "change": {
+        "riot": true
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Nontoken creatures you control have riot.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "token": false,
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Riot"
+        ]
+      }
+    }
+  ]
+}

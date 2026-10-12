@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,373 defined and playable today; 2,744 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,404 defined and playable today; 2,757 with every
 mechanic built, so only their definitions are left to write; 27 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -20,8 +20,8 @@ many most-played cards need it among other missing things; **Alone** how many it
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 69 | 0 | 5 | 120 |
 | Keyword actions (CR 701) | 70 | 22 | 5 | 1 | 42 |
-| Effects | 192 | 74 | 2 | 1 | 115 |
-| Triggers | 138 | 25 | 4 | 1 | 108 |
+| Effects | 192 | 76 | 2 | 1 | 113 |
+| Triggers | 138 | 26 | 4 | 1 | 107 |
 | Static abilities | 77 | 14 | 2 | 0 | 61 |
 | Replacement effects | 34 | 0 | 6 | 0 | 28 |
 | Costs | 26 | 5 | 2 | 10 | 9 |
@@ -45,9 +45,9 @@ The things that alone hold back the most of the most-played cards.
 | effect | Discover | discover | named | 6 | 6 |
 | count | Amount | — | missing | 5 | 9 |
 | count | How many things an effect remembered | — | missing | 5 | 8 |
-| effect | ChangeTargets | — | missing | 5 | 7 |
 | option | Unless a player sacrifices a permanent | — | missing | 5 | 7 |
 | count | Times this resolved this turn | — | missing | 5 | 7 |
+| keyword ability | Spree | — | missing | 5 | 6 |
 | static | RaiseCost | — | missing | 5 | 6 |
 | effect | Protection | — | missing | 5 | 5 |
 | keyword ability | Cascade | — | missing | 5 | 5 |
@@ -91,7 +91,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.74 | Evoke | Evoke | built | 6 | 36 | 0 | 0 |
 | 702.131 | Ascend | Ascend | built | 6 | 30 | 0 | 0 |
 | 702.174 | Gift | — | missing | 6 | 27 | 6 | 2 |
-| 702.172 | Spree | — | missing | 6 | 21 | 6 | 4 |
+| 702.172 | Spree | — | missing | 6 | 21 | 6 | 5 |
 | 702.33 | Kicker | — | missing | 5 | 239 | 5 | 1 |
 | 702.14 | Landwalk | — | named | 5 | 131 | 5 | 4 |
 | 702.11 | Hexproof | Hexproof | built | 5 | 94 | 0 | 0 |
@@ -393,12 +393,12 @@ The things that alone hold back the most of the most-played cards.
 | Poison | poison | built | 11 | 36 | 0 | 0 |
 | AddTurn | addTurn | built | 10 | 65 | 0 | 0 |
 | BecomeMonarch | becomeMonarch | built | 10 | 62 | 0 | 0 |
-| ChangeTargets | — | missing | 10 | 43 | 7 | 5 |
+| ChangeTargets | changeTargets | built | 10 | 43 | 0 | 0 |
 | Earthbend | earthbend | built | 10 | 36 | 0 | 0 |
 | Phases | phaseOut | built | 9 | 56 | 0 | 0 |
 | RemoveCounter | removeCounter | built | 8 | 198 | 0 | 0 |
 | ChoosePlayer | — | missing | 8 | 120 | 8 | 6 |
-| Repeat | — | missing | 8 | 58 | 8 | 0 |
+| Repeat | — | missing | 8 | 58 | 8 | 1 |
 | RollDice | — | missing | 7 | 131 | 7 | 3 |
 | Amass | amass | built | 7 | 72 | 0 | 0 |
 | StoreSVar | — | missing | 6 | 68 | 5 | 1 |
@@ -416,7 +416,7 @@ The things that alone hold back the most of the most-played cards.
 | Connive | connive | built | 3 | 51 | 0 | 0 |
 | TapOrUntap | — | missing | 3 | 48 | 3 | 3 |
 | Manifest | manifest | built | 3 | 32 | 0 | 0 |
-| RearrangeTopOfLibrary | — | missing | 3 | 32 | 3 | 3 |
+| RearrangeTopOfLibrary | rearrangeTop | built | 3 | 32 | 0 | 0 |
 | ReplaceMana | — | missing | 3 | 22 | 3 | 0 |
 | Reveal | — | missing | 2 | 84 | 2 | 1 |
 | RevealHand | — | missing | 2 | 80 | 2 | 2 |
@@ -442,7 +442,7 @@ The things that alone hold back the most of the most-played cards.
 | Unattach | — | missing | 1 | 8 | 1 | 1 |
 | Meld | — | missing | 1 | 7 | 1 | 1 |
 | Blight | — | missing | 1 | 6 | 1 | 1 |
-| ControlSpell | — | missing | 1 | 6 | 1 | 0 |
+| ControlSpell | — | missing | 1 | 6 | 1 | 1 |
 | UnlockDoor | — | missing | 1 | 4 | 1 | 0 |
 | ChangeX | — | missing | 1 | 2 | 1 | 0 |
 | ExchangeTextBox | — | missing | 1 | 2 | 1 | 1 |
@@ -542,7 +542,7 @@ The things that alone hold back the most of the most-played cards.
 | Discarded | discarded | built | 17 | 76 | 0 | 0 |
 | CounterAddedOnce | counter added | built | 10 | 47 | 0 | 0 |
 | AttackersDeclaredOneTarget | attackers declared | built | 8 | 32 | 0 | 0 |
-| SpellCastOrCopy | — | missing | 6 | 31 | 6 | 4 |
+| SpellCastOrCopy | spell cast | built | 6 | 31 | 0 | 0 |
 | LifeLost | life lost | built | 6 | 20 | 0 | 0 |
 | BecomesTarget | becomes target | built | 5 | 116 | 0 | 0 |
 | AbilityCast | — | missing | 5 | 42 | 5 | 5 |
@@ -893,7 +893,7 @@ The things that alone hold back the most of the most-played cards.
 | — | Whether it was kicked | — | missing | 3 | 92 | 3 | 0 |
 | — | Times kicked | — | missing | 3 | 30 | 2 | 0 |
 | — | Life your opponents lost this turn | amount {lifeLostThisTurn: "opponents"} (effects/resources.mjs keeps each player's, rules/turn.mjs clears it) | built | 3 | 26 | 0 | 0 |
-| — | An amount the trigger carries | — | missing | 3 | 21 | 3 | 2 |
+| — | An amount the trigger carries | — | missing | 3 | 21 | 2 | 1 |
 | — | Your experience counters | amount {countersOn: "you", counter: "experience"} (script/amount.mjs); putCounter's who gives them | built | 3 | 15 | 0 | 0 |
 | — | Abilities activated this turn | — | missing | 3 | 13 | 3 | 3 |
 | — | A gift promised | — | missing | 3 | 11 | 3 | 0 |

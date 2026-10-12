@@ -41,7 +41,7 @@
 import {conditionHolds} from "../script/condition.mjs";
 import {isCounted, amountOf} from "../script/amount.mjs";
 import {chosenFor} from "../script/chosen.mjs";
-import {hasSubtype, everyCreatureType, isLandType, isCreatureType} from "../keywords/types.mjs";
+import {hasSubtype, everyCreatureType, isLandType, isCreatureType, BASIC_LAND_MANA} from "../keywords/types.mjs";
 
 /** The seven layers of CR 613.1, in order. */
 export const LAYERS = Object.freeze([1, 2, 3, 4, 5, 6, 7]);
@@ -64,13 +64,6 @@ export const isKeywordCounter = (kind) => Boolean(KEYWORD_COUNTERS[kind]);
 /* The keywords an object's counters give it, each with its counter's timestamp. */
 const stampedCounterKeywords = (object) => Object.entries(object.counters ?? {}).filter(([kind, n]) => n > 0 && KEYWORD_COUNTERS[kind])
   .map(([kind]) => [KEYWORD_COUNTERS[kind], object.counterStamps?.[kind] ?? object.timestamp ?? 0]);
-
-/* THE BASIC LAND TYPES' MANA (CR 305.6): Plains {W}, Island {U}, Swamp {B}, Mountain {R}, Forest {G} -- and the intrinsic
-   ability a land given one of them has, as the card compiler writes a basic land's own (cards/index.mjs, manaAbility). */
-const BASIC_MANA = Object.freeze({Plains: "W", Island: "U", Swamp: "B", Mountain: "R", Forest: "G"});
-const intrinsicMana = (subtype) => ({id: `intrinsic:${subtype}`, kind: "mana", tapSelf: true, produces: {[BASIC_MANA[subtype]]: 1},
-  text: `{T}: Add {${BASIC_MANA[subtype]}}.`});
-const givesBasicType = (apply) => (apply?.addSubtypes ?? []).some((subtype) => BASIC_MANA[subtype] !== undefined);
 
 /* An object's printed characteristics: where a derivation starts. */
 function printed(state, id) {
@@ -173,14 +166,7 @@ function applyEffect(current, effect) {
   /* CR 613.1d: "in addition to its other types" adds; setTypes replaces. */
   if (change.addTypes) for (const type of change.addTypes) if (!current.types.includes(type)) current.types.push(type);
   /* And subtypes "in addition to its other types" (CR 205.1b; effects/permanents.mjs, animate's `subtypes`). */
-  /* A LAND GIVEN A BASIC LAND TYPE HAS THAT TYPE'S MANA ABILITY (CR 305.6): "each land is a Swamp in addition to its other
-     land types" (Urborg, Tomb of Yawgmoth) gives a Forest "{T}: Add {B}" -- given with the type, in layer 4, so an effect that
-     takes abilities away in layer 6 takes it too. A land that has the type already (a Swamp, an Underground Sea) has the
-     ability already, and is given no second. */
-  if (change.addSubtypes) for (const subtype of change.addSubtypes) if (!current.subtypes.includes(subtype)) {
-    current.subtypes.push(subtype);
-    if (BASIC_MANA[subtype]) current.granted.push(intrinsicMana(subtype));
-  }
+  if (change.addSubtypes) for (const subtype of change.addSubtypes) if (!current.subtypes.includes(subtype)) current.subtypes.push(subtype);
   if (change.setTypes) current.types = [...change.setTypes];
   /* "Enchanted permanent is a colorless Forest land" (Song of the Dryads): its subtypes set, every other one lost (CR 205.1b). */
   if (change.setSubtypes) { current.subtypes = [...change.setSubtypes]; current.everyCreatureType = false; }
@@ -210,7 +196,18 @@ function applyEffect(current, effect) {
      abilities it is -- so two grants of one ability are two abilities. */
   if (change.addAbilities) for (const ability of change.addAbilities)
     current.granted.push({...ability, id: `granted:${effect.timestamp ?? ""}:${effect.id ?? ""}:${ability.id}`});
-  if (change.addKeywords) for (const word of change.addKeywords) if (!current.keywords.includes(word)) current.keywords.push(word);
+  /* A keyword given by an effect older than one that took that keyword away is not had: a pump's keywords are applied with its
+     power in layer 7c here, and are layer 6's by the rules (CR 613.1f), where timestamps order them (CR 613.7). */
+  if (change.addKeywords) for (const word of change.addKeywords)
+    if (!current.keywords.includes(word) && !(current.keywordsLost ?? []).some((lost) => lost.words.includes(word) && lost.timestamp > (effect.timestamp ?? 0))) current.keywords.push(word);
+  /* "Permanents your opponents control lose hexproof and indestructible until end of turn" (Shadowspear; CR 613.1f): those
+     keywords taken away -- printed, given before it, or a counter's put on before it -- and one given after it, in timestamp
+     order (CR 613.7), or a keyword counter put on since (above), it has again (the card's rulings). */
+  if (change.removeKeywords) {
+    const since = new Set((current.counterKeywords ?? []).filter(([, stamp]) => stamp > (effect.timestamp ?? 0)).map(([word]) => word));
+    current.keywords = current.keywords.filter((word) => since.has(word) || !change.removeKeywords.includes(word));
+    current.keywordsLost = [...(current.keywordsLost ?? []), {words: [...change.removeKeywords], timestamp: effect.timestamp ?? 0}];
+  }
   if (Number.isInteger(change.setPower)) current.power = change.setPower;
   if (Number.isInteger(change.setToughness)) current.toughness = change.setToughness;
   if (Number.isInteger(change.power) && current.power !== null) current.power += change.power;
@@ -601,6 +598,20 @@ function lostEffect(state, effect, begun, losers) {
   return lostBy(state, effect.sourceId).some((part) => part !== effect.partOf);
 }
 
+/* A BASIC LAND TYPE AN EFFECT GAVE (CR 305.7): "lands you control are every basic land type in addition to their other types"
+   (Dryad of the Ilysian Grove), "each land is a Swamp in addition to its other land types" (Urborg, Tomb of Yawgmoth) -- each one the object does not print brings that type's intrinsic mana ability, "{T}: Add
+   [its mana]" (CR 305.6), given with the type in layer 4, so an effect that takes abilities away in layer 6 takes it too
+   (CR 613.1f). A type it prints has its ability among its own already: a basic land's, a dual land's written out. Once a
+   type, however many effects give it: a subtype is had once (applyEffect). */
+function intrinsicMana(state, id, current) {
+  const own = state.objects[id].subtypes ?? [];
+  for (const type of current.subtypes) {
+    const color = BASIC_LAND_MANA[type];
+    if (!color || own.includes(type)) continue;
+    current.granted.push({id: `intrinsic:${type}`, kind: "mana", tapSelf: true, produces: {[color]: 1}, text: `{T}: Add {${color}}.`});
+  }
+}
+
 function derive(state, id, counts = true, through = 7) {
   derivations += 1;
   let current = printed(state, id);
@@ -629,6 +640,7 @@ function derive(state, id, counts = true, through = 7) {
       for (const effect of orderWithin(state, inLayer, current, sourceOf)) {
         if (affects(state, effect, current, sourceOf(effect))) current = applied(effect);
       }
+      if (layer === 4) intrinsicMana(state, id, current);
       continue;
     }
 
@@ -682,8 +694,9 @@ const heldAbilities = (object, current) => [...(current.lostAbilities ? [] : obj
    graveyard (where one may work from, allEffects): when none does, a permanent's abilities are its own, and nothing need
    be derived to read them. */
 function abilitiesChange(state) {
-  /* And one that gives a land a basic land type, with its mana ability (CR 305.6; applyEffect). */
-  const changes = (apply) => Boolean(apply && (apply.addAbilities || apply.removeAllAbilities || apply.topCardAbilities || apply.graveyardAbilities || givesBasicType(apply)));
+  /* And a basic land type given, which brings its mana ability (CR 305.7, intrinsicMana). */
+  const changes = (apply) => Boolean(apply && (apply.addAbilities || apply.removeAllAbilities || apply.topCardAbilities || apply.graveyardAbilities
+    || [...(apply.addSubtypes ?? []), ...(apply.setSubtypes ?? [])].some((type) => BASIC_LAND_MANA[type])));
   if ((state.effects ?? []).some((effect) => changes(effect.apply))) return true;
   const holders = [...state.zones.battlefield, ...(state.zones.graveyard ?? []).flat()];
   return holders.some((id) => (state.objects[id].abilities ?? []).some((ability) => ability.kind === "static" && changes(ability.apply)));

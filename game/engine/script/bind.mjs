@@ -52,7 +52,7 @@
 import {compileSelector, selectMatching, creatureTypesOf, shareCreatureType} from "./filter.mjs";
 import {powerOf, toughnessOf, controllerOf} from "../rules/layers.mjs";
 import {namesChosen, withChosen, namesChosenColor, withChosenColor} from "./chosen.mjs";
-import {valueCostOf, shownName} from "../state/index.mjs";
+import {valueCostOf, shownName, xOnStack} from "../state/index.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {amountOf, AMOUNT_PARAMS} from "./amount.mjs";
 import {conditionHolds} from "./condition.mjs";
@@ -355,8 +355,10 @@ export function factsOf(state, targets) {
     return {powerOf: o.zone === "battlefield" ? powerOf(state, t.id) : (o.power ?? 0),
       /* "Its controller gains life equal to its toughness" (Condemn): as it was, before the effect moved it. */
       toughnessOf: o.zone === "battlefield" ? toughnessOf(state, t.id) : (o.toughness ?? 0),
-      /* A transformed permanent's is its front face's (CR 202.3b). */
-      manaValueOf: valueCostOf(o) ? manaValue(parseManaCost(valueCostOf(o))) : 0,
+      /* A transformed permanent's is its front face's (CR 202.3b). A spell's on the stack counts X as the value chosen for it
+         (CR 202.3e): "add an amount of {C} equal to that spell's mana value" (Mana Drain), "lose life equal to that spell's
+         mana value" (Imp's Mischief) -- read as the resolution begins, before the spell is countered or moved. */
+      manaValueOf: valueCostOf(o) ? manaValue(parseManaCost(valueCostOf(o)), {x: xOnStack(state, t.id)}) : 0,
       controllerOf: o.zone === "battlefield" ? controllerOf(state, t.id) : o.controller,
       /* A face-down permanent has no name (CR 708.2; Reflector Mage's ruling): a lock by its name locks nothing. */
       ownerOf: o.owner, nameOf: o.faceDown === true ? null : o.card};

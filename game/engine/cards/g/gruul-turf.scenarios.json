@@ -1,0 +1,137 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Gruul Turf",
+  "scenarios": [
+    {
+      "name": "Played: tapped, and Rob chooses which land to return -- the Forest, not the Swamp",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Gruul Turf"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Gruul Turf"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Forest",
+                  "Swamp",
+                  "Gruul Turf"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Gruul Turf"
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Swamp",
+            "Gruul Turf"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "His only land: it returns itself",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Gruul Turf"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Gruul Turf"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Gruul Turf"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Gruul Turf"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": []
+        }
+      ]
+    },
+    {
+      "name": "{T}: {R}{G}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gruul Turf"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Gruul Turf"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1,
+            "G": 1
+          }
+        }
+      ]
+    }
+  ]
+}
