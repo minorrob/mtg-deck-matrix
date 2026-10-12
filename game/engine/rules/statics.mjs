@@ -14,10 +14,15 @@
  *
  * "WHAT IT AFFECTS" IS THE SAME SHAPE AS A CONTINUOUS EFFECT'S (`affects`), read through `layers.mjs` against the
  * object as it currently is, with "you" meaning the static ability's controller.
+ *
+ * A PERMANENT'S RULES COME FROM ITS ABILITIES AS THEY ARE AFTER LAYER 6 (CR 613.1f, 604.1): each reader here asks
+ * `staticAbilities` for them, never the printed list, so a permanent that has lost all its abilities changes no rule --
+ * Marauding Raptor under Song of the Dryads makes no creature spell cheaper, an Elk Oko made of Thalia taxes nothing. A
+ * card's own rule read where it is not a permanent (in a hand, on the stack) is its own.
  */
 
 import {conditionHolds} from "../script/condition.mjs";
-import {staticAffects, powerOf, toughnessOf, abilitiesOf, controllerOf} from "./layers.mjs";
+import {staticAffects, powerOf, toughnessOf, abilitiesOf, controllerOf, staticAbilities} from "./layers.mjs";
 import {compileSelector, matchesSelector, matchesLastKnown} from "../script/filter.mjs";
 import {amountOf} from "../script/amount.mjs";
 import {usesThisTurn} from "../state/index.mjs";
@@ -256,10 +261,11 @@ export const STATIC_RULES = Object.freeze({
 export function freeCast(state, player, cardId) {
   const object = state.objects[cardId];
   if (!object) return null;
+  const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
     if (holder.controller !== player) continue;
-    for (const ability of holder.abilities ?? []) {
+    for (const ability of held(holderId)) {
       if (ability.kind !== "static" || ability.rule !== "cast-without-paying") continue;
       if (ability.zones && !ability.zones.includes(object.zone)) continue;
       if (!conditionHolds(state, ability.condition, {controller: holder.controller, source: holderId})) continue;
@@ -297,9 +303,10 @@ export function castForbidden(state, player, cardId) {
     if (effect.rule !== "cant-cast" || !(effect.players ?? []).includes(player)) continue;
     if (compileSelector({...(effect.spells ?? {}), what: "card", zone: object.zone})(state, cardId, {controller: effect.sourceController})) return true;
   }
+  const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
-    for (const ability of holder.abilities ?? []) {
+    for (const ability of held(holderId)) {
       if (ability.kind !== "static" || ability.rule !== "cant-cast") continue;
       const context = {controller: holder.controller, source: holderId};
       if (!compileSelector({what: "player", ...(ability.affects ?? {})})(state, player, context)) continue;
@@ -331,9 +338,10 @@ const duringCombat = (state) => typeof state.phase === "string" && state.phase.s
  * activation is offered (rules/actions.mjs).
  */
 export function activationForbidden(state, player) {
+  const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
-    for (const ability of holder.abilities ?? []) {
+    for (const ability of held(holderId)) {
       if (ability.kind !== "static" || ability.rule !== "cant-activate") continue;
       const context = {controller: holder.controller, source: holderId};
       if (!compileSelector({what: "player", ...(ability.affects ?? {})})(state, player, context)) continue;
@@ -350,9 +358,10 @@ export function activationForbidden(state, player) {
  * gains them nothing (702.15b), and no life is gained to be seen ("whenever you gain life").
  */
 export function cantGainLife(state, player) {
+  const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
-    for (const ability of holder.abilities ?? []) {
+    for (const ability of held(holderId)) {
       if (ability.kind !== "static" || ability.rule !== "cant-gain-life") continue;
       const context = {controller: holder.controller, source: holderId};
       if (compileSelector({what: "player", ...(ability.affects ?? {})})(state, player, context) && conditionHolds(state, ability.condition, context)) return true;
@@ -378,9 +387,10 @@ export function cantGainLife(state, player) {
  */
 export function tokensCreated(state, controller, count, values) {
   let n = count, instead = null;
+  const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
-    for (const ability of holder.abilities ?? []) {
+    for (const ability of held(holderId)) {
       if (ability.kind !== "static") continue;
       if (ability.rule === "tokens-instead" && holder.controller === controller && matchesLastKnown(ability.affects, values)) instead = ability.token;
       if (ability.rule === "more-tokens" && compileSelector({what: "player", ...ability.affects})(state, controller, {controller: holder.controller, source: holderId})) n *= ability.times;
@@ -395,9 +405,10 @@ export function tokensCreated(state, controller, count, values) {
  * or paying a cost that sacrifices one, can't choose it -- "can't" beats "must" and "may" alike (CR 101.2).
  */
 export function cantBeSacrificed(state, id) {
+  const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
-    for (const ability of holder.abilities ?? [])
+    for (const ability of held(holderId))
       if (ability.kind === "static" && ability.rule === "cant-be-sacrificed"
         && matchesSelector({what: "permanent", ...ability.affects}, state, id, {controller: holder.controller, source: holderId})) return true;
   }
@@ -415,9 +426,10 @@ export function drawsInstead(state, player, count) {
   if (count < 2) return [];
   const seats = state.players.length, order = (p) => (p - player - 1 + seats) % seats;
   const found = new Set();
+  const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
-    for (const ability of holder.abilities ?? [])
+    for (const ability of held(holderId))
       if (ability.kind === "static" && ability.rule === "draws-instead" && compileSelector({what: "player", ...ability.affects})(state, player, {controller: holder.controller, source: holderId}))
         found.add(holder.controller);
   }
@@ -432,9 +444,10 @@ export function drawsInstead(state, player, count) {
  */
 export function lifeGained(state, player, amount) {
   let n = amount;
+  const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
-    for (const ability of holder.abilities ?? []) {
+    for (const ability of held(holderId)) {
       if (ability.kind !== "static" || ability.rule !== "more-life") continue;
       if (compileSelector({what: "player", ...ability.affects})(state, player, {controller: holder.controller, source: holderId})) n *= ability.times;
     }
@@ -486,9 +499,10 @@ function counterEnds(candidates, n, out = new Set()) {
 /* The effects that would change counters of this kind put on this permanent (`id`) or player (`player`) by `by`. */
 function counterCandidates(state, {id = null, player = null}, kind, by) {
   const found = [];
+  const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
-    for (const ability of holder.abilities ?? []) {
+    for (const ability of held(holderId)) {
       if (!changesCounters(state, ability, holder, holderId, kind, by)) continue;
       if (player !== null ? ability.players !== true
         : !matchesSelector({what: "permanent", ...ability.affects}, state, id, {controller: holder.controller, source: holderId})) continue;
@@ -580,9 +594,10 @@ export function counterOrderChoice(state, awaiting) {
  * keeps a creature from it.
  */
 export function cantAttack(state, attacker, defender, planeswalker = null) {
+  const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
-    for (const ability of holder.abilities ?? []) {
+    for (const ability of held(holderId)) {
       if (ability.kind !== "static" || ability.rule !== "cant-attack") continue;
       const context = {controller: holder.controller, source: holderId};
       if (!matchesSelector({what: "permanent", ...ability.affects}, state, attacker, context)) continue;
@@ -642,9 +657,10 @@ const attackedYouLastTurn = (state, player, you) => (state.players[player]?.atta
  * -- only toward the players it names, and never toward a planeswalker; an effect for a while lifts it toward anyone.
  */
 export function defenderLifted(state, id, defender = undefined, planeswalker = null) {
+  const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
-    for (const ability of holder.abilities ?? []) {
+    for (const ability of held(holderId)) {
       if (ability.kind !== "static" || ability.rule !== "attacks-despite-defender") continue;
       const context = {controller: holder.controller, source: holderId};
       if (!conditionHolds(state, ability.condition, context) || !matchesSelector(chosenFor(ability, holder).affects, state, id, context)) continue;
@@ -664,9 +680,10 @@ export function defenderLifted(state, id, defender = undefined, planeswalker = n
  */
 export function attacksEachCombat(state, id) {
   const sources = [];
+  const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
-    for (const ability of holder.abilities ?? []) {
+    for (const ability of held(holderId)) {
       if (ability.kind !== "static" || ability.rule !== "attacks-each-combat") continue;
       const context = {controller: holder.controller, source: holderId};
       if (conditionHolds(state, ability.condition, context) && matchesSelector(chosenFor(ability, holder).affects, state, id, context)) sources.push(holderId);
@@ -701,10 +718,11 @@ export function goadersOf(state, id) {
  */
 export function attackTax(state, picked) {
   let total = 0;
+  const held = staticAbilities(state);
   for (const {defenderId, planeswalkerId} of picked) for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
     if (holder.controller !== defenderId) continue;
-    for (const ability of holder.abilities ?? []) if (ability.kind === "static" && ability.rule === "attack-tax" && (planeswalkerId === undefined || ability.planeswalkers === true)
+    for (const ability of held(holderId)) if (ability.kind === "static" && ability.rule === "attack-tax" && (planeswalkerId === undefined || ability.planeswalkers === true)
       /* "As long as you have an enduring story, creatures can't attack you unless ..." (Dain): only while it holds. */
       && conditionHolds(state, ability.condition, {controller: holder.controller, source: holderId}))
       total += amountOf(state, ability.amount ?? 0, {controller: holder.controller, source: holderId});
@@ -724,9 +742,10 @@ export function cantBeCountered(state, spellId) {
   for (const ability of spell.abilities ?? []) {
     if (ability.kind === "static" && ability.rule === "cant-be-countered" && ability.affects?.self === true) return true;
   }
+  const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
-    for (const ability of holder.abilities ?? []) {
+    for (const ability of held(holderId)) {
       if (ability.kind !== "static" || ability.rule !== "cant-be-countered") continue;
       if (matchesSelector(ability.affects, state, spellId, {controller: holder.controller, source: holderId})) return true;
     }
@@ -740,9 +759,10 @@ export function cantBeCountered(state, spellId) {
  * less power than the ability's source. "You" is the ability's controller throughout.
  */
 export function cantBeBlockedBy(state, attackerId, blockerId) {
+  const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
-    for (const ability of holder.abilities ?? []) {
+    for (const ability of held(holderId)) {
       if (ability.kind !== "static" || ability.rule !== "cant-be-blocked-by") continue;
       const context = {controller: holder.controller, source: holderId};
       if (!matchesSelector(ability.affects, state, attackerId, context)) continue;
@@ -778,10 +798,11 @@ export function flashGranted(state, player, id) {
 /** The "play-from" and similar static abilities a player's permanents give them: each such ability, with its source. */
 export function playerStatics(state, rule, player) {
   const found = [];
+  const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
     if (holder.controller !== player) continue;
-    for (const ability of holder.abilities ?? []) if (ability.kind === "static" && ability.rule === rule) found.push({ability: chosenFor(ability, holder), source: holderId});
+    for (const ability of held(holderId)) if (ability.kind === "static" && ability.rule === rule) found.push({ability: chosenFor(ability, holder), source: holderId});
   }
   return found;
 }
@@ -804,10 +825,11 @@ export function costReduction(state, player, cardId, targets = null) {
   /* EMINENCE (The Ur-Sphinx): "as long as this is in the command zone or on the battlefield" -- an ability that works from
      its owner's command zone too (`eminence`, CR 113.6), its controller there its owner. */
   const commanding = (state.zones.command ?? []).flat().filter((id) => (state.objects[id]?.abilities ?? []).some((a) => a.eminence === true));
+  const held = staticAbilities(state);
   for (const holderId of [...state.zones.battlefield, ...commanding]) {
     const holder = state.objects[holderId];
     const fromCommand = holder.zone === "command";
-    for (const own of holder.abilities ?? []) {
+    for (const own of held(holderId)) {
       if (own.kind !== "static" || own.rule !== "spells-cost-less") continue;
       if (fromCommand && own.eminence !== true) continue;
       /* "Creature spells of the chosen type cost {2} less" (Urza's Incubator): its own choice. */
@@ -860,9 +882,10 @@ export function costIncrease(state, player, cardId) {
   const object = state.objects[cardId];
   if (!object) return 0;
   let total = 0;
+  const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
-    for (const own of holder.abilities ?? []) {
+    for (const own of held(holderId)) {
       if (own.kind !== "static" || own.rule !== "spells-cost-more") continue;
       const ability = chosenFor(own, holder);
       const caster = ability.caster ?? "any";
@@ -897,9 +920,10 @@ export function costIncrease(state, player, cardId) {
  */
 export function proliferateTimes(state, player) {
   let times = 1;
+  const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
-    for (const ability of holder.abilities ?? []) {
+    for (const ability of held(holderId)) {
       if (ability.kind !== "static" || ability.rule !== "proliferate-twice") continue;
       if (compileSelector({what: "player", ...(ability.affects ?? {})})(state, player, {controller: holder.controller, source: holderId})) times *= 2;
     }
@@ -916,9 +940,10 @@ export function proliferateTimes(state, player) {
  */
 export function abilityCostIncrease(state, player) {
   let total = 0;
+  const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
-    for (const ability of holder.abilities ?? []) {
+    for (const ability of held(holderId)) {
       if (ability.kind !== "static" || ability.rule !== "abilities-cost-more") continue;
       const context = {controller: holder.controller, source: holderId};
       if (!compileSelector({what: "player", ...(ability.affects ?? {})})(state, player, context)) continue;
@@ -934,9 +959,10 @@ export function abilityCostIncrease(state, player) {
  * selector, "you" being the ability's controller.
  */
 export function playerRuleChanged(state, rule, player) {
+  const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
-    for (const ability of holder.abilities ?? []) {
+    for (const ability of held(holderId)) {
       if (ability.kind !== "static" || ability.rule !== rule || ability.affects?.what !== "player") continue;
       if (compileSelector(ability.affects)(state, player, {controller: holder.controller, source: holderId})) return true;
     }
@@ -946,9 +972,10 @@ export function playerRuleChanged(state, rule, player) {
 
 /** Whether any static ability on the battlefield -- or an effect with a duration ("can't be blocked this turn") -- changes `rule` for this object. */
 export function ruleChanged(state, rule, id) {
+  const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
-    for (const ability of holder.abilities ?? []) {
+    for (const ability of held(holderId)) {
       if (ability.kind !== "static" || ability.rule !== rule) continue;
       /* "Unless you have an enduring story" (Bombur): a rule changed only while its condition holds. */
       if (!conditionHolds(state, ability.condition, {controller: holder.controller, source: holderId})) continue;

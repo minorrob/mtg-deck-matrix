@@ -27,7 +27,7 @@
  * render. It is pinned in §12.1 and reproduced here, not designed.
  */
 
-import {characteristicsOf, deriving} from "./rules/layers.mjs";
+import {characteristicsOf, deriving, staticAbilities} from "./rules/layers.mjs";
 import {commanderKeyOf} from "./state/index.mjs";
 
 export const PROJECTION_SCHEMA = "CommanderProbeProjection@1";
@@ -115,10 +115,12 @@ function cardFor(state, id, canSeeFace, viewer = null) {
    its owner alone. Never more than that one card, and never without such a permanent. */
 function topSeenBy(state, owner, viewer) {
   let revealed = false, looked = false;
+  /* Its abilities as they are after layer 6 (CR 613.1f): one that lost them all shows nothing. */
+  const held = staticAbilities(state);
   for (const id of state.zones.battlefield) {
     const holder = state.objects[id];
     if (holder.controller !== owner) continue;
-    for (const ability of holder.abilities ?? []) {
+    for (const ability of held(id)) {
       if (ability.kind !== "static") continue;
       if (ability.rule === "top-revealed") revealed = true;
       if (ability.rule === "look-at-top") looked = true;

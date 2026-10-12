@@ -70,7 +70,7 @@ import {costReduction, costIncrease, abilityCostIncrease, equipCostReduction, pl
 import {countMana, amountOf, countEffect, isCounted, amountProblems, commanderless} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
-import {lastKnown, characteristicsOf, abilitiesOf, deriving, derivingAfresh, onceAQuestion, keywordsOf, colorsOf, controllerOf} from "./layers.mjs";
+import {lastKnown, characteristicsOf, abilitiesOf, deriving, derivingAfresh, onceAQuestion, keywordsOf, colorsOf, controllerOf, staticAbilities} from "./layers.mjs";
 import {namesChosen, withChosen, chosenFor} from "../script/chosen.mjs";
 import {poolFor, spendFor, addRestricted, addRider, riderChoices, addProvenance, addPoolMana} from "./restricted-mana.mjs";
 import {askEntering} from "./entering.mjs";
@@ -125,9 +125,11 @@ export function flashbackCost(state, player, id) {
   if (!object || object.zone !== "graveyard" || object.owner !== player) return null;
   if (!(object.types ?? []).some((t) => t === "Instant" || t === "Sorcery")) return null;
   const own = (object.abilities ?? []).find((a) => a.kind === "static" && a.rule === "flashback");
+  const held = staticAbilities(state);
   const given = (state.effects ?? []).some((e) => e.rule === "flashback" && (e.affects?.ids ?? []).includes(id))
-    /* "Each instant and sorcery card in your graveyard has flashback" (Lier): a permanent's static, its cost the card's mana cost. */
-    || state.zones.battlefield.some((h) => (state.objects[h].abilities ?? []).some((a) => a.kind === "static" && a.rule === "flashback" && a.affects
+    /* "Each instant and sorcery card in your graveyard has flashback" (Lier): a permanent's static, its cost the card's mana
+       cost -- of its abilities as they are after layer 6 (CR 613.1f). */
+    || state.zones.battlefield.some((h) => held(h).some((a) => a.kind === "static" && a.rule === "flashback" && a.affects
       && matchesSelector({...a.affects, what: "card", zone: "graveyard"}, state, id, {controller: state.objects[h].controller, source: h})));
   const cost = own?.cost ?? (given ? [{atom: "mana", cost: object.manaCost ?? ""}] : null);
   if (!cost) return null;
@@ -165,7 +167,9 @@ export function escapeWays(state, player, id) {
   const ways = [];
   const own = (object.abilities ?? []).find((a) => a.kind === "static" && a.rule === "escape" && !a.affects?.zone);
   if (own) ways.push({kind: "own", mana: (own.cost ?? []).find((a) => a.atom === "mana")?.cost ?? "", exile: exileOf(own.cost)});
-  const given = state.zones.battlefield.flatMap((h) => (state.objects[h].abilities ?? []).filter((a) => a.kind === "static" && a.rule === "escape" && a.affects?.zone === "graveyard"
+  /* A permanent's, of its abilities as they are after layer 6 (CR 613.1f). */
+  const held = staticAbilities(state);
+  const given = state.zones.battlefield.flatMap((h) => held(h).filter((a) => a.kind === "static" && a.rule === "escape" && a.affects?.zone === "graveyard"
     && matchesSelector({...a.affects, what: "card", zone: "graveyard"}, state, id, {controller: state.objects[h].controller, source: h})));
   if (given.length && object.manaCost) ways.push({kind: "given", mana: object.manaCost, exile: Math.min(...given.map((a) => exileOf(a.cost)))});
   const others = cardsIn(state, "graveyard", player).filter((c) => c !== id).length;
@@ -696,7 +700,8 @@ export const costAtomBuilt = (atom) => (COST_ATOMS_BUILT.includes(atom?.atom) &&
    summoning-sick creature may crew. "This token crews Vehicles as though its power were 2 greater" (`crews-with-more`). */
 const CREW_OFFERS_MAX = 64;
 const crewPower = (state, id) => Math.max(0, characteristicsOf(state, id).power ?? 0)
-  + (state.objects[id].abilities ?? []).filter((a) => a.kind === "static" && a.rule === "crews-with-more").reduce((n, a) => n + (a.amount ?? 0), 0);
+  /* Of its abilities as they are after layer 6 (CR 613.1f). */
+  + staticAbilities(state)(id).filter((a) => a.kind === "static" && a.rule === "crews-with-more").reduce((n, a) => n + (a.amount ?? 0), 0);
 function crewChoices(state, player, vehicle, power) {
   const crew = state.zones.battlefield.filter((id) => id !== vehicle && state.objects[id].controller === player && !state.objects[id].tapped
     && characteristicsOf(state, id).types.includes("Creature")).sort((a, b) => a - b);
@@ -965,11 +970,12 @@ export function manaAlternatives(state, player, given, source = null) {
   if (ability.anyCombination) return combinations(count, 0, Array.isArray(ability.anyCombination) ? COLORS.filter((c) => ability.anyCombination.includes(c)) : COLORS);
   /* "Any color that a land an opponent controls could produce" (Exotic Orchard), "any type ... a land you control"
      (Reflecting Pool, `anyType`, colorless too): what those lands' own mana abilities could add, now -- never another
-     such ability's (CR 106.7), so two Reflecting Pools do not feed each other. */
+     such ability's (CR 106.7), so two Reflecting Pools do not feed each other. Their mana abilities as they are after layer
+     6 (CR 613.1f): an Island under Song of the Dryads could produce {G}, and no {U}. */
   if (ability.reflect) {
     const kinds = new Set();
     for (const id of selectMatching(state, ability.reflect, context))
-      for (const theirs of state.objects[id].abilities ?? [])
+      for (const theirs of abilitiesOf(state, id))
         if (theirs.kind === "mana" && !theirs.reflect && !theirs.among) for (const m of manaAlternatives(state, state.objects[id].controller, theirs, id)) for (const k of Object.keys(m)) kinds.add(k);
     return [...COLORS, ...(ability.anyType ? ["C"] : [])].filter((k) => kinds.has(k)).map((k) => ({[k]: count}));
   }

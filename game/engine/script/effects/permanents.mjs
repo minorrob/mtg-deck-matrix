@@ -735,6 +735,24 @@ export function gainControl(state, params, context) {
   }
   return [];
 }
+/**
+ * `exchangeControl` -- CR 701.12a-b: "exchange control of target artifact or creature you control and target creature an
+ * opponent controls with power 3 or less" (Oko, Thief of Crowns' -5): `from` the one, `targets` the other -- or, with no
+ * `from`, "exchange control of two target creatures" (Switcheroo): the two of `targets`. Both still on the battlefield -- and each still a legal target as it resolves, or nothing is bound to it (CR 608.2b) -- and controlled
+ * by different players: each player gains control of the other's, at once and for good, as two control changes, each with
+ * its record, so a player who leaves the game gives back what they were given (CR 800.4a). One gone, or no longer legal,
+ * and no part of the exchange happens (701.12a); both one player's, and it does nothing (701.12b).
+ */
+export function exchangeControl(state, params, context) {
+  const [one, other] = params.from !== undefined ? [params.from[0], (params.targets ?? [])[0]] : params.targets ?? [];
+  if (state.objects[one]?.zone !== "battlefield" || state.objects[other]?.zone !== "battlefield") return [];
+  const ones = controllerOf(state, one), others = controllerOf(state, other);
+  if (ones === others) return [];
+  gainControl(state, {targets: [one], toPlayer: others}, context);
+  gainControl(state, {targets: [other], toPlayer: ones}, context);
+  return [];
+}
+
 /** How long a control change may last other than for good: the turn, or while its source stays (schema.mjs reads it). */
 export const CONTROL_DURATIONS = Object.freeze(["end-of-turn", "this leaves"]);
 

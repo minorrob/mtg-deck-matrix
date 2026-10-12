@@ -32,7 +32,7 @@ import {event, cardRef, moveOne, playersFor, sacrificeOne, destructionQuestion, 
 import {proliferate as giveEachAnother, addCounters, putCounter, moveCounters, removeCounter} from "./resources.mjs";
 import {makeCopies, afterwards, joinAttack, attackPlaces, attachTo, createToken, effectUntil, COPY_KEYS} from "./permanents.mjs";
 import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits, unlessPlans, planWords, payPlan} from "../../rules/mana.mjs";
-import {typesOf, characteristicsOf, everyCreatureTypeOf, controllerOf, lastKnown} from "../../rules/layers.mjs";
+import {typesOf, characteristicsOf, everyCreatureTypeOf, controllerOf, lastKnown, staticAbilities} from "../../rules/layers.mjs";
 import {isLandType} from "../../keywords/types.mjs";
 import {pushCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
 import {loseLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";
@@ -2116,8 +2116,9 @@ export const orderDraws = {
     const name = (p) => state.players[p].name;
     /* Each option by its effect's card -- "Rob's Alms Collector" -- and what it does; one whose controller has since left the
        game, with it, is said to be gone (CR 800.4a). */
+    const held = staticAbilities(state);
     const card = (you) => state.objects[state.zones.battlefield.find((id) => state.objects[id].controller === you
-      && (state.objects[id].abilities ?? []).some((a) => a.kind === "static" && a.rule === "draws-instead"))]?.card;
+      && held(id).some((a) => a.kind === "static" && a.rule === "draws-instead"))]?.card;
     return {id: `order-draws:${state.turn}:${awaiting.player}`, title: `${name(awaiting.player)} would draw ${awaiting.count} cards: whose replacement applies?`,
       mode: "one", min: 1, max: 1,
       options: awaiting.options.map((you, index) => ({index, player: you,

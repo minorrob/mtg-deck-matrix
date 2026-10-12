@@ -49,7 +49,7 @@ import {compileSelector, matchesSelector} from "../script/filter.mjs";
 import {amountOf, isCounted} from "../script/amount.mjs";
 import {chosenFor} from "../script/chosen.mjs";
 import {protectedFrom} from "./protection.mjs";
-import {controllerOf} from "./layers.mjs";
+import {controllerOf, staticAbilities} from "./layers.mjs";
 
 /* "This land enters tapped unless you control a Forest or a Plains" (a check land), "... unless you control two or
    fewer other lands" (a fast land): the arrival's `unless`, read as the land is about to enter -- so the land itself,
@@ -222,10 +222,13 @@ function applicable(state, proposal) {
   /* And "if it would die this turn, exile it instead" about it (EXILE_IF_DIES). */
   if ((state.effects ?? []).some((effect) => effect.rule === "exile-if-dies" && effect.affects.ids.includes(proposal.objectId))
     && applies(state, EXILE_IF_DIES, moving, proposal)) found.push({holderId: proposal.objectId, ability: EXILE_IF_DIES});
+  /* A permanent's replacement effects come from its abilities as they are after layer 6 (CR 613.1f, 614.12): one that has
+     lost all its abilities -- Infinite Coursework on a damage doubler, Day of Black Sun's creatures as they die -- has none. */
+  const held = staticAbilities(state);
   for (const zone of ACTING_ZONES) {
     for (const id of state.zones[zone]) {
       const holder = state.objects[id];
-      for (const ability of holder.abilities ?? []) {
+      for (const ability of held(id)) {
         if (applies(state, ability, holder, proposal)) found.push({holderId: id, ability});
       }
     }
@@ -526,8 +529,9 @@ export function damageChoicesPossible(state) {
   const lasting = (state.effects ?? []).filter((e) => e.rule === "prevent-damage");
   let n = lasting.some(isShield) ? lasting.length : 0;
   if (n >= 2) return true;
+  const held = staticAbilities(state);
   for (const id of state.zones.battlefield)
-    for (const ability of state.objects[id]?.abilities ?? [])
+    for (const ability of held(id))
       if (ability.kind === "replacement" && ability.watches?.event === "damage" && (n += 1) >= 2) return true;
   return false;
 }
