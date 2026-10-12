@@ -5,18 +5,10 @@ screen, as its weekly usage ran out. Rob's instruction: *"write up a handoff doc
 OpenAI platform take my feedback and continue working on the UI of Play."* Everything this document relies on is in
 this repository. Nothing depends on the session's container, which will be reclaimed.
 
-**Read first, in this order:**
-1. `AGENTS.md`: the rules of engagement. They bind any agent, on any platform. Its **Lanes** section above all.
-2. `CLAUDE.md`, then `docs/ACTIVE.md`: who holds the work, and the Requests table between the lanes.
-3. `docs/ui-lane/README.md`: the UI lane's brief (your files, your branch, how work reaches `main`).
-4. `docs/ui-lane/gameplay-anchor.md`: the facts of a game every screen must support, and the view contract
-   `CrankRoomView@1`. The screen renders what the server sends and never decides anything itself.
-5. `docs/ui-lane/replit-brief-2026-10-12.md`: Rob's brief for the Play experience, in his words: the four players it
-   serves, the five pillars, every screen, the callout grammar, the rules the screen holds. The anchor wins where they
-   disagree.
-6. `docs/ui-lane/plan-play-ui-2026-10-12.md`: pass 1's plan: what of the Replit concept was kept, what refused and
-   why, the lower-confidence areas, the passes to come, the engine requests.
-7. This document.
+**Read first, in this order:** `docs/ui-lane/astra/README.md` is the entry point, and its order of precedence
+decides every conflict. In short: `AGENTS.md` and `CLAUDE.md`; `docs/ACTIVE.md`; `docs/ui-lane/README.md`;
+`docs/ui-lane/gameplay-anchor.md`; the Astra README; this document; `pre-lobby.md` and `deals.md`;
+`brief-v2-play-experience-2026-10-12.md`; `brief-v1-replit-2026-10-12.md`; `docs/ui-lane/plan-play-ui-2026-10-12.md`.
 
 ## 1. You, and your lane
 
@@ -58,7 +50,7 @@ merged first; you build against `main`. Rows 2 to 6 are pass 1's requests, still
 
 ## 3. Rob's direction for Play, in his words
 
-The brief (`replit-brief-2026-10-12.md`) is the long form. The sentences that govern every decision:
+The brief (`astra/brief-v1-replit-2026-10-12.md`) is the long form. The sentences that govern every decision:
 
 - The product in one line: *"a board game that meets a video game, that meets a social table, that meets a
   competitive league. Open and airy."*
@@ -151,7 +143,7 @@ Rob reviews staging at 222af699. **Where confidence is lower** (plan §3), so hi
    or the pass button; the concept anchored each to its cause, which needs the layer to know the mat's geometry.
 4. **Flights at 250 permanents:** not measured.
 
-**Pass 2, in the plan's order (§4), to be reordered by his feedback:**
+**Pass 2's order is set in `README.md` beside this file** (Rob's feedback, then Play home, then the deals' beginnings, then the second-edition brief's pieces); the plan's list (§4) below is the older order, kept for its content:
 1. Chairs in Focus as a strip across the top (the concept's Chair), with a priority ring and the away clock; Grid as
    the Table view's name in the Layout menu; "Save my layout".
 2. Tracker and Combat tabs in the pane; the stack pinned to Combat; INCOMING's readout in combat order.

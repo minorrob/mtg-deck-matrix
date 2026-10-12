@@ -1,4 +1,4 @@
-*Rob's brief for the Replit prototype of 2026-10-12, kept here verbatim as the UI lane's direction (the anchor wins where they disagree). Committed by the UI lane's session at its handoff, `docs/ui-lane/handoff-play-ui-2026-10-12.md`.*
+*Rob's brief for the Replit prototype of 2026-10-12, kept here verbatim as the UI lane's direction (the anchor wins where they disagree). Committed by the UI lane's session at its handoff, `docs/ui-lane/astra/handoff.md`.*
 
 # CrankMagic Play: the prototype brief
 
