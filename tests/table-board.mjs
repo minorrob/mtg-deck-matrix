@@ -1089,17 +1089,28 @@ try {
     return rob.page.evaluate(() => {
       const row = document.querySelector(".cm-board-mat .cm-board-lands .cm-board-cards"), r = row.getBoundingClientRect(), kids = [...row.children];
       const last = kids.at(-1), lr = () => last.getBoundingClientRect();
-      const out = {n: kids.length, scrolling: row.classList.contains("is-scrolling"), overflow: getComputedStyle(row).overflowX, scrolls: row.scrollWidth > row.clientWidth + 1,
+      const out = {n: kids.length, lapped: row.style.getPropertyValue("--lap") !== "", scrolling: row.classList.contains("is-scrolling"), overflow: getComputedStyle(row).overflowX, scrolls: row.scrollWidth > row.clientWidth + 1,
         cut: kids.filter((k) => k.getBoundingClientRect().right > r.right + 1).length};
       row.scrollLeft = row.scrollWidth;
       out.lastSeen = lr().right <= row.getBoundingClientRect().right + 1 && lr().left >= row.getBoundingClientRect().left - 1;
       return out;
     });
   };
-  const eight = await landRow(7);
-  ok(!eight.scrolling && eight.cut === 0, `eight lands, half of them tapped: overlapped to fit, none cut off (${JSON.stringify(eight)})`);
+  let copies = 7;
+  const eight = await landRow(copies);
+  ok(!eight.scrolling && eight.cut === 0, `${eight.n} lands, half of them tapped: none cut off (${JSON.stringify(eight)})`);
+  /* The fewest lands that overlap: a tapped land takes its share of the overlap too, and its room is measured with the
+     margins it is turned in. */
+  let fewest = eight;
+  while (!fewest.lapped && fewest.n < 30) fewest = await landRow(copies += 1);
+  ok(fewest.lapped && !fewest.scrolling && fewest.cut === 0, `${fewest.n} lands, the fewest that overlap, half of them tapped: overlapped to fit, none cut off (${JSON.stringify(fewest)})`);
+  /* And the most before the row scrolls, each card down to its readable strip: there a tapped land that took no share of
+     the overlap would push the row's end out of it. */
+  let deepest = fewest, next = fewest;
+  while (!next.scrolling && next.n < 40) {deepest = next; next = await landRow(copies += 1);}
+  ok(deepest.lapped && !deepest.scrolling && deepest.cut === 0 && next.scrolling, `${deepest.n} lands, the most that overlap before the row scrolls: none cut off, and ${next.n} scroll (${JSON.stringify(deepest)})`);
   const thirty = await landRow(29);
-  ok(thirty.scrolling && thirty.overflow === "auto" && thirty.scrolls && thirty.lastSeen, `thirty: the row scrolls, with its bar, and the last land is reached (${JSON.stringify(thirty)})`);
+  ok(thirty.scrolling && thirty.overflow === "auto" && thirty.scrolls && thirty.lastSeen, `${thirty.n} lands: the row scrolls, with its bar, and the last land is reached (${JSON.stringify(thirty)})`);
   await serial(async () => object.broadcast());
   await rob.page.waitForFunction(() => !document.querySelector(".cm-board-lands .is-copy"), null, {timeout: 10000});
 
